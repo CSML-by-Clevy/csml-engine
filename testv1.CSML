@@ -1,0 +1,30 @@
+hello:
+    typing 3000
+    remember said_hello = "test"
+    say "Hello {{firstname}}"
+    typing 3000
+    say "I'm Clevy."
+    show "https://whatever.com/flowers.png"
+        remember said_hello = false
+    goto how_old
+
+how_old:
+    typing 1500
+    ask "How old are you?", Buttons(
+        5 => (5, cinq),
+        10 => (5, cinq),
+        15 => (5, cinq),
+    )
+    #if input < 10 {
+        say "Grow up."
+        say "Try number {{step.retries}}"
+        retry
+    }
+
+    say "OK nice you are {{input}} years old".
+    remember user_age = input
+    #if Button[2]
+        goto meteo
+    #if Button[3]
+        goto joke
+end
