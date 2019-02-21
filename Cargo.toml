@@ -1,0 +1,8 @@
+[package]
+name = "nom_csml_v01"
+version = "0.1.0"
+authors = ["amerelo <amerelo@student.42.fr>"]
+edition = "2018"
+
+[dependencies]
+nom = "4.2.0"
