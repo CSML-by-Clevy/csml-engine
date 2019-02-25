@@ -1,4 +1,5 @@
 mod lexer;
+mod parser;
 
 use lexer::Lexer;
 use std::fs::File;
@@ -13,8 +14,11 @@ fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 
 fn main() {
     let text = read_file("testv1.CSML".to_owned()).unwrap();
-    let split: Vec<&str> = dbg!(text.split('\n').collect());
-    let lex_tokens = Lexer::lex_tokens(split);
+    // let split: Vec<&str> = dbg!(text.split('\n').collect());
+    let lex_tokens = Lexer::lex_tokens(text.as_bytes());
 
-    dbg!(lex_tokens);
+    match lex_tokens {
+        Ok((complete, tokens) ) => { println!(" {:?} ---- {:?}", complete, tokens) },
+        Err(e) => { println!("{:?}", e) }
+    };
 }
