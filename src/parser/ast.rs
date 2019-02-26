@@ -1,4 +1,4 @@
-pub type Program = Vec<BlockStmt>;
+pub type FLow = Vec<BlockStmt>;
 
 pub struct BlockStmt { 
     Label: String,

@@ -1,13 +1,15 @@
-trigger:
-keywords list("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
-remember firstname = user.firstname || "random dude"
-remember language = user.language || "en"
+flow Accept("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
+
+start:
+import "my_button.tcsml" as my_super_button
+remember firstname = user.firstname OR "random dude"
+remember language = user.language OR "en"
 goto hello
 
 hello:
 say Typing(3000)
 say Text("Hello {{firstname}}")
-say Typing(3000)
+say Wait(3000)
 say "I'm Clevy."
 say Url("https://whatever.com/flowers.png")
 remember said_hello = true
@@ -15,44 +17,34 @@ goto how_old
 
 how_old:
 say Typing(1500)
-ask "How old are you?", Buttons(5, 10, 15)
-#if input < 10 
-{
+ask Button("How old are you?", [1,2,3,4,4])
+if input < 10 {
 	say "Grow up."
 	say "Try number {{step.retries}}"
-	retry
+	retry Button("toto", [1,2])
 }
 say "OK nice you are {{input}} years old".
 remember user_age = input
-#if Button[2]
-{
+if input == 2
 	goto meteo
-}
-#if Button[3]
-{
+if input == 3
 	goto joke
-}
 
 joke:
 say OneOf("Some joke", "Some other joke")
-goto closure
-
+goto end
 
 meteo:
 say Typing(1500)
 say "It is {{meteo.temperature}}°C in Toulouse now"
-goto closure
-
+goto end
 
 some_step:
 remember age = memory.get("user_age")
 say "OK {{firstname}} I know that you are {{age}} years old"
 say translate(language, "SOME_TRANSLATABLE_KEY")
 say "Bye"
-goto closure
+goto end
 
-
-closure:
+end:
 do saveUserData(user, memory.all())
-
-end

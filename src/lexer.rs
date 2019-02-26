@@ -102,10 +102,10 @@ named!(rbracket_punctuation<CompleteByteSlice, Token>, do_parse!(
     )
 );
 
-named!(new_line<CompleteByteSlice, Token>, do_parse!(
-        line_ending >> (Token::NewL)
-    )
-);
+// named!(new_line<CompleteByteSlice, Token>, do_parse!(
+//         line_ending >> (Token::NewL)
+//     )
+// );
 
 named!(lex_punctuations<CompleteByteSlice, Token>, alt!(
     comma_punctuation |
@@ -119,8 +119,8 @@ named!(lex_punctuations<CompleteByteSlice, Token>, alt!(
     lbrace_punctuation |
     rbrace_punctuation |
     lbracket_punctuation |
-    rbracket_punctuation |
-    new_line
+    rbracket_punctuation 
+    // new_line
 ));
 
 // Strings
@@ -208,23 +208,16 @@ fn parse_reserved(c: CompleteStr, rest: Option<CompleteStr>) -> Token {
     let mut string = c.0.to_owned();
     string.push_str(rest.unwrap_or(CompleteStr("")).0);
     match string.as_ref() {
-        "#if" => Token::If,
-        "end" => Token::End,
+        "if" => Token::If,
         "remember" => Token::Remember,
         "retry" => Token::Retry,
         "goto" => Token::Goto,
         "ask" => Token::Say,
         "say" => Token::Ask,
         "import" => Token::Import,
+        "flow" => Token::Flow,
+        // "execute"
         _ => Token::Ident(string),
-    }
-}
-
-fn is_valid_alpha(chr: u8) -> bool {
-    if chr == b'#' || chr.is_ascii_alphabetic() {
-        true
-    } else {
-        false
     }
 }
 
@@ -233,7 +226,7 @@ fn complete_byte_slice_str_from_utf8(c: CompleteByteSlice) -> Result<CompleteStr
 }
 
 named!(take_1_char<CompleteByteSlice, CompleteByteSlice>,
-    flat_map!(take!(1), check!(is_valid_alpha))
+    flat_map!(take!(1), check!(is_alphabetic))
 );
 
 pub fn my_asscii<T>(input: T) -> IResult<T, T, u32>
@@ -244,11 +237,7 @@ where
     input.split_at_position1(
         |item| {
             let c = item.as_char();
-            if c != '_' && !c.is_alphabetic() {
-                true
-            } else {
-                false
-            }
+            c != '_' && !c.is_alphabetic()
         },
         ErrorKind::Alpha,
     )

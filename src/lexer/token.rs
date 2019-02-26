@@ -6,8 +6,8 @@ use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 pub enum Token {
     Illegal,
     EOF,
-    NewL,
-    // identifier and literals
+    // NewL,
+    // identifiers
     Ident(String),
     StringLiteral(String),
     // Label(String),
@@ -16,7 +16,6 @@ pub enum Token {
 
     // statements
     If,
-    End,
     And,
     Or,
 
@@ -36,8 +35,7 @@ pub enum Token {
     Say,
     Ask,
     Import,
-    // Show,
-    // Typing,
+    Flow,
 
     // punctuations
     Comma,
@@ -62,15 +60,15 @@ pub struct Tokens<'a> {
     pub end: usize,
 }
 
-impl<'a> Tokens<'a> {
-    pub fn new(vec: &'a Vec<Token>) -> Self {
-        Tokens {
-            tok: vec.as_slice(),
-            start: 0,
-            end: vec.len(),
-        }
-    }
-}
+// impl<'a> Tokens<'a> {
+//     pub fn new(vec: &'a Vec<Token>) -> Self {
+//         Tokens {
+//             tok: vec.as_slice(),
+//             start: 0,
+//             end: vec.len(),
+//         }
+//     }
+// }
 
 impl<'a> InputLength for Tokens<'a> {
     #[inline]
