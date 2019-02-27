@@ -1,9 +1,6 @@
 flow Accept("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
 
 start:
-import "my_button.tcsml"
-remember firstname = user.firstname OR "random dude"
-remember language = user.language OR "en"
 goto hello
 
 hello:
@@ -12,7 +9,6 @@ say Text("Hello {{firstname}}")
 say Wait(3000)
 say "I'm Clevy."
 say Url("https://whatever.com/flowers.png")
-remember said_hello = true
 goto how_old
 
 how_old:
@@ -23,8 +19,7 @@ if input < 10 {
 	say "Try number {{step.retries}}"
 	retry Button("toto", [1,2])
 }
-say "OK nice you are {{input}} years old".
-remember user_age = input
+say "OK nice you are old".
 if input == 2
 	goto meteo
 if input == 3
@@ -40,7 +35,6 @@ say "It is {{meteo.temperature}}°C in Toulouse now"
 goto end
 
 some_step:
-remember age = memory.get("user_age")
 say "OK {{firstname}} I know that you are {{age}} years old"
 say translate(language, "SOME_TRANSLATABLE_KEY")
 say "Bye"

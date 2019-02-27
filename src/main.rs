@@ -1,7 +1,8 @@
 mod lexer;
 mod parser;
 
-use lexer::Lexer;
+use lexer::{Lexer, token::Tokens};
+use parser::Parser;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -18,7 +19,11 @@ fn main() {
     let lex_tokens = Lexer::lex_tokens(text.as_bytes());
 
     match lex_tokens {
-        Ok((complete, tokens) ) => { println!(" {:?} ---- {:?}", complete, tokens) },
+        Ok((_complete, t) ) => {
+            let tokens = Tokens::new(&t);
+            let ret = Parser::parse_tokens(tokens);
+            println!("label  {:?}", ret) 
+        },
         Err(e) => { println!("{:?}", e) }
     };
 }

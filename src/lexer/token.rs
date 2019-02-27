@@ -10,9 +10,8 @@ pub enum Token {
     // identifiers
     Ident(String),
     StringLiteral(String),
-    // Label(String),
     IntLiteral(i64),
-    // BoolLiteral(bool),
+    BoolLiteral(bool),
 
     // statements
     If,
@@ -60,15 +59,15 @@ pub struct Tokens<'a> {
     pub end: usize,
 }
 
-// impl<'a> Tokens<'a> {
-//     pub fn new(vec: &'a Vec<Token>) -> Self {
-//         Tokens {
-//             tok: vec.as_slice(),
-//             start: 0,
-//             end: vec.len(),
-//         }
-//     }
-// }
+impl<'a> Tokens<'a> {
+    pub fn new(vec: &'a Vec<Token>) -> Self {
+        Tokens {
+            tok: vec.as_slice(),
+            start: 0,
+            end: vec.len(),
+        }
+    }
+}
 
 impl<'a> InputLength for Tokens<'a> {
     #[inline]

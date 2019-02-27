@@ -1,38 +1,62 @@
-pub type FLow = Vec<BlockStmt>;
-
-pub struct BlockStmt { 
-    Label: String,
-    Block: Vec<Stmt>,
-}
+pub type Flow = Vec<Step>;
 
 #[derive(PartialEq, Debug, Clone)]
-pub enum Stmt {
-    ExprStmt(Expr),
-    MemStmt(Ident, Expr),
+pub enum Step {
+    Block {
+        label: Ident,
+        actions: Vec<Expr>,
+    },
+    FlowStarter{
+        ident: Ident,
+        list: Vec<Expr>,
+    },
+    NotYet
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Expr {
-    Action { fun: Literal, act: Box<Expr> },
-    IdentExpr(Ident),
-    LitExpr(Literal),
+    Action {
+        fun: Ident,
+        arg: Vec<Expr>
+    },
     IfExpr {
         cond: Box<Expr>,
         consequence: Vec<Expr>,
     },
-    ArrayExpr(Vec<Expr>),
-    // PrefixExpr(Prefix, Box<Expr>),
-    // InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    // FnExpr { params: Vec<Ident>, body: BlockStmt },
-    // HashExpr(Vec<(Literal, Expr)>),
-    // IndexExpr { array: Box<Expr>, index: Box<Expr> },
+    InfixExpr(Infix, Box<Expr>, Box<Expr>),
+    LitExpr(Literal),
+    IdentExpr(Ident),
+    ArrayLit(Vec<Literal>),
 }
+
+// #[derive(PartialEq, Debug, Clone)]
+// pub enum Stmt {
+//     ExprStmt(Expr),
+//     MemStmt(Ident, Expr),
+// }
+
+// #[derive(PartialEq, Debug, Clone)]
+// pub enum Expr {
+//     Action { fun: Literal, act: Box<Expr> },
+//     IdentExpr(Ident),
+//     LitExpr(Literal),
+//     IfExpr {
+//         cond: Box<Expr>,
+//         consequence: Vec<Expr>,
+//     },
+//     ArrayExpr(Vec<Expr>),
+//     // PrefixExpr(Prefix, Box<Expr>),
+//     // InfixExpr(Infix, Box<Expr>, Box<Expr>),
+//     // FnExpr { params: Vec<Ident>, body: BlockStmt },
+//     // HashExpr(Vec<(Literal, Expr)>),
+//     // IndexExpr { array: Box<Expr>, index: Box<Expr> },
+// }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Literal {
-    IntLiteral(i64),
     StringLiteral(String),
-    // BoolLiteral(bool),
+    IntLiteral(i64),
+    BoolLiteral(bool),
 }
 
 #[derive(PartialEq, Debug, Eq, Clone)]

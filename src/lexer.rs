@@ -216,6 +216,8 @@ fn parse_reserved(c: CompleteStr, rest: Option<CompleteStr>) -> Token {
         "say" => Token::Ask,
         "import" => Token::Import,
         "flow" => Token::Flow,
+        "True" => Token::BoolLiteral(true),
+        "False" => Token::BoolLiteral(false),
         // "execute"
         _ => Token::Ident(string),
     }
@@ -229,7 +231,7 @@ named!(take_1_char<CompleteByteSlice, CompleteByteSlice>,
     flat_map!(take!(1), check!(is_alphabetic))
 );
 
-pub fn my_asscii<T>(input: T) -> IResult<T, T, u32>
+pub fn my_ascii<T>(input: T) -> IResult<T, T, u32>
 where
     T: InputTakeAtPosition,
     <T as InputTakeAtPosition>::Item: AsChar,
@@ -246,7 +248,7 @@ where
 named!(lex_reserved_ident<CompleteByteSlice, Token>,
     do_parse!(
         c: map_res!(call!(take_1_char), complete_byte_slice_str_from_utf8) >>
-        rest: opt!(complete!(map_res!(my_asscii, complete_byte_slice_str_from_utf8))) >>
+        rest: opt!(complete!(map_res!(my_ascii, complete_byte_slice_str_from_utf8))) >>
         (parse_reserved(c, rest))
     )
 );
