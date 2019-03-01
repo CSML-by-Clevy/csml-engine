@@ -1,44 +1,48 @@
 flow Accept("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
 
 start:
-goto hello
+    goto hello
 
 hello:
-say Typing(3000)
-say Text("Hello {{firstname}}")
-say Wait(3000)
-say "I'm Clevy."
-say Url("https://whatever.com/flowers.png")
-goto how_old
+    say Typing(3000)
+    say Text("Hello")
+    say Wait(3000)
+    say "I'm Clevy."
+    say Url("https://whatever.com/flowers.png")
+    goto how_old
 
 how_old:
-say Typing(1500)
-ask Button("How old are you?", [1,2,3,4,4])
-if input < 10 {
-	say "Grow up."
-	say "Try number {{step.retries}}"
-	retry Button("toto", [1,2])
-}
-say "OK nice you are old".
-if input == 2
-	goto meteo
-if input == 3
-	goto joke
+    say Typing(1500)
+    ask Button("How old are you?", [5,8])
+    if input < 10 {
+        say "Grow up."
+        say "Try number 2"
+        retry Button("toto", [1,2])
+    }
+    say "OK nice you are old".
+    if input == 5
+        goto meteo
+    if input == 8
+        goto joke
 
 joke:
-say OneOf("Some joke", "Some other joke")
-goto end
+    say OneOf("Some joke", "Some other joke")
+    goto end
 
 meteo:
-say Typing(1500)
-say "It is {{meteo.temperature}}°C in Toulouse now"
-goto end
+    say Typing(1500)
+    say "It is -120°C in Toulouse now"
+    goto end
 
 some_step:
-say "OK {{firstname}} I know that you are {{age}} years old"
-say translate(language, "SOME_TRANSLATABLE_KEY")
-say "Bye"
-goto end
+    say "OK I know that you are old"
+    say "Bye"
+    goto end
 
 end:
-do saveUserData(user, memory.all())
+    ask Button("How old are you?", [1,2,3,4,4])
+    if input < 10 {
+        say "Grow up."
+        say "Try number {{step.retries}}"
+        retry Button("toto", [1,2])
+    }

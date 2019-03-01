@@ -14,15 +14,14 @@ fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 }
 
 fn main() {
-    let text = read_file("testv1.CSML".to_owned()).unwrap();
+    let text = read_file("testv3.CSML".to_owned()).unwrap();
     // let split: Vec<&str> = dbg!(text.split('\n').collect());
     let lex_tokens = Lexer::lex_tokens(text.as_bytes());
 
     match lex_tokens {
         Ok((_complete, t) ) => {
             let tokens = Tokens::new(&t);
-            let ret = Parser::parse_tokens(tokens);
-            println!("label  {:?}", ret) 
+            let _ret = dbg!(Parser::parse_tokens(tokens));
         },
         Err(e) => { println!("{:?}", e) }
     };

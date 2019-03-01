@@ -9,6 +9,8 @@ pub enum Token {
     // NewL,
     // identifiers
     Ident(String),
+    Label(String),
+    ReservedFunc(String),
     StringLiteral(String),
     IntLiteral(i64),
     BoolLiteral(bool),
@@ -28,13 +30,13 @@ pub enum Token {
 
     // reserved words
     Function,
-    Remember,
-    Retry, // macro goto sur current label
-    Goto,
-    Say,
-    Ask,
-    Import,
     Flow,
+    Goto,
+    // Remember,
+    // Say,
+    // Ask,
+    // Import,
+    // Retry, // macro goto sur current label
 
     // punctuations
     Comma,

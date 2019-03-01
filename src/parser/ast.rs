@@ -10,23 +10,28 @@ pub enum Step {
         ident: Ident,
         list: Vec<Expr>,
     },
-    NotYet
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Expr {
+    Reserved {
+        fun: Ident,
+        arg: Box<Expr>
+    },
     Action {
         fun: Ident,
         arg: Vec<Expr>
     },
     IfExpr {
-        cond: Box<Expr>,
+        cond: Vec<Expr>,
         consequence: Vec<Expr>,
     },
-    InfixExpr(Infix, Box<Expr>, Box<Expr>),
+    InfixExpr(Infix, Box<Expr>), //, Box<Expr>
+    Goto(Ident),
     LitExpr(Literal),
     IdentExpr(Ident),
     ArrayLit(Vec<Literal>),
+    // VecExpr(Vec<Expr>),
 }
 
 // #[derive(PartialEq, Debug, Clone)]
@@ -81,6 +86,8 @@ pub enum Infix {
     LessThanEqual,
     GreaterThan,
     LessThan,
+    And,
+    Or
 }
 
 // #[derive(PartialEq, PartialOrd, Debug, Clone)]

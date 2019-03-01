@@ -1,0 +1,29 @@
+flow Accept("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
+
+test :
+    say Typing(3000)
+    say Text("Hello firstname")
+    say Wait(3000)
+    say "I'm Clevy."
+    say Url("https://whatever.com/flowers.png")
+    goto hello
+
+dasdasd:
+    say Typing(3000)
+    say Text("Hello {{firstname}}")
+    say Wait(3000)
+    say "I'm Clevy."
+    say Url("https://whatever.com/flowers.png")
+    goto hello
+
+test:
+    say Typing(3000)
+    say Text("Hello {{firstname}}")
+    say Wait(3000)
+    say "I'm Clevy."
+    say Url("https://whatever.com/flowers.png")
+    if input < 10 {
+        say "Grow up."
+        say "Try number 2"
+    }
+    goto hello

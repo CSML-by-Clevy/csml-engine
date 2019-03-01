@@ -153,6 +153,14 @@ named!(string<CompleteByteSlice, String>,
     )
 );
 
+// named!(lex_label<CompleteByteSlice, Token>,
+//     do_parse!(
+//         s: string >>
+//         tag!(":") >>
+//         (Token::Label(s))
+//     )
+// );
+
 named!(lex_string<CompleteByteSlice, Token>,
     do_parse!(
         s: string >>
@@ -209,13 +217,13 @@ fn parse_reserved(c: CompleteStr, rest: Option<CompleteStr>) -> Token {
     string.push_str(rest.unwrap_or(CompleteStr("")).0);
     match string.as_ref() {
         "if" => Token::If,
-        "remember" => Token::Remember,
-        "retry" => Token::Retry,
-        "goto" => Token::Goto,
-        "ask" => Token::Say,
-        "say" => Token::Ask,
-        "import" => Token::Import,
         "flow" => Token::Flow,
+        "goto" => Token::Goto,
+        "remember" => Token::ReservedFunc(string),
+        "retry" => Token::ReservedFunc(string),
+        "ask" => Token::ReservedFunc(string),
+        "say" => Token::ReservedFunc(string),
+        "import" => Token::ReservedFunc(string),
         "True" => Token::BoolLiteral(true),
         "False" => Token::BoolLiteral(false),
         // "execute"
@@ -262,18 +270,13 @@ named!(lex_token<CompleteByteSlice, Token>, alt_complete!(
     lex_illegal
 ));
 
-named!(lex_tokenst<CompleteByteSlice, Vec<Token>>, ws!(many0!(lex_token)));
+named!(start_lex<CompleteByteSlice, Vec<Token>>, ws!(many0!(lex_token)));
 
 pub struct Lexer;
 
 impl Lexer {
     pub fn lex_tokens(slice: &[u8]) -> IResult<CompleteByteSlice, Vec<Token>> {
-        // slice.iter().map(|c_l|
-        // .map(|(slice, result)|
-        //         (slice, [&result, &vec![Token::EOF][..]].concat())
-        //     )
-        // ).collect();
-        lex_tokenst(CompleteByteSlice(slice)).map(|(slice, result)|
+        start_lex(CompleteByteSlice(slice)).map(|(slice, result)|
             (slice, [&result, &vec![Token::EOF][..]].concat())
         )
     }
