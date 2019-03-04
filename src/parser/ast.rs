@@ -30,15 +30,10 @@ pub enum Expr {
     Goto(Ident),
     LitExpr(Literal),
     IdentExpr(Ident),
-    ArrayLit(Vec<Literal>),
     VecExpr(Vec<Expr>),
+    // ArrayLit(Vec<Literal>),
 }
 
-// #[derive(PartialEq, Debug, Clone)]
-// pub enum Stmt {
-//     ExprStmt(Expr),
-//     MemStmt(Ident, Expr),
-// }
 
 // #[derive(PartialEq, Debug, Clone)]
 // pub enum Expr {

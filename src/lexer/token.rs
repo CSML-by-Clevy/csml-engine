@@ -9,7 +9,6 @@ pub enum Token {
     // NewL,
     // identifiers
     Ident(String),
-    Label(String),
     ReservedFunc(String),
     StringLiteral(String),
     IntLiteral(i64),
@@ -29,7 +28,6 @@ pub enum Token {
     LessThanEqual,
 
     // reserved words
-    Function,
     Flow,
     Goto,
     // Remember,

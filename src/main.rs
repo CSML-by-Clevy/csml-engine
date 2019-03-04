@@ -1,5 +1,6 @@
 mod lexer;
 mod parser;
+mod interact;
 
 use lexer::{Lexer, token::Tokens};
 use parser::Parser;
@@ -18,11 +19,12 @@ fn main() {
     // let split: Vec<&str> = dbg!(text.split('\n').collect());
     let lex_tokens = Lexer::lex_tokens(text.as_bytes());
 
+    interact::test_json();
+
     match lex_tokens {
         Ok((_complete, t) ) => {
             let tokens = Tokens::new(&t);
-            let (test ,ret) = dbg!(Parser::parse_tokens(tokens).unwrap());
-
+            let (_ ,ret) = dbg!(Parser::parse_tokens(tokens).unwrap());
             for truc in ret.iter()
             {
                 println!(" >>>> {:?}\n", truc);

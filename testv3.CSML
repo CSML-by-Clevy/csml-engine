@@ -1,26 +1,22 @@
 flow Accept("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
 
 start :
-    say Typing(3000)
-    say Text("Hello firstname")
-    say Wait(3000)
     say "I'm Clevy."
-    say Url("https://whatever.com/flowers.png")
     goto hello
 
 end:
     say Typing(3000)
-    say "I'm Clevy."
+    say "Goodbye"
     say Url("https://whatever.com/flowers.png")
 
 hello        :
     say Typing(3000)
     say Text("Hello firstname")
     say Wait(3000)
-    say "I'm Clevy."
-    ask Button("How old are you?", [1,2,3,4,4])
-    if input < 10 {
+    ask Button("How old are you?", [1,2,3,4,5])
+    if input < 4 {
         say "Grow up."
-        say "Try number 2"
+        say "Try number 4 or 5"
+        retry Button("toto", [1,2])
     }
     goto end
