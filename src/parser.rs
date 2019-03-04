@@ -111,21 +111,6 @@ macro_rules! parse_reservedfunc (
     );
 );
 
-// macro_rules! parse_token (
-//     ($i: expr,) => (
-//         {
-//             use std::result::Result::*;
-//             use nom::{Err,ErrorKind};
-//             let (i1, t1) = try_parse!($i, take!(1));
-//             if t1.tok.is_empty() {
-//                 Err(Err::Incomplete(Needed::Size(1)))
-//             } else {
-//                 Ok((i1, Step::NotYet))
-//             }
-//         }
-//     );
-// );
-
 // ################################ FUNC
 
 // named!(parse_<Tokens, Expr>, do_parse!(
@@ -234,12 +219,6 @@ named!(parse_identexpr<Tokens, Expr>, do_parse!(
     )
 );
 
-// named!(parse_reservedexpr<Tokens, Expr>, do_parse!(
-//         ident: parse_reservedfunc!() >>
-//         (Expr::IdentExpr(ident))
-//     )
-// );
-
 named!(parse_literalexpr<Tokens, Expr>, do_parse!(
         literal: parse_literal!() >>
         (Expr::LitExpr(literal))
@@ -247,15 +226,13 @@ named!(parse_literalexpr<Tokens, Expr>, do_parse!(
 );
 
 named!(parse_exp<Tokens, Expr>, alt!(
+        parse_identexpr |
+        parse_literalexpr|
+        parse_vec
         // pars_if |
         // parse_action
-        parse_identexpr |
-        parse_literalexpr
     )
 );
-
-
-
 
 
 named!(get_exp<Tokens, Expr>, do_parse!(
@@ -264,6 +241,15 @@ named!(get_exp<Tokens, Expr>, do_parse!(
     (val)
     )
 );
+
+//     do_parse!(
+//     tag_token!(Token::Flow) >>
+//     ident: parse_ident!() >>
+//     start_vec: delimited!(
+//         tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
+//     ) >>
+//     (Step::FlowStarter{ident: ident, list: start_vec})
+// )
 
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     res: many1!(
@@ -275,6 +261,18 @@ named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     >> (res)
     )
 );
+
+named!(parse_vec<Tokens, Expr >, do_parse!(
+    start_vec: alt!(
+        delimited!(
+            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
+        ) |
+        delimited!(
+            tag_token!(Token::LBracket), get_vec, tag_token!(Token::RBracket)
+        )
+    ) >>
+    (Expr::VecExpr(start_vec))
+));
 
 named!(parse_start_flow<Tokens, Step>,
     do_parse!(
@@ -297,9 +295,8 @@ named!(parse_start_flow<Tokens, Step>,
 // );
 
 named!(parse_steps<Tokens, Step>, alt_complete!(
-    parse_label |
-    parse_start_flow
-    // parse_notyet
+        parse_label |
+        parse_start_flow
     )
 );
 

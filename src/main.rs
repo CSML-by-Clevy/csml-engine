@@ -21,7 +21,12 @@ fn main() {
     match lex_tokens {
         Ok((_complete, t) ) => {
             let tokens = Tokens::new(&t);
-            let _ret = dbg!(Parser::parse_tokens(tokens));
+            let (test ,ret) = dbg!(Parser::parse_tokens(tokens).unwrap());
+
+            for truc in ret.iter()
+            {
+                println!(" >>>> {:?}\n", truc);
+            }
         },
         Err(e) => { println!("{:?}", e) }
     };

@@ -31,7 +31,7 @@ pub enum Expr {
     LitExpr(Literal),
     IdentExpr(Ident),
     ArrayLit(Vec<Literal>),
-    // VecExpr(Vec<Expr>),
+    VecExpr(Vec<Expr>),
 }
 
 // #[derive(PartialEq, Debug, Clone)]
