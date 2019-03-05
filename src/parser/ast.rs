@@ -2,25 +2,19 @@ pub type Flow = Vec<Step>;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Step {
-    Block {
-        label: Ident,
-        actions: Vec<Expr>,
-    },
-    FlowStarter{
-        ident: Ident,
-        list: Vec<Expr>,
-    },
+    FlowStarter { ident: Ident, list: Vec<Expr> },
+    Block { label: Ident, actions: Vec<Expr> },
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Expr {
     Reserved {
         fun: Ident,
-        arg: Box<Expr>
+        arg: Box<Expr>,
     },
     Action {
-        fun: Ident,
-        arg: Vec<Expr>
+        builtin: Ident,
+        args: Vec<Expr>,
     },
     IfExpr {
         cond: Vec<Expr>,
@@ -33,7 +27,6 @@ pub enum Expr {
     VecExpr(Vec<Expr>),
     // ArrayLit(Vec<Literal>),
 }
-
 
 // #[derive(PartialEq, Debug, Clone)]
 // pub enum Expr {
@@ -82,7 +75,7 @@ pub enum Infix {
     GreaterThan,
     LessThan,
     And,
-    Or
+    Or,
 }
 
 // #[derive(PartialEq, PartialOrd, Debug, Clone)]

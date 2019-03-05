@@ -1,8 +1,9 @@
+mod interact;
 mod lexer;
 mod parser;
-mod interact;
 
-use lexer::{Lexer, token::Tokens};
+use interact::*;
+use lexer::{token::Tokens, Lexer};
 use parser::Parser;
 use std::fs::File;
 use std::io::prelude::*;
@@ -22,14 +23,11 @@ fn main() {
     interact::test_json();
 
     match lex_tokens {
-        Ok((_complete, t) ) => {
+        Ok((_complete, t)) => {
             let tokens = Tokens::new(&t);
-            let (_ ,ret) = dbg!(Parser::parse_tokens(tokens).unwrap());
-            for truc in ret.iter()
-            {
-                println!(" >>>> {:?}\n", truc);
-            }
-        },
-        Err(e) => { println!("{:?}", e) }
+            let (_, flow) = dbg!(Parser::parse_tokens(tokens).unwrap());
+            parse_flow(flow);
+        }
+        Err(e) => println!("{:?}", e),
     };
 }

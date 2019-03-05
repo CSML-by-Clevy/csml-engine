@@ -2,8 +2,8 @@ pub mod ast;
 
 use crate::lexer::token::*;
 use ast::Literal::*;
-use nom::*;
 use ast::*;
+use nom::*;
 
 macro_rules! tag_token (
     ($i: expr, $tag: expr) => (
@@ -127,12 +127,12 @@ named!(parse_f<Tokens, Expr>, do_parse!(
     vec: delimited!(
         tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
     ) >>
-    (Expr::Action{fun: ident, arg: vec })
+    (Expr::Action{builtin: ident, args: vec })
 ));
 
 named!(parse_reserved<Tokens, Expr>, do_parse!(
     action:  parse_reservedfunc!() >>
-    arg: alt!( 
+    arg: alt!(
         parse_f |
         parse_literalexpr
      ) >>
@@ -147,16 +147,16 @@ named!(parse_reserved<Tokens, Expr>, do_parse!(
 // named!(logique_parser<Tokensm Expr>, do_prase!(
 //     vec: many0!(
 //         do_parse!(
-            
+
 //         )
 //     ) >>
 // ));
 
 // named!(parse_comparators<Tokens, Expr>,
-    // eq_parsers!()
-    // alt!(
-    // logique_parser
-    // )
+// eq_parsers!()
+// alt!(
+// logique_parser
+// )
 // );
 
 named!(parse_infixexpr<Tokens, Expr>, do_parse!(

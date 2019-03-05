@@ -119,7 +119,7 @@ named!(lex_punctuations<CompleteByteSlice, Token>, alt!(
     lbrace_punctuation |
     rbrace_punctuation |
     lbracket_punctuation |
-    rbracket_punctuation 
+    rbracket_punctuation
     // new_line
 ));
 
@@ -276,9 +276,8 @@ pub struct Lexer;
 
 impl Lexer {
     pub fn lex_tokens(slice: &[u8]) -> IResult<CompleteByteSlice, Vec<Token>> {
-        start_lex(CompleteByteSlice(slice)).map(|(slice, result)|
-            (slice, [&result, &vec![Token::EOF][..]].concat())
-        )
+        start_lex(CompleteByteSlice(slice))
+            .map(|(slice, result)| (slice, [&result, &vec![Token::EOF][..]].concat()))
     }
 }
 

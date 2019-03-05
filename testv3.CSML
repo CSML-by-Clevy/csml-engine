@@ -17,6 +17,6 @@ hello        :
     if input < 4 {
         say "Grow up."
         say "Try number 4 or 5"
-        retry Button("toto", [1,2])
+        retry Button("toto", [4, 5])
     }
     goto end

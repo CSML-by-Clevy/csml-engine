@@ -13,11 +13,11 @@ hello:
 
 how_old:
     say Typing(1500)
-    ask Button("How old are you?", [5,8])
+    ask Button("How old are you?", [4, 5, 8, 20])
     if input < 10 {
         say "Grow up."
-        say "Try number 2"
-        retry Button("toto", [1,2])
+        say "Try number 20"
+        retry Button("toto", [4, 5, 20 ,30])
     }
     say "OK nice you are old".
     if input == 5
