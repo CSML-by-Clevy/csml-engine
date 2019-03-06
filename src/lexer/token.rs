@@ -6,7 +6,7 @@ use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 pub enum Token {
     Illegal,
     EOF,
-    // NewL,
+
     // identifiers
     Ident(String),
     ReservedFunc(String),
@@ -30,11 +30,6 @@ pub enum Token {
     // reserved words
     Flow,
     Goto,
-    // Remember,
-    // Say,
-    // Ask,
-    // Import,
-    // Retry, // macro goto sur current label
 
     // punctuations
     Comma,
@@ -60,9 +55,9 @@ pub struct Tokens<'a> {
 }
 
 impl<'a> Tokens<'a> {
-    pub fn new(vec: &'a Vec<Token>) -> Self {
+    pub fn new(vec: &'a[Token]) -> Self {
         Tokens {
-            tok: vec.as_slice(),
+            tok: vec,
             start: 0,
             end: vec.len(),
         }

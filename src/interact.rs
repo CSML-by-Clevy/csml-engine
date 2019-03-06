@@ -24,6 +24,7 @@ struct RootInterface {
     next_step: Option<String>,
 }
 
+// json example
 pub fn test_json() {
     let point = RootInterface {
         remember: Option::None,
@@ -44,37 +45,132 @@ pub fn test_json() {
     println!("deserialized = {:?}", deserialized);
 }
 
-//check start flow
+pub struct Interpreter {
+    pub ast: Flow,
+    pub start: bool,
+    pub end: bool,
+    pub accept_flow: bool,
+}
 
-// return Result<struct, error>
-fn parse_block(_label: &Ident, actions: &Vec<Expr>) {
-    for action in actions {
-        match action {
-            Expr::Reserved { fun, arg }         => match_reserved(fun, arg),
-            Expr::Goto(ident)                   => println!("goto -> {:?}", ident),
-            Expr::IfExpr { cond, consequence }  => match_ifexpr(cond, consequence),
-            // Expr::Action { builtin, args }      => match_builtin(builtin, args),
-            _                                   => println!("error block must start with a reserved keyword"),
-            // Expr::InfixExpr(infix, expr)        => println!("{:?} {:?}", infix, expr),
-            // Expr::LitExpr(literal)              => println!("{:?}", literal),
-            // Expr::IdentExpr(ident)              => println!("{:?}", ident),
-            // Expr::VecExpr(vec)                  => println!("{:?}", vec),
+impl Interpreter {
+    pub fn new(ast: Flow) -> Interpreter {
+        Interpreter {
+            ast,
+            start: false,
+            end: false,
+            accept_flow: false
         }
     }
-    println!("==========================");
-}
 
-// return Result<struct, error>
-fn match_reserved(reserved: &Ident, _arg: &Box<Expr>)
-{
-    match reserved {
-        Ident(arg) if arg == "say"      => println!("say"),
-        Ident(arg) if arg == "ask"      => println!("ask"),
-        Ident(arg) if arg == "retry"    => println!("retry"),
-        _                               => println!("error")
+    fn check_valid_flow(&mut self) -> bool {
+        for step in self.ast.iter() {
+            match step {
+                Step::FlowStarter { .. }   =>  { self.accept_flow = true },
+                Step::Block { label, ..  }     => {
+                    match label {
+                        Ident(t) if t == "start" => self.start = true,
+                        Ident(t) if t == "end"   => self.end = true,
+                        _                        => {},
+                    }
+                },
+            }
+        }
+        self.start && self.end && self.accept_flow
+    }
+
+    fn check_valid_step(&self, step: &[Expr]) -> bool {
+        let mut nbr = 0;
+
+        for expr in step {
+            if let Expr::Reserved { fun, .. } = expr {
+                match fun {
+                    Ident(ident) if ident == "ask" => nbr += 1,
+                    _                              => {}
+                }
+            }
+        }
+        nbr < 2
+    }
+
+    // return Result<struct, error>
+    fn parse_block(&self, _label: &Ident, actions: &[Expr]) {
+        
+        // need to check if block for ask expr
+        self.check_valid_step(actions);
+
+        for action in actions {
+            match action {
+                Expr::Reserved { fun, arg }         => { match_reserved(fun, arg) },
+                Expr::Goto(ident)                   => println!("goto -> {:?}", ident),
+                Expr::IfExpr { cond, consequence }  => match_ifexpr(cond, consequence),
+                _                                   => println!("error block must start with a reserved keyword"),
+                // Expr::InfixExpr(infix, expr)        => println!("{:?} {:?}", infix, expr),
+                // Expr::LitExpr(literal)              => println!("{:?}", literal),
+                // Expr::IdentExpr(ident)              => println!("{:?}", ident),
+                // Expr::VecExpr(vec)                  => println!("{:?}", vec),
+            }
+        }
+        println!("==========================");
+    }
+
+    pub fn interpret(&mut self) {
+        if !self.check_valid_flow() {
+            println!("the Flow is not valid it need a start and end Label and a Accept Flow");
+            return;
+        }
+
+        for step in self.ast.iter() {
+            match step {
+                Step::FlowStarter { ident, list }   => match_flowstrarter(ident, list),
+                Step::Block { label, actions }      => self.parse_block(label, actions),
+            }
+        }
     }
 }
 
+// ################### match ast structure
+
+// return Result<struct, error>
+fn match_flowstrarter(ident: &Ident, list: &[Expr])
+{
+    println!("{:?} - {:?}", ident, list);
+}
+
+// return Result<struct, error>
+fn match_action(action: &Expr) {
+    match action {
+        Expr::Action { builtin, args }      => match_builtin(builtin, args),
+        Expr::LitExpr(literal)              => println!("--> literal {:?}", literal),
+        _                                   => println!("error block must start with a reserved keyword"),
+    }
+}
+
+// return Result<struct, error>
+fn match_reserved(reserved: &Ident, arg: &Expr)
+{
+    match reserved {
+        Ident(ident) if ident == "say"      => {print!("say  "); match_action(arg)},
+        Ident(ident) if ident == "ask"      => {print!("ask  "); match_action(arg)},
+        Ident(ident) if ident == "retry"    => {print!("retry  "); match_action(arg)},
+        _                                   => {print!("error"); }
+    }
+}
+
+// return Result<struct, error>
+fn match_builtin(builtin: &Ident, _args: &[Expr])
+{
+    match builtin {
+        Ident(arg) if arg == "Typing"   => println!("Typing"),
+        Ident(arg) if arg == "Wait"     => println!("Wait"),
+        Ident(arg) if arg == "Text"     => println!("Text"),
+        Ident(arg) if arg == "Button"   => println!("Button"),
+        Ident(arg) if arg == "Url"      => println!("Url"),
+        Ident(arg) if arg == "OneOf"    => println!("Oneof"),
+        Ident(arg)                      => println!("Error no buitin with name {}", arg)
+    }
+}
+
+// ################ structure rules for CSML
 fn check_infixexpr(exprs: &[Expr]) -> bool
 {
     for expr in exprs.iter() {
@@ -82,62 +178,56 @@ fn check_infixexpr(exprs: &[Expr]) -> bool
             Expr::InfixExpr(_, _)   => true, 
             _                       => false 
         };
-        if !res { return false; }
+        if !res { return false;}
     };
     true
 }
 
-fn eval_condition(cond: &Vec<Expr>) -> bool
+fn is_variable(expr: &Expr) -> bool
+{
+    match expr { 
+        Expr::LitExpr(_e)   => true,
+        Expr::IdentExpr(_e) => true,
+        _                   => false
+    }
+}
+
+fn eval_condition(cond: &[Expr]) -> bool
 {
     match cond.split_last() {
         Some((last, elements)) 
-            if match last { 
-                Expr::LitExpr(_e) => true, _ => false 
-                } && check_infixexpr(elements)
+            if is_variable(last) && check_infixexpr(elements)
                             => true,
             _               => false
     }
 }
+// #####################
 
 // return Result<struct, error>
-fn match_ifexpr(cond: &Vec<Expr>, consequence: &Vec<Expr>)
+fn match_ifexpr(cond: &[Expr], consequence: &[Expr])
 {
+    println!("If");
     if eval_condition(cond) {
         for expr in consequence {
             match expr {
                 Expr::Reserved { fun, arg }         => match_reserved(fun, arg),
                 Expr::Goto(ident)                   => println!("goto -> {:?}", ident),
                 Expr::IfExpr { cond, consequence }  => match_ifexpr(cond, consequence),
-                _                                   => println!(" Error in If block "),
+                _                                   => println!("Error in If block "),
             }
         }
     } else {
         //replace with return error
-        println!("error in if condition it does not reduce to a boolean expression");
+        println!("error in if condition it does not reduce to a boolean expression -> {:?}", cond);
     }
     // eval condition
     // matche actions
 }
 
-// return Result<struct, error>
-fn match_builtin(builtin: &Ident, _args: &Vec<Expr>)
+fn reserved_keywords(ident: &Ident)
 {
-    match builtin {
-        Ident(arg) if arg == "Typing"   => println!("Typing"),
-        Ident(arg) if arg == "Text"     => println!("Text"),
-        Ident(arg) if arg == "Wait"     => println!("Wait"),
-        Ident(arg) if arg == "Url"      => println!("Botton"),
-        Ident(arg) if arg == "Button"   => println!("Button"),
-        Ident(arg) if arg == "OneOf"    => println!("Oneof"),
-        _                               => println!("error")
-    }
-}
-
-pub fn parse_flow(flow: Flow) {
-    for step in flow.iter() {
-        match step {
-            Step::FlowStarter { ident, list } => println!(" +-------- {:?} {:?}", ident, list),
-            Step::Block { label, actions } => parse_block(label, actions),
-        }
+    match ident {
+        Ident(arg) if arg == "input"   => println!("input is the input get from client response"),
+        _                              => println!("error at finding keyword")
     }
 }

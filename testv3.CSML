@@ -12,7 +12,7 @@ end:
 hello        :
     say Typing(3000)
     say Text("Hello firstname")
-    say Wait(3000)
+    say Wait(1500)
     ask Button("How old are you?", [1,2,3,4,5])
     if input < 4 {
         say "Grow up."
@@ -20,3 +20,13 @@ hello        :
         retry Button("toto", [4, 5])
     }
     goto end
+
+meteo:
+    say Typing(1500)
+    ask Button("do you want to know the weather in Paris", [Yes, No])
+    if input == Yes {
+        say Typing(1500)
+        say "It is -120°C now"
+        goto end
+    }
+    goto hello

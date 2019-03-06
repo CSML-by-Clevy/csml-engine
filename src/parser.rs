@@ -5,6 +5,8 @@ use ast::Literal::*;
 use ast::*;
 use nom::*;
 
+// ################## Macros
+
 macro_rules! tag_token (
     ($i: expr, $tag: expr) => (
         {
@@ -113,9 +115,6 @@ macro_rules! parse_reservedfunc (
 
 // ################################ FUNC
 
-// named!(parse_<Tokens, Expr>, do_parse!(
-// ));
-
 named!(parse_goto<Tokens, Expr>, do_parse!(
     tag_token!(Token::Goto) >>
     label: parse_ident!() >>
@@ -135,7 +134,7 @@ named!(parse_reserved<Tokens, Expr>, do_parse!(
     arg: alt!(
         parse_f |
         parse_literalexpr
-     ) >>
+    ) >>
     (Expr::Reserved{fun : action , arg : Box::new(arg)})
 ));
 
@@ -161,7 +160,7 @@ named!(parse_reserved<Tokens, Expr>, do_parse!(
 
 named!(parse_infixexpr<Tokens, Expr>, do_parse!(
     lit: alt!(
-            parse_literalexpr  |
+            parse_literalexpr |
             parse_identexpr
         )
     >>
