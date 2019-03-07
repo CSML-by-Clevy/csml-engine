@@ -1,6 +1,7 @@
 mod interact;
 mod lexer;
 mod parser;
+mod builtins;
 
 use interact::*;
 use lexer::{token::Tokens, Lexer};
@@ -18,7 +19,7 @@ fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 fn main() {
     let text = read_file("testv3.CSML".to_owned()).unwrap();
     let lex_tokens = Lexer::lex_tokens(text.as_bytes());
-    
+
     // interact::test_json();
 
     match lex_tokens {

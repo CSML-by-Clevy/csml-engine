@@ -55,7 +55,7 @@ pub struct Tokens<'a> {
 }
 
 impl<'a> Tokens<'a> {
-    pub fn new(vec: &'a[Token]) -> Self {
+    pub fn new(vec: &'a [Token]) -> Self {
         Tokens {
             tok: vec,
             start: 0,
