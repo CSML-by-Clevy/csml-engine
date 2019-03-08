@@ -1,9 +1,9 @@
-mod interact;
+mod interpreter;
 mod lexer;
 mod parser;
 mod builtins;
 
-use interact::*;
+use interpreter::*;
 use lexer::{token::Tokens, Lexer};
 use parser::Parser;
 use std::fs::File;

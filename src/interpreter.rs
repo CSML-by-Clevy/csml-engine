@@ -7,7 +7,7 @@ use std::io::{Error, ErrorKind};
 // use std::result::Result;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Action {
+struct ActionType {
     m_type: String,
 }
 
@@ -18,8 +18,29 @@ struct Content {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Message {
-    action: Action,
+    action_type: ActionType,
     content: Content,
+}
+
+impl Message {
+    pub fn new(expr: &Expr) -> Self
+    {
+        let mut msg = Message {
+            action_type: ActionType {
+                m_type: "".to_string(),
+            },
+            content: Content {
+                text: "".to_string(),
+            }
+        };
+
+        match expr {
+            Expr::LitExpr(Literal::IntLiteral(val))     => {msg.action_type.m_type = "Int".to_string(); msg.content.text = val.to_string(); msg},
+            Expr::LitExpr(Literal::StringLiteral(val))  => {msg.action_type.m_type = "Text".to_string(); msg.content.text = val.to_string(); msg},
+            Expr::LitExpr(Literal::BoolLiteral(val))    => {msg.action_type.m_type = "Bool".to_string(); msg.content.text = val.to_string(); msg},
+            _                                           => {msg},
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -32,6 +53,7 @@ struct RootInterface {
 impl Add for RootInterface {
     type Output = RootInterface;
 
+    // return Result<struct, error>
     fn add(self, other: RootInterface) -> RootInterface {
         RootInterface {
             remember: None,
@@ -40,7 +62,7 @@ impl Add for RootInterface {
                 (None, None)    => None,
                 (None, t)       => t,
                 (t, None)       => t,
-                (_, _)          => panic!("ERROR bad paring can not have too goto at same time"),
+                (_, _)          => panic!("ERROR bad paring cant have too goto at same time"),
             },
         }
     }
@@ -51,7 +73,7 @@ pub fn test_json() {
     let point = RootInterface {
         remember: Option::None,
         message: vec![Message {
-            action: Action {
+            action_type: ActionType {
                 m_type: "say".to_owned(),
             },
             content: Content {
@@ -103,10 +125,10 @@ impl Interpreter {
     fn check_valid_flow(&mut self) -> bool {
         for step in self.ast.iter() {
             match step {
-                Step::FlowStarter { .. } => self.accept_flow = true,
-                Step::Block { label, .. } => match label {
-                    Ident(t) if t == "start" => self.start = true,
-                    Ident(t) if t == "end" => self.end = true,
+                Step::FlowStarter { .. }        => self.accept_flow = true,
+                Step::Block { label, .. }       => match label {
+                    Ident(t) if t == "start"    => self.start = true,
+                    Ident(t) if t == "end"      => self.end = true,
                     _ => {}
                 },
             }
@@ -155,11 +177,11 @@ impl Interpreter {
     }
 
     // return Result<struct, error>
-    pub fn serch_for(&self, name: &str) {
+    pub fn search_for(&self, name: &str) {
         for step in self.ast.iter() {
             match step {
                 Step::FlowStarter { ident, list } if check_ident(ident, name) => {
-                    match_flowstrarter(ident, list)
+                    match_flowstarter(ident, list)
                 }
                 Step::Block { label, actions } if check_ident(label, name) => {
                     self.match_block(label, actions);
@@ -175,22 +197,34 @@ impl Interpreter {
             return;
         }
 
+        for step in self.ast.iter() {
+            match step {
+                Step::FlowStarter { ident, list } => {
+                    match_flowstarter(ident, list)
+                }
+                Step::Block { label, actions } => {
+                    self.match_block(label, actions);
+                }
+            }
+            println!("{}","=======================" )
+        }
+
         loop {
             let read = read_standar_in();
             println!("{:?}", read);
 
             match read {
-                Ok(ref string) if string.trim() == "exit" => break,
-                Ok(ref string) if string.trim() == "flow" => {
+                Ok(ref string) if string.trim() == "exit"   => break,
+                Ok(ref string) if string.trim() == "flow"   => {
                     // check if flow can start
-                    self.serch_for("flow");
-                    self.serch_for("start");
-                }
-                Ok(ref string) if string.trim() == "hello" => {
-                    self.serch_for("hello");
-                }
-                Ok(_string) => continue,
-                Err(e) => {
+                    self.search_for("flow");
+                    self.search_for("start");
+                },
+                Ok(ref string) if string.trim() == "hello"  => {
+                    self.search_for("hello");
+                },
+                Ok(_string)                                 => continue,
+                Err(e)                                      => {
                     println!("Error => {:?}", e);
                     break;
                 }
@@ -211,7 +245,7 @@ fn read_standar_in() -> Result<String> {
 // ################### match ast structure
 
 // return Result<struct, error>
-fn match_flowstrarter(ident: &Ident, list: &[Expr]) {
+fn match_flowstarter(ident: &Ident, list: &[Expr]) {
     println!("{:?} - {:?}", ident, list);
 }
 
@@ -263,15 +297,15 @@ fn match_reserved_if(reserved: &Ident, arg: &Expr) {
 }
 
 // return Result<struct, error>
-fn match_builtin(builtin: &Ident, _args: &[Expr]) {
+fn match_builtin(builtin: &Ident, args: &[Expr]) {
     match builtin {
-        Ident(arg) if arg == "Typing"   => println!("Typing"),
-        Ident(arg) if arg == "Wait"     => println!("Wait"),
-        Ident(arg) if arg == "Text"     => println!("Text"),
-        Ident(arg) if arg == "Button"   => println!("Button"),
-        Ident(arg) if arg == "Url"      => println!("Url"),
-        Ident(arg) if arg == "OneOf"    => println!("Oneof"),
-        Ident(arg)                      => println!("Error no buitin with name {}", arg),
+        Ident(arg) if arg == "Typing"   => println!("typing -> {:?}", Message::new(typing(args))),
+        Ident(arg) if arg == "Wait"     => println!("wait -> {:?}", Message::new(wait(args))),
+        Ident(arg) if arg == "Text"     => println!("text -> {:?}", Message::new(text(args))),
+        Ident(arg) if arg == "Url"      => println!("url -> {:?}", Message::new(url(args))),
+        Ident(arg) if arg == "OneOf"    => println!("one of -> {:?}", Message::new(one_of(args))),
+        Ident(arg) if arg == "Button"   => button(args),
+        Ident(arg)                      => println!("Error no buitin with named {}", arg),
     }
 }
 
@@ -290,7 +324,7 @@ fn match_ifexpr(cond: &[Expr], consequence: &[Expr]) {
     } else {
         //replace with return error
         println!(
-            "error in if condition does not reduce to a boolean expression -> {:?}",
+            "error in if condition, it does not reduce to a boolean expression -> {:?}",
             cond
         );
     }

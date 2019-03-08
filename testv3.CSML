@@ -1,7 +1,7 @@
 flow Accept("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
 
 start :
-    say "I'm Clevy."
+    say OneOf("I'm Clevy.", "Hola")
     goto hello
 
 end:

@@ -1,38 +1,52 @@
-use crate::interact::*;
-use rand;
 use crate::parser::ast::*;
+use rand::Rng;
 
-pub fn typing(args: &[Expr])
-{
-    println!("typing -> {:?}", args);
+// return Result<Expr, error>
+pub fn typing(args: &[Expr]) -> &Expr {
+    if args.len() == 1 {
+        if let Expr::LitExpr(Literal::IntLiteral(_)) = &args[0] {
+            return &args[0];
+        }
+    }
+    return &args[0];
 }
 
-pub fn wait(args: &[Expr])
-{
-    println!("wait -> {:?}", args);
+// return Result<Expr, error>
+pub fn wait(args: &[Expr]) -> &Expr {
+    if args.len() == 1 {
+        if let Expr::LitExpr(Literal::IntLiteral(_)) = &args[0] {
+            return &args[0];
+        }
+    }
+    return &args[0];
 }
 
-pub fn text(args: &[Expr])
-{
-    println!("text -> {:?}", args);
+// return Result<Expr, error>
+pub fn text(args: &[Expr]) -> &Expr {
+    if args.len() == 1 {
+        if let Expr::LitExpr(_) = &args[0] {
+            return &args[0];
+        }
+    }
+    return &args[0];
 }
 
-pub fn button(args: &[Expr])
-{
+// return Result<Expr, error>
+pub fn button(args: &[Expr]) {
     println!("button -> {:?}", args);
 }
 
-pub fn url(args: &[Expr])
-{
-    println!("url -> {:?}", args);
-}
-
-pub fn one_of(args: &[Expr])
-{
-    for arg in args.iter() {
-        match arg {
-            Expr::VecExpr(expr) => println!("one of => {:?}", expr),
-            _                   => println!("Error")
+// return Result<Expr, error>
+pub fn url(args: &[Expr]) -> &Expr {
+    if args.len() == 1 {
+        if let Expr::LitExpr(_) = &args[0] {
+            return &args[0];
         }
     }
+    return &args[0];
+}
+
+// return Result<Expr, error>
+pub fn one_of(args: &[Expr]) -> &Expr {
+    &args[rand::thread_rng().gen_range(0, args.len())]
 }
