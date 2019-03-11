@@ -25,7 +25,7 @@ fn main() {
     match lex_tokens {
         Ok((_complete, t)) => {
             let tokens = Tokens::new(&t);
-            let (_, flow) = Parser::parse_tokens(tokens).unwrap();
+            let (_, flow) = dbg!(Parser::parse_tokens(tokens).unwrap());
             let mut inter = Interpreter::new(flow);
             inter.interpret();
         }
