@@ -1,7 +1,6 @@
 mod interpreter;
 mod lexer;
 mod parser;
-mod builtins;
 
 use interpreter::*;
 use lexer::{token::Tokens, Lexer};

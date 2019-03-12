@@ -1,5 +1,5 @@
 use crate::parser::ast::*;
-use crate::interpreter::*;
+use crate::interpreter::message::*;
 use rand::Rng;
 
 fn exprvec_to_vec(vec: &[Expr]) -> Vec<String> {
