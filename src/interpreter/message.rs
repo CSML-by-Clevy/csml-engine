@@ -5,6 +5,7 @@ use std::ops::Add;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Content {
     Text(String),
+    Int(i64),
     Button(String, Vec<String>)
 }
 
@@ -16,16 +17,16 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(expr: &Expr) -> Self {
+    pub fn new(expr: &Expr, string: String) -> Self {
         let mut msg = Message {
             my_type: "".to_string(),
             content: Content::Text("".to_string())
         };
 
         match expr {
-            Expr::LitExpr(Literal::IntLiteral(val))     => {msg.my_type = "Int".to_string(); msg.content = Content::Text(val.to_string()); msg},
-            Expr::LitExpr(Literal::StringLiteral(val))  => {msg.my_type = "Text".to_string(); msg.content = Content::Text(val.to_string()); msg},
-            Expr::LitExpr(Literal::BoolLiteral(val))    => {msg.my_type = "Bool".to_string(); msg.content = Content::Text(val.to_string()); msg},
+            Expr::LitExpr(Literal::IntLiteral(val))     => {msg.my_type = string; msg.content = Content::Int(*val); msg},
+            Expr::LitExpr(Literal::StringLiteral(val))  => {msg.my_type = string; msg.content = Content::Text(val.to_string()); msg},
+            Expr::LitExpr(Literal::BoolLiteral(val))    => {msg.my_type = string; msg.content = Content::Text(val.to_string()); msg},
             _                                           => {msg},
         }
     }

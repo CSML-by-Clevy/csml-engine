@@ -17,8 +17,8 @@ pub fn is_variable(expr: &Expr) -> bool {
 
 pub fn eval_condition(cond: &[Expr]) -> bool {
     match cond.split_last() {
-        Some((last, elements)) if is_variable(last) && check_infixexpr(elements) => true,
-        _ => false,
+        Some((last, elements)) if is_variable(last) && check_infixexpr(elements)    => true,
+        _                                                                           => false,
     }
 }
 

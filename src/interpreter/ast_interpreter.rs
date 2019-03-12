@@ -8,6 +8,14 @@ use crate::interpreter::{
 use std::io::*;
 use std::io::{Error, ErrorKind};
 
+use std::collections::HashMap;
+
+struct StepInfo<'a> {
+    name: &'a str,
+    var: HashMap<&'a str, &'a Expr>,
+    retry: i32
+}
+
 // return Result<struct, error>
 pub fn match_flowstarter(ident: &Ident, list: &[Expr]) {
     println!("{:?} - {:?}", ident, list);
@@ -16,7 +24,7 @@ pub fn match_flowstarter(ident: &Ident, list: &[Expr]) {
 pub fn match_action(action: &Expr) -> Result<Message> {
     match action {
         Expr::Action { builtin, args }  => match_builtin(builtin, args),
-        Expr::LitExpr(_literal)         => Ok(Message::new(action)),
+        Expr::LitExpr(_literal)         => Ok(Message::new(action, "Text".to_string())),
         _                               => Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword")),
     }
 }
@@ -27,9 +35,13 @@ pub fn match_reserved(reserved: &Ident, arg: &Expr) -> Result<Message> {
             match_action(arg)
         }
         Ident(ident) if ident == "ask"      => {
+            //check for info
             match_action(arg)
+            //check if retry > 1
         }
         Ident(ident) if ident == "retry"    => {
+            //check nbr
+            // save new option if exist 
             match_action(arg)
         }
         _                                   => {
@@ -38,12 +50,15 @@ pub fn match_reserved(reserved: &Ident, arg: &Expr) -> Result<Message> {
     }
 }
 
+// Can be rm if we can have multiple ask in the same Step
 pub fn match_reserved_if(reserved: &Ident, arg: &Expr) -> Result<Message>{
     match reserved {
         Ident(ident) if ident == "say"      => {
             match_action(arg)
         }
         Ident(ident) if ident == "retry"    => {
+            // check nbr
+            // save new option if exist 
             match_action(arg)
         }
         _                                   => {
@@ -54,20 +69,22 @@ pub fn match_reserved_if(reserved: &Ident, arg: &Expr) -> Result<Message>{
 
 pub fn match_builtin(builtin: &Ident, args: &[Expr]) -> Result<Message> {
     match builtin {
-        Ident(arg) if arg == "Typing"   => Ok(Message::new(typing(args))),
-        Ident(arg) if arg == "Wait"     => Ok(Message::new(wait(args))),
-        Ident(arg) if arg == "Text"     => Ok(Message::new(text(args))),
-        Ident(arg) if arg == "Url"      => Ok(Message::new(url(args))),
-        Ident(arg) if arg == "OneOf"    => Ok(Message::new(one_of(args))),
-        Ident(arg) if arg == "Button"   => Ok(button(args)),
-        Ident(_arg)                     => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
+        Ident(arg) if arg == "Typing"=> Ok(Message::new(typing(args), arg.to_string())),
+        Ident(arg) if arg == "Wait"  => Ok(Message::new(wait(args), arg.to_string())),
+        Ident(arg) if arg == "Text"  => Ok(Message::new(text(args), arg.to_string())),
+        Ident(arg) if arg == "Url"   => Ok(Message::new(url(args), arg.to_string())),
+        Ident(arg) if arg == "OneOf" => Ok(Message::new(one_of(args), "Text".to_string())),
+        Ident(arg) if arg == "Button"=> Ok(button(args)),
+        Ident(_arg)                  => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
     }
 }
 
 pub fn match_ifexpr(cond: &[Expr], consequence: &[Expr]) -> Result<RootInterface>{
     if eval_condition(cond) {
         let mut root = RootInterface {remember: None, message: vec![], next_step: None};
+      
         println!("condition is OK === {:?}", cond);
+      
         for expr in consequence {
             if root.next_step.is_some() {
                 return Ok(root)
