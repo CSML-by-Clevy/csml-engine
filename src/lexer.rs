@@ -282,27 +282,3 @@ impl Lexer {
             .map(|(slice, result)| (slice, [&result, &vec![Token::EOF][..]].concat()))
     }
 }
-
-// named!(pub space, eat_separator!(&b" \t"[..]));
-// #[macro_export]
-// macro_rules! sp (
-//   ($i:expr, $($args:tt)*) => (
-//     {
-//       use nom::Convert;
-//       use nom::Err;
-
-//       match sep!($i, space, $($args)*) {
-//         Err(e) => Err(e),
-//         Ok((i1,o))    => {
-//           match space(i1) {
-//             Err(e) => Err(Err::convert(e)),
-//             Ok((i2,_))    => Ok((i2, o))
-//           }
-//         }
-//       }
-//     }
-//   )
-// );
-// named!(tuple<&[u8], (&[u8], &[u8]) >,
-//   sp!(tuple!( take!(3), tag!("de") ))
-// );

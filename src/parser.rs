@@ -138,42 +138,30 @@ named!(parse_reserved<Tokens, Expr>, do_parse!(
     (Expr::Reserved{fun : action , arg : Box::new(arg)})
 ));
 
-// named!(parse_function<Tokens, Expr>, alt!(
-//     )
-// );
-
-// A && B && C || D && E
-// named!(logique_parser<Tokensm Expr>, do_prase!(
-//     vec: many0!(
-//         do_parse!(
-
-//         )
-//     ) >>
-// ));
-
-// named!(parse_comparators<Tokens, Expr>,
-// eq_parsers!()
-// alt!(
-// logique_parser
-// )
-// );
-
 named!(parse_infixexpr<Tokens, Expr>, do_parse!(
     lit: alt!(
+            parse_vec_condition |
             parse_literalexpr |
             parse_identexpr
-        )
-    >>
+    ) >>
     eq: eq_parsers!() >>
     (Expr::InfixExpr(eq, Box::new(lit) ))
 ));
+
+named!(parse_vec_condition<Tokens, Expr >, do_parse!(
+    start_vec: delimited!(
+            tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
+    ) >>
+    (Expr::VecExpr(start_vec))
+));
+
 
 named!(parse_condition<Tokens, Vec<Expr> >, do_parse!(
     vec: many1!(
         alt!(
             parse_infixexpr |
             parse_literalexpr |
-            parse_identexpr
+            parse_identexpr 
         )
     ) >>
     (vec)
@@ -240,15 +228,6 @@ named!(get_exp<Tokens, Expr>, do_parse!(
     )
 );
 
-//     do_parse!(
-//     tag_token!(Token::Flow) >>
-//     ident: parse_ident!() >>
-//     start_vec: delimited!(
-//         tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-//     ) >>
-//     (Step::FlowStarter{ident: ident, list: start_vec})
-// )
-
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     res: many1!(
         alt!(
@@ -283,15 +262,6 @@ named!(parse_start_flow<Tokens, Step>,
     )
 );
 
-// named!(parse_notyet<Tokens, Step>,
-//     do_parse!(
-//         test: parse_token!() >>
-//         // _elem: parse_ident!() >>
-//         // _elem2: parse_literal!() >>
-//         (test)
-//     )
-// );
-
 named!(parse_steps<Tokens, Step>, alt_complete!(
         parse_label |
         parse_start_flow
@@ -312,6 +282,4 @@ impl Parser {
     pub fn parse_tokens(tokens: Tokens) -> IResult<Tokens, Flow> {
         parse_program(tokens)
     }
-    // pub fn parse_labels(tokens: Vec<Token>) -> Vec<Token> {
-    // }
 }

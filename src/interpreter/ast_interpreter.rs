@@ -67,7 +67,7 @@ pub fn match_builtin(builtin: &Ident, args: &[Expr]) -> Result<Message> {
 pub fn match_ifexpr(cond: &[Expr], consequence: &[Expr]) -> Result<RootInterface>{
     if eval_condition(cond) {
         let mut root = RootInterface {remember: None, message: vec![], next_step: None};
-
+        println!("condition is OK === {:?}", cond);
         for expr in consequence {
             if root.next_step.is_some() {
                 return Ok(root)

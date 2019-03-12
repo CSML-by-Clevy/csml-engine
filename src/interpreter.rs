@@ -62,7 +62,7 @@ impl Interpreter {
         let mut root = RootInterface {remember: None, message: vec![], next_step: None};
 
         for action in actions {
-            //check goto and maybe ask
+            //check ask
             if root.next_step.is_some() {
                 return Ok(root)
             }
@@ -108,15 +108,14 @@ impl Interpreter {
     }
 
     pub fn interpret(&mut self) {
+        let mut json: Option<String> = None;
+
         if !self.check_valid_flow() {
             println!("The Flow is not valid it need a start , end Labels and a Accept Flow");
             return;
         }
-
-        let mut json: Option<String> = None;
         loop {
             let read = read_standar_in();
-            // println!("{:?}", read);
 
             match (read, &json) {
                 (Ok(_), Some(string)) => {
@@ -133,7 +132,7 @@ impl Interpreter {
                     self.search_for("hello");
                 },
                 (Ok(_string), None)                                 => continue,
-                (Err(e), _)                                      => {
+                (Err(e), _)                                         => {
                     println!("Error => {:?}", e);
                     break;
                 }

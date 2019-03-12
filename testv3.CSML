@@ -13,8 +13,8 @@ hello        :
     say Typing(3000)
     say Text("Hello firstname")
     say Wait(1500)
-    ask Button("How old are you?", [1,2,3,4,5])
-    if input < 4 {
+    ask Button("How old are you?", [1, 2, 3, 4, 5])
+    if ((input < 4) || input == 1) || 5 && input {
         say "Grow up."
         say "Try number 4 or 5"
         retry Button("toto", [4, 5])
