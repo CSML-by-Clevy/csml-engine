@@ -9,7 +9,7 @@ use csml_rules::*;
 use ast_interpreter::*;
 
 use std::io::*;
-use std::io::{Error, ErrorKind};
+// use std::io::{Error, ErrorKind};
 
 pub struct Interpreter {
     pub ast: Flow,
@@ -32,59 +32,15 @@ impl Interpreter {
         for step in self.ast.iter() {
             match step {
                 Step::FlowStarter { .. }        => self.accept_flow = true,
-                Step::Block { label, .. }       => match label {
-                    Ident(t) if t == "start"    => self.start = true,
-                    Ident(t) if t == "end"      => self.end = true,
-                    _                           => {}
-                },
+                Step::Block { label, .. }       =>
+                    match label {
+                        Ident(t) if t == "start"    => self.start = true,
+                        Ident(t) if t == "end"      => self.end = true,
+                        _                           => {}
+                    },
             }
         }
-        // Check if no double label with same name
-        self.start && self.end && self.accept_flow
-    }
-
-    fn check_valid_step(&self, step: &[Expr]) -> bool {
-        let mut nbr = 0;
-
-        for expr in step {
-            if let Expr::Reserved { fun, .. } = expr {
-                match fun {
-                    Ident(ident) if ident == "ask"  => nbr += 1,
-                    _                               => {}
-                }
-            }
-        }
-        nbr < 2
-    }
-
-    fn match_block(&self, _label: &Ident, actions: &[Expr]) -> Result<RootInterface> {
-        self.check_valid_step(actions);
-        let mut root = RootInterface {remember: None, message: vec![], next_step: None};
-
-        for action in actions {
-            //check ask
-            if root.next_step.is_some() {
-                return Ok(root)
-            }
-
-            match action {
-                Expr::Reserved { fun, arg } => {
-                    match match_reserved(fun, arg) {
-                        Ok(action)  => root.add_message(action),
-                        Err(err)    => return Err(err)
-                    }
-                },
-                Expr::IfExpr { cond, consequence }  => {
-                    match match_ifexpr(cond, consequence) {
-                        Ok(action)  => root = root + action,
-                        Err(err)    => return Err(err)
-                    }
-                },
-                Expr::Goto(Ident(ident))    => root.add_next_step(ident),
-                _                           => return Err(Error::new(ErrorKind::Other, "Block must start with a reserved keyword")),
-            };
-        }
-        Ok(root)
+        self.start && self.end && self.accept_flow && double_label(&self.ast)
     }
 
     // return Result<struct, error>
@@ -96,7 +52,7 @@ impl Interpreter {
                     return None;
                 }
                 Step::Block { label, actions } if check_ident(label, name) => {
-                    let json = self.match_block(label, actions).unwrap();
+                    let json = match_block(actions).unwrap();
                     let ser = serde_json::to_string(&json).unwrap();
                     println!("--------> {}", ser);
                     return Some(ser);
@@ -111,26 +67,23 @@ impl Interpreter {
         let mut json: Option<String> = None;
 
         if !self.check_valid_flow() {
-            println!("The Flow is not valid it need a start , end Labels and a Accept Flow");
+            println!("The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique");
             return;
         }
         loop {
             let read = read_standar_in();
 
             match (read, &json) {
-                (Ok(_), Some(string)) => {
+                (Ok(..), Some(string)) => {
                     let deserialized: RootInterface = serde_json::from_str(&string).unwrap();
                     json = self.search_for(&deserialized.next_step.unwrap());
                 },
-                (Ok(ref string), None) if string.trim() == "exit"   => break,
                 (Ok(ref string), None) if string.trim() == "flow"   => {
                     // check if flow can start
                     self.search_for("flow");
                     json = self.search_for("start");
                 },
-                (Ok(ref string), None) if string.trim() == "hello"  => {
-                    self.search_for("hello");
-                },
+                (Ok(ref string), None) if string.trim() == "exit"   => break,
                 (Ok(_string), None)                                 => continue,
                 (Err(e), _)                                         => {
                     println!("Error => {:?}", e);

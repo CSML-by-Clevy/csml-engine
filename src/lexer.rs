@@ -225,7 +225,7 @@ fn parse_reserved(c: CompleteStr, rest: Option<CompleteStr>) -> Token {
 
         "remember" => Token::ReservedFunc(string),
         "import" => Token::ReservedFunc(string),
-        
+
         "True" => Token::BoolLiteral(true),
         "False" => Token::BoolLiteral(false),
         // "execute"

@@ -132,6 +132,10 @@ named!(parse_f<Tokens, Expr>, do_parse!(
 named!(parse_reserved<Tokens, Expr>, do_parse!(
     action:  parse_reservedfunc!() >>
     arg: alt!(
+        do_parse!(
+            block : parse_block >>
+            (Expr::VecExpr(block))
+        ) |
         parse_f |
         parse_literalexpr
     ) >>
@@ -155,7 +159,6 @@ named!(parse_vec_condition<Tokens, Expr >, do_parse!(
     (Expr::VecExpr(start_vec))
 ));
 
-
 named!(parse_condition<Tokens, Vec<Expr> >, do_parse!(
     vec: many1!(
         alt!(
@@ -167,12 +170,17 @@ named!(parse_condition<Tokens, Vec<Expr> >, do_parse!(
     (vec)
 ));
 
-named!(parse_if<Tokens, Expr>, do_parse!(
-    tag_token!(Token::If) >>
-    cond: parse_condition >>
+named!(parse_block<Tokens, Vec<Expr> >, do_parse!(
     block: delimited!(
         tag_token!(Token::LBrace), parse_actions, tag_token!(Token::RBrace)
     ) >>
+    (block)
+));
+
+named!(parse_if<Tokens, Expr>, do_parse!(
+    tag_token!(Token::If) >>
+    cond: parse_condition >>
+    block: parse_block >>
     (Expr::IfExpr{cond: cond, consequence: block})
 ));
 

@@ -9,6 +9,12 @@ pub enum Content {
     Button(String, Vec<String>)
 }
 
+//TMP
+pub enum MessageType {
+    Msg(Message),
+    Msgs(Vec<Message>)
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
     #[serde(rename = "type")]
