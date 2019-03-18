@@ -1,5 +1,5 @@
 use crate::parser::ast::*;
-use std::io::*;
+// use std::io::*;
 
 pub fn check_ident(expr: &Ident, name: &str) -> bool {
     match expr {
@@ -23,30 +23,24 @@ fn contains_starterflow(step: &Step) -> bool {
     }
 }
 
-pub fn double_label(ast: &Flow) -> bool
+pub fn double_label(mut ast: &[Step]) -> bool
 {
-    let mut remaining: &[Step] = ast;
-
-    loop {
-        if let Some((hd, tl)) = remaining.split_first() {
-            match (hd, tl) {
-                (Step::Block{label: Ident(name), ..}, tl)  => {
-                    match tl.iter().find(|&x| contains_label(x, name)) {
-                        Some( .. )  => return false,
-                        None        => true
-                    }
-                },
-                (Step::FlowStarter{ .. }, tl)  => {
-                    match  tl.iter().find(|&x| contains_starterflow(x)) {
-                        Some( .. )  => return false,
-                        None        => true
-                    }
-                },
-            };
-            remaining = tl;
-        } else {
-            break;
-        }
+    while let Some((hd, tl)) = ast.split_first() {
+        match (hd, tl) {
+            (Step::Block{label: Ident(name), ..}, tl)  => {
+                match tl.iter().find(|&x| contains_label(x, name)) {
+                    Some( .. )  => return false,
+                    None        => true
+                }
+            },
+            (Step::FlowStarter{ .. }, tl)  => {
+                match tl.iter().find(|&x| contains_starterflow(x)) {
+                    Some( .. )  => return false,
+                    None        => true
+                }
+            },
+        };
+        ast = tl;
     }
     true
 }
@@ -71,7 +65,7 @@ pub fn check_infixexpr(exprs: &[Expr]) -> bool {
         match expr {
             Expr::InfixExpr(_, e)   => {
                 if let Expr::VecExpr(expr) = e.as_ref() {
-                   if eval_condition(expr) == false {
+                   if !eval_condition(expr) {
                        return false;
                    }
                 }

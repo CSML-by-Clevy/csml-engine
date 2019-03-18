@@ -3,6 +3,7 @@ flow Accept("hello", "hi", "new", "NLP_NEW_SOME_FLOW")
 start:
 import "my_button.tcsml"
 remember firstname = user.firstname OR "random dude"
+remember age = OrDefault(input, "42")
 remember language = user.language OR "en"
 goto hello
 

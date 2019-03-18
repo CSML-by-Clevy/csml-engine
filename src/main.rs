@@ -5,10 +5,30 @@ mod parser;
 use interpreter::*;
 use lexer::{token::Tokens, Lexer};
 use parser::Parser;
-use std::fs::File;
-use std::io::prelude::*;
 
-fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
+use std::io::{Result, prelude::*};
+use std::fs::File;
+
+// use serde::{Deserialize, Serialize};
+
+// use std::path::Path;
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// struct test {
+//     name: String,
+//     body: Vec<serde_json::Value>
+// }
+
+// fn read_code_from_file<P: AsRef<Path>>(path: P) -> Result<test> {
+//     let file = File::open(path)?;
+
+//     let first_pass = serde_json::from_reader(file)?;
+
+//     Ok(first_pass)
+// }
+// let nodes = read_code_from_file("test.json");
+// println!("------------> {:?}", nodes);
+
+fn read_file(file_path: String) -> Result<String> {
     let mut file = File::open(file_path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
@@ -22,10 +42,16 @@ fn main() {
     match lex_tokens {
         Ok((_complete, t)) => {
             let tokens = Tokens::new(&t);
-            let (_, flow) = Parser::parse_tokens(tokens).unwrap();
-            let mut inter = Interpreter::new(flow);
-            inter.interpret();
+            match Parser::parse_tokens(tokens) {
+                Ok((_, flow)) => {
+                    let mut inter = Interpreter::new(flow);
+                    inter.interpret();
+                },
+                Err(e) => {
+                    println!("Error in Paring AST {:?}", e);
+                }
+            }
         }
-        Err(e) => println!("{:?}", e),
+        Err(e) => println!("Problem in Lexing Tokens -> {:?}", e),
     };
 }

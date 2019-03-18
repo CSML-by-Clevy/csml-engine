@@ -12,7 +12,8 @@ pub enum Content {
 //TMP
 pub enum MessageType {
     Msg(Message),
-    Msgs(Vec<Message>)
+    Msgs(Vec<Message>),
+    Empty
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

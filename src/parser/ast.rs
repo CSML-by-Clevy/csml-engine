@@ -14,17 +14,19 @@ pub enum Expr {
     },
     Action {
         builtin: Ident,
-        args: Vec<Expr>,
+        args: Box<Expr>,
     },
     IfExpr {
         cond: Vec<Expr>,
         consequence: Vec<Expr>,
     },
     InfixExpr(Infix, Box<Expr>), //, Box<Expr>
+    // BuilderExpr(Box<Expr>, Box<Expr>),
     Goto(Ident),
     LitExpr(Literal),
     IdentExpr(Ident),
     VecExpr(Vec<Expr>),
+    Empty,
     // ArrayLit(Vec<Literal>),
 }
 

@@ -123,23 +123,26 @@ named!(parse_goto<Tokens, Expr>, do_parse!(
 
 named!(parse_f<Tokens, Expr>, do_parse!(
     ident: parse_ident!() >>
-    vec: delimited!(
-        tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-    ) >>
-    (Expr::Action{builtin: ident, args: vec })
+    vec: vectorice >>
+    (Expr::Action{builtin: ident, args: Box::new(vec) })
 ));
 
 named!(parse_reserved<Tokens, Expr>, do_parse!(
-    action:  parse_reservedfunc!() >>
+    action: parse_reservedfunc!() >>
     arg: alt!(
         do_parse!(
-            block : parse_block >>
+            block: parse_block >>
             (Expr::VecExpr(block))
         ) |
         parse_f |
         parse_literalexpr
     ) >>
-    (Expr::Reserved{fun : action , arg : Box::new(arg)})
+    (Expr::Reserved{fun: action, arg: Box::new(arg)})
+));
+
+named!(parse_reserved_empty<Tokens, Expr>, do_parse!(
+    action: parse_reservedfunc!() >>
+    (Expr::Reserved{fun: action, arg : Box::new(Expr::Empty)})
 ));
 
 named!(parse_infixexpr<Tokens, Expr>, do_parse!(
@@ -190,7 +193,8 @@ named!(parse_actions<Tokens, Vec<Expr> >,
             alt!(
                 parse_reserved |
                 parse_goto |
-                parse_if
+                parse_if |
+                parse_reserved_empty
             )
         )
         >> (res)
@@ -236,11 +240,20 @@ named!(get_exp<Tokens, Expr>, do_parse!(
     )
 );
 
+named!(vectorice<Tokens, Expr >, do_parse!(
+        vec: delimited!(
+            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
+        ) >>
+        (Expr::VecExpr(vec))
+    )
+);
+
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     res: many1!(
         alt!(
             parse_exp |
-            get_exp
+            get_exp |
+            vectorice
         )
     )
     >> (res)

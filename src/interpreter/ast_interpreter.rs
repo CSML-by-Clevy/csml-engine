@@ -25,11 +25,12 @@ pub fn match_action(action: &Expr) -> Result<MessageType> {
     match action {
         Expr::Action { builtin, args }  => match_builtin(builtin, args),
         Expr::LitExpr(_literal)         => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
+        Expr::Empty                     => Ok(MessageType::Empty),
         _                               => Err(Error::new(ErrorKind::Other, "Error must be a valid action")),
     }
 }
 
-pub fn match_builtin(builtin: &Ident, args: &[Expr]) -> Result<MessageType> {
+pub fn match_builtin(builtin: &Ident, args: &Expr) -> Result<MessageType> {
     match builtin {
         Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string()))),
         Ident(arg) if arg == "Wait"  => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string()))),
@@ -60,7 +61,7 @@ pub fn match_reserved(reserved: &Ident, arg: &Expr) -> Result<MessageType> {
             }
         }
         Ident(ident) if ident == "retry"    => {
-            //check nbr
+            // check nbr
             // save new option if exist
             match_action(arg)
         }
@@ -119,8 +120,9 @@ pub fn match_block( actions: &[Expr]) -> Result<RootInterface> {
                 match match_reserved(fun, arg) {
                     Ok(action)  => {
                         match action {
-                            MessageType::Msg(msg) => root.add_message(msg),
+                            MessageType::Msg(msg)   => root.add_message(msg),
                             MessageType::Msgs(msgs) => root.message.extend(msgs),
+                            MessageType::Empty      => {},
                         }
                     },
                     Err(err)    => return Err(err)
@@ -153,8 +155,9 @@ pub fn match_ifexpr(cond: &[Expr], consequence: &[Expr]) -> Result<RootInterface
                     match match_reserved_if(fun, arg) {
                         Ok(msg)   => {
                             match msg {
-                                MessageType::Msg(msg) => root.add_message(msg),
+                                MessageType::Msg(msg)   => root.add_message(msg),
                                 MessageType::Msgs(msgs) => root.message.extend(msgs),
+                                MessageType::Empty      => {},
                             }
                         },
                         Err(err)  => return Err(err)
