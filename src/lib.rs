@@ -43,42 +43,40 @@ register_module!(mut cx, {
 });
 
 
-
-
-#[no_mangle]
-pub extern "C" fn rust_function() {
-    println!("Hello Lib");
-}
+// #[no_mangle]
+// pub extern "C" fn rust_function() {
+//     println!("Hello Lib");
+// }
 
 // #[no_mangle]
 // pub extern "C" fn get_flow(filename: *const c_char) {
     
 // }
 
-fn read_file(file_path: String) -> Result<String> {
-    let mut file = File::open(file_path)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    Ok(contents)
-}
+// fn read_file(file_path: String) -> Result<String> {
+//     let mut file = File::open(file_path)?;
+//     let mut contents = String::new();
+//     file.read_to_string(&mut contents)?;
+//     Ok(contents)
+// }
 
-fn main() {
-    let text = read_file("testv3.CSML".to_owned()).unwrap();
-    let lex_tokens = Lexer::lex_tokens(text.as_bytes());
+// fn main() {
+//     let text = read_file("testv3.CSML".to_owned()).unwrap();
+//     let lex_tokens = Lexer::lex_tokens(text.as_bytes());
 
-    match lex_tokens {
-        Ok((_complete, t)) => {
-            let tokens = Tokens::new(&t);
-            match Parser::parse_tokens(tokens) {
-                Ok((_, flow)) => {
-                    let mut inter = Interpreter::new(flow);
-                    inter.interpret();
-                },
-                Err(e) => {
-                    println!("Error in Paring AST {:?}", e);
-                }
-            }
-        }
-        Err(e) => println!("Problem in Lexing Tokens -> {:?}", e),
-    };
-}
+//     match lex_tokens {
+//         Ok((_complete, t)) => {
+//             let tokens = Tokens::new(&t);
+//             match Parser::parse_tokens(tokens) {
+//                 Ok((_, flow)) => {
+//                     let mut inter = Interpreter::new(flow);
+//                     inter.interpret();
+//                 },
+//                 Err(e) => {
+//                     println!("Error in Paring AST {:?}", e);
+//                 }
+//             }
+//         }
+//         Err(e) => println!("Problem in Lexing Tokens -> {:?}", e),
+//     };
+// }
