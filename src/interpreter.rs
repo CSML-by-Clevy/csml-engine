@@ -14,7 +14,6 @@ use std::io::*;
 pub struct Interpreter {
     pub ast: Flow,
     pub start: bool,
-    pub end: bool,
     pub accept_flow: bool,
 }
 
@@ -23,7 +22,6 @@ impl Interpreter {
         Interpreter {
             ast,
             start: false,
-            end: false,
             accept_flow: false,
         }
     }
@@ -35,12 +33,11 @@ impl Interpreter {
                 Step::Block { label, .. }       =>
                     match label {
                         Ident(t) if t == "start"    => self.start = true,
-                        Ident(t) if t == "end"      => self.end = true,
                         _                           => {}
                     },
             }
         }
-        self.start && self.end && self.accept_flow && double_label(&self.ast)
+        self.start && self.accept_flow && double_label(&self.ast)
     }
 
     // return Result<struct, error>

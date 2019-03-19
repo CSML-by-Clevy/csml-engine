@@ -1,13 +1,20 @@
 [package]
-name = "nom_csml_v01"
+name = "csmlinterpreter"
 version = "0.1.0"
 authors = ["amerelo <alexis.merelo@clevy.io>"]
+build = "build.rs"
+exclude = ["artifacts.json", "index.node"]
 edition = "2018"
 
 [lib]
-crate-type = ["cdylib"]
+name = "csmlinterpreter"
+crate-type = ["dylib"]
+
+[build-dependencies]
+neon-build = "0.2.0"
 
 [dependencies]
+neon = "0.2.0"
 nom = "4.2.2"
 rand = "0.6.5"
 serde = { version = "1.0", features = ["derive"] }
