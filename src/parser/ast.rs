@@ -1,12 +1,14 @@
+use serde::{Deserialize, Serialize};
+
 pub type Flow = Vec<Step>;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Step {
     FlowStarter { ident: Ident, list: Vec<Expr> },
     Block { label: Ident, actions: Vec<Expr> },
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Expr {
     Reserved {
         fun: Ident,
@@ -30,17 +32,17 @@ pub enum Expr {
     // ArrayLit(Vec<Literal>),
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Literal {
     StringLiteral(String),
     IntLiteral(i64),
     BoolLiteral(bool),
 }
 
-#[derive(PartialEq, Debug, Eq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone)]
 pub struct Ident(pub String);
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Infix {
     // Plus,
     // Minus,
