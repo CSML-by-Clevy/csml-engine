@@ -5,8 +5,7 @@ use crate::interpreter::{
     csml_rules::*
 };
 
-use std::io::*;
-use std::io::{Error, ErrorKind};
+use std::io::{Error, ErrorKind, Result};
 
 use std::collections::HashMap;
 

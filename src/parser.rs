@@ -4,6 +4,7 @@ use crate::lexer::token::*;
 use ast::Literal::*;
 use ast::*;
 use nom::*;
+use std::io::{Error, ErrorKind, Result};
 
 // ################## Macros
 
@@ -289,7 +290,7 @@ named!(parse_steps<Tokens, Step>, alt_complete!(
     )
 );
 
-named!(parse_program<Tokens, Flow>,
+named!(parse_program<Tokens, Vec<Step> >,
     do_parse!(
         prog: many0!(parse_steps) >>
         tag_token!(Token::EOF) >>
@@ -300,7 +301,23 @@ named!(parse_program<Tokens, Flow>,
 pub struct Parser;
 
 impl Parser {
-    pub fn parse_tokens(tokens: Tokens) -> IResult<Tokens, Flow> {
-        parse_program(tokens)
+    pub fn parse_tokens(tokens: Tokens) -> Result<Flow> {
+        let mut flow = Flow{accept: vec![], steps: vec![]};
+        // TODO: no use CLONE and check if there are multiple accepts in flow
+        match parse_program(tokens) {
+            Ok((_, ast)) => {
+                for elem in ast.iter() {
+                    match elem {
+                            Step::Block{..} => flow.steps.push(elem.clone()),
+                            Step::FlowStarter{ident: _ , list} => flow.accept = list.clone()
+                    }
+                }
+                Ok(flow)
+            },
+            Err(e) => {
+                // TODO: find error type
+                Err(Error::new(ErrorKind::Other, "Error at parsing"))
+            }
+        }
     }
 }

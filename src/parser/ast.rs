@@ -1,6 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-pub type Flow = Vec<Step>;
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub struct Flow {
+    pub accept: Vec<Expr>,
+    pub steps: Vec<Step>
+}
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Step {
