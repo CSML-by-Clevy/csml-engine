@@ -153,25 +153,28 @@ named!(parse_infixexpr<Tokens, Expr>, do_parse!(
             parse_identexpr
     ) >>
     eq: eq_parsers!() >>
-    (Expr::InfixExpr(eq, Box::new(lit) ))
+    lit2: alt!(
+            parse_vec_condition |
+            parse_literalexpr |
+            parse_identexpr
+    ) >>
+    (Expr::InfixExpr(eq, Box::new(lit), Box::new(lit2)))
 ));
 
 named!(parse_vec_condition<Tokens, Expr >, do_parse!(
     start_vec: delimited!(
             tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
     ) >>
-    (Expr::VecExpr(start_vec))
+    (start_vec)
 ));
 
-named!(parse_condition<Tokens, Vec<Expr> >, do_parse!(
-    vec: many1!(
-        alt!(
+named!(parse_condition<Tokens, Expr >, do_parse!(
+    condition: alt!(
             parse_infixexpr |
             parse_literalexpr |
-            parse_identexpr 
-        )
+            parse_identexpr
     ) >>
-    (vec)
+    (condition)
 ));
 
 named!(parse_block<Tokens, Vec<Expr> >, do_parse!(
@@ -185,7 +188,7 @@ named!(parse_if<Tokens, Expr>, do_parse!(
     tag_token!(Token::If) >>
     cond: parse_condition >>
     block: parse_block >>
-    (Expr::IfExpr{cond: cond, consequence: block})
+    (Expr::IfExpr{cond: Box::new(cond), consequence: block})
 ));
 
 named!(parse_actions<Tokens, Vec<Expr> >,

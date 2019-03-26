@@ -9,7 +9,7 @@ pub enum Content {
     Button(String, Vec<String>)
 }
 
-//TMP
+//TMP I dont like this TODO: change it
 pub enum MessageType {
     Msg(Message),
     Msgs(Vec<Message>),

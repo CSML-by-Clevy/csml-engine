@@ -45,35 +45,13 @@ pub fn double_label(mut ast: &[Step]) -> bool
     true
 }
 
-pub fn is_variable(expr: &Expr) -> bool {
+pub fn check_infixexpr(expr: &Expr) -> bool {
     match expr {
-        Expr::LitExpr(_e)   => true,
-        Expr::IdentExpr(_e) => true,
-        _                   => false,
+        Expr::InfixExpr(infix, exp1, exp2)  => check_infixexpr(exp1) && check_infixexpr(exp2),
+        Expr::IdentExpr(_ident)             => true,
+        Expr::LitExpr(_lit)                 => true,
+        _                                   => false,
     }
-}
-
-pub fn eval_condition(cond: &[Expr]) -> bool {
-    match cond.split_last() {
-        Some((last, elements)) if is_variable(last) && check_infixexpr(elements)    => true,
-        _                                                                           => false,
-    }
-}
-
-pub fn check_infixexpr(exprs: &[Expr]) -> bool {
-    for expr in exprs.iter() {
-        match expr {
-            Expr::InfixExpr(_, e)   => {
-                if let Expr::VecExpr(expr) = e.as_ref() {
-                   if !eval_condition(expr) {
-                       return false;
-                   }
-                }
-            },
-            _                       => { return false; },
-        };
-    }
-    true
 }
 
 // fn reserved_keywords(ident: &Ident) -> bool

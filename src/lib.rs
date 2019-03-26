@@ -2,58 +2,11 @@ mod interpreter;
 mod lexer;
 mod parser;
 
-use interpreter::*;
+use interpreter::{json_to_rust::*, Interpreter};
 use lexer::{token::Tokens, Lexer};
 use parser::{Parser, ast::*};
 use neon::{register_module, prelude::*};
-// use neon_serde;
-
 use serde::{Deserialize, Serialize};
-
-// use std::io::{Result, prelude::*};
-// use std::fs::File;
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum ValueType {
-    STR(String),
-    BOOL(bool),
-    I32(i32),
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MemoryType {
-    pub conversation_id : String,
-    pub created_at : String,
-    pub key : String,
-    pub value : ValueType
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct JsContext {
-    pub past: Option< Vec<serde_json::Value> >,
-    pub current: Option< Vec<serde_json::Value> >,
-    pub metadata: Option< Vec<serde_json::Value> >,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Content {
-    pub text: String
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PayLoad {
-    pub content_type: String,
-    pub content: Content
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Event {
-    pub channel_id: String,
-    pub channel_type: String,
-    pub user_id: String,
-    pub timestamp: i64,
-    pub payload: PayLoad
-}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Error_msg {
@@ -112,30 +65,22 @@ fn interpret_flow(mut cx: FunctionContext) -> JsResult<JsString> {
     let arg0 = cx.argument::<JsString>(0)?.value();
     let step_name = cx.argument::<JsString>(1)?.value();
     let context = cx.argument::<JsString>(2)?.value();
-    let eventjson = match cx.argument_opt(3) {
+    let event = match cx.argument_opt(3) {
         Some(arg)     => {
             let tmp = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
             let event: Event = serde_json::from_str(&tmp).unwrap();
-            println!("||| event -> {:?} \n", event);
-            tmp
+            Some(event)
         },
-        None      => "error".to_owned()
+        None      => None
     };
-    // cx.argument::<JsString>(3);
-
-    println!("Step-name -> {}", step_name);
-    println!("context -> {}", context);
-    println!("event -> {} \n\n", eventjson);
 
     let flow: Flow = serde_json::from_str(&arg0).unwrap();
     let memory: JsContext = serde_json::from_str(&context).unwrap();
-    // TODO: check error 
-    
 
-    println!("memory -> {:?} \n\n", memory);
-    
+    println!("memory -> {:?} \n", memory);
+    println!("event -> {:?} \n", event);
 
-    let ret = Interpreter::interpret(&flow, &step_name, &context, &eventjson);
+    let ret = Interpreter::interpret(&flow, &step_name, &memory, &event);
     Ok(cx.string(ret))
 }
 

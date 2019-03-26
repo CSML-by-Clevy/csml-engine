@@ -1,179 +1,193 @@
+use std::io::{Error, ErrorKind, Result};
 use crate::parser::ast::*;
 use crate::interpreter::{
     builtins::*,
     message::*,
-    csml_rules::*
+    csml_rules::*,
+    json_to_rust::*,
 };
+// use std::collections::HashMap;
 
-use std::io::{Error, ErrorKind, Result};
+// struct StepInfo<'a> {
+//     name: &'a str,
+//     var: HashMap<&'a str, &'a Expr>,
+//     retry: i32
+// }
 
-use std::collections::HashMap;
+// // return Result<struct, error>
+// pub fn match_flowstarter(ident: &Ident, list: &[Expr]) {
+//     println!("{:?} - {:?}", ident, list);
+// }
 
-struct StepInfo<'a> {
-    name: &'a str,
-    var: HashMap<&'a str, &'a Expr>,
-    retry: i32
+pub struct AstInterpreter<'a> {
+    pub context: &'a JsContext,
+    pub event: &'a Option<Event>,
 }
 
-// return Result<struct, error>
-pub fn match_flowstarter(ident: &Ident, list: &[Expr]) {
-    println!("{:?} - {:?}", ident, list);
-}
-
-pub fn match_action(action: &Expr) -> Result<MessageType> {
-    match action {
-        Expr::Action { builtin, args }  => match_builtin(builtin, args),
-        Expr::LitExpr(_literal)         => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
-        Expr::Empty                     => Ok(MessageType::Empty),
-        _                               => Err(Error::new(ErrorKind::Other, "Error must be a valid action")),
-    }
-}
-
-pub fn match_builtin(builtin: &Ident, args: &Expr) -> Result<MessageType> {
-    match builtin {
-        Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string()))),
-        Ident(arg) if arg == "Wait"  => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string()))),
-        Ident(arg) if arg == "Text"  => Ok(MessageType::Msg(Message::new(text(args), arg.to_string()))),
-        Ident(arg) if arg == "Url"   => Ok(MessageType::Msg(Message::new(url(args), arg.to_string()))),
-        Ident(arg) if arg == "OneOf" => Ok(MessageType::Msg(Message::new(one_of(args), "Text".to_string()))),
-        Ident(arg) if arg == "Button"=> Ok(button(args)),
-        Ident(_arg)                  => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
-    }
-}
-
-pub fn match_reserved(reserved: &Ident, arg: &Expr) -> Result<MessageType> {
-    match reserved {
-        Ident(ident) if ident == "say"      => {
-            match_action(arg)
-        }
-        Ident(ident) if ident == "ask"      => {
-            // TMP implementation of block for an action
-            if let Expr::VecExpr(block) = arg {
-                match match_block(block) { 
-                    Ok(root)  => Ok(MessageType::Msgs(root.message)),
-                    Err(e)    => Err(e)
-                }
-            } else {
-                //check for info
-                match_action(arg)
-                //check if retry > 1
-            }
-        }
-        Ident(ident) if ident == "retry"    => {
-            // check nbr
-            // save new option if exist
-            match_action(arg)
-        }
-        _                                   => {
-            Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword"))
+impl<'a> AstInterpreter<'a>
+{
+    fn match_var(&self, var: &Ident, action: &Expr) -> Result<MessageType> {
+        match var {
+            Ident(arg) if arg == "event"   => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
+            Ident(_arg)                    => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
-}
 
-// Can be rm if we want to have multiple ask in the same Step
-pub fn match_reserved_if(reserved: &Ident, arg: &Expr) -> Result<MessageType> {
-    match reserved {
-        Ident(ident) if ident == "say"      => {
-            match_action(arg)
-        }
-        Ident(ident) if ident == "retry"    => {
-            // check nbr
-            // save new option if exist 
-            match_action(arg)
-        }
-        _                                   => {
-            Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword"))
+    fn match_builtin(&self, builtin: &Ident, args: &Expr) -> Result<MessageType> {
+        match builtin {
+            Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string()))),
+            Ident(arg) if arg == "Wait"  => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string()))),
+            Ident(arg) if arg == "Text"  => Ok(MessageType::Msg(Message::new(text(args), arg.to_string()))),
+            Ident(arg) if arg == "Url"   => Ok(MessageType::Msg(Message::new(url(args), arg.to_string()))),
+            Ident(arg) if arg == "OneOf" => Ok(MessageType::Msg(Message::new(one_of(args), "Text".to_string()))),
+            Ident(arg) if arg == "Button"=> Ok(button(args)),
+            // arg                          => self.match_var(arg, args),
+            Ident(_arg)                  => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
-}
 
-// TMP implementation of block for an action
-fn check_valid_step(step: &[Expr]) -> bool {
-    let mut nbr = 0;
-
-    for expr in step {
-        if let Expr::Reserved { fun, .. } = expr {
-            match fun {
-                Ident(ident) if ident == "ask"  => nbr += 1,
-                _                               => {}
-            }
-        }
-    }
-    nbr < 2
-}
-
-// TMP implementation of block for an action
-// _label: &Ident,
-pub fn match_block( actions: &[Expr]) -> Result<RootInterface> {
-    check_valid_step(actions);
-    let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
-
-    for action in actions {
-        //check ask
-        if root.next_step.is_some() {
-            return Ok(root)
-        }
-
+    fn match_action(&self, action: &Expr) -> Result<MessageType> {
         match action {
-            Expr::Reserved { fun, arg } => {
-                match match_reserved(fun, arg) {
-                    Ok(action)  => {
-                        match action {
-                            MessageType::Msg(msg)   => root.add_message(msg),
-                            MessageType::Msgs(msgs) => root.message.extend(msgs),
-                            MessageType::Empty      => {},
+            Expr::Action { builtin, args }  => self.match_builtin(builtin, args),
+            Expr::LitExpr(_literal)         => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
+            Expr::Empty                     => Ok(MessageType::Empty),
+            _                               => Err(Error::new(ErrorKind::Other, "Error must be a valid action")),
+        }
+    }
+
+    fn match_reserved(&self, reserved: &Ident, arg: &Expr) -> Result<MessageType> {
+        match reserved {
+            Ident(ident) if ident == "say"      => {
+                self.match_action(arg)
+            }
+            Ident(ident) if ident == "ask"      => {
+                // TMP implementation of block for an action
+                if let Expr::VecExpr(block) = arg {
+                    match self.match_block(block) { 
+                        Ok(root)  => Ok(MessageType::Msgs(root.message)),
+                        Err(e)    => Err(e)
+                    }
+                } else {
+                    //check for info
+                    self.match_action(arg)
+                    //check if retry > 1
+                }
+            }
+            Ident(ident) if ident == "retry"    => {
+                // check nbr
+                // save new option if exist
+                self.match_action(arg)
+            }
+            _                                   => {
+                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword"))
+            }
+        }
+    }
+
+    // Can be rm if we want to have multiple ask in the same Step
+    fn match_reserved_if(&self, reserved: &Ident, arg: &Expr) -> Result<MessageType> {
+        match reserved {
+            Ident(ident) if ident == "say"      => {
+                self.match_action(arg)
+            }
+            Ident(ident) if ident == "retry"    => {
+                // check nbr
+                // save new option if exist 
+                self.match_action(arg)
+            }
+            _                                   => {
+                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword"))
+            }
+        }
+    }
+
+    // TMP implementation of block for an action
+    fn check_valid_step(&self, step: &[Expr]) -> bool {
+        let mut nbr = 0;
+
+        for expr in step {
+            if let Expr::Reserved { fun, .. } = expr {
+                match fun {
+                    Ident(ident) if ident == "ask"  => nbr += 1,
+                    _                               => {}
+                }
+            }
+        }
+        nbr < 2
+    }
+
+    fn match_ifexpr(&self, cond: &Expr, consequence: &[Expr]) -> Result<RootInterface> {
+       println!("> condition > {:?}", cond);
+        if check_infixexpr(cond) {
+            let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
+            for expr in consequence {
+                if root.next_step.is_some() {
+                    return Ok(root)
+                }
+
+                match expr {
+                    Expr::Reserved { fun, arg }         => {
+                        match self.match_reserved_if(fun, arg) {
+                            Ok(msg)   => {
+                                match msg {
+                                    MessageType::Msg(msg)   => root.add_message(msg),
+                                    MessageType::Msgs(msgs) => root.message.extend(msgs),
+                                    MessageType::Empty      => {},
+                                }
+                            },
+                            Err(err)  => return Err(err)
                         }
                     },
-                    Err(err)    => return Err(err)
+                    Expr::IfExpr { cond, consequence }  => {
+                        match self.match_ifexpr(cond, consequence) {
+                            Ok(msg)   => root = root + msg,
+                            Err(err)  => return Err(err)
+                        }
+                    },
+                    Expr::Goto(Ident(ident))            => root.add_next_step(ident),
+                    _                                   => return Err(Error::new(ErrorKind::Other, "Error in If block")),
                 }
-            },
-            Expr::IfExpr { cond, consequence }  => {
-                match match_ifexpr(cond, consequence) {
-                    Ok(action)  => root = root + action,
-                    Err(err)    => return Err(err)
-                }
-            },
-            Expr::Goto(Ident(ident))    => root.add_next_step(ident),
-            _                           => return Err(Error::new(ErrorKind::Other, "Block must start with a reserved keyword")),
-        };
+            }
+            Ok(root)
+        } else {
+            Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "))
+        }
     }
-    Ok(root)
-}
 
-pub fn match_ifexpr(cond: &[Expr], consequence: &[Expr]) -> Result<RootInterface> {
-    if eval_condition(cond) {
+    // TMP implementation of block for an action
+    pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
+        self.check_valid_step(actions);
         let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
-        // println!("condition is Ok === {:?}", cond);
-        for expr in consequence {
+
+        for action in actions {
+            //TODO: check ask
             if root.next_step.is_some() {
                 return Ok(root)
             }
 
-            match expr {
-                Expr::Reserved { fun, arg }         => {
-                    match match_reserved_if(fun, arg) {
-                        Ok(msg)   => {
-                            match msg {
+            match action {
+                Expr::Reserved { fun, arg } => {
+                    match self.match_reserved(fun, arg) {
+                        Ok(action)  => {
+                            match action {
                                 MessageType::Msg(msg)   => root.add_message(msg),
                                 MessageType::Msgs(msgs) => root.message.extend(msgs),
                                 MessageType::Empty      => {},
                             }
                         },
-                        Err(err)  => return Err(err)
+                        Err(err)    => return Err(err)
                     }
                 },
                 Expr::IfExpr { cond, consequence }  => {
-                    match match_ifexpr(cond, consequence) {
-                        Ok(msg)   => root = root + msg,
-                        Err(err)  => return Err(err)
+                    match self.match_ifexpr(cond, consequence) {
+                        Ok(action)  => root = root + action,
+                        Err(err)    => return Err(err)
                     }
                 },
-                Expr::Goto(Ident(ident))            => root.add_next_step(ident),
-                _                                   => return Err(Error::new(ErrorKind::Other, "Error in If block")),
-            }
+                Expr::Goto(Ident(ident))    => root.add_next_step(ident),
+                _                           => return Err(Error::new(ErrorKind::Other, "Block must start with a reserved keyword")),
+            };
         }
         Ok(root)
-    } else {
-        Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "))
     }
 }

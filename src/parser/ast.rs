@@ -23,10 +23,10 @@ pub enum Expr {
         args: Box<Expr>,
     },
     IfExpr {
-        cond: Vec<Expr>,
+        cond: Box<Expr>,
         consequence: Vec<Expr>,
     },
-    InfixExpr(Infix, Box<Expr>), //, Box<Expr>
+    InfixExpr(Infix, Box<Expr>, Box<Expr>),
     // BuilderExpr(Box<Expr>, Box<Expr>),
     Goto(Ident),
     LitExpr(Literal),
