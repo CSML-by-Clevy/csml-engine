@@ -54,7 +54,7 @@ impl Interpreter {
                 Step::Block { label, actions } if check_ident(label, name) => {
                     let json = match_block(actions).unwrap();
                     let ser = serde_json::to_string(&json).unwrap();
-                    println!("--------> {}", ser);
+                    println!("--|--|----> {}", ser);
                     return Some(ser);
                 }
                 _ => continue,
@@ -63,7 +63,7 @@ impl Interpreter {
         None
     }
 
-    pub fn interpret(ast: &Flow, step_name: &str, _context: &str) -> String {
+    pub fn interpret(ast: &Flow, step_name: &str, _context: &str, _event: &str) -> String {
         if !Interpreter::check_valid_flow(ast) {
             return "The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique".to_owned();
         }

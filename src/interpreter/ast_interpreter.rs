@@ -106,7 +106,7 @@ fn check_valid_step(step: &[Expr]) -> bool {
 // _label: &Ident,
 pub fn match_block( actions: &[Expr]) -> Result<RootInterface> {
     check_valid_step(actions);
-    let mut root = RootInterface {remember: None, message: vec![], next_step: None};
+    let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
 
     for action in actions {
         //check ask
@@ -142,8 +142,8 @@ pub fn match_block( actions: &[Expr]) -> Result<RootInterface> {
 
 pub fn match_ifexpr(cond: &[Expr], consequence: &[Expr]) -> Result<RootInterface> {
     if eval_condition(cond) {
-        let mut root = RootInterface {remember: None, message: vec![], next_step: None};
-        // println!("condition is OK === {:?}", cond);
+        let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
+        // println!("condition is Ok === {:?}", cond);
         for expr in consequence {
             if root.next_step.is_some() {
                 return Ok(root)

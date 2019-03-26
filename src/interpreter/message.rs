@@ -43,6 +43,7 @@ impl Message {
 pub struct RootInterface {
     pub remember: Option<Vec<String>>,
     pub message: Vec<Message>,
+    pub next_flow: Option<String>,
     pub next_step: Option<String>,
 }
 
@@ -55,6 +56,7 @@ impl Add for RootInterface {
         RootInterface {
             remember: None,
             message: [&self.message[..], &other.message[..]].concat(),
+            next_flow: None,
             next_step: match (self.next_step, other.next_step) {
                 (None, None)    => None,
                 (None, t)       => t,
