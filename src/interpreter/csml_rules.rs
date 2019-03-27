@@ -8,7 +8,7 @@ pub fn check_ident(expr: &Ident, name: &str) -> bool {
     }
 }
 
-fn contains_label(step: &Step, name :&str) -> bool {
+fn contains_label(step: &Step, name: &str) -> bool {
     match step {
         Step::Block{label: Ident(label), ..} if label == name   => true,
         _                                                       => false
@@ -45,14 +45,14 @@ pub fn double_label(mut ast: &[Step]) -> bool
     true
 }
 
-pub fn check_infixexpr(expr: &Expr) -> bool {
-    match expr {
-        Expr::InfixExpr(infix, exp1, exp2)  => check_infixexpr(exp1) && check_infixexpr(exp2),
-        Expr::IdentExpr(_ident)             => true,
-        Expr::LitExpr(_lit)                 => true,
-        _                                   => false,
-    }
-}
+// pub fn check_infixexpr(expr: &Expr) -> bool {
+//     match expr {
+//         Expr::InfixExpr(_, exp1, exp2)  => check_infixexpr(exp1) && check_infixexpr(exp2),
+//         Expr::LitExpr(_lit)                 => true,
+//         Expr::IdentExpr(_ident)             => true,
+//         _                                   => false, // return error
+//     }
+// }
 
 // fn reserved_keywords(ident: &Ident) -> bool
 // {

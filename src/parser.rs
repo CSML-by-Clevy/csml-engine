@@ -306,7 +306,7 @@ pub struct Parser;
 impl Parser {
     pub fn parse_tokens(tokens: Tokens) -> Result<Flow> {
         let mut flow = Flow{accept: vec![], steps: vec![]};
-        // TODO: no use CLONE and check if there are multiple accepts in flow
+        // TODO: no use of CLONE and check if there are multiple accepts in flow
         match parse_program(tokens) {
             Ok((_, ast)) => {
                 for elem in ast.iter() {
