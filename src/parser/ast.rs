@@ -28,7 +28,7 @@ pub enum Expr {
         consequence: Vec<Expr>,
     },
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    // BuilderExpr(Box<Expr>, Box<Expr>),
+    BuilderExpr(Box<Expr>, Box<Expr>),
     Goto(Ident),
     LitExpr(Literal),
     IdentExpr(Ident),

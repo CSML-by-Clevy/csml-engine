@@ -169,7 +169,7 @@ impl<'a> AstInterpreter<'a>
         }
     }
 
-    fn ger_var(&self, name: &Ident) -> Result<Literal> {
+    fn get_var(&self, name: &Ident) -> Result<Literal> {
         match name {
             Ident(var) if var == "event"       => self.gen_literal_form_event(),
             _                                  => Err(Error::new(ErrorKind::Other, "unown variable")),
@@ -180,7 +180,7 @@ impl<'a> AstInterpreter<'a>
     fn gen_literal_form_exp(&self, exp: &Expr) -> Result<Literal> {
         match exp {
             Expr::LitExpr(lit)      => Ok(lit.clone()),
-            Expr::IdentExpr(ident)  => self.ger_var(ident),
+            Expr::IdentExpr(ident)  => self.get_var(ident),
             _                       => Err(Error::new(ErrorKind::Other, "Expression must be a literal or an identifier"))
         }
     }
@@ -191,19 +191,19 @@ impl<'a> AstInterpreter<'a>
                 Ok(self.cmp_lit(infix, l1, l2))
             },
             (Expr::IdentExpr(id1), Expr::IdentExpr(id2))    => {
-                match (self.ger_var(id1), self.ger_var(id2)) {
+                match (self.get_var(id1), self.get_var(id2)) {
                     (Ok(l1), Ok(l2))   => Ok(self.cmp_lit(infix, &l1, &l2)),
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and ident"))
                 }
             },
             (Expr::IdentExpr(ident), Expr::LitExpr(l2))     => {
-                match self.ger_var(ident) {
+                match self.get_var(ident) {
                     Ok(l1) => Ok(self.cmp_lit(infix, &l1, l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and lit"))
                 }
             },
             (Expr::LitExpr(l1), Expr::IdentExpr(ident))     => {
-                match self.ger_var(ident) {
+                match self.get_var(ident) {
                     Ok(l2) => Ok(self.cmp_lit(infix, l1, &l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between lit and ident"))
                 }
@@ -225,7 +225,7 @@ impl<'a> AstInterpreter<'a>
                     },
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between InfixExpr and expr"))
                 }
-            },
+               },
             (e, Expr::InfixExpr(i1, ex1, ex2))                              => {
                 match (self.gen_literal_form_exp(e), self.evaluate_condition(i1, ex1, ex2)) {
                     (Ok(_), Ok(e2)) => {
@@ -247,7 +247,7 @@ impl<'a> AstInterpreter<'a>
             Expr::InfixExpr(inf, exp1, exp2)    => {
                 match self.evaluate_condition(inf, exp1, exp2) {
                     Ok(rep) => rep,
-                    Err(e) =>{
+                    Err(e)  =>{
                         println!("error {:?}", e);
                         false
                     }
@@ -255,7 +255,7 @@ impl<'a> AstInterpreter<'a>
             },
             Expr::LitExpr(_lit)                 => true,
             Expr::IdentExpr(ident)              => {
-                match self.ger_var(ident) {
+                match self.get_var(ident) {
                     Ok(_)   => true,
                     Err(_)  => false, // error
                 }
@@ -296,6 +296,7 @@ impl<'a> AstInterpreter<'a>
                     _                                   => return Err(Error::new(ErrorKind::Other, "Error in If block")),
                 }
             }
+            println!("end of condition evaluation");
             Ok(root)
         } else {
             Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "))
@@ -329,7 +330,7 @@ impl<'a> AstInterpreter<'a>
                 Expr::IfExpr { cond, consequence }  => {
                     match self.match_ifexpr(cond, consequence) {
                         Ok(action)  => root = root + action,
-                        Err(err)    => return Err(err)
+                        Err(_err)    => {} // return Err(err)
                     }
                 },
                 Expr::Goto(Ident(ident))    => root.add_next_step(ident),

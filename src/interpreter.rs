@@ -50,7 +50,7 @@ impl Interpreter {
                 Step::Block { label, actions } if check_ident(label, name) => {
                     let result = preter.match_block(actions).unwrap();
                     let ser = serde_json::to_string(&result).unwrap();
-                    println!("--|--|----> {}", ser);
+                    // println!("--|--|----> {}", ser);
                     return Some(ser);
                 }
                 _ => continue,

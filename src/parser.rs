@@ -149,12 +149,14 @@ named!(parse_reserved_empty<Tokens, Expr>, do_parse!(
 named!(parse_infixexpr<Tokens, Expr>, do_parse!(
     lit: alt!(
             parse_vec_condition |
+            parse_builderexpr |
             parse_literalexpr |
             parse_identexpr
     ) >>
     eq: eq_parsers!() >>
     lit2: alt!(
             parse_vec_condition |
+            parse_builderexpr |
             parse_literalexpr |
             parse_identexpr
     ) >>
@@ -228,7 +230,22 @@ named!(parse_literalexpr<Tokens, Expr>, do_parse!(
     )
 );
 
+named!(parse_builderexpr<Tokens, Expr>, do_parse!(
+    exp1: alt!(
+        parse_identexpr |
+        parse_literalexpr
+    ) >>
+    tag_token!(Token::Dot) >>
+    exp2: alt!(
+        parse_identexpr |
+        parse_literalexpr |
+        parse_builderexpr
+    ) >>
+    (Expr::BuilderExpr(Box::new(exp1), Box::new(exp2)))
+));
+
 named!(parse_exp<Tokens, Expr>, alt!(
+        parse_builderexpr |
         parse_identexpr |
         parse_literalexpr|
         parse_vec
@@ -318,7 +335,8 @@ impl Parser {
                 Ok(flow)
             },
             Err(e) => {
-                // TODO: find error type
+                // TODO: find error type\
+                println!("error at PARSER {:?}", e);
                 Err(Error::new(ErrorKind::Other, "Error at parsing"))
             }
         }
