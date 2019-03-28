@@ -70,6 +70,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "csmlinterpreter"
 version = "0.1.0"
 dependencies = [
+ "multimap 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon-build 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "neon-serde 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -116,6 +117,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "memchr"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "multimap"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "serde 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "neon"
@@ -429,6 +438,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum lazy_static 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bc5729f27f159ddd61f4df6228e827e86643d4d3e7c32183cb30a1c08f604a14"
 "checksum libc 0.2.50 (registry+https://github.com/rust-lang/crates.io-index)" = "aab692d7759f5cd8c859e169db98ae5b52c924add2af5fbbca11d12fefb567c1"
 "checksum memchr 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2efc7bc57c883d4a4d6e3246905283d8dae951bb3bd32f49d6ef297f546e1c39"
+"checksum multimap 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2eb04b9f127583ed176e163fb9ec6f3e793b87e21deedd5734a69386a18a0151"
 "checksum neon 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fd2e4dcd1e15c5944d89d283ec7c3b1b4ef83b5d2227b3b5d91d33224a45c7a3"
 "checksum neon-build 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "870c8f0b18ce83d8af6d95b9b723678aef55c047f29e09ac3e3d10ceecf57fd0"
 "checksum neon-runtime 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ff1178addfa03e060fc79e795c21170823e69f0229b0b13a4a2585190ef8fa76"

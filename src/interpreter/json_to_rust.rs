@@ -1,25 +1,36 @@
 use serde::{Deserialize, Serialize};
+use multimap::MultiMap;
 
+// Node module
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum ValueType {
-    STR(String),
-    BOOL(bool),
-    I32(i32),
+pub struct JsContext {
+    pub past: Option< Vec<serde_json::Value> >,
+    pub current: Option< Vec<serde_json::Value> >,
+    pub metadata: Option< Vec<serde_json::Value> >,
 }
+
+// -----------------------------------------------
+
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub enum ValueType {
+//     STR(String),
+//     BOOL(bool),
+//     I32(i32),
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MemoryType {
     pub conversation_id : String,
     pub created_at : String,
     pub key : String,
-    pub value : ValueType
+    pub value : String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct JsContext {
-    pub past: Option< Vec<serde_json::Value> >,
-    pub current: Option< Vec<serde_json::Value> >,
-    pub metadata: Option< Vec<serde_json::Value> >,
+pub struct Memory {
+    pub past: MultiMap<String, MemoryType>,
+    pub current: MultiMap<String, MemoryType>,
+    pub metadata: MultiMap<String, MemoryType>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

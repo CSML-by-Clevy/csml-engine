@@ -23,7 +23,7 @@ use crate::interpreter::{
 // }
 
 pub struct AstInterpreter<'a> {
-    pub context: &'a JsContext,
+    pub memory: &'a Memory,
     pub event: &'a Option<Event>,
 }
 
@@ -52,6 +52,13 @@ impl<'a> AstInterpreter<'a>
         match action {
             Expr::Action { builtin, args }  => self.match_builtin(builtin, args),
             Expr::LitExpr(_literal)         => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
+            //NOTE: ONLY Work for LITERAR::STIRINGS for now
+            Expr::BuilderExpr(..)           => Ok(MessageType::Msg(
+                match self.get_var_form_ident(action) {
+                    Ok(val) => Message::new(&Expr::LitExpr(val), "Text".to_string()),
+                    Err(e) => return Err(e),
+                }
+            )),
             Expr::Empty                     => Ok(MessageType::Empty),
             _                               => Err(Error::new(ErrorKind::Other, "Error must be a valid action")),
         }
@@ -135,28 +142,14 @@ impl<'a> AstInterpreter<'a>
             Infix::Equal                => b1 == b2,
             Infix::GreaterThanEqual     => b1 >= b2,
             Infix::LessThanEqual        => b1 <= b2,
-            Infix::GreaterThan          => b1 > b2,
-            Infix::LessThan             => b1 < b2,
+            Infix::GreaterThan          => b1 & !b2,
+            Infix::LessThan             => !b1 & b2,
             Infix::And                  => b1 && b2,
             Infix::Or                   => b1 || b2,
         }
     }
 
-    fn get_expr(&self, expr: &Expr) -> bool {
-        match expr {
-            Expr::InfixExpr(infix, exp1, exp2)  => {
-                if let Ok(var) = self.evaluate_condition(infix, exp1, exp2) {
-                    return var;
-                }
-                // TODO: return error 
-                false
-            },
-            Expr::LitExpr(_lit)                 => true,
-            Expr::IdentExpr(_ident)             => false, // search if var exist
-            _                                   => false, // ret error
-        }
-    }
-
+    // TODO: rm clone
     fn gen_literal_form_event(&self) -> Result<Literal> {
         match self.event {
             Some(event)        => {
@@ -176,12 +169,115 @@ impl<'a> AstInterpreter<'a>
         }
     }
 
+    fn get_var_form_ident(&self, expr: &Expr) -> Result<Literal> {
+        match expr {
+            Expr::IdentExpr(ident)       => self.get_var(ident),
+            Expr::BuilderExpr(..)        => self.gen_literal_form_builder(expr),
+            _                            => Err(Error::new(ErrorKind::Other, "unown variable in Ident err n#1"))
+        }
+    }
+
+    // MEMORY ------------------------------------------------------------------
+    fn search_str(&self, name: &str, expr: &Expr) -> bool {
+        match expr {
+            Expr::IdentExpr(Ident(ident)) if ident == name  => true,
+            _                                               => false
+        }
+    }
+
+    fn memory_get(&self, name: &Expr, expr: &Expr) -> Option<&MemoryType> {
+        match (name, expr) {
+            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "past"    => self.memory.past.get(lit),
+            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "memory"  => self.memory.current.get(lit),
+            (_, Expr::LitExpr(Literal::StringLiteral(lit)))                                                   => self.memory.metadata.get(lit),
+            _                                                                                                 => None,
+        }
+    }
+
+    // fn memory_getvalue(&self, name: &Expr, expr: &Expr) {
+    //     match name {
+    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
+    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
+    //         _                                                   => {},
+    //     };
+    // }
+
+    // fn memory_all(&self, name: &Expr, expr: &Expr) {
+    //     match name {
+    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
+    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
+    //         _                                                   => {},
+    //     };
+    // }
+
+    // fn memory_allvalue(&self, name: &Expr, expr: &Expr) {
+    //     match name {
+    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
+    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
+    //         _                                                   => {},
+    //     };
+    // }
+
+    // fn memory_first(&self, name: &Expr, expr: &Expr) {
+    //     match name {
+    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
+    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
+    //         _                                                   => {},
+    //     };
+    // }
+
+    // fn memory_firstvalue(&self, name: &Expr, expr: &Expr) {
+    //     match name {
+    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
+    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
+    //         _                                                   => {},
+    //     };
+    // }
+
+    fn get_memory_action(&self, name: &Expr, expr: &Expr) -> Result<Literal> {
+        match expr {
+            Expr::FunctionExpr(Ident(ident), exp) if ident == "get"         => {
+                if let Some(value) = self.memory_get(name, exp) {
+                    return Ok(Literal::StringLiteral(value.value.clone()));
+                } else {
+                    return Err(Error::new(ErrorKind::Other, "Error in memory action"));
+                }
+            },
+            // Expr::FunctionExpr(Ident(ident), exp) if ident == "getvalue"    => Err(Error::new(ErrorKind::Other, "Error in memory action")),
+            // Expr::FunctionExpr(Ident(ident), exp) if ident == "all"         => Err(Error::new(ErrorKind::Other, "Error in memory action")),
+            // Expr::FunctionExpr(Ident(ident), exp) if ident == "allvalue"    => Err(Error::new(ErrorKind::Other, "Error in memory action")),
+            // Expr::FunctionExpr(Ident(ident), exp) if ident == "first"       => Err(Error::new(ErrorKind::Other, "Error in memory action")),
+            // Expr::FunctionExpr(Ident(ident), exp) if ident == "firstvalue"  => Err(Error::new(ErrorKind::Other, "Error in memory action")),
+            _                                                               => Err(Error::new(ErrorKind::Other, "Error in memory action")),
+        }
+    }
+
+    fn gen_literal_form_builder(&self, expr: &Expr) -> Result<Literal> {
+        match expr {
+            Expr::BuilderExpr(elem , exp) if self.search_str("past", elem)      => self.get_memory_action(elem, exp),
+            Expr::BuilderExpr(elem , exp) if self.search_str("memory", elem)    => self.get_memory_action(elem, exp),
+            Expr::BuilderExpr(elem , exp) if self.search_str("metadata", elem)  => self.get_memory_action(elem, exp),
+            Expr::IdentExpr(ident)                                              => self.get_var(ident),
+            _                                                                   => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
+        }
+    }
+    // MEMORY ------------------------------------------------------------------
+
     // TODO: return Result<&Literal>
-    fn gen_literal_form_exp(&self, exp: &Expr) -> Result<Literal> {
-        match exp {
+    fn gen_literal_form_exp(&self, expr: &Expr) -> Result<Literal> {
+        match expr {
             Expr::LitExpr(lit)      => Ok(lit.clone()),
             Expr::IdentExpr(ident)  => self.get_var(ident),
             _                       => Err(Error::new(ErrorKind::Other, "Expression must be a literal or an identifier"))
+        }
+    }
+
+    // NOTE: see if IDENT CAN HAVE BUILDER_IDENT inside
+    fn check_if_ident(&self, expr: &Expr) -> bool {
+        match expr {
+            Expr::IdentExpr(..)       => true,
+            Expr::BuilderExpr(..)     => true,
+            _                         => false
         }
     }
 
@@ -190,20 +286,20 @@ impl<'a> AstInterpreter<'a>
             (Expr::LitExpr(l1), Expr::LitExpr(l2))          => {
                 Ok(self.cmp_lit(infix, l1, l2))
             },
-            (Expr::IdentExpr(id1), Expr::IdentExpr(id2))    => {
-                match (self.get_var(id1), self.get_var(id2)) {
+            (exp1, exp2) if self.check_if_ident(exp1) && self.check_if_ident(exp2)    => {
+                match (self.get_var_form_ident(exp1), self.get_var_form_ident(exp2)) {
                     (Ok(l1), Ok(l2))   => Ok(self.cmp_lit(infix, &l1, &l2)),
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and ident"))
                 }
             },
-            (Expr::IdentExpr(ident), Expr::LitExpr(l2))     => {
-                match self.get_var(ident) {
+            (exp, Expr::LitExpr(l2)) if self.check_if_ident(exp)  => {
+                match self.get_var_form_ident(exp) {
                     Ok(l1) => Ok(self.cmp_lit(infix, &l1, l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and lit"))
                 }
             },
-            (Expr::LitExpr(l1), Expr::IdentExpr(ident))     => {
-                match self.get_var(ident) {
+            (Expr::LitExpr(l1), exp) if self.check_if_ident(exp)   => {
+                match self.get_var_form_ident(exp) {
                     Ok(l2) => Ok(self.cmp_lit(infix, l1, &l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between lit and ident"))
                 }
@@ -214,8 +310,8 @@ impl<'a> AstInterpreter<'a>
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between InfixExpr and InfixExpr"))
                 }
             },
-            (Expr::InfixExpr(i1, ex1, ex2), e)                        => {
-                match (self.evaluate_condition(i1, ex1, ex2), self.gen_literal_form_exp(e)) {
+            (Expr::InfixExpr(i1, ex1, ex2), exp)             => {
+                match (self.evaluate_condition(i1, ex1, ex2), self.gen_literal_form_exp(exp)) {
                     (Ok(e1), Ok(_)) => {
                         match infix {
                             Infix::And                  => Ok(e1),
@@ -225,9 +321,9 @@ impl<'a> AstInterpreter<'a>
                     },
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between InfixExpr and expr"))
                 }
-               },
-            (e, Expr::InfixExpr(i1, ex1, ex2))                              => {
-                match (self.gen_literal_form_exp(e), self.evaluate_condition(i1, ex1, ex2)) {
+            },
+            (exp, Expr::InfixExpr(i1, ex1, ex2))             => {
+                match (self.gen_literal_form_exp(exp), self.evaluate_condition(i1, ex1, ex2)) {
                     (Ok(_), Ok(e2)) => {
                         match infix {
                             Infix::And                  => Ok(e2),
@@ -238,7 +334,7 @@ impl<'a> AstInterpreter<'a>
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between expr and InfixExpr"))
                 }
             }
-            (_, _)                                        => Err(Error::new(ErrorKind::Other, "error in evaluate_condition function")),
+            (_, _)                                          => Err(Error::new(ErrorKind::Other, "error in evaluate_condition function")),
         }
     }
 
@@ -254,18 +350,15 @@ impl<'a> AstInterpreter<'a>
                 }
             },
             Expr::LitExpr(_lit)                 => true,
-            Expr::IdentExpr(ident)              => {
-                match self.get_var(ident) {
-                    Ok(_)   => true,
-                    Err(_)  => false, // error
-                }
-            },
+            Expr::BuilderExpr(expr1, expr2)     => true,
+            Expr::IdentExpr(ident)              => self.get_var(ident).is_ok(), // error
             _                                   => false, // return error
         }
     }
 
+    // NOTE: TMP implementation of IF block for an action
     fn match_ifexpr(&self, cond: &Expr, consequence: &[Expr]) -> Result<RootInterface> {
-       println!("> condition > {:?}", self.valid_condition(cond));
+    //    println!("> condition > {:?}", self.valid_condition(cond));
         if self.valid_condition(cond) {
             let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
             for expr in consequence {
@@ -292,18 +385,17 @@ impl<'a> AstInterpreter<'a>
                             Err(err)  => return Err(err)
                         }
                     },
-                    Expr::Goto(Ident(ident))            => {root.add_next_step(ident); break},
+                    Expr::Goto(Ident(ident))            => root.add_next_step(ident),
                     _                                   => return Err(Error::new(ErrorKind::Other, "Error in If block")),
                 }
             }
-            println!("end of condition evaluation");
             Ok(root)
         } else {
             Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "))
         }
     }
 
-    // TMP implementation of block for an action
+    // NOTE: TMP implementation of block for an action
     pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
         self.check_valid_step(actions);
         let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
@@ -330,7 +422,7 @@ impl<'a> AstInterpreter<'a>
                 Expr::IfExpr { cond, consequence }  => {
                     match self.match_ifexpr(cond, consequence) {
                         Ok(action)  => root = root + action,
-                        Err(_err)    => {} // return Err(err)
+                        Err(_err)   => {} // return Err(err)
                     }
                 },
                 Expr::Goto(Ident(ident))    => root.add_next_step(ident),

@@ -20,3 +20,4 @@ rand = "0.6.5"
 serde = { version = "1.0", features = ["derive"] }
 neon-serde = "0.1.1"
 serde_json = "1.0"
+multimap = "0.4.0"

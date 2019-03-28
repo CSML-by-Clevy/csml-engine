@@ -136,7 +136,9 @@ named!(parse_reserved<Tokens, Expr>, do_parse!(
             (Expr::VecExpr(block))
         ) |
         parse_f |
-        parse_literalexpr
+        parse_literalexpr |
+        parse_builderexpr
+        // ( ) list of options 
     ) >>
     (Expr::Reserved{fun: action, arg: Box::new(arg)})
 ));
@@ -230,6 +232,21 @@ named!(parse_literalexpr<Tokens, Expr>, do_parse!(
     )
 );
 
+// TODO: mabe Ident 
+named!(parse_function<Tokens, Expr>, do_parse!(
+        ident: parse_ident!() >>
+        expr: delimited!(
+            tag_token!(Token::LParen), 
+                alt!( 
+                    parse_identexpr |
+                    parse_literalexpr 
+                )
+            , tag_token!(Token::RParen)
+        ) >>
+        (Expr::FunctionExpr(ident, Box::new(expr)))
+    )
+);
+
 named!(parse_builderexpr<Tokens, Expr>, do_parse!(
     exp1: alt!(
         parse_identexpr |
@@ -237,9 +254,10 @@ named!(parse_builderexpr<Tokens, Expr>, do_parse!(
     ) >>
     tag_token!(Token::Dot) >>
     exp2: alt!(
-        parse_identexpr |
-        parse_literalexpr |
-        parse_builderexpr
+        parse_function |
+        parse_builderexpr |
+        parse_identexpr  |
+        parse_literalexpr
     ) >>
     (Expr::BuilderExpr(Box::new(exp1), Box::new(exp2)))
 ));

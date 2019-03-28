@@ -27,14 +27,15 @@ pub enum Expr {
         cond: Box<Expr>,
         consequence: Vec<Expr>,
     },
+    FunctionExpr(Ident, Box<Expr>),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    BuilderExpr(Box<Expr>, Box<Expr>),
+    VecExpr(Vec<Expr>),
+    // RememberExpr(Ident, Literal),
     Goto(Ident),
     LitExpr(Literal),
     IdentExpr(Ident),
-    VecExpr(Vec<Expr>),
+    BuilderExpr(Box<Expr>, Box<Expr>),
     Empty,
-    // ArrayLit(Vec<Literal>),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
