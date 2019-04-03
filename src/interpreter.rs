@@ -10,9 +10,6 @@ use ast_interpreter::AstInterpreter;
 use json_to_rust::*;
 use multimap::MultiMap;
 
-// use std::io::*;
-// use std::io::{Error, ErrorKind};
-
 pub struct Interpreter {
 }
 
@@ -52,7 +49,6 @@ impl Interpreter {
                 Step::Block { label, actions } if check_ident(label, name) => {
                     let result = preter.match_block(actions).unwrap();
                     let ser = serde_json::to_string(&result).unwrap();
-                    // println!("--|--|----> {}", ser);
                     return Some(ser);
                 }
                 _ => continue,
@@ -61,7 +57,7 @@ impl Interpreter {
         None
     }
 
-    pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &Vec<serde_json::Value>) {
+    pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_json::Value]) {
 
         for value in vec.iter() {
             let memory_value: Result<MemoryType, _> = serde_json::from_value(value.clone()); 
@@ -101,32 +97,3 @@ impl Interpreter {
         }
     }
 }
-
-// loop {
-// match (read, &json) {
-//     (Ok(..), Some(string)) => {
-//         let deserialized: RootInterface = serde_json::from_str(&string).unwrap();
-//         self.search_for(&deserialized.next_step.unwrap());
-//     },
-//     (Ok(ref string), None) if string.trim() == "flow"   => {
-//         // check if flow can start
-//         self.search_for("flow");
-//         json = self.search_for("start");
-//     },
-//     (Ok(ref string), None) if string.trim() == "exit"   => break,
-//     (Ok(_string), None)                                 => continue,
-//     (Err(e), _)                                         => {
-//         println!("Error => {:?}", e);
-//         break;
-//     }
-// }
-// }
-
-// fn read_standar_in() -> Result<String> {
-//     let mut buffer = String::new();
-//     let stdin = stdin();
-//     let mut handle = stdin.lock();
-
-//     handle.read_to_string(&mut buffer)?;
-//     Ok(buffer)
-// }

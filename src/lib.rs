@@ -9,7 +9,7 @@ use neon::{register_module, prelude::*};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Error_msg {
+pub struct ErrorMsg {
     pub error: String,
 }
 

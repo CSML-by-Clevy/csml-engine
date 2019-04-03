@@ -5,16 +5,14 @@ use crate::parser::ast::*;
 use crate::interpreter::{
     builtins::*,
     message::*,
-    csml_rules::*,
+    // csml_rules::*,
     json_to_rust::*,
 };
 
 // use std::collections::HashMap;
 
 // struct StepInfo<'a> {
-//     name: &'a str,
-//     var: HashMap<&'a str, &'a Expr>,
-//     retry: i32
+    // var: HashMap<&'a str, &'a Expr>,
 // }
 
 // // return Result<struct, error>
@@ -29,13 +27,6 @@ pub struct AstInterpreter<'a> {
 
 impl<'a> AstInterpreter<'a>
 {
-    // fn match_var(&self, var: &Ident, action: &Expr) -> Result<MessageType> {
-    //     match var {
-    //         Ident(arg) if arg == "event"   => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
-    //         Ident(_arg)                    => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
-    //     }
-    // }
-
     fn match_builtin(&self, builtin: &Ident, args: &Expr) -> Result<MessageType> {
         match builtin {
             Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string()))),
@@ -82,13 +73,19 @@ impl<'a> AstInterpreter<'a>
                     //check if retry > 1
                 }
             }
+            Ident(ident) if ident == "remember" => {
+                match arg {
+                    Expr::Action {builtin: Ident(elem), args } if elem == "Assign"  => Ok(remember(args)),
+                    _                                                               => Err(Error::new(ErrorKind::Other, "Error remember can olny Assign")),
+                }
+            }
             Ident(ident) if ident == "retry"    => {
                 // check nbr
                 // save new option if exist
                 self.match_action(arg)
             }
             _                                   => {
-                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword"))
+                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword - 1"))
             }
         }
     }
@@ -99,13 +96,19 @@ impl<'a> AstInterpreter<'a>
             Ident(ident) if ident == "say"      => {
                 self.match_action(arg)
             }
+            Ident(ident) if ident == "remember" => {
+                match arg {
+                    Expr::Action {builtin: Ident(elem), args } if elem == "Assign"  => Ok(remember(args)),
+                    _                                                               => Err(Error::new(ErrorKind::Other, "Error remember can olny Assign")),
+                }
+            }
             Ident(ident) if ident == "retry"    => {
                 // check nbr
                 // save new option if exist 
                 self.match_action(arg)
             }
             _                                   => {
-                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword"))
+                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword - 2"))
             }
         }
     }
@@ -218,13 +221,15 @@ impl<'a> AstInterpreter<'a>
     //     };
     // }
 
-    // fn memory_first(&self, name: &Expr, expr: &Expr) {
-    //     match name {
-    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
-    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
-    //         _                                                   => {},
-    //     };
-    // }
+    //TODO: RM UNWRAP
+    fn memory_first(&self, name: &Expr, expr: &Expr) -> Option<&MemoryType> {
+        match (name, expr) {
+            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "past"    => self.memory.past.get_vec(lit).unwrap().last(),
+            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "memory"  => self.memory.current.get_vec(lit).unwrap().last(),
+            (_, Expr::LitExpr(Literal::StringLiteral(lit)))                                                   => self.memory.metadata.get_vec(lit).unwrap().last(),
+            _                                                                                                 => None,
+        }
+    }
 
     // fn memory_firstvalue(&self, name: &Expr, expr: &Expr) {
     //     match name {
@@ -234,11 +239,12 @@ impl<'a> AstInterpreter<'a>
     //     };
     // }
 
+    //NOTE:Only work with Strings for now 
     fn get_memory_action(&self, name: &Expr, expr: &Expr) -> Result<Literal> {
         match expr {
             Expr::FunctionExpr(Ident(ident), exp) if ident == "get"         => {
-                if let Some(value) = self.memory_get(name, exp) {
-                    return Ok(Literal::StringLiteral(value.value.clone()));
+                if let Some(elem) = self.memory_get(name, exp) {
+                    return Ok(Literal::StringLiteral(elem.value.clone()));
                 } else {
                     return Err(Error::new(ErrorKind::Other, "Error in memory action"));
                 }
@@ -246,7 +252,13 @@ impl<'a> AstInterpreter<'a>
             // Expr::FunctionExpr(Ident(ident), exp) if ident == "getvalue"    => Err(Error::new(ErrorKind::Other, "Error in memory action")),
             // Expr::FunctionExpr(Ident(ident), exp) if ident == "all"         => Err(Error::new(ErrorKind::Other, "Error in memory action")),
             // Expr::FunctionExpr(Ident(ident), exp) if ident == "allvalue"    => Err(Error::new(ErrorKind::Other, "Error in memory action")),
-            // Expr::FunctionExpr(Ident(ident), exp) if ident == "first"       => Err(Error::new(ErrorKind::Other, "Error in memory action")),
+            Expr::FunctionExpr(Ident(ident), exp) if ident == "first"       => {
+                if let Some(value) = self.memory_first(name, exp) {
+                    return Ok(Literal::StringLiteral(value.value.clone()));
+                } else {
+                    return Err(Error::new(ErrorKind::Other, "Error in memory action"));
+                }
+            },
             // Expr::FunctionExpr(Ident(ident), exp) if ident == "firstvalue"  => Err(Error::new(ErrorKind::Other, "Error in memory action")),
             _                                                               => Err(Error::new(ErrorKind::Other, "Error in memory action")),
         }
@@ -310,7 +322,7 @@ impl<'a> AstInterpreter<'a>
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between InfixExpr and InfixExpr"))
                 }
             },
-            (Expr::InfixExpr(i1, ex1, ex2), exp)             => {
+            (Expr::InfixExpr(i1, ex1, ex2), exp)                => {
                 match (self.evaluate_condition(i1, ex1, ex2), self.gen_literal_form_exp(exp)) {
                     (Ok(e1), Ok(_)) => {
                         match infix {
@@ -322,7 +334,7 @@ impl<'a> AstInterpreter<'a>
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between InfixExpr and expr"))
                 }
             },
-            (exp, Expr::InfixExpr(i1, ex1, ex2))             => {
+            (exp, Expr::InfixExpr(i1, ex1, ex2))                => {
                 match (self.gen_literal_form_exp(exp), self.evaluate_condition(i1, ex1, ex2)) {
                     (Ok(_), Ok(e2)) => {
                         match infix {
@@ -334,10 +346,11 @@ impl<'a> AstInterpreter<'a>
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between expr and InfixExpr"))
                 }
             }
-            (_, _)                                          => Err(Error::new(ErrorKind::Other, "error in evaluate_condition function")),
+            (_, _)                                              => Err(Error::new(ErrorKind::Other, "error in evaluate_condition function")),
         }
     }
 
+    // return Result<Expr, error>
     fn valid_condition(&self, expr: &Expr) -> bool {
         match expr {
             Expr::InfixExpr(inf, exp1, exp2)    => {
@@ -350,7 +363,7 @@ impl<'a> AstInterpreter<'a>
                 }
             },
             Expr::LitExpr(_lit)                 => true,
-            Expr::BuilderExpr(expr1, expr2)     => true,
+            Expr::BuilderExpr(..)               => self.get_var_form_ident(expr).is_ok(), // error
             Expr::IdentExpr(ident)              => self.get_var(ident).is_ok(), // error
             _                                   => false, // return error
         }
@@ -358,7 +371,6 @@ impl<'a> AstInterpreter<'a>
 
     // NOTE: TMP implementation of IF block for an action
     fn match_ifexpr(&self, cond: &Expr, consequence: &[Expr]) -> Result<RootInterface> {
-    //    println!("> condition > {:?}", self.valid_condition(cond));
         if self.valid_condition(cond) {
             let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
             for expr in consequence {
@@ -371,9 +383,10 @@ impl<'a> AstInterpreter<'a>
                         match self.match_reserved_if(fun, arg) {
                             Ok(msg)   => {
                                 match msg {
-                                    MessageType::Msg(msg)   => root.add_message(msg),
-                                    MessageType::Msgs(msgs) => root.message.extend(msgs),
-                                    MessageType::Empty      => {},
+                                    MessageType::Msg(msg)               => root.add_message(msg),
+                                    MessageType::Msgs(msgs)             => root.message.extend(msgs),
+                                    MessageType::Assign{name, value}    => root.add_to_memory(name, value),
+                                    MessageType::Empty                  => {},
                                 }
                             },
                             Err(err)  => return Err(err)
@@ -398,7 +411,7 @@ impl<'a> AstInterpreter<'a>
     // NOTE: TMP implementation of block for an action
     pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
         self.check_valid_step(actions);
-        let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
+        let mut root = RootInterface {remember: None, message: vec![], next_flow: None, next_step: None};
 
         for action in actions {
             //TODO: check ask
@@ -411,9 +424,10 @@ impl<'a> AstInterpreter<'a>
                     match self.match_reserved(fun, arg) {
                         Ok(action)  => {
                             match action {
-                                MessageType::Msg(msg)   => root.add_message(msg),
-                                MessageType::Msgs(msgs) => root.message.extend(msgs),
-                                MessageType::Empty      => {},
+                                MessageType::Msg(msg)            => root.add_message(msg),
+                                MessageType::Msgs(msgs)          => root.message.extend(msgs),
+                                MessageType::Assign{name, value} => root.add_to_memory(name, value),
+                                MessageType::Empty               => {},
                             }
                         },
                         Err(err)    => return Err(err)

@@ -59,6 +59,7 @@ macro_rules! eq_parsers (
                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
             } else {
                 match t1.tok[0].clone() {
+                    // Token::Assign => Ok((i1, Infix::Assign)),
                     Token::Equal => Ok((i1, Infix::Equal)),
                     Token::GreaterThan => Ok((i1, Infix::GreaterThan)),
                     Token::LessThan => Ok((i1, Infix::LessThan)),
@@ -124,7 +125,7 @@ named!(parse_goto<Tokens, Expr>, do_parse!(
 
 named!(parse_f<Tokens, Expr>, do_parse!(
     ident: parse_ident!() >>
-    vec: vectorice >>
+    vec: parse_expr_group >>
     (Expr::Action{builtin: ident, args: Box::new(vec) })
 ));
 
@@ -136,9 +137,7 @@ named!(parse_reserved<Tokens, Expr>, do_parse!(
             (Expr::VecExpr(block))
         ) |
         parse_f |
-        parse_literalexpr |
-        parse_builderexpr
-        // ( ) list of options 
+        parse_var_expr
     ) >>
     (Expr::Reserved{fun: action, arg: Box::new(arg)})
 ));
@@ -148,21 +147,17 @@ named!(parse_reserved_empty<Tokens, Expr>, do_parse!(
     (Expr::Reserved{fun: action, arg : Box::new(Expr::Empty)})
 ));
 
-named!(parse_infixexpr<Tokens, Expr>, do_parse!(
-    lit: alt!(
+named!(parse_infix_expr<Tokens, Expr>, do_parse!(
+    lit1: alt!(
             parse_vec_condition |
-            parse_builderexpr |
-            parse_literalexpr |
-            parse_identexpr
+            parse_var_expr
     ) >>
     eq: eq_parsers!() >>
     lit2: alt!(
             parse_vec_condition |
-            parse_builderexpr |
-            parse_literalexpr |
-            parse_identexpr
+            parse_var_expr
     ) >>
-    (Expr::InfixExpr(eq, Box::new(lit), Box::new(lit2)))
+    (Expr::InfixExpr(eq, Box::new(lit1), Box::new(lit2)))
 ));
 
 named!(parse_vec_condition<Tokens, Expr >, do_parse!(
@@ -174,9 +169,8 @@ named!(parse_vec_condition<Tokens, Expr >, do_parse!(
 
 named!(parse_condition<Tokens, Expr >, do_parse!(
     condition: alt!(
-            parse_infixexpr |
-            parse_literalexpr |
-            parse_identexpr
+            parse_infix_expr |
+            parse_var_expr
     ) >>
     (condition)
 ));
@@ -232,16 +226,11 @@ named!(parse_literalexpr<Tokens, Expr>, do_parse!(
     )
 );
 
-// TODO: mabe Ident 
+// NOTE: Mabe Ident
 named!(parse_function<Tokens, Expr>, do_parse!(
         ident: parse_ident!() >>
         expr: delimited!(
-            tag_token!(Token::LParen), 
-                alt!( 
-                    parse_identexpr |
-                    parse_literalexpr 
-                )
-            , tag_token!(Token::RParen)
+            tag_token!(Token::LParen), parse_var_expr, tag_token!(Token::RParen)
         ) >>
         (Expr::FunctionExpr(ident, Box::new(expr)))
     )
@@ -255,31 +244,27 @@ named!(parse_builderexpr<Tokens, Expr>, do_parse!(
     tag_token!(Token::Dot) >>
     exp2: alt!(
         parse_function |
-        parse_builderexpr |
-        parse_identexpr  |
-        parse_literalexpr
+        parse_var_expr
     ) >>
     (Expr::BuilderExpr(Box::new(exp1), Box::new(exp2)))
 ));
 
-named!(parse_exp<Tokens, Expr>, alt!(
+named!(parse_var_expr<Tokens, Expr>, alt!(
         parse_builderexpr |
         parse_identexpr |
         parse_literalexpr|
         parse_vec
-        // pars_if |
-        // parse_action
     )
 );
 
 named!(get_exp<Tokens, Expr>, do_parse!(
     tag_token!(Token::Comma) >>
-    val: parse_exp >>
+    val: parse_var_expr >>
     (val)
     )
 );
 
-named!(vectorice<Tokens, Expr >, do_parse!(
+named!(parse_expr_group<Tokens, Expr >, do_parse!(
         vec: delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
         ) >>
@@ -290,9 +275,9 @@ named!(vectorice<Tokens, Expr >, do_parse!(
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     res: many1!(
         alt!(
-            parse_exp |
+            parse_var_expr |
             get_exp |
-            vectorice
+            parse_expr_group
         )
     )
     >> (res)
@@ -347,13 +332,13 @@ impl Parser {
                 for elem in ast.iter() {
                     match elem {
                             Step::Block{..} => flow.steps.push(elem.clone()),
-                            Step::FlowStarter{ident: _ , list} => flow.accept = list.clone()
+                            Step::FlowStarter{list, ..} => flow.accept = list.clone()
                     }
                 }
                 Ok(flow)
             },
             Err(e) => {
-                // TODO: find error type\
+                // TODO: find error type
                 println!("error at PARSER {:?}", e);
                 Err(Error::new(ErrorKind::Other, "Error at parsing"))
             }

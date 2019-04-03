@@ -44,33 +44,3 @@ pub fn double_label(mut ast: &[Step]) -> bool
     }
     true
 }
-
-// pub fn check_infixexpr(expr: &Expr) -> bool {
-//     match expr {
-//         Expr::InfixExpr(_, exp1, exp2)  => check_infixexpr(exp1) && check_infixexpr(exp2),
-//         Expr::LitExpr(_lit)                 => true,
-//         Expr::IdentExpr(_ident)             => true,
-//         _                                   => false, // return error
-//     }
-// }
-
-// fn reserved_keywords(ident: &Ident) -> bool
-// {
-//     match ident {
-//         Ident(arg) if arg == "input"   => true,
-//         _                              => false
-//     }
-// }
-
-// fn check_valid_literal(expr: &Expr) -> bool
-// {
-//     let mut res = false;
-
-//     if let Expr::LitExpr(lit) = expr {
-//         match lit {
-//             Literal::StringLiteral(string)   => res = reserved_keywords(string),
-//             _                                => res = true,
-//         };
-//     }
-//     return res;
-// }

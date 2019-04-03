@@ -4,6 +4,7 @@ use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Token {
+    // Special Tokens
     Illegal,
     EOF,
 
@@ -15,21 +16,19 @@ pub enum Token {
     BoolLiteral(bool),
 
     // statements
+    Flow,
+    Goto,
+    Assign,
     If,
-    And,
-    Or,
 
     // operators
-    Assign,
     Equal,
     GreaterThan,
     LessThan,
     GreaterThanEqual,
     LessThanEqual,
-
-    // reserved words
-    Flow,
-    Goto,
+    And,
+    Or,
 
     // punctuations
     Comma,

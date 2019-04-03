@@ -12,6 +12,8 @@ fn exprvec_to_vec(vec: &[Expr]) -> Vec<String> {
     ).collect::<Vec<String>>()
 }
 
+//TODO: ERROR Handling in builtin
+
 // return Result<Expr, error>
 pub fn typing(args: &Expr) -> &Expr {
     if let Expr::VecExpr(vec) = args {
@@ -85,4 +87,16 @@ pub fn one_of(args: &Expr) -> &Expr {
         return &vec[rand::thread_rng().gen_range(0, vec.len())];
     }
     args
+}
+
+// return Result<Expr, error>
+pub fn remember(args: &Expr) -> MessageType {
+    if let Expr::VecExpr(vec) = args {
+        if vec.len() == 2 {
+            if let (Expr::IdentExpr(Ident(arg1)), Expr::LitExpr(Literal::StringLiteral(arg2))) = (&vec[0], &vec[1]) {
+                return MessageType::Assign{name: arg1.clone(), value: arg2.clone()};
+            }
+        }
+    }
+    MessageType::Assign{name: "error".to_owned(), value: "error".to_owned()}
 }

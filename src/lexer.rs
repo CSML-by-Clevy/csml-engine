@@ -124,13 +124,13 @@ named!(lex_punctuations<CompleteByteSlice, Token>, alt!(
 ));
 
 // Strings
-fn pis(input: CompleteByteSlice) -> IResult<CompleteByteSlice, Vec<u8>> {
+fn parse_string(input: CompleteByteSlice) -> IResult<CompleteByteSlice, Vec<u8>> {
     use std::result::Result::*;
 
     let (i1, c1) = try_parse!(input, take!(1));
     match c1.as_bytes() {
         b"\"" => Ok((input, vec![])),
-        c => pis(i1).map(|(slice, done)| (slice, concat_slice_vec(c, done))),
+        c => parse_string(i1).map(|(slice, done)| (slice, concat_slice_vec(c, done))),
     }
 }
 
@@ -148,7 +148,7 @@ fn convert_vec_utf8(v: Vec<u8>) -> Result<String, Utf8Error> {
 named!(string<CompleteByteSlice, String>,
     delimited!(
         tag!("\""),
-        map_res!(pis, convert_vec_utf8),
+        map_res!(parse_string, convert_vec_utf8),
         tag!("\"")
     )
 );

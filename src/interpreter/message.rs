@@ -6,13 +6,14 @@ use std::ops::Add;
 pub enum Content {
     Text(String),
     Int(i64),
-    Button(String, Vec<String>)
+    Button(String, Vec<String>),
 }
 
 //TMP I dont like this TODO: change it
 pub enum MessageType {
     Msg(Message),
     Msgs(Vec<Message>),
+    Assign{name: String, value: String},
     Empty
 }
 
@@ -41,12 +42,11 @@ impl Message {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RootInterface {
-    pub remember: Option<Vec<String>>,
+    pub remember: Option<Vec <(String, String)> >,
     pub message: Vec<Message>,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
 }
-
 
 impl Add for RootInterface {
     type Output = RootInterface;
@@ -54,23 +54,35 @@ impl Add for RootInterface {
     // return Result<struct, error>
     fn add(self, other: RootInterface) -> RootInterface {
         RootInterface {
-            remember: None,
+            remember: match (self.remember, other.remember) {
+                (Some(memory), None)            => Some(memory),
+                (None, Some(newmemory))         => Some(newmemory),
+                (Some(memory), Some(newmemory)) => Some([&memory[..], &newmemory[..]].concat()),
+                _                               => None,
+            },
             message: [&self.message[..], &other.message[..]].concat(),
             next_flow: None,
             next_step: match (self.next_step, other.next_step) {
-                (None, None)    => None,
-                (None, t)       => t,
-                (t, None)       => t,
-                (_, _)          => panic!("ERROR bad paring can't have too goto at same time"),
+                (Some(t), None)        => Some(t),
+                (None, Some(t))        => Some(t),
+                (Some(step1), Some(_)) => Some(step1), // should never happened
+                _                      => None,
             },
         }
     }
 }
 
 impl RootInterface {
-    // fn add_remeber(){}
     pub fn add_message(&mut self, message: Message) {
         self.message.push(message);
+    }
+
+    pub fn add_to_memory(&mut self, name: String, value: String) {
+        if let Some(ref mut vec) = self.remember {
+            vec.push((name, value))
+        } else {
+            self.remember = Some(vec![(name, value)]);
+        }
     }
 
     pub fn add_next_step(&mut self, next_step: &str) {

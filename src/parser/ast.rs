@@ -13,6 +13,7 @@ pub enum Step {
     Block { label: Ident, actions: Vec<Expr> },
 }
 
+//NOTE: see if it can be split in multiple enums types
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Expr {
     Reserved {
@@ -30,11 +31,13 @@ pub enum Expr {
     FunctionExpr(Ident, Box<Expr>),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
     VecExpr(Vec<Expr>),
-    // RememberExpr(Ident, Literal),
+
     Goto(Ident),
+
     LitExpr(Literal),
     IdentExpr(Ident),
     BuilderExpr(Box<Expr>, Box<Expr>),
+    
     Empty,
 }
 
@@ -88,6 +91,7 @@ pub enum Infix {
     LessThanEqual,
     GreaterThan,
     LessThan,
+    // NOTE: may not be INFIX expr
     And,
     Or,
 }
