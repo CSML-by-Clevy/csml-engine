@@ -19,6 +19,7 @@ pub enum Token {
     Flow,
     Goto,
     Assign,
+    Remember,
     If,
 
     // operators

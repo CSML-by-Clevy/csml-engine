@@ -219,11 +219,11 @@ fn parse_reserved(c: CompleteStr, rest: Option<CompleteStr>) -> Token {
         "if" => Token::If,
         "flow" => Token::Flow,
         "goto" => Token::Goto,
+        "remember" => Token::Remember,
+
         "retry" => Token::ReservedFunc(string),
         "ask" => Token::ReservedFunc(string),
         "say" => Token::ReservedFunc(string),
-
-        "remember" => Token::ReservedFunc(string),
         "import" => Token::ReservedFunc(string),
 
         "True" => Token::BoolLiteral(true),

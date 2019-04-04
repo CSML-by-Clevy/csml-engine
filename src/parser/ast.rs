@@ -24,6 +24,7 @@ pub enum Expr {
         builtin: Ident,
         args: Box<Expr>,
     },
+
     IfExpr {
         cond: Box<Expr>,
         consequence: Vec<Expr>,
@@ -33,6 +34,7 @@ pub enum Expr {
     VecExpr(Vec<Expr>),
 
     Goto(Ident),
+    Remember(Ident, Box<Expr>),
 
     LitExpr(Literal),
     IdentExpr(Ident),

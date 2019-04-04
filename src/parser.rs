@@ -59,7 +59,6 @@ macro_rules! eq_parsers (
                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
             } else {
                 match t1.tok[0].clone() {
-                    // Token::Assign => Ok((i1, Infix::Assign)),
                     Token::Equal => Ok((i1, Infix::Equal)),
                     Token::GreaterThan => Ok((i1, Infix::GreaterThan)),
                     Token::LessThan => Ok((i1, Infix::LessThan)),
@@ -116,6 +115,14 @@ macro_rules! parse_reservedfunc (
 );
 
 // ################################ FUNC
+
+named!(parse_remember<Tokens, Expr>, do_parse!(
+    tag_token!(Token::Remember) >>
+    name: parse_ident!() >>
+    tag_token!(Token::Assign) >>
+    var: parse_var_expr >>
+    (Expr::Remember(name, Box::new(var)))
+));
 
 named!(parse_goto<Tokens, Expr>, do_parse!(
     tag_token!(Token::Goto) >>
@@ -195,6 +202,7 @@ named!(parse_actions<Tokens, Vec<Expr> >,
             alt!(
                 parse_reserved |
                 parse_goto |
+                parse_remember |
                 parse_if |
                 parse_reserved_empty
             )
