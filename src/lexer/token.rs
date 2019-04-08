@@ -12,6 +12,7 @@ pub enum Token {
     Ident(String),
     ReservedFunc(String),
     StringLiteral(String),
+    ComplexString(Vec<Token>),
     IntLiteral(i64),
     BoolLiteral(bool),
 

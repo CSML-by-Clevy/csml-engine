@@ -10,37 +10,27 @@ pub fn check_ident(expr: &Ident, name: &str) -> bool {
 
 fn contains_label(step: &Step, name: &str) -> bool {
     match step {
-        Step::Block{label: Ident(label), ..} if label == name   => true,
+        Step{label: Ident(label), ..} if label == name   => true,
         _                                                       => false
     }
 }
 
-fn contains_starterflow(step: &Step) -> bool {
-    if let Step::FlowStarter{ .. } = step { 
-        true
-    } else {
-        false
-    }
-}
-
-pub fn double_label(mut ast: &[Step]) -> bool
+pub fn double_label(ast: &Flow) -> bool
 {
-    while let Some((hd, tl)) = ast.split_first() {
+    let mut steps: &[Step] = &ast.steps;
+    if ast.accept.is_empty() {
+        return false;
+    }
+    while let Some((hd, tl)) = steps.split_first() {
         match (hd, tl) {
-            (Step::Block{label: Ident(name), ..}, tl)  => {
+            (Step{label: Ident(name), ..}, tl)  => {
                 match tl.iter().find(|&x| contains_label(x, name)) {
                     Some( .. )  => return false,
                     None        => true
                 }
             },
-            (Step::FlowStarter{ .. }, tl)  => {
-                match tl.iter().find(|&x| contains_starterflow(x)) {
-                    Some( .. )  => return false,
-                    None        => true
-                }
-            },
         };
-        ast = tl;
+        steps = tl;
     }
     true
 }

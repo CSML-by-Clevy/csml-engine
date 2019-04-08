@@ -77,13 +77,13 @@ named!(rparen_punctuation<CompleteByteSlice, Token>,
     do_parse!(tag!(")") >> (Token::RParen))
 );
 
-named!(l2brace_punctuation<CompleteByteSlice, Token>,
-    do_parse!(tag!("{{") >> (Token::L2Brace))
-);
+// named!(l2brace_punctuation<CompleteByteSlice, Token>,
+//     do_parse!(tag!("{{") >> (Token::L2Brace))
+// );
 
-named!(r2brace_punctuation<CompleteByteSlice, Token>,
-    do_parse!(tag!("}}") >> (Token::R2Brace))
-);
+// named!(r2brace_punctuation<CompleteByteSlice, Token>,
+//     do_parse!(tag!("}}") >> (Token::R2Brace))
+// );
 
 named!(lbrace_punctuation<CompleteByteSlice, Token>,
     do_parse!(tag!("{") >> (Token::LBrace))
@@ -114,8 +114,8 @@ named!(lex_punctuations<CompleteByteSlice, Token>, alt!(
     colon_punctuation |
     lparen_punctuation |
     rparen_punctuation |
-    l2brace_punctuation |
-    r2brace_punctuation |
+    // l2brace_punctuation |
+    // r2brace_punctuation |
     lbrace_punctuation |
     rbrace_punctuation |
     lbracket_punctuation |
@@ -124,13 +124,18 @@ named!(lex_punctuations<CompleteByteSlice, Token>, alt!(
 ));
 
 // Strings
-fn parse_string(input: CompleteByteSlice) -> IResult<CompleteByteSlice, Vec<u8>> {
+fn parse_string(input: CompleteByteSlice) -> IResult<CompleteByteSlice, Vec<u8> > {
     use std::result::Result::*;
 
     let (i1, c1) = try_parse!(input, take!(1));
+    // println!("i1 {:?} c1 {:?}", i1, c1);
     match c1.as_bytes() {
         b"\"" => Ok((input, vec![])),
-        c => parse_string(i1).map(|(slice, done)| (slice, concat_slice_vec(c, done))),
+        c => parse_string(i1).map(|(slice, done)| {
+                // println!("slice {:?}, done {:?}", slice, done);
+                (slice, concat_slice_vec(c, done))
+            }
+        ),
     }
 }
 
@@ -152,14 +157,6 @@ named!(string<CompleteByteSlice, String>,
         tag!("\"")
     )
 );
-
-// named!(lex_label<CompleteByteSlice, Token>,
-//     do_parse!(
-//         s: string >>
-//         tag!(":") >>
-//         (Token::Label(s))
-//     )
-// );
 
 named!(lex_string<CompleteByteSlice, Token>,
     do_parse!(
@@ -263,11 +260,63 @@ named!(lex_reserved_ident<CompleteByteSlice, Token>,
     )
 );
 
+// Strings 2
+named!(parse_2brace<CompleteByteSlice, Token>, do_parse!(
+    vec: delimited!(
+        tag!("{{"), many0!(lex_token), tag!("}}")
+    ) >>
+    (Token::ComplexString(vec))
+));
+
+named!(lex_string2<CompleteByteSlice, Token>, do_parse!(
+    vec: delimited!(
+        tag!("\""), many0!(parse_string2), tag!("\"")
+    ) >>
+    (Token::ComplexString(vec))
+));
+
+fn parse_string_literal(rest: CompleteByteSlice, val: Vec<u8>) -> IResult<CompleteByteSlice, Token >{
+    Ok((rest, Token::StringLiteral(convert_vec_utf8(val).unwrap())))
+}
+
+fn parse_brace<'a>(rest: CompleteByteSlice<'a>, val: CompleteByteSlice<'a>) -> IResult<CompleteByteSlice<'a>, Token >{
+    match val.find_substring("{{") {
+        Some(len)   => {
+            let (rest2, val2) = val.take_split(len);
+            //NOTE: add to vec
+            Token::StringLiteral(convert_vec_utf8(val2.as_bytes().to_vec()).unwrap());
+            parse_2brace(rest2)
+        },
+        None        => parse_string_literal(rest, val.as_bytes().to_vec()),
+    }
+}
+
+fn parse_string2(input: CompleteByteSlice) -> IResult<CompleteByteSlice, Token > {
+    let len = match input.find_substring("\"") {
+        Some(len)   => len,
+        None        => 0,
+    };
+
+    let (rest, val) = input.take_split(len);
+    parse_brace(rest, val)
+}
+
+// named!(lex_string22< CompleteByteSlice, Token, u32>,
+//     add_return_error!(
+//         ErrorKind::Custom(2),
+//         do_parse!(
+//             string: parse_string2
+//             >>
+//             (string)
+//         )
+// ));
+
 named!(lex_token<CompleteByteSlice, Token>, alt_complete!(
     lex_operator |
     lex_punctuations |
     lex_integer |
     lex_string |
+    lex_string2 |
     lex_reserved_ident |
     lex_illegal
 ));
@@ -278,6 +327,7 @@ pub struct Lexer;
 
 impl Lexer {
     pub fn lex_tokens(slice: &[u8]) -> IResult<CompleteByteSlice, Vec<Token>> {
+        println!("lexer is called");
         start_lex(CompleteByteSlice(slice))
             .map(|(slice, result)| (slice, [&result, &vec![Token::EOF][..]].concat()))
     }

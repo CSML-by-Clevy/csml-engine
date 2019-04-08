@@ -8,9 +8,15 @@ pub struct Flow {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub enum Step {
+pub struct Step {
+    pub label: Ident,
+    pub actions: Vec<Expr>
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum FlowTypes {
     FlowStarter { ident: Ident, list: Vec<Expr> },
-    Block { label: Ident, actions: Vec<Expr> },
+    Block(Step),
 }
 
 //NOTE: see if it can be split in multiple enums types
@@ -31,15 +37,16 @@ pub enum Expr {
     },
     FunctionExpr(Ident, Box<Expr>),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    VecExpr(Vec<Expr>),
 
-    Goto(Ident),
-    Remember(Ident, Box<Expr>),
+    VecExpr(Vec<Expr>),
 
     LitExpr(Literal),
     IdentExpr(Ident),
     BuilderExpr(Box<Expr>, Box<Expr>),
-    
+
+    Goto(Ident),
+    Remember(Ident, Box<Expr>),
+
     Empty,
 }
 

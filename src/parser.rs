@@ -211,12 +211,12 @@ named!(parse_actions<Tokens, Vec<Expr> >,
     )
 );
 
-named!(parse_label<Tokens, Step>,
+named!(parse_label<Tokens, FlowTypes>,
     do_parse!(
         ident: parse_ident!() >>
         tag_token!(Token::Colon) >>
         block: parse_actions >>
-        (Step::Block{ label: ident, actions: block})
+        (FlowTypes::Block(Step{label: ident, actions: block} ))
     )
 );
 
@@ -234,7 +234,6 @@ named!(parse_literalexpr<Tokens, Expr>, do_parse!(
     )
 );
 
-// NOTE: Mabe Ident
 named!(parse_function<Tokens, Expr>, do_parse!(
         ident: parse_ident!() >>
         expr: delimited!(
@@ -304,24 +303,24 @@ named!(parse_vec<Tokens, Expr >, do_parse!(
     (Expr::VecExpr(start_vec))
 ));
 
-named!(parse_start_flow<Tokens, Step>,
+named!(parse_start_flow<Tokens, FlowTypes>,
     do_parse!(
         tag_token!(Token::Flow) >>
         ident: parse_ident!() >>
         start_vec: delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
         ) >>
-        (Step::FlowStarter{ident: ident, list: start_vec})
+        (FlowTypes::FlowStarter{ident: ident, list: start_vec})
     )
 );
 
-named!(parse_steps<Tokens, Step>, alt_complete!(
+named!(parse_steps<Tokens, FlowTypes>, alt_complete!(
         parse_label |
         parse_start_flow
     )
 );
 
-named!(parse_program<Tokens, Vec<Step> >,
+named!(parse_program<Tokens, Vec<FlowTypes> >,
     do_parse!(
         prog: many0!(parse_steps) >>
         tag_token!(Token::EOF) >>
@@ -339,8 +338,8 @@ impl Parser {
             Ok((_, ast)) => {
                 for elem in ast.iter() {
                     match elem {
-                            Step::Block{..} => flow.steps.push(elem.clone()),
-                            Step::FlowStarter{list, ..} => flow.accept = list.clone()
+                            FlowTypes::Block(step)              => flow.steps.push(step.clone()),
+                            FlowTypes::FlowStarter{list, ..}    => flow.accept = list.clone() // replace accept if there are more than one 
                     }
                 }
                 Ok(flow)

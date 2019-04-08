@@ -137,12 +137,11 @@ impl<'a> AstInterpreter<'a>
     }
 
     // VARS ##################################################################################
-    // TODO: rm clone
     fn gen_literal_form_event(&self) -> Result<Literal> {
         match self.event {
             Some(event)        => {
                 match event.payload {
-                    PayLoad{content_type: ref t, content: ref c} if t == "text" => Ok( Literal::StringLiteral(c.text.clone()) ),
+                    PayLoad{content_type: ref t, content: ref c} if t == "text" => Ok( Literal::StringLiteral(c.text.to_string())),
                     _                                                           => Err(Error::new(ErrorKind::Other, "event type is unown")),
                 }
             },
@@ -159,6 +158,7 @@ impl<'a> AstInterpreter<'a>
 
     fn get_var_form_ident(&self, expr: &Expr) -> Result<Literal> {
         match expr {
+            Expr::LitExpr(lit)           => Ok(lit.clone()),
             Expr::IdentExpr(ident)       => self.get_var(ident),
             Expr::BuilderExpr(..)        => self.gen_literal_form_builder(expr),
             _                            => Err(Error::new(ErrorKind::Other, "unown variable in Ident err n#1"))
@@ -273,6 +273,7 @@ impl<'a> AstInterpreter<'a>
     // NOTE: see if IDENT CAN HAVE BUILDER_IDENT inside
     fn check_if_ident(&self, expr: &Expr) -> bool {
         match expr {
+            Expr::LitExpr(..)         => true,
             Expr::IdentExpr(..)       => true,
             Expr::BuilderExpr(..)     => true,
             _                         => false

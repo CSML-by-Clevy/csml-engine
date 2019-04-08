@@ -21,15 +21,11 @@ impl Interpreter {
         if !flow.accept.is_empty() { accept_flow = true; }
         for step in flow.steps.iter() {
             match step {
-                Step::Block { label, .. }       =>
-                    match label {
-                        Ident(t) if t == "start"    => start = true,
-                        _                           => {}
-                    },
-                _                               => continue
+                Step{label: Ident(label), .. } if label == "start"  => start = true,
+                _                                                   => continue
             }
         }
-        start && accept_flow && double_label(&flow.steps)
+        start && accept_flow && double_label(&flow)
     }
 
     pub fn is_trigger(flow: &Flow, string: &str) -> bool {
@@ -46,7 +42,7 @@ impl Interpreter {
     pub fn search_for(flow: &Flow, name: &str, preter: AstInterpreter) -> Option<String> {
         for step in flow.steps.iter() {
             match step {
-                Step::Block { label, actions } if check_ident(label, name) => {
+                Step{label, actions} if check_ident(label, name) => {
                     let result = preter.match_block(actions).unwrap();
                     let ser = serde_json::to_string(&result).unwrap();
                     return Some(ser);

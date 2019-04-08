@@ -29,11 +29,13 @@ fn hello(mut cx: FunctionContext) -> JsResult<JsNull> {
 // let tmp: My_test = serde_json::from_str(&arg1).unwrap();
 fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
     let file = cx.argument::<JsString>(0)?.value();
+    println!("-------------------");
     let lex_tokens = Lexer::lex_tokens(file.as_bytes());
-
+    println!("-------------------");
     match lex_tokens {
         Ok((_complete, t)) => {
             let tokens = Tokens::new(&t);
+            // println!("{:#?}", tokens);
             match Parser::parse_tokens(tokens) {
                 Ok(flow) => {
                     if let Ok(json) = serde_json::to_string(&flow) {
@@ -49,7 +51,6 @@ fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
         }
         Err(e) => println!("Problem in Lexing Tokens -> {:?}", e),
     };
-
     Ok(cx.string(""))
 }
 
