@@ -223,8 +223,8 @@ fn parse_reserved(c: CompleteStr, rest: Option<CompleteStr>) -> Token {
         "say" => Token::ReservedFunc(string),
         "import" => Token::ReservedFunc(string),
 
-        "True" => Token::BoolLiteral(true),
-        "False" => Token::BoolLiteral(false),
+        "true" => Token::BoolLiteral(true),
+        "false" => Token::BoolLiteral(false),
         // "execute"
         _ => Token::Ident(string),
     }
@@ -263,60 +263,77 @@ named!(lex_reserved_ident<CompleteByteSlice, Token>,
 // Strings 2
 named!(parse_2brace<CompleteByteSlice, Token>, do_parse!(
     vec: delimited!(
-        tag!("{{"), many0!(lex_token), tag!("}}")
+        tag!("{{"), ws!(many0!(lex_token2)), tag!("}}")
     ) >>
     (Token::ComplexString(vec))
 ));
 
-named!(lex_string2<CompleteByteSlice, Token>, do_parse!(
+named!(lex_complex_string<CompleteByteSlice, Token>, do_parse!(
     vec: delimited!(
-        tag!("\""), many0!(parse_string2), tag!("\"")
+        tag!("\""), parse_string2, tag!("\"")
     ) >>
     (Token::ComplexString(vec))
 ));
 
-fn parse_string_literal(rest: CompleteByteSlice, val: Vec<u8>) -> IResult<CompleteByteSlice, Token >{
-    Ok((rest, Token::StringLiteral(convert_vec_utf8(val).unwrap())))
-}
-
-fn parse_brace<'a>(rest: CompleteByteSlice<'a>, val: CompleteByteSlice<'a>) -> IResult<CompleteByteSlice<'a>, Token >{
+//NOTE: need to make Error handling properly
+fn parse_brace(val: CompleteByteSlice) -> Vec<Token> {
     match val.find_substring("{{") {
         Some(len)   => {
             let (rest2, val2) = val.take_split(len);
-            //NOTE: add to vec
-            Token::StringLiteral(convert_vec_utf8(val2.as_bytes().to_vec()).unwrap());
-            parse_2brace(rest2)
+            let mut vec = vec![];
+            let tok1 = Token::StringLiteral(convert_vec_utf8(val2.as_bytes().to_vec()).unwrap());
+
+            vec.push(tok1);
+            if let Ok((rest3, tok2)) = parse_2brace(rest2){
+                vec.push(tok2);
+                vec.append(&mut parse_brace(rest3));
+            }
+            vec
         },
-        None        => parse_string_literal(rest, val.as_bytes().to_vec()),
+        None      => {
+            let mut vec = vec![];
+            if val.input_len() > 0 {
+                vec.push(Token::StringLiteral(convert_vec_utf8(val.as_bytes().to_vec()).unwrap()))
+            }
+            vec
+        },
     }
 }
 
-fn parse_string2(input: CompleteByteSlice) -> IResult<CompleteByteSlice, Token > {
+fn parse_string2(input: CompleteByteSlice) -> IResult<CompleteByteSlice, Vec<Token> > {
     let len = match input.find_substring("\"") {
         Some(len)   => len,
         None        => 0,
     };
 
     let (rest, val) = input.take_split(len);
-    parse_brace(rest, val)
+    Ok((rest, parse_brace(val)))
 }
 
-// named!(lex_string22< CompleteByteSlice, Token, u32>,
-//     add_return_error!(
-//         ErrorKind::Custom(2),
-//         do_parse!(
-//             string: parse_string2
-//             >>
-//             (string)
-//         )
-// ));
+named!(lex_token2<CompleteByteSlice, Token>, alt_complete!(
+    lex_operator |
+    //    punctuations
+    comma_punctuation |
+    dot_punctuation |
+    semicolon_punctuation |
+    colon_punctuation |
+    lparen_punctuation |
+    rparen_punctuation |
+    lbracket_punctuation |
+    rbracket_punctuation |
+    //    punctuations
+    lex_integer |
+    lex_string |
+    parse_2brace |
+    lex_reserved_ident 
+));
 
 named!(lex_token<CompleteByteSlice, Token>, alt_complete!(
     lex_operator |
     lex_punctuations |
     lex_integer |
-    lex_string |
-    lex_string2 |
+    lex_complex_string |
+    // lex_string |
     lex_reserved_ident |
     lex_illegal
 ));

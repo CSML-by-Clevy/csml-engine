@@ -95,6 +95,38 @@ macro_rules! parse_literal (
     );
 );
 
+//NOTE: ComplexString
+fn ret_test<'a>(rest: Tokens<'a>, vec: Tokens<'a>) -> IResult<Tokens<'a>, Vec<Expr> > {
+    match parse_complex(vec) {
+        Ok((_, vec))    => Ok((rest, vec)),
+        err             => err
+    }
+}
+
+//NOTE: ComplexString
+macro_rules! parse_complex_string (
+    ($i: expr,) => (
+        {
+            use std::result::Result::*;
+            use nom::{Err,ErrorKind};
+
+            let (i1, t1) = try_parse!($i, take!(1));
+            if t1.tok.is_empty() {
+                Err(Err::Error(error_position!($i, ErrorKind::Tag)))
+            } else {
+                match t1.tok[0].clone() {
+                    Token::ComplexString(vecs) => {
+                        // let tokens = Tokens::new(&vecs);
+                        // ret_test(i1, tokens)
+                        Ok((i1, vec![Expr::LitExpr(StringLiteral("ComplexString".to_owned()))]))
+                    },
+                    _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
+                }
+            }
+        }
+    );
+);
+
 macro_rules! parse_reservedfunc (
     ($i: expr,) => (
         {
@@ -169,7 +201,7 @@ named!(parse_infix_expr<Tokens, Expr>, do_parse!(
 
 named!(parse_vec_condition<Tokens, Expr >, do_parse!(
     start_vec: delimited!(
-            tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
+        tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
     ) >>
     (start_vec)
 ));
@@ -243,6 +275,13 @@ named!(parse_function<Tokens, Expr>, do_parse!(
     )
 );
 
+//NOTE: ComplexString
+named!(parse_complex_stringexpr<Tokens, Expr>, do_parse!(
+        complex: parse_complex_string!() >>
+        (Expr::VecExpr(complex))
+    )
+);
+
 named!(parse_builderexpr<Tokens, Expr>, do_parse!(
     exp1: alt!(
         parse_identexpr |
@@ -259,7 +298,9 @@ named!(parse_builderexpr<Tokens, Expr>, do_parse!(
 named!(parse_var_expr<Tokens, Expr>, alt!(
         parse_builderexpr |
         parse_identexpr |
-        parse_literalexpr|
+        parse_literalexpr |
+        //NOTE: ComplexString
+        parse_complex_stringexpr |
         parse_vec
     )
 );
@@ -317,6 +358,13 @@ named!(parse_start_flow<Tokens, FlowTypes>,
 named!(parse_steps<Tokens, FlowTypes>, alt_complete!(
         parse_label |
         parse_start_flow
+    )
+);
+
+named!(parse_complex<Tokens, Vec<Expr> >,
+    do_parse!(
+        prog: many0!(parse_var_expr) >>
+        (prog)
     )
 );
 

@@ -30,7 +30,8 @@ fn hello(mut cx: FunctionContext) -> JsResult<JsNull> {
 fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
     let file = cx.argument::<JsString>(0)?.value();
     println!("-------------------");
-    let lex_tokens = Lexer::lex_tokens(file.as_bytes());
+    let lex_tokens = dbg!(Lexer::lex_tokens(file.as_bytes()));
+
     println!("-------------------");
     match lex_tokens {
         Ok((_complete, t)) => {
