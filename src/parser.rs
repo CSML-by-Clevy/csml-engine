@@ -5,11 +5,14 @@ use ast::Literal::*;
 use ast::*;
 use nom::*;
 use std::io::{Error, ErrorKind, Result};
+use std::str;
+use std::str::FromStr;
+use std::str::Utf8Error;
 
 // ################## Macros
 
 macro_rules! tag_token (
-    ($i: expr, $tag: expr) => (
+    ($i: expr, $tag:path) => (
         {
             use std::result::Result::*;
             use nom::{Err,ErrorKind};
@@ -19,10 +22,29 @@ macro_rules! tag_token (
             if t1.tok.is_empty() {
                 Err(Err::Incomplete(Needed::Size(1)))
             } else {
-                if t1.tok[0] == $tag {
-                    Ok((i1, t1))
-                } else {
-                    Err(Err::Error(error_position!($i, ErrorKind::Count)))
+                match t1.tok[0] {
+                    $tag(_)    => Ok((i1, t1)),
+                    _          => Err(Err::Error(error_position!($i, ErrorKind::Count)))
+                }
+            }
+        }
+    );
+);
+
+macro_rules! tag_token2 (
+    ($i: expr, $tag:path) => (
+        {
+            use std::result::Result::*;
+            use nom::{Err,ErrorKind};
+
+            let (i1, t1) = try_parse!($i, take!(1));
+
+            if t1.tok.is_empty() {
+                Err(Err::Incomplete(Needed::Size(1)))
+            } else {
+                match t1.tok[0] {
+                    $tag       => Ok((i1, t1)),
+                    _          => Err(Err::Error(error_position!($i, ErrorKind::Count)))
                 }
             }
         }
@@ -40,7 +62,7 @@ macro_rules! parse_ident (
                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
             } else {
                 match t1.tok[0].clone() {
-                    Token::Ident(name) => Ok((i1, Ident(name))),
+                    Token::Ident(name, _) => Ok((i1, Ident(name))),
                     _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
                 }
             }
@@ -59,14 +81,14 @@ macro_rules! eq_parsers (
                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
             } else {
                 match t1.tok[0].clone() {
-                    Token::Equal => Ok((i1, Infix::Equal)),
-                    Token::GreaterThan => Ok((i1, Infix::GreaterThan)),
-                    Token::LessThan => Ok((i1, Infix::LessThan)),
-                    Token::LessThanEqual => Ok((i1, Infix::LessThanEqual)),
-                    Token::GreaterThanEqual => Ok((i1, Infix::GreaterThanEqual)),
+                    Token::Equal(_) => Ok((i1, Infix::Equal)),
+                    Token::GreaterThan(_) => Ok((i1, Infix::GreaterThan)),
+                    Token::LessThan(_) => Ok((i1, Infix::LessThan)),
+                    Token::LessThanEqual(_) => Ok((i1, Infix::LessThanEqual)),
+                    Token::GreaterThanEqual(_) => Ok((i1, Infix::GreaterThanEqual)),
                     //tmp values
-                    Token::And => Ok((i1, Infix::And)),
-                    Token::Or => Ok((i1, Infix::Or)),
+                    Token::And(_) => Ok((i1, Infix::And)),
+                    Token::Or(_) => Ok((i1, Infix::Or)),
                     _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
                 }
             }
@@ -85,9 +107,9 @@ macro_rules! parse_literal (
                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
             } else {
                 match t1.tok[0].clone() {
-                    Token::IntLiteral(i) => Ok((i1, IntLiteral(i))),
-                    Token::BoolLiteral(b) => Ok((i1, BoolLiteral(b))),
-                    Token::StringLiteral(s) => Ok((i1, StringLiteral(s))),
+                    Token::IntLiteral(i, _) => Ok((i1, IntLiteral(i))),
+                    Token::BoolLiteral(b, _) => Ok((i1, BoolLiteral(b))),
+                    Token::StringLiteral(s, _) => Ok((i1, StringLiteral(s))),
                     _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
                 }
             }
@@ -95,37 +117,57 @@ macro_rules! parse_literal (
     );
 );
 
-//NOTE: ComplexString
-fn ret_test<'a>(rest: Tokens<'a>, vec: Tokens<'a>) -> IResult<Tokens<'a>, Vec<Expr> > {
-    match parse_complex(vec) {
-        Ok((_, vec))    => Ok((rest, vec)),
-        err             => err
-    }
-}
+// macro_rules! eat_separator2 (
+//   ($i:expr, $arr:expr) => (
+//     {
+//       use $crate::{FindToken, InputTakeAtPosition};
+//       let input = $i;
+//       input.split_at_position(|c| !$arr.find_token(c))
+//     }
+//   );
+// );
 
-//NOTE: ComplexString
-macro_rules! parse_complex_string (
-    ($i: expr,) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
+// named!(pub space, eat_separator([Token::Space, Token::NewLine]));
 
-            let (i1, t1) = try_parse!($i, take!(1));
-            if t1.tok.is_empty() {
-                Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-            } else {
-                match t1.tok[0].clone() {
-                    Token::ComplexString(vecs) => {
-                        // let tokens = Tokens::new(&vecs);
-                        // ret_test(i1, tokens)
-                        Ok((i1, vec![Expr::LitExpr(StringLiteral("ComplexString".to_owned()))]))
-                    },
-                    _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
-                }
-            }
-        }
-    );
-);
+// macro_rules! sp (
+//   ($i:expr, $($args:tt)*) => (
+//     {
+//       sep!($i, space, $($args)*)
+//     }
+//   )
+// );
+
+// //NOTE: ComplexString
+// fn ret_test<'a>(rest: Tokens<'a>, vec: Tokens<'a>) -> IResult<Tokens<'a>, Vec<Expr> > {
+//     match parse_complex(vec) {
+//         Ok((_, vec))    => Ok((rest, vec)),
+//         err             => err
+//     }
+// }
+
+// //NOTE: ComplexString
+// macro_rules! parse_complex_string (
+//     ($i: expr,) => (
+//         {
+//             use std::result::Result::*;
+//             use nom::{Err,ErrorKind};
+
+//             let (i1, t1) = try_parse!($i, take!(1));
+//             if t1.tok.is_empty() {
+//                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
+//             } else {
+//                 match t1.tok[0].clone() {
+//                     Token::ComplexString(vecs) => {
+//                         // let tokens = Tokens::new(&vecs);
+//                         // ret_test(i1, tokens)
+//                         Ok((i1, vec![Expr::LitExpr(StringLiteral("ComplexString".to_owned()))]))
+//                     },
+//                     _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
+//                 }
+//             }
+//         }
+//     );
+// );
 
 macro_rules! parse_reservedfunc (
     ($i: expr,) => (
@@ -138,7 +180,7 @@ macro_rules! parse_reservedfunc (
                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
             } else {
                 match t1.tok[0].clone() {
-                    Token::ReservedFunc(i) => Ok((i1, Ident(i))),
+                    Token::ReservedFunc(i, _) => Ok((i1, Ident(i))),
                     _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
                 }
             }
@@ -146,90 +188,165 @@ macro_rules! parse_reservedfunc (
     );
 );
 
-// ################################ FUNC
+//  ################################ STRING
 
+// fn parse_string(input: Tokens) -> IResult<Tokens, Vec<u8> > {
+//     use std::result::Result::*;
+
+//     let (i1, c1) = try_parse!(input, take!(1));
+//     // println!("i1 {:?} c1 {:?}", i1, c1);
+//     match c1.fragment.as_bytes() {
+//         b"\"" => Ok((input, vec![])),
+//         c => parse_string(i1).map(|(slice, done)| {
+//                 // println!("slice {:?}, done {:?}", slice, done);
+//                 (slice, concat_slice_vec(c, done))
+//             }
+//         ),
+//     }
+// }
+
+// fn concat_slice_vec(c: &[u8], done: Vec<u8>) -> Vec<u8> {
+//     let mut new_vec = c.to_vec();
+//     new_vec.extend(&done);
+//     new_vec
+// }
+
+// fn convert_vec_utf8(v: Vec<u8>) -> Result<String, Utf8Error> {
+//     let slice = v.as_slice();
+//     str::from_utf8(slice).map(|s| s.to_owned())
+// }
+
+// named!(to_string<Tokens, String>, do_parse!(
+//     )
+// );
+
+// named!(string<Tokens, String>, do_parse!(
+//         consume_ws >>
+//         test: delimited!(
+//             tag_token!(Token::DoubleQuote),
+//             many0!(parse_steps),
+//             // map_res!(parse_string, convert_vec_utf8),
+//             tag_token!(Token::DoubleQuote)
+//         ) >>
+//         (test)
+//     )
+// );
+
+// ################################ FUNC
 named!(parse_remember<Tokens, Expr>, do_parse!(
+    consume_ws >>
     tag_token!(Token::Remember) >>
+    consume_ws >>
     name: parse_ident!() >>
+    consume_ws >>
     tag_token!(Token::Assign) >>
+    consume_ws >>
     var: parse_var_expr >>
+    consume_ws >>
     (Expr::Remember(name, Box::new(var)))
 ));
 
 named!(parse_goto<Tokens, Expr>, do_parse!(
+    consume_ws >>
     tag_token!(Token::Goto) >>
+    consume_ws >>
     label: parse_ident!() >>
+    consume_ws >>
     (Expr::Goto(label))
 ));
 
 named!(parse_f<Tokens, Expr>, do_parse!(
+    consume_ws >>
     ident: parse_ident!() >>
+    consume_ws >>
     vec: parse_expr_group >>
+    consume_ws >>
     (Expr::Action{builtin: ident, args: Box::new(vec) })
 ));
 
 named!(parse_reserved<Tokens, Expr>, do_parse!(
+    consume_ws >>
     action: parse_reservedfunc!() >>
+    consume_ws >>
     arg: alt!(
         do_parse!(
+            consume_ws >>
             block: parse_block >>
             (Expr::VecExpr(block))
         ) |
         parse_f |
         parse_var_expr
     ) >>
+    consume_ws >>
     (Expr::Reserved{fun: action, arg: Box::new(arg)})
 ));
 
 named!(parse_reserved_empty<Tokens, Expr>, do_parse!(
+    consume_ws >>
     action: parse_reservedfunc!() >>
+    consume_ws >>
     (Expr::Reserved{fun: action, arg : Box::new(Expr::Empty)})
 ));
 
 named!(parse_infix_expr<Tokens, Expr>, do_parse!(
+    consume_ws >>
     lit1: alt!(
             parse_vec_condition |
             parse_var_expr
     ) >>
+    consume_ws >>
     eq: eq_parsers!() >>
+    consume_ws >>
     lit2: alt!(
             parse_vec_condition |
             parse_var_expr
     ) >>
+    consume_ws >>
     (Expr::InfixExpr(eq, Box::new(lit1), Box::new(lit2)))
 ));
 
 named!(parse_vec_condition<Tokens, Expr >, do_parse!(
+    consume_ws >>
     start_vec: delimited!(
         tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
     ) >>
+    consume_ws >>
     (start_vec)
 ));
 
 named!(parse_condition<Tokens, Expr >, do_parse!(
+    consume_ws >>
     condition: alt!(
             parse_infix_expr |
             parse_var_expr
     ) >>
+    consume_ws >>
     (condition)
 ));
 
 named!(parse_block<Tokens, Vec<Expr> >, do_parse!(
+    consume_ws >>
     block: delimited!(
         tag_token!(Token::LBrace), parse_actions, tag_token!(Token::RBrace)
     ) >>
+    consume_ws >>
     (block)
 ));
 
 named!(parse_if<Tokens, Expr>, do_parse!(
+    consume_ws >>
     tag_token!(Token::If) >>
+    consume_ws >>
     cond: parse_condition >>
+    consume_ws >>
     block: parse_block >>
+    consume_ws >>
     (Expr::IfExpr{cond: Box::new(cond), consequence: block})
 ));
 
 named!(parse_actions<Tokens, Vec<Expr> >,
     do_parse!(
+        consume_ws >>
         res: many0!(
             alt!(
                 parse_reserved |
@@ -238,14 +355,17 @@ named!(parse_actions<Tokens, Vec<Expr> >,
                 parse_if |
                 parse_reserved_empty
             )
-        )
-        >> (res)
+        ) >>
+        consume_ws >>
+        (res)
     )
 );
 
 named!(parse_label<Tokens, FlowTypes>,
     do_parse!(
+        consume_ws >>
         ident: parse_ident!() >>
+        consume_ws >>
         tag_token!(Token::Colon) >>
         block: parse_actions >>
         (FlowTypes::Block(Step{label: ident, actions: block} ))
@@ -255,43 +375,54 @@ named!(parse_label<Tokens, FlowTypes>,
 // ################ pars_to
 
 named!(parse_identexpr<Tokens, Expr>, do_parse!(
+        consume_ws >>
         ident: parse_ident!() >>
+        consume_ws >>
         (Expr::IdentExpr(ident))
     )
 );
 
 named!(parse_literalexpr<Tokens, Expr>, do_parse!(
+        consume_ws >>
         literal: parse_literal!() >>
+        consume_ws >>
         (Expr::LitExpr(literal))
     )
 );
 
 named!(parse_function<Tokens, Expr>, do_parse!(
+        consume_ws >>
         ident: parse_ident!() >>
+        consume_ws >>
         expr: delimited!(
             tag_token!(Token::LParen), parse_var_expr, tag_token!(Token::RParen)
         ) >>
+        consume_ws >>
         (Expr::FunctionExpr(ident, Box::new(expr)))
     )
 );
 
 //NOTE: ComplexString
-named!(parse_complex_stringexpr<Tokens, Expr>, do_parse!(
-        complex: parse_complex_string!() >>
-        (Expr::VecExpr(complex))
-    )
-);
+// named!(parse_complex_stringexpr<Tokens, Expr>, do_parse!(
+//         complex: parse_complex_string!() >>
+//         (Expr::VecExpr(complex))
+//     )
+// );
 
 named!(parse_builderexpr<Tokens, Expr>, do_parse!(
+    consume_ws >>
     exp1: alt!(
         parse_identexpr |
         parse_literalexpr
     ) >>
+    consume_ws >>
     tag_token!(Token::Dot) >>
+    consume_ws >>
     exp2: alt!(
         parse_function |
         parse_var_expr
     ) >>
+    consume_ws >>
     (Expr::BuilderExpr(Box::new(exp1), Box::new(exp2)))
 ));
 
@@ -299,40 +430,49 @@ named!(parse_var_expr<Tokens, Expr>, alt!(
         parse_builderexpr |
         parse_identexpr |
         parse_literalexpr |
+
         //NOTE: ComplexString
-        parse_complex_stringexpr |
+        // parse_complex_stringexpr |
         parse_vec
     )
 );
 
 named!(get_exp<Tokens, Expr>, do_parse!(
+    consume_ws >>
     tag_token!(Token::Comma) >>
+    consume_ws >>
     val: parse_var_expr >>
+    consume_ws >>
     (val)
     )
 );
 
 named!(parse_expr_group<Tokens, Expr >, do_parse!(
+        consume_ws >>
         vec: delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
         ) >>
+        consume_ws >>
         (Expr::VecExpr(vec))
     )
 );
 
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
+    consume_ws >>
     res: many1!(
         alt!(
             parse_var_expr |
             get_exp |
             parse_expr_group
         )
-    )
-    >> (res)
+    ) >>
+    consume_ws >>
+    (res)
     )
 );
 
 named!(parse_vec<Tokens, Expr >, do_parse!(
+    consume_ws >>
     start_vec: alt!(
         delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
@@ -341,16 +481,21 @@ named!(parse_vec<Tokens, Expr >, do_parse!(
             tag_token!(Token::LBracket), get_vec, tag_token!(Token::RBracket)
         )
     ) >>
+    consume_ws >>
     (Expr::VecExpr(start_vec))
 ));
 
 named!(parse_start_flow<Tokens, FlowTypes>,
     do_parse!(
+        consume_ws >>
         tag_token!(Token::Flow) >>
+        consume_ws >>
         ident: parse_ident!() >>
+        consume_ws >>
         start_vec: delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
         ) >>
+        consume_ws >>
         (FlowTypes::FlowStarter{ident: ident, list: start_vec})
     )
 );
@@ -363,15 +508,34 @@ named!(parse_steps<Tokens, FlowTypes>, alt_complete!(
 
 named!(parse_complex<Tokens, Vec<Expr> >,
     do_parse!(
+        consume_ws >>
         prog: many0!(parse_var_expr) >>
+        consume_ws >>
         (prog)
+    )
+);
+
+//NOTE: test for WS in parser
+named!(consume_ws<Tokens, bool>,
+    do_parse!(
+        opt!(
+            many0!(
+                alt!(
+                    tag_token2!(Token::Space) |
+                    tag_token2!(Token::NewLine)
+                )
+            )
+        ) >>
+        (true)
     )
 );
 
 named!(parse_program<Tokens, Vec<FlowTypes> >,
     do_parse!(
+        consume_ws >>
         prog: many0!(parse_steps) >>
-        tag_token!(Token::EOF) >>
+        consume_ws >>
+        tag_token2!(Token::EOF) >>
         (prog)
     )
 );

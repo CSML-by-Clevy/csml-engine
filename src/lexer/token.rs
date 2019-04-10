@@ -1,56 +1,64 @@
 use nom::*;
+use nom::types::*;
+use nom_locate::LocatedSpan;
 use std::iter::Enumerate;
 use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 
+pub type Span<'a> = LocatedSpan<CompleteByteSlice<'a>>;
+
 #[derive(PartialEq, Debug, Clone)]
-pub enum Token {
+pub enum Token<'a> {
     // Special Tokens
-    Illegal,
+    Illegal(Span<'a>),
     EOF,
 
     // identifiers
-    Ident(String),
-    ReservedFunc(String),
-    StringLiteral(String),
-    ComplexString(Vec<Token>),
-    IntLiteral(i64),
-    BoolLiteral(bool),
+    Ident(String, Span<'a>),
+    ReservedFunc(String, Span<'a>),
+    StringLiteral(String, Span<'a>),
+    ComplexString(Vec<Token<'a>>),
+    IntLiteral(i64, Span<'a>),
+    BoolLiteral(bool, Span<'a>),
 
     // statements
-    Flow,
-    Goto,
-    Assign,
-    Remember,
-    If,
+    Flow(Span<'a>),
+    Goto(Span<'a>),
+    Assign(Span<'a>),
+    Remember(Span<'a>),
+    If(Span<'a>),
 
     // operators
-    Equal,
-    GreaterThan,
-    LessThan,
-    GreaterThanEqual,
-    LessThanEqual,
-    And,
-    Or,
+    Equal(Span<'a>),
+    GreaterThan(Span<'a>),
+    LessThan(Span<'a>),
+    GreaterThanEqual(Span<'a>),
+    LessThanEqual(Span<'a>),
+    And(Span<'a>),
+    Or(Span<'a>),
 
     // punctuations
-    Comma,
-    Dot,
-    Colon,
-    SemiColon,
-    LParen,
-    RParen,
-    LBrace,
-    RBrace,
-    L2Brace,
-    R2Brace,
-    LBracket,
-    RBracket,
+    Space,
+    NewLine,
+    L2Brace(Span<'a>),
+    R2Brace(Span<'a>),
+    DoubleQuote(Span<'a>),
+
+    Comma(Span<'a>),
+    Dot(Span<'a>),
+    Colon(Span<'a>),
+    SemiColon(Span<'a>),
+    LParen(Span<'a>),
+    RParen(Span<'a>),
+    LBrace(Span<'a>),
+    RBrace(Span<'a>),
+    LBracket(Span<'a>),
+    RBracket(Span<'a>),
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[repr(C)]
 pub struct Tokens<'a> {
-    pub tok: &'a [Token],
+    pub tok: &'a [Token<'a>],
     pub start: usize,
     pub end: usize,
 }
@@ -66,21 +74,21 @@ impl<'a> Tokens<'a> {
 }
 
 impl<'a> InputLength for Tokens<'a> {
-    #[inline]
+    // #[inline]
     fn input_len(&self) -> usize {
         self.tok.len()
     }
 }
 
 impl<'a> AtEof for Tokens<'a> {
-    #[inline]
+    // #[inline]
     fn at_eof(&self) -> bool {
         true
     }
 }
 
 impl<'a> InputTake for Tokens<'a> {
-    #[inline]
+    // #[inline]
     fn take(&self, count: usize) -> Self {
         Tokens {
             tok: &self.tok[0..count],
@@ -89,7 +97,7 @@ impl<'a> InputTake for Tokens<'a> {
         }
     }
 
-    #[inline]
+    // #[inline]
     fn take_split(&self, count: usize) -> (Self, Self) {
         let (prefix, suffix) = self.tok.split_at(count);
         let first = Tokens {
@@ -106,15 +114,15 @@ impl<'a> InputTake for Tokens<'a> {
     }
 }
 
-impl InputLength for Token {
-    #[inline]
+impl<'a> InputLength for Token<'a> {
+    // #[inline]
     fn input_len(&self) -> usize {
         1
     }
 }
 
 impl<'a> Slice<Range<usize>> for Tokens<'a> {
-    #[inline]
+    // #[inline]
     fn slice(&self, range: Range<usize>) -> Self {
         Tokens {
             tok: self.tok.slice(range.clone()),
@@ -125,21 +133,21 @@ impl<'a> Slice<Range<usize>> for Tokens<'a> {
 }
 
 impl<'a> Slice<RangeTo<usize>> for Tokens<'a> {
-    #[inline]
+    // #[inline]
     fn slice(&self, range: RangeTo<usize>) -> Self {
         self.slice(0..range.end)
     }
 }
 
 impl<'a> Slice<RangeFrom<usize>> for Tokens<'a> {
-    #[inline]
+    // #[inline]
     fn slice(&self, range: RangeFrom<usize>) -> Self {
         self.slice(range.start..self.end - self.start)
     }
 }
 
 impl<'a> Slice<RangeFull> for Tokens<'a> {
-    #[inline]
+    // #[inline]
     fn slice(&self, _: RangeFull) -> Self {
         Tokens {
             tok: self.tok,
@@ -150,27 +158,27 @@ impl<'a> Slice<RangeFull> for Tokens<'a> {
 }
 
 impl<'a> InputIter for Tokens<'a> {
-    type Item = &'a Token;
-    type RawItem = Token;
-    type Iter = Enumerate<::std::slice::Iter<'a, Token>>;
-    type IterElem = ::std::slice::Iter<'a, Token>;
+    type Item = &'a Token<'a>;
+    type RawItem = Token<'a>;
+    type Iter = Enumerate<::std::slice::Iter<'a, Token<'a>>>;
+    type IterElem = ::std::slice::Iter<'a, Token<'a>>;
 
-    #[inline]
-    fn iter_indices(&self) -> Enumerate<::std::slice::Iter<'a, Token>> {
+    // #[inline]
+    fn iter_indices(&self) -> Enumerate<::std::slice::Iter<'a, Token<'a>>> {
         self.tok.iter().enumerate()
     }
-    #[inline]
-    fn iter_elements(&self) -> ::std::slice::Iter<'a, Token> {
+    // #[inline]
+    fn iter_elements(&self) -> ::std::slice::Iter<'a, Token<'a>> {
         self.tok.iter()
     }
-    #[inline]
+    // #[inline]
     fn position<P>(&self, predicate: P) -> Option<usize>
     where
         P: Fn(Self::RawItem) -> bool,
     {
         self.tok.iter().position(|b| predicate(b.clone()))
     }
-    #[inline]
+    // #[inline]
     fn slice_index(&self, count: usize) -> Option<usize> {
         if self.tok.len() >= count {
             Some(count)
