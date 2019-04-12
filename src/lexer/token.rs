@@ -39,8 +39,8 @@ pub enum Token<'a> {
     // punctuations
     Space,
     NewLine,
-    L2Brace(Span<'a>),
-    R2Brace(Span<'a>),
+    L2Brace,
+    R2Brace,
     DoubleQuote(Span<'a>),
 
     Comma(Span<'a>),
