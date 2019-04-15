@@ -41,7 +41,6 @@ pub enum Token<'a> {
     NewLine,
     L2Brace,
     R2Brace,
-    DoubleQuote(Span<'a>),
 
     Comma(Span<'a>),
     Dot(Span<'a>),

@@ -35,9 +35,9 @@ impl<'a> AstInterpreter<'a>
         match action {
             Expr::Action { builtin, args }  => self.match_builtin(builtin, args),
             Expr::LitExpr(_literal)         => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
-            //NOTE: ONLY Work for LITERAR::STIRINGS for now
+            //NOTE: ONLY Work for LITERAR::STRINGS for now
             Expr::BuilderExpr(..)           => Ok(MessageType::Msg(
-                match self.get_var_form_ident(action) {
+                match self.get_var_from_ident(action) {
                     Ok(val) => Message::new(&Expr::LitExpr(val), "Text".to_string()),
                     Err(e) => return Err(e),
                 }
@@ -156,11 +156,24 @@ impl<'a> AstInterpreter<'a>
         }
     }
 
-    fn get_var_form_ident(&self, expr: &Expr) -> Result<Literal> {
+    fn get_string_from_complexstring(&self, exprs: &Vec<Expr>) -> Result<Literal> {
+        let mut new_string = String::new();
+
+        for elem in exprs.iter() {
+            match self.get_var_from_ident(elem) {
+                Ok(val)     => new_string.push_str(&val.to_string()),
+                Err(e)      => return Err(e),
+            }
+        }
+        Ok(Literal::StringLiteral(new_string))
+    }
+
+    fn get_var_from_ident(&self, expr: &Expr) -> Result<Literal> {
         match expr {
             Expr::LitExpr(lit)           => Ok(lit.clone()),
             Expr::IdentExpr(ident)       => self.get_var(ident),
             Expr::BuilderExpr(..)        => self.gen_literal_form_builder(expr),
+            Expr::ComplexLiteral(..)     => self.gen_literal_form_builder(expr),
             _                            => Err(Error::new(ErrorKind::Other, "unown variable in Ident err n#1"))
         }
     }
@@ -255,6 +268,7 @@ impl<'a> AstInterpreter<'a>
             Expr::BuilderExpr(elem , exp) if self.search_str("past", elem)      => self.get_memory_action(elem, exp),
             Expr::BuilderExpr(elem , exp) if self.search_str("memory", elem)    => self.get_memory_action(elem, exp),
             Expr::BuilderExpr(elem , exp) if self.search_str("metadata", elem)  => self.get_memory_action(elem, exp),
+            Expr::ComplexLiteral(vec)                                           => self.get_string_from_complexstring(vec),
             Expr::IdentExpr(ident)                                              => self.get_var(ident),
             _                                                                   => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
         }
@@ -276,6 +290,7 @@ impl<'a> AstInterpreter<'a>
             Expr::LitExpr(..)         => true,
             Expr::IdentExpr(..)       => true,
             Expr::BuilderExpr(..)     => true,
+            Expr::ComplexLiteral(..)  => true,
             _                         => false
         }
     }
@@ -286,19 +301,19 @@ impl<'a> AstInterpreter<'a>
                 Ok(self.cmp_lit(infix, l1, l2))
             },
             (exp1, exp2) if self.check_if_ident(exp1) && self.check_if_ident(exp2)    => {
-                match (self.get_var_form_ident(exp1), self.get_var_form_ident(exp2)) {
+                match (self.get_var_from_ident(exp1), self.get_var_from_ident(exp2)) {
                     (Ok(l1), Ok(l2))   => Ok(self.cmp_lit(infix, &l1, &l2)),
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and ident"))
                 }
             },
             (exp, Expr::LitExpr(l2)) if self.check_if_ident(exp)  => {
-                match self.get_var_form_ident(exp) {
+                match self.get_var_from_ident(exp) {
                     Ok(l1) => Ok(self.cmp_lit(infix, &l1, l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and lit"))
                 }
             },
             (Expr::LitExpr(l1), exp) if self.check_if_ident(exp)   => {
-                match self.get_var_form_ident(exp) {
+                match self.get_var_from_ident(exp) {
                     Ok(l2) => Ok(self.cmp_lit(infix, l1, &l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between lit and ident"))
                 }
@@ -350,7 +365,7 @@ impl<'a> AstInterpreter<'a>
                 }
             },
             Expr::LitExpr(_lit)                 => true,
-            Expr::BuilderExpr(..)               => self.get_var_form_ident(expr).is_ok(), // error
+            Expr::BuilderExpr(..)               => self.get_var_from_ident(expr).is_ok(), // error
             Expr::IdentExpr(ident)              => self.get_var(ident).is_ok(), // error
             _                                   => false, // return error
         }
@@ -385,7 +400,7 @@ impl<'a> AstInterpreter<'a>
                     },
                     Expr::Goto(Ident(ident))                                        => root.add_next_step(ident),
                     Expr::Remember(Ident(name), expr) if self.check_if_ident(expr)  => {
-                        if let Ok(Literal::StringLiteral(var)) = self.get_var_form_ident(expr) {
+                        if let Ok(Literal::StringLiteral(var)) = self.get_var_from_ident(expr) {
                             self.add_to_message(&mut root, remember(name.to_string(), var.to_string()));
                         } else {
                             return Err(Error::new(ErrorKind::Other, "Error Assign value must be valid"));
@@ -426,7 +441,7 @@ impl<'a> AstInterpreter<'a>
                 },
                 Expr::Goto(Ident(ident))    => root.add_next_step(ident),
                 Expr::Remember(Ident(name), expr) if self.check_if_ident(expr)  => {
-                        if let Ok(Literal::StringLiteral(var)) = self.get_var_form_ident(expr) {
+                        if let Ok(Literal::StringLiteral(var)) = self.get_var_from_ident(expr) {
                             self.add_to_message(&mut root, remember(name.to_string(), var.to_string()));
                         } else {
                             return Err(Error::new(ErrorKind::Other, "Error Assign value must be valid"));

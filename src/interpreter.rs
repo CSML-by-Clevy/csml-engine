@@ -70,11 +70,11 @@ impl Interpreter {
         if let Some(ref vec) = context.past {
             Interpreter::add_to_memory(&mut memory.past, vec);
         }
-        if let Some(ref vec) = context.current {
-            Interpreter::add_to_memory(&mut memory.current, vec);
-        }
         if let Some(ref vec) = context.metadata {
             Interpreter::add_to_memory(&mut memory.metadata, vec);
+        }
+        if let Some(ref vec) = context.current {
+            Interpreter::add_to_memory(&mut memory.current, vec);
         }
         memory
     }

@@ -221,7 +221,7 @@ macro_rules! parse_reservedfunc (
 // );
 
 // named!(string<Tokens, String>, do_parse!(
-//         consume_ws >>
+        // consume_ws >>
 //         test: delimited!(
 //             tag_token!(Token::DoubleQuote),
 //             many0!(parse_steps),
@@ -231,122 +231,130 @@ macro_rules! parse_reservedfunc (
 //         (test)
 //     )
 // );
+// ################################ Complex Literal
+
+named!(parse_complex_string<Tokens, Expr>, do_parse!(
+    vec: delimited!(
+        tag_token2!(Token::L2Brace), many0!(parse_var_expr), tag_token2!(Token::R2Brace)
+    ) >>
+    (Expr::ComplexLiteral(vec))
+));
 
 // ################################ FUNC
 named!(parse_remember<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     tag_token!(Token::Remember) >>
-    consume_ws >>
+    // consume_ws >>
     name: parse_ident!() >>
-    consume_ws >>
+    // consume_ws >>
     tag_token!(Token::Assign) >>
-    consume_ws >>
+    // consume_ws >>
     var: parse_var_expr >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::Remember(name, Box::new(var)))
 ));
 
 named!(parse_goto<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     tag_token!(Token::Goto) >>
-    consume_ws >>
+    // consume_ws >>
     label: parse_ident!() >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::Goto(label))
 ));
 
 named!(parse_f<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     ident: parse_ident!() >>
-    consume_ws >>
+    // consume_ws >>
     vec: parse_expr_group >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::Action{builtin: ident, args: Box::new(vec) })
 ));
 
 named!(parse_reserved<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     action: parse_reservedfunc!() >>
-    consume_ws >>
+    // consume_ws >>
     arg: alt!(
         do_parse!(
-            consume_ws >>
+            // consume_ws >>
             block: parse_block >>
             (Expr::VecExpr(block))
         ) |
         parse_f |
         parse_var_expr
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::Reserved{fun: action, arg: Box::new(arg)})
 ));
 
 named!(parse_reserved_empty<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     action: parse_reservedfunc!() >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::Reserved{fun: action, arg : Box::new(Expr::Empty)})
 ));
 
 named!(parse_infix_expr<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     lit1: alt!(
             parse_vec_condition |
             parse_var_expr
     ) >>
-    consume_ws >>
+    // consume_ws >>
     eq: eq_parsers!() >>
-    consume_ws >>
+    // consume_ws >>
     lit2: alt!(
             parse_vec_condition |
             parse_var_expr
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::InfixExpr(eq, Box::new(lit1), Box::new(lit2)))
 ));
 
 named!(parse_vec_condition<Tokens, Expr >, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     start_vec: delimited!(
         tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (start_vec)
 ));
 
 named!(parse_condition<Tokens, Expr >, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     condition: alt!(
             parse_infix_expr |
             parse_var_expr
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (condition)
 ));
 
 named!(parse_block<Tokens, Vec<Expr> >, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     block: delimited!(
         tag_token!(Token::LBrace), parse_actions, tag_token!(Token::RBrace)
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (block)
 ));
 
 named!(parse_if<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     tag_token!(Token::If) >>
-    consume_ws >>
+    // consume_ws >>
     cond: parse_condition >>
-    consume_ws >>
+    // consume_ws >>
     block: parse_block >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::IfExpr{cond: Box::new(cond), consequence: block})
 ));
 
 named!(parse_actions<Tokens, Vec<Expr> >,
     do_parse!(
-        consume_ws >>
+        // consume_ws >>
         res: many0!(
             alt!(
                 parse_reserved |
@@ -356,16 +364,16 @@ named!(parse_actions<Tokens, Vec<Expr> >,
                 parse_reserved_empty
             )
         ) >>
-        consume_ws >>
+        // consume_ws >>
         (res)
     )
 );
 
 named!(parse_label<Tokens, FlowTypes>,
     do_parse!(
-        consume_ws >>
+        // consume_ws >>
         ident: parse_ident!() >>
-        consume_ws >>
+        // consume_ws >>
         tag_token!(Token::Colon) >>
         block: parse_actions >>
         (FlowTypes::Block(Step{label: ident, actions: block} ))
@@ -375,54 +383,47 @@ named!(parse_label<Tokens, FlowTypes>,
 // ################ pars_to
 
 named!(parse_identexpr<Tokens, Expr>, do_parse!(
-        consume_ws >>
+        // consume_ws >>
         ident: parse_ident!() >>
-        consume_ws >>
+        // consume_ws >>
         (Expr::IdentExpr(ident))
     )
 );
 
 named!(parse_literalexpr<Tokens, Expr>, do_parse!(
-        consume_ws >>
+        // consume_ws >>
         literal: parse_literal!() >>
-        consume_ws >>
+        // consume_ws >>
         (Expr::LitExpr(literal))
     )
 );
 
 named!(parse_function<Tokens, Expr>, do_parse!(
-        consume_ws >>
+        // consume_ws >>
         ident: parse_ident!() >>
-        consume_ws >>
+        // consume_ws >>
         expr: delimited!(
             tag_token!(Token::LParen), parse_var_expr, tag_token!(Token::RParen)
         ) >>
-        consume_ws >>
+        // consume_ws >>
         (Expr::FunctionExpr(ident, Box::new(expr)))
     )
 );
 
-//NOTE: ComplexString
-// named!(parse_complex_stringexpr<Tokens, Expr>, do_parse!(
-//         complex: parse_complex_string!() >>
-//         (Expr::VecExpr(complex))
-//     )
-// );
-
 named!(parse_builderexpr<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     exp1: alt!(
         parse_identexpr |
         parse_literalexpr
     ) >>
-    consume_ws >>
+    // consume_ws >>
     tag_token!(Token::Dot) >>
-    consume_ws >>
+    // consume_ws >>
     exp2: alt!(
         parse_function |
         parse_var_expr
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::BuilderExpr(Box::new(exp1), Box::new(exp2)))
 ));
 
@@ -430,35 +431,34 @@ named!(parse_var_expr<Tokens, Expr>, alt!(
         parse_builderexpr |
         parse_identexpr |
         parse_literalexpr |
+        parse_vec          |
 
-        //NOTE: ComplexString
-        // parse_complex_stringexpr |
-        parse_vec
+        parse_complex_string
     )
 );
 
 named!(get_exp<Tokens, Expr>, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     tag_token!(Token::Comma) >>
-    consume_ws >>
+    // consume_ws >>
     val: parse_var_expr >>
-    consume_ws >>
+    // consume_ws >>
     (val)
     )
 );
 
 named!(parse_expr_group<Tokens, Expr >, do_parse!(
-        consume_ws >>
+        // consume_ws >>
         vec: delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
         ) >>
-        consume_ws >>
+        // consume_ws >>
         (Expr::VecExpr(vec))
     )
 );
 
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     res: many1!(
         alt!(
             parse_var_expr |
@@ -466,13 +466,13 @@ named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
             parse_expr_group
         )
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (res)
     )
 );
 
 named!(parse_vec<Tokens, Expr >, do_parse!(
-    consume_ws >>
+    // consume_ws >>
     start_vec: alt!(
         delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
@@ -481,21 +481,21 @@ named!(parse_vec<Tokens, Expr >, do_parse!(
             tag_token!(Token::LBracket), get_vec, tag_token!(Token::RBracket)
         )
     ) >>
-    consume_ws >>
+    // consume_ws >>
     (Expr::VecExpr(start_vec))
 ));
 
 named!(parse_start_flow<Tokens, FlowTypes>,
     do_parse!(
-        consume_ws >>
+        // consume_ws >>
         tag_token!(Token::Flow) >>
-        consume_ws >>
+        // consume_ws >>
         ident: parse_ident!() >>
-        consume_ws >>
+        // consume_ws >>
         start_vec: delimited!(
             tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
         ) >>
-        consume_ws >>
+        // consume_ws >>
         (FlowTypes::FlowStarter{ident: ident, list: start_vec})
     )
 );
@@ -508,33 +508,33 @@ named!(parse_steps<Tokens, FlowTypes>, alt_complete!(
 
 named!(parse_complex<Tokens, Vec<Expr> >,
     do_parse!(
-        consume_ws >>
+        // consume_ws >>
         prog: many0!(parse_var_expr) >>
-        consume_ws >>
+        // consume_ws >>
         (prog)
     )
 );
 
 //NOTE: test for WS in parser
-named!(consume_ws<Tokens, bool>,
-    do_parse!(
-        opt!(
-            many0!(
-                alt!(
-                    tag_token2!(Token::Space) |
-                    tag_token2!(Token::NewLine)
-                )
-            )
-        ) >>
-        (true)
-    )
-);
+// named!(consume_ws<Tokens, bool>,
+//     do_parse!(
+//         opt!(
+//             many0!(
+//                 alt!(
+//                     tag_token2!(Token::Space) |
+//                     tag_token2!(Token::NewLine)
+//                 )
+//             )
+//         ) >>
+//         (true)
+//     )
+// );
 
 named!(parse_program<Tokens, Vec<FlowTypes> >,
     do_parse!(
-        consume_ws >>
+        // consume_ws >>
         prog: many0!(parse_steps) >>
-        consume_ws >>
+        // consume_ws >>
         tag_token2!(Token::EOF) >>
         (prog)
     )

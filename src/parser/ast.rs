@@ -43,6 +43,7 @@ pub enum Expr {
     LitExpr(Literal),
     IdentExpr(Ident),
     BuilderExpr(Box<Expr>, Box<Expr>),
+    ComplexLiteral(Vec<Expr>),
 
     Goto(Ident),
     Remember(Ident, Box<Expr>),
@@ -81,6 +82,16 @@ impl PartialEq for Literal {
             (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1 == l2,
             (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1 == l2,
             _                                                           => false
+        }
+    }
+}
+
+impl Literal {
+    pub fn to_string(&self) -> String {
+        match self {
+            Literal::StringLiteral(lliteral)    => lliteral.to_string(),
+            Literal::IntLiteral(lliteral)       => lliteral.to_string(),
+            Literal::BoolLiteral(lliteral)      => lliteral.to_string(),
         }
     }
 }

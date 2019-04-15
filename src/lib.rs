@@ -29,10 +29,8 @@ fn hello(mut cx: FunctionContext) -> JsResult<JsNull> {
 // let tmp: My_test = serde_json::from_str(&arg1).unwrap();
 fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
     let file = cx.argument::<JsString>(0)?.value();
-    println!("-------------------");
     let lex_tokens = dbg!(Lexer::lex_tokens(file.as_bytes()));
 
-    println!("-------------------");
     match lex_tokens {
         Ok((_complete, t)) => {
             let tokens = Tokens::new(&t);
@@ -79,8 +77,8 @@ fn interpret_flow(mut cx: FunctionContext) -> JsResult<JsString> {
     let flow: Flow = serde_json::from_str(&arg0).unwrap();
     let memory: JsContext = serde_json::from_str(&context).unwrap();
 
-    println!("memory -> {:?} \n", memory);
-    println!("event -> {:?} \n", event);
+    // println!("memory -> {:?} \n", memory);
+    // println!("event -> {:?} \n", event);
 
     let ret = Interpreter::interpret(&flow, &step_name, &memory, &event);
     Ok(cx.string(ret))

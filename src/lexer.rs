@@ -165,13 +165,6 @@ named!(rbracket_punctuation<Span, Token>, do_parse!(
     )
 );
 
-// named!(double_quote_punctuation<Span, Token>, do_parse!(
-//         position: position!() >>
-//         tag!("\"") >> 
-//         (Token::DoubleQuote(position))
-//     )
-// );
-
 named!(space_punctuation<Span, Token>,
     do_parse!(
         alt!(
@@ -181,20 +174,6 @@ named!(space_punctuation<Span, Token>,
         (Token::Space)
     )
 );
-
-// named!(l2brace_punctuation<Span, Token>,
-//     do_parse!(
-//     position: position!() >>
-//     tag!("{{") >> (Token::L2Brace(position))
-//     )
-// );
-
-// named!(r2brace_punctuation<Span, Token>,
-//     do_parse!(
-//     position: position!() >>
-//     tag!("}}") >> (Token::R2Brace(position))
-//     )
-// );
 
 named!(newline_punctuation<Span, Token>,
     do_parse!(
@@ -215,88 +194,62 @@ named!(lex_punctuations<Span, Token>, alt!(
     lbracket_punctuation |
     rbracket_punctuation |
 
-    // l2brace_punctuation |
-    // r2brace_punctuation |
-    // double_quote_punctuation |
     space_punctuation |
     newline_punctuation
 ));
 
 // Strings #############################################
 
-fn parse_string(input: Span) -> IResult<Span, Vec<u8> > {
-    use std::result::Result::*;
-
-    let (i1, c1) = try_parse!(input, take!(1));
-    // println!("i1 {:?} c1 {:?}", i1, c1);
-    match c1.fragment.as_bytes() {
-        b"\"" => Ok((input, vec![])),
-        c => parse_string(i1).map(|(slice, done)| {
-                // println!("slice {:?}, done {:?}", slice, done);
-                (slice, concat_slice_vec(c, done))
-            }
-        ),
-    }
-}
-
-fn concat_slice_vec(c: &[u8], done: Vec<u8>) -> Vec<u8> {
-    let mut new_vec = c.to_vec();
-    new_vec.extend(&done);
-    new_vec
-}
-
 fn convert_vec_utf8(v: Vec<u8>) -> Result<String, Utf8Error> {
     let slice = v.as_slice();
     str::from_utf8(slice).map(|s| s.to_owned())
 }
 
-named!(string<Span, String>,
-    delimited!(
-        tag!("\""),
-        map_res!(parse_string, convert_vec_utf8),
-        tag!("\"")
-    )
-);
-
-named!(lex_string<Span, Token>,
-    do_parse!(
-        position: position!() >>
-        s: string >>
-        (Token::StringLiteral(s, position))
-    )
-);
-
-// Strings 2
-// //NOTE: ComplexString
+//TODO: ERROR HANDLING
 named!(parse_2brace<Span, (Vec<Token>, Span) >, do_parse!(
     tag!("{{") >>
-    vec: many_till!(lex_token ,tag!("}}")) >>
+    vec: many_till!(ws!(lex_token) ,tag!("}}")) >>
     (vec)
 ));
 
 named!(get_position<Span, Span>, position!());
 
-// //NOTE: ComplexString
-named!(lex_complex_string<Span, Token>, do_parse!(
+fn not_stirng(token: &Token) -> bool {
+    if let Token::StringLiteral(..) = token {
+        false
+    } else { 
+        true 
+    }
+}
+
+fn format_complex_string(mut vec: Vec<Token>) -> Vec<Token> {
+    if vec.len() > 1 || (vec.len() == 1 && not_stirng(&vec[0]) ) {
+        vec = [&[Token::L2Brace][..], &vec[..], &[Token::R2Brace][..]].concat();
+    }
+    vec
+}
+
+//TODO: ERROR HANDLING
+named!(lex_string<Span, Token>, do_parse!(
     vec: delimited!(
-        tag!("\""), parse_string2, tag!("\"")
+        tag!("\""), ws!(parse_string), tag!("\"")
     ) >>
-    (Token::ComplexString(vec))
+    (Token::ComplexString( format_complex_string(vec) ))
 ));
 
-//NOTE: ComplexString
+//TODO: ERROR HANDLING
 fn parse_brace<'a>(input: Span<'a>, mut vec: Vec<Token<'a>>) -> IResult<Span<'a>, Vec<Token<'a> >> {
     match parse_2brace(input) {
         Ok((rest, (mut tokens, _))) => {
             vec.append(&mut tokens);
-            if let Ok((rest2, mut vec2)) = parse_string2(rest) {
+            if let Ok((rest2, mut vec2)) = parse_string(rest) {
                 vec.append(&mut vec2);
                 Ok((rest2, vec))
             } else {
                 Ok((rest, vec))
             }
         },
-        Err(e) => {
+        Err(_e) => {
             // if let Err::Error(res) = e {
             //     println!(" ERROR ;( {:?}", res)
             // }
@@ -311,8 +264,8 @@ fn get_dist(input: &Span, val: &str) -> (Option<usize>, Option<usize>) {
     (dist1, dist2)
 }
 
-//NOTE: ComplexString
-fn parse_string2(input: Span) -> IResult<Span, Vec<Token>> {
+//TODO: ERROR HANDLING
+fn parse_string(input: Span) -> IResult<Span, Vec<Token>> {
     match get_dist(&input, "{{") {
         (Some(d1), Some(d2)) if d1 < d2 => {
             let (rest, val) = input.take_split(d1);
@@ -327,7 +280,7 @@ fn parse_string2(input: Span) -> IResult<Span, Vec<Token>> {
                 Ok((res, value))  => {
                     Ok((res, value))
                 },
-                Err(e) => {
+                Err(_e) => {
                     Ok((rest, vec![]))
                 },
             }
@@ -335,11 +288,12 @@ fn parse_string2(input: Span) -> IResult<Span, Vec<Token>> {
         (_, Some(d2))             => {
             let (rest, val) = input.take_split(d2);
             let (val, position) = get_position(val).unwrap();
-            let mut string: String = String::new();
+            let mut vec = vec![];
+
             if val.input_len() > 0 {
-                string = convert_vec_utf8(val.fragment.as_bytes().to_vec()).unwrap();
+                vec.push(Token::StringLiteral(convert_vec_utf8(val.fragment.as_bytes().to_vec()).unwrap(), position));
             }
-            Ok((rest, vec![Token::StringLiteral(string, position)]))
+            Ok((rest, vec))
         },
         (_, _) => {
             // Return better Error
@@ -413,7 +367,6 @@ fn parse_reserved<'a>(c: CompleteStr, rest: Option<CompleteStr>, position: Span<
 
         "true" => Token::BoolLiteral(true, position),
         "false" => Token::BoolLiteral(false, position),
-        // "execute"
         _ => Token::Ident(string, position),
     }
 }
@@ -453,8 +406,7 @@ named!(lex_token<Span, Token>, alt_complete!(
     lex_operator |
     lex_punctuations |
     lex_integer |
-    lex_complex_string |
-    // lex_string |
+    lex_string |
     lex_reserved_ident |
     lex_illegal
 ));
@@ -462,16 +414,14 @@ named!(lex_token<Span, Token>, alt_complete!(
 fn concat_token<'a>(nested: &mut Vec<Token<'a>>, vec: &mut Vec<Token<'a>>) {
     for elem in nested.drain(..) {
         if let Token::ComplexString(mut vecval) = elem {
-            vec.push(Token::L2Brace);
             concat_token(&mut vecval, vec);
-            vec.push(Token::R2Brace);
         } else {
             vec.push(elem);
         }
     }
 }
 
-named!(start_lex<Span, Vec<Token>>, many0!(lex_token));
+named!(start_lex<Span, Vec<Token>>, ws!(many0!(lex_token)));
 
 pub struct Lexer;
 
@@ -479,10 +429,10 @@ impl Lexer {
     pub fn lex_tokens(slice: &[u8]) -> IResult<Span, Vec<Token>> {
         start_lex(Span::new(CompleteByteSlice(slice)))
             .map(|(slice, result)| {
-                        let mut vec = vec![];
-                        let mut test = [&result, &vec![Token::EOF][..]].concat();
-                        concat_token(&mut test, &mut vec);
-                        (slice, vec)
+                        let mut newvec = vec![];
+                        let mut vec = [&result, &vec![Token::EOF][..]].concat();
+                        concat_token(&mut vec, &mut newvec);
+                        (slice, newvec)
                     }
                 )
     }
