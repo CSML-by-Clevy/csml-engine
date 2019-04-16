@@ -43,7 +43,7 @@ impl Message {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RootInterface {
     pub remember: Option<Vec <(String, String)> >,
-    pub message: Vec<Message>,
+    pub messages: Vec<Message>,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
 }
@@ -60,7 +60,7 @@ impl Add for RootInterface {
                 (Some(memory), Some(newmemory)) => Some([&memory[..], &newmemory[..]].concat()),
                 _                               => None,
             },
-            message: [&self.message[..], &other.message[..]].concat(),
+            messages: [&self.messages[..], &other.messages[..]].concat(),
             next_flow: None,
             next_step: match (self.next_step, other.next_step) {
                 (Some(t), None)        => Some(t),
@@ -74,7 +74,7 @@ impl Add for RootInterface {
 
 impl RootInterface {
     pub fn add_message(&mut self, message: Message) {
-        self.message.push(message);
+        self.messages.push(message);
     }
 
     pub fn add_to_memory(&mut self, name: String, value: String) {

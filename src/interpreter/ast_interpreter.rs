@@ -65,7 +65,7 @@ impl<'a> AstInterpreter<'a>
                 // TMP implementation of block for an action
                 if let Expr::VecExpr(block) = arg {
                     match self.match_block(block) { 
-                        Ok(root)  => Ok(MessageType::Msgs(root.message)),
+                        Ok(root)  => Ok(MessageType::Msgs(root.messages)),
                         Err(e)    => Err(e)
                     }
                 } else {
@@ -376,7 +376,7 @@ impl<'a> AstInterpreter<'a>
     {
         match action {
             MessageType::Msg(msg)            => root.add_message(msg),
-            MessageType::Msgs(msgs)          => root.message.extend(msgs),
+            MessageType::Msgs(msgs)          => root.messages.extend(msgs),
             MessageType::Assign{name, value} => root.add_to_memory(name, value),
             MessageType::Empty               => {},
         }
@@ -386,7 +386,7 @@ impl<'a> AstInterpreter<'a>
     // NOTE: check if memory var are not reserved keys words
     fn match_ifexpr(&self, cond: &Expr, consequence: &[Expr]) -> Result<RootInterface> {
         if self.valid_condition(cond) {
-            let mut root = RootInterface {remember: None, message: vec![], next_flow: None , next_step: None};
+            let mut root = RootInterface {remember: None, messages: vec![], next_flow: None , next_step: None};
             for expr in consequence {
                 if root.next_step.is_some() {
                     return Ok(root)
@@ -419,7 +419,7 @@ impl<'a> AstInterpreter<'a>
     // NOTE: TMP implementation of block for an action
     pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
         // self.check_valid_step(actions);
-        let mut root = RootInterface {remember: None, message: vec![], next_flow: None, next_step: None};
+        let mut root = RootInterface {remember: None, messages: vec![], next_flow: None, next_step: None};
 
         for action in actions {
             //TODO: check ask
