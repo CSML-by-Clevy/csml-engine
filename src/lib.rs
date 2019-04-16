@@ -29,7 +29,7 @@ fn hello(mut cx: FunctionContext) -> JsResult<JsNull> {
 // let tmp: My_test = serde_json::from_str(&arg1).unwrap();
 fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
     let file = cx.argument::<JsString>(0)?.value();
-    let lex_tokens = dbg!(Lexer::lex_tokens(file.as_bytes()));
+    let lex_tokens = Lexer::lex_tokens(file.as_bytes());
 
     match lex_tokens {
         Ok((_complete, t)) => {
@@ -37,7 +37,7 @@ fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
             // println!("{:#?}", tokens);
             match Parser::parse_tokens(tokens) {
                 Ok(flow) => {
-                    if let Ok(json) = serde_json::to_string(&flow) {
+                    if let Ok(json) = serde_json::to_string(&dbg!(flow) ) {
                         return Ok(cx.string(json));
                     }
                     // let mut inter = Interpreter::new(flow);

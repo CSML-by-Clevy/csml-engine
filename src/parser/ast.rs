@@ -89,9 +89,9 @@ impl PartialEq for Literal {
 impl Literal {
     pub fn to_string(&self) -> String {
         match self {
-            Literal::StringLiteral(lliteral)    => lliteral.to_string(),
-            Literal::IntLiteral(lliteral)       => lliteral.to_string(),
-            Literal::BoolLiteral(lliteral)      => lliteral.to_string(),
+            Literal::StringLiteral(literal)    => literal.to_string(),
+            Literal::IntLiteral(literal)       => literal.to_string(),
+            Literal::BoolLiteral(literal)      => literal.to_string(),
         }
     }
 }
