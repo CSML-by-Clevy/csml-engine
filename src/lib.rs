@@ -13,20 +13,11 @@ pub struct ErrorMsg {
     pub error: String,
 }
 
-// fn read_file(file_path: String) -> Result<String> {
-//     let mut file = File::open(file_path)?;
-//     let mut contents = String::new();
-//     file.read_to_string(&mut contents)?;
-//     Ok(contents)
-// }
-
 fn hello(mut cx: FunctionContext) -> JsResult<JsNull> {
     println!("Hello from lib");
     Ok(cx.null())
 }
 
-// let arg1 = cx.argument::<JsString>(0)?.value();
-// let tmp: My_test = serde_json::from_str(&arg1).unwrap();
 fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
     let file = cx.argument::<JsString>(0)?.value();
     let lex_tokens = Lexer::lex_tokens(file.as_bytes());

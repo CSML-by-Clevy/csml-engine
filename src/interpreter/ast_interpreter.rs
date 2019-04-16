@@ -103,22 +103,6 @@ impl<'a> AstInterpreter<'a>
     }
 
     // Match reserved Actions ###############################################################
-
-    // // TMP implementation of block for an action
-    // fn check_valid_step(&self, step: &[Expr]) -> bool {
-    //     let mut nbr = 0;
-
-    //     for expr in step {
-    //         if let Expr::Reserved { fun, .. } = expr {
-    //             match fun {
-    //                 Ident(ident) if ident == "ask"  => nbr += 1,
-    //                 _                               => {}
-    //             }
-    //         }
-    //     }
-    //     nbr < 2
-    // }
-
     fn cmp_lit(&self, infix: &Infix, lit1: &Literal, lit2: &Literal) -> bool {
         match infix {
             Infix::Equal                => lit1 == lit2,
@@ -196,7 +180,7 @@ impl<'a> AstInterpreter<'a>
 
     fn memorytype_to_literal(&self, memtype: Option<&MemoryType>) -> Result<Literal> {
         if let Some(elem) = memtype {
-            return Ok(Literal::StringLiteral(elem.value.clone()));
+            return Ok(Literal::StringLiteral(elem.value.to_string()));
         } else {
             return Err(Error::new(ErrorKind::Other, "Error in memory action"));
         }

@@ -11,7 +11,7 @@ pub fn check_ident(expr: &Ident, name: &str) -> bool {
 fn contains_label(step: &Step, name: &str) -> bool {
     match step {
         Step{label: Ident(label), ..} if label == name   => true,
-        _                                                       => false
+        _                                                => false
     }
 }
 
