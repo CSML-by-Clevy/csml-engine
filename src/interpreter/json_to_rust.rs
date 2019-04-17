@@ -10,29 +10,15 @@ pub struct JsContext {
 }
 
 // -----------------------------------------------
-// ({
-//  "bot_name": String("e_lisa"),
-//  "channel_id": String("alexisbot"),
-//  "channel_type": String("workplace"),
-//  "conversation_id": String("db0c7ac3-9272-4165-94b7-e256bb35c308"),
-//  "created_at": String("2019-04-16T14:28:54.000Z"),
-//  "flow_name": String("form"),
-//  "id": String("e018ec5f-4913-4bcb-8d36-3f717802acd7"),
-//  "interaction_id": String("26b889e6-be3a-43a4-9edd-5fb6245e9c8e"),
-//  "key": String("points"),
-//  "step_name": String("STEP_25"),
-//  "type": String("mem"),
-//  "user_id": String("100033646789991"),
-//  "value": Number(1)}
-// )
 
-// Object({
-//         "conversation_id": String("24ac7583-af66-4f5a-9232-f029b6a3c8ed"),
-//         "created_at": String("2019-04-16T16:10:37.000Z"),
+//  Object({
+//         "created_at": String("2019-04-17T08:13:42.000Z"),
+//         "flow_name": String("form"),
+//         "step_name": Null,
 //         "key": String("firstname"),
-//         "value": String("Alexis")}
-//     )
-
+//         "type": Null,
+//         "value": String("Alexis")
+//  })
 
 // #[derive(Serialize, Deserialize, Debug, Clone)]
 // pub enum ValueType {
@@ -43,19 +29,13 @@ pub struct JsContext {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MemoryType {
-    // pub bot_name: String,
-    // pub channel_id: String,
-    // pub channel_type: String,
-    pub conversation_id : String,
-    pub created_at : String,
-    // pub flow_name : String,
-    // pub id : String,
-    // pub interaction_id : String,
-    pub key : String,
-    // pub step_name : String,
-    // pub r#type : String,
-    // pub user_id : String,
-    pub value : String
+    // pub conversation_id: String,
+    pub created_at: String,
+    pub flow_name: Option<String>,
+    pub step_name: Option<String>,
+    pub key: String,
+    pub r#type: Option<String>,
+    pub value: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

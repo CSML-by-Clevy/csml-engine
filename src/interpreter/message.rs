@@ -4,6 +4,7 @@ use std::ops::Add;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Content {
+    #[serde(rename = "text")]
     Text(String),
     Int(i64),
     Button(String, Vec<String>),
@@ -19,22 +20,21 @@ pub enum MessageType {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
-    #[serde(rename = "type")]
-    pub my_type: String,
+    pub content_type: String,
     pub content: Content,
 }
 
 impl Message {
     pub fn new(expr: &Expr, string: String) -> Self {
         let mut msg = Message {
-            my_type: "".to_string(),
+            content_type: "".to_string(),
             content: Content::Text("".to_string())
         };
 
         match expr {
-            Expr::LitExpr(Literal::IntLiteral(val))     => {msg.my_type = string; msg.content = Content::Int(*val); msg},
-            Expr::LitExpr(Literal::StringLiteral(val))  => {msg.my_type = string; msg.content = Content::Text(val.to_string()); msg},
-            Expr::LitExpr(Literal::BoolLiteral(val))    => {msg.my_type = string; msg.content = Content::Text(val.to_string()); msg},
+            Expr::LitExpr(Literal::IntLiteral(val))     => {msg.content_type = string.to_lowercase() ; msg.content = Content::Int(*val); msg},
+            Expr::LitExpr(Literal::StringLiteral(val))  => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
+            Expr::LitExpr(Literal::BoolLiteral(val))    => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
             _                                           => {msg},
         }
     }

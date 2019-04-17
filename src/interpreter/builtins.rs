@@ -59,13 +59,13 @@ pub fn button(args: &Expr) -> MessageType {
         if vec.len() == 2 {
             if let (Expr::LitExpr(Literal::StringLiteral(arg1)), Expr::VecExpr(arg2)) = (&vec[0], &vec[1]) {
                 return MessageType::Msg( Message {
-                    my_type: "Button".to_string(),
+                    content_type: "Button".to_string(),
                     content: Content::Button(arg1.to_string(), exprvec_to_vec(arg2))
                 })
             }
         }
     }
-    MessageType::Msg( Message {my_type: "say".to_owned(), content: Content::Button("Button".to_owned(), vec![])})
+    MessageType::Msg( Message {content_type: "say".to_owned(), content: Content::Button("Button".to_owned(), vec![])})
 }
 
 // return Result<Expr, error>

@@ -21,11 +21,11 @@ impl<'a> AstInterpreter<'a>
 {
     fn match_builtin(&self, builtin: &Ident, args: &Expr) -> Result<MessageType> {
         match builtin {
-            Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string()))),
-            Ident(arg) if arg == "Wait"  => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string()))),
-            Ident(arg) if arg == "Text"  => Ok(MessageType::Msg(Message::new(text(args), arg.to_string()))),
-            Ident(arg) if arg == "Url"   => Ok(MessageType::Msg(Message::new(url(args), arg.to_string()))),
-            Ident(arg) if arg == "OneOf" => Ok(MessageType::Msg(Message::new(one_of(args), "Text".to_string()))),
+            Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string() ))),
+            Ident(arg) if arg == "Wait"  => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string() ))),
+            Ident(arg) if arg == "Text"  => Ok(MessageType::Msg(Message::new(text(args), arg.to_string() ))),
+            Ident(arg) if arg == "Url"   => Ok(MessageType::Msg(Message::new(url(args), arg.to_string() ))),
+            Ident(arg) if arg == "OneOf" => Ok(MessageType::Msg(Message::new(one_of(args), "text".to_string()))),
             Ident(arg) if arg == "Button"=> Ok(button(args)),
             Ident(_arg)                  => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
@@ -34,18 +34,18 @@ impl<'a> AstInterpreter<'a>
     fn match_action(&self, action: &Expr) -> Result<MessageType> {
         match action {
             Expr::Action { builtin, args }  => self.match_builtin(builtin, args),
-            Expr::LitExpr(_)                => Ok(MessageType::Msg(Message::new(action, "Text".to_string()))),
+            Expr::LitExpr(_)                => Ok(MessageType::Msg(Message::new(action, "text".to_string()))),
             //NOTE: ONLY Work for LITERAR::STRINGS for now
             Expr::BuilderExpr(..)           =>
                 match self.get_var_from_ident(action) {
-                    Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr(val), "Text".to_string()))),
+                    Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr(val), "text".to_string()))),
                     Err(e)  => Err(e)
                 }
             ,
             //NOTE: ONLY Work for LITERAR::STRINGS for now
             Expr::ComplexLiteral(vec)       => {
                 match self.get_string_from_complexstring(vec) {
-                    Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr(val), "Text".to_string()))),
+                    Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr(val), "text".to_string()))),
                     Err(e)  => Err(e)
                 }
             },
