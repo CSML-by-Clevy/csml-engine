@@ -13,7 +13,6 @@ fn exprvec_to_vec(vec: &[Expr]) -> Vec<String> {
 }
 
 //TODO: ERROR Handling in builtin
-
 // return Result<Expr, error>
 pub fn typing(args: &Expr) -> &Expr {
     if let Expr::VecExpr(vec) = args {
