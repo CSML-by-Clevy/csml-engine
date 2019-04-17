@@ -386,7 +386,7 @@ impl<'a> AstInterpreter<'a>
     // NOTE: check if memory var are not reserved keys words
     fn match_ifexpr(&self, cond: &Expr, consequence: &[Expr]) -> Result<RootInterface> {
         if self.valid_condition(cond) {
-            let mut root = RootInterface {remember: None, messages: vec![], next_flow: None , next_step: None};
+            let mut root = RootInterface {memories: None, messages: vec![], next_flow: None , next_step: None};
             for expr in consequence {
                 if root.next_step.is_some() {
                     return Ok(root)
@@ -419,7 +419,7 @@ impl<'a> AstInterpreter<'a>
     // NOTE: TMP implementation of block for an action
     pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
         // self.check_valid_step(actions);
-        let mut root = RootInterface {remember: None, messages: vec![], next_flow: None, next_step: None};
+        let mut root = RootInterface {memories: None, messages: vec![], next_flow: None, next_step: None};
 
         for action in actions {
             //TODO: check ask

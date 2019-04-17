@@ -42,7 +42,7 @@ impl Message {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RootInterface {
-    pub remember: Option<Vec <(String, String)> >,
+    pub memories: Option<Vec <(String, String)> >,
     pub messages: Vec<Message>,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
@@ -54,7 +54,7 @@ impl Add for RootInterface {
     // return Result<struct, error>
     fn add(self, other: RootInterface) -> RootInterface {
         RootInterface {
-            remember: match (self.remember, other.remember) {
+            memories: match (self.memories, other.memories) {
                 (Some(memory), None)            => Some(memory),
                 (None, Some(newmemory))         => Some(newmemory),
                 (Some(memory), Some(newmemory)) => Some([&memory[..], &newmemory[..]].concat()),
@@ -78,10 +78,10 @@ impl RootInterface {
     }
 
     pub fn add_to_memory(&mut self, name: String, value: String) {
-        if let Some(ref mut vec) = self.remember {
+        if let Some(ref mut vec) = self.memories {
             vec.push((name, value))
         } else {
-            self.remember = Some(vec![(name, value)]);
+            self.memories = Some(vec![(name, value)]);
         }
     }
 
