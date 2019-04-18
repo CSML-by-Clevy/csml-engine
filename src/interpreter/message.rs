@@ -3,11 +3,22 @@ use serde::{Deserialize, Serialize};
 use std::ops::Add;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Button {
+    pub title: String,
+    pub accepts: Vec<String>,
+    pub key: String,
+    pub value: String,
+    pub payload: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Content {
     #[serde(rename = "text")]
     Text(String),
+    #[serde(rename = "int")]
     Int(i64),
-    Button(String, Vec<String>),
+    #[serde(rename = "button")]
+    Buttons(Vec<Button>),
 }
 
 //TMP I dont like this TODO: change it
