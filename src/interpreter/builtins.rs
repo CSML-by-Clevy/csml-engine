@@ -52,6 +52,19 @@ pub fn text(args: &Expr) -> &Expr {
     args
 }
 
+// return Result<Expr, error>
+pub fn img(args: &Expr) -> &Expr {
+    if let Expr::VecExpr(vec) = args {
+        if vec.len() == 1 {
+            if let Expr::LitExpr(_) = &vec[0] {
+                return &vec[0];
+            }
+        }
+        return &vec[0];
+    }
+    args
+}
+
 fn tmp_formatter_string(elem: &Expr) -> String {
     if let Expr::LitExpr(Literal::StringLiteral(string)) = elem {
         string.to_string()

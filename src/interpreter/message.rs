@@ -38,8 +38,8 @@ pub struct Message {
 impl Message {
     pub fn new(expr: &Expr, string: String) -> Self {
         let mut msg = Message {
-            content_type: "".to_string(),
-            content: Content::Text("".to_string())
+            content_type: "text".to_string(),
+            content: Content::Text("Error in message creation".to_string())
         };
 
         match expr {
