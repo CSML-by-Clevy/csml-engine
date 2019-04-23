@@ -1,4 +1,4 @@
-use crate::parser::ast::*;
+use crate::parser::ast::{Expr, Literal};
 use crate::interpreter::message::*;
 use rand::Rng;
 
@@ -88,7 +88,7 @@ fn tmp_formatter_vec(args: &Expr) -> Vec<String> {
 
 //TODO: Find better solution
 fn parse_button(button: &[Expr]) -> Button {
-    Button{
+    Button {
         title: tmp_formatter_string(button.get(0).unwrap()),
         accepts: tmp_formatter_vec(button.get(1).unwrap()), //Vec<String>
         key: tmp_formatter_string(button.get(2).unwrap()),

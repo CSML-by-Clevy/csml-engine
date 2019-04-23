@@ -2,7 +2,7 @@ mod interpreter;
 mod lexer;
 mod parser;
 
-use interpreter::{json_to_rust::*, Interpreter};
+use interpreter::{json_to_rust::{Event, JsContext}, Interpreter};
 use lexer::{token::Tokens, Lexer};
 use parser::{Parser, ast::*};
 use neon::{register_module, prelude::*};
@@ -11,11 +11,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ErrorMsg {
     pub error: String,
-}
-
-fn hello(mut cx: FunctionContext) -> JsResult<JsNull> {
-    println!("Hello from lib");
-    Ok(cx.null())
 }
 
 fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
@@ -76,7 +71,6 @@ fn interpret_flow(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 register_module!(mut cx, {
-    cx.export_function("hello", hello)?;
     cx.export_function("parse_file", parse_file)?;
     cx.export_function("interpret_flow", interpret_flow)?;
     cx.export_function("flowIsTrigger", flow_istrigger)?;

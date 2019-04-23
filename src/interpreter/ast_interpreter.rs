@@ -1,5 +1,4 @@
 //TODO: make a better error system
-
 use std::io::{Error, ErrorKind, Result};
 use crate::parser::ast::*;
 use crate::interpreter::{
@@ -7,10 +6,6 @@ use crate::interpreter::{
     message::*,
     json_to_rust::*,
 };
-
-// struct StepInfo<'a> {
-    // var: HashMap<&'a str, &'a Expr>,
-// }
 
 pub struct AstInterpreter<'a> {
     pub memory: &'a Memory,
@@ -31,6 +26,8 @@ impl<'a> AstInterpreter<'a>
             Ident(_arg)                  => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
+
+    // Match reserved Actions ###############################################################
 
     fn match_action(&self, action: &Expr) -> Result<MessageType> {
         match action {
@@ -55,26 +52,25 @@ impl<'a> AstInterpreter<'a>
         }
     }
 
-    // Match reserved Actions ###############################################################
-
     fn match_reserved(&self, reserved: &Ident, arg: &Expr) -> Result<MessageType> {
         match reserved {
+            // Expr::Reserved { fun, arg }     => self.match_builtin(fun, arg),
             Ident(ident) if ident == "say"      => {
                 self.match_action(arg)
             }
-            Ident(ident) if ident == "ask"      => {
-                // TMP implementation of block for an action
-                if let Expr::VecExpr(block) = arg {
-                    match self.match_block(block) { 
-                        Ok(root)  => Ok(MessageType::Msgs(root.messages)),
-                        Err(e)    => Err(e)
-                    }
-                } else {
-                    //check for info
-                    self.match_action(arg)
-                    //check if retry > 1
-                }
-            }
+            // Ident(ident) if ident == "ask"      => {
+            //     // TMP implementation of block for an action
+            //     if let Expr::VecExpr(block) = arg {
+            //         match self.match_block(block) { 
+            //             Ok(root)  => Ok(MessageType::Msgs(root.messages)),
+            //             Err(e)    => Err(e)
+            //         }
+            //     } else {
+            //         //check for info
+            //         self.match_action(arg)
+            //         //check if retry > 1
+            //     }
+            // }
             Ident(ident) if ident == "retry"    => {
                 // check nbr
                 // save new option if exist
@@ -82,23 +78,6 @@ impl<'a> AstInterpreter<'a>
             }
             _                                   => {
                 Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword - 1"))
-            }
-        }
-    }
-
-    // Can be rm if we want to have multiple ask in the same Step
-    fn match_reserved_if(&self, reserved: &Ident, arg: &Expr) -> Result<MessageType> {
-        match reserved {
-            Ident(ident) if ident == "say"      => {
-                self.match_action(arg)
-            }
-            Ident(ident) if ident == "retry"    => {
-                // check nbr
-                // save new option if exist 
-                self.match_action(arg)
-            }
-            _                                   => {
-                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword - 2"))
             }
         }
     }
@@ -395,7 +374,7 @@ impl<'a> AstInterpreter<'a>
 
                 match expr {
                     Expr::Reserved { fun, arg }         => {
-                        match self.match_reserved_if(fun, arg) {
+                        match self.match_reserved(fun, arg) {
                             Ok(action)  => self.add_to_message(&mut root, action),
                             Err(err)  => return Err(err)
                         }
@@ -435,14 +414,14 @@ impl<'a> AstInterpreter<'a>
                         Err(err)    => return Err(err)
                     }
                 },
-                Expr::IfExpr { cond, consequence }  => {
+                Expr::IfExpr { cond, consequence } => {
                     match self.match_ifexpr(cond, consequence) {
                         Ok(action)  => root = root + action,
                         Err(_err)   => {} // return Err(err)
                     }
                 },
                 Expr::Goto(Ident(ident))    => root.add_next_step(ident),
-                Expr::Remember(Ident(name), expr) if self.check_if_ident(expr)  => {
+                Expr::Remember(Ident(name), expr) if self.check_if_ident(expr) => {
                         if let Ok(Literal::StringLiteral(var)) = self.get_var_from_ident(expr) {
                             self.add_to_message(&mut root, remember(name.to_string(), var.to_string()));
                         } else {
