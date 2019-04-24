@@ -285,11 +285,6 @@ named!(parse_f<Tokens, Expr>, do_parse!(
 named!(parse_reserved<Tokens, Expr>, do_parse!(
     action: parse_reservedfunc!() >>
     arg: alt!(
-        // do_parse!(
-        //     block: parse_block >>
-        //     (Expr::VecExpr(block))
-        // ) |
-        parse_sublabel |
         parse_f |
         parse_var_expr
     ) >>
@@ -347,6 +342,7 @@ named!(parse_actions<Tokens, Vec<Expr> >,
     do_parse!(
         res: many0!(
             alt!(
+                parse_sublabel |
                 parse_reserved |
                 parse_goto |
                 parse_remember |
@@ -413,11 +409,10 @@ named!(parse_builderexpr<Tokens, Expr>, do_parse!(
 ));
 
 named!(parse_var_expr<Tokens, Expr>, alt!(
-        parse_builderexpr |
-        parse_identexpr |
-        parse_literalexpr |
-        parse_vec          |
-
+        parse_builderexpr   |
+        parse_identexpr     |
+        parse_literalexpr   |
+        parse_vec           |
         parse_complex_string
     )
 );

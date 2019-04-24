@@ -334,7 +334,7 @@ impl<'a> AstInterpreter<'a> {
                 match self.evaluate_condition(inf, exp1, exp2) {
                     Ok(rep) => rep,
                     Err(e)  =>{
-                        println!("error {:?}", e);
+                        println!("----------------------------------------- error {:?} ====================", e);
                         false
                     }
                 }
@@ -378,13 +378,19 @@ impl<'a> AstInterpreter<'a> {
             match action {
                 Expr::Reserved { fun, arg } => {
                     match (fun, self.event) {
-                        (Ident(ref name), None) if name == "ask"            => {
+                        (Ident(ref name), None) if name == "ask"                    => {
                             return self.match_sublable(fun, arg, root);
                         },
-                        (Ident(ref name), Some(..)) if name == "respond"    => {
+                        (Ident(ref name), Some(..)) if name == "respond"            => {
                             return self.match_sublable(fun, arg, root);
                         },
-                        _                                                   => continue
+                        (Ident(ref name), _) if name == "respond" || name == "ask"  => continue,
+                        (_, _)                                                      => {
+                            match self.match_reserved(fun, arg) {
+                                Ok(action)  => self.add_to_message(&mut root, action),
+                                Err(err)    => return Err(err)
+                            }
+                        }  
                     };
                 },
                 Expr::IfExpr { cond, consequence } => {
@@ -393,9 +399,10 @@ impl<'a> AstInterpreter<'a> {
                             Ok(action)  => root = root + action,
                             Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in if consequence "))
                         }
-                    } else {
-                        return Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "));
-                    }
+                    } 
+                    // else {
+                    //     return Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "));
+                    // }
                 },
                 Expr::Goto(Ident(ident))    => root.add_next_step(ident),
                 Expr::Remember(Ident(name), expr) if self.check_if_ident(expr) => {
