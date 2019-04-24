@@ -355,13 +355,18 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    fn match_sublable(&self, ident: &Ident, arg: &Expr, mut root: RootInterface) -> Result<RootInterface>{
-        match self.match_reserved(ident, arg) {
-            Ok(action)  => {
-                self.add_to_message(&mut root, action);
-                return Ok(root)
-            },
-            Err(err)    => return Err(err)
+    fn match_sub_block(&self, arg: &Expr, root: RootInterface) -> Result<RootInterface>{
+        if let Expr::VecExpr(vec) = arg {
+            match self.match_block(vec) {
+                Ok(action)  => {
+                    println!("root   -> {:?}", root);
+                    println!("action -> {:?}", action);
+                    Ok(root + action)
+                },
+                Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in if consequence "))
+            }
+        } else {
+            return Err(Error::new(ErrorKind::Other, "error sub block arg must be of type  Expr::VecExpr"))
         }
     }
 
@@ -379,10 +384,10 @@ impl<'a> AstInterpreter<'a> {
                 Expr::Reserved { fun, arg } => {
                     match (fun, self.event) {
                         (Ident(ref name), None) if name == "ask"                    => {
-                            return self.match_sublable(fun, arg, root);
+                            return self.match_sub_block(arg, root);
                         },
                         (Ident(ref name), Some(..)) if name == "respond"            => {
-                            return self.match_sublable(fun, arg, root);
+                            return self.match_sub_block(arg, root);
                         },
                         (Ident(ref name), _) if name == "respond" || name == "ask"  => continue,
                         (_, _)                                                      => {
@@ -404,7 +409,10 @@ impl<'a> AstInterpreter<'a> {
                     //     return Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "));
                     // }
                 },
-                Expr::Goto(Ident(ident))    => root.add_next_step(ident),
+                Expr::Goto(Ident(ident))    => {
+                    println!("goto -> {:?}", ident);
+                    root.add_next_step(ident)
+                },
                 Expr::Remember(Ident(name), expr) if self.check_if_ident(expr) => {
                         if let Ok(Literal::StringLiteral(var)) = self.get_var_from_ident(expr) {
                             self.add_to_message(&mut root, remember(name.to_string(), var.to_string()));
