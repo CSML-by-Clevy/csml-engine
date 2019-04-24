@@ -338,21 +338,6 @@ named!(parse_if<Tokens, Expr>, do_parse!(
     (Expr::IfExpr{cond: Box::new(cond), consequence: block})
 ));
 
-named!(parse_subactions<Tokens, Vec<Expr> >,
-    do_parse!(
-        res: many0!(
-            alt!(
-                parse_reserved |
-                parse_goto |
-                parse_remember |
-                parse_if |
-                parse_reserved_empty
-            )
-        ) >>
-        (res)
-    )
-);
-
 named!(parse_actions<Tokens, Vec<Expr> >,
     do_parse!(
         res: many0!(
@@ -371,9 +356,8 @@ named!(parse_actions<Tokens, Vec<Expr> >,
 
 named!(parse_sublabel<Tokens, Expr>,
     do_parse!(
-        ident: parse_sub_ident!() >>
-        tag_token!(Token::Colon) >>
-        block: parse_subactions >>
+        ident: parse_ident!() >>
+        block: parse_block >>
         (Expr::Reserved{fun: ident, arg: Box::new(Expr::VecExpr(block)) } )
     )
 );

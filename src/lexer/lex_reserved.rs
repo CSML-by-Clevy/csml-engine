@@ -41,7 +41,6 @@ fn parse_reserved<'a>(c: CompleteStr, rest: Option<CompleteStr>, position: Span<
         "remember" => Token::Remember(position),
 
         "retry" => Token::ReservedFunc(string, position),
-        "ask" => Token::ReservedFunc(string, position),
         "say" => Token::ReservedFunc(string, position),
         "import" => Token::ReservedFunc(string, position),
 
