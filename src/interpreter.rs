@@ -14,45 +14,6 @@ pub struct Interpreter {
 }
 
 impl Interpreter {
-    pub fn check_valid_flow(flow: &Flow) -> bool {
-        let mut accept_flow = false;
-        let mut start = false;
-
-        if !flow.accept.is_empty() { accept_flow = true; }
-        for step in flow.steps.iter() {
-            match step {
-                Step{label: Ident(label), .. } if label == "start"  => start = true,
-                _                                                   => continue
-            }
-        }
-        start && accept_flow && double_label(&flow)
-    }
-
-    pub fn is_trigger(flow: &Flow, string: &str) -> bool {
-        for elem in flow.accept.iter() {
-            match elem {
-                Expr::LitExpr(Literal::StringLiteral(tag)) if tag == string => return true,
-                _                                                           => continue,
-            }
-        }
-        false
-    }
-
-    // return Result<struct, error>
-    pub fn search_for(flow: &Flow, name: &str, preter: AstInterpreter) -> Option<String> {
-        for step in flow.steps.iter() {
-            match step {
-                Step{label, actions} if check_ident(label, name) => {
-                    let result = preter.match_block(actions).unwrap();
-                    let ser = serde_json::to_string(&result).unwrap();
-                    return Some(ser);
-                }
-                _ => continue,
-            }
-        }
-        None
-    }
-
     pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_json::Value]) {
 
         for value in vec.iter() {
@@ -80,14 +41,14 @@ impl Interpreter {
     }
 
     pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> String {
-        if !Interpreter::check_valid_flow(ast) {
+        if !check_valid_flow(ast) {
             return "The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique".to_owned();
         }
 
         let memory = Interpreter::contex_to_memory(context);
         let intpreter = AstInterpreter{ memory: &memory, event};
 
-        match Interpreter::search_for(ast, step_name, intpreter) {
+        match search_for(ast, step_name, intpreter) {
             Some(json) => json,
             None       => "error in step".to_owned()
         }

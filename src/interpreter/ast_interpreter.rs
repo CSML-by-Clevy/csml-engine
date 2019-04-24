@@ -1,7 +1,7 @@
 //TODO: make a better error system
 use std::io::{Error, ErrorKind, Result};
 use crate::parser::ast::*;
-use crate::interpreter::{
+use crate::interpreter:: {
     builtins::*,
     message::*,
     json_to_rust::*,
@@ -12,8 +12,7 @@ pub struct AstInterpreter<'a> {
     pub event: &'a Option<Event>,
 }
 
-impl<'a> AstInterpreter<'a>
-{
+impl<'a> AstInterpreter<'a> {
     fn match_builtin(&self, builtin: &Ident, args: &Expr) -> Result<MessageType> {
         match builtin {
             Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string() ))),
@@ -54,30 +53,26 @@ impl<'a> AstInterpreter<'a>
 
     fn match_reserved(&self, reserved: &Ident, arg: &Expr) -> Result<MessageType> {
         match reserved {
-            // Expr::Reserved { fun, arg }     => self.match_builtin(fun, arg),
+            Ident(ident) if ident == "ask" || ident == "respond" => { 
+                if let Expr::VecExpr(block) = arg {
+                    match self.match_block(block) {
+                        Ok(root)  => Ok(MessageType::Msgs(root.messages)),
+                        Err(e)     => Err(e)
+                    }
+                } else {
+                    Err(Error::new(ErrorKind::Other, "Error ask/respond must have a block"))
+                }
+            }
             Ident(ident) if ident == "say"      => {
                 self.match_action(arg)
             }
-            // Ident(ident) if ident == "ask"      => {
-            //     // TMP implementation of block for an action
-            //     if let Expr::VecExpr(block) = arg {
-            //         match self.match_block(block) { 
-            //             Ok(root)  => Ok(MessageType::Msgs(root.messages)),
-            //             Err(e)    => Err(e)
-            //         }
-            //     } else {
-            //         //check for info
-            //         self.match_action(arg)
-            //         //check if retry > 1
-            //     }
-            // }
             Ident(ident) if ident == "retry"    => {
-                // check nbr
+                //NOTE: check nbr of retrys
                 // save new option if exist
                 self.match_action(arg)
             }
             _                                   => {
-                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword - 1"))
+                Err(Error::new(ErrorKind::Other, "Error block must start with a reserved keyword"))
             }
         }
     }
@@ -112,7 +107,7 @@ impl<'a> AstInterpreter<'a>
         match self.event {
             Some(event)        => {
                 match event.payload {
-                    PayLoad{content_type: ref t, content: ref c} if t == "text" => Ok( Literal::StringLiteral(c.text.to_string())),
+                    PayLoad{content_type: ref t, content: ref c} if t == "text" => Ok(Literal::StringLiteral(c.text.to_string())),
                     _                                                           => Err(Error::new(ErrorKind::Other, "event type is unown")),
                 }
             },
@@ -255,7 +250,6 @@ impl<'a> AstInterpreter<'a>
         }
     }
     // MEMORY ------------------------------------------------------------------
-
     // TODO: return Result<&Literal>
     fn gen_literal_form_exp(&self, expr: &Expr) -> Result<Literal> {
         match expr {
@@ -352,8 +346,7 @@ impl<'a> AstInterpreter<'a>
         }
     }
 
-    fn add_to_message(&self, root: &mut RootInterface, action: MessageType)
-    {
+    fn add_to_message(&self, root: &mut RootInterface, action: MessageType) {
         match action {
             MessageType::Msg(msg)            => root.add_message(msg),
             MessageType::Msgs(msgs)          => root.messages.extend(msgs),
@@ -362,37 +355,13 @@ impl<'a> AstInterpreter<'a>
         }
     }
 
-    // NOTE: TMP implementation of IF block for an action
-    // NOTE: check if memory var are not reserved keys words
-    fn match_ifexpr(&self, cond: &Expr, consequence: &[Expr]) -> Result<RootInterface> {
-        if self.valid_condition(cond) {
-            let mut root = RootInterface {memories: None, messages: vec![], next_flow: None , next_step: None};
-            for expr in consequence {
-                if root.next_step.is_some() {
-                    return Ok(root)
-                }
-
-                match expr {
-                    Expr::Reserved { fun, arg }         => {
-                        match self.match_reserved(fun, arg) {
-                            Ok(action)  => self.add_to_message(&mut root, action),
-                            Err(err)  => return Err(err)
-                        }
-                    },
-                    Expr::Goto(Ident(ident))                                        => root.add_next_step(ident),
-                    Expr::Remember(Ident(name), expr) if self.check_if_ident(expr)  => {
-                        if let Ok(Literal::StringLiteral(var)) = self.get_var_from_ident(expr) {
-                            self.add_to_message(&mut root, remember(name.to_string(), var.to_string()));
-                        } else {
-                            return Err(Error::new(ErrorKind::Other, "Error Assign value must be valid"));
-                        }
-                    },
-                    _                                                               => return Err(Error::new(ErrorKind::Other, "Error in If block")),
-                }
-            }
-            Ok(root)
-        } else {
-            Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "))
+    fn match_sublable(&self, ident: &Ident, arg: &Expr, mut root: RootInterface) -> Result<RootInterface>{
+        match self.match_reserved(ident, arg) {
+            Ok(action)  => {
+                self.add_to_message(&mut root, action);
+                return Ok(root)
+            },
+            Err(err)    => return Err(err)
         }
     }
 
@@ -400,24 +369,32 @@ impl<'a> AstInterpreter<'a>
     pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
         // self.check_valid_step(actions);
         let mut root = RootInterface {memories: None, messages: vec![], next_flow: None, next_step: None};
-
+        // event
         for action in actions {
-            //TODO: check ask
             if root.next_step.is_some() {
                 return Ok(root)
             }
 
             match action {
                 Expr::Reserved { fun, arg } => {
-                    match self.match_reserved(fun, arg) {
-                        Ok(action)  => self.add_to_message(&mut root, action),
-                        Err(err)    => return Err(err)
-                    }
+                    match (fun, self.event) {
+                        (Ident(ref name), None) if name == "ask"            => {
+                            return self.match_sublable(fun, arg, root);
+                        },
+                        (Ident(ref name), Some(..)) if name == "respond"    => {
+                            return self.match_sublable(fun, arg, root);
+                        },
+                        _                                                   => continue
+                    };
                 },
                 Expr::IfExpr { cond, consequence } => {
-                    match self.match_ifexpr(cond, consequence) {
-                        Ok(action)  => root = root + action,
-                        Err(_err)   => {} // return Err(err)
+                    if self.valid_condition(cond) { 
+                        match self.match_block(consequence) {
+                            Ok(action)  => root = root + action,
+                            Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in if consequence "))
+                        }
+                    } else {
+                        return Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "));
                     }
                 },
                 Expr::Goto(Ident(ident))    => root.add_next_step(ident),

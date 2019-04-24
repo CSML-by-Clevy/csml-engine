@@ -2,7 +2,7 @@ mod interpreter;
 mod lexer;
 mod parser;
 
-use interpreter::{json_to_rust::{Event, JsContext}, Interpreter};
+use interpreter::{json_to_rust::{Event, JsContext}, Interpreter, csml_rules::*};
 use lexer::{token::Tokens, Lexer};
 use parser::{Parser, ast::*};
 use neon::{register_module, prelude::*};
@@ -44,7 +44,7 @@ fn flow_istrigger(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     let arg1 = cx.argument::<JsString>(1)?.value();
 
     let flow: Flow = serde_json::from_str(&arg0).unwrap();
-    Ok(cx.boolean(Interpreter::is_trigger(&flow, &arg1)))
+    Ok(cx.boolean(is_trigger(&flow, &arg1)))
 }
 
 fn interpret_flow(mut cx: FunctionContext) -> JsResult<JsString> {
