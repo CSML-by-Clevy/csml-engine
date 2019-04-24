@@ -1,6 +1,8 @@
 use crate::parser::ast::*;
 use crate::interpreter::ast_interpreter::AstInterpreter;
 
+//TODO: Check sub block ask/respond rules
+
 pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     for elem in flow.accept.iter() {
         match elem {

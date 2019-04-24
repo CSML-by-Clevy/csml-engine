@@ -62,7 +62,7 @@ where
     input.split_at_position1(
         |item| {
             let c = item.as_char();
-            c != '_' && !c.is_alphabetic()
+            c != '_' && !c.is_alphanumeric()
         },
         ErrorKind::Alpha,
     )

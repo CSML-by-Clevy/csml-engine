@@ -359,8 +359,6 @@ impl<'a> AstInterpreter<'a> {
         if let Expr::VecExpr(vec) = arg {
             match self.match_block(vec) {
                 Ok(action)  => {
-                    println!("root   -> {:?}", root);
-                    println!("action -> {:?}", action);
                     Ok(root + action)
                 },
                 Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in if consequence "))
@@ -410,7 +408,6 @@ impl<'a> AstInterpreter<'a> {
                     // }
                 },
                 Expr::Goto(Ident(ident))    => {
-                    println!("goto -> {:?}", ident);
                     root.add_next_step(ident)
                 },
                 Expr::Remember(Ident(name), expr) if self.check_if_ident(expr) => {
