@@ -43,6 +43,7 @@ fn flow_istrigger(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     let arg0 = cx.argument::<JsString>(0)?.value();
     let arg1 = cx.argument::<JsString>(1)?.value();
 
+    //TODO: error in unwarp
     let flow: Flow = serde_json::from_str(&arg0).unwrap();
     Ok(cx.boolean(is_trigger(&flow, &arg1)))
 }

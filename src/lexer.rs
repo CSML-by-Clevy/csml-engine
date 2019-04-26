@@ -20,12 +20,12 @@ use std::str;
 use std::str::Utf8Error;
 
 named!(lex_token<Span, Token>, alt_complete!(
-    lex_operator |
-    lex_punctuations |
-    lex_integer |
-    lex_string |
-    lex_from_file |
-    lex_reserved_ident |
+    lex_operator        |
+    lex_punctuations    |
+    lex_integer         |
+    lex_string          |
+    lex_from_file       |
+    lex_reserved_ident  |
     lex_illegal
 ));
 

@@ -4,6 +4,7 @@ use crate::lexer::token::*;
 use ast::Literal::*;
 use ast::*;
 use nom::*;
+use nom::{Err, ErrorKind as NomError, simple_errors};
 use std::io::{Error, ErrorKind, Result};
 
 // ################## Macros
@@ -114,58 +115,6 @@ macro_rules! parse_literal (
     );
 );
 
-// macro_rules! eat_separator2 (
-//   ($i:expr, $arr:expr) => (
-//     {
-//       use $crate::{FindToken, InputTakeAtPosition};
-//       let input = $i;
-//       input.split_at_position(|c| !$arr.find_token(c))
-//     }
-//   );
-// );
-
-// named!(pub space, eat_separator([Token::Space, Token::NewLine]));
-
-// macro_rules! sp (
-//   ($i:expr, $($args:tt)*) => (
-//     {
-//       sep!($i, space, $($args)*)
-//     }
-//   )
-// );
-
-// //NOTE: ComplexString
-// fn ret_test<'a>(rest: Tokens<'a>, vec: Tokens<'a>) -> IResult<Tokens<'a>, Vec<Expr> > {
-//     match parse_complex(vec) {
-//         Ok((_, vec))    => Ok((rest, vec)),
-//         err             => err
-//     }
-// }
-
-// //NOTE: ComplexString
-// macro_rules! parse_complex_string (
-//     ($i: expr,) => (
-//         {
-//             use std::result::Result::*;
-//             use nom::{Err,ErrorKind};
-
-//             let (i1, t1) = try_parse!($i, take!(1));
-//             if t1.tok.is_empty() {
-//                 Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-//             } else {
-//                 match t1.tok[0].clone() {
-//                     Token::ComplexString(vecs) => {
-//                         // let tokens = Tokens::new(&vecs);
-//                         // ret_test(i1, tokens)
-//                         Ok((i1, vec![Expr::LitExpr(StringLiteral("ComplexString".to_owned()))]))
-//                     },
-//                     _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
-//                 }
-//             }
-//         }
-//     );
-// );
-
 macro_rules! parse_reservedfunc (
     ($i: expr,) => (
         {
@@ -185,48 +134,6 @@ macro_rules! parse_reservedfunc (
     );
 );
 
-//  ################################ STRING
-
-// fn parse_string(input: Tokens) -> IResult<Tokens, Vec<u8> > {
-//     use std::result::Result::*;
-
-//     let (i1, c1) = try_parse!(input, take!(1));
-//     // println!("i1 {:?} c1 {:?}", i1, c1);
-//     match c1.fragment.as_bytes() {
-//         b"\"" => Ok((input, vec![])),
-//         c => parse_string(i1).map(|(slice, done)| {
-//                 // println!("slice {:?}, done {:?}", slice, done);
-//                 (slice, concat_slice_vec(c, done))
-//             }
-//         ),
-//     }
-// }
-
-// fn concat_slice_vec(c: &[u8], done: Vec<u8>) -> Vec<u8> {
-//     let mut new_vec = c.to_vec();
-//     new_vec.extend(&done);
-//     new_vec
-// }
-
-// fn convert_vec_utf8(v: Vec<u8>) -> Result<String, Utf8Error> {
-//     let slice = v.as_slice();
-//     str::from_utf8(slice).map(|s| s.to_owned())
-// }
-
-// named!(to_string<Tokens, String>, do_parse!(
-//     )
-// );
-
-// named!(string<Tokens, String>, do_parse!(
-//         test: delimited!(
-//             tag_token!(Token::DoubleQuote),
-//             many0!(parse_steps),
-//             // map_res!(parse_string, convert_vec_utf8),
-//             tag_token!(Token::DoubleQuote)
-//         ) >>
-//         (test)
-//     )
-// );
 // ################################ Complex Literal
 
 named!(parse_complex_string<Tokens, Expr>, do_parse!(
@@ -238,43 +145,81 @@ named!(parse_complex_string<Tokens, Expr>, do_parse!(
 
 // ################################ FUNC
 
-fn format_import_opt() {
+named!(parse_import_opt<Tokens, (Option<Ident>, Option<Ident>, Option<Ident>)>, do_parse!(
+    step_name: opt!(
+        do_parse!(
+            tag_token!(Token::Step) >>
+            name: parse_ident!() >>
+        )
+    ) >>
+    as_name: opt!(
+        do_parse!(
+            tag_token!(Token::As) >>
+            name: parse_ident!() >>
+        )
+    ) >>
+    file_path: opt!(
+        do_parse!(
+            tag_token!(Token::FromFile) >>
+            file_path: parse_ident!() >>
+        )
+    ) >>
+    ((step_name, as_name, file_path))
+));
 
+fn gen_function_expr(name: &str, expr: Expr) -> Expr {
+    Expr::FunctionExpr(Ident(name.to_owned()), Box::new(expr))
 }
 
-// named!(parse_import_step<Tokens, Expr>, do_parse!(
-//     tag_token!(Token::Step) >>
-//     step_name: parse_ident!() >>
-//     as_name: opt!(
-//         do_parse!(
-//             tag_token!(Token::As) >>
-//             name: parse_ident!() >>
-//         )
-//     ) >>
-//     flie_path: opt!(parse_import_file) >>
-//     (Expr::FunctionExpr( Ident("step".to_owned()), ))
-// ));
+fn gen_builder_expr(expr1: Expr, expr2: Expr) -> Expr {
+    Expr::BuilderExpr(Box::new(expr1), Box::new(expr2))
+}
 
-// named!(parse_import_file<Tokens, Expr>, do_parse!(
-//     tag_token!(Token::FromFile) >>
-//     file_path: parse_ident!() >>
-//     (Expr::FunctionExpr(Ident("filse".to_owned()), Box::new(file_path)))
-// ));
+fn format_step_options(step_name: Ident, as_name: Option<Ident>, file_path: Option<Ident>) -> Expr{
+    match (as_name, file_path) {
+        (Some(name), Some(file))    => {
+            gen_builder_expr(
+                gen_function_expr("step", 
+                    gen_function_expr("as", Expr::IdentExpr(name))
+                ),
+                gen_function_expr("file", Expr::IdentExpr(file))
+            )
+        },
+        (Some(name), None)          => {
+            gen_function_expr("step", 
+                gen_function_expr("as", Expr::IdentExpr(name))
+            )
+        },
+        (None, Some(file))          => {
+            gen_builder_expr(
+                gen_function_expr("step", Expr::IdentExpr(step_name)),
+                gen_function_expr("file", Expr::IdentExpr(file))
+            )
+        },
+        (None, None)                => gen_function_expr("step", Expr::IdentExpr(step_name)),
+    }
+}
 
-// named!(parse_import_from<Tokens, Expr>, do_parse!(
-//     name: alt!(
-//         parse_import_step |
-//                         // |
-//         parse_import_file
-//     ) >>
-//     (name)
-// ));
+//OK: nom Custom error handling Example
+fn format_import_opt(tokens: Tokens) -> IResult<Tokens , Expr> {
+    match parse_import_opt(tokens) {
+        Ok((_, (Some(step), as_name, file_path)))   => Ok((tokens, format_step_options(step, as_name, file_path))),
+        Ok((_, (None, None, Some(file_path))))      => Ok((tokens, gen_function_expr("file", Expr::IdentExpr(file_path)))),
+        Err(e)                                      => Err(e),
+        _                                           => Err(Err::Failure(Context::Code(tokens, NomError::Custom(42)))),
+    }
+}
 
-// named!(parse_import<Tokens, Expr>, do_parse!(
-//     tag_token!(Token::Import) >>
-//     name: parse_import_from >>
-//     (Expr::FunctionExpr(Ident("import".to_owned()), Box::new(name)))
-// ));
+named!(parse_import_from<Tokens, Expr>, do_parse!(
+    expr: format_import_opt >>
+    (expr)
+));
+
+named!(parse_import<Tokens, Expr>, do_parse!(
+    tag_token!(Token::Import) >>
+    name: parse_import_from >>
+    (Expr::FunctionExpr(Ident("import".to_owned()), Box::new(name)))
+));
 
 named!(parse_remember<Tokens, Expr>, do_parse!(
     tag_token!(Token::Remember) >>

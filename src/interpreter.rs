@@ -25,7 +25,7 @@ impl Interpreter {
         }
     }
 
-    pub fn contex_to_memory(context: &JsContext) -> Memory {
+    pub fn context_to_memory(context: &JsContext) -> Memory {
         let mut memory = Memory {past: MultiMap::new(), current: MultiMap::new(), metadata: MultiMap::new()};
 
         if let Some(ref vec) = context.past {
@@ -45,7 +45,7 @@ impl Interpreter {
             return "The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique".to_owned();
         }
 
-        let memory = Interpreter::contex_to_memory(context);
+        let memory = Interpreter::context_to_memory(context);
         let intpreter = AstInterpreter{ memory: &memory, event};
 
         match search_for(ast, step_name, intpreter) {
