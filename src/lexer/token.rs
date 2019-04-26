@@ -21,11 +21,16 @@ pub enum Token<'a> {
     BoolLiteral(bool, Span<'a>),
 
     // statements
+    If(Span<'a>),
     Flow(Span<'a>),
     Goto(Span<'a>),
     Assign(Span<'a>),
     Remember(Span<'a>),
-    If(Span<'a>),
+    Import(Span<'a>),
+
+    Step(Span<'a>),
+    FromFile(Span<'a>),
+    As(Span<'a>),
 
     // operators
     Equal(Span<'a>),

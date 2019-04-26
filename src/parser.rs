@@ -67,31 +67,6 @@ macro_rules! parse_ident (
     );
 );
 
-macro_rules! parse_sub_ident (
-    ($i: expr,) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
-
-            let (i1, t1) = try_parse!($i, take!(1));
-            if t1.tok.is_empty() {
-                Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-            } else {
-                match t1.tok[0].clone() {
-                    Token::Ident(name, _)  => {
-                        if &name == "ask" || &name == "respond" {
-                            Ok((i1, Ident(name)))
-                        } else {
-                            Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-                        }
-                    },
-                    _                      => Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-                }
-            }
-        }
-    );
-);
-
 macro_rules! eq_parsers (
     ($i: expr,) => (
         {
@@ -262,6 +237,45 @@ named!(parse_complex_string<Tokens, Expr>, do_parse!(
 ));
 
 // ################################ FUNC
+
+fn format_import_opt() {
+
+}
+
+// named!(parse_import_step<Tokens, Expr>, do_parse!(
+//     tag_token!(Token::Step) >>
+//     step_name: parse_ident!() >>
+//     as_name: opt!(
+//         do_parse!(
+//             tag_token!(Token::As) >>
+//             name: parse_ident!() >>
+//         )
+//     ) >>
+//     flie_path: opt!(parse_import_file) >>
+//     (Expr::FunctionExpr( Ident("step".to_owned()), ))
+// ));
+
+// named!(parse_import_file<Tokens, Expr>, do_parse!(
+//     tag_token!(Token::FromFile) >>
+//     file_path: parse_ident!() >>
+//     (Expr::FunctionExpr(Ident("filse".to_owned()), Box::new(file_path)))
+// ));
+
+// named!(parse_import_from<Tokens, Expr>, do_parse!(
+//     name: alt!(
+//         parse_import_step |
+//                         // |
+//         parse_import_file
+//     ) >>
+//     (name)
+// ));
+
+// named!(parse_import<Tokens, Expr>, do_parse!(
+//     tag_token!(Token::Import) >>
+//     name: parse_import_from >>
+//     (Expr::FunctionExpr(Ident("import".to_owned()), Box::new(name)))
+// ));
+
 named!(parse_remember<Tokens, Expr>, do_parse!(
     tag_token!(Token::Remember) >>
     name: parse_ident!() >>

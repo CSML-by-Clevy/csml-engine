@@ -5,6 +5,7 @@ use crate::interpreter:: {
     builtins::*,
     message::*,
     json_to_rust::*,
+    csml_rules::*
 };
 
 pub struct AstInterpreter<'a> {
@@ -249,6 +250,7 @@ impl<'a> AstInterpreter<'a> {
             _                                                                   => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
         }
     }
+
     // MEMORY ------------------------------------------------------------------
     // TODO: return Result<&Literal>
     fn gen_literal_form_exp(&self, expr: &Expr) -> Result<Literal> {
@@ -393,7 +395,7 @@ impl<'a> AstInterpreter<'a> {
                                 Ok(action)  => self.add_to_message(&mut root, action),
                                 Err(err)    => return Err(err)
                             }
-                        }  
+                        }
                     };
                 },
                 Expr::IfExpr { cond, consequence } => {

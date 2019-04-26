@@ -13,7 +13,7 @@ pub struct ErrorMsg {
     pub error: String,
 }
 
-fn parse_file(mut cx: FunctionContext) -> JsResult<JsString>{
+fn parse_file(mut cx: FunctionContext) -> JsResult<JsString> {
     let file = cx.argument::<JsString>(0)?.value();
     let lex_tokens = Lexer::lex_tokens(file.as_bytes());
 

@@ -10,7 +10,7 @@ use token::*;
 use lex_operators::lex_operator;
 use lex_punctuation::lex_punctuations;
 use lex_illegal::lex_illegal;
-use lex_reserved::lex_reserved_ident;
+use lex_reserved::{lex_reserved_ident, lex_from_file};
 use lex_int::lex_integer;
 
 use nom::*;
@@ -24,6 +24,7 @@ named!(lex_token<Span, Token>, alt_complete!(
     lex_punctuations |
     lex_integer |
     lex_string |
+    lex_from_file |
     lex_reserved_ident |
     lex_illegal
 ));

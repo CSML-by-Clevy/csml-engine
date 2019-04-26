@@ -38,11 +38,14 @@ fn parse_reserved<'a>(c: CompleteStr, rest: Option<CompleteStr>, position: Span<
         "if" => Token::If(position),
         "flow" => Token::Flow(position),
         "goto" => Token::Goto(position),
-        "remember" => Token::Remember(position),
+        "import" => Token::Import(position),
+        
+        "step" => Token::Step(position),
+        "as" => Token::As(position),
 
+        "remember" => Token::Remember(position),
         "retry" => Token::ReservedFunc(string, position),
         "say" => Token::ReservedFunc(string, position),
-        "import" => Token::ReservedFunc(string, position),
 
         "true" => Token::BoolLiteral(true, position),
         "false" => Token::BoolLiteral(false, position),
@@ -67,6 +70,13 @@ where
         ErrorKind::Alpha,
     )
 }
+
+named!(pub lex_from_file<Span, Token>, do_parse!(
+    position: position!() >>
+    tag!("from")  >>
+    tag!("file")  >>
+    (Token::FromFile(position))
+));
 
 named!(pub lex_reserved_ident<Span, Token>,
     do_parse!(

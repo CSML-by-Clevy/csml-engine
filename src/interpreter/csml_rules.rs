@@ -1,7 +1,18 @@
-use crate::parser::ast::*;
+use crate::parser::ast::{Expr, Flow, Ident, Literal, Step};
 use crate::interpreter::ast_interpreter::AstInterpreter;
 
 //TODO: Check sub block ask/respond rules
+
+pub fn check_expr_is_ident(expr: &Expr, name: &str) -> bool {
+    if let Expr::IdentExpr(Ident(var)) = expr {
+        if var == name {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    false
+}
 
 pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     for elem in flow.accept.iter() {

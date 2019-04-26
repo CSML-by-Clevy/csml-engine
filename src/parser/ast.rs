@@ -32,7 +32,6 @@ pub enum Expr {
         args: Box<Expr>,
     },
 
-
     IfExpr {
         cond: Box<Expr>,
         consequence: Vec<Expr>,
@@ -40,15 +39,14 @@ pub enum Expr {
     FunctionExpr(Ident, Box<Expr>),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
 
-    VecExpr(Vec<Expr>),
-
     LitExpr(Literal),
     IdentExpr(Ident),
+    VecExpr(Vec<Expr>),
     BuilderExpr(Box<Expr>, Box<Expr>),
-    ComplexLiteral(Vec<Expr>),
 
-    Goto(Ident),
-    Remember(Ident, Box<Expr>),
+    ComplexLiteral(Vec<Expr>),
+    Goto(Ident), // can rm
+    Remember(Ident, Box<Expr>), // can rm
 
     Empty,
 }

@@ -24,7 +24,7 @@ pub struct MemoryType {
     pub flow_name: Option<String>,
     pub step_name: Option<String>,
     pub key: String,
-    pub r#type: Option<String>,
+    pub r#type: String,
     pub value: String
 }
 
