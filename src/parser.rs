@@ -150,18 +150,21 @@ named!(parse_import_opt<Tokens, (Option<Ident>, Option<Ident>, Option<Ident>)>, 
         do_parse!(
             tag_token!(Token::Step) >>
             name: parse_ident!() >>
+            (name)
         )
     ) >>
     as_name: opt!(
         do_parse!(
             tag_token!(Token::As) >>
             name: parse_ident!() >>
+            (name)
         )
     ) >>
     file_path: opt!(
         do_parse!(
             tag_token!(Token::FromFile) >>
             file_path: parse_ident!() >>
+            (file_path)
         )
     ) >>
     ((step_name, as_name, file_path))
