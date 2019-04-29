@@ -17,6 +17,7 @@ impl Interpreter {
     pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_json::Value]) {
 
         for value in vec.iter() {
+            println!("value before memory insert {:?}", value);
             let memory_value: Result<MemoryType, _> = serde_json::from_value(value.clone()); 
             match memory_value {
                 Ok(memory_value)              => memory.insert(memory_value.key.clone(), memory_value),

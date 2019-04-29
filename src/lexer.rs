@@ -15,6 +15,7 @@ use lex_int::lex_integer;
 
 use nom::*;
 use nom::types::*;
+use nom::{Err, ErrorKind as NomError};
 use nom_locate::position;
 use std::str;
 use std::str::Utf8Error;
@@ -86,7 +87,6 @@ fn format_complex_string(mut vec: Vec<Token>) -> Vec<Token> {
     vec
 }
 
-//TODO: ERROR HANDLING
 fn parse_brace<'a>(input: Span<'a>, mut vec: Vec<Token<'a>>) -> IResult<Span<'a>, Vec<Token<'a> >> {
     match parse_2brace(input) {
         Ok((rest, (mut tokens, _))) => {
@@ -99,10 +99,8 @@ fn parse_brace<'a>(input: Span<'a>, mut vec: Vec<Token<'a>>) -> IResult<Span<'a>
             }
         },
         Err(_e) => {
-            // if let Err::Error(res) = e {
-            //     println!(" ERROR ;( {:?}", res)
-            // }
-            Ok((input, vec))
+            //TODO: ERROR HANDLING
+            Err(Err::Failure(Context::Code(input, NomError::Custom(32))))
         }
     }
 }
@@ -118,7 +116,7 @@ fn parse_string(input: Span) -> IResult<Span, Vec<Token>> {
     match get_dist(&input, "{{") {
         (Some(d1), Some(d2)) if d1 < d2 => {
             let (rest, val) = input.take_split(d1);
-            let (val, position) = get_position(val).unwrap();
+            let (val, position) = get_position(val)?;
 
             let mut vec = vec![];
             if val.input_len() > 0 {
@@ -136,7 +134,7 @@ fn parse_string(input: Span) -> IResult<Span, Vec<Token>> {
         },
         (_, Some(d2))             => {
             let (rest, val) = input.take_split(d2);
-            let (val, position) = get_position(val).unwrap();
+            let (val, position) = get_position(val)?;
             let mut vec = vec![];
 
             if val.input_len() > 0 {
@@ -145,8 +143,7 @@ fn parse_string(input: Span) -> IResult<Span, Vec<Token>> {
             Ok((rest, vec))
         },
         (_, _) => {
-            // Return better Error
-            Err(Err::Incomplete(Needed::Size(1)))
+            Err(Err::Failure(Context::Code(input, NomError::Custom(42))))
         }
     }
 }

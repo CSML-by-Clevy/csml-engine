@@ -4,7 +4,7 @@ use crate::lexer::token::*;
 use ast::Literal::*;
 use ast::*;
 use nom::*;
-use nom::{Err, ErrorKind as NomError, simple_errors};
+use nom::{Err, ErrorKind as NomError};
 use std::io::{Error, ErrorKind, Result};
 
 // ################## Macros
@@ -482,7 +482,6 @@ impl Parser {
             },
             Err(e) => {
                 // TODO: find error type
-                println!("error at PARSER {:?}", e);
                 Err(Error::new(ErrorKind::Other, "Error at parsing"))
             }
         }

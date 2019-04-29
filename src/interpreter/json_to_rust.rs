@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+// use serde_json::Value;
 use multimap::MultiMap;
 
 // Node module
@@ -10,20 +11,12 @@ pub struct JsContext {
 }
 
 // -----------------------------------------------
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub enum ValueType {
-//     STR(String),
-//     BOOL(bool),
-//     I32(i32),
-// }
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MemoryType {
     pub created_at: String,
     pub flow_name: Option<String>,
-    pub step_name: Option<String>,
     pub key: String,
+    pub step_name: Option<String>,
     pub r#type: Option<String>,
     pub value: String
 }

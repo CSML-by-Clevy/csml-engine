@@ -2,18 +2,6 @@ use crate::parser::ast::{Expr, Flow, Ident, Literal, Step};
 use crate::interpreter::ast_interpreter::AstInterpreter;
 
 //TODO: Check sub block ask/respond rules
-
-pub fn check_expr_is_ident(expr: &Expr, name: &str) -> bool {
-    if let Expr::IdentExpr(Ident(var)) = expr {
-        if var == name {
-            return true;
-        } else {
-            return false;
-        }
-    }
-    false
-}
-
 pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     for elem in flow.accept.iter() {
         match elem {
@@ -76,7 +64,9 @@ pub fn check_valid_flow(flow: &Flow) -> bool {
     let mut accept_flow = false;
     let mut start = false;
 
-    if !flow.accept.is_empty() { accept_flow = true; }
+    if !flow.accept.is_empty() {
+        accept_flow = true;
+    }
     for step in flow.steps.iter() {
         match step {
             Step{label: Ident(label), .. } if label == "start"  => start = true,

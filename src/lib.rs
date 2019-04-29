@@ -20,21 +20,19 @@ fn parse_file(mut cx: FunctionContext) -> JsResult<JsString> {
     match lex_tokens {
         Ok((_complete, t)) => {
             let tokens = Tokens::new(&t);
-            // println!("{:#?}", tokens);
+
             match Parser::parse_tokens(tokens) {
                 Ok(flow) => {
                     if let Ok(json) = serde_json::to_string(&dbg!(flow) ) {
                         return Ok(cx.string(json));
                     }
-                    // let mut inter = Interpreter::new(flow);
-                    // inter.interpret();
                 },
                 Err(e) => {
-                    println!("Error in Paring AST {:?}", e);
+                    return cx.throw_error(format!("Error in Paring AST {:?}", e))
                 }
             }
         }
-        Err(e) => println!("Problem in Lexing Tokens -> {:?}", e),
+        Err(e) => return cx.throw_error(format!("Problem in Lexing Tokens -> {:?}", e)),
     };
     Ok(cx.string(""))
 }
@@ -43,8 +41,11 @@ fn flow_istrigger(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     let arg0 = cx.argument::<JsString>(0)?.value();
     let arg1 = cx.argument::<JsString>(1)?.value();
 
-    //TODO: error in unwarp
-    let flow: Flow = serde_json::from_str(&arg0).unwrap();
+    let flow: Flow  = match serde_json::from_str(&arg0) {
+        Ok(flow)    => flow,
+        Err(e)      => return cx.throw_error(format!("Error in parsing Flow : {:?}", e))
+    };
+
     Ok(cx.boolean(is_trigger(&flow, &arg1)))
 }
 
@@ -52,23 +53,29 @@ fn interpret_flow(mut cx: FunctionContext) -> JsResult<JsString> {
     let arg0 = cx.argument::<JsString>(0)?.value();
     let step_name = cx.argument::<JsString>(1)?.value();
     let context = cx.argument::<JsString>(2)?.value();
+
     let event = match cx.argument_opt(3) {
         Some(arg)     => {
             let tmp = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-            let event: Event = serde_json::from_str(&tmp).unwrap();
+            let event: Event = match serde_json::from_str(&tmp) {
+                Ok(event)   => event,
+                Err(e)      => return cx.throw_error(format!("Error in parsing Event : {:?}", e))
+            };
             Some(event)
         },
         None      => None
     };
 
-    let flow: Flow = serde_json::from_str(&arg0).unwrap();
-    let memory: JsContext = serde_json::from_str(&context).unwrap();
-
-    // println!("memory -> {:?} \n", memory);
-    // println!("event -> {:?} \n", event);
-
-    let ret = Interpreter::interpret(&flow, &step_name, &memory, &event);
-    Ok(cx.string(ret))
+    let flow: Flow = match serde_json::from_str(&arg0) {
+        Ok(flow)    => flow,
+        Err(e)      => return cx.throw_error(format!("Error in parsing Flow : {:?}", e))
+    };  
+    let memory: JsContext = match serde_json::from_str(&context) {
+        Ok(mem)    => mem,
+        Err(e)     => return cx.throw_error(format!("Error in parsing Memory : {:?}", e))
+    };
+    let message = Interpreter::interpret(&flow, &step_name, &memory, &event);
+    Ok(cx.string(message))
 }
 
 register_module!(mut cx, {

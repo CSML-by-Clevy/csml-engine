@@ -16,14 +16,15 @@ pub struct AstInterpreter<'a> {
 impl<'a> AstInterpreter<'a> {
     fn match_builtin(&self, builtin: &Ident, args: &Expr) -> Result<MessageType> {
         match builtin {
-            Ident(arg) if arg == "Typing"=> Ok(MessageType::Msg(Message::new(typing(args), arg.to_string() ))),
-            Ident(arg) if arg == "Wait"  => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string() ))),
-            Ident(arg) if arg == "Text"  => Ok(MessageType::Msg(Message::new(text(args), arg.to_string() ))),
-            Ident(arg) if arg == "Url"   => Ok(MessageType::Msg(Message::new(url(args), arg.to_string() ))),
-            Ident(arg) if arg == "Image" => Ok(MessageType::Msg(Message::new(img(args), arg.to_string() ))),
-            Ident(arg) if arg == "OneOf" => Ok(MessageType::Msg(Message::new(one_of(args), "text".to_string()))),
-            Ident(arg) if arg == "Button"=> Ok(button(args)),
-            Ident(_arg)                  => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
+            Ident(arg) if arg == "Typing"       => Ok(MessageType::Msg(Message::new(typing(args), arg.to_string() ))),
+            Ident(arg) if arg == "Wait"         => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string() ))),
+            Ident(arg) if arg == "Text"         => Ok(MessageType::Msg(Message::new(text(args), arg.to_string() ))),
+            Ident(arg) if arg == "Url"          => Ok(MessageType::Msg(Message::new(url(args), arg.to_string() ))),
+            Ident(arg) if arg == "Image"        => Ok(MessageType::Msg(Message::new(img(args), arg.to_string() ))),
+            Ident(arg) if arg == "OneOf"        => Ok(MessageType::Msg(Message::new(one_of(args), "text".to_string()))),
+            Ident(arg) if arg == "Button"       => Ok(button(args)),
+            Ident(arg) if arg == "QuickButton"  => Ok(quick_button(args)),
+            Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
 
@@ -154,6 +155,17 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
+    fn gen_literal_form_builder(&self, expr: &Expr) -> Result<Literal> {
+        match expr {
+            Expr::BuilderExpr(elem, exp) if self.search_str("past", elem)      => self.get_memory_action(elem, exp),
+            Expr::BuilderExpr(elem, exp) if self.search_str("memory", elem)    => self.get_memory_action(elem, exp),
+            Expr::BuilderExpr(elem, exp) if self.search_str("metadata", elem)  => self.get_memory_action(elem, exp),
+            Expr::ComplexLiteral(vec)                                          => self.get_string_from_complexstring(vec),
+            Expr::IdentExpr(ident)                                             => self.get_var(ident),
+            _                                                                  => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
+        }
+    }
+
     fn memorytype_to_literal(&self, memtype: Option<&MemoryType>) -> Result<Literal> {
         if let Some(elem) = memtype {
             return Ok(Literal::StringLiteral(elem.value.to_string()));
@@ -237,17 +249,6 @@ impl<'a> AstInterpreter<'a> {
             },
             // Expr::FunctionExpr(Ident(ident), exp) if ident == "firstvalue"  => Err(Error::new(ErrorKind::Other, "Error in memory action")),
             _                                                               => Err(Error::new(ErrorKind::Other, "Error in memory action")),
-        }
-    }
-
-    fn gen_literal_form_builder(&self, expr: &Expr) -> Result<Literal> {
-        match expr {
-            Expr::BuilderExpr(elem , exp) if self.search_str("past", elem)      => self.get_memory_action(elem, exp),
-            Expr::BuilderExpr(elem , exp) if self.search_str("memory", elem)    => self.get_memory_action(elem, exp),
-            Expr::BuilderExpr(elem , exp) if self.search_str("metadata", elem)  => self.get_memory_action(elem, exp),
-            Expr::ComplexLiteral(vec)                                           => self.get_string_from_complexstring(vec),
-            Expr::IdentExpr(ident)                                              => self.get_var(ident),
-            _                                                                   => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
         }
     }
 
@@ -336,7 +337,6 @@ impl<'a> AstInterpreter<'a> {
                 match self.evaluate_condition(inf, exp1, exp2) {
                     Ok(rep) => rep,
                     Err(e)  =>{
-                        println!("----------------------------------------- error {:?} ====================", e);
                         false
                     }
                 }

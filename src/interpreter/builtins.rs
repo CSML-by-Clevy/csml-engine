@@ -2,16 +2,6 @@ use crate::parser::ast::{Expr, Literal};
 use crate::interpreter::message::*;
 use rand::Rng;
 
-fn exprvec_to_vec(vec: &[Expr]) -> Vec<String> {
-    vec.iter().filter_map(|elem|
-        match elem {
-           Expr::LitExpr(Literal::StringLiteral(string))    => Some(string.clone()),
-           Expr::LitExpr(Literal::IntLiteral(int))          => Some(int.to_string()),
-           _                                                => None
-        }
-    ).collect::<Vec<String>>()
-}
-
 //TODO: ERROR Handling in builtin
 // return Result<Expr, error>
 pub fn typing(args: &Expr) -> &Expr {
@@ -112,6 +102,34 @@ pub fn button(args: &Expr) -> MessageType {
         })
     }
 
+    MessageType::Msg( Message {content_type: "text".to_owned(), content: Content::Text("error in button construction".to_owned()) })
+}
+
+//TODO: Find better solution
+fn parse_quickbutton(val: &str) -> Button {
+    Button {
+        title: val.to_owned(),
+        accepts: vec![val.to_owned()],
+        key: val.to_owned(),
+        value: val.to_owned(),
+        payload: val.to_owned(),
+    }
+}
+
+// return Result<Expr, error>
+pub fn quick_button(args: &Expr) -> MessageType {
+    if let Expr::VecExpr(vec) = args {
+        let mut buttons: Vec<Button> = vec![];
+        for elem in vec.iter() {
+            if let Expr::LitExpr(literal) = elem {
+                buttons.push( parse_quickbutton(&literal.to_string()) );
+            }
+        }
+
+        return MessageType::Msg( Message {
+            content_type: "quick_button".to_string(), content: Content::Buttons(buttons)
+        })
+    }
     MessageType::Msg( Message {content_type: "text".to_owned(), content: Content::Text("error in button construction".to_owned()) })
 }
 
