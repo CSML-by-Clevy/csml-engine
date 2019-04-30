@@ -5,7 +5,7 @@ use crate::interpreter:: {
     builtins::*,
     message::*,
     json_to_rust::*,
-    csml_rules::*
+    // csml_rules::*
 };
 
 pub struct AstInterpreter<'a> {
@@ -24,6 +24,7 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == "OneOf"        => Ok(MessageType::Msg(Message::new(one_of(args), "text".to_string()))),
             Ident(arg) if arg == "Button"       => Ok(button(args)),
             Ident(arg) if arg == "QuickButton"  => Ok(quick_button(args)),
+            Ident(arg) if arg == "Question"     => Ok(quick_button(args)),
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
@@ -55,16 +56,6 @@ impl<'a> AstInterpreter<'a> {
 
     fn match_reserved(&self, reserved: &Ident, arg: &Expr) -> Result<MessageType> {
         match reserved {
-            Ident(ident) if ident == "ask" || ident == "respond" => { 
-                if let Expr::VecExpr(block) = arg {
-                    match self.match_block(block) {
-                        Ok(root)  => Ok(MessageType::Msgs(root.messages)),
-                        Err(e)     => Err(e)
-                    }
-                } else {
-                    Err(Error::new(ErrorKind::Other, "Error ask/respond must have a block"))
-                }
-            }
             Ident(ident) if ident == "say"      => {
                 self.match_action(arg)
             }
@@ -363,7 +354,7 @@ impl<'a> AstInterpreter<'a> {
                 Ok(action)  => {
                     Ok(root + action)
                 },
-                Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in if consequence "))
+                Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in sub_block "))
             }
         } else {
             return Err(Error::new(ErrorKind::Other, "error sub block arg must be of type  Expr::VecExpr"))
@@ -374,7 +365,7 @@ impl<'a> AstInterpreter<'a> {
     pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
         // self.check_valid_step(actions);
         let mut root = RootInterface {memories: None, messages: vec![], next_flow: None, next_step: None};
-        // event
+
         for action in actions {
             if root.next_step.is_some() {
                 return Ok(root)

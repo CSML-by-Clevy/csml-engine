@@ -12,21 +12,6 @@ pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     false
 }
 
-// return Result<struct, error>
-pub fn search_for(flow: &Flow, name: &str, preter: AstInterpreter) -> Option<String> {
-    for step in flow.steps.iter() {
-        match step {
-            Step{label, actions} if check_ident(label, name) => {
-                let result = preter.match_block(actions).unwrap();
-                let ser = serde_json::to_string(&result).unwrap();
-                return Some(ser);
-            }
-            _ => continue,
-        }
-    }
-    None
-}
-
 pub fn check_ident(expr: &Ident, name: &str) -> bool {
     match expr {
         Ident(string) if string == name => true,

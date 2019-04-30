@@ -41,6 +41,22 @@ impl Interpreter {
         memory
     }
 
+    // return Result<struct, error>
+    pub fn search_for(flow: &Flow, name: &str, interpreter: AstInterpreter) -> Option<String> {
+        for step in flow.steps.iter() {
+            match step {
+                Step{label, actions} if check_ident(label, name) => {
+                    let result = interpreter.match_block(actions).unwrap();
+                    let ser = serde_json::to_string(&result).unwrap();
+                    return Some(ser);
+                }
+                _ => continue,
+            }
+        }
+        None
+    }
+
+    // return Result<struct, error>
     pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> String {
         if !check_valid_flow(ast) {
             return "The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique".to_owned();
@@ -49,7 +65,7 @@ impl Interpreter {
         let memory = Interpreter::context_to_memory(context);
         let intpreter = AstInterpreter{ memory: &memory, event};
 
-        match search_for(ast, step_name, intpreter) {
+        match Interpreter::search_for(ast, step_name, intpreter) {
             Some(json) => json,
             None       => "error in step".to_owned()
         }

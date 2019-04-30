@@ -106,13 +106,13 @@ pub fn button(args: &Expr) -> MessageType {
 }
 
 //TODO: Find better solution
-fn parse_quickbutton(val: &str) -> Button {
+fn parse_quickbutton(val: String) -> Button {
     Button {
-        title: val.to_owned(),
-        accepts: vec![val.to_owned()],
-        key: val.to_owned(),
-        value: val.to_owned(),
-        payload: val.to_owned(),
+        title: val.clone(),
+        accepts: vec![val.clone()],
+        key: val.clone(),
+        value: val.clone(),
+        payload: val,
     }
 }
 
@@ -122,14 +122,17 @@ pub fn quick_button(args: &Expr) -> MessageType {
         let mut buttons: Vec<Button> = vec![];
         for elem in vec.iter() {
             if let Expr::LitExpr(literal) = elem {
-                buttons.push( parse_quickbutton(&literal.to_string()) );
+                buttons.push( parse_quickbutton(literal.to_string()) );
             }
         }
 
+        println!(">>>>>>>>>>>> {:?}", buttons);
+        
         return MessageType::Msg( Message {
             content_type: "quick_button".to_string(), content: Content::Buttons(buttons)
         })
     }
+
     MessageType::Msg( Message {content_type: "text".to_owned(), content: Content::Text("error in button construction".to_owned()) })
 }
 

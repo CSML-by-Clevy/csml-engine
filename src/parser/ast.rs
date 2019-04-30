@@ -36,17 +36,18 @@ pub enum Expr {
         cond: Box<Expr>,
         consequence: Vec<Expr>,
     },
-    FunctionExpr(Ident, Box<Expr>),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
+    FunctionExpr(Ident, Box<Expr>),
+    // FunctionExpr(&str, Ident, Box<Expr>),
+    ComplexLiteral(Vec<Expr>),
+    Goto(Ident), // can rm ?
+    Remember(Ident, Box<Expr>), // can rm ?
+    Assign(Ident, Box<Expr>), // can rm ?
 
     LitExpr(Literal),
     IdentExpr(Ident),
     VecExpr(Vec<Expr>),
     BuilderExpr(Box<Expr>, Box<Expr>),
-
-    ComplexLiteral(Vec<Expr>),
-    Goto(Ident), // can rm
-    Remember(Ident, Box<Expr>), // can rm
 
     Empty,
 }

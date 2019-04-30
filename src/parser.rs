@@ -224,6 +224,13 @@ named!(parse_import<Tokens, Expr>, do_parse!(
     (Expr::FunctionExpr(Ident("import".to_owned()), Box::new(name)))
 ));
 
+named!(parse_assign<Tokens, Expr>, do_parse!(
+    name: parse_ident!() >>
+    tag_token!(Token::Assign) >>
+    var: parse_var_expr >>
+    (Expr::Assign(name, Box::new(var)))
+));
+
 named!(parse_remember<Tokens, Expr>, do_parse!(
     tag_token!(Token::Remember) >>
     name: parse_ident!() >>
@@ -304,11 +311,12 @@ named!(parse_actions<Tokens, Vec<Expr> >,
     do_parse!(
         res: many0!(
             alt!(
-                parse_sublabel |
-                parse_reserved |
-                parse_goto |
-                parse_remember |
-                parse_if |
+                parse_sublabel  |
+                parse_reserved  |
+                parse_goto      | // tmp
+                parse_remember  | // tmp
+                parse_assign    | // tmp
+                parse_if        |
                 parse_reserved_empty
             )
         ) >>
