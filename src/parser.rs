@@ -378,6 +378,7 @@ named!(parse_builderexpr<Tokens, Expr>, do_parse!(
 ));
 
 named!(parse_var_expr<Tokens, Expr>, alt!(
+        parse_assign        | // tmp
         parse_builderexpr   |
         parse_identexpr     |
         parse_literalexpr   |

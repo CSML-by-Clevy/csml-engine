@@ -12,6 +12,13 @@ pub struct Button {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Question {
+    pub title: String,
+    pub accepts: Vec<String>,
+    pub buttons: Vec<Button>
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Content {
     #[serde(rename = "text")]
     Text(String),
@@ -19,6 +26,8 @@ pub enum Content {
     Int(i64),
     #[serde(rename = "button")]
     Buttons(Vec<Button>),
+    #[serde(rename = "question")]
+    Questions(Question),
 }
 
 //TMP I dont like this TODO: change it

@@ -24,13 +24,12 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == "OneOf"        => Ok(MessageType::Msg(Message::new(one_of(args), "text".to_string()))),
             Ident(arg) if arg == "Button"       => Ok(button(args)),
             Ident(arg) if arg == "QuickButton"  => Ok(quick_button(args)),
-            Ident(arg) if arg == "Question"     => Ok(quick_button(args)),
+            Ident(arg) if arg == "Question"     => Ok(question(args)),
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
 
     // Match reserved Actions ###############################################################
-
     fn match_action(&self, action: &Expr) -> Result<MessageType> {
         match action {
             Expr::Action { builtin, args }  => self.match_builtin(builtin, args),

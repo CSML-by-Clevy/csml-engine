@@ -1,4 +1,4 @@
-use crate::parser::ast::{Expr, Literal};
+use crate::parser::ast::{Expr, Literal, Ident};
 use crate::interpreter::message::*;
 use rand::Rng;
 
@@ -124,15 +124,90 @@ pub fn quick_button(args: &Expr) -> MessageType {
             if let Expr::LitExpr(literal) = elem {
                 buttons.push( parse_quickbutton(literal.to_string()) );
             }
-        }
-
-        println!(">>>>>>>>>>>> {:?}", buttons);
-        
+        }        
         return MessageType::Msg( Message {
             content_type: "quick_button".to_string(), content: Content::Buttons(buttons)
         })
     }
 
+    MessageType::Msg( Message {content_type: "text".to_owned(), content: Content::Text("error in button construction".to_owned()) })
+}
+
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct Button {
+//     pub title: String,
+//     pub accepts: Vec<String>,
+//     pub key: String,
+//     pub value: String,
+//     pub payload: String,
+// }
+
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct Question {
+//     pub title: String,
+//     pub accepts: Vec<String>,
+//     pub buttons: Vec<Button>
+// }
+
+fn search_for_key_in_vec<'a>(key: &str, vec: &'a Vec<Expr>) -> &'a Expr {
+    for elem in vec.iter() {
+        if let Expr::Assign(Ident(name), var) = elem {
+            if name == key {
+                return var;
+            } 
+        }
+    }
+    panic!("error in search_for_key_in_vec");
+}
+
+// TODO: RM when var handling are separate from ast_iterpreter
+fn expr_to_string(expr: &Expr) -> String {
+    match expr {
+        Expr::LitExpr(literal)          => literal.to_string(),
+        Expr::IdentExpr(Ident(ident))   => ident.to_owned(),
+        _                               => panic!("error in expr_to_string")
+    }
+}
+
+fn expr_to_vec<'a>(expr: &'a Expr) -> &'a Vec<Expr> {
+    match expr {
+        Expr::VecExpr(vec)  => vec,
+        _                   => panic!("expr_to_vec")
+    }
+}
+
+fn parse_question(vec: &Vec<Expr>) -> Question {
+    let title = search_for_key_in_vec("title", vec);
+    let button_type = search_for_key_in_vec("button_type", vec);
+    let expr_buttons = expr_to_vec(search_for_key_in_vec("buttons", vec));
+    let mut buttons: Vec<Button> = vec![];
+    let mut accepts: Vec<String> = vec![];
+
+    for button in expr_buttons.iter() {
+        if let Expr::Assign(Ident(name), expr) = button {
+            if name == "QuickButton" {
+                buttons.push(parse_quickbutton(expr_to_string(expr)));
+            }
+            // else { WARNING bad element }
+        }
+    }
+
+    Question {
+        title: expr_to_string(title),
+        accepts,
+        buttons,
+    }
+}
+
+// return Result<Expr, error>
+pub fn question(args: &Expr) -> MessageType {
+    if let Expr::VecExpr(vec) = args {
+        let question = parse_question(&vec);
+
+        return MessageType::Msg( Message {
+            content_type: "question".to_string(), content: Content::Questions(question)
+        })
+    }
     MessageType::Msg( Message {content_type: "text".to_owned(), content: Content::Text("error in button construction".to_owned()) })
 }
 
