@@ -22,8 +22,6 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == "Url"          => Ok(MessageType::Msg(Message::new(url(args), arg.to_string() ))),
             Ident(arg) if arg == "Image"        => Ok(MessageType::Msg(Message::new(img(args), arg.to_string() ))),
             Ident(arg) if arg == "OneOf"        => Ok(MessageType::Msg(Message::new(one_of(args), "text".to_string()))),
-            Ident(arg) if arg == "Button"       => Ok(button(args)),
-            Ident(arg) if arg == "QuickButton"  => Ok(quick_button(args)),
             Ident(arg) if arg == "Question"     => Ok(question(args)),
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }

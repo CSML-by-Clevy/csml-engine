@@ -55,60 +55,14 @@ pub fn img(args: &Expr) -> &Expr {
     args
 }
 
-fn tmp_formatter_string(elem: &Expr) -> String {
-    if let Expr::LitExpr(Literal::StringLiteral(string)) = elem {
-        string.to_string()
-    } else {
-        "Error in button elem".to_owned()
-    }
-}
-
-fn tmp_formatter_vec(args: &Expr) -> Vec<String> {
-    let mut vec = vec![];
-    if let Expr::VecExpr(elem) = args {
-        for val in elem.iter() {
-            vec.push( tmp_formatter_string(val) );
-        }
-        vec
-    } else {
-        vec.push("Error in button vec elem".to_owned());
-        vec
-    }
-}
-
-//TODO: Find better solution
-fn parse_button(button: &[Expr]) -> Button {
-    Button {
-        title: tmp_formatter_string(button.get(0).unwrap()),
-        accepts: tmp_formatter_vec(button.get(1).unwrap()), //Vec<String>
-        key: tmp_formatter_string(button.get(2).unwrap()),
-        value: tmp_formatter_string(button.get(3).unwrap()),
-        payload: tmp_formatter_string(button.get(4).unwrap()),
-    }
-}
-
 // return Result<Expr, error>
-pub fn button(args: &Expr) -> MessageType {
-    if let Expr::VecExpr(vec) = args {
-        let mut buttons = vec![];
-        for elem in vec.iter() {
-            if let Expr::VecExpr(button) = elem {
-                buttons.push( parse_button(button) )
-            }
-        }
-
-        return MessageType::Msg( Message {
-            content_type: "button".to_string(), content: Content::Buttons(buttons)
-        })
-    }
-
-    MessageType::Msg( Message {content_type: "text".to_owned(), content: Content::Text("error in button construction".to_owned()) })
-}
-
 //TODO: Find better solution
-fn parse_quickbutton(val: String) -> Button {
+fn parse_quickbutton(val: String, buttton_type: String,  accepts: &mut Vec<String>) -> Button {
+    accepts.push(val.clone());
+
     Button {
         title: val.clone(),
+        buttton_type,
         accepts: vec![val.clone()],
         key: val.clone(),
         value: val.clone(),
@@ -117,38 +71,6 @@ fn parse_quickbutton(val: String) -> Button {
 }
 
 // return Result<Expr, error>
-pub fn quick_button(args: &Expr) -> MessageType {
-    if let Expr::VecExpr(vec) = args {
-        let mut buttons: Vec<Button> = vec![];
-        for elem in vec.iter() {
-            if let Expr::LitExpr(literal) = elem {
-                buttons.push( parse_quickbutton(literal.to_string()) );
-            }
-        }        
-        return MessageType::Msg( Message {
-            content_type: "quick_button".to_string(), content: Content::Buttons(buttons)
-        })
-    }
-
-    MessageType::Msg( Message {content_type: "text".to_owned(), content: Content::Text("error in button construction".to_owned()) })
-}
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct Button {
-//     pub title: String,
-//     pub accepts: Vec<String>,
-//     pub key: String,
-//     pub value: String,
-//     pub payload: String,
-// }
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct Question {
-//     pub title: String,
-//     pub accepts: Vec<String>,
-//     pub buttons: Vec<Button>
-// }
-
 fn search_for_key_in_vec<'a>(key: &str, vec: &'a Vec<Expr>) -> &'a Expr {
     for elem in vec.iter() {
         if let Expr::Assign(Ident(name), var) = elem {
@@ -160,6 +82,7 @@ fn search_for_key_in_vec<'a>(key: &str, vec: &'a Vec<Expr>) -> &'a Expr {
     panic!("error in search_for_key_in_vec");
 }
 
+// return Result<Expr, error>
 // TODO: RM when var handling are separate from ast_iterpreter
 fn expr_to_string(expr: &Expr) -> String {
     match expr {
@@ -169,6 +92,8 @@ fn expr_to_string(expr: &Expr) -> String {
     }
 }
 
+// return Result<Expr, error>
+// TODO: RM when var handling are separate from ast_iterpreter
 fn expr_to_vec<'a>(expr: &'a Expr) -> &'a Vec<Expr> {
     match expr {
         Expr::VecExpr(vec)  => vec,
@@ -176,17 +101,18 @@ fn expr_to_vec<'a>(expr: &'a Expr) -> &'a Vec<Expr> {
     }
 }
 
+// return Result<Expr, error>
 fn parse_question(vec: &Vec<Expr>) -> Question {
-    let title = search_for_key_in_vec("title", vec);
-    let button_type = search_for_key_in_vec("button_type", vec);
-    let expr_buttons = expr_to_vec(search_for_key_in_vec("buttons", vec));
+    let title = search_for_key_in_vec("title", vec); // Option
+    let button_type = search_for_key_in_vec("button_type", vec); // Option
+    let expr_buttons = expr_to_vec(search_for_key_in_vec("buttons", vec)); // Option
     let mut buttons: Vec<Button> = vec![];
     let mut accepts: Vec<String> = vec![];
 
     for button in expr_buttons.iter() {
         if let Expr::Assign(Ident(name), expr) = button {
-            if name == "QuickButton" {
-                buttons.push(parse_quickbutton(expr_to_string(expr)));
+            if name == "Button" {
+                buttons.push(parse_quickbutton(expr_to_string(expr), expr_to_string(button_type), &mut accepts));
             }
             // else { WARNING bad element }
         }

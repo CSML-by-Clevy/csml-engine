@@ -5,6 +5,7 @@ use std::ops::Add;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Button {
     pub title: String,
+    pub buttton_type: String,
     pub accepts: Vec<String>,
     pub key: String,
     pub value: String,
@@ -24,8 +25,6 @@ pub enum Content {
     Text(String),
     #[serde(rename = "int")]
     Int(i64),
-    #[serde(rename = "button")]
-    Buttons(Vec<Button>),
     #[serde(rename = "question")]
     Questions(Question),
 }
