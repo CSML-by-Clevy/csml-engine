@@ -6,9 +6,10 @@ pub mod json_to_rust;
 
 use crate::parser::ast::*;
 use csml_rules::*;
-use ast_interpreter::AstInterpreter;
 use json_to_rust::*;
 use multimap::MultiMap;
+use ast_interpreter::AstInterpreter;
+use std::io::{Error, ErrorKind, Result as IoResult};
 
 pub struct Interpreter {
 
@@ -21,7 +22,7 @@ impl Interpreter {
             let memory_value: Result<MemoryType, _> = serde_json::from_value(value.clone()); 
             match memory_value {
                 Ok(memory_value)              => memory.insert(memory_value.key.clone(), memory_value),
-                Err(e)                        => println!("value is not of fomrat MemoryType {:?} error -> {:?}", value, e),
+                Err(e)                        => println!("value is not of fomrat MemoryType {:?} error -> {:?}", value, e), // error to the api
             }
         }
     }
@@ -41,33 +42,30 @@ impl Interpreter {
         memory
     }
 
-    // return Result<struct, error>
-    pub fn search_for(flow: &Flow, name: &str, interpreter: AstInterpreter) -> Option<String> {
+    pub fn search_for(flow: &Flow, name: &str, interpreter: AstInterpreter) -> IoResult<String> {
         for step in flow.steps.iter() {
             match step {
                 Step{label, actions} if check_ident(label, name) => {
-                    let result = interpreter.match_block(actions).unwrap();
-                    let ser = serde_json::to_string(&result).unwrap();
-                    return Some(ser);
+                    let result = interpreter.match_block(actions)?;
+                    let ser = serde_json::to_string(&result)?;
+
+                    return Ok(ser);
                 }
                 _ => continue,
             }
         }
-        None
+
+        Err(Error::new(ErrorKind::Other, "Error Empty Flow"))
     }
 
-    // return Result<struct, error>
-    pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> String {
+    pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> IoResult<String> {
         if !check_valid_flow(ast) {
-            return "The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique".to_owned();
+            return Err(Error::new(ErrorKind::Other, "The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique"));
         }
 
         let memory = Interpreter::context_to_memory(context);
         let intpreter = AstInterpreter{ memory: &memory, event};
 
-        match Interpreter::search_for(ast, step_name, intpreter) {
-            Some(json) => json,
-            None       => "error in step".to_owned()
-        }
+        Ok(Interpreter::search_for(ast, step_name, intpreter)?)
     }
 }

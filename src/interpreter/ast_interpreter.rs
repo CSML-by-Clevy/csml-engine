@@ -1,11 +1,9 @@
-//TODO: make a better error system
 use std::io::{Error, ErrorKind, Result};
 use crate::parser::ast::*;
 use crate::interpreter:: {
     builtins::*,
     message::*,
     json_to_rust::*,
-    // csml_rules::*
 };
 
 pub struct AstInterpreter<'a> {
@@ -16,13 +14,13 @@ pub struct AstInterpreter<'a> {
 impl<'a> AstInterpreter<'a> {
     fn match_builtin(&self, builtin: &Ident, args: &Expr) -> Result<MessageType> {
         match builtin {
-            Ident(arg) if arg == "Typing"       => Ok(MessageType::Msg(Message::new(typing(args), arg.to_string() ))),
-            Ident(arg) if arg == "Wait"         => Ok(MessageType::Msg(Message::new(wait(args), arg.to_string() ))),
-            Ident(arg) if arg == "Text"         => Ok(MessageType::Msg(Message::new(text(args), arg.to_string() ))),
-            Ident(arg) if arg == "Url"          => Ok(MessageType::Msg(Message::new(url(args), arg.to_string() ))),
-            Ident(arg) if arg == "Image"        => Ok(MessageType::Msg(Message::new(img(args), arg.to_string() ))),
-            Ident(arg) if arg == "OneOf"        => Ok(MessageType::Msg(Message::new(one_of(args), "text".to_string()))),
-            Ident(arg) if arg == "Question"     => Ok(question(args)),
+            Ident(arg) if arg == "Typing"       => typing(args, arg.to_string()),
+            Ident(arg) if arg == "Wait"         => wait(args, arg.to_string()),
+            Ident(arg) if arg == "Text"         => text(args, arg.to_string()),
+            Ident(arg) if arg == "Url"          => url(args, arg.to_string()),
+            Ident(arg) if arg == "Image"        => img(args, arg.to_string()),
+            Ident(arg) if arg == "OneOf"        => one_of(args, arg.to_string()),
+            Ident(arg) if arg == "Question"     => question(args, arg.to_string()),
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
@@ -57,8 +55,6 @@ impl<'a> AstInterpreter<'a> {
                 self.match_action(arg)
             }
             Ident(ident) if ident == "retry"    => {
-                //NOTE: check nbr of retrys
-                // save new option if exist
                 self.match_action(arg)
             }
             _                                   => {
@@ -121,15 +117,15 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    fn get_string_from_complexstring(&self, exprs: &Vec<Expr>) -> Result<Literal> {
+    fn get_string_from_complexstring(&self, exprs: &[Expr]) -> Result<Literal> {
         let mut new_string = String::new();
 
         for elem in exprs.iter() {
-            match self.get_var_from_ident(elem) {
-                Ok(val)     => new_string.push_str(&val.to_string()),
-                Err(e)      => return Err(e),
-            }
+            new_string.push_str(
+                &self.get_var_from_ident(elem)?.to_string()
+            );
         }
+
         Ok(Literal::StringLiteral(new_string))
     }
 
@@ -156,9 +152,9 @@ impl<'a> AstInterpreter<'a> {
 
     fn memorytype_to_literal(&self, memtype: Option<&MemoryType>) -> Result<Literal> {
         if let Some(elem) = memtype {
-            return Ok(Literal::StringLiteral(elem.value.to_string()));
+            Ok(Literal::StringLiteral(elem.value.to_string()))
         } else {
-            return Err(Error::new(ErrorKind::Other, "Error in memory action"));
+            Err(Error::new(ErrorKind::Other, "Error in memory action"))
         }
     }
 
@@ -181,30 +177,6 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    // fn memory_getvalue(&self, name: &Expr, expr: &Expr) {
-    //     match name {
-    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
-    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
-    //         _                                                   => {},
-    //     };
-    // }
-
-    // fn memory_all(&self, name: &Expr, expr: &Expr) {
-    //     match name {
-    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
-    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
-    //         _                                                   => {},
-    //     };
-    // }
-
-    // fn memory_allvalue(&self, name: &Expr, expr: &Expr) {
-    //     match name {
-    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
-    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
-    //         _                                                   => {},
-    //     };
-    // }
-
     //TODO: RM UNWRAP
     fn memory_first(&self, name: &Expr, expr: &Expr) -> Option<&MemoryType> {
         match (name, expr) {
@@ -215,27 +187,15 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    // fn memory_firstvalue(&self, name: &Expr, expr: &Expr) {
-    //     match name {
-    //         Expr::IdentExpr(Ident(ident)) if ident == "past"    => {},
-    //         Expr::IdentExpr(Ident(ident)) if ident == "memory"  => {},
-    //         _                                                   => {},
-    //     };
-    // }
-
     //NOTE:Only work with Strings for now 
     fn get_memory_action(&self, name: &Expr, expr: &Expr) -> Result<Literal> {
         match expr {
             Expr::FunctionExpr(Ident(ident), exp) if ident == "get"         => {
                 self.memorytype_to_literal(self.memory_get(name, exp))
             },
-            // Expr::FunctionExpr(Ident(ident), exp) if ident == "getvalue"    => Err(Error::new(ErrorKind::Other, "Error in memory action")),
-            // Expr::FunctionExpr(Ident(ident), exp) if ident == "all"         => Err(Error::new(ErrorKind::Other, "Error in memory action")),
-            // Expr::FunctionExpr(Ident(ident), exp) if ident == "allvalue"    => Err(Error::new(ErrorKind::Other, "Error in memory action")),
             Expr::FunctionExpr(Ident(ident), exp) if ident == "first"       => {
                 self.memorytype_to_literal(self.memory_first(name, exp))
             },
-            // Expr::FunctionExpr(Ident(ident), exp) if ident == "firstvalue"  => Err(Error::new(ErrorKind::Other, "Error in memory action")),
             _                                                               => Err(Error::new(ErrorKind::Other, "Error in memory action")),
         }
     }
@@ -338,29 +298,22 @@ impl<'a> AstInterpreter<'a> {
 
     fn add_to_message(&self, root: &mut RootInterface, action: MessageType) {
         match action {
+            // MessageType::Msgs(msgs)          => root.messages.extend(msgs),
             MessageType::Msg(msg)            => root.add_message(msg),
-            MessageType::Msgs(msgs)          => root.messages.extend(msgs),
             MessageType::Assign{name, value} => root.add_to_memory(name, value),
             MessageType::Empty               => {},
         }
     }
 
-    fn match_sub_block(&self, arg: &Expr, root: RootInterface) -> Result<RootInterface>{
+    fn match_sub_block(&self, arg: &Expr, root: RootInterface) -> Result<RootInterface> {
         if let Expr::VecExpr(vec) = arg {
-            match self.match_block(vec) {
-                Ok(action)  => {
-                    Ok(root + action)
-                },
-                Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in sub_block "))
-            }
+            Ok(root + self.match_block(vec)?)
         } else {
             return Err(Error::new(ErrorKind::Other, "error sub block arg must be of type  Expr::VecExpr"))
         }
     }
 
-    // NOTE: TMP implementation of block for an action
     pub fn match_block(&self, actions: &[Expr]) -> Result<RootInterface> {
-        // self.check_valid_step(actions);
         let mut root = RootInterface {memories: None, messages: vec![], next_flow: None, next_step: None};
 
         for action in actions {
@@ -379,19 +332,16 @@ impl<'a> AstInterpreter<'a> {
                         },
                         (Ident(ref name), _) if name == "respond" || name == "ask"  => continue,
                         (_, _)                                                      => {
-                            match self.match_reserved(fun, arg) {
-                                Ok(action)  => self.add_to_message(&mut root, action),
-                                Err(err)    => return Err(err)
-                            }
+                            self.add_to_message(
+                                &mut root,
+                                self.match_reserved(fun, arg)?
+                            )
                         }
                     };
                 },
                 Expr::IfExpr { cond, consequence } => {
-                    if self.valid_condition(cond) { 
-                        match self.match_block(consequence) {
-                            Ok(action)  => root = root + action,
-                            Err(_err)   => return Err(Error::new(ErrorKind::Other, "error in if consequence "))
-                        }
+                    if self.valid_condition(cond) {
+                        root = root + self.match_block(consequence)?;
                     } 
                     // else {
                     //     return Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "));

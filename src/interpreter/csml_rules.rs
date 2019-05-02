@@ -1,5 +1,4 @@
 use crate::parser::ast::{Expr, Flow, Ident, Literal, Step};
-use crate::interpreter::ast_interpreter::AstInterpreter;
 
 //TODO: Check sub block ask/respond rules
 pub fn is_trigger(flow: &Flow, string: &str) -> bool {

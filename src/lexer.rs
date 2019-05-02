@@ -60,7 +60,8 @@ impl Lexer {
 //  String #################################################################
 fn convert_vec_utf8(v: Vec<u8>) -> Result<String, Utf8Error> {
     let slice = v.as_slice();
-    str::from_utf8(slice).map(|s| s.to_owned())
+
+    Ok(str::from_utf8(slice)?.to_owned())
 }
 
 //TODO: ERROR HANDLING

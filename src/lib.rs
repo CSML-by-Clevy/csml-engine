@@ -59,7 +59,7 @@ fn interpret_flow(mut cx: FunctionContext) -> JsResult<JsString> {
             let tmp = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
             let event: Event = match serde_json::from_str(&tmp) {
                 Ok(event)   => event,
-                Err(e)      => return cx.throw_error(format!("Error in parsing Event : {:?}", e))
+                Err(e)      => return cx.throw_error( format!("Error in parsing Event : {:?}", e))
             };
             Some(event)
         },
@@ -74,7 +74,11 @@ fn interpret_flow(mut cx: FunctionContext) -> JsResult<JsString> {
         Ok(mem)    => mem,
         Err(e)     => return cx.throw_error(format!("Error in parsing Memory : {:?}", e))
     };
-    let message = Interpreter::interpret(&flow, &step_name, &memory, &event);
+    let message = match Interpreter::interpret(&flow, &step_name, &memory, &event) {
+        Ok(msg)    => msg,
+        Err(e)     => return cx.throw_error(format!("Error: {:?}", e))
+    };
+
     Ok(cx.string(message))
 }
 

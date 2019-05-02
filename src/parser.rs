@@ -495,8 +495,7 @@ impl Parser {
                 Ok(flow)
             },
             Err(e) => {
-                // TODO: find error type
-                Err(Error::new(ErrorKind::Other, "Error at parsing"))
+                Err(Error::new(ErrorKind::Other, format!("Error at parsing: {:?}", e)))
             }
         }
     }

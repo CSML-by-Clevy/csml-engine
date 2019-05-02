@@ -31,8 +31,8 @@ pub enum Content {
 
 //TMP I dont like this TODO: change it
 pub enum MessageType {
+    // Msgs(Vec<Message>),
     Msg(Message),
-    Msgs(Vec<Message>),
     Assign{name: String, value: String},
     Empty
 }
@@ -76,7 +76,6 @@ pub struct RootInterface {
 impl Add for RootInterface {
     type Output = RootInterface;
 
-    // return Result<struct, error>
     fn add(self, other: RootInterface) -> RootInterface {
         RootInterface {
             memories: match (self.memories, other.memories) {
@@ -90,7 +89,6 @@ impl Add for RootInterface {
             next_step: match (self.next_step, other.next_step) {
                 (Some(t), None)        => Some(t),
                 (None, Some(t))        => Some(t),
-                (Some(step1), Some(_)) => Some(step1), // should never happened
                 _                      => None,
             },
         }
