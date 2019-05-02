@@ -145,6 +145,8 @@ named!(parse_complex_string<Tokens, Expr>, do_parse!(
 
 // ################################ FUNC
 
+// ###################################### FUNC IMPORT
+
 named!(parse_import_opt<Tokens, (Option<Ident>, Option<Ident>, Option<Ident>)>, do_parse!(
     step_name: opt!(
         do_parse!(
@@ -223,6 +225,8 @@ named!(parse_import<Tokens, Expr>, do_parse!(
     name: parse_import_from >>
     (Expr::FunctionExpr(Ident("import".to_owned()), Box::new(name)))
 ));
+
+// ############################################### FUNC IMPORT
 
 named!(parse_assign<Tokens, Expr>, do_parse!(
     name: parse_ident!() >>
@@ -405,9 +409,10 @@ named!(parse_expr_group<Tokens, Expr >, do_parse!(
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     res: many1!(
         alt!(
-            parse_var_expr |
-            get_exp |
-            parse_expr_group
+            parse_f             |
+            parse_expr_group    |
+            get_exp             |
+            parse_var_expr
         )
     ) >>
     (res)
