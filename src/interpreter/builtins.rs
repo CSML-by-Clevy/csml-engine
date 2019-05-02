@@ -101,6 +101,15 @@ fn expr_to_vec<'a>(expr: &'a Expr) -> &'a Vec<Expr> {
     }
 }
 
+//see if it can be a generic macro
+fn get_vec_from_box(expr: &Expr) -> &Vec<Expr> {
+    if let Expr::VecExpr(vec) = expr {
+        vec
+    } else {
+        panic!("error in get_vec_from_box")
+    }
+}
+
 // return Result<Expr, error>
 fn parse_question(vec: &Vec<Expr>) -> Question {
     let title = search_for_key_in_vec("title", vec); // Option
@@ -110,11 +119,19 @@ fn parse_question(vec: &Vec<Expr>) -> Question {
     let mut accepts: Vec<String> = vec![];
 
     for button in expr_buttons.iter() {
-        if let Expr::Assign(Ident(name), expr) = button {
+        if let Expr::Action{ builtin: Ident(name), args } = button {
+            let vec = get_vec_from_box(args);
+
             if name == "Button" {
-                buttons.push(parse_quickbutton(expr_to_string(expr), expr_to_string(button_type), &mut accepts));
+                for elem in vec.iter() {
+                    buttons.push(parse_quickbutton(expr_to_string(elem), expr_to_string(button_type), &mut accepts));
+                }
             }
             // else { WARNING bad element }
+        } else if let Expr::VecExpr( args ) = button { // TMP for Debug
+            for elem in args.iter() {
+                buttons.push(parse_quickbutton(expr_to_string(elem), expr_to_string(button_type), &mut accepts));
+            }
         }
     }
 
@@ -158,7 +175,6 @@ pub fn one_of(args: &Expr) -> &Expr {
     args
 }
 
-// return Result<Expr, error>
 pub fn remember(name: String, value: String) -> MessageType {
     return MessageType::Assign{name, value};
 }
