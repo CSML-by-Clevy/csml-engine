@@ -169,7 +169,7 @@ pub fn question(args: &Expr, name: String) -> Result<MessageType>{
 
         return Ok(MessageType::Msg(
             Message {
-                content_type: name,
+                content_type: name.to_lowercase(),
                 content: Content::Questions(question)
             }
         ))

@@ -251,7 +251,7 @@ named!(parse_goto<Tokens, Expr>, do_parse!(
 
 named!(parse_f<Tokens, Expr>, do_parse!(
     ident: parse_ident!() >>
-    vec: parse_expr_group >>
+    vec: parse_vec_exp >>
     (Expr::Action{builtin: ident, args: Box::new(vec) })
 ));
 
@@ -282,6 +282,7 @@ named!(parse_infix_expr<Tokens, Expr>, do_parse!(
     (Expr::InfixExpr(eq, Box::new(lit1), Box::new(lit2)))
 ));
 
+
 named!(parse_vec_condition<Tokens, Expr >, do_parse!(
     start_vec: delimited!(
         tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
@@ -295,13 +296,6 @@ named!(parse_condition<Tokens, Expr >, do_parse!(
             parse_var_expr
     ) >>
     (condition)
-));
-
-named!(parse_block<Tokens, Vec<Expr> >, do_parse!(
-    block: delimited!(
-        tag_token!(Token::LBrace), parse_actions, tag_token!(Token::RBrace)
-    ) >>
-    (block)
 ));
 
 named!(parse_if<Tokens, Expr>, do_parse!(
@@ -361,9 +355,7 @@ named!(parse_literalexpr<Tokens, Expr>, do_parse!(
 
 named!(parse_function<Tokens, Expr>, do_parse!(
         ident: parse_ident!() >>
-        expr: delimited!(
-            tag_token!(Token::LParen), parse_var_expr, tag_token!(Token::RParen)
-        ) >>
+        expr: parse_vec_exp >>
         (Expr::FunctionExpr(ident, Box::new(expr)))
     )
 );
@@ -383,10 +375,10 @@ named!(parse_builderexpr<Tokens, Expr>, do_parse!(
 
 named!(parse_var_expr<Tokens, Expr>, alt!(
         parse_assign        | // tmp
+
         parse_builderexpr   |
         parse_identexpr     |
         parse_literalexpr   |
-        parse_vec           |
         parse_complex_string
     )
 );
@@ -398,20 +390,13 @@ named!(get_exp<Tokens, Expr>, do_parse!(
     )
 );
 
-named!(parse_expr_group<Tokens, Expr >, do_parse!(
-        vec: delimited!(
-            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-        ) >>
-        (Expr::VecExpr(vec))
-    )
-);
-
 named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     res: many1!(
         alt!(
-            parse_f             |
-            parse_expr_group    |
-            get_exp             |
+            parse_f         |
+            parse_vec_exp   |
+
+            get_exp         |
             parse_var_expr
         )
     ) >>
@@ -419,25 +404,37 @@ named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
     )
 );
 
-named!(parse_vec<Tokens, Expr >, do_parse!(
-    start_vec: alt!(
-        delimited!(
-            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-        ) |
-        delimited!(
-            tag_token!(Token::LBracket), get_vec, tag_token!(Token::RBracket)
-        )
+named!(parse_block<Tokens, Vec<Expr> >, do_parse!(
+    block: delimited!(
+        tag_token!(Token::LBrace), parse_actions, tag_token!(Token::RBrace)
     ) >>
-    (Expr::VecExpr(start_vec))
+    (block)
 ));
+
+named!(parse_vec<Tokens, Vec<Expr> >, do_parse!(
+        vec: alt!(
+            delimited!(
+                tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
+            ) |
+            delimited!(
+                tag_token!(Token::LBracket), get_vec, tag_token!(Token::RBracket)
+            )
+        ) >>
+        (vec)
+    )
+);
+
+named!(parse_vec_exp<Tokens, Expr >, do_parse!(
+        vec: parse_vec >>
+        (Expr::VecExpr(vec))
+    )
+);
 
 named!(parse_start_flow<Tokens, FlowTypes>,
     do_parse!(
         tag_token!(Token::Flow) >>
         ident: parse_ident!() >>
-        start_vec: delimited!(
-            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-        ) >>
+        start_vec: parse_vec >>
         (FlowTypes::FlowStarter{ident: ident, list: start_vec})
     )
 );
@@ -454,21 +451,6 @@ named!(parse_complex<Tokens, Vec<Expr> >,
         (prog)
     )
 );
-
-//NOTE: test for WS in parser
-// named!(consume_ws<Tokens, bool>,
-//     do_parse!(
-//         opt!(
-//             many0!(
-//                 alt!(
-//                     tag_token2!(Token::Space) |
-//                     tag_token2!(Token::NewLine)
-//                 )
-//             )
-//         ) >>
-//         (true)
-//     )
-// );
 
 named!(parse_program<Tokens, Vec<FlowTypes> >,
     do_parse!(

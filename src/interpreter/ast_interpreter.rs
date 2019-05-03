@@ -19,7 +19,7 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == "Text"         => text(args, arg.to_string()),
             Ident(arg) if arg == "Url"          => url(args, arg.to_string()),
             Ident(arg) if arg == "Image"        => img(args, arg.to_string()),
-            Ident(arg) if arg == "OneOf"        => one_of(args, arg.to_string()),
+            Ident(arg) if arg == "OneOf"        => one_of(args, "text".to_owned()),
             Ident(arg) if arg == "Question"     => question(args, arg.to_string()),
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
@@ -37,12 +37,13 @@ impl<'a> AstInterpreter<'a> {
                     Err(e)  => Err(e)
                 }
             ,
-            //NOTE: ONLY Work for LITERAR::STRINGS for now
             Expr::ComplexLiteral(vec)       => {
-                match self.get_string_from_complexstring(vec) {
-                    Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr(val), "text".to_string()))),
-                    Err(e)  => Err(e)
-                }
+                Ok(MessageType::Msg(
+                    Message::new(
+                        &Expr::LitExpr(self.get_string_from_complexstring(vec)),
+                        "text".to_string()
+                    )
+                ))
             },
             Expr::Empty                     => Ok(MessageType::Empty),
             _                               => Err(Error::new(ErrorKind::Other, "Error must be a valid action")),
@@ -97,7 +98,7 @@ impl<'a> AstInterpreter<'a> {
                     _                                                           => Err(Error::new(ErrorKind::Other, "event type is unown")),
                 }
             },
-            None               => Err(Error::new(ErrorKind::Other, "no event is received"))
+            None               => Err(Error::new(ErrorKind::Other, "no event is received in gen_literal_form_event"))
         }
     }
 
@@ -106,7 +107,7 @@ impl<'a> AstInterpreter<'a> {
             Ident(var) if self.memory.metadata.contains_key(var) => self.memorytype_to_literal(self.memory.metadata.get(var)),
             Ident(var) if self.memory.current.contains_key(var)  => self.memorytype_to_literal(self.memory.current.get(var)),
             Ident(var) if self.memory.past.contains_key(var)     => self.memorytype_to_literal(self.memory.past.get(var)),
-            _                                                    => Err(Error::new(ErrorKind::Other, "unown variable in memory V2")),
+            _                                                    => Err(Error::new(ErrorKind::Other, "unown variable in search_var_memory")),
         }
     }
 
@@ -117,16 +118,17 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    fn get_string_from_complexstring(&self, exprs: &[Expr]) -> Result<Literal> {
+    fn get_string_from_complexstring(&self, exprs: &[Expr]) -> Literal {
         let mut new_string = String::new();
 
         for elem in exprs.iter() {
-            new_string.push_str(
-                &self.get_var_from_ident(elem)?.to_string()
-            );
+            match &self.get_var_from_ident(elem) {
+                Ok(var) => new_string.push_str(&var.to_string()),
+                Err(_)  => new_string.push_str(&format!(" NULL "))
+            }
         }
 
-        Ok(Literal::StringLiteral(new_string))
+        Literal::StringLiteral(new_string)
     }
 
     fn get_var_from_ident(&self, expr: &Expr) -> Result<Literal> {
@@ -144,7 +146,7 @@ impl<'a> AstInterpreter<'a> {
             Expr::BuilderExpr(elem, exp) if self.search_str("past", elem)      => self.get_memory_action(elem, exp),
             Expr::BuilderExpr(elem, exp) if self.search_str("memory", elem)    => self.get_memory_action(elem, exp),
             Expr::BuilderExpr(elem, exp) if self.search_str("metadata", elem)  => self.get_memory_action(elem, exp),
-            Expr::ComplexLiteral(vec)                                          => self.get_string_from_complexstring(vec),
+            Expr::ComplexLiteral(vec)                                          => Ok(self.get_string_from_complexstring(vec)),
             Expr::IdentExpr(ident)                                             => self.get_var(ident),
             _                                                                  => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
         }
@@ -201,7 +203,6 @@ impl<'a> AstInterpreter<'a> {
     }
 
     // MEMORY ------------------------------------------------------------------
-    // TODO: return Result<&Literal>
     fn gen_literal_form_exp(&self, expr: &Expr) -> Result<Literal> {
         match expr {
             Expr::LitExpr(lit)      => Ok(lit.clone()),
@@ -284,9 +285,7 @@ impl<'a> AstInterpreter<'a> {
             Expr::InfixExpr(inf, exp1, exp2)    => {
                 match self.evaluate_condition(inf, exp1, exp2) {
                     Ok(rep) => rep,
-                    Err(e)  =>{
-                        false
-                    }
+                    Err(e)  => false
                 }
             },
             Expr::LitExpr(_lit)                 => true,

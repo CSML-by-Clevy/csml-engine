@@ -43,6 +43,7 @@ pub struct Message {
     pub content: Content,
 }
 
+// return Result<Message>
 impl Message {
     pub fn new(expr: &Expr, string: String) -> Self {
         let mut msg = Message {
