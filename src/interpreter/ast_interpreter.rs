@@ -21,6 +21,7 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == "Image"        => img(args, arg.to_string()),
             Ident(arg) if arg == "OneOf"        => one_of(args, "text".to_owned()),
             Ident(arg) if arg == "Question"     => question(args, arg.to_string()),
+            Ident(arg) if arg == "Meteo"        => meteo(args),
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }

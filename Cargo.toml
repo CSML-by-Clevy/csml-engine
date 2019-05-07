@@ -2,23 +2,20 @@
 name = "csmlinterpreter"
 version = "0.1.0"
 authors = ["amerelo <alexis.merelo@clevy.io>"]
-build = "build.rs"
-exclude = ["artifacts.json", "index.node"]
 edition = "2018"
 
 [lib]
 name = "csmlinterpreter"
-crate-type = ["dylib"]
-
-[build-dependencies]
-neon-build = "0.2.0"
+crate-type = ["rlib"]
 
 [dependencies]
-neon = "0.2.0"
 nom = "4.2.3"
 nom_locate = "0.3.1"
 rand = "0.6.5"
 serde = { version = "1.0", features = ["derive"] }
-neon-serde = "0.1.1"
 serde_json = "1.0"
 multimap = "0.4.0"
+reqwest = "0.9.16"
+
+[[example]]
+name = "test_flow"
