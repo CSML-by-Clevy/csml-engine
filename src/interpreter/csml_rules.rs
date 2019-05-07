@@ -1,16 +1,6 @@
-use crate::parser::ast::{Expr, Flow, Ident, Literal, Step};
+use crate::parser::ast::{Flow, Ident, Step};
 
 //TODO: Check sub block ask/respond rules
-pub fn is_trigger(flow: &Flow, string: &str) -> bool {
-    for elem in flow.accept.iter() {
-        match elem {
-            Expr::LitExpr(Literal::StringLiteral(tag)) if tag == string => return true,
-            _                                                           => continue,
-        }
-    }
-    false
-}
-
 pub fn check_ident(expr: &Ident, name: &str) -> bool {
     match expr {
         Ident(string) if string == name => true,

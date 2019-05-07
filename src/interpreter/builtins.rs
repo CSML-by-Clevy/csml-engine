@@ -1,5 +1,6 @@
 use rand::Rng;
 use std::io::{Error, ErrorKind, Result};
+use reqwest::*;
 
 use crate::parser::ast::{Expr, Literal, Ident};
 use crate::interpreter::message::*;
@@ -133,7 +134,6 @@ fn get_vec_from_box(expr: &Expr) -> Result<&Vec<Expr> > {
     }
 }
 
-
 fn parse_question(vec: &[Expr]) -> Result<Question> {
     let expr_title = search_for_key_in_vec("title", vec)?; // Option
     let button_type = search_for_key_in_vec("button_type", vec)?; // Option
@@ -163,7 +163,7 @@ fn parse_question(vec: &[Expr]) -> Result<Question> {
     })
 }
 
-pub fn question(args: &Expr, name: String) -> Result<MessageType>{
+pub fn question(args: &Expr, name: String) -> Result<MessageType> {
     if let Expr::VecExpr(vec) = args {
         let question = parse_question(&vec)?;
 
@@ -176,4 +176,29 @@ pub fn question(args: &Expr, name: String) -> Result<MessageType>{
     }
 
     Err(Error::new(ErrorKind::Other, "Builtin question bad argument"))
+}
+
+fn parse_meteo(vec: &[Expr]) -> Result<String> {
+    let city = search_for_key_in_vec("city", vec)?;
+    let date = search_for_key_in_vec("date", vec)?;
+
+    Ok(format!("http://localhost:3000/meteo?city={:?}&date={:?}", expr_to_string(city)?, expr_to_string(date)?))
+}
+
+pub fn meteo(args: &Expr) -> Result<MessageType> {
+    if let Expr::VecExpr(vec) = args {
+        let meteo_arg = parse_meteo(&vec)?;
+
+        match reqwest::get(&meteo_arg) {
+            Ok(ref mut arg) => {
+                match arg.text() {
+                    Ok(text) => return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned()))),
+                    Err(_e)  => return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+                }
+            },
+            Err(_e) => return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+        };
+    }
+
+    Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
 }
