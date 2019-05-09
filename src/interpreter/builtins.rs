@@ -180,22 +180,36 @@ pub fn question(args: &Expr, name: String) -> Result<MessageType> {
 
 fn parse_meteo(vec: &[Expr]) -> Result<String> {
     println!("start parsing meteo args");
-    let city = search_for_key_in_vec("city", vec)?;
-    let date = search_for_key_in_vec("date", vec)?;
+    let hostname = match search_for_key_in_vec("hostname", vec) {
+        Ok(arg)  => expr_to_string(arg)?,
+        Err(..) => "localhost".to_owned(),
+    };
+    let port = match search_for_key_in_vec("port", vec) {
+        Ok(arg)  => expr_to_string(arg)?,
+        Err(..) => "3000".to_owned(),
+    };
+    let city = match search_for_key_in_vec("city", vec) {
+        Ok(arg)  => expr_to_string(arg)?,
+        Err(..)  => "paris".to_owned(),
+    };
+    let lang = match search_for_key_in_vec("lang", vec) {
+        Ok(arg)  => expr_to_string(arg)?,
+        Err(..)  => "en".to_owned(),
+    };
 
-    println!("args {:?} {:?}", city, date);
-    Ok(format!("http://localhost:3000/meteo?city={:?}&date={:?}", expr_to_string(city)?, expr_to_string(date)?))
+    Ok(format!("http://{}:{}/meteo?city={}&date={}", hostname, port, city, lang))
 }
 
 pub fn meteo(args: &Expr) -> Result<MessageType> {
     if let Expr::VecExpr(vec) = args {
         let meteo_arg = parse_meteo(&vec)?;
 
+        println!("http call {:?}", meteo_arg);
         match reqwest::get(&meteo_arg) {
             Ok(ref mut arg) => {
                 match arg.text() {
                     Ok(text) => {
-                        println!("reqwest get ok");
+                        println!("reqwest get ok : ");
                         return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
                     },
                     Err(e)  => {
