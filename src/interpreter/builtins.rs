@@ -1,5 +1,9 @@
 use rand::Rng;
 use std::io::{Error, ErrorKind, Result};
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, Map, Number};
+use std::collections::HashMap;
+
 use reqwest::*;
 
 use crate::parser::ast::{Expr, Literal, Ident};
@@ -125,6 +129,14 @@ fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr> > {
     }
 }
 
+fn value_or_default(key: &str, vec: &[Expr], default: Option<String>) -> Result<String> {
+    match (search_for_key_in_vec(key, vec), default) {
+        (Ok(arg), ..)  => Ok(expr_to_string(arg)?),
+        (Err(..), Some(string)) => Ok(string),
+        (Err(..), None)         => Err(Error::new(ErrorKind::Other, format!("Error: no key {} found", key)))
+    }
+}
+
 //see if it can be a generic macro
 fn get_vec_from_box(expr: &Expr) -> Result<&Vec<Expr> > {
     if let Expr::VecExpr(vec) = expr {
@@ -133,6 +145,7 @@ fn get_vec_from_box(expr: &Expr) -> Result<&Vec<Expr> > {
         Err(Error::new(ErrorKind::Other, " get_vec_from_box"))
     }
 }
+
 
 fn parse_question(vec: &[Expr]) -> Result<Question> {
     let expr_title = search_for_key_in_vec("title", vec)?; // Option
@@ -178,26 +191,19 @@ pub fn question(args: &Expr, name: String) -> Result<MessageType> {
     Err(Error::new(ErrorKind::Other, "Builtin question bad argument"))
 }
 
+// ###############################################
+const PORT: &str = "3000";
+
+// meto ###############################################
+
 fn parse_meteo(vec: &[Expr]) -> Result<String> {
     println!("start parsing meteo args");
-    let hostname = match search_for_key_in_vec("hostname", vec) {
-        Ok(arg)  => expr_to_string(arg)?,
-        Err(..) => "localhost".to_owned(),
-    };
-    let port = match search_for_key_in_vec("port", vec) {
-        Ok(arg)  => expr_to_string(arg)?,
-        Err(..) => "3000".to_owned(),
-    };
-    let city = match search_for_key_in_vec("city", vec) {
-        Ok(arg)  => expr_to_string(arg)?,
-        Err(..)  => "paris".to_owned(),
-    };
-    let lang = match search_for_key_in_vec("lang", vec) {
-        Ok(arg)  => expr_to_string(arg)?,
-        Err(..)  => "en".to_owned(),
-    };
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()) )?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()) )?;
+    let city = value_or_default("city", vec, Some("paris".to_owned()) )?;
+    let lang = value_or_default("lang", vec, Some("en".to_owned()) )?;
 
-    Ok(format!("http://{}:{}/meteo?city={}&date={}", hostname, port, city, lang))
+    Ok(format!("http://{}:{}/meteo?city={}&lang={}", hostname, port, city, lang))
 }
 
 pub fn meteo(args: &Expr) -> Result<MessageType> {
@@ -214,17 +220,94 @@ pub fn meteo(args: &Expr) -> Result<MessageType> {
                     },
                     Err(e)  => {
                         println!("error in parsing reqwest result: {:?}", e);
-                        return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+                        return Err(Error::new(ErrorKind::Other, "Error in parsing reqwest result"))
                     }
                 }
             },
             Err(e) => {
                 println!("error in reqwest get {:?}", e);
-                return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+                return Err(Error::new(ErrorKind::Other, "Error in reqwest get"))
             }
         };
     }
 
     println!("meto is not correctly formatted");
     Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+}
+
+// wttj ###############################################
+
+//      curl -X "POST" http://localhost:3000/wttj -d '{"action": "getCandidates"}'  -H "Content-Type: application/json"
+
+//     curl -X "POST" "http://localhost:3000/wttj" \
+//     -d '{"action": "moveCandidate", "name": "Sandra TheGreat", "stage": "itw"}'  \
+//     -H "Content-Type: application/json"
+
+//      curl -X "POST" "http://localhost:3000/wttj" \
+// -d '{"action": "createCandidate", "candidate": {"firstname":"Bas", "lastname": "Tien", "email":"bastien+test@clevy.io"}}'  \
+// -H "Content-Type: application/json
+
+fn parse_wttj(vec: &[Expr]) -> Result<(String, HashMap<String, Value>) > {
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()))?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()))?;
+    let action = value_or_default("action", vec, None)?;
+
+    let mut map: HashMap<String, Value> = HashMap::new();
+
+    match action.as_ref() {
+        "getCandidates"   => {
+            map.insert("action".to_owned(), Value::String("getCandidates".to_owned()) );
+        },
+        "moveCandidate"   => {
+            let name = value_or_default("name", vec, None)?;
+            let stage = value_or_default("stage", vec, None)?;
+
+            map.insert("action".to_owned(), Value::String("moveCandidate".to_owned()) );
+            map.insert("name".to_owned(), Value::String(name));
+            map.insert("stage".to_owned(), Value::String(stage));
+        },
+        "createCandidate" => {
+            let mut candidate_info = Map::new();
+
+            candidate_info.insert("firstname".to_string(), Value::String(value_or_default("firstname", vec, None)?) );
+            candidate_info.insert("lastname".to_string(), Value::String(value_or_default("lastname", vec, None)?) );
+            candidate_info.insert("email".to_string(), Value::String(value_or_default("email", vec, None)?) );
+
+            map.insert("action".to_owned(), Value::String("createCandidate".to_owned()) );
+            map.insert("candidate".to_owned(), Value::Object(candidate_info));
+        },
+        action            => return Err(Error::new(ErrorKind::Other, format!("no action exist with name {}", action)))
+    }
+
+    Ok( (format!("http://{}:{}/wttj", hostname, port), map) )
+}
+
+pub fn wttj(args: &Expr) -> Result<MessageType> {
+    if let Expr::VecExpr(vec) = args {
+        let (http_arg, map) = parse_wttj(&vec)?;
+
+        println!("http call {:?}", http_arg);
+        println!("map {:?}", serde_json::to_string(&map).unwrap());
+        match reqwest::Client::new().post(&http_arg).json(&map).send() {
+            Ok(ref mut arg) => {
+                match arg.text() {
+                    Ok(text) => {
+                        println!("reqwest get ok : ");
+                        return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
+                    },
+                    Err(e)  => {
+                        println!("error in parsing reqwest result: {:?}", e);
+                        return Err(Error::new(ErrorKind::Other, "Error in parsing reqwest result"))
+                    }
+                }
+            },
+            Err(e) => {
+                println!("error in reqwest get {:?}", e);
+                return Err(Error::new(ErrorKind::Other, "Error in reqwest get"))
+            }
+        };
+    }
+
+    println!("wttj is not correctly formatted");
+    Err(Error::new(ErrorKind::Other, "Builtin WTTJ bad argument"))
 }
