@@ -179,9 +179,11 @@ pub fn question(args: &Expr, name: String) -> Result<MessageType> {
 }
 
 fn parse_meteo(vec: &[Expr]) -> Result<String> {
+    println!("start parsing meteo args");
     let city = search_for_key_in_vec("city", vec)?;
     let date = search_for_key_in_vec("date", vec)?;
 
+    println!("args {:?} {:?}", city, date);
     Ok(format!("http://localhost:3000/meteo?city={:?}&date={:?}", expr_to_string(city)?, expr_to_string(date)?))
 }
 
@@ -192,13 +194,23 @@ pub fn meteo(args: &Expr) -> Result<MessageType> {
         match reqwest::get(&meteo_arg) {
             Ok(ref mut arg) => {
                 match arg.text() {
-                    Ok(text) => return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned()))),
-                    Err(_e)  => return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+                    Ok(text) => {
+                        println!("reqwest get ok");
+                        return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
+                    },
+                    Err(_e)  => {
+                        println!("error in parsing reqwest result");
+                        return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+                    }
                 }
             },
-            Err(_e) => return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+            Err(_e) => {
+                println!("error in reqwest get");
+                return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
+            }
         };
     }
 
+    println!("meto is not correctly formatted");
     Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
 }
