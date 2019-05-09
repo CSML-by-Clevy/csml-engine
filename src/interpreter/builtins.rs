@@ -198,14 +198,14 @@ pub fn meteo(args: &Expr) -> Result<MessageType> {
                         println!("reqwest get ok");
                         return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
                     },
-                    Err(_e)  => {
-                        println!("error in parsing reqwest result");
+                    Err(e)  => {
+                        println!("error in parsing reqwest result: {:?}", e);
                         return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
                     }
                 }
             },
-            Err(_e) => {
-                println!("error in reqwest get");
+            Err(e) => {
+                println!("error in reqwest get {:?}", e);
                 return Err(Error::new(ErrorKind::Other, "Builtin meteo bad argument"))
             }
         };
