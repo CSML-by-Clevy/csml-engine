@@ -29,14 +29,14 @@ pub struct Memory {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Content {
+pub struct PayLoadContent {
     pub text: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PayLoad {
     pub content_type: String,
-    pub content: Content
+    pub content: PayLoadContent
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

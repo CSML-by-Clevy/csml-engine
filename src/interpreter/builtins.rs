@@ -1,13 +1,13 @@
 use rand::Rng;
 use std::io::{Error, ErrorKind, Result};
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, Map, Number};
+use serde_json::{Value, Map};
 use std::collections::HashMap;
-
-use reqwest::*;
-
 use crate::parser::ast::{Expr, Literal, Ident};
-use crate::interpreter::message::*;
+use crate::interpreter:: {
+    message::*,
+    json_to_rust::*,
+    variable_handler::*,
+};
 
 pub fn remember(name: String, value: String) -> MessageType {
     MessageType::Assign{name, value}
@@ -112,16 +112,6 @@ fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr> {
 }
 
 // TODO: RM when var handling are separate from ast_iterpreter
-fn expr_to_string(expr: &Expr) -> Result<String> {
-    match expr {
-        Expr::LitExpr(literal)          => Ok(literal.to_string()),
-        Expr::IdentExpr(Ident(ident))   => Ok(ident.to_owned()),
-        _                               => Err(Error::new(ErrorKind::Other, " expr_to_string"))
-    }
-}
-
-// return Result<Expr, error>
-// TODO: RM when var handling are separate from ast_iterpreter
 fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr> > {
     match expr {
         Expr::VecExpr(vec)  => Ok(vec),
@@ -129,9 +119,10 @@ fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr> > {
     }
 }
 
-fn value_or_default(key: &str, vec: &[Expr], default: Option<String>) -> Result<String> {
+fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, memory: &Memory, event: &Option<Event>) -> Result<String> {
     match (search_for_key_in_vec(key, vec), default) {
-        (Ok(arg), ..)  => Ok(expr_to_string(arg)?),
+        
+        (Ok(arg), ..)           => Ok(get_var_from_ident(memory, event, arg)?.to_string()),
         (Err(..), Some(string)) => Ok(string),
         (Err(..), None)         => Err(Error::new(ErrorKind::Other, format!("Error: no key {} found", key)))
     }
@@ -146,8 +137,7 @@ fn get_vec_from_box(expr: &Expr) -> Result<&Vec<Expr> > {
     }
 }
 
-
-fn parse_question(vec: &[Expr]) -> Result<Question> {
+fn parse_question(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<Question> {
     let expr_title = search_for_key_in_vec("title", vec)?; // Option
     let button_type = search_for_key_in_vec("button_type", vec)?; // Option
     let expr_buttons = expr_to_vec(search_for_key_in_vec("buttons", vec)?)?; // Option
@@ -161,7 +151,11 @@ fn parse_question(vec: &[Expr]) -> Result<Question> {
 
             if name == "Button" {
                 for elem in vec.iter() {
-                    buttons.push(parse_quickbutton(expr_to_string(elem)?, expr_to_string(button_type)?, &mut accepts));
+                    buttons.push(parse_quickbutton(
+                        get_var_from_ident(memory, event, elem)?.to_string(),
+                        get_var_from_ident(memory, event, button_type)?.to_string(),
+                        &mut accepts)
+                    );
                 }
             }
             // else { WARNING bad element }
@@ -170,15 +164,15 @@ fn parse_question(vec: &[Expr]) -> Result<Question> {
     }
 
     Ok(Question {
-        title: expr_to_string(expr_title)?,
+        title: get_var_from_ident(memory, event, expr_title)?.to_string(),
         accepts,
         buttons,
     })
 }
 
-pub fn question(args: &Expr, name: String) -> Result<MessageType> {
+pub fn question(args: &Expr, name: String, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
     if let Expr::VecExpr(vec) = args {
-        let question = parse_question(&vec)?;
+        let question = parse_question(&vec, memory, event)?;
 
         return Ok(MessageType::Msg(
             Message {
@@ -193,22 +187,21 @@ pub fn question(args: &Expr, name: String) -> Result<MessageType> {
 
 // ###############################################
 const PORT: &str = "3000";
-
 // meto ###############################################
 
-fn parse_meteo(vec: &[Expr]) -> Result<String> {
+fn parse_meteo(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<String> {
     println!("start parsing meteo args");
-    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()) )?;
-    let port = value_or_default("port", vec, Some(PORT.to_owned()) )?;
-    let city = value_or_default("city", vec, Some("paris".to_owned()) )?;
-    let lang = value_or_default("lang", vec, Some("en".to_owned()) )?;
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event )?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event )?;
+    let city = value_or_default("city", vec, Some("paris".to_owned()), memory, event )?;
+    let lang = value_or_default("lang", vec, Some("en".to_owned()), memory, event )?;
 
     Ok(format!("http://{}:{}/meteo?city={}&lang={}", hostname, port, city, lang))
 }
 
-pub fn meteo(args: &Expr) -> Result<MessageType> {
+pub fn meteo(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
     if let Expr::VecExpr(vec) = args {
-        let meteo_arg = parse_meteo(&vec)?;
+        let meteo_arg = parse_meteo(&vec, memory, event)?;
 
         println!("http call {:?}", meteo_arg);
         match reqwest::get(&meteo_arg) {
@@ -237,20 +230,10 @@ pub fn meteo(args: &Expr) -> Result<MessageType> {
 
 // wttj ###############################################
 
-//      curl -X "POST" http://localhost:3000/wttj -d '{"action": "getCandidates"}'  -H "Content-Type: application/json"
-
-//     curl -X "POST" "http://localhost:3000/wttj" \
-//     -d '{"action": "moveCandidate", "name": "Sandra TheGreat", "stage": "itw"}'  \
-//     -H "Content-Type: application/json"
-
-//      curl -X "POST" "http://localhost:3000/wttj" \
-// -d '{"action": "createCandidate", "candidate": {"firstname":"Bas", "lastname": "Tien", "email":"bastien+test@clevy.io"}}'  \
-// -H "Content-Type: application/json
-
-fn parse_wttj(vec: &[Expr]) -> Result<(String, HashMap<String, Value>) > {
-    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()))?;
-    let port = value_or_default("port", vec, Some(PORT.to_owned()))?;
-    let action = value_or_default("action", vec, None)?;
+fn parse_wttj(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(String, HashMap<String, Value>) > {
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event)?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event)?;
+    let action = value_or_default("action", vec, None, memory, event)?;
 
     let mut map: HashMap<String, Value> = HashMap::new();
 
@@ -259,8 +242,8 @@ fn parse_wttj(vec: &[Expr]) -> Result<(String, HashMap<String, Value>) > {
             map.insert("action".to_owned(), Value::String("getCandidates".to_owned()) );
         },
         "moveCandidate"   => {
-            let name = value_or_default("name", vec, None)?;
-            let stage = value_or_default("stage", vec, None)?;
+            let name = value_or_default("name", vec, None, memory, event)?;
+            let stage = value_or_default("stage", vec, None, memory, event)?;
 
             map.insert("action".to_owned(), Value::String("moveCandidate".to_owned()) );
             map.insert("name".to_owned(), Value::String(name));
@@ -269,9 +252,9 @@ fn parse_wttj(vec: &[Expr]) -> Result<(String, HashMap<String, Value>) > {
         "createCandidate" => {
             let mut candidate_info = Map::new();
 
-            candidate_info.insert("firstname".to_string(), Value::String(value_or_default("firstname", vec, None)?) );
-            candidate_info.insert("lastname".to_string(), Value::String(value_or_default("lastname", vec, None)?) );
-            candidate_info.insert("email".to_string(), Value::String(value_or_default("email", vec, None)?) );
+            candidate_info.insert("firstname".to_string(), Value::String(value_or_default("firstname", vec, None, memory, event )?) );
+            candidate_info.insert("lastname".to_string(), Value::String(value_or_default("lastname", vec, None, memory, event )?) );
+            candidate_info.insert("email".to_string(), Value::String(value_or_default("email", vec, None, memory, event )?) );
 
             map.insert("action".to_owned(), Value::String("createCandidate".to_owned()) );
             map.insert("candidate".to_owned(), Value::Object(candidate_info));
@@ -282,9 +265,9 @@ fn parse_wttj(vec: &[Expr]) -> Result<(String, HashMap<String, Value>) > {
     Ok( (format!("http://{}:{}/wttj", hostname, port), map) )
 }
 
-pub fn wttj(args: &Expr) -> Result<MessageType> {
+pub fn wttj(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
     if let Expr::VecExpr(vec) = args {
-        let (http_arg, map) = parse_wttj(&vec)?;
+        let (http_arg, map) = parse_wttj(&vec, memory, event)?;
 
         println!("http call {:?}", http_arg);
         println!("map {:?}", serde_json::to_string(&map).unwrap());

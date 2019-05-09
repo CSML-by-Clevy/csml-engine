@@ -4,6 +4,7 @@ use crate::interpreter:: {
     builtins::*,
     message::*,
     json_to_rust::*,
+    variable_handler::*,
 };
 
 pub struct AstInterpreter<'a> {
@@ -20,9 +21,9 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == "Url"          => url(args, arg.to_string()),
             Ident(arg) if arg == "Image"        => img(args, arg.to_string()),
             Ident(arg) if arg == "OneOf"        => one_of(args, "text".to_owned()),
-            Ident(arg) if arg == "Question"     => question(args, arg.to_string()),
-            Ident(arg) if arg == "Meteo"        => meteo(args),
-            Ident(arg) if arg == "WTTJ"         => wttj(args),
+            Ident(arg) if arg == "Question"     => question(args, arg.to_string(), self.memory, self.event),
+            Ident(arg) if arg == "Meteo"        => meteo(args, self.memory, self.event),
+            Ident(arg) if arg == "WTTJ"         => wttj(args, self.memory, self.event),
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
@@ -34,7 +35,7 @@ impl<'a> AstInterpreter<'a> {
             Expr::LitExpr(_)                => Ok(MessageType::Msg(Message::new(action, "text".to_string()))),
             //NOTE: ONLY Work for LITERAR::STRINGS for now
             Expr::BuilderExpr(..)           =>
-                match self.get_var_from_ident(action) {
+                match get_var_from_ident(self.memory, self.event, action) {
                     Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr(val), "text".to_string()))),
                     Err(e)  => Err(e)
                 }
@@ -42,7 +43,7 @@ impl<'a> AstInterpreter<'a> {
             Expr::ComplexLiteral(vec)       => {
                 Ok(MessageType::Msg(
                     Message::new(
-                        &Expr::LitExpr(self.get_string_from_complexstring(vec)),
+                        &Expr::LitExpr(get_string_from_complexstring(self.memory, self.event, vec)),
                         "text".to_string()
                     )
                 ))
@@ -91,124 +92,11 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    // VARS ##################################################################################
-    fn gen_literal_form_event(&self) -> Result<Literal> {
-        match self.event {
-            Some(event)        => {
-                match event.payload {
-                    PayLoad{content_type: ref t, content: ref c} if t == "text" => Ok(Literal::StringLiteral(c.text.to_string())),
-                    _                                                           => Err(Error::new(ErrorKind::Other, "event type is unown")),
-                }
-            },
-            None               => Err(Error::new(ErrorKind::Other, "no event is received in gen_literal_form_event"))
-        }
-    }
 
-    fn search_var_memory(&self, name: &Ident) -> Result<Literal> {
-        match name {
-            Ident(var) if self.memory.metadata.contains_key(var) => self.memorytype_to_literal(self.memory.metadata.get(var)),
-            Ident(var) if self.memory.current.contains_key(var)  => self.memorytype_to_literal(self.memory.current.get(var)),
-            Ident(var) if self.memory.past.contains_key(var)     => self.memorytype_to_literal(self.memory.past.get(var)),
-            _                                                    => Err(Error::new(ErrorKind::Other, "unown variable in search_var_memory")),
-        }
-    }
-
-    fn get_var(&self, name: &Ident) -> Result<Literal> {
-        match name {
-            Ident(var) if var == "event"    => self.gen_literal_form_event(),
-            Ident(_)                        => self.search_var_memory(name),
-        }
-    }
-
-    fn get_string_from_complexstring(&self, exprs: &[Expr]) -> Literal {
-        let mut new_string = String::new();
-
-        for elem in exprs.iter() {
-            match &self.get_var_from_ident(elem) {
-                Ok(var) => new_string.push_str(&var.to_string()),
-                Err(_)  => new_string.push_str(&format!(" NULL "))
-            }
-        }
-
-        Literal::StringLiteral(new_string)
-    }
-
-    fn get_var_from_ident(&self, expr: &Expr) -> Result<Literal> {
-        match expr {
-            Expr::LitExpr(lit)           => Ok(lit.clone()),
-            Expr::IdentExpr(ident)       => self.get_var(ident),
-            Expr::BuilderExpr(..)        => self.gen_literal_form_builder(expr),
-            Expr::ComplexLiteral(..)     => self.gen_literal_form_builder(expr),
-            _                            => Err(Error::new(ErrorKind::Other, "unown variable in Ident err n#1"))
-        }
-    }
-
-    fn gen_literal_form_builder(&self, expr: &Expr) -> Result<Literal> {
-        match expr {
-            Expr::BuilderExpr(elem, exp) if self.search_str("past", elem)      => self.get_memory_action(elem, exp),
-            Expr::BuilderExpr(elem, exp) if self.search_str("memory", elem)    => self.get_memory_action(elem, exp),
-            Expr::BuilderExpr(elem, exp) if self.search_str("metadata", elem)  => self.get_memory_action(elem, exp),
-            Expr::ComplexLiteral(vec)                                          => Ok(self.get_string_from_complexstring(vec)),
-            Expr::IdentExpr(ident)                                             => self.get_var(ident),
-            _                                                                  => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
-        }
-    }
-
-    fn memorytype_to_literal(&self, memtype: Option<&MemoryType>) -> Result<Literal> {
-        if let Some(elem) = memtype {
-            Ok(Literal::StringLiteral(elem.value.to_string()))
-        } else {
-            Err(Error::new(ErrorKind::Other, "Error in memory action"))
-        }
-    }
-
-    // VARS ##################################################################################
-
-    // MEMORY ------------------------------------------------------------------
-    fn search_str(&self, name: &str, expr: &Expr) -> bool {
-        match expr {
-            Expr::IdentExpr(Ident(ident)) if ident == name  => true,
-            _                                               => false
-        }
-    }
-
-    fn memory_get(&self, name: &Expr, expr: &Expr) -> Option<&MemoryType> {
-        match (name, expr) {
-            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "past"    => self.memory.past.get(lit),
-            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "memory"  => self.memory.current.get(lit),
-            (_, Expr::LitExpr(Literal::StringLiteral(lit)))                                                   => self.memory.metadata.get(lit),
-            _                                                                                                 => None,
-        }
-    }
-
-    //TODO: RM UNWRAP
-    fn memory_first(&self, name: &Expr, expr: &Expr) -> Option<&MemoryType> {
-        match (name, expr) {
-            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "past"    => self.memory.past.get_vec(lit).unwrap().last(),
-            (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "memory"  => self.memory.current.get_vec(lit).unwrap().last(),
-            (_, Expr::LitExpr(Literal::StringLiteral(lit)))                                                   => self.memory.metadata.get_vec(lit).unwrap().last(),
-            _                                                                                                 => None,
-        }
-    }
-
-    //NOTE:Only work with Strings for now 
-    fn get_memory_action(&self, name: &Expr, expr: &Expr) -> Result<Literal> {
-        match expr {
-            Expr::FunctionExpr(Ident(ident), exp) if ident == "get"         => {
-                self.memorytype_to_literal(self.memory_get(name, exp))
-            },
-            Expr::FunctionExpr(Ident(ident), exp) if ident == "first"       => {
-                self.memorytype_to_literal(self.memory_first(name, exp))
-            },
-            _                                                               => Err(Error::new(ErrorKind::Other, "Error in memory action")),
-        }
-    }
-
-    // MEMORY ------------------------------------------------------------------
     fn gen_literal_form_exp(&self, expr: &Expr) -> Result<Literal> {
         match expr {
             Expr::LitExpr(lit)      => Ok(lit.clone()),
-            Expr::IdentExpr(ident)  => self.get_var(ident),
+            Expr::IdentExpr(ident)  => get_var(self.memory, self.event, ident),
             _                       => Err(Error::new(ErrorKind::Other, "Expression must be a literal or an identifier"))
         }
     }
@@ -230,19 +118,19 @@ impl<'a> AstInterpreter<'a> {
                 Ok(self.cmp_lit(infix, l1, l2))
             },
             (exp1, exp2) if self.check_if_ident(exp1) && self.check_if_ident(exp2)    => {
-                match (self.get_var_from_ident(exp1), self.get_var_from_ident(exp2)) {
+                match (get_var_from_ident(self.memory, self.event, exp1), get_var_from_ident(self.memory, self.event, exp2)) {
                     (Ok(l1), Ok(l2))   => Ok(self.cmp_lit(infix, &l1, &l2)),
                     _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and ident"))
                 }
             },
             (exp, Expr::LitExpr(l2)) if self.check_if_ident(exp)  => {
-                match self.get_var_from_ident(exp) {
+                match get_var_from_ident(self.memory, self.event, exp) {
                     Ok(l1) => Ok(self.cmp_lit(infix, &l1, l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and lit"))
                 }
             },
             (Expr::LitExpr(l1), exp) if self.check_if_ident(exp)   => {
-                match self.get_var_from_ident(exp) {
+                match get_var_from_ident(self.memory, self.event, exp) {
                     Ok(l2) => Ok(self.cmp_lit(infix, l1, &l2)),
                     _      => Err(Error::new(ErrorKind::Other, "error in evaluation between lit and ident"))
                 }
@@ -291,8 +179,8 @@ impl<'a> AstInterpreter<'a> {
                 }
             },
             Expr::LitExpr(_lit)                 => true,
-            Expr::BuilderExpr(..)               => self.get_var_from_ident(expr).is_ok(), // error
-            Expr::IdentExpr(ident)              => self.get_var(ident).is_ok(), // error
+            Expr::BuilderExpr(..)               => get_var_from_ident(self.memory, self.event, expr).is_ok(), // error
+            Expr::IdentExpr(ident)              => get_var(self.memory, self.event, ident).is_ok(), // error
             _                                   => false, // return error
         }
     }
@@ -352,7 +240,7 @@ impl<'a> AstInterpreter<'a> {
                     root.add_next_step(ident)
                 },
                 Expr::Remember(Ident(name), expr) if self.check_if_ident(expr) => {
-                        if let Ok(Literal::StringLiteral(var)) = self.get_var_from_ident(expr) {
+                        if let Ok(Literal::StringLiteral(var)) = get_var_from_ident(self.memory, self.event, expr) {
                             self.add_to_message(&mut root, remember(name.to_string(), var.to_string()));
                         } else {
                             return Err(Error::new(ErrorKind::Other, "Error Assign value must be valid"));
