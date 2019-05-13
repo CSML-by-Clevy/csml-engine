@@ -1,15 +1,23 @@
+use crate::lexer::token::*;
 use crate::lexer::token::Span;
 use nom::*;
 
 named!(pub comment_delimited<Span, Span>,
     preceded!(
-        tag!("/*"),
-        take_until_and_consume!("*/")
+        tag!(START_COMMENT),
+        take_until_and_consume!(END_COMMENT)
     )
 );
 
+// named!(pub comment_line<Span, Span>,
+//     preceded!(
+//         tag!("//"),
+//         take_until_and_consume!( '\n' )
+//     )
+// );
+
 named!(pub whitespace<Span, Span>,
-    is_a!(" \t\n\r")
+    is_a!(WHITE_SPACE)
 );
 
 named!(pub skip<Span, Vec<Span>>,

@@ -1,5 +1,6 @@
 use std::io::{Error, ErrorKind, Result};
 use crate::parser::ast::*;
+use crate::lexer::token::*;
 use crate::interpreter:: {
     builtins::*,
     message::*,
@@ -15,16 +16,16 @@ pub struct AstInterpreter<'a> {
 impl<'a> AstInterpreter<'a> {
     fn match_builtin(&self, builtin: &Ident, args: &Expr) -> Result<MessageType> {
         match builtin {
-            Ident(arg) if arg == "Typing"       => typing(args, arg.to_string()),
-            Ident(arg) if arg == "Wait"         => wait(args, arg.to_string()),
-            Ident(arg) if arg == "Text"         => text(args, arg.to_string()),
-            Ident(arg) if arg == "Url"          => url(args, arg.to_string()),
-            Ident(arg) if arg == "Image"        => img(args, arg.to_string()),
-            Ident(arg) if arg == "OneOf"        => one_of(args, "text".to_owned()),
-            Ident(arg) if arg == "Question"     => question(args, arg.to_string(), self.memory, self.event),
-            Ident(arg) if arg == "Meteo"        => meteo(args, self.memory, self.event),
-            Ident(arg) if arg == "WTTJ"         => wttj(args, self.memory, self.event),
-            Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
+            Ident(arg) if arg == TYPING     => typing(args, arg.to_string()),
+            Ident(arg) if arg == WAIT       => wait(args, arg.to_string()),
+            Ident(arg) if arg == TEXT       => text(args, arg.to_string()),
+            Ident(arg) if arg == URL        => url(args, arg.to_string()),
+            Ident(arg) if arg == IMAGE      => img(args, arg.to_string()),
+            Ident(arg) if arg == ONE_OF     => one_of(args, "text".to_owned()),
+            Ident(arg) if arg == QUESTION   => question(args, arg.to_string(), self.memory, self.event),
+            Ident(arg) if arg == METEO      => meteo(args, self.memory, self.event),
+            Ident(arg) if arg == WTTJ       => wttj(args, self.memory, self.event),
+            Ident(_arg)                     => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
     }
 
@@ -55,10 +56,10 @@ impl<'a> AstInterpreter<'a> {
 
     fn match_reserved(&self, reserved: &Ident, arg: &Expr) -> Result<MessageType> {
         match reserved {
-            Ident(ident) if ident == "say"      => {
+            Ident(ident) if ident == SAY      => {
                 self.match_action(arg)
             }
-            Ident(ident) if ident == "retry"    => {
+            Ident(ident) if ident == RETRY    => {
                 self.match_action(arg)
             }
             _                                   => {
@@ -212,13 +213,13 @@ impl<'a> AstInterpreter<'a> {
             match action {
                 Expr::Reserved { fun, arg } => {
                     match (fun, self.event) {
-                        (Ident(ref name), None) if name == "ask"                    => {
+                        (Ident(ref name), None) if name == ASK                    => {
                             return self.match_sub_block(arg, root);
                         },
-                        (Ident(ref name), Some(..)) if name == "respond"            => {
+                        (Ident(ref name), Some(..)) if name == RESPOND            => {
                             return self.match_sub_block(arg, root);
                         },
-                        (Ident(ref name), _) if name == "respond" || name == "ask"  => continue,
+                        (Ident(ref name), _) if name == RESPOND || name == ASK  => continue,
                         (_, _)                                                      => {
                             self.add_to_message(
                                 &mut root,

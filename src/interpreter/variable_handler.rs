@@ -1,5 +1,6 @@
 use std::io::{Error, ErrorKind, Result};
 use crate::parser::ast::*;
+use crate::lexer::token::*;
 use crate::interpreter:: {
     json_to_rust::*,
 };
@@ -28,7 +29,7 @@ pub fn search_var_memory(memory: &Memory, name: &Ident) -> Result<Literal> {
 
 pub fn get_var(memory: &Memory, event: &Option<Event>, name: &Ident) -> Result<Literal> {
     match name {
-        Ident(var) if var == "event"    => gen_literal_form_event(event),
+        Ident(var) if var == EVENT      => gen_literal_form_event(event),
         Ident(_)                        => search_var_memory(memory, name),
     }
 }
@@ -58,9 +59,9 @@ pub fn get_var_from_ident(memory: &Memory, event: &Option<Event>, expr: &Expr) -
 
 pub fn gen_literal_form_builder(memory: &Memory, event: &Option<Event>, expr: &Expr) -> Result<Literal> {
     match expr {
-        Expr::BuilderExpr(elem, exp) if search_str("past", elem)     => get_memory_action(memory, elem, exp),
-        Expr::BuilderExpr(elem, exp) if search_str("memory", elem)   => get_memory_action(memory, elem, exp),
-        Expr::BuilderExpr(elem, exp) if search_str("metadata", elem) => get_memory_action(memory, elem, exp),
+        Expr::BuilderExpr(elem, exp) if search_str(PAST, elem)     => get_memory_action(memory, elem, exp),
+        Expr::BuilderExpr(elem, exp) if search_str(MEMORY, elem)   => get_memory_action(memory, elem, exp),
+        Expr::BuilderExpr(elem, exp) if search_str(METADATA, elem) => get_memory_action(memory, elem, exp),
         Expr::ComplexLiteral(vec)                                                   => Ok(get_string_from_complexstring(memory, event, vec)),
         Expr::IdentExpr(ident)                                                      => get_var(memory, event,ident),
         _                                                                           => Err(Error::new(ErrorKind::Other, "Error in Exprecion builder"))
@@ -85,8 +86,8 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
 
 pub fn memory_get<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
     match (name, expr) {
-        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "past"    => memory.past.get(lit),
-        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "memory"  => memory.current.get(lit),
+        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == PAST    => memory.past.get(lit),
+        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == MEMORY  => memory.current.get(lit),
         (_, Expr::LitExpr(Literal::StringLiteral(lit)))                                                   => memory.metadata.get(lit),
         _                                                                                                 => None,
     }
@@ -95,20 +96,20 @@ pub fn memory_get<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'
 //TODO: RM UNWRAP
 pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
     match (name, expr) {
-        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "past"    => memory.past.get_vec(lit).unwrap().last(),
-        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == "memory"  => memory.current.get_vec(lit).unwrap().last(),
-        (_, Expr::LitExpr(Literal::StringLiteral(lit)))                                                   => memory.metadata.get_vec(lit).unwrap().last(),
-        _                                                                                                 => None,
+        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == PAST    => memory.past.get_vec(lit).unwrap().last(),
+        (Expr::IdentExpr(Ident(ident)), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == MEMORY  => memory.current.get_vec(lit).unwrap().last(),
+        (_, Expr::LitExpr(Literal::StringLiteral(lit)))                                                 => memory.metadata.get_vec(lit).unwrap().last(),
+        _                                                                                               => None,
     }
 }
 
 //NOTE:Only work with Strings for now 
 pub fn get_memory_action(memory: &Memory, name: &Expr, expr: &Expr) -> Result<Literal> {
     match expr {
-        Expr::FunctionExpr(Ident(ident), exp) if ident == "get"         => {
+        Expr::FunctionExpr(Ident(ident), exp) if ident == GET_VALUE     => {
             memorytype_to_literal(memory_get(memory, name, exp))
         },
-        Expr::FunctionExpr(Ident(ident), exp) if ident == "first"       => {
+        Expr::FunctionExpr(Ident(ident), exp) if ident == FIRST         => {
             memorytype_to_literal(memory_first(memory, name, exp))
         },
         _                                                               => Err(Error::new(ErrorKind::Other, "Error in memory action")),

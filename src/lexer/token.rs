@@ -6,6 +6,84 @@ use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 
 pub type Span<'a> = LocatedSpan<CompleteByteSlice<'a>>;
 
+// ####################################################################################
+pub const PORT: &str = "3000";
+
+pub const WHITE_SPACE: &str = " \t\n\r";
+pub const START_COMMENT: &str = "/*";
+pub const END_COMMENT: &str = "*/";
+
+
+pub const EQUAL: &str = "==";
+pub const ASSIGN: &str = "=";
+
+pub const OR: &str = "||";
+pub const AND: &str = "&&";
+
+
+pub const GREATER_THAN_EQUAL: &str = ">=";
+pub const LESS_THAN_EQUAL: &str = "<=";
+pub const GREATER_THAN: &str = ">";
+pub const LESS_THAN: &str = "<";
+
+
+pub const COMMA: &str = ",";
+pub const DOT: &str = ".";
+pub const SEMICOLON: &str = ";";
+pub const COLON: &str = ":";
+
+pub const L_PAREN: &str = "(";
+pub const R_PAREN: &str = ")";
+pub const L_BRACE: &str = "{";
+pub const R_BRACE: &str = "}";
+
+pub const L_BRACKET: &str = "[";
+pub const R_BRACKET: &str = "]";
+
+
+pub const IF: &str = "if";
+pub const FLOW: &str = "flow";
+pub const GOTO: &str = "goto";
+pub const IMPORT: &str = "import";
+pub const STEP: &str = "step";
+pub const AS: &str = "as";
+
+pub const REMEMBER: &str = "remember";
+pub const RETRY: &str = "retry";
+pub const SAY: &str = "say";
+pub const ASK: &str = "ask";
+pub const RESPOND: &str = "respond";
+
+
+pub const TRUE: &str = "true";
+pub const FALSE: &str = "false";
+
+
+pub const FROM: &str = "from";
+pub const FILE: &str = "file";
+
+
+pub const TYPING: &str = "Typing";
+pub const WAIT: &str = "Wait";
+pub const TEXT: &str = "Text";
+pub const URL: &str = "Url";
+pub const IMAGE: &str = "Image";
+pub const ONE_OF: &str = "OneOf";
+pub const QUESTION: &str = "Question";
+pub const METEO: &str = "Meteo";
+pub const WTTJ: &str = "WTTJ";
+
+pub const EVENT: &str = "event";
+
+pub const PAST: &str = "past";
+pub const MEMORY: &str = "memory";
+pub const METADATA: &str = "metadata";
+
+pub const GET_VALUE: &str = "getvalue";
+pub const FIRST: &str = "first";
+
+// ####################################################################################
+
 #[derive(PartialEq, Debug, Clone)]
 pub enum Token<'a> {
     // Special Tokens

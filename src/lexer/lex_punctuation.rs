@@ -82,22 +82,22 @@ named!(rbracket_punctuation<Span, Token>, do_parse!(
     )
 );
 
-named!(space_punctuation<Span, Token>,
-    do_parse!(
-        alt!(
-            char!(' ') |
-            char!('\t')
-        )  >>
-        (Token::Space)
-    )
-);
+// named!(space_punctuation<Span, Token>,
+//     do_parse!(
+//         alt!(
+//             char!(' ') |
+//             char!('\t')
+//         )  >>
+//         (Token::Space)
+//     )
+// );
 
-named!(newline_punctuation<Span, Token>,
-    do_parse!(
-        char!('\n') >>
-        (Token::NewLine)
-    )
-);
+// named!(newline_punctuation<Span, Token>,
+//     do_parse!(
+//        C >>
+//         (Token::NewLine)
+//     )
+// );
 
 named!(pub lex_punctuations<Span, Token>, alt!(
     comma_punctuation |
@@ -109,8 +109,8 @@ named!(pub lex_punctuations<Span, Token>, alt!(
     lbrace_punctuation |
     rbrace_punctuation |
     lbracket_punctuation |
-    rbracket_punctuation |
+    rbracket_punctuation
 
-    space_punctuation |
-    newline_punctuation
+    // space_punctuation |
+    // newline_punctuation
 ));

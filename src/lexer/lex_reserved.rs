@@ -35,20 +35,20 @@ fn parse_reserved<'a>(c: CompleteStr, rest: Option<CompleteStr>, position: Span<
     let mut string = c.0.to_owned();
     string.push_str(rest.unwrap_or(CompleteStr("")).0);
     match string.as_ref() {
-        "if" => Token::If(position),
-        "flow" => Token::Flow(position),
-        "goto" => Token::Goto(position),
-        "import" => Token::Import(position),
+        IF => Token::If(position),
+        FLOW => Token::Flow(position),
+        GOTO => Token::Goto(position),
+        IMPORT => Token::Import(position),
         
-        "step" => Token::Step(position),
-        "as" => Token::As(position),
+        STEP => Token::Step(position),
+        AS => Token::As(position),
 
-        "remember" => Token::Remember(position),
-        "retry" => Token::ReservedFunc(string, position),
-        "say" => Token::ReservedFunc(string, position),
+        REMEMBER => Token::Remember(position),
+        RETRY => Token::ReservedFunc(string, position),
+        SAY => Token::ReservedFunc(string, position),
 
-        "true" => Token::BoolLiteral(true, position),
-        "false" => Token::BoolLiteral(false, position),
+        TRUE => Token::BoolLiteral(true, position),
+        FALSE => Token::BoolLiteral(false, position),
         _ => Token::Ident(string, position),
     }
 }
@@ -73,8 +73,8 @@ where
 
 named!(pub lex_from_file<Span, Token>, do_parse!(
     position: position!() >>
-    tag!("from")  >>
-    tag!("file")  >>
+    tag!(FROM)  >>
+    tag!(FILE)  >>
     (Token::FromFile(position))
 ));
 

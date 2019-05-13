@@ -2,6 +2,7 @@ use rand::Rng;
 use std::io::{Error, ErrorKind, Result};
 use serde_json::{Value, Map};
 use std::collections::HashMap;
+use crate::lexer::token::*;
 use crate::parser::ast::{Expr, Literal, Ident};
 use crate::interpreter:: {
     message::*,
@@ -185,8 +186,6 @@ pub fn question(args: &Expr, name: String, memory: &Memory, event: &Option<Event
     Err(Error::new(ErrorKind::Other, "Builtin question bad argument"))
 }
 
-// ###############################################
-const PORT: &str = "3000";
 // meto ###############################################
 
 fn parse_meteo(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<String> {

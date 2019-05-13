@@ -1,12 +1,11 @@
 use crate::lexer::token::*;
-
 use nom::*;
 use nom_locate::position;
 
 named!(equal_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!("==") >> 
+        tag!(EQUAL) >> 
         (Token::Equal(position))
     )
 );
@@ -14,7 +13,7 @@ named!(equal_operator<Span, Token>,
 named!(or_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!("||") >> 
+        tag!(OR) >> 
         (Token::Or(position))
     )
 );
@@ -22,7 +21,7 @@ named!(or_operator<Span, Token>,
 named!(and_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!("&&")  >> 
+        tag!(AND)  >> 
         (Token::And(position))
     )
 );
@@ -30,7 +29,7 @@ named!(and_operator<Span, Token>,
 named!(assign_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!("=")   >> 
+        tag!(ASSIGN)   >> 
         (Token::Assign(position))
     )
 );
@@ -38,7 +37,7 @@ named!(assign_operator<Span, Token>,
 named!(greaterthanequal_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!(">=")  >> 
+        tag!(GREATER_THAN_EQUAL)  >> 
         (Token::GreaterThanEqual(position))
         )
 );
@@ -46,7 +45,7 @@ named!(greaterthanequal_operator<Span, Token>,
 named!(lessthanequal_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!("<=")  >> 
+        tag!(LESS_THAN_EQUAL)  >> 
         (Token::LessThanEqual(position))
     )
 );
@@ -54,7 +53,7 @@ named!(lessthanequal_operator<Span, Token>,
 named!(greaterthan_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!(">")   >> 
+        tag!(GREATER_THAN)   >> 
         (Token::GreaterThan(position))
     )
 );
@@ -62,7 +61,7 @@ named!(greaterthan_operator<Span, Token>,
 named!(lessthan_operator<Span, Token>,
     do_parse!(
         position: position!() >>
-        tag!("<")   >> 
+        tag!(LESS_THAN)   >> 
         (Token::LessThan(position))
     )
 );

@@ -32,8 +32,7 @@ named!(lex_token<Span, Token>, alt_complete!(
     lex_reserved_ident  |
     lex_illegal
 ));
-// comment!(
-// ws!(
+
 named!(start_lex<Span, Vec<Token>>, comment!(many0!(lex_token)) );
 
 fn concat_token<'a>(nested: &mut Vec<Token<'a>>, vec: &mut Vec<Token<'a>>) {
@@ -77,7 +76,7 @@ named!(parse_2brace<Span, (Vec<Token>, Span) >, do_parse!(
 
 named!(get_position<Span, Span>, position!());
 
-fn not_stirng(token: &Token) -> bool {
+fn not_string(token: &Token) -> bool {
     if let Token::StringLiteral(..) = token {
         false
     } else { 
@@ -86,7 +85,7 @@ fn not_stirng(token: &Token) -> bool {
 }
 
 fn format_complex_string(mut vec: Vec<Token>) -> Vec<Token> {
-    if vec.len() > 1 || (vec.len() == 1 && not_stirng(&vec[0]) ) {
+    if vec.len() > 1 || (vec.len() == 1 && not_string(&vec[0]) ) {
         vec = [&[Token::L2Brace][..], &vec[..], &[Token::R2Brace][..]].concat();
     }
     vec
