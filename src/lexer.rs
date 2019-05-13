@@ -1,10 +1,13 @@
 pub mod token;
 pub mod tools;
+
 pub mod lex_operators;
 pub mod lex_illegal;
 pub mod lex_reserved;
 pub mod lex_punctuation;
 pub mod lex_int;
+#[macro_use]
+pub mod lex_comments;
 
 use token::*;
 use lex_operators::lex_operator;
@@ -29,8 +32,9 @@ named!(lex_token<Span, Token>, alt_complete!(
     lex_reserved_ident  |
     lex_illegal
 ));
-
-named!(start_lex<Span, Vec<Token>>, ws!(many0!(lex_token)));
+// comment!(
+// ws!(
+named!(start_lex<Span, Vec<Token>>, comment!(many0!(lex_token)) );
 
 fn concat_token<'a>(nested: &mut Vec<Token<'a>>, vec: &mut Vec<Token<'a>>) {
     for elem in nested.drain(..) {
