@@ -6,6 +6,8 @@ use parser::ast::*;
 use interpreter::csml_rules::*;
 use interpreter::json_to_rust::*;
 use interpreter::ast_interpreter::AstInterpreter;
+use lexer::{Lexer, token::Tokens};
+use parser::{Parser};
 
 use std::io::{Error, ErrorKind, Result as IoResult};
 use multimap::MultiMap;
@@ -18,6 +20,22 @@ pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_jso
             Ok(memory_value)              => memory.insert(memory_value.key.clone(), memory_value),
             Err(e)                        => println!("value is not of fomrat MemoryType {:?} error -> {:?}", value, e), // error to the api
         }
+    }
+}
+
+pub fn pars_file(file: String) -> IoResult<Flow> {
+    let lex_tokens = Lexer::lex_tokens(file.as_bytes());
+
+    match lex_tokens {
+        Ok((_complete, t)) => {
+            let tokens = Tokens::new(&t);
+
+            match Parser::parse_tokens(tokens) {
+                Ok(flow) => Ok(flow),
+                Err(e)   => Err(Error::new(ErrorKind::Other, format!("Error in Paring AST {:?}", e)))
+            }
+        }
+        Err(e) => Err(Error::new(ErrorKind::Other, format!("Problem in Lexing Tokens -> {:?}", e))),
     }
 }
 
@@ -46,20 +64,29 @@ pub fn context_to_memory(context: &JsContext) -> Memory {
     memory
 }
 
-pub fn search_for(flow: &Flow, name: &str, interpreter: AstInterpreter) -> IoResult<String> {
+pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Step> {
     for step in flow.steps.iter() {
         match step {
-            Step{label, actions} if check_ident(label, name) => {
-                let result = interpreter.match_block(actions)?;
-                let ser = serde_json::to_string(&result)?;
-
-                return Ok(ser);
+            Step{ label, ..} if check_ident(label, name) => {
+                return Some(step)
             }
             _ => continue,
         }
     }
 
-    Err(Error::new(ErrorKind::Other, "Error Empty Flow"))
+    None
+}
+
+pub fn execute_step(flow: &Flow, name: &str, interpreter: AstInterpreter) -> IoResult<String> {
+    match search_for(flow, name) {
+        Some(Step{ label: _, actions}) => {
+            let result = interpreter.match_block(actions)?;
+            let ser = serde_json::to_string(&result)?;
+
+            Ok(ser)
+        }
+        _ => Err(Error::new(ErrorKind::Other, "Error Empty Flow")),
+    }
 }
 
 pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> IoResult<String> {
@@ -70,5 +97,5 @@ pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Optio
     let memory = context_to_memory(context);
     let intpreter = AstInterpreter{ memory: &memory, event};
 
-    Ok(search_for(ast, step_name, intpreter)?)
+    Ok(execute_step(ast, step_name, intpreter)?)
 }

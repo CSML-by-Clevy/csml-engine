@@ -92,7 +92,6 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-
     fn gen_literal_form_exp(&self, expr: &Expr) -> Result<Literal> {
         match expr {
             Expr::LitExpr(lit)      => Ok(lit.clone()),
@@ -175,7 +174,7 @@ impl<'a> AstInterpreter<'a> {
             Expr::InfixExpr(inf, exp1, exp2)    => {
                 match self.evaluate_condition(inf, exp1, exp2) {
                     Ok(rep) => rep,
-                    Err(e)  => false
+                    Err(_e)  => false
                 }
             },
             Expr::LitExpr(_lit)                 => true,
@@ -198,7 +197,7 @@ impl<'a> AstInterpreter<'a> {
         if let Expr::VecExpr(vec) = arg {
             Ok(root + self.match_block(vec)?)
         } else {
-            return Err(Error::new(ErrorKind::Other, "error sub block arg must be of type  Expr::VecExpr"))
+            return Err(Error::new(ErrorKind::Other, "error sub block arg must be of type Expr::VecExpr"))
         }
     }
 

@@ -9,8 +9,8 @@ name = "csmlinterpreter"
 crate-type = ["rlib"]
 
 [dependencies]
-nom = "4.2.3"
 nom_locate = "0.3.1"
+nom = "4.2.3"
 rand = "0.6.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
