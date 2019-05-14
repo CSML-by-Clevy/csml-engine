@@ -7,7 +7,7 @@ use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 pub type Span<'a> = LocatedSpan<CompleteByteSlice<'a>>;
 
 // ####################################################################################
-pub const PORT: &str = "3000";
+pub const PORT: &str = "3002";
 
 pub const WHITE_SPACE: &str = " \t\n\r";
 pub const START_COMMENT: &str = "/*";
