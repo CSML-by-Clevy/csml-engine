@@ -70,8 +70,12 @@ pub const URL: &str = "Url";
 pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
 pub const QUESTION: &str = "Question";
+
 pub const METEO: &str = "Meteo";
 pub const WTTJ: &str = "WTTJ";
+pub const GET_GSHEET: &str = "GetGSheet";
+pub const APPEND_GSHEET: &str = "AppendGsheet";
+pub const HUB_SPOT: &str = "Hubspot";
 
 pub const EVENT: &str = "event";
 

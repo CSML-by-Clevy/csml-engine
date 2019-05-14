@@ -100,44 +100,6 @@ fn parse_quickbutton(val: String, buttton_type: String,  accepts: &mut Vec<Strin
     }
 }
 
-fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr> {
-    for elem in vec.iter() {
-        if let Expr::Assign(Ident(name), var) = elem {
-            if name == key {
-                return Ok(var);
-            } 
-        }
-    }
-
-    Err(Error::new(ErrorKind::Other, " search_for_key_in_vec"))
-}
-
-// TODO: RM when var handling are separate from ast_iterpreter
-fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr> > {
-    match expr {
-        Expr::VecExpr(vec)  => Ok(vec),
-        _                   => Err(Error::new(ErrorKind::Other, " expr_to_vec"))
-    }
-}
-
-fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, memory: &Memory, event: &Option<Event>) -> Result<String> {
-    match (search_for_key_in_vec(key, vec), default) {
-        
-        (Ok(arg), ..)           => Ok(get_var_from_ident(memory, event, arg)?.to_string()),
-        (Err(..), Some(string)) => Ok(string),
-        (Err(..), None)         => Err(Error::new(ErrorKind::Other, format!("Error: no key {} found", key)))
-    }
-}
-
-//see if it can be a generic macro
-fn get_vec_from_box(expr: &Expr) -> Result<&Vec<Expr> > {
-    if let Expr::VecExpr(vec) = expr {
-        Ok(vec)
-    } else {
-        Err(Error::new(ErrorKind::Other, " get_vec_from_box"))
-    }
-}
-
 fn parse_question(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<Question> {
     let expr_title = search_for_key_in_vec("title", vec)?; // Option
     let button_type = search_for_key_in_vec("button_type", vec)?; // Option
@@ -186,10 +148,63 @@ pub fn question(args: &Expr, name: String, memory: &Memory, event: &Option<Event
     Err(Error::new(ErrorKind::Other, "Builtin question bad argument"))
 }
 
+// ########################################################################
+
+fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr> {
+    for elem in vec.iter() {
+        if let Expr::Assign(Ident(name), var) = elem {
+            if name == key {
+                return Ok(var);
+            } 
+        }
+    }
+
+    Err(Error::new(ErrorKind::Other, " search_for_key_in_vec"))
+}
+
+fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], memory: &Memory, event: &Option<Event>) -> Result<Map<String, Value> > {
+    let mut map = Map::new();
+
+    for elem in vec.iter() {
+        if let Expr::Assign(Ident(name), var) = elem {
+            if let None = keys.iter().find(|&&x| x == name) {
+                let value = get_var_from_ident(memory, event, var)?.to_string();
+                map.insert(name.clone(), Value::String(value));
+            }
+        }
+    }
+
+    Ok(map)
+}
+
+// TODO: RM when var handling are separate from ast_iterpreter
+fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr> > {
+    match expr {
+        Expr::VecExpr(vec)  => Ok(vec),
+        _                   => Err(Error::new(ErrorKind::Other, " expr_to_vec"))
+    }
+}
+
+fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, memory: &Memory, event: &Option<Event>) -> Result<String> {
+    match (search_for_key_in_vec(key, vec), default) {
+        (Ok(arg), ..)           => Ok(get_var_from_ident(memory, event, arg)?.to_string()),
+        (Err(..), Some(string)) => Ok(string),
+        (Err(..), None)         => Err(Error::new(ErrorKind::Other, format!("Error: no key {} found", key)))
+    }
+}
+
+//see if it can be a generic macro
+fn get_vec_from_box(expr: &Expr) -> Result<&Vec<Expr> > {
+    if let Expr::VecExpr(vec) = expr {
+        Ok(vec)
+    } else {
+        Err(Error::new(ErrorKind::Other, " get_vec_from_box"))
+    }
+}
+
 // meto ###############################################
 
 fn parse_meteo(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<String> {
-    println!("start parsing meteo args");
     let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event )?;
     let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event )?;
     let city = value_or_default("city", vec, Some("paris".to_owned()), memory, event )?;
@@ -292,4 +307,136 @@ pub fn wttj(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<Messa
 
     println!("wttj is not correctly formatted");
     Err(Error::new(ErrorKind::Other, "Builtin WTTJ bad argument"))
+}
+
+// Hubspot ###############################################
+fn parse_hub_spot(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(String, HashMap<String, Value>) > {
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event)?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event)?;
+    let action = value_or_default("action", vec, None, memory, event)?;
+    let sub_map = create_submap(&["hostname", "port", "action"], vec, memory, event)?;
+
+    let mut map: HashMap<String, Value> = HashMap::new();
+
+    map.insert("action".to_owned(), Value::String(action));
+    map.insert("candidate".to_owned(), Value::Object(sub_map));
+
+    Ok((format!("http://{}:{}/hubspot", hostname, port), map))
+}
+
+pub fn hub_spot(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
+    if let Expr::VecExpr(vec) = args {
+        let (http_arg, map) = parse_hub_spot(&vec, memory, event)?;
+
+        println!("http call {:?}", http_arg);
+        println!("map {:?}", serde_json::to_string(&map).unwrap());
+        match reqwest::Client::new().post(&http_arg).json(&map).send() {
+            Ok(ref mut arg) => {
+                match arg.text() {
+                    Ok(text) => {
+                        println!("reqwest get ok : ");
+                        return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
+                    },
+                    Err(e)  => {
+                        println!("error in parsing reqwest result: {:?}", e);
+                        return Err(Error::new(ErrorKind::Other, "Error in parsing reqwest result"))
+                    }
+                }
+            },
+            Err(e) => {
+                println!("error in reqwest get {:?}", e);
+                return Err(Error::new(ErrorKind::Other, "Error in reqwest get"))
+            }
+        };
+    }
+
+    println!("hub_spot is not correctly formatted");
+    Err(Error::new(ErrorKind::Other, "Builtin hub_spot bad argument"))
+}
+
+// GetGSheet ###############################################
+
+fn parse_get_gsheet(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<String> {
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event )?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event )?;
+    
+    let sheet_id = value_or_default("sheet_id", vec, None, memory, event )?;
+
+    Ok(format!("http://{}:{}/gsheets?sheet_id={}", hostname, port, sheet_id))
+}
+
+pub fn get_gsheet(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
+    if let Expr::VecExpr(vec) = args {
+        let meteo_arg = parse_get_gsheet(&vec, memory, event)?;
+
+        println!("http call {:?}", meteo_arg);
+        match reqwest::get(&meteo_arg) {
+            Ok(ref mut arg) => {
+                match arg.text() {
+                    Ok(text) => {
+                        println!("reqwest get ok : ");
+                        return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
+                    },
+                    Err(e)  => {
+                        println!("error in parsing reqwest result: {:?}", e);
+                        return Err(Error::new(ErrorKind::Other, "Error in parsing reqwest result"))
+                    }
+                }
+            },
+            Err(e) => {
+                println!("error in reqwest get {:?}", e);
+                return Err(Error::new(ErrorKind::Other, "Error in reqwest get"))
+            }
+        };
+    }
+
+    println!("get_gsheet is not correctly formatted");
+    Err(Error::new(ErrorKind::Other, "Builtin get_gsheet bad argument"))
+}
+
+// AppendGsheet ###############################################
+
+fn parse_append_gsheet(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(String, HashMap<String, Value>) > {
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event)?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event)?;
+    
+    let sheet_id = value_or_default("sheet_id", vec, None, memory, event)?;
+    let sub_map = create_submap(&["hostname", "port", "sheet_id"], vec, memory, event)?;
+
+    let mut map: HashMap<String, Value> = HashMap::new();
+
+    map.insert("sheet_id".to_owned(), Value::String(sheet_id));
+    map.insert("params".to_owned(), Value::Object(sub_map));
+
+    Ok((format!("http://{}:{}/gsheets", hostname, port), map))
+}
+
+pub fn append_gsheet(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
+    if let Expr::VecExpr(vec) = args {
+        let (http_arg, map) = parse_append_gsheet(&vec, memory, event)?;
+
+        println!("http call {:?}", http_arg);
+        println!("map {:?}", serde_json::to_string(&map).unwrap());
+        match reqwest::Client::new().post(&http_arg).json(&map).send() {
+            Ok(ref mut arg) => {
+                match arg.text() {
+                    Ok(text) => {
+                        println!("reqwest get ok : ");
+                        return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
+                    },
+                    Err(e)  => {
+                        println!("error in parsing reqwest result: {:?}", e);
+                        return Err(Error::new(ErrorKind::Other, "Error in parsing reqwest result"))
+                    }
+                }
+            },
+            Err(e) => {
+                println!("error in reqwest get {:?}", e);
+                return Err(Error::new(ErrorKind::Other, "Error in reqwest get"))
+            }
+        };
+    }
+
+    println!("append_gsheet is not correctly formatted");
+    Err(Error::new(ErrorKind::Other, "Builtin append_gsheet bad argument"))
 }
