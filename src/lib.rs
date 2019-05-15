@@ -23,7 +23,7 @@ pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_jso
     }
 }
 
-pub fn pars_file(file: String) -> IoResult<Flow> {
+pub fn parse_file(file: String) -> IoResult<Flow> {
     let lex_tokens = Lexer::lex_tokens(file.as_bytes());
 
     match lex_tokens {
