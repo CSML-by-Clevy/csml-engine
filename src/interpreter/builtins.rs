@@ -440,3 +440,48 @@ pub fn append_gsheet(args: &Expr, memory: &Memory, event: &Option<Event>) -> Res
     println!("append_gsheet is not correctly formatted");
     Err(Error::new(ErrorKind::Other, "Builtin append_gsheet bad argument"))
 }
+// #############################################################################
+
+fn parse_aws(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(String, HashMap<String, Value>) > {
+    let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event)?;
+    let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event)?;
+    let action = value_or_default("action", vec, None, memory, event)?;
+    let sub_map = create_submap(&["hostname", "port", "action"], vec, memory, event)?;
+
+    let mut map: HashMap<String, Value> = HashMap::new();
+
+    map.insert("action".to_owned(), Value::String(action));
+    map.insert("params".to_owned(), Value::Object(sub_map));
+
+    Ok((format!("http://{}:{}/aws", hostname, port), map))
+}
+
+pub fn aws(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
+    if let Expr::VecExpr(vec) = args {
+        let (http_arg, map) = parse_aws(&vec, memory, event)?;
+
+        println!("http call {:?}", http_arg);
+        println!("map {:?}", serde_json::to_string(&map).unwrap());
+        match reqwest::Client::new().post(&http_arg).json(&map).send() {
+            Ok(ref mut arg) => {
+                match arg.text() {
+                    Ok(text) => {
+                        println!("reqwest get ok : ");
+                        return Ok(MessageType::Msg(Message::new( &Expr::LitExpr(Literal::StringLiteral(text)) , "text".to_owned())))
+                    },
+                    Err(e)  => {
+                        println!("error in parsing reqwest result: {:?}", e);
+                        return Err(Error::new(ErrorKind::Other, "Error in parsing reqwest result"))
+                    }
+                }
+            },
+            Err(e) => {
+                println!("error in reqwest get {:?}", e);
+                return Err(Error::new(ErrorKind::Other, "Error in reqwest get"))
+            }
+        };
+    }
+
+    println!("aws is not correctly formatted");
+    Err(Error::new(ErrorKind::Other, "Builtin aws bad argument"))
+}

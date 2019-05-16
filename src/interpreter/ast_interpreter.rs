@@ -30,6 +30,8 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == GET_GSHEET     => get_gsheet(args, self.memory, self.event),
             Ident(arg) if arg == APPEND_GSHEET  => append_gsheet(args, self.memory, self.event),
             Ident(arg) if arg == HUB_SPOT       => hub_spot(args, self.memory, self.event),
+            Ident(arg) if arg == "AWS"          => aws(args, self.memory, self.event),
+            
 
             Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
         }
