@@ -79,9 +79,12 @@ pub fn url(args: &Expr, name: String) -> Result<MessageType>{
     Err(Error::new(ErrorKind::Other, "Builtin Url bad argument"))
 }
 
-pub fn one_of(args: &Expr, name: String) -> Result<MessageType> {
+pub fn one_of(args: &Expr, elem_type: String, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
     if let Expr::VecExpr(vec) = args {
-        return Ok(MessageType::Msg(Message::new(&vec[rand::thread_rng().gen_range(0, vec.len())], name)));
+        let value = &vec[rand::thread_rng().gen_range(0, vec.len())];
+        let literal = get_var_from_ident(memory, event, value)?;
+
+        return Ok(MessageType::Msg(Message::new(&Expr::LitExpr(literal), elem_type)));
     }
 
     Err(Error::new(ErrorKind::Other, "Builtin One_of bad argument"))
@@ -440,7 +443,7 @@ pub fn append_gsheet(args: &Expr, memory: &Memory, event: &Option<Event>) -> Res
     println!("append_gsheet is not correctly formatted");
     Err(Error::new(ErrorKind::Other, "Builtin append_gsheet bad argument"))
 }
-// #############################################################################
+// aws #############################################################################
 
 fn parse_aws(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(String, HashMap<String, Value>) > {
     let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event)?;

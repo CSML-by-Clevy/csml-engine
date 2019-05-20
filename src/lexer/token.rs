@@ -13,13 +13,11 @@ pub const WHITE_SPACE: &str = " \t\n\r";
 pub const START_COMMENT: &str = "/*";
 pub const END_COMMENT: &str = "*/";
 
-
 pub const EQUAL: &str = "==";
 pub const ASSIGN: &str = "=";
 
 pub const OR: &str = "||";
 pub const AND: &str = "&&";
-
 
 pub const GREATER_THAN_EQUAL: &str = ">=";
 pub const LESS_THAN_EQUAL: &str = "<=";
@@ -76,6 +74,7 @@ pub const WTTJ: &str = "WTTJ";
 pub const GET_GSHEET: &str = "GetGSheet";
 pub const APPEND_GSHEET: &str = "AppendGsheet";
 pub const HUB_SPOT: &str = "Hubspot";
+pub const AWS: &str = "AWS";
 
 pub const EVENT: &str = "event";
 
