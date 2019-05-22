@@ -24,7 +24,7 @@ impl<'a> AstInterpreter<'a> {
 
             Ident(arg) if arg == ONE_OF         => one_of(args, "text".to_owned(), self.memory, self.event),
             Ident(arg) if arg == QUESTION       => question(args, arg.to_string(), self.memory, self.event),
-            
+
             Ident(arg) if arg == METEO          => meteo(args, self.memory, self.event),
             Ident(arg) if arg == WTTJ           => wttj(args, self.memory, self.event),
 
@@ -33,7 +33,7 @@ impl<'a> AstInterpreter<'a> {
             Ident(arg) if arg == HUB_SPOT       => hub_spot(args, self.memory, self.event),
             Ident(arg) if arg == AWS            => aws(args, self.memory, self.event),
 
-            Ident(_arg)                         => Err(Error::new(ErrorKind::Other, "Error no builtin found")),
+            Ident(_arg)                         => api(args, self.memory, self.event),
         }
     }
 
