@@ -1,15 +1,11 @@
 pub mod interpreter;
-pub mod lexer;
 pub mod parser;
 
-use parser::ast::*;
+use parser::{ErrorInfo, Parser, ast::*, tokens::*};
 use interpreter::csml_rules::*;
 use interpreter::json_to_rust::*;
 use interpreter::ast_interpreter::AstInterpreter;
-use lexer::{Lexer, token::Tokens};
-use parser::{Parser};
 
-use std::io::{Error, ErrorKind, Result as IoResult};
 use multimap::MultiMap;
 
 pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_json::Value]) {
@@ -17,33 +13,29 @@ pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_jso
     for value in vec.iter() {
         let memory_value: Result<MemoryType, _> = serde_json::from_value(value.clone()); 
         match memory_value {
-            Ok(memory_value)              => memory.insert(memory_value.key.clone(), memory_value),
-            Err(e)                        => println!("value is not of fomrat MemoryType {:?} error -> {:?}", value, e), // error to the api
+            Ok(memory_value)    => memory.insert(memory_value.key.clone(), memory_value),
+            Err(e)              => println!("value is not of fomrat MemoryType {:?} error -> {:?}", value, e), // error to the api
         }
     }
 }
 
-pub fn parse_file(file: String) -> IoResult<Flow> {
-    let lex_tokens = Lexer::lex_tokens(file.as_bytes());
-
-    match lex_tokens {
-        Ok((_complete, t)) => {
-            let tokens = Tokens::new(&t);
-
-            match Parser::parse_tokens(tokens) {
-                Ok(flow) => Ok(flow),
-                Err(e)   => Err(Error::new(ErrorKind::Other, format!("Error in Paring AST {:?}", e)))
-            }
-        }
-        Err(e) => Err(Error::new(ErrorKind::Other, format!("Problem in Lexing Tokens -> {:?}", e))),
+pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
+    // add flow validations
+    match Parser::parse_flow(file.as_bytes()) {
+        Ok(flow) => Ok(flow),
+        Err(e)   => Err(e)
     }
 }
 
 pub fn is_trigger(flow: &Flow, string: &str) -> bool {
-    for elem in flow.accept.iter() {
-        match elem {
-            Expr::LitExpr(Literal::StringLiteral(tag)) if tag == string => return true,
-            _                                                           => continue,
+    let info = flow.flow_instructions.get(&InstructionType::StartFlow(ACCEPT.to_string()));
+
+    if let Some(Expr::VecExpr(vec)) = info {
+        for elem in vec.iter() {
+            match elem {
+                Expr::LitExpr{lit: Literal::StringLiteral(tag)} if tag == string    => return true,
+                _                                                                   => continue,
+            }
         }
     }
     false
@@ -64,35 +56,34 @@ pub fn context_to_memory(context: &JsContext) -> Memory {
     memory
 }
 
-pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Step> {
-    for step in flow.steps.iter() {
-        match step {
-            Step{ label, ..} if check_ident(label, name) => {
-                return Some(step)
-            }
-            _ => continue,
-        }
-    }
-
-    None
+pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
+    flow.flow_instructions.get(&InstructionType::NormalStep(name.to_string()))
 }
 
-pub fn execute_step(flow: &Flow, name: &str, interpreter: AstInterpreter) -> IoResult<String> {
+pub fn execute_step(flow: &Flow, name: &str, interpreter: AstInterpreter) -> Result<String, ErrorInfo> {
     match search_for(flow, name) {
-        Some(Step{ label: _, actions}) => {
-            let result = interpreter.match_block(actions)?;
-            let ser = serde_json::to_string(&result)?;
-
-            Ok(ser)
+        Some(Expr::Block{arg: actions, ..}) => {
+            // let result = interpreter.interpret_block(actions)?;
+            let result = match interpreter.interpret_block(actions) {
+                Ok(val) => val,
+                Err(_)  => return Err(ErrorInfo{line: 0, colon: 0, message: "ERROR: Interpret fail".to_string()})
+            };
+            dbg!(&result);
+            match serde_json::to_string(&result) {
+                Ok(ser) => Ok(ser),
+                Err(_)  => panic!("serde_json fail")
+            }
         }
-        _ => Err(Error::new(ErrorKind::Other, "Error Empty Flow")),
+        _ => Err(ErrorInfo{line: 0, colon: 0, message: "ERROR: Empty Flow".to_string()}),
     }
 }
 
-pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> IoResult<String> {
+pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> Result<String, ErrorInfo> {
     if !check_valid_flow(ast) {
-        return Err(Error::new(ErrorKind::Other, "The Flow is not valid it need a start/end Labels, a Accept Flow, and each label must be unique"));
+        return Err(ErrorInfo{line: 0, colon: 0, message: "ERROR: invalid Flow".to_string()});
     }
+
+    dbg!(&ast);
 
     let memory = context_to_memory(context);
     let intpreter = AstInterpreter{ memory: &memory, event};

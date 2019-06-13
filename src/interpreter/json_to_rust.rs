@@ -41,9 +41,5 @@ pub struct PayLoad {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
-    pub channel_id: String,
-    pub channel_type: String,
-    pub user_id: String,
-    pub timestamp: i64,
     pub payload: PayLoad
 }

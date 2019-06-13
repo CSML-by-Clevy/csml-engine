@@ -1,117 +1,175 @@
+use serde::ser::{Serializer, SerializeMap}; //SerializeSeq, 
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+// use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
+use std::collections::HashMap;
+// use crate::parser::tokens::Span;
+
+#[derive(Deserialize, PartialEq, Debug, Clone)]
 pub struct Flow {
-    pub accept: Vec<Expr>,
-    pub steps: Vec<Step>
+    pub flow_instructions: HashMap<InstructionType, Expr>
+}
+
+impl Serialize for Flow {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_map(Some(self.flow_instructions.len()))?;
+        for (k, v) in &self.flow_instructions {
+            seq.serialize_entry(&k.to_string(), &v)?;
+        }
+        seq.end()
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash)]
+pub enum InstructionType {
+    StartFlow(String),
+    NormalStep(String)
+}
+
+impl Display for InstructionType {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            InstructionType::StartFlow(ref name)     => write!(f, "{}", name),
+            InstructionType::NormalStep(ref name)    => write!(f, "{}", name)
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub struct Step {
-    pub label: Ident,
-    pub actions: Vec<Expr>
+pub struct Instruction {
+    pub instruction_type: InstructionType,
+    pub actions: Expr
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub enum FlowTypes {
-    FlowStarter { ident: Ident, list: Vec<Expr> },
-    Block(Step),
+pub enum GotoType {
+    Step,
+    File
 }
 
-//NOTE: see if it can be split in multiple enums types
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum ReservedFunction {
+    Goto(GotoType),
+    Say,
+    Remember(String),
+    Assign(String),
+    Normal(String)
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum BlockType {
+    Ask,
+    Response,
+    AskResponse,
+    Step
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Expr {
-    Reserved {
-        // block_type: String,
-        fun: Ident,
-        arg: Box<Expr>,
+    Block {
+        block_type: BlockType,
+        arg: Vec<Expr>,
     },
-    Action {
-        builtin: Ident,
-        args: Box<Expr>,
-    },
-
     IfExpr {
         cond: Box<Expr>,
         consequence: Vec<Expr>,
+        // #[serde(skip_serializing, skip_deserializing)]
+        // span: Option<Span >
     },
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    FunctionExpr(Ident, Box<Expr>),
-    // FunctionExpr(&str, Ident, Box<Expr>),
-    ComplexLiteral(Vec<Expr>),
-    Goto(Ident), // can rm ?
-    Remember(Ident, Box<Expr>), // can rm ?
-    Assign(Ident, Box<Expr>), // can rm ?
+    FunctionExpr(ReservedFunction, Box<Expr>),
 
-    LitExpr(Literal),
-    IdentExpr(Ident),
+    ComplexLiteral(Vec<Expr>),
     VecExpr(Vec<Expr>),
     BuilderExpr(Box<Expr>, Box<Expr>),
 
-    Empty,
+    IdentExpr(String),
+    LitExpr {
+        lit: Literal,
+        // #[serde(skip_serializing, skip_deserializing)]
+        // span: Option<Span >
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Eq)]
+impl Expr {
+    pub fn new_literal(lit: Literal) -> Expr {
+        Expr::LitExpr{lit}
+        // span: Some(span)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, PartialOrd)]
+/*
+    add ident ?
+    add ComplexLiteral ?
+    add vector ?
+    add hashmap ?
+    add builder ?
+*/
 pub enum Literal {
     StringLiteral(String),
     IntLiteral(i64),
+    FloatLiteral(f64),
     BoolLiteral(bool),
 }
 
-impl Ord for Literal {
-    fn cmp(&self, other: &Literal) -> Ordering {
-        match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1.cmp(l2),
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1.cmp(l2),
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1.cmp(l2),
-            _                                                           => Ordering::Less
-        }
-    }
-}
+// impl Ord for Literal {
+//     fn cmp(&self, other: &Literal) -> Ordering {
+//         match (self, other) {
+//             (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1.cmp(l2),
+//             (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1.cmp(l2),
+//             (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1.cmp(l2),
+//             _                                                           => Ordering::Less
+//         }
+//     }
+// }
 
-impl PartialOrd for Literal {
-    fn partial_cmp(&self, other: &Literal) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
+// impl PartialOrd for Literal {
+//     fn partial_cmp(&self , other: &Literal ) -> Option<Ordering> {
+//         Some(self.cmp(other))
+//     }
+// }
 
-impl PartialEq for Literal {
-    fn eq(&self, other: &Literal) -> bool {
-        match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1 == l2,
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1 == l2,
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1 == l2,
-            _                                                           => false
-        }
-    }
-}
+// impl PartialEq for Literal {
+//     fn eq(&self, other: &Literal) -> bool {
+//         match (self, other) {
+//             (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1 == l2,
+//             (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1 == l2,
+//             (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1 == l2,
+//             _                                                           => false
+//         }
+//     }
+// }
 
 impl Literal {
     pub fn to_string(&self) -> String {
         match self {
             Literal::StringLiteral(literal)    => literal.to_string(),
             Literal::IntLiteral(literal)       => literal.to_string(),
+            Literal::FloatLiteral(literal)     => literal.to_string(),
             Literal::BoolLiteral(literal)      => literal.to_string(),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone)]
-pub struct Ident(pub String);
-
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Infix {
-    // Plus,
-    // Minus,
-    // Divide,
-    // Multiply,
+    Adition,
+    Substraction,
+    Divide,
+    Multiply,
+
     Equal,
     // NotEqual,
     GreaterThanEqual,
     LessThanEqual,
     GreaterThan,
     LessThan,
+
     // NOTE: may not be INFIX expr
     And,
     Or,
