@@ -29,9 +29,10 @@ pub enum Content {
     Questions(Question),
 }
 
+
+
 //TMP I dont like this TODO: change it
 pub enum MessageType {
-    // Msgs(Vec<Message>),
     Msg(Message),
     Assign{name: String, value: String},
     Empty
@@ -52,10 +53,10 @@ impl Message {
         };
 
         match expr {
-            Expr::LitExpr(Literal::IntLiteral(val))     => {msg.content_type = string.to_lowercase() ; msg.content = Content::Int(*val); msg},
-            Expr::LitExpr(Literal::StringLiteral(val))  => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
-            Expr::LitExpr(Literal::BoolLiteral(val))    => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
-            _                                           => {msg},
+            Expr::LitExpr{lit: Literal::IntLiteral(val)}     => {msg.content_type = string.to_lowercase() ; msg.content = Content::Int(*val); msg},
+            Expr::LitExpr{lit: Literal::StringLiteral(val)}  => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
+            Expr::LitExpr{lit: Literal::BoolLiteral(val)}    => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
+            _                                                => {msg},
         }
     }
 }
@@ -65,6 +66,8 @@ pub struct Memories {
     pub key: String,
     pub value: String,
 }
+
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RootInterface {
@@ -88,9 +91,10 @@ impl Add for RootInterface {
             messages: [&self.messages[..], &other.messages[..]].concat(),
             next_flow: None,
             next_step: match (self.next_step, other.next_step) {
-                (Some(t), None)        => Some(t),
-                (None, Some(t))        => Some(t),
-                _                      => None,
+                (Some(step), None)        => Some(step),
+                (None, Some(step))        => Some(step),
+                (Some(step), Some(_))     => Some(step),
+                _                         => None,
             },
         }
     }

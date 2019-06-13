@@ -1,487 +1,287 @@
 pub mod ast;
+pub mod parse_ident;
+pub mod parse_string;
 
-use crate::lexer::token::*;
-use ast::Literal::*;
+pub mod tools;
+pub mod tokens;
+pub mod parse_comments;
+pub mod parse_functions;
+pub mod parse_if;
+
+use crate::comment;
+
+use tokens::*;
 use ast::*;
+use tools::parse_literalexpr;
+use parse_ident::parse_ident;
+use parse_string::parse_string;
+use parse_functions::{parse_root_functions, parse_functions, parse_assignation};
+use parse_if::{parse_if, operator_precedence};
+
 use nom::*;
-use nom::{Err, ErrorKind as NomError};
-use std::io::{Error, ErrorKind, Result};
+use nom::types::*;
+// use nom::{Err, ErrorKind as NomError};
+// use nom_locate::position;
 
-// ################## Macros
+use std::collections::HashMap;
+// use std::str;
 
-macro_rules! tag_token (
-    ($i: expr, $tag:path) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
+// ################# add marco in nom ecosystem
 
-            let (i1, t1) = try_parse!($i, take!(1));
+// #[macro_export]
+// macro_rules! tag_or_error{
+//     ($tag_name:expr) => {
+//         {
+//             use nom::*;
+//             named!(parse_error<Span, Span>, return_error!(
+//                 nom::ErrorKind::Custom(102),   // 102
+//                 tag!($tag_name)
+//             ));
+//         }
+//     };
+// }
 
-            if t1.tok.is_empty() {
-                Err(Err::Incomplete(Needed::Size(1)))
-            } else {
-                match t1.tok[0] {
-                    $tag(_)    => Ok((i1, t1)),
-                    _          => Err(Err::Error(error_position!($i, ErrorKind::Count)))
-                }
-            }
+// ##################################### Expr
+
+named!(parse_builderexpr<Span, Expr>, do_parse!(
+    ident: parse_identexpr >>
+    comment!(tag!(DOT)) >>
+    exp: parse_var_expr >>
+    (Expr::BuilderExpr(Box::new(ident), Box::new(exp)))
+));
+
+named!(parse_identexpr<Span, Expr>, do_parse!(
+    indent: parse_ident >>
+    (Expr::IdentExpr(indent))
+));
+
+named!(get_list<Span, Expr>, do_parse!(
+    first_elem: parse_var_expr >>
+    vec: fold_many0!(
+        do_parse!(
+            comment!(tag!(COMMA)) >>
+            expr: parse_var_expr >>
+            (expr)
+        ),
+        vec![first_elem],
+        |mut acc: Vec<_>, item | {
+            acc.push(item);
+            acc
         }
-    );
-);
+    ) >>
+    (Expr::VecExpr(vec))
+));
 
-macro_rules! tag_token2 (
-    ($i: expr, $tag:path) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
 
-            let (i1, t1) = try_parse!($i, take!(1));
+named!(parse_r_parentheses<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::RightParenthesesError as u32),
+    tag!(R_PAREN)
+));
 
-            if t1.tok.is_empty() {
-                Err(Err::Incomplete(Needed::Size(1)))
-            } else {
-                match t1.tok[0] {
-                    $tag       => Ok((i1, t1)),
-                    _          => Err(Err::Error(error_position!($i, ErrorKind::Count)))
-                }
-            }
-        }
-    );
-);
 
-macro_rules! parse_ident (
-    ($i: expr,) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
-
-            let (i1, t1) = try_parse!($i, take!(1));
-            if t1.tok.is_empty() {
-                Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-            } else {
-                match t1.tok[0].clone() {
-                    Token::Ident(name, _) => Ok((i1, Ident(name))),
-                    _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
-                }
-            }
-        }
-    );
-);
-
-macro_rules! eq_parsers (
-    ($i: expr,) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
-
-            let (i1, t1) = try_parse!($i, take!(1));
-            if t1.tok.is_empty() {
-                Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-            } else {
-                match t1.tok[0].clone() {
-                    Token::Equal(_) => Ok((i1, Infix::Equal)),
-                    Token::GreaterThan(_) => Ok((i1, Infix::GreaterThan)),
-                    Token::LessThan(_) => Ok((i1, Infix::LessThan)),
-                    Token::LessThanEqual(_) => Ok((i1, Infix::LessThanEqual)),
-                    Token::GreaterThanEqual(_) => Ok((i1, Infix::GreaterThanEqual)),
-                    //tmp values
-                    Token::And(_) => Ok((i1, Infix::And)),
-                    Token::Or(_) => Ok((i1, Infix::Or)),
-                    _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
-                }
-            }
-        }
-    );
-);
-
-macro_rules! parse_literal (
-    ($i: expr,) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
-
-            let (i1, t1) = try_parse!($i, take!(1));
-            if t1.tok.is_empty() {
-                Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-            } else {
-                match t1.tok[0].clone() {
-                    Token::IntLiteral(i, _) => Ok((i1, IntLiteral(i))),
-                    Token::BoolLiteral(b, _) => Ok((i1, BoolLiteral(b))),
-                    Token::StringLiteral(s, _) => Ok((i1, StringLiteral(s))),
-                    _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
-                }
-            }
-        }
-    );
-);
-
-macro_rules! parse_reservedfunc (
-    ($i: expr,) => (
-        {
-            use std::result::Result::*;
-            use nom::{Err,ErrorKind};
-
-            let (i1, t1) = try_parse!($i, take!(1));
-            if t1.tok.is_empty() {
-                Err(Err::Error(error_position!($i, ErrorKind::Tag)))
-            } else {
-                match t1.tok[0].clone() {
-                    Token::ReservedFunc(i, _) => Ok((i1, Ident(i))),
-                    _ => Err(Err::Error(error_position!($i, ErrorKind::Tag))),
-                }
-            }
-        }
-    );
-);
-
-// ################################ Complex Literal
-
-named!(parse_complex_string<Tokens, Expr>, do_parse!(
+named!(parse_expr_list<Span, Expr>, do_parse!(
     vec: delimited!(
-        tag_token2!(Token::L2Brace), many0!(parse_var_expr), tag_token2!(Token::R2Brace)
+        comment!(tag!(L_PAREN)),
+        get_list,
+        comment!(parse_r_parentheses)
     ) >>
-    (Expr::ComplexLiteral(vec))
+    (vec)
 ));
 
-// ################################ FUNC
+named!(parse_r_bracket<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::RightBracketError as u32),
+    tag!(R_BRACKET)
+));
 
-// ###################################### FUNC IMPORT
-
-named!(parse_import_opt<Tokens, (Option<Ident>, Option<Ident>, Option<Ident>)>, do_parse!(
-    step_name: opt!(
-        do_parse!(
-            tag_token!(Token::Step) >>
-            name: parse_ident!() >>
-            (name)
-        )
+named!(parse_expr_array<Span, Expr>, do_parse!(
+    vec: delimited!(
+        comment!(tag!(L_BRACKET)),
+        get_list,
+        comment!(parse_r_bracket)
     ) >>
-    as_name: opt!(
-        do_parse!(
-            tag_token!(Token::As) >>
-            name: parse_ident!() >>
-            (name)
-        )
-    ) >>
-    file_path: opt!(
-        do_parse!(
-            tag_token!(Token::FromFile) >>
-            file_path: parse_ident!() >>
-            (file_path)
-        )
-    ) >>
-    ((step_name, as_name, file_path))
+    (vec)
 ));
 
-fn gen_function_expr(name: &str, expr: Expr) -> Expr {
-    Expr::FunctionExpr(Ident(name.to_owned()), Box::new(expr))
-}
-
-fn gen_builder_expr(expr1: Expr, expr2: Expr) -> Expr {
-    Expr::BuilderExpr(Box::new(expr1), Box::new(expr2))
-}
-
-fn format_step_options(step_name: Ident, as_name: Option<Ident>, file_path: Option<Ident>) -> Expr{
-    match (as_name, file_path) {
-        (Some(name), Some(file))    => {
-            gen_builder_expr(
-                gen_function_expr("step", 
-                    gen_function_expr("as", Expr::IdentExpr(name))
-                ),
-                gen_function_expr("file", Expr::IdentExpr(file))
-            )
-        },
-        (Some(name), None)          => {
-            gen_function_expr("step", 
-                gen_function_expr("as", Expr::IdentExpr(name))
-            )
-        },
-        (None, Some(file))          => {
-            gen_builder_expr(
-                gen_function_expr("step", Expr::IdentExpr(step_name)),
-                gen_function_expr("file", Expr::IdentExpr(file))
-            )
-        },
-        (None, None)                => gen_function_expr("step", Expr::IdentExpr(step_name)),
-    }
-}
-
-//OK: nom Custom error handling Example
-fn format_import_opt(tokens: Tokens) -> IResult<Tokens , Expr> {
-    match parse_import_opt(tokens) {
-        Ok((_, (Some(step), as_name, file_path)))   => Ok((tokens, format_step_options(step, as_name, file_path))),
-        Ok((_, (None, None, Some(file_path))))      => Ok((tokens, gen_function_expr("file", Expr::IdentExpr(file_path)))),
-        Err(e)                                      => Err(e),
-        _                                           => Err(Err::Failure(Context::Code(tokens, NomError::Custom(42)))),
-    }
-}
-
-named!(parse_import_from<Tokens, Expr>, do_parse!(
-    expr: format_import_opt >>
-    (expr)
+named!(pub parse_basic_expr<Span, Expr>, comment!( 
+    alt!(
+        parse_literalexpr       |
+        parse_builderexpr       |
+        parse_string            |
+        parse_identexpr
+    )
 ));
 
-named!(parse_import<Tokens, Expr>, do_parse!(
-    tag_token!(Token::Import) >>
-    name: parse_import_from >>
-    (Expr::FunctionExpr(Ident("import".to_owned()), Box::new(name)))
+named!(pub parse_var_expr<Span, Expr>, comment!(
+    alt!(
+        parse_expr_array        |
+        parse_assignation       |
+        parse_functions         |
+        operator_precedence     |
+        parse_basic_expr
+    )
 ));
 
-// ############################################### FUNC IMPORT
+// ################################### Ask_Response
 
-named!(parse_assign<Tokens, Expr>, do_parse!(
-    name: parse_ident!() >>
-    tag_token!(Token::Assign) >>
-    var: parse_var_expr >>
-    (Expr::Assign(name, Box::new(var)))
-));
-
-named!(parse_remember<Tokens, Expr>, do_parse!(
-    tag_token!(Token::Remember) >>
-    name: parse_ident!() >>
-    tag_token!(Token::Assign) >>
-    var: parse_var_expr >>
-    (Expr::Remember(name, Box::new(var)))
-));
-
-named!(parse_goto<Tokens, Expr>, do_parse!(
-    tag_token!(Token::Goto) >>
-    label: parse_ident!() >>
-    (Expr::Goto(label))
-));
-
-named!(parse_f<Tokens, Expr>, do_parse!(
-    ident: parse_ident!() >>
-    vec: parse_expr_group >>
-    (Expr::Action{builtin: ident, args: Box::new(vec) })
-));
-
-named!(parse_reserved<Tokens, Expr>, do_parse!(
-    action: parse_reservedfunc!() >>
-    arg: alt!(
-        parse_f |
-        parse_var_expr
-    ) >>
-    (Expr::Reserved{fun: action, arg: Box::new(arg)})
-));
-
-named!(parse_reserved_empty<Tokens, Expr>, do_parse!(
-    action: parse_reservedfunc!() >>
-    (Expr::Reserved{fun: action, arg: Box::new(Expr::Empty)})
-));
-
-named!(parse_infix_expr<Tokens, Expr>, do_parse!(
-    lit1: alt!(
-            parse_vec_condition |
-            parse_var_expr
-    ) >>
-    eq: eq_parsers!() >>
-    lit2: alt!(
-            parse_vec_condition |
-            parse_var_expr
-    ) >>
-    (Expr::InfixExpr(eq, Box::new(lit1), Box::new(lit2)))
-));
-
-named!(parse_vec_condition<Tokens, Expr >, do_parse!(
-    start_vec: delimited!(
-        tag_token!(Token::LParen), parse_condition, tag_token!(Token::RParen)
-    ) >>
-    (start_vec)
-));
-
-named!(parse_condition<Tokens, Expr >, do_parse!(
-    condition: alt!(
-            parse_infix_expr |
-            parse_var_expr
-    ) >>
-    (condition)
-));
-
-named!(parse_block<Tokens, Vec<Expr> >, do_parse!(
-    block: delimited!(
-        tag_token!(Token::LBrace), parse_actions, tag_token!(Token::RBrace)
-    ) >>
-    (block)
-));
-
-named!(parse_if<Tokens, Expr>, do_parse!(
-    tag_token!(Token::If) >>
-    cond: parse_condition >>
+named!(parse_ask<Span, Expr>, do_parse!(
+    comment!(tag!(ASK)) >>
     block: parse_block >>
-    (Expr::IfExpr{cond: Box::new(cond), consequence: block})
+    (Expr::Block{block_type: BlockType::Ask, arg: block})
 ));
 
-named!(parse_actions<Tokens, Vec<Expr> >,
-    do_parse!(
-        res: many0!(
-            alt!(
-                parse_sublabel  |
-                parse_reserved  |
-                parse_goto      | // tmp
-                parse_remember  | // tmp
-                parse_assign    | // tmp
-                parse_if        |
-                parse_reserved_empty
-            )
-        ) >>
-        (res)
-    )
-);
-
-named!(parse_sublabel<Tokens, Expr>,
-    do_parse!(
-        ident: parse_ident!() >>
-        block: parse_block >>
-        (Expr::Reserved{fun: ident, arg: Box::new(Expr::VecExpr(block)) } )
-    )
-);
-
-named!(parse_label<Tokens, FlowTypes>,
-    do_parse!(
-        ident: parse_ident!() >>
-        tag_token!(Token::Colon) >>
-        block: parse_actions >>
-        (FlowTypes::Block(Step{label: ident, actions: block} ))
-    )
-);
-
-// ################ pars_to
-
-named!(parse_identexpr<Tokens, Expr>, do_parse!(
-        ident: parse_ident!() >>
-        (Expr::IdentExpr(ident))
-    )
-);
-
-named!(parse_literalexpr<Tokens, Expr>, do_parse!(
-        literal: parse_literal!() >>
-        (Expr::LitExpr(literal))
-    )
-);
-
-named!(parse_function<Tokens, Expr>, do_parse!(
-        ident: parse_ident!() >>
-        expr: delimited!(
-            tag_token!(Token::LParen), parse_var_expr, tag_token!(Token::RParen)
-        ) >>
-        (Expr::FunctionExpr(ident, Box::new(expr)))
-    )
-);
-
-named!(parse_builderexpr<Tokens, Expr>, do_parse!(
-    exp1: alt!(
-        parse_identexpr |
-        parse_literalexpr
-    ) >>
-    tag_token!(Token::Dot) >>
-    exp2: alt!(
-        parse_function |
-        parse_var_expr
-    ) >>
-    (Expr::BuilderExpr(Box::new(exp1), Box::new(exp2)))
+named!(parse_response<Span, Expr>, do_parse!(
+    comment!(tag!(RESPONSE)) >>
+    block: parse_block >>
+    (Expr::Block{block_type: BlockType::Response, arg: block})
 ));
 
-named!(parse_var_expr<Tokens, Expr>, alt!(
-        parse_assign        | // tmp
-        parse_builderexpr   |
-        parse_identexpr     |
-        parse_literalexpr   |
-        parse_vec           |
-        parse_complex_string
-    )
-);
+named!(parse_ask_response<Span, Expr>, do_parse!(
+    tuple: permutation!(parse_ask, parse_response) >>
+    (Expr::Block{block_type: BlockType::AskResponse, arg: vec![tuple.0, tuple.1]})
+));
 
-named!(get_exp<Tokens, Expr>, do_parse!(
-    tag_token!(Token::Comma) >>
-    val: parse_var_expr >>
-    (val)
-    )
-);
+// ################################### accept
 
-named!(parse_expr_group<Tokens, Expr >, do_parse!(
-        vec: delimited!(
-            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-        ) >>
-        (Expr::VecExpr(vec))
-    )
-);
+named!(parse_accept<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::AcceptError as u32),
+    tag!(ACCEPT)
+));
 
-named!(get_vec<Tokens, Vec<Expr> >, do_parse!(
-    res: many1!(
+named!(parse_start_flow<Span, Instruction>, do_parse!(
+    tag!(FLOW) >>
+    comment!(parse_accept) >>
+    actions: parse_expr_list  >>
+
+    (Instruction { instruction_type: InstructionType::StartFlow(ACCEPT.to_owned()), actions })
+));
+
+// ################################### step
+
+named!(parse_actions<Span, Vec<Expr> >, do_parse!(
+    actions: many0!(
         alt!(
-            parse_f             |
-            parse_expr_group    |
-            get_exp             |
-            parse_var_expr
+            parse_if            |
+            parse_root_functions|
+            parse_ask_response
         )
     ) >>
-    (res)
-    )
-);
-
-named!(parse_vec<Tokens, Expr >, do_parse!(
-    start_vec: alt!(
-        delimited!(
-            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-        ) |
-        delimited!(
-            tag_token!(Token::LBracket), get_vec, tag_token!(Token::RBracket)
-        )
-    ) >>
-    (Expr::VecExpr(start_vec))
+    (actions)
 ));
 
-named!(parse_start_flow<Tokens, FlowTypes>,
-    do_parse!(
-        tag_token!(Token::Flow) >>
-        ident: parse_ident!() >>
-        start_vec: delimited!(
-            tag_token!(Token::LParen), get_vec, tag_token!(Token::RParen)
-        ) >>
-        (FlowTypes::FlowStarter{ident: ident, list: start_vec})
-    )
-);
+named!(parse_step<Span, Instruction>, do_parse!(
+    ident: comment!(parse_ident) >>
+    comment!(tag!(COLON)) >>
+    actions: comment!(parse_actions) >>
+    (Instruction { instruction_type: InstructionType::NormalStep(ident), actions: Expr::Block{block_type: BlockType::Step, arg: actions} } )
+));
 
-named!(parse_steps<Tokens, FlowTypes>, alt_complete!(
-        parse_label |
-        parse_start_flow
-    )
-);
+// ############################## block
 
-named!(parse_complex<Tokens, Vec<Expr> >,
-    do_parse!(
-        prog: many0!(parse_var_expr) >>
-        (prog)
-    )
-);
+named!(parse_l_brace<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::LeftBraceError as u32),
+    tag!(L_BRACE)
+));
 
-named!(parse_program<Tokens, Vec<FlowTypes> >,
-    do_parse!(
-        prog: many0!(parse_steps) >>
-        tag_token2!(Token::EOF) >>
-        (prog)
+named!(parse_r_brace<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::RightBraceError as u32),
+    tag!(R_BRACE)
+));
+
+named!(pub parse_block<Span, Vec<Expr>>, do_parse!(
+    vec: delimited!(
+        comment!(parse_l_brace),
+        parse_actions,
+        comment!(parse_r_brace)
+    ) >>
+    (vec)
+));
+
+// ################################
+
+named!(parse_blocks<Span, Instruction>, comment!(
+    alt!(
+        parse_start_flow |
+        parse_step
     )
-);
+));
+
+named!(start_parsing<Span, Vec<Instruction> >, exact!(
+    do_parse!(
+        flow: comment!(many0!(parse_blocks)) >>
+        comment!(eof!()) >>
+        (flow)
+    )
+));
+
+// TODO: check for steps with the same name and return ERROR
+fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Flow {
+    Flow {
+        flow_instructions:
+            instructions
+                .into_iter()
+                .map(|elem| (elem.instruction_type, elem.actions))
+                .collect::<HashMap<InstructionType, Expr> >()
+    }
+}
+
+#[repr(u32)]
+pub enum ParserErrorType {
+    AssignError             = 1,
+    GotoStepError           = 10,
+    AcceptError             = 100,
+    LeftBraceError          = 110,
+    RightBraceError         = 111,
+    LeftParenthesesError    = 112,
+    RightParenthesesError   = 113,
+    RightBracketError       = 114,
+    DoubleQuoteError        = 120,
+    DoubleBraceError        = 130
+}
+
+#[derive(Debug)]
+pub struct ErrorInfo {
+    pub line: u32,
+    pub colon: u32,
+    pub message: String,
+}
+
+fn get_error_message(error_code: ErrorKind) -> String {
+    match error_code {
+        ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32            => "ERROR: Missing = after remember statement".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::GotoStepError as u32          => "ERROR: Missing label name after goto".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::AcceptError as u32            => "ERROR: Flow argument expect Accept identifier".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::LeftBraceError as u32         => "ERROR: Missing start of block { ".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::RightBraceError as u32        => "ERROR: Agruments inside brace bad format or brace missing".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32   => "ERROR: ( mabe missing".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32  => "ERROR: Agruments inside parentheses bad format or ) missing".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::RightBracketError as u32      => "ERROR: Agruments inside parentheses bad format or ] missing".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::DoubleQuoteError as u32       => "ERROR: \" mabe missing".to_string(),
+        ErrorKind::Custom(val) if val == ParserErrorType::DoubleBraceError as u32       => "ERROR: }} mabe missing".to_string(),
+        e                                                                               => e.description().to_owned()
+    }
+}
+
+fn format_error<'a>(e: Span<'a>, error_code: ErrorKind) -> ErrorInfo {
+    let message = get_error_message(error_code);
+
+    ErrorInfo{line: e.line, colon: e.get_column() as u32, message}
+}
 
 pub struct Parser;
 
 impl Parser {
-    pub fn parse_tokens(tokens: Tokens) -> Result<Flow> {
-        let mut flow = Flow{accept: vec![], steps: vec![]};
-        // TODO: no use of CLONE and check if there are multiple accepts in flow
-        match parse_program(tokens) {
-            Ok((_, ast)) => {
-                for elem in ast.iter() {
-                    match elem {
-                            FlowTypes::Block(step)              => flow.steps.push(step.clone()),
-                            FlowTypes::FlowStarter{list, ..}    => flow.accept = list.clone() // replace accept if there are more than one 
-                    }
-                }
-                Ok(flow)
-            },
-            Err(e) => {
-                Err(Error::new(ErrorKind::Other, format!("Error at parsing: {:?}", e)))
+    pub fn parse_flow(slice: &[u8]) -> Result<Flow, ErrorInfo> {
+        match start_parsing(Span::new(CompleteByteSlice(slice))) {
+            Ok((.., instructions)) => {
+                Ok(create_flow_from_instructions(instructions))
             }
+            Err(e) => {
+                match e {
+                    Err::Error(Context::Code(span, code))      => Err(format_error(span, code)),
+                    Err::Failure(Context::Code(span, code))    => Err(format_error(span, code)),
+                    Err::Incomplete(..)                        => Err(ErrorInfo{line: 0, colon: 0, message: "Incomplete".to_string()})
+                }
+            },
         }
     }
 }
