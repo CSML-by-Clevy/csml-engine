@@ -71,7 +71,7 @@ pub fn execute_step(flow: &Flow, name: &str, interpreter: AstInterpreter) -> Res
             dbg!(&result);
             match serde_json::to_string(&result) {
                 Ok(ser) => Ok(ser),
-                Err(_)  => panic!("serde_json fail")
+                Err(_)  => unreachable!()
             }
         }
         _ => Err(ErrorInfo{line: 0, colon: 0, message: "ERROR: Empty Flow".to_string()}),

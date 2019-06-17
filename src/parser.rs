@@ -18,7 +18,7 @@ use parse_string::parse_string;
 use parse_functions::{parse_root_functions, parse_functions, parse_assignation};
 use parse_if::{parse_if, operator_precedence};
 
-use nom::*;
+use nom::{*, Err, ErrorKind as NomError};
 use nom::types::*;
 // use nom::{Err, ErrorKind as NomError};
 // use nom_locate::position;
@@ -142,10 +142,12 @@ named!(parse_ask_response<Span, Expr>, do_parse!(
 
 // ################################### accept
 
-named!(parse_accept<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::AcceptError as u32),
-    tag!(ACCEPT)
-));
+fn parse_accept(input: Span) -> IResult<Span, bool> {
+    match parse_ident(input) {
+        Ok((span, ref ident)) if ident == ACCEPT => Ok((span, true)),
+        _                                        => Err(Err::Failure(Context::Code(input, NomError::Custom(ParserErrorType::AcceptError as u32))))
+    }
+}
 
 named!(parse_start_flow<Span, Instruction>, do_parse!(
     tag!(FLOW) >>
@@ -261,7 +263,7 @@ fn get_error_message(error_code: ErrorKind) -> String {
     }
 }
 
-fn format_error<'a>(e: Span<'a>, error_code: ErrorKind) -> ErrorInfo {
+fn format_error(e: Span, error_code: ErrorKind) -> ErrorInfo {
     let message = get_error_message(error_code);
 
     ErrorInfo{line: e.line, colon: e.get_column() as u32, message}
