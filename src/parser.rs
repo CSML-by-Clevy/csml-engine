@@ -78,6 +78,20 @@ named!(parse_r_parentheses<Span, Span>, return_error!(
     tag!(R_PAREN)
 ));
 
+named!(parse_l_parentheses<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::LeftParenthesesError as u32),
+    tag!(L_PAREN)
+));
+
+
+named!(parse_mandatory_expr_list<Span, Expr>, do_parse!(
+    vec: delimited!(
+        comment!(parse_l_parentheses),
+        get_list,
+        comment!(parse_r_parentheses)
+    ) >>
+    (vec)
+));
 
 named!(parse_expr_list<Span, Expr>, do_parse!(
     vec: delimited!(
@@ -152,7 +166,7 @@ fn parse_accept(input: Span) -> IResult<Span, bool> {
 named!(parse_start_flow<Span, Instruction>, do_parse!(
     tag!(FLOW) >>
     comment!(parse_accept) >>
-    actions: parse_expr_list  >>
+    actions: parse_mandatory_expr_list  >>
 
     (Instruction { instruction_type: InstructionType::StartFlow(ACCEPT.to_owned()), actions })
 ));

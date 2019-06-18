@@ -1,4 +1,3 @@
-use std::io::{Error, ErrorKind, Result};
 use serde_json::{Value};
 use std::collections::HashMap;
 
@@ -11,7 +10,7 @@ use crate::interpreter:: {
 
 // default #############################################################################
 
-fn parse_api(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(String, HashMap<String, Value>) > {
+fn parse_api(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(String, HashMap<String, Value>), String> {
     let hostname = value_or_default("hostname", vec, Some("localhost".to_owned()), memory, event)?;
     let port = value_or_default("port", vec, Some(PORT.to_owned()), memory, event)?;
     let sub_map = create_submap(&["hostname", "port"], vec, memory, event)?;
@@ -23,7 +22,7 @@ fn parse_api(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<(St
     Ok((format!("http://{}:{}/", hostname, port), map))
 }
 
-pub fn api(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
+pub fn api(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
         let (http_arg, map) = parse_api(&vec, memory, event)?;
 
@@ -38,18 +37,17 @@ pub fn api(args: &Expr, memory: &Memory, event: &Option<Event>) -> Result<Messag
                     },
                     Err(e)  => {
                         println!("error in parsing reqwest result: {:?}", e);
-                        return Err(Error::new(ErrorKind::Other, "Error in parsing reqwest result"))
+                        return Err("Error in parsing reqwest result".to_owned())
                     }
                 }
             },
             Err(e) => {
                 println!("error in reqwest post {:?}", e);
-                return Err(Error::new(ErrorKind::Other, "Error in reqwest post"))
+                return Err("Error in reqwest post".to_owned())
             }
         };
     }
 
     println!("default is not correctly formatted");
-    Err(Error::new(ErrorKind::Other, "Builtin default bad argument"))
+    Err("Builtin default bad argument".to_owned())
 }
-

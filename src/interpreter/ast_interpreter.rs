@@ -1,4 +1,3 @@
-use std::io::{Error, ErrorKind, Result};
 use crate::parser::{ast::*, tokens::*};
 use crate::interpreter:: {
     builtins::{api_functions::*, reserved_functions::*},
@@ -12,108 +11,64 @@ pub struct AstInterpreter<'a> {
     pub event: &'a Option<Event>,
 }
 
+fn cmp_lit(infix: &Infix, lit1: Result<Literal, String>, lit2: Result<Literal, String>) -> Result<Literal, String> {
+    match (infix, lit1, lit2) {
+        (Infix::Equal, Ok(l1), Ok(l2) )             => Ok(Literal::BoolLiteral(l1 == l2)),
+        (Infix::GreaterThanEqual, Ok(l1), Ok(l2))   => Ok(Literal::BoolLiteral(l1 >= l2)),
+        (Infix::LessThanEqual, Ok(l1), Ok(l2))      => Ok(Literal::BoolLiteral(l1 <= l2)),
+        (Infix::GreaterThan, Ok(l1), Ok(l2))        => Ok(Literal::BoolLiteral(l1 > l2)),
+        (Infix::LessThan, Ok(l1), Ok(l2))           => Ok(Literal::BoolLiteral(l1 < l2)),
+        
+        (Infix::Or, Ok(..), Ok(..))                 => Ok(Literal::BoolLiteral(true)),
+        (Infix::Or, Ok(..), Err(..))                => Ok(Literal::BoolLiteral(true)),
+        (Infix::Or, Err(..), Ok(..))                => Ok(Literal::BoolLiteral(true)),
+        
+        (Infix::And, Ok(..), Ok(..))                => Ok(Literal::BoolLiteral(true)),
+
+        (Infix::Adition, Ok(l1), Ok(l2))            => l1 + l2,
+        (Infix::Substraction, Ok(l1), Ok(l2))       => l1 - l2,
+        (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,
+        (Infix::Multiply, Ok(l1), Ok(l2))           => l1 * l2,
+        _                                           => Ok(Literal::BoolLiteral(false)),
+    }
+}
+
+fn check_if_ident(expr: &Expr) -> bool {
+    match expr {
+        Expr::LitExpr{..}           => true,
+        Expr::IdentExpr(..)         => true,
+        Expr::BuilderExpr(..)       => true,
+        Expr::ComplexLiteral(..)    => true,
+        _                           => false
+    }
+}
+
+pub fn evaluate_condition(infix: &Infix, expr1: &Expr, expr2: &Expr, memory: &Memory, event: &Option<Event>) -> Result<Literal, String> {
+    match (expr1, expr2) {
+        (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2)   => {
+            cmp_lit(infix, get_var_from_ident(memory, event, exp1), get_var_from_ident(memory, event, exp2))
+        },
+        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2))      => {
+            cmp_lit(infix, evaluate_condition(i1, ex1, ex2, memory, event), evaluate_condition(i2, exp1, exp2, memory, event))
+        },
+        (Expr::InfixExpr(i1, ex1, ex2), exp)                => {
+            cmp_lit(infix, evaluate_condition(i1, ex1, ex2, memory, event), gen_literal_form_exp(memory, event, exp))
+        },
+        (exp, Expr::InfixExpr(i1, ex1, ex2))                => {
+            cmp_lit(infix, gen_literal_form_exp(memory, event, exp), evaluate_condition(i1, ex1, ex2, memory, event))
+        }
+        (_, _)                                              => Err("error in evaluate_condition function".to_owned()),
+    }
+}
 impl<'a> AstInterpreter<'a> {
-    fn cmp_lit(&self, infix: &Infix, lit1: &Literal, lit2: &Literal) -> bool {
-        match infix {
-            Infix::Equal                => lit1 == lit2,
-            Infix::GreaterThanEqual     => lit1 >= lit2,
-            Infix::LessThanEqual        => lit1 <= lit2,
-            Infix::GreaterThan          => lit1 > lit2,
-            Infix::LessThan             => lit1 < lit2,
-            Infix::And                  => true,
-            Infix::Or                   => true,
-            _                           => true, // <= Arithmetic Operators
-        }
-    }
-
-    fn cmp_bool(&self, infix: &Infix, b1: bool, b2: bool) -> bool {
-        match infix {
-            Infix::Equal                => b1 == b2,
-            Infix::GreaterThanEqual     => b1 >= b2,
-            Infix::LessThanEqual        => b1 <= b2,
-            Infix::GreaterThan          => b1 & !b2,
-            Infix::LessThan             => !b1 & b2,
-            Infix::And                  => b1 && b2,
-            Infix::Or                   => b1 || b2,
-            _                           => true, // <= Arithmetic Operators
-        }
-    }
-
-    // NOTE: see if IDENT CAN HAVE BUILDER_IDENT inside and LitExpr can have ComplexLiteral
-    fn check_if_ident(&self, expr: &Expr) -> bool {
-        match expr {
-            Expr::LitExpr{..}           => true,
-            Expr::IdentExpr(..)         => true,
-            Expr::BuilderExpr(..)       => true,
-            Expr::ComplexLiteral(..)    => true,
-            _                           => false
-        }
-    }
-
-    fn evaluate_condition(&self, infix: &Infix, expr1: &Expr, expr2: &Expr) -> Result<bool> {
-        match (expr1, expr2) {
-            (Expr::LitExpr{lit: l1}, Expr::LitExpr{lit: l2})          => {
-                Ok(self.cmp_lit(infix, l1, l2))
-            },
-            (exp1, exp2) if self.check_if_ident(exp1) && self.check_if_ident(exp2)    => {
-                match (get_var_from_ident(self.memory, self.event, exp1), get_var_from_ident(self.memory, self.event, exp2)) {
-                    (Ok(l1), Ok(l2))   => Ok(self.cmp_lit(infix, &l1, &l2)),
-                    _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and ident"))
-                }
-            },
-            (exp, Expr::LitExpr{lit: l2}) if self.check_if_ident(exp)  => {
-                match get_var_from_ident(self.memory, self.event, exp) {
-                    Ok(l1) => Ok(self.cmp_lit(infix, &l1, l2)),
-                    _      => Err(Error::new(ErrorKind::Other, "error in evaluation between ident and lit"))
-                }
-            },
-            (Expr::LitExpr{lit: l1}, exp) if self.check_if_ident(exp)   => {
-                match get_var_from_ident(self.memory, self.event, exp) {
-                    Ok(l2) => Ok(self.cmp_lit(infix, l1, &l2)),
-                    _      => Err(Error::new(ErrorKind::Other, "error in evaluation between lit and ident"))
-                }
-            },
-            (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2))      => {
-                match (self.evaluate_condition(i1, ex1, ex2), self.evaluate_condition(i2, exp1, exp2)) {
-                    (Ok(l1), Ok(l2))   => Ok(self.cmp_bool(infix, l1, l2)),
-                    _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between InfixExpr and InfixExpr"))
-                }
-            },
-            (Expr::InfixExpr(i1, ex1, ex2), exp)                => {
-                match (self.evaluate_condition(i1, ex1, ex2), gen_literal_form_exp(self.memory, self.event, exp)) {
-                    (Ok(e1), Ok(_)) => {
-                        match infix {
-                            Infix::And                  => Ok(e1),
-                            Infix::Or                   => Ok(true),
-                            _                           => Err(Error::new(ErrorKind::Other, "error need && or ||"))
-                        }
-                    },
-                    _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between InfixExpr and expr"))
-                }
-            },
-            (exp, Expr::InfixExpr(i1, ex1, ex2))                => {
-                match (gen_literal_form_exp(self.memory, self.event, exp), self.evaluate_condition(i1, ex1, ex2)) {
-                    (Ok(_), Ok(e2)) => {
-                        match infix {
-                            Infix::And                  => Ok(e2),
-                            Infix::Or                   => Ok(true),
-                            _                           => Err(Error::new(ErrorKind::Other, "error need && or ||"))
-                        }
-                    },
-                    _                  => Err(Error::new(ErrorKind::Other, "error in evaluation between expr and InfixExpr"))
-                }
-            }
-            (_, _)                                              => Err(Error::new(ErrorKind::Other, "error in evaluate_condition function")),
-        }
-    }
-
-    // return Result<Expr, error>
+    // return Result<Expr, String, error>
     fn valid_condition(&self, expr: &Expr) -> bool {
         match expr {
             Expr::InfixExpr(inf, exp1, exp2)    => {
-                match self.evaluate_condition(inf, exp1, exp2) {
-                    Ok(rep) => rep,
-                    Err(_e)  => false
+                match evaluate_condition(inf, exp1, exp2, self.memory, self.event) {
+                    Ok(Literal::BoolLiteral(false)) => false,
+                    Ok(_)                           => true,
+                    Err(_e)                         => false
                 }
             },
             Expr::LitExpr{..}                   => true,
@@ -131,7 +86,7 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    fn match_builtin(&self, builtin: &str, args: &Expr) -> Result<MessageType> {
+    fn match_builtin(&self, builtin: &str, args: &Expr) -> Result<MessageType, String> {
         match builtin {
             arg if arg == TYPING         => typing(args, arg.to_string()),
             arg if arg == WAIT           => wait(args, arg.to_string()),
@@ -147,7 +102,7 @@ impl<'a> AstInterpreter<'a> {
     }
 
     //NOTE: ONLY Work for LITERAR::STRINGS for now
-    fn match_functions(&self, action: &Expr) -> Result<MessageType> {
+    fn match_functions(&self, action: &Expr) -> Result<MessageType, String> {
         match action {
             Expr::FunctionExpr(ReservedFunction::Normal(name), variable) => self.match_builtin(&name, variable),
             Expr::LitExpr{..}               => Ok(MessageType::Msg(Message::new(action, TEXT.to_string()))),
@@ -165,11 +120,23 @@ impl<'a> AstInterpreter<'a> {
                     )
                 ))
             },
-            _                               => Err(Error::new(ErrorKind::Other, "Error must be a valid action")),
+            Expr::InfixExpr(infix, exp1, exp2) => {
+                match evaluate_condition(infix, exp1, exp2, self.memory, self.event) {
+                    Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, INT.to_string()))),
+                    Err(e)  => Err(e)
+                }
+            },
+            Expr::IdentExpr(ident)          => {
+                match get_var(self.memory, self.event, ident) {
+                    Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, INT.to_string()))),
+                    Err(e)  => Err(e)
+                }
+            },
+            _                               => Err("Error must be a valid action".to_owned()),
         }
     }
 
-    fn match_actions(&self, function: &ReservedFunction, expr: &Expr, root: &mut RootInterface) -> Result<bool> {
+    fn match_actions(&self, function: &ReservedFunction, expr: &Expr, root: &mut RootInterface) -> Result<bool, String> {
         match (function, expr) {
             (ReservedFunction::Say, arg)        => {
                 let msgtype = self.match_functions(arg)?;
@@ -179,7 +146,7 @@ impl<'a> AstInterpreter<'a> {
             (ReservedFunction::Goto(..), step_name) => { 
                 match step_name {
                     Expr::IdentExpr(name) => root.add_next_step(&name),
-                    _                     => return Err(Error::new(ErrorKind::Other, "Error Assign value must be valid"))
+                    _                     => return Err("Error Assign value must be valid".to_owned())
                 };
             },
             (ReservedFunction::Remember(name), variable) => { // if self.check_if_ident(variable)
@@ -187,16 +154,16 @@ impl<'a> AstInterpreter<'a> {
                     self.add_to_message(root, remember(name.to_string(), variable.to_string()));
                 }
                 // } else {
-                //     return Err(Error::new(ErrorKind::Other, "Error Assign value must be valid"));
+                //     return Err("Error Assign value must be valid"));
                 // }
             },
             // (ReservedFunction::Retry, arg)      => {
-            (_, _)                              => {return Err(Error::new(ErrorKind::Other, "Error Assign value must be valid"))}
+            (_, _)                              => {return Err("Error Assign value must be valid".to_owned())}
         };
         Ok(true)
     }
 
-    fn match_ask_response(&self, vec: &[Expr], root: RootInterface) -> Result<RootInterface> {
+    fn match_ask_response(&self, vec: &[Expr], root: RootInterface) -> Result<RootInterface, String> {
         for block in vec.iter() {
             match (block, self.event) {
                 (Expr::Block{block_type: BlockType::Ask, arg: args}, None)              => {
@@ -208,10 +175,10 @@ impl<'a> AstInterpreter<'a> {
                 (_, _)                                                                  => continue,
             }
         }
-        Err(Error::new(ErrorKind::Other, "error sub block arg must be of type Expr::VecExpr"))
+        Err("error sub block arg must be of type Expr::VecExpr".to_owned())
     }
 
-    pub fn interpret_block(&self, actions: &[Expr]) -> Result<RootInterface> {
+    pub fn interpret_block(&self, actions: &[Expr]) -> Result<RootInterface, String> {
         let mut root = RootInterface {memories: None, messages: vec![], next_flow: None, next_step: None};
 
         for action in actions {
@@ -226,13 +193,13 @@ impl<'a> AstInterpreter<'a> {
                         root = root + self.interpret_block(consequence)?;
                     }
                     // else {
-                    //     return Err(Error::new(ErrorKind::Other, "error in if condition, it does not reduce to a boolean expression "));
+                    //     return Err("error in if condition, it does not reduce to a boolean expression "));
                     // }
                 },
                 Expr::Block { block_type: BlockType::AskResponse, arg: vec }    => {
                     root = self.match_ask_response(vec, root)?;
                 }
-                _                                                               => return Err(Error::new(ErrorKind::Other, "Block must start with a reserved keyword")),
+                _                                                               => return Err("Block must start with a reserved keyword".to_owned()),
             };
         }
         Ok(root)

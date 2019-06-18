@@ -1,7 +1,6 @@
 pub mod api_functions;
 pub mod reserved_functions;
 
-use std::io::{Error, ErrorKind, Result};
 use serde_json::{Value, Map};
 
 use crate::parser::{ast::{Expr, ReservedFunction}};
@@ -10,19 +9,19 @@ use crate::interpreter:: {
     variable_handler::*,
 };
 
-pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr> {
+pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr, String> {
     for elem in vec.iter() {
         if let Expr::FunctionExpr(ReservedFunction::Assign(name), var) = elem {
             if name == key {
                 return Ok(var);
-            } 
+            }
         }
     }
 
-    Err(Error::new(ErrorKind::Other, " search_for_key_in_vec"))
+    Err(" search_for_key_in_vec".to_owned())
 }
 
-pub  fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], memory: &Memory, event: &Option<Event>) -> Result<Map<String, Value> > {
+pub  fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], memory: &Memory, event: &Option<Event>) -> Result<Map<String, Value>, String> {
     let mut map = Map::new();
 
     for elem in vec.iter() {
@@ -37,18 +36,18 @@ pub  fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], memory: &Memory, event
     Ok(map)
 }
 
-fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr> > {
+fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr>, String> {
     match expr {
         Expr::VecExpr(vec)  => Ok(vec),
-        _                   => Err(Error::new(ErrorKind::Other, " expr_to_vec"))
+        _                   => Err(" expr_to_vec".to_owned())
     }
 }
 
-pub  fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, memory: &Memory, event: &Option<Event>) -> Result<String> {
+pub  fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, memory: &Memory, event: &Option<Event>) -> Result<String, String> {
     match (search_for_key_in_vec(key, vec), default) {
         (Ok(arg), ..)           => Ok(get_var_from_ident(memory, event, arg)?.to_string()),
         (Err(..), Some(string)) => Ok(string),
-        (Err(..), None)         => Err(Error::new(ErrorKind::Other, format!("Error: no key {} found", key)))
+        (Err(..), None)         => Err(format!("Error: no key {} found", key))
     }
 }
 

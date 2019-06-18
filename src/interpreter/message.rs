@@ -25,11 +25,11 @@ pub enum Content {
     Text(String),
     #[serde(rename = "int")]
     Int(i64),
+    #[serde(rename = "float")]
+    Float(f64),
     #[serde(rename = "question")]
     Questions(Question),
 }
-
-
 
 //TMP I dont like this TODO: change it
 pub enum MessageType {
@@ -54,6 +54,7 @@ impl Message {
 
         match expr {
             Expr::LitExpr{lit: Literal::IntLiteral(val)}     => {msg.content_type = string.to_lowercase() ; msg.content = Content::Int(*val); msg},
+            Expr::LitExpr{lit: Literal::FloatLiteral(val)}   => {msg.content_type = string.to_lowercase() ; msg.content = Content::Float(*val); msg},
             Expr::LitExpr{lit: Literal::StringLiteral(val)}  => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
             Expr::LitExpr{lit: Literal::BoolLiteral(val)}    => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
             _                                                => {msg},
@@ -66,8 +67,6 @@ pub struct Memories {
     pub key: String,
     pub value: String,
 }
-
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RootInterface {

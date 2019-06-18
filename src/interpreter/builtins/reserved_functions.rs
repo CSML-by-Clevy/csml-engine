@@ -1,5 +1,4 @@
 use rand::Rng;
-use std::io::{Error, ErrorKind, Result};
 use std::borrow::Borrow;
 
 use crate::parser::{ast::{Expr, Literal, ReservedFunction}, tokens::*};
@@ -14,72 +13,72 @@ pub fn remember(name: String, value: String) -> MessageType {
     MessageType::Assign{name, value}
 }
 
-pub fn typing(args: &Expr, name: String) -> Result<MessageType> {
+pub fn typing(args: &Expr, name: String) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
         if vec.len() == 1 {
             if let Expr::LitExpr{lit: Literal::IntLiteral(_)} = &vec[0] {
                 return Ok(MessageType::Msg(Message::new(&vec[0], name)));
             }
         }
-        return Err(Error::new(ErrorKind::Other, "Builtin Typing bad argument"))
+        return Err("Builtin Typing bad argument".to_owned())
     }
 
-    Err(Error::new(ErrorKind::Other, "Builtin Typing bad argument"))
+    Err("Builtin Typing bad argument".to_owned())
 }
 
-pub fn wait(args: &Expr, name: String) -> Result<MessageType> {
+pub fn wait(args: &Expr, name: String) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
         if vec.len() == 1 {
             if let Expr::LitExpr{lit: Literal::IntLiteral(_)} = &vec[0] {
                 return Ok(MessageType::Msg(Message::new(&vec[0], name)));
             }
         }
-        return Err(Error::new(ErrorKind::Other, "Builtin Wait bad argument"))
+        return Err("Builtin Wait bad argument".to_owned())
     }
 
-    Err(Error::new(ErrorKind::Other, "Builtin Wait bad argument"))
+    Err("Builtin Wait bad argument".to_owned())
 }
 
-pub fn text(args: &Expr, name: String) -> Result<MessageType> {
+pub fn text(args: &Expr, name: String) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
         if vec.len() == 1 {
             if let Expr::LitExpr{..} = &vec[0] {
                 return Ok(MessageType::Msg(Message::new(&vec[0], name)));
             }
         }
-        return Err(Error::new(ErrorKind::Other, "Builtin Text bad argument"))
+        return Err("Builtin Text bad argument".to_owned())
     }
 
-    Err(Error::new(ErrorKind::Other, "Builtin Text bad argument"))
+    Err("Builtin Text bad argument".to_owned())
 }
 
-pub fn img(args: &Expr, name: String) -> Result<MessageType> {
+pub fn img(args: &Expr, name: String) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
         if vec.len() == 1 {
             if let Expr::LitExpr{..} = &vec[0] {
                 return Ok(MessageType::Msg(Message::new(&vec[0], name)));
             }
         }
-        return Err(Error::new(ErrorKind::Other, "Builtin Image bad argument"))
+        return Err("Builtin Image bad argument".to_owned())
     }
 
-    Err(Error::new(ErrorKind::Other, "Builtin Image bad argument"))
+    Err("Builtin Image bad argument".to_owned())
 }
 
-pub fn url(args: &Expr, name: String) -> Result<MessageType>{
+pub fn url(args: &Expr, name: String) -> Result<MessageType, String>{
     if let Expr::VecExpr(vec) = args {
         if vec.len() == 1 {
             if let Expr::LitExpr{..} = &vec[0] {
                 return Ok(MessageType::Msg(Message::new(&vec[0], name)));
             }
         }
-        return Err(Error::new(ErrorKind::Other, "Builtin Url bad argument"))
+        return Err("Builtin Url bad argument".to_owned())
     }
 
-    Err(Error::new(ErrorKind::Other, "Builtin Url bad argument"))
+    Err("Builtin Url bad argument".to_owned())
 }
 
-pub fn one_of(args: &Expr, elem_type: String, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
+pub fn one_of(args: &Expr, elem_type: String, memory: &Memory, event: &Option<Event>) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
         let value = &vec[rand::thread_rng().gen_range(0, vec.len())];
         let literal = get_var_from_ident(memory, event, value)?;
@@ -87,7 +86,7 @@ pub fn one_of(args: &Expr, elem_type: String, memory: &Memory, event: &Option<Ev
         return Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: literal}, elem_type)));
     }
 
-    Err(Error::new(ErrorKind::Other, "Builtin One_of bad argument"))
+    Err("Builtin One_of bad argument".to_owned())
 }
 
 fn parse_quickbutton(val: String, buttton_type: String,  accepts: &mut Vec<String>) -> Button {
@@ -103,7 +102,7 @@ fn parse_quickbutton(val: String, buttton_type: String,  accepts: &mut Vec<Strin
     }
 }
 
-fn match_buttons(buttons: &mut Vec<Button>, button_type: &Expr, accepts: &mut Vec<String>, name: &str, expr: &Expr, memory: &Memory, event: &Option<Event>) -> Result<bool> {
+fn match_buttons(buttons: &mut Vec<Button>, button_type: &Expr, accepts: &mut Vec<String>, name: &str, expr: &Expr, memory: &Memory, event: &Option<Event>) -> Result<bool, String> {
     match (name, expr.borrow()) {
         (BUTTON, Expr::VecExpr(expr_vec))   => {
             for elem in expr_vec.iter() {
@@ -114,13 +113,13 @@ fn match_buttons(buttons: &mut Vec<Button>, button_type: &Expr, accepts: &mut Ve
                 );
             }
         }
-        _                                   => return Err(Error::new(ErrorKind::Other, "bad Button Type"))
+        _                                   => return Err("bad Button Type".to_owned())
     }
 
     Ok(true)
 }
 
-fn parse_question(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<Question> {
+fn parse_question(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Result<Question, String> {
     let expr_title = search_for_key_in_vec("title", vec)?; // Option
     let button_type = search_for_key_in_vec("button_type", vec)?; // Option
     let expr_buttons = expr_to_vec(search_for_key_in_vec("buttons", vec)?)?; // Option
@@ -142,7 +141,7 @@ fn parse_question(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Resul
     })
 }
 
-pub fn question(args: &Expr, name: String, memory: &Memory, event: &Option<Event>) -> Result<MessageType> {
+pub fn question(args: &Expr, name: String, memory: &Memory, event: &Option<Event>) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
         let question = parse_question(&vec, memory, event)?;
 
@@ -154,5 +153,5 @@ pub fn question(args: &Expr, name: String, memory: &Memory, event: &Option<Event
         ))
     }
 
-    Err(Error::new(ErrorKind::Other, "Builtin question bad argument"))
+    Err("Builtin question bad argument".to_owned())
 }
