@@ -8,8 +8,21 @@ pub fn gen_literal_form_event(event: &Option<Event>) -> Result<Literal, String> 
     match event {
         Some(event)        => {
             match event.payload {
-                PayLoad{content_type: ref t, content: ref c} if t == "text" => Ok(Literal::StringLiteral(c.text.to_string())),
-                _                                                           => Err("event type is unown".to_owned()),
+                PayLoad{content_type: ref t, content: ref c} if t == "text"     => Ok(Literal::StringLiteral(c.text.to_string())),
+                PayLoad{content_type: ref t, content: ref c} if t == "float"    => {
+                    match c.text.to_string().replace(",", ".").parse::<f64>() {
+                        Ok(float) => Ok(Literal::FloatLiteral(float)),
+                        Err(..)   => Err(format!("event value {} is not a float", c.text))
+                    }
+                },
+                PayLoad{content_type: ref t, content: ref c} if t == "int"      => {
+                    match c.text.to_string().replace(",", ".").parse::<i64>() {
+                        Ok(int) => Ok(Literal::IntLiteral(int)),
+                        Err(..) => Err(format!("event value {} is not a int", c.text))
+                    }
+                },
+                // PayLoad{content_type: ref t, content: ref c} if t == "bool"     => Ok(Literal::BoolLiteral(c.text.to_string())),
+                _                                                               => Err("event type is unown".to_owned()),
             }
         },
         None               => Err("no event is received in gen_literal_form_event".to_owned())

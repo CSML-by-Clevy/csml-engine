@@ -18,13 +18,10 @@ fn cmp_lit(infix: &Infix, lit1: Result<Literal, String>, lit2: Result<Literal, S
         (Infix::LessThanEqual, Ok(l1), Ok(l2))      => Ok(Literal::BoolLiteral(l1 <= l2)),
         (Infix::GreaterThan, Ok(l1), Ok(l2))        => Ok(Literal::BoolLiteral(l1 > l2)),
         (Infix::LessThan, Ok(l1), Ok(l2))           => Ok(Literal::BoolLiteral(l1 < l2)),
-        
         (Infix::Or, Ok(..), Ok(..))                 => Ok(Literal::BoolLiteral(true)),
         (Infix::Or, Ok(..), Err(..))                => Ok(Literal::BoolLiteral(true)),
         (Infix::Or, Err(..), Ok(..))                => Ok(Literal::BoolLiteral(true)),
-        
         (Infix::And, Ok(..), Ok(..))                => Ok(Literal::BoolLiteral(true)),
-
         (Infix::Adition, Ok(l1), Ok(l2))            => l1 + l2,
         (Infix::Substraction, Ok(l1), Ok(l2))       => l1 - l2,
         (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,
@@ -60,6 +57,7 @@ pub fn evaluate_condition(infix: &Infix, expr1: &Expr, expr2: &Expr, memory: &Me
         (_, _)                                              => Err("error in evaluate_condition function".to_owned()),
     }
 }
+
 impl<'a> AstInterpreter<'a> {
     // return Result<Expr, String, error>
     fn valid_condition(&self, expr: &Expr) -> bool {

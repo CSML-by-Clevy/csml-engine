@@ -245,8 +245,6 @@ pub enum Infix {
     LessThanEqual,
     GreaterThan,
     LessThan,
-
-    // NOTE: may not be INFIX expr
     And,
     Or,
 }
