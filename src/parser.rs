@@ -6,17 +6,21 @@ pub mod tools;
 pub mod tokens;
 pub mod parse_comments;
 pub mod parse_functions;
+pub mod expressions_evaluation;
+pub mod parse_literal;
 pub mod parse_if;
 
 use crate::comment;
 
 use tokens::*;
 use ast::*;
-use tools::parse_literalexpr;
+use tools::*;
+use expressions_evaluation::operator_precedence;
+use parse_literal::parse_literalexpr;
 use parse_ident::parse_ident;
 use parse_string::parse_string;
 use parse_functions::{parse_root_functions, parse_functions, parse_assignation};
-use parse_if::{parse_if, operator_precedence};
+use parse_if::parse_if;
 
 use nom::{*, Err, ErrorKind as NomError};
 use nom::types::*;
@@ -72,18 +76,6 @@ named!(get_list<Span, Expr>, do_parse!(
     (Expr::VecExpr(vec))
 ));
 
-
-named!(parse_r_parentheses<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightParenthesesError as u32),
-    tag!(R_PAREN)
-));
-
-named!(parse_l_parentheses<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::LeftParenthesesError as u32),
-    tag!(L_PAREN)
-));
-
-
 named!(parse_mandatory_expr_list<Span, Expr>, do_parse!(
     vec: delimited!(
         comment!(parse_l_parentheses),
@@ -102,10 +94,6 @@ named!(parse_expr_list<Span, Expr>, do_parse!(
     (vec)
 ));
 
-named!(parse_r_bracket<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightBracketError as u32),
-    tag!(R_BRACKET)
-));
 
 named!(parse_expr_array<Span, Expr>, do_parse!(
     vec: delimited!(
@@ -192,16 +180,6 @@ named!(parse_step<Span, Instruction>, do_parse!(
 ));
 
 // ############################## block
-
-named!(parse_l_brace<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::LeftBraceError as u32),
-    tag!(L_BRACE)
-));
-
-named!(parse_r_brace<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightBraceError as u32),
-    tag!(R_BRACE)
-));
 
 named!(pub parse_block<Span, Vec<Expr>>, do_parse!(
     vec: delimited!(

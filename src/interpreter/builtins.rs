@@ -21,7 +21,7 @@ pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr,
     Err(" search_for_key_in_vec".to_owned())
 }
 
-pub  fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], memory: &Memory, event: &Option<Event>) -> Result<Map<String, Value>, String> {
+pub fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], memory: &Memory, event: &Option<Event>) -> Result<Map<String, Value>, String> {
     let mut map = Map::new();
 
     for elem in vec.iter() {
@@ -43,7 +43,7 @@ fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr>, String> {
     }
 }
 
-pub  fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, memory: &Memory, event: &Option<Event>) -> Result<String, String> {
+pub fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, memory: &Memory, event: &Option<Event>) -> Result<String, String> {
     match (search_for_key_in_vec(key, vec), default) {
         (Ok(arg), ..)           => Ok(get_var_from_ident(memory, event, arg)?.to_string()),
         (Err(..), Some(string)) => Ok(string),

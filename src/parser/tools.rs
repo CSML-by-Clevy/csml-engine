@@ -1,69 +1,54 @@
-use crate::parser::{ast::*, tokens::*};
 use crate::comment;
+use crate::parser::{ParserErrorType, expressions_evaluation::* ,ast::*, tokens::*};
 
-use nom::*;
+
 use nom::types::*;
+use nom::*;
 use std::str;
 use std::str::{Utf8Error, FromStr};
-
-named!(signed_digits<Span, Span>, recognize!(
-    tuple!(
-        opt!(alt!(tag!("+") | tag!("-"))),
-        digit
-    )
-));
-
-named!(pub parse_integer<Span, Expr>, do_parse!(
-    i: map_res!(map_res!(digit, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::new_literal(Literal::IntLiteral(i)) )
-));
-
-named!(floating_point<Span, Span>, recognize!(
-    tuple!(
-        signed_digits,
-        complete!(pair!(
-            tag!("."),
-            digit
-        ))
-    )
-));
-
-named!(pub parse_float<Span, Expr>, do_parse!(
-    elem: map_res!(map_res!(floating_point, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::new_literal(Literal::FloatLiteral(elem)))
-));
 
 pub fn complete_byte_slice_str_from_utf8(c: Span) -> Result<CompleteStr, Utf8Error> {
     str::from_utf8(c.fragment.0).map(|s| CompleteStr(s))
 }
 
-fn complete_str_from_str<F: FromStr>(c: CompleteStr) -> Result<F, F::Err> {
+pub fn complete_str_from_str<F: FromStr>(c: CompleteStr) -> Result<F, F::Err> {
     FromStr::from_str(c.0)
 }
 
-named!(parse_boolean<Span, Expr>, do_parse!(
-    boolean: alt!(
-            do_parse!(
-                tag!(TRUE) >>
-                (Literal::BoolLiteral(true))
-
-            ) |
-            do_parse!(
-                tag!(FALSE) >>
-                (Literal::BoolLiteral(false))
-            )
-    ) >>
-    (Expr::new_literal(boolean))
+named!(pub parse_l_parentheses<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::LeftParenthesesError as u32),
+    tag!(L_PAREN)
 ));
 
-named!(pub parse_literalexpr<Span, Expr>, do_parse!(
-    // span: position!() >>
-    lit: comment!(
-        alt!(
-            parse_float     |
-            parse_integer   |
-            parse_boolean
-        )
-    ) >>
-    (lit) //, span
+//duplicate rm
+named!(pub parse_r_parentheses<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::RightParenthesesError as u32),
+    tag!(R_PAREN)
+));
+
+named!(pub parse_strict_condition_group<Span, Expr>, delimited!(
+    comment!(parse_l_parentheses),
+    operator_precedence,
+    comment!(parse_r_parentheses)
+));
+
+named!(pub parse_condition_group<Span, Expr>, delimited!(
+    tag!(L_PAREN),
+    operator_precedence,
+    comment!(parse_r_parentheses)
+));
+
+named!(pub parse_r_bracket<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::RightBracketError as u32),
+    tag!(R_BRACKET)
+));
+
+named!(pub parse_l_brace<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::LeftBraceError as u32),
+    tag!(L_BRACE)
+));
+
+named!(pub parse_r_brace<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::RightBraceError as u32),
+    tag!(R_BRACE)
 ));

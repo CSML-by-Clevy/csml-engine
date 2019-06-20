@@ -127,7 +127,7 @@ impl<'a> AstInterpreter<'a> {
             Expr::IdentExpr(ident)          => {
                 match get_var(self.memory, self.event, ident) {
                     Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, INT.to_string()))),
-                    Err(e)  => Err(e)
+                    Err(_e)  => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: Literal::StringLiteral("NULL".to_owned())}, TEXT.to_string()))),//Err(e)
                 }
             },
             _                               => Err("Error must be a valid action".to_owned()),
