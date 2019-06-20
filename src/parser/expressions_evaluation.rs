@@ -53,6 +53,8 @@ named!(parse_infix_operators<Span, Infix>, alt!(
     lessthan_operator
 ));
 
+// ########################################
+
 named!(pub operator_precedence<Span, Expr>, do_parse!(
         init: parse_and_condition >>
         and_expr: fold_many0!(
@@ -169,3 +171,85 @@ named!(parse_term<Span, Expr>, do_parse!(
     ) >>
     (and_expr)
 ));
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nom::types::*;
+    use crate::comment;
+
+    named!(pub test_expressions<Span, Expr>, exact!(comment!(operator_precedence)));
+
+    #[test]
+    fn ok_normal_and() {
+        let string = Span::new(CompleteByteSlice("3 && event".as_bytes()));
+        match test_expressions(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_normal_or() {
+        let string = Span::new(CompleteByteSlice("3 || event".as_bytes()));
+        match test_expressions(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_normal_comparator() {
+        let string = Span::new(CompleteByteSlice("3 == event".as_bytes()));
+        match test_expressions(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_normal_arithmetic() {
+        let string = Span::new(CompleteByteSlice("3 + (event - 5) * 8 / 3".as_bytes()));
+        match test_expressions(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_complex_expressio() {
+        let string = Span::new(CompleteByteSlice("test && (event || hola) && 4 + 3 - 2 ".as_bytes()));
+        match test_expressions(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn err_normal_comparation() {
+        let string = Span::new(CompleteByteSlice("test == hola >= event".as_bytes()));
+        match test_expressions(string) {
+            Ok(..) => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+
+    // #[test]
+    // fn err_normal_if2() {
+    //     let string = Span::new(CompleteByteSlice("if ( event ) ".as_bytes()));
+    //     match test_expressions(string) {
+    //         Ok(..) => panic!("need to fail"),
+    //         Err(..) => {}
+    //     }
+    // }
+
+    // #[test]
+    // fn err_normal_if3() {
+    //     let string = Span::new(CompleteByteSlice("if ( event { say \"hola\"  say event }".as_bytes()));
+    //     match test_expressions(string) {
+    //         Ok(..) => panic!("need to fail"),
+    //         Err(..) => {}
+    //     }
+    // }
+}
