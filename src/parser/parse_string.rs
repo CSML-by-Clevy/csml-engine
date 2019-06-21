@@ -88,3 +88,85 @@ named!(pub parse_string<Span, Expr>, do_parse!(
 
     (expr)
 ));
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nom::types::*;
+    use crate::comment;
+
+    named!(pub test_string<Span, Expr>, comment!(parse_string));
+
+    #[test]
+    fn ok_normal_string() {
+        let string = Span::new(CompleteByteSlice("\"normal string\"".as_bytes()));
+        match test_string(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_normal_comment_string() {
+        let string = Span::new(CompleteByteSlice("    \"normal string\"    /* test */".as_bytes()));
+        match test_string(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn err_normal_string_no_right_quote() {
+        let string = Span::new(CompleteByteSlice(" \"normal string ".as_bytes()));
+        match test_string(string) {
+            Ok(..)  => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+
+    #[test]
+    fn err_normal_string_no_left_quote() {
+        let string = Span::new(CompleteByteSlice(" normal string\" ".as_bytes()));
+        match test_string(string) {
+            Ok(..) => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+
+    #[test]
+    fn ok_complex_string() {
+        let string = Span::new(CompleteByteSlice("  \"complex string {{ \"test\" }}\"  ".as_bytes()));
+        match test_string(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_complex_complex_string() {
+        let string = Span::new(CompleteByteSlice("  \"complex string {{ \"var {{ \"test\" }}\" }}\"  ".as_bytes()));
+        match test_string(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn err_complex_string_no_right_braket() {
+        let string = Span::new(CompleteByteSlice("  \"complex string {{ \"  ".as_bytes()));
+        match test_string(string) {
+            Ok(..) => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+
+    #[test]
+    fn err_complex_string_no_left_braket() {
+        let string = Span::new(CompleteByteSlice("  \"complex string  }}\"  ".as_bytes()));
+        match test_string(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+}

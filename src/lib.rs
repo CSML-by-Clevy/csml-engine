@@ -66,12 +66,12 @@ pub fn execute_step(flow: &Flow, name: &str, interpreter: AstInterpreter) -> Res
             // let result = interpreter.interpret_block(actions)?;
             let result = match interpreter.interpret_block(actions) {
                 Ok(val) => val,
-                Err(_)  => return Err(ErrorInfo{line: 0, colon: 0, message: "ERROR: Interpret fail".to_string()})
+                Err(e)  => return Err(ErrorInfo{line: 0, colon: 0, message: e})
             };
             dbg!(&result);
             match serde_json::to_string(&result) {
                 Ok(ser) => Ok(ser),
-                Err(_)  => panic!("serde_json fail")
+                Err(_)  => unreachable!()
             }
         }
         _ => Err(ErrorInfo{line: 0, colon: 0, message: "ERROR: Empty Flow".to_string()}),

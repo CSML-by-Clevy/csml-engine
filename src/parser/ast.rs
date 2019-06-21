@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 // use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::collections::HashMap;
+use std::ops::{Sub, Add, Mul, Div};
 // use crate::parser::tokens::Span;
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
@@ -57,6 +58,7 @@ pub enum ReservedFunction {
     Say,
     Remember(String),
     Assign(String),
+    Import(String),
     Normal(String)
 }
 
@@ -103,13 +105,6 @@ impl Expr {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, PartialOrd)]
-/*
-    add ident ?
-    add ComplexLiteral ?
-    add vector ?
-    add hashmap ?
-    add builder ?
-*/
 pub enum Literal {
     StringLiteral(String),
     IntLiteral(i64),
@@ -145,6 +140,88 @@ pub enum Literal {
 //     }
 // }
 
+impl Add for Literal {
+    type Output = Result<Literal, String>;
+
+    fn add(self, other: Literal) -> Result<Literal, String> {
+        match (self, other) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(Literal::FloatLiteral(l1 + l2 as f64)),
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(Literal::FloatLiteral(l1 as f64 + l2)),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(Literal::FloatLiteral(l1 + l2)),
+
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(Literal::IntLiteral(l1 + l2)),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(Literal::IntLiteral(l1 as i64 + l2 as i64)),
+            _                                                           => Err("Illegal operation + between types".to_owned())
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 + l2),
+        }
+    }
+}
+
+impl Sub for Literal {
+    type Output = Result<Literal, String>;
+
+    fn sub(self, other: Literal) -> Result<Literal, String> {
+        match (self, other) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(Literal::FloatLiteral(l1 - l2 as f64)),
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(Literal::FloatLiteral(l1 as f64 - l2)),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(Literal::FloatLiteral(l1 - l2)),
+
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(Literal::IntLiteral(l1 - l2)),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(Literal::IntLiteral(l1 as i64 - l2 as i64)),
+            _                                                           => Err("Illegal operation - between types".to_owned())
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 - l2),
+        }
+    }    
+}
+
+impl Div for Literal {
+    type Output = Result<Literal, String>;
+
+    fn div(self, other: Literal) -> Result<Literal, String> {
+        match (self, other) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => {
+                if l2 == 0 { return Err("Cannot divide by zero-valued".to_owned()) }
+                Ok(Literal::FloatLiteral(l1 / l2 as f64))
+            },
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => {
+                if l2 == 0.0 { return Err("Cannot divide by zero-valued".to_owned()) }
+                Ok(Literal::FloatLiteral(l1 as f64 / l2))
+            },
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => {
+                if l2 == 0.0 { return Err("Cannot divide by zero-valued".to_owned()) }
+                Ok(Literal::FloatLiteral(l1 / l2))
+            },
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => {
+                if l2 == 0 { return Err("Cannot divide by zero-valued".to_owned()) }
+                Ok(Literal::IntLiteral(l1 / l2))
+            },
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => {
+                if !l2 { return Err("Cannot divide by zero-valued".to_owned()) }
+                Ok(Literal::IntLiteral(l1 as i64 / l2 as i64))
+            },
+            _                                                           => Err("Illegal operation / between types".to_owned())
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 / l2),
+        }
+    }
+}
+
+impl Mul for Literal {
+    type Output = Result<Literal, String>;
+
+    fn mul(self, other: Literal) -> Result<Literal, String> {
+        match (self, other) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(Literal::FloatLiteral(l1 * l2 as f64)),
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(Literal::FloatLiteral(l1 as f64 * l2)),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(Literal::FloatLiteral(l1 * l2)),
+
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(Literal::IntLiteral(l1 * l2)),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(Literal::IntLiteral(l1 as i64 * l2 as i64)),
+            _                                                           => Err("Illegal operation * between types".to_owned())
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 * l2),
+        }
+    }
+}
+
 impl Literal {
     pub fn to_string(&self) -> String {
         match self {
@@ -169,8 +246,6 @@ pub enum Infix {
     LessThanEqual,
     GreaterThan,
     LessThan,
-
-    // NOTE: may not be INFIX expr
     And,
     Or,
 }

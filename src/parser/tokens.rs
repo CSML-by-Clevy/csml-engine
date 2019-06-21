@@ -69,19 +69,13 @@ pub const ACCEPT: &str = "Accept";
 pub const TYPING: &str = "Typing";
 pub const WAIT: &str = "Wait";
 pub const TEXT: &str = "Text";
+pub const INT: &str = "Int";
 pub const URL: &str = "Url";
 pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
-
-pub const METEO: &str = "Meteo";
-pub const WTTJ: &str = "WTTJ";
-pub const GET_GSHEET: &str = "GetGSheet";
-pub const APPEND_GSHEET: &str = "AppendGsheet";
-pub const HUB_SPOT: &str = "Hubspot";
-pub const AWS: &str = "AWS";
-
+pub const FROMEFILE: &str = "FromFile";
 
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";

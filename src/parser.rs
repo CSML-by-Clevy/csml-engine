@@ -5,20 +5,25 @@ pub mod parse_string;
 pub mod tools;
 pub mod tokens;
 pub mod parse_comments;
+// pub mod parse_import;
 pub mod parse_functions;
+pub mod expressions_evaluation;
+pub mod parse_literal;
 pub mod parse_if;
 
 use crate::comment;
 
 use tokens::*;
 use ast::*;
-use tools::parse_literalexpr;
+use tools::*;
+use expressions_evaluation::operator_precedence;
+use parse_literal::parse_literalexpr;
 use parse_ident::parse_ident;
 use parse_string::parse_string;
 use parse_functions::{parse_root_functions, parse_functions, parse_assignation};
-use parse_if::{parse_if, operator_precedence};
+use parse_if::parse_if;
 
-use nom::*;
+use nom::{*, Err, ErrorKind as NomError};
 use nom::types::*;
 // use nom::{Err, ErrorKind as NomError};
 // use nom_locate::position;
@@ -72,12 +77,14 @@ named!(get_list<Span, Expr>, do_parse!(
     (Expr::VecExpr(vec))
 ));
 
-
-named!(parse_r_parentheses<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightParenthesesError as u32),
-    tag!(R_PAREN)
+named!(parse_mandatory_expr_list<Span, Expr>, do_parse!(
+    vec: delimited!(
+        comment!(parse_l_parentheses),
+        get_list,
+        comment!(parse_r_parentheses)
+    ) >>
+    (vec)
 ));
-
 
 named!(parse_expr_list<Span, Expr>, do_parse!(
     vec: delimited!(
@@ -88,10 +95,6 @@ named!(parse_expr_list<Span, Expr>, do_parse!(
     (vec)
 ));
 
-named!(parse_r_bracket<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightBracketError as u32),
-    tag!(R_BRACKET)
-));
 
 named!(parse_expr_array<Span, Expr>, do_parse!(
     vec: delimited!(
@@ -142,15 +145,17 @@ named!(parse_ask_response<Span, Expr>, do_parse!(
 
 // ################################### accept
 
-named!(parse_accept<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::AcceptError as u32),
-    tag!(ACCEPT)
-));
+fn parse_accept(input: Span) -> IResult<Span, bool> {
+    match parse_ident(input) {
+        Ok((span, ref ident)) if ident == ACCEPT => Ok((span, true)),
+        _                                        => Err(Err::Failure(Context::Code(input, NomError::Custom(ParserErrorType::AcceptError as u32))))
+    }
+}
 
 named!(parse_start_flow<Span, Instruction>, do_parse!(
     tag!(FLOW) >>
     comment!(parse_accept) >>
-    actions: parse_expr_list  >>
+    actions: parse_mandatory_expr_list  >>
 
     (Instruction { instruction_type: InstructionType::StartFlow(ACCEPT.to_owned()), actions })
 ));
@@ -176,16 +181,6 @@ named!(parse_step<Span, Instruction>, do_parse!(
 ));
 
 // ############################## block
-
-named!(parse_l_brace<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::LeftBraceError as u32),
-    tag!(L_BRACE)
-));
-
-named!(parse_r_brace<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightBraceError as u32),
-    tag!(R_BRACE)
-));
 
 named!(pub parse_block<Span, Vec<Expr>>, do_parse!(
     vec: delimited!(
@@ -261,7 +256,7 @@ fn get_error_message(error_code: ErrorKind) -> String {
     }
 }
 
-fn format_error<'a>(e: Span<'a>, error_code: ErrorKind) -> ErrorInfo {
+fn format_error(e: Span, error_code: ErrorKind) -> ErrorInfo {
     let message = get_error_message(error_code);
 
     ErrorInfo{line: e.line, colon: e.get_column() as u32, message}
