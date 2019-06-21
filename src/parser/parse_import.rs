@@ -30,3 +30,74 @@ named!(parse_import<Span, Expr>, do_parse!(
     name: parse_import_opt >>
     (name)
 ));
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nom::types::*;
+
+    named!(pub test_import<Span, Expr>, exact!(parse_import));
+
+    #[test]
+    fn ok_step_import() {
+        let string = Span::new(CompleteByteSlice("import step hola".as_bytes()));
+        match test_import(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_step_import_as() {
+        let string = Span::new(CompleteByteSlice("import step hola as test".as_bytes()));
+        match test_import(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn ok_step_import_as_from_file() {
+        let string = Span::new(CompleteByteSlice("import step hola as test FromFile filetest".as_bytes()));
+        match test_import(string) {
+            Ok(..) => {},
+            Err(e) => panic!("{:?}", e)
+        }
+    }
+
+    #[test]
+    fn err_step_import1() {
+        let string = Span::new(CompleteByteSlice("import hola".as_bytes()));
+        match test_import(string) {
+            Ok(..) => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+
+    #[test]
+    fn err_step_import2() {
+        let string = Span::new(CompleteByteSlice("import step".as_bytes()));
+        match test_import(string) {
+            Ok(..) => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+
+    #[test]
+    fn err_step_import_as() {
+        let string = Span::new(CompleteByteSlice("import step hola as".as_bytes()));
+        match test_import(string) {
+            Ok(..) => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+
+    #[test]
+    fn err_step_import_as_from_file() {
+        let string = Span::new(CompleteByteSlice("import step hola as".as_bytes()));
+        match test_import(string) {
+            Ok(..) => panic!("need to fail"),
+            Err(..) => {}
+        }
+    }
+}
