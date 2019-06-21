@@ -5,7 +5,7 @@ pub mod parse_string;
 pub mod tools;
 pub mod tokens;
 pub mod parse_comments;
-// pub mod parse_import;
+pub mod parse_import;
 pub mod parse_functions;
 pub mod expressions_evaluation;
 pub mod parse_literal;
@@ -223,6 +223,8 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Flow {
 pub enum ParserErrorType {
     AssignError             = 1,
     GotoStepError           = 10,
+    ImportError             = 11,
+    ImportStepError         = 12,
     AcceptError             = 100,
     LeftBraceError          = 110,
     RightBraceError         = 111,

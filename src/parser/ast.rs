@@ -54,12 +54,12 @@ pub enum GotoType {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum ReservedFunction {
-    Goto(GotoType),
-    Say,
-    Remember(String),
-    Assign(String),
-    Import(String),
-    Normal(String)
+    Goto(GotoType, String),
+    Say(Box<Expr>),
+    Remember(String, Box<Expr>),
+    Assign(String, Box<Expr>),
+    Import{step_name: String, as_name: Option<String>, file_path: Option<String>},
+    Normal(String, Box<Expr>)
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -83,8 +83,7 @@ pub enum Expr {
         // span: Option<Span >
     },
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    FunctionExpr(ReservedFunction, Box<Expr>),
-
+    FunctionExpr(ReservedFunction),
     ComplexLiteral(Vec<Expr>),
     VecExpr(Vec<Expr>),
     BuilderExpr(Box<Expr>, Box<Expr>),

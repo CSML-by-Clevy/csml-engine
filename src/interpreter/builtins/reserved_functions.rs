@@ -128,7 +128,7 @@ fn parse_question(vec: &[Expr], memory: &Memory, event: &Option<Event>) -> Resul
     let mut accepts: Vec<String> = vec![];
 
     for button in expr_buttons.iter() {
-        if let Expr::FunctionExpr(ReservedFunction::Normal(name), expr) = button {
+        if let Expr::FunctionExpr(ReservedFunction::Normal(name, expr)) = button {
             match_buttons(&mut buttons, &button_type, &mut accepts, &name, &expr, memory, event)?;
         }
         // else { WARNING bad element }

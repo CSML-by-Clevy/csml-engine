@@ -11,7 +11,7 @@ use crate::interpreter:: {
 
 pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr, String> {
     for elem in vec.iter() {
-        if let Expr::FunctionExpr(ReservedFunction::Assign(name), var) = elem {
+        if let Expr::FunctionExpr(ReservedFunction::Assign(name, var)) = elem {
             if name == key {
                 return Ok(var);
             }
@@ -25,7 +25,7 @@ pub fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], memory: &Memory, event:
     let mut map = Map::new();
 
     for elem in vec.iter() {
-        if let Expr::FunctionExpr(ReservedFunction::Assign(name), var) = elem {
+        if let Expr::FunctionExpr(ReservedFunction::Assign(name, var)) = elem {
             if keys.iter().find(|&&x| x == name).is_none() {
                 let value = get_var_from_ident(memory, event, var)?.to_string();
                 map.insert(name.clone(), Value::String(value));

@@ -102,7 +102,7 @@ impl<'a> AstInterpreter<'a> {
     //NOTE: ONLY Work for LITERAR::STRINGS for now
     fn match_functions(&self, action: &Expr) -> Result<MessageType, String> {
         match action {
-            Expr::FunctionExpr(ReservedFunction::Normal(name), variable) => self.match_builtin(&name, variable),
+            Expr::FunctionExpr(ReservedFunction::Normal(name, variable)) => self.match_builtin(&name, variable),
             Expr::LitExpr{..}               => Ok(MessageType::Msg(Message::new(action, TEXT.to_string()))),
             Expr::BuilderExpr(..)           => {
                 match get_var_from_ident(self.memory, self.event, action) {
@@ -134,20 +134,15 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    fn match_actions(&self, function: &ReservedFunction, expr: &Expr, root: &mut RootInterface) -> Result<bool, String> {
-        match (function, expr) {
-            (ReservedFunction::Say, arg)        => {
+    fn match_actions(&self, function: &ReservedFunction, root: &mut RootInterface) -> Result<bool, String> {
+        match function {
+        ReservedFunction::Say(arg)                      => {
                 let msgtype = self.match_functions(arg)?;
 
                 self.add_to_message(root, msgtype);
             },
-            (ReservedFunction::Goto(..), step_name) => { 
-                match step_name {
-                    Expr::IdentExpr(name) => root.add_next_step(&name),
-                    _                     => return Err("Error Assign value must be valid".to_owned())
-                };
-            },
-            (ReservedFunction::Remember(name), variable) => { // if self.check_if_ident(variable)
+            ReservedFunction::Goto(.., step_name)       => { root.add_next_step(&step_name) },
+            ReservedFunction::Remember(name, variable)  => { // if self.check_if_ident(variable)
                 if let Ok(Literal::StringLiteral(variable)) = get_var_from_ident(self.memory, self.event, variable) {
                     self.add_to_message(root, remember(name.to_string(), variable.to_string()));
                 }
@@ -156,7 +151,7 @@ impl<'a> AstInterpreter<'a> {
                 // }
             },
             // (ReservedFunction::Retry, arg)      => {
-            (_, _)                              => {return Err("Error Assign value must be valid".to_owned())}
+            _                                           => {return Err("Error Assign value must be valid".to_owned())}
         };
         Ok(true)
     }
@@ -185,7 +180,7 @@ impl<'a> AstInterpreter<'a> {
             }
 
             match action {
-                Expr::FunctionExpr(fun, expr)                                   => { self.match_actions(fun, &expr, &mut root)?; },
+                Expr::FunctionExpr(fun)                                         => { self.match_actions(fun, &mut root)?; },
                 Expr::IfExpr { cond, consequence }                              => {
                     if self.valid_condition(cond) {
                         root = root + self.interpret_block(consequence)?;

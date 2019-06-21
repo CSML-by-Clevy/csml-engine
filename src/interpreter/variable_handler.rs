@@ -127,12 +127,12 @@ pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<
 //NOTE:Only work with Strings for now
 pub fn get_memory_action(memory: &Memory, name: &Expr, expr: &Expr) -> Result<Literal, String> {
     match expr {
-        Expr::FunctionExpr(ReservedFunction::Normal(ident), exp) if ident == GET_VALUE     => {
+        Expr::FunctionExpr(ReservedFunction::Normal(ident, exp)) if ident == GET_VALUE     => {
             memorytype_to_literal(memory_get(memory, name, exp))
         },
-        Expr::FunctionExpr(ReservedFunction::Normal(ident), exp) if ident == FIRST         => {
+        Expr::FunctionExpr(ReservedFunction::Normal(ident, exp)) if ident == FIRST         => {
             memorytype_to_literal(memory_first(memory, name, exp))
         },
-        _                                                               => Err("Error in memory action".to_owned()),
+        _                                                                                  => Err("Error in memory action".to_owned()),
     }
 }

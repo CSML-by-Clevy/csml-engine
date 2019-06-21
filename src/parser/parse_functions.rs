@@ -3,7 +3,6 @@ use crate::parser::{
     ParserErrorType,
     parse_expr_list, 
     parse_var_expr, 
-    parse_identexpr,
     ast::*, 
     tokens::*, 
     parse_ident::parse_ident, 
@@ -15,7 +14,7 @@ named!(pub parse_assignation<Span, Expr>, do_parse!(
     name: parse_ident >>
     comment!(tag!(ASSIGN)) >>
     expr: complete!(parse_var_expr) >>
-    (Expr::FunctionExpr(ReservedFunction::Assign(name), Box::new(expr)))
+    (Expr::FunctionExpr(ReservedFunction::Assign(name, Box::new(expr))))
 ));
 
 named!(get_step<Span, GotoType>, do_parse!(
@@ -36,11 +35,11 @@ named!(parse_goto<Span, Expr>, do_parse!(
     comment!(tag!(GOTO)) >>
     goto_type: alt!(get_step | get_file | get_default) >>
     // expr: complete!(parse_var_expr) >>
-    expr: return_error!(
+    name: return_error!(
         nom::ErrorKind::Custom(ParserErrorType::GotoStepError as u32),
-        parse_identexpr
+        parse_ident
     ) >>
-    (Expr::FunctionExpr(ReservedFunction::Goto(goto_type), Box::new(expr)))
+    (Expr::FunctionExpr(ReservedFunction::Goto(goto_type, name)))
 ));
 
 named!(parse_say<Span, Expr>, do_parse!(
@@ -51,7 +50,7 @@ named!(parse_say<Span, Expr>, do_parse!(
     //     parse_var_expr
     // ) >>
     // expr: preceded!(comment!(tag!(SAY)), parse_var_expr ) >>
-    (Expr::FunctionExpr(ReservedFunction::Say, Box::new(expr)))
+    (Expr::FunctionExpr(ReservedFunction::Say(Box::new(expr))))
 ));
 
 named!(parse_remember<Span, Expr>, do_parse!(
@@ -62,13 +61,13 @@ named!(parse_remember<Span, Expr>, do_parse!(
         comment!(tag!(ASSIGN))
     ) >>
     expr: complete!(parse_var_expr) >>
-    (Expr::FunctionExpr(ReservedFunction::Remember(ident), Box::new(expr)))
+    (Expr::FunctionExpr(ReservedFunction::Remember(ident, Box::new(expr))))
 ));
 
 named!(pub parse_functions<Span, Expr>, do_parse!(
     name: parse_ident >>
     expr: parse_expr_list >>
-    (Expr::FunctionExpr(ReservedFunction::Normal(name), Box::new(expr)))
+    (Expr::FunctionExpr(ReservedFunction::Normal(name, Box::new(expr))))
 ));
 
 //  IMPORT, RETRY, AS
