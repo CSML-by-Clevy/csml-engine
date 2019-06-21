@@ -58,6 +58,7 @@ pub enum ReservedFunction {
     Say,
     Remember(String),
     Assign(String),
+    Import(String),
     Normal(String)
 }
 

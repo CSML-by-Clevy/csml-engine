@@ -75,6 +75,7 @@ pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
+pub const FROMEFILE: &str = "FromFile";
 
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";

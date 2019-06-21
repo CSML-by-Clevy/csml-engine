@@ -1,29 +1,35 @@
-// named!(pub lex_from_file<Span, Token>, do_parse!(
-//     position: position!() >>
-//     tag!(FROM)  >>
-//     tag!(FILE)  >>
-//     (Token::FromFile(position))
-// ));
 
-// named!(parse_import_opt<Tokens, (Option<Ident>, Option<Ident>, Option<Ident>)>, do_parse!(
+// use crate::comment;
+// use crate::parser::{parse_ident::*, tools::*, parse_block, ast::*, tokens::*};
+// use nom::*;
+
+
+// // named!(pub lex_from_file<Span, String>, do_parse!(
+// //     position: position!() >>
+// //     tag!(FROM)  >>
+// //     tag!(FILE)  >>
+// //     (Token::FromFile(position))
+// // ));
+
+// named!(parse_import_opt<Span, (Option<String>, Option<String>, Option<String>)>, do_parse!(
 //     step_name: opt!(
 //         do_parse!(
-//             tag_token!(Token::Step) >>
-//             name: parse_ident!() >>
+//             tag!(STEP) >>
+//             name: parse_ident >>
 //             (name)
 //         )
 //     ) >>
 //     as_name: opt!(
 //         do_parse!(
-//             tag_token!(Token::As) >>
-//             name: parse_ident!() >>
+//             tag!(AS) >>
+//             name: parse_ident >>
 //             (name)
 //         )
 //     ) >>
 //     file_path: opt!(
 //         do_parse!(
-//             tag_token!(Token::FromFile) >>
-//             file_path: parse_ident!() >>
+//             tag!(FROMEFILE) >>
+//             file_path: parse_ident >>
 //             (file_path)
 //         )
 //     ) >>
@@ -32,7 +38,7 @@
 
 // #[allow(dead_code)]
 // fn gen_function_expr(name: &str, expr: Expr) -> Expr {
-//     Expr::FunctionExpr(Ident(name.to_owned()), Box::new(expr))
+//     Expr::FunctionExpr(ReservedFunction::Import(name.to_owned()), Box::new(expr))
 // }
 
 // #[allow(dead_code)]
@@ -41,7 +47,7 @@
 // }
 
 // #[allow(dead_code)]
-// fn format_step_options(step_name: Ident, as_name: Option<Ident>, file_path: Option<Ident>) -> Expr{
+// fn format_step_options(step_name: String, as_name: Option<String>, file_path: Option<String>) -> Expr {
 //     match (as_name, file_path) {
 //         (Some(name), Some(file))    => {
 //             gen_builder_expr(
@@ -67,22 +73,22 @@
 // }
 
 // #[allow(dead_code)]
-// fn format_import_opt(tokens: Tokens) -> IResult<Tokens , Expr> {
-//     match parse_import_opt(tokens) {
-//         Ok((_, (Some(step), as_name, file_path)))   => Ok((tokens, format_step_options(step, as_name, file_path))),
-//         Ok((_, (None, None, Some(file_path))))      => Ok((tokens, gen_function_expr(FILE, Expr::IdentExpr(file_path)))),
+// fn format_import_opt(span: Span) -> IResult<Span , Expr> {
+//     match parse_import_opt(span) {
+//         Ok((_, (Some(step), as_name, file_path)))   => Ok((span, format_step_options(step, as_name, file_path))),
+//         Ok((_, (None, None, Some(file_path))))      => Ok((span, gen_function_expr(FILE, Expr::IdentExpr(file_path)))),
 //         Err(e)                                      => Err(e),
-//         _                                           => Err(Err::Failure(Context::Code(tokens, NomError::Custom(42)))),
+//         _                                           => Err(Err::Failure(Context::Code(span, NomError::Custom(42)))),
 //     }
 // }
 
-// named!(parse_import_from<Tokens, Expr>, do_parse!(
+// named!(parse_import_from<Span, Expr>, do_parse!(
 //     expr: format_import_opt >>
 //     (expr)
 // ));
 
-// named!(parse_import<Tokens, Expr>, do_parse!(
-//     tag_token!(Token::Import) >>
+// named!(parse_import<Span, Expr>, do_parse!(
+//     tag!(IMPORT) >>
 //     name: parse_import_from >>
 //     (Expr::FunctionExpr(Ident(IMPORT.to_owned()), Box::new(name)))
 // ));

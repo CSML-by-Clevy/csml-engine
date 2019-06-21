@@ -234,22 +234,4 @@ mod tests {
             Err(..) => {}
         }
     }
-
-    // #[test]
-    // fn err_normal_if2() {
-    //     let string = Span::new(CompleteByteSlice("if ( event ) ".as_bytes()));
-    //     match test_expressions(string) {
-    //         Ok(..) => panic!("need to fail"),
-    //         Err(..) => {}
-    //     }
-    // }
-
-    // #[test]
-    // fn err_normal_if3() {
-    //     let string = Span::new(CompleteByteSlice("if ( event { say \"hola\"  say event }".as_bytes()));
-    //     match test_expressions(string) {
-    //         Ok(..) => panic!("need to fail"),
-    //         Err(..) => {}
-    //     }
-    // }
 }
