@@ -33,8 +33,8 @@ pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     if let Some(Expr::VecExpr(vec)) = info {
         for elem in vec.iter() {
             match elem {
-                Expr::LitExpr{lit: Literal::StringLiteral(tag)} if tag == string    => return true,
-                _                                                                   => continue,
+                Expr::LitExpr{lit: Literal::StringLiteral(tag)} if tag.to_lowercase() == string.to_lowercase()  => return true,
+                _                                                                                               => continue,
             }
         }
     }
@@ -86,7 +86,7 @@ pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Optio
     dbg!(&ast);
 
     let memory = context_to_memory(context);
-    let intpreter = AstInterpreter{ memory: &memory, event};
+    let intpreter = AstInterpreter{ ast, memory: &memory, event};
 
     Ok(execute_step(ast, step_name, intpreter)?)
 }

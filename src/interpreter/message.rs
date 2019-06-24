@@ -100,19 +100,25 @@ impl Add for RootInterface {
 }
 
 impl RootInterface {
-    pub fn add_message(&mut self, message: Message) {
+    pub fn add_message(mut self, message: Message) -> Self {
         self.messages.push(message);
+
+        self
     }
 
-    pub fn add_to_memory(&mut self, key: String, value: String) {
+    pub fn add_to_memory(mut self, key: String, value: String) -> Self {
         if let Some(ref mut vec) = self.memories {
             vec.push(Memories{key, value})
         } else {
             self.memories = Some(vec![Memories{key, value}]);
         }
+
+        self
     }
 
-    pub fn add_next_step(&mut self, next_step: &str) {
+    pub fn add_next_step(mut self, next_step: &str) -> Self {
         self.next_step = Some(next_step.to_string());
+
+        self
     }
 }

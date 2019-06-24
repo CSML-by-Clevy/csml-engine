@@ -25,7 +25,7 @@ named!(parse_import_opt<Span, Expr>, do_parse!(
     (Expr::FunctionExpr(ReservedFunction::Import{step_name, as_name, file_path}))
 ));
 
-named!(parse_import<Span, Expr>, do_parse!(
+named!(pub parse_import<Span, Expr>, do_parse!(
     comment!(tag!(IMPORT)) >>
     name: parse_import_opt >>
     (name)

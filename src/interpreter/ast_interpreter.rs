@@ -7,6 +7,7 @@ use crate::interpreter:: {
 };
 
 pub struct AstInterpreter<'a> {
+    pub ast: &'a Flow,
     pub memory: &'a Memory,
     pub event: &'a Option<Event>,
 }
@@ -42,19 +43,19 @@ fn check_if_ident(expr: &Expr) -> bool {
 
 pub fn evaluate_condition(infix: &Infix, expr1: &Expr, expr2: &Expr, memory: &Memory, event: &Option<Event>) -> Result<Literal, String> {
     match (expr1, expr2) {
-        (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2)   => {
+        (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2)        => {
             cmp_lit(infix, get_var_from_ident(memory, event, exp1), get_var_from_ident(memory, event, exp2))
         },
-        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2))      => {
+        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2))    => {
             cmp_lit(infix, evaluate_condition(i1, ex1, ex2, memory, event), evaluate_condition(i2, exp1, exp2, memory, event))
         },
-        (Expr::InfixExpr(i1, ex1, ex2), exp)                => {
+        (Expr::InfixExpr(i1, ex1, ex2), exp)                                => {
             cmp_lit(infix, evaluate_condition(i1, ex1, ex2, memory, event), gen_literal_form_exp(memory, event, exp))
         },
-        (exp, Expr::InfixExpr(i1, ex1, ex2))                => {
+        (exp, Expr::InfixExpr(i1, ex1, ex2))                                => {
             cmp_lit(infix, gen_literal_form_exp(memory, event, exp), evaluate_condition(i1, ex1, ex2, memory, event))
         }
-        (_, _)                                              => Err("error in evaluate_condition function".to_owned()),
+        (_, _)                                                              => Err("error in evaluate_condition function".to_owned()),
     }
 }
 
@@ -76,11 +77,11 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    fn add_to_message(&self, root: &mut RootInterface, action: MessageType) {
+    fn add_to_message(&self, root: RootInterface, action: MessageType) -> RootInterface {
         match action {
             MessageType::Msg(msg)            => root.add_message(msg),
             MessageType::Assign{name, value} => root.add_to_memory(name, value),
-            MessageType::Empty               => {},
+            MessageType::Empty               => root,
         }
     }
 
@@ -103,7 +104,6 @@ impl<'a> AstInterpreter<'a> {
     fn match_functions(&self, action: &Expr) -> Result<MessageType, String> {
         match action {
             Expr::FunctionExpr(ReservedFunction::Normal(name, variable)) => self.match_builtin(&name, variable),
-            Expr::LitExpr{..}               => Ok(MessageType::Msg(Message::new(action, TEXT.to_string()))),
             Expr::BuilderExpr(..)           => {
                 match get_var_from_ident(self.memory, self.event, action) {
                     Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, TEXT.to_string()))),
@@ -118,6 +118,7 @@ impl<'a> AstInterpreter<'a> {
                     )
                 ))
             },
+            Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(action, TEXT.to_string()))),
             Expr::InfixExpr(infix, exp1, exp2) => {
                 match evaluate_condition(infix, exp1, exp2, self.memory, self.event) {
                     Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, INT.to_string()))),
@@ -134,26 +135,34 @@ impl<'a> AstInterpreter<'a> {
         }
     }
 
-    fn match_actions(&self, function: &ReservedFunction, root: &mut RootInterface) -> Result<bool, String> {
+    fn match_actions(&self, function: &ReservedFunction, root: RootInterface) -> Result<RootInterface, String> {
         match function {
         ReservedFunction::Say(arg)                      => {
                 let msgtype = self.match_functions(arg)?;
-
-                self.add_to_message(root, msgtype);
+                Ok(self.add_to_message(root, msgtype))
             },
-            ReservedFunction::Goto(.., step_name)       => { root.add_next_step(&step_name) },
+            ReservedFunction::Goto(.., step_name)       => Ok(root.add_next_step(&step_name)),
             ReservedFunction::Remember(name, variable)  => { // if self.check_if_ident(variable)
                 if let Ok(Literal::StringLiteral(variable)) = get_var_from_ident(self.memory, self.event, variable) {
-                    self.add_to_message(root, remember(name.to_string(), variable.to_string()));
-                }
-                // } else {
+                   Ok(self.add_to_message(root, remember(name.to_string(), variable.to_string())))
+                } else {
+                    Ok(root)
                 //     return Err("Error Assign value must be valid"));
-                // }
+                }
             },
+            ReservedFunction::Import{step_name: name, ..}          => {
+                if let Some(Expr::Block{arg: actions, ..}) = self.ast.flow_instructions.get(&InstructionType::NormalStep(name.to_string())) {
+                    match self.interpret_block(&actions) {
+                        Ok(root2)  => Ok(root + root2),
+                        Err(e)     => Err("Error in import function".to_owned())
+                    }
+                } else {
+                    Err(format!("Error step {} not found in flow", name))
+                }
+            }
             // (ReservedFunction::Retry, arg)      => {
-            _                                           => {return Err("Error Assign value must be valid".to_owned())}
-        };
-        Ok(true)
+            _                                           => {Err("Error Assign value must be valid".to_owned())}
+        }
     }
 
     fn match_ask_response(&self, vec: &[Expr], root: RootInterface) -> Result<RootInterface, String> {
@@ -180,7 +189,7 @@ impl<'a> AstInterpreter<'a> {
             }
 
             match action {
-                Expr::FunctionExpr(fun)                                         => { self.match_actions(fun, &mut root)?; },
+                Expr::FunctionExpr(fun)                                         => { root = self.match_actions(fun, root)?; },
                 Expr::IfExpr { cond, consequence }                              => {
                     if self.valid_condition(cond) {
                         root = root + self.interpret_block(consequence)?;

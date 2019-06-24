@@ -6,6 +6,7 @@ use crate::parser::{
     ast::*, 
     tokens::*, 
     parse_ident::parse_ident, 
+    parse_import::parse_import,
     GotoType
 };
 use nom::*;
@@ -75,6 +76,7 @@ named!(pub parse_root_functions<Span, Expr>, do_parse!(
     reserved_function: alt!(
         parse_remember          |
         parse_say               |
+        parse_import            |
         parse_goto
     ) >>
     (reserved_function)
