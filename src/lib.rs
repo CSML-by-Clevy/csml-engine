@@ -1,10 +1,14 @@
 pub mod interpreter;
 pub mod parser;
 
+use std::collections::HashMap;
 use parser::{ErrorInfo, Parser, ast::*, tokens::*};
-use interpreter::csml_rules::*;
-use interpreter::json_to_rust::*;
-use interpreter::ast_interpreter::AstInterpreter;
+use interpreter::{
+    csml_rules::*,
+    ast_interpreter::interpret_block,
+    json_to_rust::*,
+    data::Data
+};
 
 use multimap::MultiMap;
 
@@ -60,11 +64,11 @@ pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
     flow.flow_instructions.get(&InstructionType::NormalStep(name.to_string()))
 }
 
-pub fn execute_step(flow: &Flow, name: &str, interpreter: AstInterpreter) -> Result<String, ErrorInfo> {
+pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, ErrorInfo> {
     match search_for(flow, name) {
         Some(Expr::Block{arg: actions, ..}) => {
             // let result = interpreter.interpret_block(actions)?;
-            let result = match interpreter.interpret_block(actions) {
+            let result = match interpret_block(actions, &mut data) {
                 Ok(val) => val,
                 Err(e)  => return Err(ErrorInfo{line: 0, colon: 0, message: e})
             };
@@ -86,7 +90,6 @@ pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Optio
     dbg!(&ast);
 
     let memory = context_to_memory(context);
-    let intpreter = AstInterpreter{ ast, memory: &memory, event};
-
-    Ok(execute_step(ast, step_name, intpreter)?)
+    let data = Data{ ast, memory: &memory, event, step_vars: HashMap::new()};
+    Ok(execute_step(ast, step_name, data)?)
 }

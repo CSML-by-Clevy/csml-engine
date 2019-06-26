@@ -1,6 +1,7 @@
 use crate::parser::ast::*;
 use serde::{Deserialize, Serialize};
 use std::ops::Add;
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Button {
@@ -27,11 +28,16 @@ pub enum Content {
     Int(i64),
     #[serde(rename = "float")]
     Float(f64),
+    #[serde(rename = "array")]
+    Array(Vec<Content>),
+    #[serde(rename = "object")]
+    Object(HashMap<String, Content>),
+
     #[serde(rename = "question")]
-    Questions(Question),
+    Question(Question),
 }
 
-//TMP I dont like this TODO: change it
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MessageType {
     Msg(Message),
     Assign{name: String, value: String},
@@ -47,17 +53,12 @@ pub struct Message {
 // return Result<Message>
 impl Message {
     pub fn new(expr: &Expr, string: String) -> Self {
-        let mut msg = Message {
-            content_type: "text".to_string(),
-            content: Content::Text("Error in message creation".to_string())
-        };
-
         match expr {
-            Expr::LitExpr{lit: Literal::IntLiteral(val)}     => {msg.content_type = string.to_lowercase() ; msg.content = Content::Int(*val); msg},
-            Expr::LitExpr{lit: Literal::FloatLiteral(val)}   => {msg.content_type = string.to_lowercase() ; msg.content = Content::Float(*val); msg},
-            Expr::LitExpr{lit: Literal::StringLiteral(val)}  => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
-            Expr::LitExpr{lit: Literal::BoolLiteral(val)}    => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
-            _                                                => {msg},
+            Expr::LitExpr{lit: Literal::IntLiteral(val)}     => {Message { content_type: string.to_lowercase(), content: Content::Int(*val) }},
+            Expr::LitExpr{lit: Literal::FloatLiteral(val)}   => {Message { content_type: string.to_lowercase(), content: Content::Float(*val) }},
+            Expr::LitExpr{lit: Literal::StringLiteral(val)}  => {Message { content_type: string.to_lowercase(), content: Content::Text(val.to_string()) }},
+            Expr::LitExpr{lit: Literal::BoolLiteral(val)}    => {Message { content_type: string.to_lowercase(), content: Content::Text(val.to_string()) }},
+            _                                                => {Message { content_type: "text".to_string(), content: Content::Text("Error in message creation".to_string()) } },
         }
     }
 }

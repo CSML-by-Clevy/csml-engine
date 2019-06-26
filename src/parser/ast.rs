@@ -58,6 +58,7 @@ pub enum ReservedFunction {
     Say(Box<Expr>),
     Remember(String, Box<Expr>),
     Assign(String, Box<Expr>),
+    As(String, Box<Expr>),
     Import{step_name: String, as_name: Option<String>, file_path: Option<String>},
     Normal(String, Box<Expr>)
 }

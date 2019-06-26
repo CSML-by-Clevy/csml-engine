@@ -51,7 +51,7 @@ use std::collections::HashMap;
 named!(parse_builderexpr<Span, Expr>, do_parse!(
     ident: parse_identexpr >>
     comment!(tag!(DOT)) >>
-    exp: parse_var_expr >>
+    exp: alt!(parse_as_variable | parse_var_expr) >>
     (Expr::BuilderExpr(Box::new(ident), Box::new(exp)))
 ));
 
@@ -61,11 +61,11 @@ named!(parse_identexpr<Span, Expr>, do_parse!(
 ));
 
 named!(get_list<Span, Expr>, do_parse!(
-    first_elem: parse_var_expr >>
+    first_elem: alt!(parse_as_variable | parse_var_expr) >>
     vec: fold_many0!(
         do_parse!(
             comment!(tag!(COMMA)) >>
-            expr: parse_var_expr >>
+            expr: alt!(parse_as_variable | parse_var_expr) >>
             (expr)
         ),
         vec![first_elem],
@@ -122,6 +122,15 @@ named!(pub parse_var_expr<Span, Expr>, comment!(
         operator_precedence     |
         parse_basic_expr
     )
+));
+
+// ################################### As name
+
+named!(pub parse_as_variable<Span, Expr>, do_parse!(
+    expr: parse_var_expr >>
+    comment!(tag!(AS)) >>
+    name: parse_ident >>
+    (Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))))
 ));
 
 // ################################### Ask_Response
