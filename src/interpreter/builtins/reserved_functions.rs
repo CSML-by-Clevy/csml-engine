@@ -1,5 +1,6 @@
 use rand::Rng;
 use std::borrow::Borrow;
+use std::collections::HashMap;
 
 use crate::parser::{ast::{Expr, Literal, ReservedFunction}, tokens::*};
 use crate::interpreter:: {
@@ -89,27 +90,31 @@ pub fn one_of(args: &Expr, elem_type: String, data: &mut Data) -> Result<Message
     Err("Builtin One_of bad argument".to_owned())
 }
 
-fn parse_quickbutton(val: String, buttton_type: String,  accepts: &mut Vec<String>) -> Button {
-    accepts.push(val.clone());
+fn parse_quickbutton(val: String, buttton_type: String, accepts: &mut Vec<Content>) -> Content {
+    let mut button_value = HashMap::new();
 
-    Button {
-        title: val.clone(),
-        buttton_type,
-        accepts: vec![val.clone()],
-        key: val.clone(),
-        value: val.clone(),
-        payload: val,
-    }
+    accepts.push(Content::Text(val.clone()));
+
+    button_value.insert("title".to_owned(), Content::Text(val.clone()));
+    button_value.insert("buttton_type".to_owned(), Content::Array(vec![ Content::Text(buttton_type.clone())]));
+    button_value.insert("accept".to_owned(), Content::Text(val.clone()));
+    button_value.insert("key".to_owned(), Content::Text(val.clone()));
+    button_value.insert("value".to_owned(), Content::Text(val.clone()));
+    button_value.insert("payload".to_owned(), Content::Text(val));
+
+    Content::Object{ name: "button".to_owned(), value: button_value}
 }
 
-fn match_buttons(buttons: &mut Vec<Button>, button_type: &Expr, accepts: &mut Vec<String>, name: &str, expr: &Expr, data: &mut Data) -> Result<bool, String> {
+fn match_buttons(buttons: &mut Vec<Content>, button_type: &Expr, accepts: &mut Vec<Content>, name: &str, expr: &Expr, data: &mut Data) -> Result<bool, String> {
     match (name, expr.borrow()) {
         (BUTTON, Expr::VecExpr(expr_vec))   => {
             for elem in expr_vec.iter() {
-                buttons.push(parse_quickbutton(
-                    get_var_from_ident(elem, data)?.to_string(),
-                    get_var_from_ident(button_type, data)?.to_string(),
-                    accepts)
+                buttons.push(
+                    parse_quickbutton(
+                        get_var_from_ident(elem, data)?.to_string(),
+                        get_var_from_ident(button_type, data)?.to_string(),
+                        accepts
+                    )
                 );
             }
         }
@@ -121,12 +126,14 @@ fn match_buttons(buttons: &mut Vec<Button>, button_type: &Expr, accepts: &mut Ve
 
 pub fn question(args: &Expr, name: String, data: &mut Data) -> Result<MessageType, String> {
     if let Expr::VecExpr(vec) = args {
+        let mut question_value = HashMap::new();
+
         let expr_title = search_for_key_in_vec("title", vec)?; // Option
         let button_type = search_for_key_in_vec("button_type", vec)?; // Option
         let expr_buttons = expr_to_vec(search_for_key_in_vec("buttons", vec)?)?; // Option
 
-        let mut buttons: Vec<Button> = vec![];
-        let mut accepts: Vec<String> = vec![];
+        let mut buttons: Vec<Content> = vec![];
+        let mut accepts: Vec<Content> = vec![];
 
         for button in expr_buttons.iter() {
             if let Expr::FunctionExpr(ReservedFunction::Normal(name, expr)) = button {
@@ -134,16 +141,15 @@ pub fn question(args: &Expr, name: String, data: &mut Data) -> Result<MessageTyp
             }
             // else { WARNING bad element }
         }
+
+        question_value.insert("title".to_owned(), Content::Text(get_var_from_ident(expr_title, data)?.to_string()));
+        question_value.insert("accepts".to_owned(), Content::Array(accepts));
+        question_value.insert("buttons".to_owned(), Content::Array(buttons));
+
         Ok(MessageType::Msg(
             Message {
                 content_type: name.to_lowercase(),
-                content: Content::Question(
-                    Question {
-                        title: get_var_from_ident(expr_title, data)?.to_string(),
-                        accepts,
-                        buttons,
-                    }
-                )
+                content: Content::Object{name: "question".to_owned(), value: question_value}
             }
         ))
     } else {

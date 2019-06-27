@@ -15,6 +15,7 @@ pub const DIVIDE: &str = "/";
 pub const MULTIPLY: &str = "*";
 
 pub const EQUAL: &str = "==";
+pub const NOT_EQUAL: &str = "!=";
 pub const ASSIGN: &str = "=";
 
 pub const OR: &str = "||";
@@ -55,6 +56,7 @@ pub const FLOW: &str = "flow";
 pub const FILE: &str = "file";
 pub const STEP: &str = "step";
 pub const SAY: &str = "say";
+pub const USE: &str = "use";
 pub const ASK: &str = "ask";
 pub const GOTO: &str = "goto";
 pub const RESPONSE: &str = "response";

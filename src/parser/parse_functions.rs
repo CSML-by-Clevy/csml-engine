@@ -47,12 +47,13 @@ named!(parse_goto<Span, Expr>, do_parse!(
 named!(parse_say<Span, Expr>, do_parse!(
     comment!(tag!(SAY)) >>
     expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    // expr: return_error!(
-    //     nom::ErrorKind::Custom(ParserErrorType::GotoStepError as u32),
-    //     parse_var_expr
-    // ) >>
-    // expr: preceded!(comment!(tag!(SAY)), parse_var_expr ) >>
     (Expr::FunctionExpr(ReservedFunction::Say(Box::new(expr))))
+));
+
+named!(parse_use<Span, Expr>, do_parse!(
+    comment!(tag!(USE)) >>
+    expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
+    (Expr::FunctionExpr(ReservedFunction::Use(Box::new(expr))))
 ));
 
 named!(parse_remember<Span, Expr>, do_parse!(
@@ -76,9 +77,10 @@ named!(pub parse_functions<Span, Expr>, do_parse!(
 named!(pub parse_root_functions<Span, Expr>, do_parse!(
     reserved_function: alt!(
         parse_remember          |
-        parse_say               |
         parse_import            |
-        parse_goto
+        parse_goto              |
+        parse_say               |
+        parse_use
     ) >>
     (reserved_function)
 ));

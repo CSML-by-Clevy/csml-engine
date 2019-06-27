@@ -31,10 +31,10 @@ pub enum Content {
     #[serde(rename = "array")]
     Array(Vec<Content>),
     #[serde(rename = "object")]
-    Object(HashMap<String, Content>),
-
-    #[serde(rename = "question")]
-    Question(Question),
+    Object { 
+        name: String,
+        value: HashMap<String, Content>
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

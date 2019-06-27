@@ -8,6 +8,7 @@ use crate::interpreter:: {
 
 fn cmp_lit(infix: &Infix, lit1: Result<Literal, String>, lit2: Result<Literal, String>) -> Result<Literal, String> {
     match (infix, lit1, lit2) {
+        (Infix::NotEqual, Ok(l1), Ok(l2) )          => Ok(Literal::BoolLiteral(l1 != l2)),
         (Infix::Equal, Ok(l1), Ok(l2) )             => Ok(Literal::BoolLiteral(l1 == l2)),
         (Infix::GreaterThanEqual, Ok(l1), Ok(l2))   => Ok(Literal::BoolLiteral(l1 >= l2)),
         (Infix::LessThanEqual, Ok(l1), Ok(l2))      => Ok(Literal::BoolLiteral(l1 <= l2)),
@@ -139,9 +140,13 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
 
 fn match_actions(function: &ReservedFunction, root: RootInterface, data: &mut Data) -> Result<RootInterface, String> {
     match function {
-    ReservedFunction::Say(arg)                      => {
+        ReservedFunction::Say(arg)                      => {
             let msgtype = match_functions(arg, data)?;
             Ok(add_to_message(root, msgtype))
+        },
+        ReservedFunction::Use(arg)                      => {
+            match_functions(arg, data)?;
+            Ok(root)
         },
         ReservedFunction::Goto(.., step_name)       => Ok(root.add_next_step(&step_name)),
         ReservedFunction::Remember(name, variable)  => { // if self.check_if_ident(variable)
@@ -162,6 +167,7 @@ fn match_actions(function: &ReservedFunction, root: RootInterface, data: &mut Da
                 Err(format!("Error step {} not found in flow", name))
             }
         }
+        
         // (ReservedFunction::Retry, arg)      => {
         _                                           => {Err("Error must be a valid action".to_owned())}
     }

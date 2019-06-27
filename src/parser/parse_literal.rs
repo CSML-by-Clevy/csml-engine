@@ -30,7 +30,6 @@ named!(pub parse_float<Span, Expr>, do_parse!(
     (Expr::new_literal(Literal::FloatLiteral(elem)))
 ));
 
-
 named!(parse_boolean<Span, Expr>, do_parse!(
     boolean: alt!(
             do_parse!(
@@ -57,7 +56,6 @@ named!(pub parse_literalexpr<Span, Expr>, do_parse!(
     ) >>
     (lit) //, span
 ));
-
 
 #[cfg(test)]
 mod tests {
