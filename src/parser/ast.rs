@@ -101,6 +101,20 @@ impl Expr {
         Expr::LitExpr{lit}
         // span: Some(span)
     }
+    
+    pub fn to_string(&self) -> String {
+        match self {
+            Expr::ComplexLiteral(..)    => "complex_literal".to_owned(),
+            Expr::BuilderExpr(..)       => "builder".to_owned(),
+            Expr::VecExpr(..)           => "Array".to_owned(),
+            Expr::IdentExpr(name)       => name.to_owned(),
+            Expr::LitExpr{lit}          => lit.name_to_string(),
+            Expr::FunctionExpr(..)      => "function".to_owned(),
+            Expr::Block{..}             => "block".to_owned(),
+            Expr::IfExpr{..}            => "if".to_owned(),
+            Expr::InfixExpr(..)         => "infix".to_owned()
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)] //, PartialEq, PartialOrd
@@ -114,9 +128,12 @@ pub enum Literal {
     #[serde(rename = "bool")]
     BoolLiteral(bool),
     #[serde(rename = "array")]
-    VecLiteral(Vec<Literal>),
+    ArrayLiteral(Vec<Literal>),
     #[serde(rename = "object")]
-    ObjectLiteral(HashMap<String, Literal>),
+    ObjectLiteral{
+        name: String,
+        value: HashMap<String, Literal>
+    }
     // NULL,
 }
 
@@ -228,12 +245,23 @@ impl Mul for Literal {
 impl Literal {
     pub fn to_string(&self) -> String {
         match self {
-            Literal::StringLiteral(literal)    => literal.to_owned(),
-            Literal::IntLiteral(literal)       => literal.to_string(),
-            Literal::FloatLiteral(literal)     => literal.to_string(),
-            Literal::BoolLiteral(literal)      => literal.to_string(),
-            Literal::VecLiteral(vec)           => format!("{:?}", vec),
-            Literal::ObjectLiteral(vec)        => format!("{:?}", vec)
+            Literal::StringLiteral(literal)         => literal.to_owned(),
+            Literal::IntLiteral(literal)            => literal.to_string(),
+            Literal::FloatLiteral(literal)          => literal.to_string(),
+            Literal::BoolLiteral(literal)           => literal.to_string(),
+            Literal::ArrayLiteral(vec)              => format!("{:?}", vec),
+            Literal::ObjectLiteral{name, value}     => format!("{}: {:?}", name, value)
+        }
+    }
+
+    pub fn name_to_string(&self) -> String {
+        match self {
+            Literal::StringLiteral(literal)         => format!("String"),
+            Literal::IntLiteral(literal)            => format!("Numeric"),
+            Literal::FloatLiteral(literal)          => format!("Numeric"),
+            Literal::BoolLiteral(literal)           => format!("Bool"),
+            Literal::ArrayLiteral(vec)              => format!("Array"),
+            Literal::ObjectLiteral{name, value}     => format!("Object")
         }
     }
 }

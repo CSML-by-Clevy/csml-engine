@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::parser::{ast::*, tokens::*};
 use crate::interpreter:: {
     builtins::{api_functions::*, reserved_functions::*},
@@ -79,17 +80,58 @@ fn add_to_message(root: RootInterface, action: MessageType) -> RootInterface {
     }
 }
 
+fn match_builtin(object: Literal, data: &mut Data) -> Result<MessageType, String> {
+    match object {
+        Literal::ObjectLiteral{name, value} if name == TYPING   => typing(value, name.to_owned()),
+        Literal::ObjectLiteral{name, value} if name == WAIT     => wait(value, name.to_owned()),
+        Literal::ObjectLiteral{name, value} if name == TEXT     => text(value, name.to_owned()),
+        Literal::ObjectLiteral{name, value} if name == URL      => url(value, name.to_owned()),
+        Literal::ObjectLiteral{name, value} if name == IMAGE    => img(value, name.to_owned()),
+        Literal::ObjectLiteral{name, value} if name == ONE_OF   => one_of(value, TEXT.to_owned(), data),
+        Literal::ObjectLiteral{name, value} if name == QUESTION => question(value, name.to_owned(), data),
+        Literal::ObjectLiteral{name, value}                     => api(value, data),
+        _                                                       => Err("buitin format Error"),
+    }
+}
 
-fn match_builtin(builtin: &str, args: &Expr, data: &mut Data) -> Result<MessageType, String> {
-    match builtin {
-        arg if arg == TYPING         => typing(args, arg.to_string()),
-        arg if arg == WAIT           => wait(args, arg.to_string()),
-        arg if arg == TEXT           => text(args, arg.to_string()),
-        arg if arg == URL            => url(args, arg.to_string()),
-        arg if arg == IMAGE          => img(args, arg.to_string()),
-        arg if arg == ONE_OF         => one_of(args, TEXT.to_owned(), data),
-        arg if arg == QUESTION       => question(args, arg.to_string(), data),
-        _                            => api(args, data),
+fn Expr_to_Literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
+    match expr {
+        Expr::FunctionExpr(ReservedFunction::As(name, var))        => {
+            let value = Expr_to_Literal(var, data)?;
+            data.step_vars.insert(name.to_owned(), value.clone());
+            Ok(value)
+        },
+        Expr::FunctionExpr(ReservedFunction::Normal(name, var))    => {
+            let mut obj = HashMap::new();
+            let expr: &Expr = var;
+
+            if let Expr::VecExpr(vec) = expr {
+                for elem in vec.iter() {
+                    match elem {
+                        Expr::FunctionExpr(ReservedFunction::Assign(name, var))    => {
+                            obj.insert(name.to_owned(), Expr_to_Literal(var, data)?);
+                        },
+                        _   => {
+                            let value = Expr_to_Literal(var, data)?;
+                            obj.insert(value.to_string(), Expr_to_Literal(var, data)?);
+                        },
+                    }
+                }
+            }
+            Ok(Literal::ObjectLiteral{name: name.to_owned(), value: obj})
+        },
+        Expr::ComplexLiteral(vec)                                       => Ok(get_string_from_complexstring(vec, data)),
+        Expr::VecExpr(vec)                                              => {
+            let mut array = vec![];
+            for value in vec.iter() {
+                array.push(Expr_to_Literal(value, data)?)
+            }
+            Ok(Literal::ArrayLiteral(array))
+        },
+        Expr::IdentExpr(var)                                            => get_var(var, data),
+        // Expr::BuilderExpr(expr1, expr2)                              => Ok(),
+        Expr::LitExpr{lit: literal}                                     => Ok(literal.to_owned()),
+        _                                                               => Err(format!("ERROR: Expr {:?} can't be converted to Literal", expr).to_owned())
     }
 }
 
@@ -106,7 +148,7 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
             };
             Ok(msg)
         },
-        Expr::FunctionExpr(ReservedFunction::Normal(name, variable)) => match_builtin(&name, variable, data),
+        Expr::FunctionExpr(ReservedFunction::Normal(name, variable)) =>  match_builtin(Expr_to_Literal(action, data), data),
         Expr::BuilderExpr(..)           => {
             match get_var_from_ident(action, data) {
                 Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, TEXT.to_string()))),

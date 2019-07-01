@@ -2,7 +2,6 @@ use crate::parser::{ast::*, tokens::*};
 use crate::interpreter:: {
     ast_interpreter::evaluate_condition,
     data::Data,
-    message::*,
     json_to_rust::*,
 };
 
@@ -38,21 +37,12 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
     }
 }
 
-fn content_to_literal(content: &Content) -> Result<Literal, String> {
-    match content {
-        Content::Text(string)    => Ok(Literal::StringLiteral(string.to_owned())),
-        Content::Int(int)        => Ok(Literal::IntLiteral(*int)),
-        Content::Float(float)    => Ok(Literal::FloatLiteral(*float)),
-        _                        => Err("Error: in content convertion to Literal".to_owned())
-    }
-}
-
 pub fn get_var(name: &str, data: &mut Data) -> Result<Literal, String> {
     match name {
         var if var == EVENT      => gen_literal_form_event(data.event),
         _                        => {
             match data.step_vars.get(name) {
-                Some(val)   => content_to_literal(val),
+                Some(val)   => Ok(val.to_owned()),
                 None        => search_var_memory(data.memory, name)
             }
         },

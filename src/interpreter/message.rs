@@ -1,7 +1,6 @@
 use crate::parser::ast::*;
 use serde::{Deserialize, Serialize};
 use std::ops::Add;
-use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Button {
@@ -21,23 +20,6 @@ pub struct Question {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum Content {
-    #[serde(rename = "text")]
-    Text(String),
-    #[serde(rename = "int")]
-    Int(i64),
-    #[serde(rename = "float")]
-    Float(f64),
-    #[serde(rename = "array")]
-    Array(Vec<Content>),
-    #[serde(rename = "object")]
-    Object { 
-        name: String,
-        value: HashMap<String, Content>
-    },
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MessageType {
     Msg(Message),
     Assign{name: String, value: String},
@@ -47,18 +29,18 @@ pub enum MessageType {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
     pub content_type: String,
-    pub content: Content,
+    pub content: Literal,
 }
 
 // return Result<Message>
 impl Message {
-    pub fn new(expr: &Expr, string: String) -> Self {
+    pub fn new(expr: &Literal, string: String) -> Self {
         match expr {
-            Expr::LitExpr{lit: Literal::IntLiteral(val)}     => {Message { content_type: string.to_lowercase(), content: Content::Int(*val) }},
-            Expr::LitExpr{lit: Literal::FloatLiteral(val)}   => {Message { content_type: string.to_lowercase(), content: Content::Float(*val) }},
-            Expr::LitExpr{lit: Literal::StringLiteral(val)}  => {Message { content_type: string.to_lowercase(), content: Content::Text(val.to_string()) }},
-            Expr::LitExpr{lit: Literal::BoolLiteral(val)}    => {Message { content_type: string.to_lowercase(), content: Content::Text(val.to_string()) }},
-            _                                                => {Message { content_type: "text".to_string(), content: Content::Text("Error in message creation".to_string()) } },
+            Literal::IntLiteral(val)    => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::FloatLiteral(val)  => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::StringLiteral(val) => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::BoolLiteral(val)   => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            _                           => {Message { content_type: "text".to_string(), content: Literal::StringLiteral("Error in message creation".to_string()) } },
         }
     }
 }

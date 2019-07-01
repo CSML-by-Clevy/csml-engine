@@ -39,7 +39,7 @@ pub fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], data: &mut Data) -> Res
 fn expr_to_vec(expr: &Expr) -> Result<&Vec<Expr>, String> {
     match expr {
         Expr::VecExpr(vec)  => Ok(vec),
-        _                   => Err(" expr_to_vec".to_owned())
+        err                 => Err(format!(" expr_to_vec {:?} ", err).to_owned())
     }
 }
 
