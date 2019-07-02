@@ -36,11 +36,12 @@ pub struct Message {
 impl Message {
     pub fn new(expr: &Literal, string: String) -> Self {
         match expr {
-            Literal::IntLiteral(val)    => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
-            Literal::FloatLiteral(val)  => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
-            Literal::StringLiteral(val) => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
-            Literal::BoolLiteral(val)   => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
-            _                           => {Message { content_type: "text".to_string(), content: Literal::StringLiteral("Error in message creation".to_string()) } },
+            Literal::IntLiteral(..)               => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::FloatLiteral(..)             => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::StringLiteral(..)            => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::BoolLiteral(..)              => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::ArrayLiteral(..)             => {Message { content_type: "Array".to_lowercase(), content: expr.clone() }},
+            Literal::ObjectLiteral{name, ..}      => {Message { content_type: name.to_lowercase(), content: expr.clone() }},
         }
     }
 }

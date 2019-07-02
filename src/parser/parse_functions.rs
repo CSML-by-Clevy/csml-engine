@@ -73,7 +73,7 @@ named!(pub parse_functions<Span, Expr>, do_parse!(
     (Expr::FunctionExpr(ReservedFunction::Normal(name, Box::new(expr))))
 ));
 
-//  RETRY, AS
+//  RETRY
 named!(pub parse_root_functions<Span, Expr>, do_parse!(
     reserved_function: alt!(
         parse_remember          |

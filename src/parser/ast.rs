@@ -108,7 +108,7 @@ impl Expr {
             Expr::BuilderExpr(..)       => "builder".to_owned(),
             Expr::VecExpr(..)           => "Array".to_owned(),
             Expr::IdentExpr(name)       => name.to_owned(),
-            Expr::LitExpr{lit}          => lit.name_to_string(),
+            Expr::LitExpr{lit}          => lit.type_to_string(),
             Expr::FunctionExpr(..)      => "function".to_owned(),
             Expr::Block{..}             => "block".to_owned(),
             Expr::IfExpr{..}            => "if".to_owned(),
@@ -254,14 +254,14 @@ impl Literal {
         }
     }
 
-    pub fn name_to_string(&self) -> String {
+    pub fn type_to_string(&self) -> String {
         match self {
-            Literal::StringLiteral(literal)         => format!("String"),
-            Literal::IntLiteral(literal)            => format!("Numeric"),
-            Literal::FloatLiteral(literal)          => format!("Numeric"),
-            Literal::BoolLiteral(literal)           => format!("Bool"),
-            Literal::ArrayLiteral(vec)              => format!("Array"),
-            Literal::ObjectLiteral{name, value}     => format!("Object")
+            Literal::StringLiteral(..)      => format!("String"),
+            Literal::IntLiteral(..)         => format!("Numeric"),
+            Literal::FloatLiteral(..)       => format!("Numeric"),
+            Literal::BoolLiteral(..)        => format!("Bool"),
+            Literal::ArrayLiteral(..)       => format!("Array"),
+            Literal::ObjectLiteral{..}      => format!("Object")
         }
     }
 }

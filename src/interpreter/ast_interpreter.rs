@@ -82,22 +82,22 @@ fn add_to_message(root: RootInterface, action: MessageType) -> RootInterface {
 
 fn match_builtin(object: Literal, data: &mut Data) -> Result<MessageType, String> {
     match object {
-        Literal::ObjectLiteral{name, value} if name == TYPING   => typing(value, name.to_owned()),
-        Literal::ObjectLiteral{name, value} if name == WAIT     => wait(value, name.to_owned()),
-        Literal::ObjectLiteral{name, value} if name == TEXT     => text(value, name.to_owned()),
-        Literal::ObjectLiteral{name, value} if name == URL      => url(value, name.to_owned()),
-        Literal::ObjectLiteral{name, value} if name == IMAGE    => img(value, name.to_owned()),
-        Literal::ObjectLiteral{name, value} if name == ONE_OF   => one_of(value, TEXT.to_owned(), data),
-        Literal::ObjectLiteral{name, value} if name == QUESTION => question(value, name.to_owned(), data),
-        Literal::ObjectLiteral{name, value}                     => api(value, data),
-        _                                                       => Err("buitin format Error"),
+        Literal::ObjectLiteral{ref name, ref value} if name == TYPING   => typing(value, name.to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == WAIT     => wait(value, name.to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == TEXT     => text(value, name.to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == URL      => url(value, name.to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == IMAGE    => img(value, name.to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == ONE_OF   => one_of(value, TEXT.to_owned(), data),
+        Literal::ObjectLiteral{ref name, ref value} if name == QUESTION => question(value, name.to_owned(), data),
+        Literal::ObjectLiteral{name: _, ref value}                     => api(value, data),
+    _                                                                   => Err("buitin format Error".to_owned()),
     }
 }
 
-fn Expr_to_Literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
+fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
     match expr {
         Expr::FunctionExpr(ReservedFunction::As(name, var))        => {
-            let value = Expr_to_Literal(var, data)?;
+            let value = expr_to_literal(var, data)?;
             data.step_vars.insert(name.to_owned(), value.clone());
             Ok(value)
         },
@@ -109,11 +109,11 @@ fn Expr_to_Literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
                 for elem in vec.iter() {
                     match elem {
                         Expr::FunctionExpr(ReservedFunction::Assign(name, var))    => {
-                            obj.insert(name.to_owned(), Expr_to_Literal(var, data)?);
+                            obj.insert(name.to_owned(), expr_to_literal(var, data)?);
                         },
                         _   => {
-                            let value = Expr_to_Literal(var, data)?;
-                            obj.insert(value.to_string(), Expr_to_Literal(var, data)?);
+                            let value = expr_to_literal(elem, data)?;
+                            obj.insert(value.type_to_string(), expr_to_literal(var, data)?);
                         },
                     }
                 }
@@ -124,13 +124,13 @@ fn Expr_to_Literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
         Expr::VecExpr(vec)                                              => {
             let mut array = vec![];
             for value in vec.iter() {
-                array.push(Expr_to_Literal(value, data)?)
+                array.push(expr_to_literal(value, data)?)
             }
             Ok(Literal::ArrayLiteral(array))
         },
         Expr::IdentExpr(var)                                            => get_var(var, data),
         // Expr::BuilderExpr(expr1, expr2)                              => Ok(),
-        Expr::LitExpr{lit: literal}                                     => Ok(literal.to_owned()),
+        Expr::LitExpr{lit: literal}                                     => Ok(literal.clone()),
         _                                                               => Err(format!("ERROR: Expr {:?} can't be converted to Literal", expr).to_owned())
     }
 }
@@ -142,41 +142,42 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
             let msg = match_functions(expr, data)?;
 
             match msg {
-                MessageType::Msg(Message{ref content, ..})  => {data.step_vars.insert(name.to_owned(), content.clone());},
-                MessageType::Assign{..}                 => {},
-                MessageType::Empty                      => {}
+                MessageType::Msg(Message{ref content, ..})        => {data.step_vars.insert(name.to_owned(), content.clone());},
+                MessageType::Assign{..}                           => {},
+                MessageType::Empty                                => {}
             };
             Ok(msg)
         },
-        Expr::FunctionExpr(ReservedFunction::Normal(name, variable)) =>  match_builtin(Expr_to_Literal(action, data), data),
+        Expr::FunctionExpr(ReservedFunction::Normal(..)) => match_builtin(expr_to_literal(action, data)?, data),
         Expr::BuilderExpr(..)           => {
             match get_var_from_ident(action, data) {
-                Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, TEXT.to_string()))),
+                Ok(val) => Ok(MessageType::Msg(Message::new(&val, TEXT.to_string()))),
                 Err(e)  => Err(e)
             }
         },
         Expr::ComplexLiteral(vec)       => {
             Ok(MessageType::Msg(
                 Message::new(
-                    &Expr::LitExpr{lit: get_string_from_complexstring(vec, data)},
+                    &get_string_from_complexstring(vec, data),
                     TEXT.to_string()
                 )
             ))
         },
-        Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(action, TEXT.to_string()))),
         Expr::InfixExpr(infix, exp1, exp2) => {
             match evaluate_condition(infix, exp1, exp2, data) {
-                Ok(val) => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, INT.to_string()))),
+                Ok(val) => Ok(MessageType::Msg(Message::new(&val, INT.to_string()))),
                 Err(e)  => Err(e)
             }
         },
         Expr::IdentExpr(ident)          => {
             match get_var(ident, data) {
-                Ok(val)     => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: val}, INT.to_string()))),
-                Err(_e)     => Ok(MessageType::Msg(Message::new(&Expr::LitExpr{lit: Literal::StringLiteral("NULL".to_owned())}, TEXT.to_string()))),//Err(e)
+                Ok(val)     => Ok(MessageType::Msg(Message::new(&val, INT.to_string()))),
+                Err(_e)     => Ok(MessageType::Msg(Message::new(&Literal::StringLiteral("NULL".to_owned()), TEXT.to_string()))),//Err(e)
             }
         },
-        _                               => Err("Error must be a valid action".to_owned()),
+        Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?, TEXT.to_string()))),
+        Expr::VecExpr(..)                 => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?, "Array".to_string()))),
+        err                                => Err(format!("Error must be a valid function {:?}", err)),
     }
 }
 

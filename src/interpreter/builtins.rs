@@ -1,9 +1,9 @@
 pub mod api_functions;
 pub mod reserved_functions;
 
+use std::collections::HashMap;
 use serde_json::{Value, Map};
-
-use crate::parser::{ast::{Expr, ReservedFunction}};
+use crate::parser::{ast::*};
 use crate::interpreter:: {
     variable_handler::*,
     data::Data,
@@ -21,18 +21,17 @@ pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr,
     Err(" search_for_key_in_vec".to_owned())
 }
 
-pub fn create_submap<'a>(keys: &[&str], vec: &'a [Expr], data: &mut Data) -> Result<Map<String, Value>, String> {
+pub fn create_submap(keys: &[&str], args: &HashMap<String, Literal>, data: &mut Data) -> Result<Map<String, Value>, String> {
     let mut map = Map::new();
 
-    for elem in vec.iter() {
-        if let Expr::FunctionExpr(ReservedFunction::Assign(name, var)) = elem {
-            if keys.iter().find(|&&x| x == name).is_none() {
-                let value = get_var_from_ident(var, data)?.to_string();
-                map.insert(name.clone(), Value::String(value));
+    for elem in args.keys() {
+        if keys.iter().find(|&&x| x == elem).is_none() {
+            match args.get(&*elem) {
+                Some(value) => {map.insert(elem.clone(), Value::String(value.to_string()));},
+                None        => {}
             }
         }
     }
-
     Ok(map)
 }
 
