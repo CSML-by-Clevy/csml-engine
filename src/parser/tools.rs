@@ -20,7 +20,6 @@ named!(pub parse_l_parentheses<Span, Span>, return_error!(
     tag!(L_PAREN)
 ));
 
-//duplicate rm
 named!(pub parse_r_parentheses<Span, Span>, return_error!(
     nom::ErrorKind::Custom(ParserErrorType::RightParenthesesError as u32),
     tag!(R_PAREN)
@@ -51,4 +50,9 @@ named!(pub parse_l_brace<Span, Span>, return_error!(
 named!(pub parse_r_brace<Span, Span>, return_error!(
     nom::ErrorKind::Custom(ParserErrorType::RightBraceError as u32),
     tag!(R_BRACE)
+));
+
+named!(pub parse_import_step<Span, Span>, return_error!(
+    nom::ErrorKind::Custom(ParserErrorType::ImportStepError as u32),
+    tag!(STEP)
 ));

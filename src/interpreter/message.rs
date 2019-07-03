@@ -20,18 +20,6 @@ pub struct Question {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum Content {
-    #[serde(rename = "text")]
-    Text(String),
-    #[serde(rename = "int")]
-    Int(i64),
-    #[serde(rename = "float")]
-    Float(f64),
-    #[serde(rename = "question")]
-    Questions(Question),
-}
-
-//TMP I dont like this TODO: change it
 pub enum MessageType {
     Msg(Message),
     Assign{name: String, value: String},
@@ -41,23 +29,19 @@ pub enum MessageType {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Message {
     pub content_type: String,
-    pub content: Content,
+    pub content: Literal,
 }
 
 // return Result<Message>
 impl Message {
-    pub fn new(expr: &Expr, string: String) -> Self {
-        let mut msg = Message {
-            content_type: "text".to_string(),
-            content: Content::Text("Error in message creation".to_string())
-        };
-
+    pub fn new(expr: &Literal, string: String) -> Self {
         match expr {
-            Expr::LitExpr{lit: Literal::IntLiteral(val)}     => {msg.content_type = string.to_lowercase() ; msg.content = Content::Int(*val); msg},
-            Expr::LitExpr{lit: Literal::FloatLiteral(val)}   => {msg.content_type = string.to_lowercase() ; msg.content = Content::Float(*val); msg},
-            Expr::LitExpr{lit: Literal::StringLiteral(val)}  => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
-            Expr::LitExpr{lit: Literal::BoolLiteral(val)}    => {msg.content_type = string.to_lowercase() ; msg.content = Content::Text(val.to_string()); msg},
-            _                                                => {msg},
+            Literal::IntLiteral(..)               => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::FloatLiteral(..)             => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::StringLiteral(..)            => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::BoolLiteral(..)              => {Message { content_type: string.to_lowercase(), content: expr.clone() }},
+            Literal::ArrayLiteral(..)             => {Message { content_type: "Array".to_lowercase(), content: expr.clone() }},
+            Literal::ObjectLiteral{name, ..}      => {Message { content_type: name.to_lowercase(), content: expr.clone() }},
         }
     }
 }
@@ -100,19 +84,25 @@ impl Add for RootInterface {
 }
 
 impl RootInterface {
-    pub fn add_message(&mut self, message: Message) {
+    pub fn add_message(mut self, message: Message) -> Self {
         self.messages.push(message);
+
+        self
     }
 
-    pub fn add_to_memory(&mut self, key: String, value: String) {
+    pub fn add_to_memory(mut self, key: String, value: String) -> Self {
         if let Some(ref mut vec) = self.memories {
             vec.push(Memories{key, value})
         } else {
             self.memories = Some(vec![Memories{key, value}]);
         }
+
+        self
     }
 
-    pub fn add_next_step(&mut self, next_step: &str) {
+    pub fn add_next_step(mut self, next_step: &str) -> Self {
         self.next_step = Some(next_step.to_string());
+
+        self
     }
 }

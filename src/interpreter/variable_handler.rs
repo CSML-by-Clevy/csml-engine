@@ -1,6 +1,7 @@
 use crate::parser::{ast::*, tokens::*};
 use crate::interpreter:: {
     ast_interpreter::evaluate_condition,
+    data::Data,
     json_to_rust::*,
 };
 
@@ -36,18 +37,23 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
     }
 }
 
-pub fn get_var(memory: &Memory, event: &Option<Event>, name: &str) -> Result<Literal, String> {
+pub fn get_var(name: &str, data: &mut Data) -> Result<Literal, String> {
     match name {
-        var if var == EVENT      => gen_literal_form_event(event),
-        _                        => search_var_memory(memory, name),
+        var if var == EVENT      => gen_literal_form_event(data.event),
+        _                        => {
+            match data.step_vars.get(name) {
+                Some(val)   => Ok(val.to_owned()),
+                None        => search_var_memory(data.memory, name)
+            }
+        },
     }
 }
 
-pub fn get_string_from_complexstring(memory: &Memory, event: &Option<Event>, exprs: &[Expr]) -> Literal {
+pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> Literal {
     let mut new_string = String::new();
 
     for elem in exprs.iter() {
-        match get_var_from_ident(memory, event, elem) {
+        match get_var_from_ident(elem, data) {
             Ok(var) => new_string.push_str(&var.to_string()),
             Err(_)  => new_string.push_str(" NULL ")
         }
@@ -56,32 +62,32 @@ pub fn get_string_from_complexstring(memory: &Memory, event: &Option<Event>, exp
     Literal::StringLiteral(new_string)
 }
 
-pub fn get_var_from_ident(memory: &Memory, event: &Option<Event>, expr: &Expr) -> Result<Literal, String> {
+pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
     match expr {
         Expr::LitExpr{lit}                  => Ok(lit.clone()),
-        Expr::IdentExpr(ident)              => get_var(memory, event, ident),
-        Expr::BuilderExpr(..)               => gen_literal_form_builder(memory, event, expr),
-        Expr::ComplexLiteral(..)            => gen_literal_form_builder(memory, event, expr),
-        Expr::InfixExpr(infix, exp1, exp2)  => evaluate_condition(infix, exp1, exp2, memory, event),
+        Expr::IdentExpr(ident)              => get_var(ident, data),
+        Expr::BuilderExpr(..)               => gen_literal_form_builder(expr, data),
+        Expr::ComplexLiteral(..)            => gen_literal_form_builder(expr, data),
+        Expr::InfixExpr(infix, exp1, exp2)  => evaluate_condition(infix, exp1, exp2, data),
         _                                   => Err("unown variable in Ident err n#1".to_owned())
     }
 }
 
-pub fn gen_literal_form_exp(memory: &Memory, event: &Option<Event>, expr: &Expr) -> Result<Literal, String> {
+pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
     match expr {
         Expr::LitExpr{lit}      => Ok(lit.clone()),
-        Expr::IdentExpr(ident)  => get_var(memory, event, ident),
+        Expr::IdentExpr(ident)  => get_var(ident, data),
         _                       => Err("Expression must be a literal or an identifier".to_owned())
     }
 }
 
-pub fn gen_literal_form_builder(memory: &Memory, event: &Option<Event>, expr: &Expr) -> Result<Literal, String> {
+pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
     match expr {
-        Expr::BuilderExpr(elem, exp) if search_str(PAST, elem)      => get_memory_action(memory, elem, exp),
-        Expr::BuilderExpr(elem, exp) if search_str(MEMORY, elem)    => get_memory_action(memory, elem, exp),
-        Expr::BuilderExpr(elem, exp) if search_str(METADATA, elem)  => get_memory_action(memory, elem, exp),
-        Expr::ComplexLiteral(vec)                                   => Ok(get_string_from_complexstring(memory, event, vec)),
-        Expr::IdentExpr(ident)                                      => get_var(memory, event,ident),
+        Expr::BuilderExpr(elem, exp) if search_str(PAST, elem)      => get_memory_action(data.memory, elem, exp),
+        Expr::BuilderExpr(elem, exp) if search_str(MEMORY, elem)    => get_memory_action(data.memory, elem, exp),
+        Expr::BuilderExpr(elem, exp) if search_str(METADATA, elem)  => get_memory_action(data.memory, elem, exp),
+        Expr::ComplexLiteral(vec)                                   => Ok(get_string_from_complexstring(vec, data)),
+        Expr::IdentExpr(ident)                                      => get_var(ident, data),
         _                                                           => Err("Error in Exprecion builder".to_owned())
     }
 }
@@ -127,12 +133,12 @@ pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<
 //NOTE:Only work with Strings for now
 pub fn get_memory_action(memory: &Memory, name: &Expr, expr: &Expr) -> Result<Literal, String> {
     match expr {
-        Expr::FunctionExpr(ReservedFunction::Normal(ident), exp) if ident == GET_VALUE     => {
+        Expr::FunctionExpr(ReservedFunction::Normal(ident, exp)) if ident == GET_VALUE     => {
             memorytype_to_literal(memory_get(memory, name, exp))
         },
-        Expr::FunctionExpr(ReservedFunction::Normal(ident), exp) if ident == FIRST         => {
+        Expr::FunctionExpr(ReservedFunction::Normal(ident, exp)) if ident == FIRST         => {
             memorytype_to_literal(memory_first(memory, name, exp))
         },
-        _                                                               => Err("Error in memory action".to_owned()),
+        _                                                                                  => Err("Error in memory action".to_owned()),
     }
 }

@@ -14,7 +14,12 @@ named!(and_operator<Span, Infix>, do_parse!(
     (Infix::And)
 ));
 
-// NotEqual,
+named!(notequal_operator<Span, Infix>, do_parse!(
+    // position: position!() >>
+    tag!(NOT_EQUAL) >>
+    (Infix::NotEqual)
+));
+
 named!(equal_operator<Span, Infix>, do_parse!(
     // position: position!() >>
     tag!(EQUAL) >>
@@ -46,6 +51,7 @@ named!(lessthan_operator<Span, Infix>, do_parse!(
 ));
 
 named!(parse_infix_operators<Span, Infix>, alt!(
+    notequal_operator           |
     equal_operator              |
     greaterthanequal_operator   |
     lessthanequal_operator      |
