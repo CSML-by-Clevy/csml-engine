@@ -1,70 +1,72 @@
 use rand::Rng;
 use std::collections::HashMap;
+use std::hash::BuildHasher;
 
-use crate::parser::{ast::{Expr, Literal}, tokens::*};
-use crate::interpreter:: {
-    message::*,
-    builtins::*,
-    data::Data
-};
+use crate::parser::{ast::Literal, tokens::*};
+use crate::interpreter::message::*;
 
 pub fn remember(name: String, value: String) -> MessageType {
     MessageType::Assign{name, value}
 }
 
-pub fn typing(args: &HashMap<String, Literal>, name: String) -> Result<MessageType, String> {
+pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<MessageType, String> {
     if args.len() == 1 {
         match args.get("Numeric") {
-            Some(value) => return Ok(MessageType::Msg(Message::new(value, name))),
-            None        => return Err("Builtin Typing bad argument type in typing".to_owned())
+            Some(value) =>  Ok(MessageType::Msg(Message::new(value, name))),
+            None        =>  Err("Builtin Typing bad argument type in typing".to_owned())
         }
+    } else {
+        Err("Builtin Typing bad number of argument".to_owned())
     }
-    return Err("Builtin Typing bad number of argument".to_owned())
 }
 
-pub fn wait(args: &HashMap<String, Literal>, name: String) -> Result<MessageType, String> {
+pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<MessageType, String> {
     if args.len() == 1 {
         match args.get("Numeric") {
-            Some(value) => return Ok(MessageType::Msg(Message::new(value, name))),
-            None        => return Err("Builtin Typing bad argument type in wait".to_owned())
+            Some(value) => Ok(MessageType::Msg(Message::new(value, name))),
+            None        => Err("Builtin Typing bad argument type in wait".to_owned())
         }
+    } else {
+        Err("Builtin Typing bad number of argument".to_owned())
     }
-    return Err("Builtin Typing bad number of argument".to_owned())
 }
 
-pub fn text(args: &HashMap<String, Literal>, name: String) -> Result<MessageType, String> {
+pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<MessageType, String> {
     if args.len() == 1 {
         match args.get("String") {
-            Some(value) => return Ok(MessageType::Msg(Message::new(value, name))),
-            None        => return Err("Builtin Typing bad argument type in text".to_owned())
+            Some(value) => Ok(MessageType::Msg(Message::new(value, name))),
+            None        => Err("Builtin Typing bad argument type in text".to_owned())
         }
+    } else {
+        Err("Builtin Typing bad number of argument".to_owned())
     }
-    return Err("Builtin Typing bad number of argument".to_owned())
 }
 
-pub fn img(args: &HashMap<String, Literal>, name: String) -> Result<MessageType, String> {
+pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<MessageType, String> {
     if args.len() == 1 {
         match args.get("String") {
-            Some(value) => return Ok(MessageType::Msg(Message::new(value, name))),
-            None        => return Err("Builtin Typing bad argument type in img".to_owned())
+            Some(value) => Ok(MessageType::Msg(Message::new(value, name))),
+            None        => Err("Builtin Typing bad argument type in img".to_owned())
         }
+    } else {
+        Err("Builtin Typing bad number of argument".to_owned())
     }
-    return Err("Builtin Typing bad number of argument".to_owned())
 }
 
-pub fn url(args: &HashMap<String, Literal>, name: String) -> Result<MessageType, String>{
+pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<MessageType, String>{
     if args.len() == 1 {
         match args.get("String") {
-            Some(value) => return Ok(MessageType::Msg(Message::new(value, name))),
-            None        => return Err("Builtin Typing bad argument type in url".to_owned())
+            Some(value) => Ok(MessageType::Msg(Message::new(value, name))),
+            None        => Err("Builtin Typing bad argument type in url".to_owned())
         }
+    } else {
+        Err("Builtin Typing bad number of argument".to_owned())
     }
-    return Err("Builtin Typing bad number of argument".to_owned())
 }
 
-pub fn one_of(args: &HashMap<String, Literal>, elem_type: String, data: &mut Data) -> Result<MessageType, String> {
+pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>, elem_type: String) -> Result<MessageType, String> {
     let lit = &args.values().nth(rand::thread_rng().gen_range(0, args.len())).expect("error in get one_of");
-    return Ok(MessageType::Msg(Message::new(lit, elem_type)));
+    Ok(MessageType::Msg(Message::new(lit, elem_type)))
 }
 
 fn parse_quickbutton(val: Literal, buttton_type: Literal, accepts: &mut Vec<Literal>) -> Literal {
@@ -82,7 +84,7 @@ fn parse_quickbutton(val: Literal, buttton_type: Literal, accepts: &mut Vec<Lite
     Literal::ObjectLiteral{ name: "button".to_owned(), value: button_value}
 }
 
-pub fn question(args: &HashMap<String, Literal>, name: String, data: &mut Data) -> Result<MessageType, String> {
+pub fn question<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<MessageType, String> {
     let mut question_value = HashMap::new();
 
     let expr_title = args.get("title").expect("error in question");

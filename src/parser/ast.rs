@@ -256,12 +256,12 @@ impl Literal {
 
     pub fn type_to_string(&self) -> String {
         match self {
-            Literal::StringLiteral(..)      => format!("String"),
-            Literal::IntLiteral(..)         => format!("Numeric"),
-            Literal::FloatLiteral(..)       => format!("Numeric"),
-            Literal::BoolLiteral(..)        => format!("Bool"),
-            Literal::ArrayLiteral(..)       => format!("Array"),
-            Literal::ObjectLiteral{..}      => format!("Object")
+            Literal::StringLiteral(..)      => "String".to_owned(),
+            Literal::IntLiteral(..)         => "Numeric".to_owned(),
+            Literal::FloatLiteral(..)       => "Numeric".to_owned(),
+            Literal::BoolLiteral(..)        => "Bool".to_owned(),
+            Literal::ArrayLiteral(..)       => "Array".to_owned(),
+            Literal::ObjectLiteral{..}      => "Object".to_owned()
         }
     }
 }

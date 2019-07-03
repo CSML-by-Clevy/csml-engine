@@ -80,16 +80,16 @@ fn add_to_message(root: RootInterface, action: MessageType) -> RootInterface {
     }
 }
 
-fn match_builtin(object: Literal, data: &mut Data) -> Result<MessageType, String> {
+fn match_builtin(object: Literal) -> Result<MessageType, String> {
     match object {
         Literal::ObjectLiteral{ref name, ref value} if name == TYPING   => typing(value, name.to_owned()),
         Literal::ObjectLiteral{ref name, ref value} if name == WAIT     => wait(value, name.to_owned()),
         Literal::ObjectLiteral{ref name, ref value} if name == TEXT     => text(value, name.to_owned()),
         Literal::ObjectLiteral{ref name, ref value} if name == URL      => url(value, name.to_owned()),
         Literal::ObjectLiteral{ref name, ref value} if name == IMAGE    => img(value, name.to_owned()),
-        Literal::ObjectLiteral{ref name, ref value} if name == ONE_OF   => one_of(value, TEXT.to_owned(), data),
-        Literal::ObjectLiteral{ref name, ref value} if name == QUESTION => question(value, name.to_owned(), data),
-        Literal::ObjectLiteral{name: _, ref value}                     => api(value, data),
+        Literal::ObjectLiteral{ref name, ref value} if name == ONE_OF   => one_of(value, TEXT.to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == QUESTION => question(value, name.to_owned()),
+        Literal::ObjectLiteral{ref value, .. }                          => api(value),
     _                                                                   => Err("buitin format Error".to_owned()),
     }
 }
@@ -148,7 +148,7 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
             };
             Ok(msg)
         },
-        Expr::FunctionExpr(ReservedFunction::Normal(..)) => match_builtin(expr_to_literal(action, data)?, data),
+        Expr::FunctionExpr(ReservedFunction::Normal(..)) => match_builtin(expr_to_literal(action, data)?),
         Expr::BuilderExpr(..)           => {
             match get_var_from_ident(action, data) {
                 Ok(val) => Ok(MessageType::Msg(Message::new(&val, TEXT.to_string()))),
