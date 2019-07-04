@@ -5,9 +5,9 @@ use multimap::MultiMap;
 // Node module
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JsContext {
-    pub past: Option< Vec<serde_json::Value> >,
-    pub current: Option< Vec<serde_json::Value> >,
-    pub metadata: Option< Vec<serde_json::Value> >,
+    pub past: Option<Vec<serde_json::Value>>,
+    pub current: Option<Vec<serde_json::Value>>,
+    pub metadata: Option<Vec<serde_json::Value>>,
 }
 
 // -----------------------------------------------
@@ -18,7 +18,7 @@ pub struct MemoryType {
     pub key: String,
     pub step_name: Option<String>,
     pub r#type: Option<String>,
-    pub value: String
+    pub value: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -30,16 +30,16 @@ pub struct Memory {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PayLoadContent {
-    pub text: String
+    pub text: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PayLoad {
     pub content_type: String,
-    pub content: PayLoadContent
+    pub content: PayLoadContent,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
-    pub payload: PayLoad
+    pub payload: PayLoad,
 }

@@ -1,5 +1,5 @@
 use crate::comment;
-use crate::parser::{parse_basic_expr, tools::*, ast::*, tokens::*};
+use crate::parser::{ast::*, parse_basic_expr, tokens::*, tools::*};
 use nom::*;
 
 named!(or_operator<Span, Infix>, do_parse!(
@@ -178,12 +178,11 @@ named!(parse_term<Span, Expr>, do_parse!(
     (and_expr)
 ));
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nom::types::*;
     use crate::comment;
+    use nom::types::*;
 
     named!(pub test_expressions<Span, Expr>, exact!(comment!(operator_precedence)));
 
@@ -191,8 +190,8 @@ mod tests {
     fn ok_normal_and() {
         let string = Span::new(CompleteByteSlice("3 && event".as_bytes()));
         match test_expressions(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
@@ -200,8 +199,8 @@ mod tests {
     fn ok_normal_or() {
         let string = Span::new(CompleteByteSlice("3 || event".as_bytes()));
         match test_expressions(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
@@ -209,8 +208,8 @@ mod tests {
     fn ok_normal_comparator() {
         let string = Span::new(CompleteByteSlice("3 == event".as_bytes()));
         match test_expressions(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
@@ -218,17 +217,19 @@ mod tests {
     fn ok_normal_arithmetic() {
         let string = Span::new(CompleteByteSlice("3 + (event - 5) * 8 / 3".as_bytes()));
         match test_expressions(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
     #[test]
     fn ok_complex_expressio() {
-        let string = Span::new(CompleteByteSlice("test && (event || hola) && 4 + 3 - 2 ".as_bytes()));
+        let string = Span::new(CompleteByteSlice(
+            "test && (event || hola) && 4 + 3 - 2 ".as_bytes(),
+        ));
         match test_expressions(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 

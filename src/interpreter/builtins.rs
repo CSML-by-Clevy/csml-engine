@@ -1,14 +1,11 @@
 pub mod api_functions;
 pub mod reserved_functions;
 
+use crate::interpreter::{data::Data, variable_handler::*};
+use crate::parser::ast::*;
+use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
-use serde_json::{Value, Map};
-use crate::parser::{ast::*};
-use crate::interpreter:: {
-    variable_handler::*,
-    data::Data,
-};
 
 pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr, String> {
     for elem in vec.iter() {
@@ -21,7 +18,10 @@ pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr,
 
     Err(" search_for_key_in_vec".to_owned())
 }
-pub fn create_submap<S: BuildHasher>(keys: &[&str], args: &HashMap<String, Literal, S>) -> Result<Map<String, Value>, String> {
+pub fn create_submap<S: BuildHasher>(
+    keys: &[&str],
+    args: &HashMap<String, Literal, S>,
+) -> Result<Map<String, Value>, String> {
     let mut map = Map::new();
 
     for elem in args.keys() {
@@ -34,11 +34,16 @@ pub fn create_submap<S: BuildHasher>(keys: &[&str], args: &HashMap<String, Liter
     Ok(map)
 }
 
-pub fn value_or_default(key: &str, vec: &[Expr], default: Option<String>, data: &mut Data) -> Result<String, String> {
+pub fn value_or_default(
+    key: &str,
+    vec: &[Expr],
+    default: Option<String>,
+    data: &mut Data,
+) -> Result<String, String> {
     match (search_for_key_in_vec(key, vec), default) {
-        (Ok(arg), ..)           => Ok(get_var_from_ident(arg, data)?.to_string()),
+        (Ok(arg), ..) => Ok(get_var_from_ident(arg, data)?.to_string()),
         (Err(..), Some(string)) => Ok(string),
-        (Err(..), None)         => Err(format!("Error: no key {} found", key))
+        (Err(..), None) => Err(format!("Error: no key {} found", key)),
     }
 }
 

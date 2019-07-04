@@ -2,29 +2,29 @@ pub mod ast;
 pub mod parse_ident;
 pub mod parse_string;
 
-pub mod tools;
-pub mod tokens;
-pub mod parse_comments;
-pub mod parse_import;
-pub mod parse_functions;
 pub mod expressions_evaluation;
-pub mod parse_literal;
+pub mod parse_comments;
+pub mod parse_functions;
 pub mod parse_if;
+pub mod parse_import;
+pub mod parse_literal;
+pub mod tokens;
+pub mod tools;
 
 use crate::comment;
 
-use tokens::*;
 use ast::*;
-use tools::*;
 use expressions_evaluation::operator_precedence;
-use parse_literal::parse_literalexpr;
+use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
 use parse_ident::parse_ident;
-use parse_string::parse_string;
-use parse_functions::{parse_root_functions, parse_functions, parse_assignation};
 use parse_if::parse_if;
+use parse_literal::parse_literalexpr;
+use parse_string::parse_string;
+use tokens::*;
+use tools::*;
 
-use nom::{*, Err, ErrorKind as NomError};
 use nom::types::*;
+use nom::{Err, ErrorKind as NomError, *};
 // use nom::{Err, ErrorKind as NomError};
 // use nom_locate::position;
 
@@ -95,7 +95,6 @@ named!(parse_expr_list<Span, Expr>, do_parse!(
     (vec)
 ));
 
-
 named!(parse_expr_array<Span, Expr>, do_parse!(
     vec: delimited!(
         comment!(tag!(L_BRACKET)),
@@ -135,21 +134,41 @@ named!(pub parse_as_variable<Span, Expr>, do_parse!(
 
 // ################################### Ask_Response
 
-named!(parse_ask<Span, Expr>, do_parse!(
+named!(parse_ask<Span, (Expr, Option<String> )>, do_parse!(
     comment!(tag!(ASK)) >>
+    opt: opt!(parse_ident) >>
     block: parse_block >>
-    (Expr::Block{block_type: BlockType::Ask, arg: block})
+    ((Expr::Block{block_type: BlockType::Ask, arg: block}, opt))
 ));
 
 named!(parse_response<Span, Expr>, do_parse!(
     comment!(tag!(RESPONSE)) >>
-    block: parse_block >>
+    block: parse_strick_block >>
     (Expr::Block{block_type: BlockType::Response, arg: block})
 ));
 
-named!(parse_ask_response<Span, Expr>, do_parse!(
-    tuple: permutation!(parse_ask, parse_response) >>
-    (Expr::Block{block_type: BlockType::AskResponse, arg: vec![tuple.0, tuple.1]})
+named!(normal_ask_response<Span, Expr>, do_parse!(
+    ask: parse_ask  >>
+    response: parse_response >>
+    (Expr::Block{block_type: BlockType::AskResponse(ask.1), arg: vec![ask.0, response]})
+));
+
+named!(short_ask_response<Span, Expr>, do_parse!(
+    comment!(tag!(ASK)) >>
+    ident: opt!(parse_ident) >>
+    ask: parse_root_functions >>
+    response: many0!(parse_root_functions) >>
+    (Expr::Block{
+        block_type: BlockType::AskResponse(ident),
+        arg: vec![
+            Expr::Block{block_type: BlockType::Ask, arg: vec![ask]},
+            Expr::Block{block_type: BlockType::Response, arg: response},
+        ]
+    })
+));
+
+named!(parse_ask_response<Span, Expr>, alt!(
+    normal_ask_response | short_ask_response
 ));
 
 // ################################### accept
@@ -157,7 +176,10 @@ named!(parse_ask_response<Span, Expr>, do_parse!(
 fn parse_accept(input: Span) -> IResult<Span, bool> {
     match parse_ident(input) {
         Ok((span, ref ident)) if ident == ACCEPT => Ok((span, true)),
-        _                                        => Err(Err::Failure(Context::Code(input, NomError::Custom(ParserErrorType::AcceptError as u32))))
+        _ => Err(Err::Failure(Context::Code(
+            input,
+            NomError::Custom(ParserErrorType::AcceptError as u32),
+        ))),
     }
 }
 
@@ -191,9 +213,18 @@ named!(parse_step<Span, Instruction>, do_parse!(
 
 // ############################## block
 
-named!(pub parse_block<Span, Vec<Expr>>, do_parse!(
+named!(pub parse_strick_block<Span, Vec<Expr>>, do_parse!(
     vec: delimited!(
         comment!(parse_l_brace),
+        parse_actions,
+        comment!(parse_r_brace)
+    ) >>
+    (vec)
+));
+
+named!(pub parse_block<Span, Vec<Expr>>, do_parse!(
+    vec: delimited!(
+        comment!(tag!(L_BRACE)),
         parse_actions,
         comment!(parse_r_brace)
     ) >>
@@ -220,28 +251,27 @@ named!(start_parsing<Span, Vec<Instruction> >, exact!(
 // TODO: check for steps with the same name and return ERROR
 fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Flow {
     Flow {
-        flow_instructions:
-            instructions
-                .into_iter()
-                .map(|elem| (elem.instruction_type, elem.actions))
-                .collect::<HashMap<InstructionType, Expr> >()
+        flow_instructions: instructions
+            .into_iter()
+            .map(|elem| (elem.instruction_type, elem.actions))
+            .collect::<HashMap<InstructionType, Expr>>(),
     }
 }
 
 #[repr(u32)]
 pub enum ParserErrorType {
-    AssignError             = 1,
-    GotoStepError           = 10,
-    ImportError             = 11,
-    ImportStepError         = 12,
-    AcceptError             = 100,
-    LeftBraceError          = 110,
-    RightBraceError         = 111,
-    LeftParenthesesError    = 112,
-    RightParenthesesError   = 113,
-    RightBracketError       = 114,
-    DoubleQuoteError        = 120,
-    DoubleBraceError        = 130
+    AssignError = 1,
+    GotoStepError = 10,
+    ImportError = 11,
+    ImportStepError = 12,
+    AcceptError = 100,
+    LeftBraceError = 110,
+    RightBraceError = 111,
+    LeftParenthesesError = 112,
+    RightParenthesesError = 113,
+    RightBracketError = 114,
+    DoubleQuoteError = 120,
+    DoubleBraceError = 130,
 }
 
 #[derive(Debug)]
@@ -253,24 +283,48 @@ pub struct ErrorInfo {
 
 fn get_error_message(error_code: ErrorKind) -> String {
     match error_code {
-        ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32            => "ERROR: Missing = after remember statement".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::GotoStepError as u32          => "ERROR: Missing label name after goto".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::AcceptError as u32            => "ERROR: Flow argument expect Accept identifier".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::LeftBraceError as u32         => "ERROR: Missing start of block { ".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::RightBraceError as u32        => "ERROR: Agruments inside brace bad format or brace missing".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32   => "ERROR: ( mabe missing".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32  => "ERROR: Agruments inside parentheses bad format or ) missing".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::RightBracketError as u32      => "ERROR: Agruments inside parentheses bad format or ] missing".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::DoubleQuoteError as u32       => "ERROR: \" mabe missing".to_string(),
-        ErrorKind::Custom(val) if val == ParserErrorType::DoubleBraceError as u32       => "ERROR: }} mabe missing".to_string(),
-        e                                                                               => e.description().to_owned()
+        ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32 => {
+            "ERROR: Missing = after remember statement".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::GotoStepError as u32 => {
+            "ERROR: Missing label name after goto".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::AcceptError as u32 => {
+            "ERROR: Flow argument expect Accept identifier".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::LeftBraceError as u32 => {
+            "ERROR: Missing start of block { ".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::RightBraceError as u32 => {
+            "ERROR: Agruments inside brace bad format or brace missing".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32 => {
+            "ERROR: ( mabe missing".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32 => {
+            "ERROR: Agruments inside parentheses bad format or ) missing".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::RightBracketError as u32 => {
+            "ERROR: Agruments inside parentheses bad format or ] missing".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::DoubleQuoteError as u32 => {
+            "ERROR: \" mabe missing".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::DoubleBraceError as u32 => {
+            "ERROR: }} mabe missing".to_string()
+        }
+        e => e.description().to_owned(),
     }
 }
 
 fn format_error(e: Span, error_code: ErrorKind) -> ErrorInfo {
     let message = get_error_message(error_code);
 
-    ErrorInfo{line: e.line, colon: e.get_column() as u32, message}
+    ErrorInfo {
+        line: e.line,
+        colon: e.get_column() as u32,
+        message,
+    }
 }
 
 pub struct Parser;
@@ -278,15 +332,15 @@ pub struct Parser;
 impl Parser {
     pub fn parse_flow(slice: &[u8]) -> Result<Flow, ErrorInfo> {
         match start_parsing(Span::new(CompleteByteSlice(slice))) {
-            Ok((.., instructions)) => {
-                Ok(create_flow_from_instructions(instructions))
-            }
-            Err(e) => {
-                match e {
-                    Err::Error(Context::Code(span, code))      => Err(format_error(span, code)),
-                    Err::Failure(Context::Code(span, code))    => Err(format_error(span, code)),
-                    Err::Incomplete(..)                        => Err(ErrorInfo{line: 0, colon: 0, message: "Incomplete".to_string()})
-                }
+            Ok((.., instructions)) => Ok(create_flow_from_instructions(instructions)),
+            Err(e) => match e {
+                Err::Error(Context::Code(span, code)) => Err(format_error(span, code)),
+                Err::Failure(Context::Code(span, code)) => Err(format_error(span, code)),
+                Err::Incomplete(..) => Err(ErrorInfo {
+                    line: 0,
+                    colon: 0,
+                    message: "Incomplete".to_string(),
+                }),
             },
         }
     }

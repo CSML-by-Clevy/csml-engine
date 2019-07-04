@@ -1,11 +1,10 @@
 use crate::comment;
-use crate::parser::{ParserErrorType, expressions_evaluation::* ,ast::*, tokens::*};
-
+use crate::parser::{ast::*, expressions_evaluation::*, tokens::*, ParserErrorType};
 
 use nom::types::*;
 use nom::*;
 use std::str;
-use std::str::{Utf8Error, FromStr};
+use std::str::{FromStr, Utf8Error};
 
 pub fn complete_byte_slice_str_from_utf8(c: Span) -> Result<CompleteStr, Utf8Error> {
     str::from_utf8(c.fragment.0).map(|s| CompleteStr(s))

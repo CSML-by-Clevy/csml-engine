@@ -1,8 +1,8 @@
-use crate::parser::tokens::*;
 use crate::comment;
+use crate::parser::tokens::*;
 
-use nom_locate::position;
 use nom::*;
+use nom_locate::position;
 
 named!(pub parse_ident<Span, String>, do_parse!(
     _position: position!() >>
@@ -14,4 +14,3 @@ pub fn is_valid_char(input: u8) -> bool {
     let var = input as char;
     input != b'_' && !var.is_alphanumeric()
 }
-

@@ -1,14 +1,7 @@
 use crate::comment;
 use crate::parser::{
-    ParserErrorType,
-    parse_expr_list, 
-    parse_var_expr,
-    parse_as_variable,
-    ast::*, 
-    tokens::*, 
-    parse_ident::parse_ident, 
-    parse_import::parse_import,
-    GotoType
+    ast::*, parse_as_variable, parse_expr_list, parse_ident::parse_ident,
+    parse_import::parse_import, parse_var_expr, tokens::*, GotoType, ParserErrorType,
 };
 use nom::*;
 

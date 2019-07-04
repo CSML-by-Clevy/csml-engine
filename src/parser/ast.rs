@@ -1,13 +1,16 @@
-use serde::{Deserialize, Serialize, ser::{Serializer, SerializeMap}};
-use std::ops::{Sub, Add, Mul, Div};
-use std::fmt::{Display, Formatter};
-use std::collections::HashMap;
+use serde::{
+    ser::{SerializeMap, Serializer},
+    Deserialize, Serialize,
+};
 use std::cmp::Ordering;
+use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
+use std::ops::{Add, Div, Mul, Sub};
 // use crate::parser::tokens::Span;
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub struct Flow {
-    pub flow_instructions: HashMap<InstructionType, Expr>
+    pub flow_instructions: HashMap<InstructionType, Expr>,
 }
 
 impl Serialize for Flow {
@@ -26,14 +29,14 @@ impl Serialize for Flow {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash)]
 pub enum InstructionType {
     StartFlow(String),
-    NormalStep(String)
+    NormalStep(String),
 }
 
 impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionType::StartFlow(ref name)     => write!(f, "{}", name),
-            InstructionType::NormalStep(ref name)    => write!(f, "{}", name)
+            InstructionType::StartFlow(ref name) => write!(f, "{}", name),
+            InstructionType::NormalStep(ref name) => write!(f, "{}", name),
         }
     }
 }
@@ -41,13 +44,13 @@ impl Display for InstructionType {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Instruction {
     pub instruction_type: InstructionType,
-    pub actions: Expr
+    pub actions: Expr,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum GotoType {
     Step,
-    File
+    File,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -58,16 +61,20 @@ pub enum ReservedFunction {
     Remember(String, Box<Expr>),
     Assign(String, Box<Expr>),
     As(String, Box<Expr>),
-    Import{step_name: String, as_name: Option<String>, file_path: Option<String>},
-    Normal(String, Box<Expr>)
+    Import {
+        step_name: String,
+        as_name: Option<String>,
+        file_path: Option<String>,
+    },
+    Normal(String, Box<Expr>),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum BlockType {
     Ask,
     Response,
-    AskResponse,
-    Step
+    AskResponse(Option<String>),
+    Step,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -89,30 +96,26 @@ pub enum Expr {
     BuilderExpr(Box<Expr>, Box<Expr>),
 
     IdentExpr(String),
-    LitExpr {
-        lit: Literal,
-        // #[serde(skip_serializing, skip_deserializing)]
-        // span: Option<Span >
-    }
+    LitExpr(Literal),
 }
 
 impl Expr {
     pub fn new_literal(lit: Literal) -> Expr {
-        Expr::LitExpr{lit}
+        Expr::LitExpr(lit)
         // span: Some(span)
     }
-    
+
     pub fn to_string(&self) -> String {
         match self {
-            Expr::ComplexLiteral(..)    => "complex_literal".to_owned(),
-            Expr::BuilderExpr(..)       => "builder".to_owned(),
-            Expr::VecExpr(..)           => "Array".to_owned(),
-            Expr::IdentExpr(name)       => name.to_owned(),
-            Expr::LitExpr{lit}          => lit.type_to_string(),
-            Expr::FunctionExpr(..)      => "function".to_owned(),
-            Expr::Block{..}             => "block".to_owned(),
-            Expr::IfExpr{..}            => "if".to_owned(),
-            Expr::InfixExpr(..)         => "infix".to_owned()
+            Expr::ComplexLiteral(..) => "complex_literal".to_owned(),
+            Expr::BuilderExpr(..) => "builder".to_owned(),
+            Expr::VecExpr(..) => "Array".to_owned(),
+            Expr::IdentExpr(name) => name.to_owned(),
+            Expr::LitExpr(lit) => lit.type_to_string(),
+            Expr::FunctionExpr(..) => "function".to_owned(),
+            Expr::Block { .. } => "block".to_owned(),
+            Expr::IfExpr { .. } => "if".to_owned(),
+            Expr::InfixExpr(..) => "infix".to_owned(),
         }
     }
 }
@@ -130,21 +133,20 @@ pub enum Literal {
     #[serde(rename = "array")]
     ArrayLiteral(Vec<Literal>),
     #[serde(rename = "object")]
-    ObjectLiteral{
+    ObjectLiteral {
         name: String,
-        value: HashMap<String, Literal>
-    }
-    // NULL,
+        value: HashMap<String, Literal>,
+    }, // NULL
 }
 
 impl PartialOrd for Literal {
-    fn partial_cmp(&self , other: &Literal ) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Literal) -> Option<Ordering> {
         match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1.partial_cmp(l2),
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1.partial_cmp(l2),
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => l1.partial_cmp(l2),
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1.partial_cmp(l2),
-            _                                                           => None
+            (Literal::StringLiteral(l1), Literal::StringLiteral(l2)) => l1.partial_cmp(l2),
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2)) => l1.partial_cmp(l2),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2)) => l1.partial_cmp(l2),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2)) => l1.partial_cmp(l2),
+            _ => None,
         }
     }
 }
@@ -152,11 +154,11 @@ impl PartialOrd for Literal {
 impl PartialEq for Literal {
     fn eq(&self, other: &Literal) -> bool {
         match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1 == l2,
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1 == l2,
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => l1 == l2,
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1 == l2,
-            _                                                           => false
+            (Literal::StringLiteral(l1), Literal::StringLiteral(l2)) => l1 == l2,
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2)) => l1 == l2,
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2)) => l1 == l2,
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2)) => l1 == l2,
+            _ => false,
         }
     }
 }
@@ -191,7 +193,7 @@ impl Sub for Literal {
             _                                                           => Err("Illegal operation - between types".to_owned())
             // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 - l2),
         }
-    }    
+    }
 }
 
 impl Div for Literal {
@@ -245,23 +247,23 @@ impl Mul for Literal {
 impl Literal {
     pub fn to_string(&self) -> String {
         match self {
-            Literal::StringLiteral(literal)         => literal.to_owned(),
-            Literal::IntLiteral(literal)            => literal.to_string(),
-            Literal::FloatLiteral(literal)          => literal.to_string(),
-            Literal::BoolLiteral(literal)           => literal.to_string(),
-            Literal::ArrayLiteral(vec)              => format!("{:?}", vec),
-            Literal::ObjectLiteral{name, value}     => format!("{}: {:?}", name, value)
+            Literal::StringLiteral(literal) => literal.to_owned(),
+            Literal::IntLiteral(literal) => literal.to_string(),
+            Literal::FloatLiteral(literal) => literal.to_string(),
+            Literal::BoolLiteral(literal) => literal.to_string(),
+            Literal::ArrayLiteral(vec) => format!("{:?}", vec),
+            Literal::ObjectLiteral { name, value } => format!("{}: {:?}", name, value),
         }
     }
 
     pub fn type_to_string(&self) -> String {
         match self {
-            Literal::StringLiteral(..)      => "String".to_owned(),
-            Literal::IntLiteral(..)         => "Numeric".to_owned(),
-            Literal::FloatLiteral(..)       => "Numeric".to_owned(),
-            Literal::BoolLiteral(..)        => "Bool".to_owned(),
-            Literal::ArrayLiteral(..)       => "Array".to_owned(),
-            Literal::ObjectLiteral{..}      => "Object".to_owned()
+            Literal::StringLiteral(..) => "String".to_owned(),
+            Literal::IntLiteral(..) => "Numeric".to_owned(),
+            Literal::FloatLiteral(..) => "Numeric".to_owned(),
+            Literal::BoolLiteral(..) => "Bool".to_owned(),
+            Literal::ArrayLiteral(..) => "Array".to_owned(),
+            Literal::ObjectLiteral { .. } => "Object".to_owned(),
         }
     }
 }

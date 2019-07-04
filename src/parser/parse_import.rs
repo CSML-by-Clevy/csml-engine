@@ -1,5 +1,5 @@
 use crate::comment;
-use crate::parser::{parse_ident::*, tools::*, ast::*, tokens::*};
+use crate::parser::{ast::*, parse_ident::*, tokens::*, tools::*};
 use nom::*;
 
 named!(parse_import_opt<Span, Expr>, do_parse!(
@@ -42,8 +42,8 @@ mod tests {
     fn ok_step_import() {
         let string = Span::new(CompleteByteSlice("import step hola".as_bytes()));
         match test_import(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
@@ -51,17 +51,19 @@ mod tests {
     fn ok_step_import_as() {
         let string = Span::new(CompleteByteSlice("import step hola as test".as_bytes()));
         match test_import(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
     #[test]
     fn ok_step_import_as_from_file() {
-        let string = Span::new(CompleteByteSlice("import step hola as test FromFile filetest".as_bytes()));
+        let string = Span::new(CompleteByteSlice(
+            "import step hola as test FromFile filetest".as_bytes(),
+        ));
         match test_import(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 

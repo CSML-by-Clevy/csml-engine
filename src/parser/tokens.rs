@@ -21,12 +21,10 @@ pub const ASSIGN: &str = "=";
 pub const OR: &str = "||";
 pub const AND: &str = "&&";
 
-
 pub const GREATER_THAN_EQUAL: &str = ">=";
 pub const LESS_THAN_EQUAL: &str = "<=";
 pub const GREATER_THAN: &str = ">";
 pub const LESS_THAN: &str = "<";
-
 
 pub const COMMA: &str = ",";
 pub const DOT: &str = ".";
@@ -42,7 +40,6 @@ pub const L_BRACKET: &str = "[";
 pub const R_BRACKET: &str = "]";
 pub const L2_BRACE: &str = "{{";
 pub const R2_BRACE: &str = "}}";
-
 
 pub const IF: &str = "if";
 
@@ -61,7 +58,6 @@ pub const ASK: &str = "ask";
 pub const GOTO: &str = "goto";
 pub const RESPONSE: &str = "response";
 pub const REMEMBER: &str = "remember";
-
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";

@@ -1,8 +1,6 @@
+use crate::interpreter::json_to_rust::*;
+use crate::parser::ast::*;
 use std::collections::HashMap;
-use crate::parser::{ast::*};
-use crate::interpreter:: {
-    json_to_rust::*
-};
 
 pub struct Data<'a> {
     pub ast: &'a Flow,

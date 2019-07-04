@@ -75,7 +75,7 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
 fn add_to_message(root: RootInterface, action: MessageType) -> RootInterface {
     match action {
         MessageType::Msg(msg)            => root.add_message(msg),
-        MessageType::Assign{name, value} => root.add_to_memory(name, value),
+        // MessageType::Assign{name, value} => root.add_to_memory(name, value),
         MessageType::Empty               => root,
     }
 }
@@ -130,7 +130,7 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
         },
         Expr::IdentExpr(var)                                            => get_var(var, data),
         // Expr::BuilderExpr(expr1, expr2)                              => Ok(),
-        Expr::LitExpr{lit: literal}                                     => Ok(literal.clone()),
+        Expr::LitExpr(literal)                                          => Ok(literal.clone()),
         _                                                               => Err(format!("ERROR: Expr {:?} can't be converted to Literal", expr).to_owned())
     }
 }
@@ -143,7 +143,6 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
 
             match msg {
                 MessageType::Msg(Message{ref content, ..})        => {data.step_vars.insert(name.to_owned(), content.clone());},
-                MessageType::Assign{..}                           => {},
                 MessageType::Empty                                => {}
             };
             Ok(msg)
@@ -181,7 +180,7 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
     }
 }
 
-fn match_actions(function: &ReservedFunction, root: RootInterface, data: &mut Data) -> Result<RootInterface, String> {
+fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mut Data) -> Result<RootInterface, String> {
     match function {
         ReservedFunction::Say(arg)                      => {
             let msgtype = match_functions(arg, data)?;
@@ -192,13 +191,9 @@ fn match_actions(function: &ReservedFunction, root: RootInterface, data: &mut Da
             Ok(root)
         },
         ReservedFunction::Goto(.., step_name)       => Ok(root.add_next_step(&step_name)),
-        ReservedFunction::Remember(name, variable)  => { // if self.check_if_ident(variable)
-            if let Ok(Literal::StringLiteral(variable)) = get_var_from_ident(variable, data) {
-                Ok(add_to_message(root, remember(name.to_string(), variable.to_string())))
-            } else {
-                Ok(root)
-            //     return Err("Error Assign value must be valid"));
-            }
+        ReservedFunction::Remember(name, variable)  => {
+            root = root.add_to_memory(name.to_owned(), get_var_from_ident(variable, data)?);
+            Ok(root)
         },
         ReservedFunction::Import{step_name: name, ..}          => {
             if let Some(Expr::Block{arg: actions, ..}) = data.ast.flow_instructions.get(&InstructionType::NormalStep(name.to_string())) {
@@ -216,13 +211,16 @@ fn match_actions(function: &ReservedFunction, root: RootInterface, data: &mut Da
     }
 }
 
-fn match_ask_response(vec: &[Expr], root: RootInterface, data: &mut Data) -> Result<RootInterface, String> {
+fn match_ask_response(vec: &[Expr],  mut root: RootInterface, data: &mut Data, opt: &Option<String>) -> Result<RootInterface, String> {
     for block in vec.iter() {
         match (block, data.event) {
             (Expr::Block{block_type: BlockType::Ask, arg: args}, None)              => {
                 return Ok(root + interpret_block(args, data)?);
             },
             (Expr::Block{block_type: BlockType::Response, arg: args}, Some(..))     => {
+                if let Some(ident) = opt {
+                   root = root.add_to_memory(ident.to_owned(), gen_literal_form_event(data.event)?);
+                }
                 return Ok(root + interpret_block(args, data)?);
             },
             (_, _)                                                                  => continue,
@@ -249,8 +247,8 @@ pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<RootInterfac
                 //     return Err("error in if condition, it does not reduce to a boolean expression "));
                 // }
             },
-            Expr::Block { block_type: BlockType::AskResponse, arg: vec }    => {
-                root = match_ask_response(vec, root, data)?;
+            Expr::Block { block_type: BlockType::AskResponse(opt), arg: vec }    => {
+                root = match_ask_response(vec, root, data, opt)?;
             }
             _                                                               => return Err("Block must start with a reserved keyword".to_owned()),
         };

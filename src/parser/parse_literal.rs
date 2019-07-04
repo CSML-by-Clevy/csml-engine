@@ -1,5 +1,5 @@
-use crate::parser::{tools::*, ast::*, tokens::*};
 use crate::comment;
+use crate::parser::{ast::*, tokens::*, tools::*};
 
 use nom::*;
 
@@ -68,8 +68,8 @@ mod tests {
     fn ok_int() {
         let string = Span::new(CompleteByteSlice(" +42 ".as_bytes()));
         match test_literal(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
@@ -77,8 +77,8 @@ mod tests {
     fn ok_float() {
         let string = Span::new(CompleteByteSlice(" -42.42 ".as_bytes()));
         match test_literal(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
@@ -86,8 +86,8 @@ mod tests {
     fn ok_bool() {
         let string = Span::new(CompleteByteSlice(" true ".as_bytes()));
         match test_literal(string) {
-            Ok(..) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
@@ -113,7 +113,7 @@ mod tests {
     fn err_float2() {
         let string = Span::new(CompleteByteSlice(" 3,2 ".as_bytes()));
         match test_literal(string) {
-            Ok(ok)  => panic!("need to fail {:?}", ok),
+            Ok(ok) => panic!("need to fail {:?}", ok),
             Err(..) => {}
         }
     }

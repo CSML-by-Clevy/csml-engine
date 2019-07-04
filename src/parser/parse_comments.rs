@@ -1,5 +1,5 @@
-use crate::parser::tokens::*;
 use crate::parser::tokens::Span;
+use crate::parser::tokens::*;
 
 use nom::*;
 
