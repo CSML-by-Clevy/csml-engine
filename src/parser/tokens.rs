@@ -42,6 +42,7 @@ pub const L2_BRACE: &str = "{{";
 pub const R2_BRACE: &str = "}}";
 
 pub const IF: &str = "if";
+pub const ELSE: &str = "else";
 
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";

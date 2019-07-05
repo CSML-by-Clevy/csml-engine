@@ -75,7 +75,6 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
 fn add_to_message(root: RootInterface, action: MessageType) -> RootInterface {
     match action {
         MessageType::Msg(msg)            => root.add_message(msg),
-        // MessageType::Assign{name, value} => root.add_to_memory(name, value),
         MessageType::Empty               => root,
     }
 }
@@ -205,13 +204,12 @@ fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mu
                 Err(format!("Error step {} not found in flow", name))
             }
         }
-        
         // (ReservedFunction::Retry, arg)      => {
         _                                           => {Err("Error must be a valid action".to_owned())}
     }
 }
 
-fn match_ask_response(vec: &[Expr],  mut root: RootInterface, data: &mut Data, opt: &Option<String>) -> Result<RootInterface, String> {
+fn match_ask_response(vec: &[Expr], mut root: RootInterface, data: &mut Data, opt: &Option<String>) -> Result<RootInterface, String> {
     for block in vec.iter() {
         match (block, data.event) {
             (Expr::Block{block_type: BlockType::Ask, arg: args}, None)              => {
@@ -229,6 +227,25 @@ fn match_ask_response(vec: &[Expr],  mut root: RootInterface, data: &mut Data, o
     Err("error sub block arg must be of type Expr::VecExpr".to_owned())
 }
 
+pub fn solve_if_statments(statment: &IfStatement, mut root: RootInterface, data: &mut Data) -> Result<RootInterface, String>{
+    match statment {
+        IfStatement::IfStmt{cond, consequence, then_branch}  => {
+            if valid_condition(cond, data) {
+                root = root + interpret_block(consequence, data)?;
+                return Ok(root);
+            } 
+            if let Some(then) = then_branch {
+                return solve_if_statments(then, root, data);
+            }
+            Ok(root)
+        }
+        IfStatement::ElseStmt(consequence)                   => {
+            root = root + interpret_block(consequence, data)?;
+            Ok(root)
+        }
+    }
+}
+
 pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<RootInterface, String> {
     let mut root = RootInterface {memories: None, messages: vec![], next_flow: None, next_step: None};
 
@@ -238,19 +255,12 @@ pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<RootInterfac
         }
 
         match action {
-            Expr::FunctionExpr(fun)                                         => { root = match_actions(fun, root, data)?; },
-            Expr::IfExpr { cond, consequence }                              => {
-                if valid_condition(cond, data) {
-                    root = root + interpret_block(consequence, data)?;
-                }
-                // else {
-                //     return Err("error in if condition, it does not reduce to a boolean expression "));
-                // }
-            },
-            Expr::Block { block_type: BlockType::AskResponse(opt), arg: vec }    => {
+            Expr::FunctionExpr(fun)                                             => { root = match_actions(fun, root, data)?; },
+            Expr::IfExpr(ref ifstatement)                                       => root = solve_if_statments(ifstatement, root, data)?,
+            Expr::Block { block_type: BlockType::AskResponse(opt), arg: vec }   => {
                 root = match_ask_response(vec, root, data, opt)?;
             }
-            _                                                               => return Err("Block must start with a reserved keyword".to_owned()),
+            _                                                                   => return Err("Block must start with a reserved keyword".to_owned()),
         };
     }
     Ok(root)

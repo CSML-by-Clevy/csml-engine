@@ -78,17 +78,24 @@ pub enum BlockType {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum IfStatement {
+    IfStmt {
+        cond: Box<Expr>,
+        consequence: Vec<Expr>,
+        then_branch: Option<Box<IfStatement>>
+    },
+    ElseStmt(Vec<Expr>)
+}
+
+// #[serde(skip_serializing, skip_deserializing)]
+// span: Option<Span >
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Expr {
     Block {
         block_type: BlockType,
         arg: Vec<Expr>,
     },
-    IfExpr {
-        cond: Box<Expr>,
-        consequence: Vec<Expr>,
-        // #[serde(skip_serializing, skip_deserializing)]
-        // span: Option<Span >
-    },
+    IfExpr(IfStatement),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
     FunctionExpr(ReservedFunction),
     ComplexLiteral(Vec<Expr>),
