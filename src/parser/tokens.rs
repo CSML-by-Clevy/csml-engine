@@ -46,7 +46,6 @@ pub const ELSE: &str = "else";
 
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
-pub const RETRY: &str = "retry";
 pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
 

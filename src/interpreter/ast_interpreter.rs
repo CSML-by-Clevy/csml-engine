@@ -189,12 +189,13 @@ fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mu
             match_functions(arg, data)?;
             Ok(root)
         },
-        ReservedFunction::Goto(.., step_name)       => Ok(root.add_next_step(&step_name)),
+        ReservedFunction::Goto(GotoType::Step, step_name)=> Ok(root.add_next_step(&step_name)),
+        ReservedFunction::Goto(GotoType::Flow, flow_name)=> Ok(root.add_next_flow(&flow_name)),
         ReservedFunction::Remember(name, variable)  => {
             root = root.add_to_memory(name.to_owned(), get_var_from_ident(variable, data)?);
             Ok(root)
         },
-        ReservedFunction::Import{step_name: name, ..}          => {
+        ReservedFunction::Import{step_name: name, ..}    => {
             if let Some(Expr::Block{arg: actions, ..}) = data.ast.flow_instructions.get(&InstructionType::NormalStep(name.to_string())) {
                 match interpret_block(&actions, data) {
                     Ok(root2)  => Ok(root + root2),

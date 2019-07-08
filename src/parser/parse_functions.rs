@@ -17,9 +17,9 @@ named!(get_step<Span, GotoType>, do_parse!(
     (GotoType::Step)
 ));
 
-named!(get_file<Span, GotoType>, do_parse!(
-    comment!(tag!(FILE)) >>
-    (GotoType::File)
+named!(get_flow<Span, GotoType>, do_parse!(
+    comment!(tag!(FLOW)) >>
+    (GotoType::Flow)
 ));
 
 named!(get_default<Span, GotoType>, do_parse!(
@@ -28,7 +28,7 @@ named!(get_default<Span, GotoType>, do_parse!(
 
 named!(parse_goto<Span, Expr>, do_parse!(
     comment!(tag!(GOTO)) >>
-    goto_type: alt!(get_step | get_file | get_default) >>
+    goto_type: alt!(get_step | get_flow | get_default) >>
     // expr: complete!(parse_var_expr) >>
     name: return_error!(
         nom::ErrorKind::Custom(ParserErrorType::GotoStepError as u32),
@@ -66,7 +66,6 @@ named!(pub parse_functions<Span, Expr>, do_parse!(
     (Expr::FunctionExpr(ReservedFunction::Normal(name, Box::new(expr))))
 ));
 
-//  RETRY
 named!(pub parse_root_functions<Span, Expr>, do_parse!(
     reserved_function: alt!(
         parse_remember          |

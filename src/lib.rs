@@ -77,7 +77,7 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
                 Err(e) => {
                     return Err(ErrorInfo {
                         line: 0,
-                        colon: 0,
+                        column: 0,
                         message: e,
                     })
                 }
@@ -90,7 +90,7 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
         }
         _ => Err(ErrorInfo {
             line: 0,
-            colon: 0,
+            column: 0,
             message: "ERROR: Empty Flow".to_string(),
         }),
     }
@@ -100,7 +100,7 @@ pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Optio
     if !check_valid_flow(ast) {
         return Err(ErrorInfo {
             line: 0,
-            colon: 0,
+            column: 0,
             message: "ERROR: invalid Flow".to_string(),
         });
     }

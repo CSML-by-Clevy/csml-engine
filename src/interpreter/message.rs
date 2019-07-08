@@ -122,4 +122,10 @@ impl RootInterface {
 
         self
     }
+    
+    pub fn add_next_flow(mut self, next_step: &str) -> Self {
+        self.next_flow = Some(next_step.to_string());
+
+        self
+    }
 }

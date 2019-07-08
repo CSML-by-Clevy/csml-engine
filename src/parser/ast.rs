@@ -50,7 +50,7 @@ pub struct Instruction {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum GotoType {
     Step,
-    File,
+    Flow,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -290,4 +290,10 @@ pub enum Infix {
     LessThan,
     And,
     Or,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub struct Index {
+    pub line: u32,
+    pub column: u32,
 }

@@ -129,7 +129,6 @@ pub fn memory_get<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'
     }
 }
 
-//TODO: RM UNWRAP
 pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
     match (name, expr) {
         (Expr::IdentExpr(ident), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == PAST => {

@@ -11,9 +11,8 @@ pub mod parse_literal;
 pub mod tokens;
 pub mod tools;
 
-use crate::comment;
-
 use ast::*;
+use crate::comment;
 use expressions_evaluation::operator_precedence;
 use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
 use parse_ident::parse_ident;
@@ -25,11 +24,7 @@ use tools::*;
 
 use nom::types::*;
 use nom::{Err, ErrorKind as NomError, *};
-// use nom::{Err, ErrorKind as NomError};
-// use nom_locate::position;
-
 use std::collections::HashMap;
-// use std::str;
 
 // ################# add marco in nom ecosystem
 
@@ -248,18 +243,28 @@ named!(start_parsing<Span, Vec<Instruction> >, exact!(
     )
 ));
 
-// TODO: check for steps with the same name and return ERROR
-fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Flow {
-    Flow {
+fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow, ErrorInfo> {
+    let mut elem = instructions.iter();
+    while let Some(val) = elem.next() {
+        let elem2 = elem.clone();
+        for val2 in elem2 {
+            if val.instruction_type == val2.instruction_type {
+                return Err(format_error(Index{ line: 0, column: 0}, ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32) ))
+            }
+        }
+    }
+
+    Ok(Flow {
         flow_instructions: instructions
             .into_iter()
             .map(|elem| (elem.instruction_type, elem.actions))
             .collect::<HashMap<InstructionType, Expr>>(),
-    }
+    })
 }
 
 #[repr(u32)]
 pub enum ParserErrorType {
+    StepDuplicateError = 0,
     AssignError = 1,
     GotoStepError = 10,
     ImportError = 11,
@@ -277,12 +282,15 @@ pub enum ParserErrorType {
 #[derive(Debug)]
 pub struct ErrorInfo {
     pub line: u32,
-    pub colon: u32,
+    pub column: u32,
     pub message: String,
 }
 
 fn get_error_message(error_code: ErrorKind) -> String {
     match error_code {
+        ErrorKind::Custom(val) if val == ParserErrorType::StepDuplicateError as u32 => {
+           "ERROR: Step name already exists".to_string()
+        }
         ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32 => {
             "ERROR: Missing = after remember statement".to_string()
         }
@@ -317,12 +325,12 @@ fn get_error_message(error_code: ErrorKind) -> String {
     }
 }
 
-fn format_error(e: Span, error_code: ErrorKind) -> ErrorInfo {
+fn format_error(index: Index, error_code: ErrorKind) -> ErrorInfo {
     let message = get_error_message(error_code);
 
     ErrorInfo {
-        line: e.line,
-        colon: e.get_column() as u32,
+        line: index.line,
+        column: index.column,
         message,
     }
 }
@@ -332,13 +340,13 @@ pub struct Parser;
 impl Parser {
     pub fn parse_flow(slice: &[u8]) -> Result<Flow, ErrorInfo> {
         match start_parsing(Span::new(CompleteByteSlice(slice))) {
-            Ok((.., instructions)) => Ok(create_flow_from_instructions(instructions)),
-            Err(e) => match e {
-                Err::Error(Context::Code(span, code)) => Err(format_error(span, code)),
-                Err::Failure(Context::Code(span, code)) => Err(format_error(span, code)),
+            Ok((.., instructions)) => create_flow_from_instructions(instructions),
+            Err(e)                 => match e {
+                Err::Error(Context::Code(span, code)) => Err(format_error(Index{ line: span.line, column: span.get_column() as u32}, code)),
+                Err::Failure(Context::Code(span, code)) => Err(format_error(Index{ line: span.line, column: span.get_column() as u32}, code)),
                 Err::Incomplete(..) => Err(ErrorInfo {
                     line: 0,
-                    colon: 0,
+                    column: 0,
                     message: "Incomplete".to_string(),
                 }),
             },
