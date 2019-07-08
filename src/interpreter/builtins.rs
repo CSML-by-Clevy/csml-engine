@@ -18,6 +18,7 @@ pub fn search_for_key_in_vec<'a>(key: &str, vec: &'a [Expr]) -> Result<&'a Expr,
 
     Err(" search_for_key_in_vec".to_owned())
 }
+
 pub fn create_submap<S: BuildHasher>(
     keys: &[&str],
     args: &HashMap<String, Literal, S>,

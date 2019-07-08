@@ -26,6 +26,12 @@ named!(equal_operator<Span, Infix>, do_parse!(
     (Infix::Equal)
 ));
 
+named!(parse_match<Span, Infix>, do_parse!(
+    // position: position!() >>
+    tag!(MATCH) >>
+    (Infix::Match)
+));
+
 named!(greaterthanequal_operator<Span, Infix>, do_parse!(
     // position: position!() >>
     tag!(GREATER_THAN_EQUAL) >>

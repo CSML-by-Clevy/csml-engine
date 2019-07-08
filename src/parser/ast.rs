@@ -277,11 +277,14 @@ impl Literal {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Infix {
+    // Not,
+
     Adition,
     Substraction,
     Divide,
     Multiply,
 
+    Match,
     Equal,
     NotEqual,
     GreaterThanEqual,

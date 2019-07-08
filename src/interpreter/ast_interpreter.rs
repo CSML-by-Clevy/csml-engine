@@ -7,6 +7,17 @@ use crate::interpreter:: {
     data::Data
 };
 
+fn match_obj(lit1: &Literal, lit2: &Literal) -> Result<Literal, String> {
+    let _button = "button".to_owned();
+    if let Literal::ObjectLiteral{name: _button, value} = lit2 {
+        if let Some(Literal::ArrayLiteral(vec)) = value.get("payload") {
+            vec.contains(lit1);
+        }
+    }
+    // TODO: TMP default return
+    Ok(Literal::BoolLiteral(lit1 == lit2))
+}
+
 fn cmp_lit(infix: &Infix, lit1: Result<Literal, String>, lit2: Result<Literal, String>) -> Result<Literal, String> {
     match (infix, lit1, lit2) {
         (Infix::NotEqual, Ok(l1), Ok(l2) )          => Ok(Literal::BoolLiteral(l1 != l2)),
@@ -23,6 +34,7 @@ fn cmp_lit(infix: &Infix, lit1: Result<Literal, String>, lit2: Result<Literal, S
         (Infix::Substraction, Ok(l1), Ok(l2))       => l1 - l2,
         (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2))           => l1 * l2,
+        (Infix::Match, Ok(ref l1), Ok(ref l2))      => match_obj(l1, l2),
         _                                           => Ok(Literal::BoolLiteral(false)),
     }
 }
@@ -89,7 +101,7 @@ fn match_builtin(object: Literal) -> Result<MessageType, String> {
         Literal::ObjectLiteral{ref name, ref value} if name == ONE_OF   => one_of(value, TEXT.to_owned()),
         Literal::ObjectLiteral{ref name, ref value} if name == QUESTION => question(value, name.to_owned()),
         Literal::ObjectLiteral{ref value, .. }                          => api(value),
-    _                                                                   => Err("buitin format Error".to_owned()),
+        _                                                               => Err("buitin format Error".to_owned()),
     }
 }
 
@@ -174,7 +186,7 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
             }
         },
         Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?, TEXT.to_string()))),
-        Expr::VecExpr(..)                 => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?, "Array".to_string()))),
+        Expr::VecExpr(..)                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?, "Array".to_string()))),
         err                                => Err(format!("Error must be a valid function {:?}", err)),
     }
 }
@@ -205,8 +217,7 @@ fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mu
                 Err(format!("Error step {} not found in flow", name))
             }
         }
-        // (ReservedFunction::Retry, arg)      => {
-        _                                           => {Err("Error must be a valid action".to_owned())}
+        _                                               => {Err("Error must be a valid action".to_owned())}
     }
 }
 

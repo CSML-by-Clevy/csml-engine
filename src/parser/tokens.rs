@@ -56,6 +56,7 @@ pub const SAY: &str = "say";
 pub const USE: &str = "use";
 pub const ASK: &str = "ask";
 pub const GOTO: &str = "goto";
+pub const MATCH: &str = "match";
 pub const RESPONSE: &str = "response";
 pub const REMEMBER: &str = "remember";
 
