@@ -2,3 +2,5 @@
 **/*.rs.bk
 artifacts.json
 index.node
+.DS_Store
+.vscode
