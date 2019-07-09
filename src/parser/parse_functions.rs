@@ -60,13 +60,6 @@ named!(parse_remember<Span, Expr>, do_parse!(
     (Expr::FunctionExpr(ReservedFunction::Remember(ident, Box::new(expr))))
 ));
 
-// named!(parse_match<Span, Expr>, do_parse!(
-//     expr1: alt!(parse_as_variable | parse_var_expr)>>
-//     comment!(tag!(MATCH)) >>
-//     expr2: alt!(parse_as_variable | parse_var_expr)>>
-//     (Expr::FunctionExpr(ReservedFunction::Match(Box::new(expr1), Box::new(expr2))))
-// ));
-
 named!(pub parse_functions<Span, Expr>, do_parse!(
     name: parse_ident >>
     expr: parse_expr_list >>

@@ -133,7 +133,7 @@ named!(parse_ask<Span, (Expr, Option<String> )>, do_parse!(
     comment!(tag!(ASK)) >>
     opt: opt!(parse_ident) >>
     block: parse_block >>
-    ((Expr::Block{block_type: BlockType::Ask, arg: block}, opt))
+    (Expr::Block{block_type: BlockType::Ask, arg: block}, opt)
 ));
 
 named!(parse_response<Span, Expr>, do_parse!(

@@ -143,7 +143,8 @@ pub enum Literal {
     ObjectLiteral {
         name: String,
         value: HashMap<String, Literal>,
-    }, // NULL
+    },
+    // NULL
 }
 
 impl PartialOrd for Literal {
@@ -277,8 +278,7 @@ impl Literal {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Infix {
-    // Not,
-
+    Not,
     Adition,
     Substraction,
     Divide,

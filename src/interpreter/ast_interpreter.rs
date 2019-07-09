@@ -35,6 +35,7 @@ fn cmp_lit(infix: &Infix, lit1: Result<Literal, String>, lit2: Result<Literal, S
         (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2))           => l1 * l2,
         (Infix::Match, Ok(ref l1), Ok(ref l2))      => match_obj(l1, l2),
+        // (Infix::Not, Ok(l1), Ok(l2))                => !l1,
         _                                           => Ok(Literal::BoolLiteral(false)),
     }
 }
@@ -49,8 +50,20 @@ fn check_if_ident(expr: &Expr) -> bool {
     }
 }
 
+fn check_if_not_operator(infix: &Infix) -> bool {
+    if let Infix::Not = infix { true } else { false }
+}
+
 pub fn evaluate_condition(infix: &Infix, expr1: &Expr, expr2: &Expr, data: &mut Data) -> Result<Literal, String> {
     match (expr1, expr2) {
+        (exp1, ..) if check_if_not_operator(infix) && check_if_ident(exp1)  => {
+            match get_var_from_ident(exp1, data) {
+                Ok(Literal::BoolLiteral(false)) => Ok(Literal::BoolLiteral(true)),
+                Ok(Literal::IntLiteral(0))      => Ok(Literal::BoolLiteral(true)),
+                Ok(..)                          => Ok(Literal::BoolLiteral(false)),
+                Err(..)                         => Ok(Literal::BoolLiteral(true))
+            }
+        },
         (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2)        => {
             cmp_lit(infix, get_var_from_ident(exp1, data), get_var_from_ident(exp2, data))
         },
@@ -140,8 +153,8 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
             Ok(Literal::ArrayLiteral(array))
         },
         Expr::IdentExpr(var)                                            => get_var(var, data),
-        // Expr::BuilderExpr(expr1, expr2)                              => Ok(),
         Expr::LitExpr(literal)                                          => Ok(literal.clone()),
+        // Expr::BuilderExpr(expr1, expr2)                              => Ok(),
         _                                                               => Err(format!("ERROR: Expr {:?} can't be converted to Literal", expr).to_owned())
     }
 }

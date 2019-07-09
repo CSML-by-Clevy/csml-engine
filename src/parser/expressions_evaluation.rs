@@ -65,6 +65,11 @@ named!(parse_infix_operators<Span, Infix>, alt!(
     lessthan_operator
 ));
 
+named!(parse_not_operator<Span, Infix>, do_parse!(
+    tag!(NOT)   >> 
+    (Infix::Not)
+));
+
 // ########################################
 
 named!(pub operator_precedence<Span, Expr>, do_parse!(
@@ -105,10 +110,17 @@ named!(parse_infix_condition<Span, Expr>, alt_complete!(
     parse_condition_group
 ));
 
-named!(parse_infix_expr<Span, Expr>, do_parse!(
+// add Null lieral
+named!(parse_postfix_operator<Span, Expr>, do_parse!(
+    operator: comment!(parse_not_operator) >>
     expr1: parse_arithmetic >>
+    (Expr::InfixExpr(operator, Box::new(expr1.clone()), Box::new(expr1)))
+));
+
+named!(parse_infix_expr<Span, Expr>, do_parse!(
+    expr1: alt!(parse_postfix_operator | parse_arithmetic) >>
     operator: comment!(parse_infix_operators) >>
-    expr2: parse_arithmetic >>
+    expr2: alt!(parse_postfix_operator | parse_arithmetic) >>
     (Expr::InfixExpr(operator, Box::new(expr1), Box::new(expr2)))
 ));
 
