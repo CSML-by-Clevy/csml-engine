@@ -31,28 +31,27 @@ pub struct Message {
     pub content: Literal,
 }
 
-// return Result<Message>
 impl Message {
-    pub fn new(expr: &Literal, string: String) -> Self {
+    pub fn new(expr: &Literal) -> Self {
         match expr {
             Literal::IntLiteral(..) => Message {
-                content_type: string.to_lowercase(),
+                content_type: expr.type_to_string(),
                 content: expr.clone(),
             },
             Literal::FloatLiteral(..) => Message {
-                content_type: string.to_lowercase(),
+                content_type: expr.type_to_string(),
                 content: expr.clone(),
             },
             Literal::StringLiteral(..) => Message {
-                content_type: string.to_lowercase(),
+                content_type: expr.type_to_string(),
                 content: expr.clone(),
             },
             Literal::BoolLiteral(..) => Message {
-                content_type: string.to_lowercase(),
+                content_type: expr.type_to_string(),
                 content: expr.clone(),
             },
             Literal::ArrayLiteral(..) => Message {
-                content_type: "Array".to_lowercase(),
+                content_type: expr.type_to_string(),
                 content: expr.clone(),
             },
             Literal::ObjectLiteral { name, .. } => Message {

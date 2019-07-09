@@ -35,7 +35,6 @@ fn cmp_lit(infix: &Infix, lit1: Result<Literal, String>, lit2: Result<Literal, S
         (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2))           => l1 * l2,
         (Infix::Match, Ok(ref l1), Ok(ref l2))      => match_obj(l1, l2),
-        // (Infix::Not, Ok(l1), Ok(l2))                => !l1,
         _                                           => Ok(Literal::BoolLiteral(false)),
     }
 }
@@ -106,12 +105,12 @@ fn add_to_message(root: RootInterface, action: MessageType) -> RootInterface {
 
 fn match_builtin(object: Literal) -> Result<MessageType, String> {
     match object {
-        Literal::ObjectLiteral{ref name, ref value} if name == TYPING   => typing(value, name.to_owned()),
-        Literal::ObjectLiteral{ref name, ref value} if name == WAIT     => wait(value, name.to_owned()),
-        Literal::ObjectLiteral{ref name, ref value} if name == TEXT     => text(value, name.to_owned()),
-        Literal::ObjectLiteral{ref name, ref value} if name == URL      => url(value, name.to_owned()),
-        Literal::ObjectLiteral{ref name, ref value} if name == IMAGE    => img(value, name.to_owned()),
-        Literal::ObjectLiteral{ref name, ref value} if name == ONE_OF   => one_of(value, TEXT.to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == TYPING   => typing(value),
+        Literal::ObjectLiteral{ref name, ref value} if name == WAIT     => wait(value),
+        Literal::ObjectLiteral{ref name, ref value} if name == TEXT     => text(value),
+        Literal::ObjectLiteral{ref name, ref value} if name == URL      => url(value),
+        Literal::ObjectLiteral{ref name, ref value} if name == IMAGE    => img(value),
+        Literal::ObjectLiteral{ref name, ref value} if name == ONE_OF   => one_of(value),
         Literal::ObjectLiteral{ref name, ref value} if name == QUESTION => question(value, name.to_owned()),
         Literal::ObjectLiteral{ref value, .. }                          => api(value),
         _                                                               => Err("buitin format Error".to_owned()),
@@ -174,32 +173,29 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
         Expr::FunctionExpr(ReservedFunction::Normal(..)) => match_builtin(expr_to_literal(action, data)?),
         Expr::BuilderExpr(..)           => {
             match get_var_from_ident(action, data) {
-                Ok(val) => Ok(MessageType::Msg(Message::new(&val, TEXT.to_string()))),
+                Ok(val) => Ok(MessageType::Msg(Message::new(&val))),
                 Err(e)  => Err(e)
             }
         },
         Expr::ComplexLiteral(vec)       => {
             Ok(MessageType::Msg(
-                Message::new(
-                    &get_string_from_complexstring(vec, data),
-                    TEXT.to_string()
-                )
+                Message::new(&get_string_from_complexstring(vec, data))
             ))
         },
         Expr::InfixExpr(infix, exp1, exp2) => {
             match evaluate_condition(infix, exp1, exp2, data) {
-                Ok(val) => Ok(MessageType::Msg(Message::new(&val, INT.to_string()))),
+                Ok(val) => Ok(MessageType::Msg(Message::new(&val))),
                 Err(e)  => Err(e)
             }
         },
         Expr::IdentExpr(ident)          => {
             match get_var(ident, data) {
-                Ok(val)     => Ok(MessageType::Msg(Message::new(&val, INT.to_string()))),
-                Err(_e)     => Ok(MessageType::Msg(Message::new(&Literal::StringLiteral("NULL".to_owned()), TEXT.to_string()))),//Err(e)
+                Ok(val)     => Ok(MessageType::Msg(Message::new(&val))),
+                Err(_e)     => Ok(MessageType::Msg(Message::new(&Literal::StringLiteral("NULL".to_owned())))),//Err(e)
             }
         },
-        Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?, TEXT.to_string()))),
-        Expr::VecExpr(..)                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?, "Array".to_string()))),
+        Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?))),
+        Expr::VecExpr(..)                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?))),
         err                                => Err(format!("Error must be a valid function {:?}", err)),
     }
 }
@@ -224,7 +220,7 @@ fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mu
             if let Some(Expr::Block{arg: actions, ..}) = data.ast.flow_instructions.get(&InstructionType::NormalStep(name.to_string())) {
                 match interpret_block(&actions, data) {
                     Ok(root2)  => Ok(root + root2),
-                    Err(..)     => Err("Error in import function".to_owned())
+                    Err(err)     => Err(format!("Error in import function {:?}", err))
                 }
             } else {
                 Err(format!("Error step {} not found in flow", name))

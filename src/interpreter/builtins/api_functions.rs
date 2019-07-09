@@ -34,10 +34,7 @@ pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Message
         Ok(ref mut arg) => match arg.text() {
             Ok(text) => {
                 println!("reqwest post ok : ");
-                Ok(MessageType::Msg(Message::new(
-                    &Literal::StringLiteral(text),
-                    "text".to_owned(),
-                )))
+                Ok(MessageType::Msg(Message::new(&Literal::StringLiteral(text))))
             }
             Err(e) => {
                 println!("error in parsing reqwest result: {:?}", e);

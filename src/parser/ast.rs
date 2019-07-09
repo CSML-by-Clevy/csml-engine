@@ -266,7 +266,7 @@ impl Literal {
 
     pub fn type_to_string(&self) -> String {
         match self {
-            Literal::StringLiteral(..) => "String".to_owned(),
+            Literal::StringLiteral(..) => "Text".to_owned(),
             Literal::IntLiteral(..) => "Numeric".to_owned(),
             Literal::FloatLiteral(..) => "Numeric".to_owned(),
             Literal::BoolLiteral(..) => "Bool".to_owned(),
