@@ -8,12 +8,15 @@ use crate::interpreter:: {
 };
 
 fn match_obj(lit1: &Literal, lit2: &Literal) -> Result<Literal, String> {
-    let _button = "button".to_owned();
-    if let Literal::ObjectLiteral{name: _button, value} = lit2 {
-        if let Some(Literal::ArrayLiteral(vec)) = value.get("payload") {
-            vec.contains(lit1);
+    let _b = BUTTON.to_owned();
+    if let Literal::ObjectLiteral{name: _b, ..} = lit2 {
+        if let MessageType::Msg(Message{content: Literal::ObjectLiteral{value, ..} , ..}) = match_builtin(lit2.clone())? {
+            if let Some(Literal::ArrayLiteral(vec)) = value.get("payload") {
+                return Ok(Literal::BoolLiteral(vec.contains(lit1)));
+            }
         }
     }
+    println!("end of match not fouand");
     // TODO: TMP default return
     Ok(Literal::BoolLiteral(lit1 == lit2))
 }
@@ -91,7 +94,7 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
         },
         Expr::LitExpr{..}                   => true,
         Expr::BuilderExpr(..)               => get_var_from_ident(expr, data).is_ok(), // error
-        Expr::IdentExpr(ident)              => get_var(ident, data).is_ok(), // error
+        Expr::IdentExpr(ident, ..)          => get_var(ident, data).is_ok(), // error
         _                                   => false, // return error
     }
 }
@@ -112,8 +115,10 @@ fn match_builtin(object: Literal) -> Result<MessageType, String> {
         Literal::ObjectLiteral{ref name, ref value} if name == IMAGE    => img(value),
         Literal::ObjectLiteral{ref name, ref value} if name == ONE_OF   => one_of(value),
         Literal::ObjectLiteral{ref name, ref value} if name == QUESTION => question(value, name.to_owned()),
-        Literal::ObjectLiteral{ref value, .. }                          => api(value),
-        _                                                               => Err("buitin format Error".to_owned()),
+        Literal::ObjectLiteral{ref name, ref value} if name == BUTTON   => button(value),
+        Literal::ObjectLiteral{ref name, ref value} if name == API      => api(value),
+        Literal::ObjectLiteral{..}                                      => Ok(MessageType::Msg(Message::new(&object))),
+        _                                                               => unreachable!(),
     }
 }
 
@@ -143,22 +148,21 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
             }
             Ok(Literal::ObjectLiteral{name: name.to_owned(), value: obj})
         },
-        Expr::ComplexLiteral(vec)                                       => Ok(get_string_from_complexstring(vec, data)),
-        Expr::VecExpr(vec)                                              => {
+        Expr::ComplexLiteral(vec)                           => Ok(get_string_from_complexstring(vec, data)),
+        Expr::VecExpr(vec)                                  => {
             let mut array = vec![];
             for value in vec.iter() {
                 array.push(expr_to_literal(value, data)?)
             }
             Ok(Literal::ArrayLiteral(array))
         },
-        Expr::IdentExpr(var)                                            => get_var(var, data),
-        Expr::LitExpr(literal)                                          => Ok(literal.clone()),
-        // Expr::BuilderExpr(expr1, expr2)                              => Ok(),
-        _                                                               => Err(format!("ERROR: Expr {:?} can't be converted to Literal", expr).to_owned())
+        Expr::IdentExpr(var, ..)                            => get_var(var, data),
+        Expr::LitExpr(literal, ..)                          => Ok(literal.clone()),
+        // Expr::BuilderExpr(expr1, expr2)                  => Ok(),
+        _                                                   => Err(format!("ERROR: Expr {:?} can't be converted to Literal", expr).to_owned())
     }
 }
 
-//NOTE: Add detection variable type
 fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String> {
     match action {
         Expr::FunctionExpr(ReservedFunction::As(name, expr)) => {
@@ -188,7 +192,7 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
                 Err(e)  => Err(e)
             }
         },
-        Expr::IdentExpr(ident)          => {
+        Expr::IdentExpr(ident, ..)         => {
             match get_var(ident, data) {
                 Ok(val)     => Ok(MessageType::Msg(Message::new(&val))),
                 Err(_e)     => Ok(MessageType::Msg(Message::new(&Literal::StringLiteral("NULL".to_owned())))),//Err(e)
@@ -203,8 +207,7 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
 fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mut Data) -> Result<RootInterface, String> {
     match function {
         ReservedFunction::Say(arg)                      => {
-            let msgtype = match_functions(arg, data)?;
-            Ok(add_to_message(root, msgtype))
+            Ok(add_to_message(root, match_functions(arg, data)?))
         },
         ReservedFunction::Use(arg)                      => {
             match_functions(arg, data)?;

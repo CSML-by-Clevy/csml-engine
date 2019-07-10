@@ -63,8 +63,7 @@ pub const REMEMBER: &str = "remember";
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
-
-pub const ACCEPT: &str = "Accept";
+pub const NULL: &str = "NULL";
 
 pub const TYPING: &str = "Typing";
 pub const WAIT: &str = "Wait";
@@ -73,13 +72,14 @@ pub const INT: &str = "Int";
 pub const URL: &str = "Url";
 pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
+pub const API: &str = "API";
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
-pub const FROMEFILE: &str = "FromFile";
 
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";
 pub const METADATA: &str = "metadata";
 
+pub const FROMEFILE: &str = "FromFile";
 pub const GET_VALUE: &str = "getvalue";
 pub const FIRST: &str = "first";

@@ -1,6 +1,6 @@
 use crate::comment;
 use crate::parser::{ast::*, tokens::*, tools::*};
-
+use nom_locate::*;
 use nom::*;
 
 named!(signed_digits<Span, Span>, recognize!(
@@ -11,8 +11,9 @@ named!(signed_digits<Span, Span>, recognize!(
 ));
 
 named!(pub parse_integer<Span, Expr>, do_parse!(
+    position: position!() >>
     i: map_res!(map_res!(signed_digits, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::new_literal(Literal::IntLiteral(i)) )
+    (Expr::new_literal(Literal::IntLiteral(i), position) )
 ));
 
 named!(floating_point<Span, Span>, recognize!(
@@ -26,11 +27,13 @@ named!(floating_point<Span, Span>, recognize!(
 ));
 
 named!(pub parse_float<Span, Expr>, do_parse!(
+    position: position!() >>
     elem: map_res!(map_res!(floating_point, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::new_literal(Literal::FloatLiteral(elem)))
+    (Expr::new_literal(Literal::FloatLiteral(elem), position))
 ));
 
 named!(parse_boolean<Span, Expr>, do_parse!(
+    position: position!() >>
     boolean: alt!(
             do_parse!(
                 tag!(TRUE) >>
@@ -42,7 +45,7 @@ named!(parse_boolean<Span, Expr>, do_parse!(
                 (Literal::BoolLiteral(false))
             )
     ) >>
-    (Expr::new_literal(boolean))
+    (Expr::new_literal(boolean, position))
 ));
 
 named!(pub parse_literalexpr<Span, Expr>, do_parse!(

@@ -3,61 +3,53 @@ use crate::parser::{ast::*, parse_basic_expr, tokens::*, tools::*};
 use nom::*;
 
 named!(or_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(OR) >> 
     (Infix::Or)
 ));
 
 named!(and_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(AND)  >> 
     (Infix::And)
 ));
 
 named!(notequal_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(NOT_EQUAL) >>
     (Infix::NotEqual)
 ));
 
 named!(equal_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(EQUAL) >>
     (Infix::Equal)
 ));
 
 named!(parse_match<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(MATCH) >>
     (Infix::Match)
 ));
 
 named!(greaterthanequal_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(GREATER_THAN_EQUAL) >>
     (Infix::GreaterThanEqual)
 ));
 
 named!(lessthanequal_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(LESS_THAN_EQUAL)  >>
     (Infix::LessThanEqual)
 ));
 
 named!(greaterthan_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(GREATER_THAN)   >> 
     (Infix::GreaterThan)
 ));
 
 named!(lessthan_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(LESS_THAN)   >> 
     (Infix::LessThan)
 ));
 
 named!(parse_infix_operators<Span, Infix>, alt!(
     notequal_operator           |
+    parse_match                 |
     equal_operator              |
     greaterthanequal_operator   |
     lessthanequal_operator      |
@@ -132,13 +124,11 @@ named!(parse_arithmetic<Span, Expr>,  alt!(
 ));
 
 named!(adition_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(ADITION)  >> 
     (Infix::Adition)
 ));
 
 named!(substraction_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(SUBTRACTION)  >> 
     (Infix::Substraction)
 ));
@@ -148,7 +138,6 @@ named!(parse_item_operator<Span, Infix>, alt!(
     adition_operator
 ));
 
-// span: position!() >>
 named!(parse_item<Span, Expr>, do_parse!(
     init: parse_term >>
     and_expr: fold_many0!(
@@ -165,13 +154,11 @@ named!(parse_item<Span, Expr>, do_parse!(
 ));
 
 named!(divide_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(DIVIDE)  >> 
     (Infix::Divide)
 ));
 
 named!(multiply_operator<Span, Infix>, do_parse!(
-    // position: position!() >>
     tag!(MULTIPLY)  >> 
     (Infix::Multiply)
 ));

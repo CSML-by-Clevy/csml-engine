@@ -1,6 +1,5 @@
 use crate::parser::{
-    ast::{Expr, Flow, InstructionType},
-    tokens::*,
+    ast::{Expr, Flow, InstructionType}
 };
 
 pub fn check_ident(expr: &str, name: &str) -> bool {
@@ -16,7 +15,7 @@ pub fn check_valid_flow(flow: &Flow) -> bool {
 
     if let Some(Expr::VecExpr(vec)) = flow
         .flow_instructions
-        .get(&InstructionType::StartFlow(ACCEPT.to_string()))
+        .get(&InstructionType::StartFlow)
     {
         if !vec.is_empty() {
             accept_flow = true;

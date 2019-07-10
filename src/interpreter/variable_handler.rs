@@ -33,7 +33,7 @@ pub fn gen_literal_form_event(event: &Option<Event>) -> Result<Literal, String> 
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {
     match expr {
-        Expr::IdentExpr(ident) if ident == name => true,
+        Expr::IdentExpr(ident, ..) if ident == name => true,
         _ => false,
     }
 }
@@ -63,8 +63,8 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> Literal
 
 pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
     match expr {
-        Expr::LitExpr(lit)                  => Ok(lit.clone()),
-        Expr::IdentExpr(ident)              => get_var(ident, data),
+        Expr::LitExpr(lit, ..)              => Ok(lit.clone()),
+        Expr::IdentExpr(ident, ..)          => get_var(ident, data),
         Expr::BuilderExpr(..)               => gen_literal_form_builder(expr, data),
         Expr::ComplexLiteral(..)            => gen_literal_form_builder(expr, data),
         Expr::InfixExpr(infix, exp1, exp2)  => evaluate_condition(infix, exp1, exp2, data),
@@ -74,9 +74,9 @@ pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<Literal, Strin
 
 pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
     match expr {
-        Expr::LitExpr(lit)      => Ok(lit.clone()),
-        Expr::IdentExpr(ident)  => get_var(ident, data),
-        _                       => Err("Expression must be a literal or an identifier".to_owned()),
+        Expr::LitExpr(lit, ..)      => Ok(lit.clone()),
+        Expr::IdentExpr(ident, ..)  => get_var(ident, data),
+        _                           => Err("Expression must be a literal or an identifier".to_owned()),
     }
 }
 
@@ -92,7 +92,7 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal,
             get_memory_action(data.memory, elem, exp)
         }
         Expr::ComplexLiteral(vec) => Ok(get_string_from_complexstring(vec, data)),
-        Expr::IdentExpr(ident) => get_var(ident, data),
+        Expr::IdentExpr(ident, ..) => get_var(ident, data),
         _ => Err("Error in Exprecion builder".to_owned()),
     }
 }
@@ -118,33 +118,32 @@ pub fn search_var_memory(memory: &Memory, name: &str) -> Result<Literal, String>
 
 pub fn memory_get<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
     match (name, expr) {
-        (Expr::IdentExpr(ident), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == PAST => {
+        (Expr::IdentExpr(ident, ..), Expr::LitExpr(Literal::StringLiteral(lit), ..)) if ident == PAST => {
             memory.past.get(lit)
         }
-        (Expr::IdentExpr(ident), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == MEMORY => {
+        (Expr::IdentExpr(ident, ..), Expr::LitExpr(Literal::StringLiteral(lit), ..)) if ident == MEMORY => {
             memory.current.get(lit)
         }
-        (_, Expr::LitExpr(Literal::StringLiteral(lit))) => memory.metadata.get(lit),
+        (_, Expr::LitExpr(Literal::StringLiteral(lit), ..)) => memory.metadata.get(lit),
         _ => None,
     }
 }
 
 pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
     match (name, expr) {
-        (Expr::IdentExpr(ident), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == PAST => {
+        (Expr::IdentExpr(ident, ..), Expr::LitExpr(Literal::StringLiteral(lit), ..)) if ident == PAST => {
             memory.past.get_vec(lit).unwrap().last()
         }
-        (Expr::IdentExpr(ident), Expr::LitExpr(Literal::StringLiteral(lit))) if ident == MEMORY => {
+        (Expr::IdentExpr(ident, ..), Expr::LitExpr(Literal::StringLiteral(lit), ..)) if ident == MEMORY => {
             memory.current.get_vec(lit).unwrap().last()
         }
-        (_, Expr::LitExpr(Literal::StringLiteral(lit))) => {
+        (_, Expr::LitExpr(Literal::StringLiteral(lit), ..)) => {
             memory.metadata.get_vec(lit).unwrap().last()
         }
         _ => None,
     }
 }
 
-//NOTE:Only work with Strings for now
 pub fn get_memory_action(memory: &Memory, name: &Expr, expr: &Expr) -> Result<Literal, String> {
     match expr {
         Expr::FunctionExpr(ReservedFunction::Normal(ident, exp)) if ident == GET_VALUE => {

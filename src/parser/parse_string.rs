@@ -51,14 +51,13 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
             if distance_to_l2brace < distance_double_quote =>
         {
             let (rest, val) = input.take_split(distance_to_l2brace);
-            let (val, _position) = get_position(val)?;
+            let (val, position) = get_position(val)?;
             let mut vec = vec![];
 
             if val.input_len() > 0 {
-                // get_position()
                 let string = String::from_utf8(val.fragment.to_vec())
                     .expect("error at parsing [u8] to &str");
-                vec.push(Expr::new_literal(Literal::StringLiteral(string))); // position
+                vec.push(Expr::new_literal(Literal::StringLiteral(string), position));
             }
             match parse_brace(rest, vec) {
                 Ok((rest, vec)) => Ok((rest, vec)),
@@ -71,12 +70,12 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
         }
         (_, Some(distance_double_quote)) => {
             let (rest, val) = input.take_split(distance_double_quote);
-            let (val, _position) = get_position(val)?;
+            let (val, position) = get_position(val)?;
 
             if val.input_len() > 0 {
                 let string = String::from_utf8(val.fragment.to_vec())
                     .expect("error at parsing [u8] to &str");
-                return Ok((rest, Expr::new_literal(Literal::StringLiteral(string)))); //, position
+                return Ok((rest, Expr::new_literal(Literal::StringLiteral(string), position)));
             }
             Ok((rest, Expr::ComplexLiteral(vec![])))
         }

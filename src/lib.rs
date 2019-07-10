@@ -2,7 +2,7 @@ pub mod interpreter;
 pub mod parser;
 
 use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
-use parser::{ast::*, tokens::*, ErrorInfo, Parser};
+use parser::{ast::*, ErrorInfo, Parser};
 use std::collections::HashMap;
 
 use multimap::MultiMap;
@@ -31,13 +31,14 @@ pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
 pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     let info = flow
         .flow_instructions
-        .get(&InstructionType::StartFlow(ACCEPT.to_string()));
+        .get(&InstructionType::StartFlow);
 
     if let Some(Expr::VecExpr(vec)) = info {
         for elem in vec.iter() {
             match elem {
-                Expr::LitExpr(Literal::StringLiteral(tag)) if tag.to_lowercase() == string.to_lowercase() => return true,
-                _                                                                                         => continue,
+                Expr::LitExpr(Literal::StringLiteral(tag), ..)
+                    if tag.to_lowercase() == string.to_lowercase() => return true,
+                _                                                  => continue,
             }
         }
     }

@@ -13,6 +13,8 @@ pub mod tools;
 
 use ast::*;
 use crate::comment;
+use crate::parser::tokens::Span;
+use nom_locate::*;
 use expressions_evaluation::operator_precedence;
 use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
 use parse_ident::parse_ident;
@@ -23,7 +25,7 @@ use tokens::*;
 use tools::*;
 
 use nom::types::*;
-use nom::{Err, ErrorKind as NomError, *};
+use nom::{Err, *};
 use std::collections::HashMap;
 
 // ################# add marco in nom ecosystem
@@ -51,8 +53,9 @@ named!(parse_builderexpr<Span, Expr>, do_parse!(
 ));
 
 named!(parse_identexpr<Span, Expr>, do_parse!(
+    position: position!() >>
     indent: parse_ident >>
-    (Expr::IdentExpr(indent))
+    (Expr::IdentExpr(indent, Interval{ line: position.line, column: position.get_column() as u32} ))
 ));
 
 named!(get_list<Span, Expr>, do_parse!(
@@ -166,24 +169,13 @@ named!(parse_ask_response<Span, Expr>, alt!(
     normal_ask_response | short_ask_response
 ));
 
-// ################################### accept
-
-fn parse_accept(input: Span) -> IResult<Span, bool> {
-    match parse_ident(input) {
-        Ok((span, ref ident)) if ident == ACCEPT => Ok((span, true)),
-        _ => Err(Err::Failure(Context::Code(
-            input,
-            NomError::Custom(ParserErrorType::AcceptError as u32),
-        ))),
-    }
-}
+// ################################### flow starter
 
 named!(parse_start_flow<Span, Instruction>, do_parse!(
     tag!(FLOW) >>
-    comment!(parse_accept) >>
     actions: parse_mandatory_expr_list  >>
 
-    (Instruction { instruction_type: InstructionType::StartFlow(ACCEPT.to_owned()), actions })
+    (Instruction { instruction_type: InstructionType::StartFlow, actions })
 ));
 
 // ################################### step
@@ -249,7 +241,7 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
         let elem2 = elem.clone();
         for val2 in elem2 {
             if val.instruction_type == val2.instruction_type {
-                return Err(format_error(Index{ line: 0, column: 0}, ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32) ))
+                return Err(format_error(Interval{ line: 0, column: 0}, ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32) ))
             }
         }
     }
@@ -325,12 +317,12 @@ fn get_error_message(error_code: ErrorKind) -> String {
     }
 }
 
-fn format_error(index: Index, error_code: ErrorKind) -> ErrorInfo {
+fn format_error(interval: Interval, error_code: ErrorKind) -> ErrorInfo {
     let message = get_error_message(error_code);
 
     ErrorInfo {
-        line: index.line,
-        column: index.column,
+        line: interval.line,
+        column: interval.column,
         message,
     }
 }
@@ -342,8 +334,8 @@ impl Parser {
         match start_parsing(Span::new(CompleteByteSlice(slice))) {
             Ok((.., instructions)) => create_flow_from_instructions(instructions),
             Err(e)                 => match e {
-                Err::Error(Context::Code(span, code)) => Err(format_error(Index{ line: span.line, column: span.get_column() as u32}, code)),
-                Err::Failure(Context::Code(span, code)) => Err(format_error(Index{ line: span.line, column: span.get_column() as u32}, code)),
+                Err::Error(Context::Code(span, code)) => Err(format_error(Interval{ line: span.line, column: span.get_column() as u32}, code)),
+                Err::Failure(Context::Code(span, code)) => Err(format_error(Interval{ line: span.line, column: span.get_column() as u32}, code)),
                 Err::Incomplete(..) => Err(ErrorInfo {
                     line: 0,
                     column: 0,

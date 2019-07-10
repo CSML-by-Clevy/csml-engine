@@ -2,22 +2,22 @@ use crate::parser::ast::*;
 use serde::{Deserialize, Serialize};
 use std::ops::Add;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Button {
-    pub title: String,
-    pub buttton_type: String,
-    pub accepts: Vec<String>,
-    pub key: String,
-    pub value: String,
-    pub payload: String,
-}
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct Button {
+//     pub title: String,
+//     pub buttton_type: String,
+//     pub accepts: Vec<String>,
+//     pub key: String,
+//     pub value: String,
+//     pub payload: String,
+// }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Question {
-    pub title: String,
-    pub accepts: Vec<String>,
-    pub buttons: Vec<Button>,
-}
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct Question {
+//     pub title: String,
+//     pub accepts: Vec<String>,
+//     pub buttons: Vec<Button>,
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MessageType {
@@ -56,6 +56,10 @@ impl Message {
             },
             Literal::ObjectLiteral { name, .. } => Message {
                 content_type: name.to_lowercase(),
+                content: expr.clone(),
+            },
+            Literal::Null => Message {
+                content_type: expr.type_to_string(),
                 content: expr.clone(),
             },
         }

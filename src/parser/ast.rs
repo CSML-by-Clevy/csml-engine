@@ -2,11 +2,12 @@ use serde::{
     ser::{SerializeMap, Serializer},
     Deserialize, Serialize,
 };
+
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
-// use crate::parser::tokens::Span;
+use crate::parser::tokens::Span;
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub struct Flow {
@@ -28,15 +29,15 @@ impl Serialize for Flow {
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash)]
 pub enum InstructionType {
-    StartFlow(String),
+    StartFlow,
     NormalStep(String),
 }
 
 impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionType::StartFlow(ref name) => write!(f, "{}", name),
-            InstructionType::NormalStep(ref name) => write!(f, "{}", name),
+            InstructionType::StartFlow              => write!(f, "Start"),
+            InstructionType::NormalStep(ref name)   => write!(f, "{}", name),
         }
     }
 }
@@ -102,27 +103,26 @@ pub enum Expr {
     VecExpr(Vec<Expr>),
     BuilderExpr(Box<Expr>, Box<Expr>),
 
-    IdentExpr(String),
-    LitExpr(Literal),
+    IdentExpr(String, Interval),
+    LitExpr(Literal, Interval),
 }
 
 impl Expr {
-    pub fn new_literal(lit: Literal) -> Expr {
-        Expr::LitExpr(lit)
-        // span: Some(span)
+    pub fn new_literal(lit: Literal, span: Span) -> Expr {
+        Expr::LitExpr(lit, Interval{ line: span.line, column: span.get_column() as u32})
     }
 
     pub fn to_string(&self) -> String {
         match self {
-            Expr::ComplexLiteral(..) => "complex_literal".to_owned(),
-            Expr::BuilderExpr(..) => "builder".to_owned(),
-            Expr::VecExpr(..) => "Array".to_owned(),
-            Expr::IdentExpr(name) => name.to_owned(),
-            Expr::LitExpr(lit) => lit.type_to_string(),
-            Expr::FunctionExpr(..) => "function".to_owned(),
-            Expr::Block { .. } => "block".to_owned(),
-            Expr::IfExpr { .. } => "if".to_owned(),
-            Expr::InfixExpr(..) => "infix".to_owned(),
+            Expr::ComplexLiteral(..)    => "complex_literal".to_owned(),
+            Expr::BuilderExpr(..)       => "builder".to_owned(),
+            Expr::VecExpr(..)           => "Array".to_owned(),
+            Expr::IdentExpr(name, ..)   => name.to_owned(),
+            Expr::LitExpr(lit, ..)      => lit.type_to_string(),
+            Expr::FunctionExpr(..)      => "function".to_owned(),
+            Expr::Block { .. }          => "block".to_owned(),
+            Expr::IfExpr { .. }         => "if".to_owned(),
+            Expr::InfixExpr(..)         => "infix".to_owned(),
         }
     }
 }
@@ -144,17 +144,18 @@ pub enum Literal {
         name: String,
         value: HashMap<String, Literal>,
     },
-    // NULL
+    #[serde(rename = "null")]
+    Null
 }
 
 impl PartialOrd for Literal {
     fn partial_cmp(&self, other: &Literal) -> Option<Ordering> {
         match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2)) => l1.partial_cmp(l2),
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2)) => l1.partial_cmp(l2),
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2)) => l1.partial_cmp(l2),
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2)) => l1.partial_cmp(l2),
-            _ => None,
+            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1.partial_cmp(l2),
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1.partial_cmp(l2),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => l1.partial_cmp(l2),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1.partial_cmp(l2),
+            _                                                           => None,
         }
     }
 }
@@ -162,11 +163,11 @@ impl PartialOrd for Literal {
 impl PartialEq for Literal {
     fn eq(&self, other: &Literal) -> bool {
         match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2)) => l1 == l2,
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2)) => l1 == l2,
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2)) => l1 == l2,
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2)) => l1 == l2,
-            _ => false,
+            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1 == l2,
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1 == l2,
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => l1 == l2,
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1 == l2,
+            _                                                           => false,
         }
     }
 }
@@ -261,6 +262,7 @@ impl Literal {
             Literal::BoolLiteral(literal) => literal.to_string(),
             Literal::ArrayLiteral(vec) => format!("{:?}", vec),
             Literal::ObjectLiteral { name, value } => format!("{}: {:?}", name, value),
+            Literal::Null => "NULL".to_owned(),
         }
     }
 
@@ -272,6 +274,7 @@ impl Literal {
             Literal::BoolLiteral(..) => "Bool".to_owned(),
             Literal::ArrayLiteral(..) => "Array".to_owned(),
             Literal::ObjectLiteral { .. } => "Object".to_owned(),
+            Literal::Null => "NULL".to_owned(),
         }
     }
 }
@@ -296,7 +299,7 @@ pub enum Infix {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub struct Index {
+pub struct Interval {
     pub line: u32,
     pub column: u32,
 }
