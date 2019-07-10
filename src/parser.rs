@@ -1,7 +1,6 @@
 pub mod ast;
 pub mod parse_ident;
 pub mod parse_string;
-
 pub mod expressions_evaluation;
 pub mod parse_comments;
 pub mod parse_functions;
@@ -11,9 +10,8 @@ pub mod parse_literal;
 pub mod tokens;
 pub mod tools;
 
-use ast::*;
 use crate::comment;
-use crate::parser::tokens::Span;
+use crate::error_format::{*, data::*};
 use nom_locate::*;
 use expressions_evaluation::operator_precedence;
 use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
@@ -23,6 +21,7 @@ use parse_literal::parse_literalexpr;
 use parse_string::parse_string;
 use tokens::*;
 use tools::*;
+use ast::*;
 
 use nom::types::*;
 use nom::{Err, *};
@@ -254,79 +253,6 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
     })
 }
 
-#[repr(u32)]
-pub enum ParserErrorType {
-    StepDuplicateError = 0,
-    AssignError = 1,
-    GotoStepError = 10,
-    ImportError = 11,
-    ImportStepError = 12,
-    AcceptError = 100,
-    LeftBraceError = 110,
-    RightBraceError = 111,
-    LeftParenthesesError = 112,
-    RightParenthesesError = 113,
-    RightBracketError = 114,
-    DoubleQuoteError = 120,
-    DoubleBraceError = 130,
-}
-
-#[derive(Debug)]
-pub struct ErrorInfo {
-    pub line: u32,
-    pub column: u32,
-    pub message: String,
-}
-
-fn get_error_message(error_code: ErrorKind) -> String {
-    match error_code {
-        ErrorKind::Custom(val) if val == ParserErrorType::StepDuplicateError as u32 => {
-           "ERROR: Step name already exists".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32 => {
-            "ERROR: Missing = after remember statement".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::GotoStepError as u32 => {
-            "ERROR: Missing label name after goto".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::AcceptError as u32 => {
-            "ERROR: Flow argument expect Accept identifier".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::LeftBraceError as u32 => {
-            "ERROR: Missing start of block { ".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::RightBraceError as u32 => {
-            "ERROR: Agruments inside brace bad format or brace missing".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32 => {
-            "ERROR: ( mabe missing".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32 => {
-            "ERROR: Agruments inside parentheses bad format or ) missing".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::RightBracketError as u32 => {
-            "ERROR: Agruments inside parentheses bad format or ] missing".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::DoubleQuoteError as u32 => {
-            "ERROR: \" mabe missing".to_string()
-        }
-        ErrorKind::Custom(val) if val == ParserErrorType::DoubleBraceError as u32 => {
-            "ERROR: }} mabe missing".to_string()
-        }
-        e => e.description().to_owned(),
-    }
-}
-
-fn format_error(interval: Interval, error_code: ErrorKind) -> ErrorInfo {
-    let message = get_error_message(error_code);
-
-    ErrorInfo {
-        line: interval.line,
-        column: interval.column,
-        message,
-    }
-}
-
 pub struct Parser;
 
 impl Parser {
@@ -337,8 +263,7 @@ impl Parser {
                 Err::Error(Context::Code(span, code)) => Err(format_error(Interval{ line: span.line, column: span.get_column() as u32}, code)),
                 Err::Failure(Context::Code(span, code)) => Err(format_error(Interval{ line: span.line, column: span.get_column() as u32}, code)),
                 Err::Incomplete(..) => Err(ErrorInfo {
-                    line: 0,
-                    column: 0,
+                    interval: Interval{ line: 0, column: 0},
                     message: "Incomplete".to_string(),
                 }),
             },

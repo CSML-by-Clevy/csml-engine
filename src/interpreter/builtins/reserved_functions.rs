@@ -95,6 +95,10 @@ fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Liter
         return Ok(elem.clone());
     }
 
+    if let Some(elem) = map.get("Array") {
+        return Ok(elem.clone());
+    }
+
     Err(format!(
         "Builtin Typing bad argument type in question -- {:?} === {:?}",
         map,

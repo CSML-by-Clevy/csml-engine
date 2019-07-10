@@ -11,13 +11,13 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Result<Literal, String> {
     let _b = BUTTON.to_owned();
     if let Literal::ObjectLiteral{name: _b, ..} = lit2 {
         if let MessageType::Msg(Message{content: Literal::ObjectLiteral{value, ..} , ..}) = match_builtin(lit2.clone())? {
-            if let Some(Literal::ArrayLiteral(vec)) = value.get("payload") {
-                return Ok(Literal::BoolLiteral(vec.contains(lit1)));
+            match value.get("payload") {
+                Some(Literal::ArrayLiteral(vec))    => return Ok(Literal::BoolLiteral(vec.contains(lit1))),
+                Some(val)                           => return Ok(Literal::BoolLiteral(val == lit1)),
+                _                                   => return Ok(Literal::BoolLiteral(lit1 == lit2))
             }
         }
     }
-    println!("end of match not fouand");
-    // TODO: TMP default return
     Ok(Literal::BoolLiteral(lit1 == lit2))
 }
 
@@ -141,11 +141,11 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
                         },
                         _   => {
                             let value = expr_to_literal(elem, data)?;
-                            obj.insert(value.type_to_string(), expr_to_literal(var, data)?);
+                            obj.insert(value.type_to_string(), value);
                         },
                     }
                 }
-            }
+            };
             Ok(Literal::ObjectLiteral{name: name.to_owned(), value: obj})
         },
         Expr::ComplexLiteral(vec)                           => Ok(get_string_from_complexstring(vec, data)),
