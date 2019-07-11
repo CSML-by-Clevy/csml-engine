@@ -1,5 +1,5 @@
 use crate::comment;
-use crate::parser::{ast::*};
+use crate::parser::ast::*;
 use crate::parser::tokens::*;
 
 use nom::*;

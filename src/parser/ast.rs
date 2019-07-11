@@ -3,11 +3,11 @@ use serde::{
     Deserialize, Serialize,
 };
 
+use crate::parser::tokens::Span;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
-use crate::parser::tokens::Span;
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub struct Flow {
@@ -37,8 +37,9 @@ impl PartialEq for InstructionType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (InstructionType::StartFlow, InstructionType::StartFlow) => true,
-            (InstructionType::NormalStep(SmartIdent{ident: ident1, ..}), 
-            InstructionType::NormalStep(SmartIdent{ ident: ident2 , ..})
+            (
+                InstructionType::NormalStep(SmartIdent { ident: ident1, .. }),
+                InstructionType::NormalStep(SmartIdent { ident: ident2, .. }),
             ) => ident1 == ident2,
             _ => false,
         }
@@ -49,7 +50,7 @@ impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             InstructionType::StartFlow => write!(f, "Start"),
-            InstructionType::NormalStep(SmartIdent{ref ident, ..}) => write!(f, "{}", ident),
+            InstructionType::NormalStep(SmartIdent { ref ident, .. }) => write!(f, "{}", ident),
         }
     }
 }
@@ -95,9 +96,9 @@ pub enum IfStatement {
     IfStmt {
         cond: Box<Expr>,
         consequence: Vec<Expr>,
-        then_branch: Option<Box<IfStatement>>
+        then_branch: Option<Box<IfStatement>>,
     },
-    ElseStmt(Vec<Expr>)
+    ElseStmt(Vec<Expr>),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -119,46 +120,50 @@ pub enum Expr {
 
 impl Expr {
     pub fn new_literal(literal: Literal, span: Span) -> Expr {
-        Expr::LitExpr(
-            SmartLiteral {
-                literal,
-                interval: Interval{ line: span.line, column: span.get_column() as u32}
-            }
-        )
+        Expr::LitExpr(SmartLiteral {
+            literal,
+            interval: Interval {
+                line: span.line,
+                column: span.get_column() as u32,
+            },
+        })
     }
 
     pub fn new_ident(ident: String, span: Span) -> SmartIdent {
         SmartIdent {
             ident,
-            interval: Interval{ line: span.line, column: span.get_column() as u32}
+            interval: Interval {
+                line: span.line,
+                column: span.get_column() as u32,
+            },
         }
     }
 
     pub fn to_string(&self) -> String {
         match self {
-            Expr::ComplexLiteral(..)                    => "complex_literal".to_owned(),
-            Expr::BuilderExpr(..)                       => "builder".to_owned(),
-            Expr::VecExpr(..)                           => "Array".to_owned(),
-            Expr::IdentExpr(SmartIdent{ident, ..})       => ident.to_owned(),
-            Expr::LitExpr(SmartLiteral{literal, ..})    => literal.type_to_string(),
-            Expr::FunctionExpr(..)                      => "function".to_owned(),
-            Expr::Block { .. }                          => "block".to_owned(),
-            Expr::IfExpr { .. }                         => "if".to_owned(),
-            Expr::InfixExpr(..)                         => "infix".to_owned(),
+            Expr::ComplexLiteral(..) => "complex_literal".to_owned(),
+            Expr::BuilderExpr(..) => "builder".to_owned(),
+            Expr::VecExpr(..) => "Array".to_owned(),
+            Expr::IdentExpr(SmartIdent { ident, .. }) => ident.to_owned(),
+            Expr::LitExpr(SmartLiteral { literal, .. }) => literal.type_to_string(),
+            Expr::FunctionExpr(..) => "function".to_owned(),
+            Expr::Block { .. } => "block".to_owned(),
+            Expr::IfExpr { .. } => "if".to_owned(),
+            Expr::InfixExpr(..) => "infix".to_owned(),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq , Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Hash)]
 pub struct SmartIdent {
     pub ident: String,
-    pub interval: Interval
+    pub interval: Interval,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct SmartLiteral {
     pub literal: Literal,
-    pub interval: Interval
+    pub interval: Interval,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -177,12 +182,12 @@ pub enum Infix {
     LessThanEqual,
     GreaterThan,
     LessThan,
- 
+
     And,
     Or,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq , Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Hash)]
 pub struct Interval {
     pub line: u32,
     pub column: u32,
@@ -206,17 +211,17 @@ pub enum Literal {
         value: HashMap<String, Literal>,
     },
     #[serde(rename = "null")]
-    Null
+    Null,
 }
 
 impl PartialOrd for Literal {
     fn partial_cmp(&self, other: &Literal) -> Option<Ordering> {
         match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1.partial_cmp(l2),
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1.partial_cmp(l2),
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => l1.partial_cmp(l2),
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1.partial_cmp(l2),
-            _                                                           => None,
+            (Literal::StringLiteral(l1), Literal::StringLiteral(l2)) => l1.partial_cmp(l2),
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2)) => l1.partial_cmp(l2),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2)) => l1.partial_cmp(l2),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2)) => l1.partial_cmp(l2),
+            _ => None,
         }
     }
 }
@@ -224,11 +229,11 @@ impl PartialOrd for Literal {
 impl PartialEq for Literal {
     fn eq(&self, other: &Literal) -> bool {
         match (self, other) {
-            (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => l1 == l2,
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => l1 == l2,
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => l1 == l2,
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => l1 == l2,
-            _                                                           => false,
+            (Literal::StringLiteral(l1), Literal::StringLiteral(l2)) => l1 == l2,
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2)) => l1 == l2,
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2)) => l1 == l2,
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2)) => l1 == l2,
+            _ => false,
         }
     }
 }

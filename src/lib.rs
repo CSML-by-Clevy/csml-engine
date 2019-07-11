@@ -1,10 +1,10 @@
+pub mod error_format;
 pub mod interpreter;
 pub mod parser;
-pub mod error_format;
 
+use error_format::data::ErrorInfo;
 use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
 use parser::{ast::*, Parser};
-use error_format::data::ErrorInfo;
 use std::collections::HashMap;
 
 use multimap::MultiMap;
@@ -31,16 +31,16 @@ pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
 }
 
 pub fn is_trigger(flow: &Flow, string: &str) -> bool {
-    let info = flow
-        .flow_instructions
-        .get(&InstructionType::StartFlow);
+    let info = flow.flow_instructions.get(&InstructionType::StartFlow);
 
     if let Some(Expr::VecExpr(vec)) = info {
         for elem in vec.iter() {
             match elem {
-                Expr::LitExpr(SmartLiteral{literal: Literal::StringLiteral(tag), ..})
-                    if tag.to_lowercase() == string.to_lowercase() => return true,
-                _                                                  => continue,
+                Expr::LitExpr(SmartLiteral {
+                    literal: Literal::StringLiteral(tag),
+                    ..
+                }) if tag.to_lowercase() == string.to_lowercase() => return true,
+                _ => continue,
             }
         }
     }
@@ -68,12 +68,10 @@ pub fn context_to_memory(context: &JsContext) -> Memory {
 
 pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
     flow.flow_instructions
-        .get(&InstructionType::NormalStep(
-            SmartIdent{
-                ident: name.to_string(),
-                interval: Interval{line: 0, column: 0}
-            }
-        ))
+        .get(&InstructionType::NormalStep(SmartIdent {
+            ident: name.to_string(),
+            interval: Interval { line: 0, column: 0 },
+        }))
 }
 
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, ErrorInfo> {
@@ -83,7 +81,7 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
                 Ok(val) => val,
                 Err(e) => {
                     return Err(ErrorInfo {
-                        interval: Interval{ line: 0, column: 0},
+                        interval: Interval { line: 0, column: 0 },
                         message: e,
                     })
                 }
@@ -97,16 +95,21 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
             }
         }
         _ => Err(ErrorInfo {
-            interval: Interval{ line: 0, column: 0},
+            interval: Interval { line: 0, column: 0 },
             message: "ERROR: Empty Flow".to_string(),
         }),
     }
 }
 
-pub fn interpret(ast: &Flow, step_name: &str, context: &JsContext, event: &Option<Event>) -> Result<String, ErrorInfo> {
+pub fn interpret(
+    ast: &Flow,
+    step_name: &str,
+    context: &JsContext,
+    event: &Option<Event>,
+) -> Result<String, ErrorInfo> {
     if !check_valid_flow(ast) {
         return Err(ErrorInfo {
-            interval: Interval{ line: 0, column: 0},
+            interval: Interval { line: 0, column: 0 },
             message: "ERROR: invalid Flow".to_string(),
         });
     }

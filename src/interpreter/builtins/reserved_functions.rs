@@ -2,9 +2,10 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 
+use crate::error_format::data::ErrorInfo;
 use crate::parser::{ast::Literal, tokens::*};
 
-pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Numeric") {
             Some(value) => Ok(value.clone()),
@@ -15,7 +16,7 @@ pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Lite
     }
 }
 
-pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Numeric") {
             Some(value) => Ok(value.clone()),
@@ -26,7 +27,7 @@ pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Litera
     }
 }
 
-pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Text") {
             Some(value) => Ok(value.clone()),
@@ -37,7 +38,7 @@ pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Litera
     }
 }
 
-pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Text") {
             Some(value) => Ok(value.clone()),
@@ -48,7 +49,7 @@ pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal
     }
 }
 
-pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Text") {
             Some(value) => Ok(value.clone()),
@@ -59,7 +60,7 @@ pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal
     }
 }
 
-pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     let lit = args
         .values()
         .nth(rand::thread_rng().gen_range(0, args.len()))
@@ -86,7 +87,7 @@ fn parse_quickbutton(val: Literal, buttton_type: Literal) -> Literal {
     }
 }
 
-fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     if let Some(elem) = map.get("Text") {
         return Ok(elem.clone());
     }
@@ -104,21 +105,29 @@ fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Liter
     ))
 }
 
-pub fn button<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn button<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         let elem = get_one_of(args)?;
 
-        Ok(parse_quickbutton(elem, Literal::StringLiteral("quick_buttons".to_owned())))
+        Ok(parse_quickbutton(
+            elem,
+            Literal::StringLiteral("quick_buttons".to_owned()),
+        ))
     } else {
         Err("Builtin Button bad number of argument".to_owned())
     }
 }
 
-pub fn question<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<Literal, String> {
+pub fn question<S: BuildHasher>(
+    args: &HashMap<String, Literal, S>,
+    name: String,
+) -> Result<Literal, ErrorInfo> {
     let mut question_value = HashMap::new();
 
     let expr_title = args.get("title").expect("error in question expr_title");
-    let button_type = args.get("button_type").expect("error in question button_type");
+    let button_type = args
+        .get("button_type")
+        .expect("error in question button_type");
     let expr_buttons = args.get("buttons").expect("error in question expr_buttons");
 
     let mut accepts: Vec<Literal> = vec![];
@@ -130,9 +139,7 @@ pub fn question<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String
                     let elem = get_one_of(value)?;
 
                     accepts.push(elem.clone());
-                    buttons.push(
-                        parse_quickbutton(elem, button_type.clone())
-                    )
+                    buttons.push(parse_quickbutton(elem, button_type.clone()))
                 }
                 err => return Err(format!("Builtin Typing bad argument type -> {:?}", err)),
             }
@@ -142,7 +149,7 @@ pub fn question<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String
         question_value.insert("buttons".to_owned(), Literal::ArrayLiteral(buttons));
     };
 
-    Ok(Literal::ObjectLiteral{
+    Ok(Literal::ObjectLiteral {
         name: name.to_lowercase().to_owned(),
         value: question_value,
     })

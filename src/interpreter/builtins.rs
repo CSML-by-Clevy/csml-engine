@@ -1,6 +1,7 @@
 pub mod api_functions;
 pub mod reserved_functions;
 
+use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{data::Data, variable_handler::*};
 use crate::parser::ast::*;
 use serde_json::{Map, Value};

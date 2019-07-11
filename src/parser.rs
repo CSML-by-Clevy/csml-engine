@@ -1,17 +1,18 @@
 pub mod ast;
-pub mod parse_ident;
-pub mod parse_string;
 pub mod expressions_evaluation;
 pub mod parse_comments;
 pub mod parse_functions;
+pub mod parse_ident;
 pub mod parse_if;
 pub mod parse_import;
 pub mod parse_literal;
+pub mod parse_string;
 pub mod tokens;
 pub mod tools;
 
 use crate::comment;
-use crate::error_format::{*, data::*};
+use crate::error_format::{data::*, *};
+use ast::*;
 use expressions_evaluation::operator_precedence;
 use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
 use parse_ident::parse_ident;
@@ -20,7 +21,6 @@ use parse_literal::parse_literalexpr;
 use parse_string::parse_string;
 use tokens::*;
 use tools::*;
-use ast::*;
 
 use nom::types::*;
 use nom::{Err, *};
@@ -241,7 +241,10 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
         let elem2 = elem.clone();
         for val2 in elem2 {
             if val.instruction_type == val2.instruction_type {
-                return Err(format_error(Interval{ line: 0, column: 0}, ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32) ))
+                return Err(format_error(
+                    Interval { line: 0, column: 0 },
+                    ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32),
+                ));
             }
         }
     }
@@ -260,11 +263,23 @@ impl Parser {
     pub fn parse_flow(slice: &[u8]) -> Result<Flow, ErrorInfo> {
         match start_parsing(Span::new(CompleteByteSlice(slice))) {
             Ok((.., instructions)) => create_flow_from_instructions(instructions),
-            Err(e)                 => match e {
-                Err::Error(Context::Code(span, code)) => Err(format_error(Interval{ line: span.line, column: span.get_column() as u32}, code)),
-                Err::Failure(Context::Code(span, code)) => Err(format_error(Interval{ line: span.line, column: span.get_column() as u32}, code)),
+            Err(e) => match e {
+                Err::Error(Context::Code(span, code)) => Err(format_error(
+                    Interval {
+                        line: span.line,
+                        column: span.get_column() as u32,
+                    },
+                    code,
+                )),
+                Err::Failure(Context::Code(span, code)) => Err(format_error(
+                    Interval {
+                        line: span.line,
+                        column: span.get_column() as u32,
+                    },
+                    code,
+                )),
                 Err::Incomplete(..) => Err(ErrorInfo {
-                    interval: Interval{ line: 0, column: 0},
+                    interval: Interval { line: 0, column: 0 },
                     message: "Incomplete".to_string(),
                 }),
             },

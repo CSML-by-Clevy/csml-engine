@@ -1,13 +1,13 @@
 pub mod data;
 
-use nom::ErrorKind;
-use data::*;
 use crate::parser::ast::Interval;
+use data::*;
+use nom::ErrorKind;
 
 pub fn get_error_message(error_code: ErrorKind) -> String {
     match error_code {
         ErrorKind::Custom(val) if val == ParserErrorType::StepDuplicateError as u32 => {
-           "ERROR: Step name already exists".to_string()
+            "ERROR: Step name already exists".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32 => {
             "ERROR: Missing = after remember statement".to_string()
@@ -45,6 +45,9 @@ pub fn get_error_message(error_code: ErrorKind) -> String {
 
 pub fn format_error(interval: Interval, error_code: ErrorKind) -> ErrorInfo {
     let message = get_error_message(error_code);
-
-    ErrorInfo {interval, message}
+    ErrorInfo { interval, message }
 }
+
+// pub fn gen_error(interval: Interval, message: String) -> ErrorInfo {
+//     ErrorInfo {interval, message}
+// }

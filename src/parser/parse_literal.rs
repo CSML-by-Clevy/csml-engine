@@ -1,7 +1,7 @@
 use crate::comment;
 use crate::parser::{ast::*, tokens::*, tools::*};
-use nom_locate::*;
 use nom::*;
+use nom_locate::*;
 
 named!(signed_digits<Span, Span>, recognize!(
     tuple!(

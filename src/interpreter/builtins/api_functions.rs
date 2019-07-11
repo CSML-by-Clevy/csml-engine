@@ -2,12 +2,15 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 
-use crate::interpreter::{builtins::*};
+use crate::error_format::data::ErrorInfo;
+use crate::interpreter::builtins::*;
 use crate::parser::{ast::Literal, tokens::*};
 
 // default #############################################################################
 
-fn parse_api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<(String, HashMap<String, Value>), String> {
+fn parse_api<S: BuildHasher>(
+    args: &HashMap<String, Literal, S>,
+) -> Result<(String, HashMap<String, Value>), ErrorInfo> {
     let hostname = match args.get("hostname") {
         Some(Literal::StringLiteral(value)) => value.to_owned(),
         _ => "localhost".to_owned(),
@@ -25,7 +28,7 @@ fn parse_api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<(Stri
     Ok((format!("http://{}:{}/", hostname, port), map))
 }
 
-pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
     let (http_arg, map) = parse_api(&args)?;
 
     println!("http call {:?}", http_arg);

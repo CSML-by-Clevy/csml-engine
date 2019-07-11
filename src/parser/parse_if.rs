@@ -1,6 +1,8 @@
 use crate::comment;
 
-use crate::parser::{ast::*, parse_block, parse_functions::parse_root_functions, tokens::*, tools::*};
+use crate::parser::{
+    ast::*, parse_block, parse_functions::parse_root_functions, tokens::*, tools::*,
+};
 use nom::*;
 
 named!(parse_implicit_block<Span, Vec<Expr>>, do_parse!(

@@ -19,6 +19,6 @@ pub enum ParserErrorType {
 
 #[derive(Debug)]
 pub struct ErrorInfo {
-    pub interval: Interval,
     pub message: String,
+    pub interval: Interval,
 }
