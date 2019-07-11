@@ -27,17 +27,29 @@ impl Serialize for Flow {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash)]
+#[derive(Serialize, Deserialize, Eq, Debug, Clone, Hash)]
 pub enum InstructionType {
     StartFlow,
-    NormalStep(String),
+    NormalStep(SmartIdent),
+}
+
+impl PartialEq for InstructionType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (InstructionType::StartFlow, InstructionType::StartFlow) => true,
+            (InstructionType::NormalStep(SmartIdent{ident: ident1, ..}), 
+            InstructionType::NormalStep(SmartIdent{ ident: ident2 , ..})
+            ) => ident1 == ident2,
+            _ => false,
+        }
+    }
 }
 
 impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionType::StartFlow              => write!(f, "Start"),
-            InstructionType::NormalStep(ref name)   => write!(f, "{}", name),
+            InstructionType::StartFlow => write!(f, "Start"),
+            InstructionType::NormalStep(SmartIdent{ref ident, ..}) => write!(f, "{}", ident),
         }
     }
 }
@@ -56,25 +68,25 @@ pub enum GotoType {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum ReservedFunction {
-    Goto(GotoType, String),
+    Goto(GotoType, SmartIdent),
     Use(Box<Expr>),
     Say(Box<Expr>),
-    Remember(String, Box<Expr>),
-    Assign(String, Box<Expr>),
-    As(String, Box<Expr>),
+    Remember(SmartIdent, Box<Expr>),
+    Assign(SmartIdent, Box<Expr>),
+    As(SmartIdent, Box<Expr>),
     Import {
-        step_name: String,
-        as_name: Option<String>,
-        file_path: Option<String>,
+        step_name: SmartIdent,
+        as_name: Option<SmartIdent>,
+        file_path: Option<SmartIdent>,
     },
-    Normal(String, Box<Expr>),
+    Normal(SmartIdent, Box<Expr>),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum BlockType {
     Ask,
     Response,
-    AskResponse(Option<String>),
+    AskResponse(Option<SmartIdent>),
     Step,
 }
 
@@ -88,8 +100,6 @@ pub enum IfStatement {
     ElseStmt(Vec<Expr>)
 }
 
-// #[serde(skip_serializing, skip_deserializing)]
-// span: Option<Span >
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Expr {
     Block {
@@ -103,31 +113,82 @@ pub enum Expr {
     VecExpr(Vec<Expr>),
     BuilderExpr(Box<Expr>, Box<Expr>),
 
-    IdentExpr(String, Interval),
-    LitExpr(Literal, Interval),
+    IdentExpr(SmartIdent),
+    LitExpr(SmartLiteral),
 }
 
 impl Expr {
-    pub fn new_literal(lit: Literal, span: Span) -> Expr {
-        Expr::LitExpr(lit, Interval{ line: span.line, column: span.get_column() as u32})
+    pub fn new_literal(literal: Literal, span: Span) -> Expr {
+        Expr::LitExpr(
+            SmartLiteral {
+                literal,
+                interval: Interval{ line: span.line, column: span.get_column() as u32}
+            }
+        )
+    }
+
+    pub fn new_ident(ident: String, span: Span) -> SmartIdent {
+        SmartIdent {
+            ident,
+            interval: Interval{ line: span.line, column: span.get_column() as u32}
+        }
     }
 
     pub fn to_string(&self) -> String {
         match self {
-            Expr::ComplexLiteral(..)    => "complex_literal".to_owned(),
-            Expr::BuilderExpr(..)       => "builder".to_owned(),
-            Expr::VecExpr(..)           => "Array".to_owned(),
-            Expr::IdentExpr(name, ..)   => name.to_owned(),
-            Expr::LitExpr(lit, ..)      => lit.type_to_string(),
-            Expr::FunctionExpr(..)      => "function".to_owned(),
-            Expr::Block { .. }          => "block".to_owned(),
-            Expr::IfExpr { .. }         => "if".to_owned(),
-            Expr::InfixExpr(..)         => "infix".to_owned(),
+            Expr::ComplexLiteral(..)                    => "complex_literal".to_owned(),
+            Expr::BuilderExpr(..)                       => "builder".to_owned(),
+            Expr::VecExpr(..)                           => "Array".to_owned(),
+            Expr::IdentExpr(SmartIdent{ident, ..})       => ident.to_owned(),
+            Expr::LitExpr(SmartLiteral{literal, ..})    => literal.type_to_string(),
+            Expr::FunctionExpr(..)                      => "function".to_owned(),
+            Expr::Block { .. }                          => "block".to_owned(),
+            Expr::IfExpr { .. }                         => "if".to_owned(),
+            Expr::InfixExpr(..)                         => "infix".to_owned(),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)] //, PartialEq, PartialOrd
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq , Hash)]
+pub struct SmartIdent {
+    pub ident: String,
+    pub interval: Interval
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub struct SmartLiteral {
+    pub literal: Literal,
+    pub interval: Interval
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum Infix {
+    Adition,
+    Substraction,
+    Divide,
+    Multiply,
+
+    Not,
+    Match,
+
+    Equal,
+    NotEqual,
+    GreaterThanEqual,
+    LessThanEqual,
+    GreaterThan,
+    LessThan,
+ 
+    And,
+    Or,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq , Hash)]
+pub struct Interval {
+    pub line: u32,
+    pub column: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Literal {
     #[serde(rename = "text")]
     StringLiteral(String),
@@ -277,29 +338,4 @@ impl Literal {
             Literal::Null => "NULL".to_owned(),
         }
     }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub enum Infix {
-    Not,
-    Adition,
-    Substraction,
-    Divide,
-    Multiply,
-
-    Match,
-    Equal,
-    NotEqual,
-    GreaterThanEqual,
-    LessThanEqual,
-    GreaterThan,
-    LessThan,
-    And,
-    Or,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub struct Interval {
-    pub line: u32,
-    pub column: u32,
 }

@@ -2,23 +2,6 @@ use crate::parser::ast::*;
 use serde::{Deserialize, Serialize};
 use std::ops::Add;
 
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct Button {
-//     pub title: String,
-//     pub buttton_type: String,
-//     pub accepts: Vec<String>,
-//     pub key: String,
-//     pub value: String,
-//     pub payload: String,
-// }
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct Question {
-//     pub title: String,
-//     pub accepts: Vec<String>,
-//     pub buttons: Vec<Button>,
-// }
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MessageType {
     Msg(Message),
@@ -32,35 +15,35 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(expr: &Literal) -> Self {
+    pub fn new(expr: Literal) -> Self {
         match expr {
             Literal::IntLiteral(..) => Message {
                 content_type: expr.type_to_string(),
-                content: expr.clone(),
+                content: expr,
             },
             Literal::FloatLiteral(..) => Message {
                 content_type: expr.type_to_string(),
-                content: expr.clone(),
+                content: expr,
             },
             Literal::StringLiteral(..) => Message {
                 content_type: expr.type_to_string(),
-                content: expr.clone(),
+                content: expr,
             },
             Literal::BoolLiteral(..) => Message {
                 content_type: expr.type_to_string(),
-                content: expr.clone(),
+                content: expr,
             },
             Literal::ArrayLiteral(..) => Message {
                 content_type: expr.type_to_string(),
-                content: expr.clone(),
+                content: expr,
             },
-            Literal::ObjectLiteral { name, .. } => Message {
-                content_type: name.to_lowercase(),
-                content: expr.clone(),
+            Literal::ObjectLiteral { ref name, .. } => Message {
+                content_type: name.to_lowercase().to_owned(),
+                content: expr,
             },
             Literal::Null => Message {
                 content_type: expr.type_to_string(),
-                content: expr.clone(),
+                content: expr,
             },
         }
     }
@@ -73,18 +56,18 @@ pub struct Memories {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RootInterface {
+pub struct MessageData {
     pub memories: Option<Vec<Memories>>,
     pub messages: Vec<Message>,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
 }
 
-impl Add for RootInterface {
-    type Output = RootInterface;
+impl Add for MessageData {
+    type Output = MessageData;
 
-    fn add(self, other: RootInterface) -> RootInterface {
-        RootInterface {
+    fn add(self, other: MessageData) -> MessageData {
+        MessageData {
             memories: match (self.memories, other.memories) {
                 (Some(memory), None) => Some(memory),
                 (None, Some(newmemory)) => Some(newmemory),
@@ -103,7 +86,7 @@ impl Add for RootInterface {
     }
 }
 
-impl RootInterface {
+impl MessageData {
     pub fn add_message(mut self, message: Message) -> Self {
         self.messages.push(message);
 

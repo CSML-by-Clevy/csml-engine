@@ -2,13 +2,12 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 
-use crate::interpreter::message::*;
 use crate::parser::{ast::Literal, tokens::*};
 
-pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
+pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
     if args.len() == 1 {
         match args.get("Numeric") {
-            Some(value) => Ok(MessageType::Msg(Message::new(value))),
+            Some(value) => Ok(value.clone()),
             None => Err("Builtin Typing bad argument type in typing".to_owned()),
         }
     } else {
@@ -16,10 +15,10 @@ pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Mess
     }
 }
 
-pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
+pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
     if args.len() == 1 {
         match args.get("Numeric") {
-            Some(value) => Ok(MessageType::Msg(Message::new(value))),
+            Some(value) => Ok(value.clone()),
             None => Err("Builtin Typing bad argument type in wait".to_owned()),
         }
     } else {
@@ -27,10 +26,10 @@ pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Messag
     }
 }
 
-pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
+pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
     if args.len() == 1 {
         match args.get("Text") {
-            Some(value) => Ok(MessageType::Msg(Message::new(value))),
+            Some(value) => Ok(value.clone()),
             None => Err("Builtin Typing bad argument type in text".to_owned()),
         }
     } else {
@@ -38,10 +37,10 @@ pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Messag
     }
 }
 
-pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
+pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
     if args.len() == 1 {
         match args.get("Text") {
-            Some(value) => Ok(MessageType::Msg(Message::new(value))),
+            Some(value) => Ok(value.clone()),
             None => Err("Builtin Typing bad argument type in img".to_owned()),
         }
     } else {
@@ -49,10 +48,10 @@ pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Message
     }
 }
 
-pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
+pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
     if args.len() == 1 {
         match args.get("Text") {
-            Some(value) => Ok(MessageType::Msg(Message::new(value))),
+            Some(value) => Ok(value.clone()),
             None => Err("Builtin Typing bad argument type in url".to_owned()),
         }
     } else {
@@ -60,12 +59,12 @@ pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Message
     }
 }
 
-pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
-    let lit = &args
+pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
+    let lit = args
         .values()
         .nth(rand::thread_rng().gen_range(0, args.len()))
         .expect("error in get one_of");
-    Ok(MessageType::Msg(Message::new(lit)))
+    Ok(lit.clone())
 }
 
 fn parse_quickbutton(val: Literal, buttton_type: Literal) -> Literal {
@@ -82,7 +81,7 @@ fn parse_quickbutton(val: Literal, buttton_type: Literal) -> Literal {
     button_value.insert("payload".to_owned(), val);
 
     Literal::ObjectLiteral {
-        name: "button".to_owned(),
+        name: BUTTON.to_owned(),
         value: button_value,
     }
 }
@@ -94,7 +93,6 @@ fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Liter
     if let Some(elem) = map.get("Numeric") {
         return Ok(elem.clone());
     }
-
     if let Some(elem) = map.get("Array") {
         return Ok(elem.clone());
     }
@@ -106,22 +104,17 @@ fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Liter
     ))
 }
 
-pub fn button<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
+pub fn button<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
     if args.len() == 1 {
         let elem = get_one_of(args)?;
 
-        Ok(MessageType::Msg(
-            Message {
-                content_type: BUTTON.to_owned().to_lowercase(),
-                content: parse_quickbutton(elem, Literal::StringLiteral("quick_buttons".to_owned())),
-            }
-        ))
+        Ok(parse_quickbutton(elem, Literal::StringLiteral("quick_buttons".to_owned())))
     } else {
         Err("Builtin Button bad number of argument".to_owned())
     }
 }
 
-pub fn question<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<MessageType, String> {
+pub fn question<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String) -> Result<Literal, String> {
     let mut question_value = HashMap::new();
 
     let expr_title = args.get("title").expect("error in question expr_title");
@@ -149,11 +142,8 @@ pub fn question<S: BuildHasher>(args: &HashMap<String, Literal, S>, name: String
         question_value.insert("buttons".to_owned(), Literal::ArrayLiteral(buttons));
     };
 
-    Ok(MessageType::Msg(Message {
-        content_type: name.to_lowercase(),
-        content: Literal::ObjectLiteral {
-            name: "question".to_owned(),
-            value: question_value,
-        },
-    }))
+    Ok(Literal::ObjectLiteral{
+        name: name.to_lowercase().to_owned(),
+        value: question_value,
+    })
 }

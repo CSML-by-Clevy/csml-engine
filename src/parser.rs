@@ -12,7 +12,6 @@ pub mod tools;
 
 use crate::comment;
 use crate::error_format::{*, data::*};
-use nom_locate::*;
 use expressions_evaluation::operator_precedence;
 use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
 use parse_ident::parse_ident;
@@ -52,9 +51,8 @@ named!(parse_builderexpr<Span, Expr>, do_parse!(
 ));
 
 named!(parse_identexpr<Span, Expr>, do_parse!(
-    position: position!() >>
     indent: parse_ident >>
-    (Expr::IdentExpr(indent, Interval{ line: position.line, column: position.get_column() as u32} ))
+    (Expr::IdentExpr(indent))
 ));
 
 named!(get_list<Span, Expr>, do_parse!(
@@ -131,7 +129,7 @@ named!(pub parse_as_variable<Span, Expr>, do_parse!(
 
 // ################################### Ask_Response
 
-named!(parse_ask<Span, (Expr, Option<String> )>, do_parse!(
+named!(parse_ask<Span, (Expr, Option<SmartIdent>)>, do_parse!(
     comment!(tag!(ASK)) >>
     opt: opt!(parse_ident) >>
     block: parse_block >>
@@ -194,7 +192,10 @@ named!(parse_step<Span, Instruction>, do_parse!(
     ident: comment!(parse_ident) >>
     comment!(tag!(COLON)) >>
     actions: comment!(parse_actions) >>
-    (Instruction { instruction_type: InstructionType::NormalStep(ident), actions: Expr::Block{block_type: BlockType::Step, arg: actions} } )
+    (Instruction { 
+        instruction_type: InstructionType::NormalStep(ident),
+        actions: Expr::Block{block_type: BlockType::Step, arg: actions}
+    })
 ));
 
 // ############################## block

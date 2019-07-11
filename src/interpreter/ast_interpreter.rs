@@ -10,7 +10,7 @@ use crate::interpreter:: {
 fn match_obj(lit1: &Literal, lit2: &Literal) -> Result<Literal, String> {
     let _b = BUTTON.to_owned();
     if let Literal::ObjectLiteral{name: _b, ..} = lit2 {
-        if let MessageType::Msg(Message{content: Literal::ObjectLiteral{value, ..} , ..}) = match_builtin(lit2.clone())? {
+        if let Literal::ObjectLiteral{value, ..} = match_builtin(lit2.clone())? {
             match value.get("payload") {
                 Some(Literal::ArrayLiteral(vec))    => return Ok(Literal::BoolLiteral(vec.contains(lit1))),
                 Some(val)                           => return Ok(Literal::BoolLiteral(val == lit1)),
@@ -56,14 +56,15 @@ fn check_if_not_operator(infix: &Infix) -> bool {
     if let Infix::Not = infix { true } else { false }
 }
 
-pub fn evaluate_condition(infix: &Infix, expr1: &Expr, expr2: &Expr, data: &mut Data) -> Result<Literal, String> {
+pub fn evaluate_condition(infix: &Infix, expr1: &Expr, expr2: &Expr, data: &mut Data) -> Result<SmartLiteral, String> {
     match (expr1, expr2) {
         (exp1, ..) if check_if_not_operator(infix) && check_if_ident(exp1)  => {
+            // TODO: add interval in error
             match get_var_from_ident(exp1, data) {
-                Ok(Literal::BoolLiteral(false)) => Ok(Literal::BoolLiteral(true)),
-                Ok(Literal::IntLiteral(0))      => Ok(Literal::BoolLiteral(true)),
-                Ok(..)                          => Ok(Literal::BoolLiteral(false)),
-                Err(..)                         => Ok(Literal::BoolLiteral(true))
+                Ok(SmartLiteral{literal: Literal::BoolLiteral(false), interval}) => Ok(SmartLiteral{literal: Literal::BoolLiteral(true), interval}),
+                Ok(SmartLiteral{literal: Literal::IntLiteral(0), interval}) => Ok(SmartLiteral{literal: Literal::BoolLiteral(true), interval}),
+                Ok(SmartLiteral{literal, interval}) => Ok(SmartLiteral{literal: Literal::BoolLiteral(false), interval}),
+                Err(..) => Ok(SmartLiteral{literal: Literal::BoolLiteral(true), interval: Interval{line: 0, column: 0}})
             }
         },
         (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2)        => {
@@ -82,7 +83,6 @@ pub fn evaluate_condition(infix: &Infix, expr1: &Expr, expr2: &Expr, data: &mut 
     }
 }
 
-// return Result<Expr, String, error>
 fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
     match expr {
         Expr::InfixExpr(inf, exp1, exp2)    => {
@@ -99,14 +99,14 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
     }
 }
 
-fn add_to_message(root: RootInterface, action: MessageType) -> RootInterface {
+fn add_to_message(root: MessageData, action: MessageType) -> MessageData {
     match action {
         MessageType::Msg(msg)            => root.add_message(msg),
         MessageType::Empty               => root,
     }
 }
 
-fn match_builtin(object: Literal) -> Result<MessageType, String> {
+fn match_builtin(object: Literal) -> Result<Literal, String> {
     match object {
         Literal::ObjectLiteral{ref name, ref value} if name == TYPING   => typing(value),
         Literal::ObjectLiteral{ref name, ref value} if name == WAIT     => wait(value),
@@ -117,7 +117,7 @@ fn match_builtin(object: Literal) -> Result<MessageType, String> {
         Literal::ObjectLiteral{ref name, ref value} if name == QUESTION => question(value, name.to_owned()),
         Literal::ObjectLiteral{ref name, ref value} if name == BUTTON   => button(value),
         Literal::ObjectLiteral{ref name, ref value} if name == API      => api(value),
-        Literal::ObjectLiteral{..}                                      => Ok(MessageType::Msg(Message::new(&object))),
+        Literal::ObjectLiteral{..}                                      => Ok(object),
         _                                                               => unreachable!(),
     }
 }
@@ -157,8 +157,7 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, String> {
             Ok(Literal::ArrayLiteral(array))
         },
         Expr::IdentExpr(var, ..)                            => get_var(var, data),
-        Expr::LitExpr(literal, ..)                          => Ok(literal.clone()),
-        // Expr::BuilderExpr(expr1, expr2)                  => Ok(),
+        Expr::LitExpr(SmartLiteral{literal, ..})            => Ok(literal.clone()),
         _                                                   => Err(format!("ERROR: Expr {:?} can't be converted to Literal", expr).to_owned())
     }
 }
@@ -174,37 +173,41 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, String
             };
             Ok(msg)
         },
-        Expr::FunctionExpr(ReservedFunction::Normal(..)) => match_builtin(expr_to_literal(action, data)?),
+        Expr::FunctionExpr(ReservedFunction::Normal(..)) => {
+            Ok(MessageType::Msg(Message::new(
+                match_builtin(expr_to_literal(action, data)?)?
+            )))
+        },
         Expr::BuilderExpr(..)           => {
             match get_var_from_ident(action, data) {
-                Ok(val) => Ok(MessageType::Msg(Message::new(&val))),
+                Ok(val) => Ok(MessageType::Msg(Message::new(val))),
                 Err(e)  => Err(e)
             }
         },
         Expr::ComplexLiteral(vec)       => {
             Ok(MessageType::Msg(
-                Message::new(&get_string_from_complexstring(vec, data))
+                Message::new(get_string_from_complexstring(vec, data))
             ))
         },
         Expr::InfixExpr(infix, exp1, exp2) => {
             match evaluate_condition(infix, exp1, exp2, data) {
-                Ok(val) => Ok(MessageType::Msg(Message::new(&val))),
+                Ok(val) => Ok(MessageType::Msg(Message::new(val))),
                 Err(e)  => Err(e)
             }
         },
         Expr::IdentExpr(ident, ..)         => {
             match get_var(ident, data) {
-                Ok(val)     => Ok(MessageType::Msg(Message::new(&val))),
-                Err(_e)     => Ok(MessageType::Msg(Message::new(&Literal::StringLiteral("NULL".to_owned())))),//Err(e)
+                Ok(val)     => Ok(MessageType::Msg(Message::new(val))),
+                Err(_e)     => Ok(MessageType::Msg(Message::new(Literal::StringLiteral("NULL".to_owned())))),
             }
         },
-        Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?))),
-        Expr::VecExpr(..)                  => Ok(MessageType::Msg(Message::new(&expr_to_literal(action, data)?))),
+        Expr::LitExpr{..}                  => Ok(MessageType::Msg(Message::new(expr_to_literal(action, data)?))),
+        Expr::VecExpr(..)                  => Ok(MessageType::Msg(Message::new(expr_to_literal(action, data)?))),
         err                                => Err(format!("Error must be a valid function {:?}", err)),
     }
 }
 
-fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mut Data) -> Result<RootInterface, String> {
+fn match_actions(function: &ReservedFunction, mut root: MessageData, data: &mut Data) -> Result<MessageData, String> {
     match function {
         ReservedFunction::Say(arg)                      => {
             Ok(add_to_message(root, match_functions(arg, data)?))
@@ -233,15 +236,15 @@ fn match_actions(function: &ReservedFunction, mut root: RootInterface, data: &mu
     }
 }
 
-fn match_ask_response(vec: &[Expr], mut root: RootInterface, data: &mut Data, opt: &Option<String>) -> Result<RootInterface, String> {
+fn match_ask_response(vec: &[Expr], mut root: MessageData, data: &mut Data, opt: &Option<SmartIdent>) -> Result<MessageData, String> {
     for block in vec.iter() {
         match (block, data.event) {
             (Expr::Block{block_type: BlockType::Ask, arg: args}, None)              => {
                 return Ok(root + interpret_block(args, data)?);
             },
             (Expr::Block{block_type: BlockType::Response, arg: args}, Some(..))     => {
-                if let Some(ident) = opt {
-                   root = root.add_to_memory(ident.to_owned(), gen_literal_form_event(data.event)?);
+                if let Some(SmartIdent{ident, interval}) = opt {
+                   root = root.add_to_memory(ident.to_owned(), gen_literal_form_event(data.event, interval)?);
                 }
                 return Ok(root + interpret_block(args, data)?);
             },
@@ -251,7 +254,7 @@ fn match_ask_response(vec: &[Expr], mut root: RootInterface, data: &mut Data, op
     Err("error sub block arg must be of type Expr::VecExpr".to_owned())
 }
 
-pub fn solve_if_statments(statment: &IfStatement, mut root: RootInterface, data: &mut Data) -> Result<RootInterface, String>{
+pub fn solve_if_statments(statment: &IfStatement, mut root: MessageData, data: &mut Data) -> Result<MessageData, String>{
     match statment {
         IfStatement::IfStmt{cond, consequence, then_branch}  => {
             if valid_condition(cond, data) {
@@ -270,8 +273,8 @@ pub fn solve_if_statments(statment: &IfStatement, mut root: RootInterface, data:
     }
 }
 
-pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<RootInterface, String> {
-    let mut root = RootInterface {memories: None, messages: vec![], next_flow: None, next_step: None};
+pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<MessageData, String> {
+    let mut root = MessageData {memories: None, messages: vec![], next_flow: None, next_step: None};
 
     for action in actions {
         if root.next_step.is_some() {
@@ -279,12 +282,12 @@ pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<RootInterfac
         }
 
         match action {
-            Expr::FunctionExpr(fun)                                             => { root = match_actions(fun, root, data)?; },
-            Expr::IfExpr(ref ifstatement)                                       => root = solve_if_statments(ifstatement, root, data)?,
+            Expr::FunctionExpr(fun) => { root = match_actions(fun, root, data)?; },
+            Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
             Expr::Block { block_type: BlockType::AskResponse(opt), arg: vec }   => {
                 root = match_ask_response(vec, root, data, opt)?;
             }
-            _                                                                   => return Err("Block must start with a reserved keyword".to_owned()),
+            _  => return Err("Block must start with a reserved keyword".to_owned()),
         };
     }
     Ok(root)

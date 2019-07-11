@@ -1,5 +1,5 @@
 use crate::parser::{
-    ast::{Expr, Flow, InstructionType}
+    ast::{Interval, SmartIdent, Expr, Flow, InstructionType}
 };
 
 pub fn check_ident(expr: &str, name: &str) -> bool {
@@ -24,8 +24,12 @@ pub fn check_valid_flow(flow: &Flow) -> bool {
 
     if flow
         .flow_instructions
-        .get(&InstructionType::NormalStep("start".to_string()))
-        .is_some()
+        .get(&InstructionType::NormalStep(
+            SmartIdent {
+                ident: "start".to_string(),
+                interval: Interval{line: 0, column: 0}
+            }
+        )).is_some()
     {
         start = true;
     }

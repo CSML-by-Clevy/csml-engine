@@ -1,13 +1,17 @@
 use crate::comment;
+use crate::parser::{ast::*};
 use crate::parser::tokens::*;
 
 use nom::*;
 use nom_locate::position;
 
-named!(pub parse_ident<Span, String>, do_parse!(
-    _position: position!() >>
+named!(pub parse_ident<Span, SmartIdent>, do_parse!(
+    position: position!() >>
     var: comment!(take_till1!(is_valid_char)) >>
-    (String::from_utf8(var.fragment.to_vec()).expect("error at parsing [u8] to &str"))
+    (Expr::new_ident(
+        String::from_utf8(var.fragment.to_vec()).expect("error at parsing [u8] to &str"),
+        position
+    ))
 ));
 
 pub fn is_valid_char(input: u8) -> bool {

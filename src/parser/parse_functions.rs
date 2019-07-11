@@ -29,7 +29,6 @@ named!(get_default<Span, GotoType>, do_parse!(
 named!(parse_goto<Span, Expr>, do_parse!(
     comment!(tag!(GOTO)) >>
     goto_type: alt!(get_step | get_flow | get_default) >>
-    // expr: complete!(parse_var_expr) >>
     name: return_error!(
         nom::ErrorKind::Custom(ParserErrorType::GotoStepError as u32),
         parse_ident

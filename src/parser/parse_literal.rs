@@ -13,7 +13,7 @@ named!(signed_digits<Span, Span>, recognize!(
 named!(pub parse_integer<Span, Expr>, do_parse!(
     position: position!() >>
     i: map_res!(map_res!(signed_digits, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::new_literal(Literal::IntLiteral(i), position) )
+    (Expr::new_literal(Literal::IntLiteral(i), position))
 ));
 
 named!(floating_point<Span, Span>, recognize!(
@@ -57,7 +57,7 @@ named!(pub parse_literalexpr<Span, Expr>, do_parse!(
             parse_boolean
         )
     ) >>
-    (lit) //, span
+    (lit)
 ));
 
 #[cfg(test)]

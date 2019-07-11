@@ -2,7 +2,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 
-use crate::interpreter::{builtins::*, message::*};
+use crate::interpreter::{builtins::*};
 use crate::parser::{ast::Literal, tokens::*};
 
 // default #############################################################################
@@ -25,7 +25,7 @@ fn parse_api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<(Stri
     Ok((format!("http://{}:{}/", hostname, port), map))
 }
 
-pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<MessageType, String> {
+pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, String> {
     let (http_arg, map) = parse_api(&args)?;
 
     println!("http call {:?}", http_arg);
@@ -34,7 +34,7 @@ pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Message
         Ok(ref mut arg) => match arg.text() {
             Ok(text) => {
                 println!("reqwest post ok : ");
-                Ok(MessageType::Msg(Message::new(&Literal::StringLiteral(text))))
+                Ok(Literal::StringLiteral(text))
             }
             Err(e) => {
                 println!("error in parsing reqwest result: {:?}", e);

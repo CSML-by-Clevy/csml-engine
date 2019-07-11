@@ -38,7 +38,7 @@ pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     if let Some(Expr::VecExpr(vec)) = info {
         for elem in vec.iter() {
             match elem {
-                Expr::LitExpr(Literal::StringLiteral(tag), ..)
+                Expr::LitExpr(SmartLiteral{literal: Literal::StringLiteral(tag), ..})
                     if tag.to_lowercase() == string.to_lowercase() => return true,
                 _                                                  => continue,
             }
@@ -68,7 +68,12 @@ pub fn context_to_memory(context: &JsContext) -> Memory {
 
 pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
     flow.flow_instructions
-        .get(&InstructionType::NormalStep(name.to_string()))
+        .get(&InstructionType::NormalStep(
+            SmartIdent{
+                ident: name.to_string(),
+                interval: Interval{line: 0, column: 0}
+            }
+        ))
 }
 
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, ErrorInfo> {
