@@ -4,6 +4,7 @@ use serde::{
 };
 
 use crate::parser::tokens::Span;
+use crate::error_format::data::ErrorInfo;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -27,30 +28,17 @@ impl Serialize for Flow {
     }
 }
 
-#[derive(Serialize, Deserialize, Eq, Debug, Clone, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone, Hash)]
 pub enum InstructionType {
     StartFlow,
-    NormalStep(SmartIdent),
-}
-
-impl PartialEq for InstructionType {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (InstructionType::StartFlow, InstructionType::StartFlow) => true,
-            (
-                InstructionType::NormalStep(SmartIdent { ident: ident1, .. }),
-                InstructionType::NormalStep(SmartIdent { ident: ident2, .. }),
-            ) => ident1 == ident2,
-            _ => false,
-        }
-    }
+    NormalStep(String),
 }
 
 impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             InstructionType::StartFlow => write!(f, "Start"),
-            InstructionType::NormalStep(SmartIdent { ref ident, .. }) => write!(f, "{}", ident),
+            InstructionType::NormalStep(ref ident) => write!(f, "{}", ident),
         }
     }
 }
@@ -98,7 +86,7 @@ pub enum IfStatement {
         consequence: Vec<Expr>,
         then_branch: Option<Box<IfStatement>>,
     },
-    ElseStmt(Vec<Expr>),
+    ElseStmt(Vec<Expr>, RangeInterval),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -106,12 +94,14 @@ pub enum Expr {
     Block {
         block_type: BlockType,
         arg: Vec<Expr>,
+        range: RangeInterval
     },
+    ComplexLiteral(Vec<Expr>, RangeInterval),
+    VecExpr(Vec<Expr>, RangeInterval),
+    InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval
+
+    FunctionExpr(ReservedFunction), // RangeInterval ?
     IfExpr(IfStatement),
-    InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    FunctionExpr(ReservedFunction),
-    ComplexLiteral(Vec<Expr>),
-    VecExpr(Vec<Expr>),
     BuilderExpr(Box<Expr>, Box<Expr>),
 
     IdentExpr(SmartIdent),
@@ -119,23 +109,17 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn new_literal(literal: Literal, span: Span) -> Expr {
+    pub fn new_literal(literal: Literal, interval: Interval) -> Expr {
         Expr::LitExpr(SmartLiteral {
             literal,
-            interval: Interval {
-                line: span.line,
-                column: span.get_column() as u32,
-            },
+            interval
         })
     }
 
-    pub fn new_ident(ident: String, span: Span) -> SmartIdent {
+    pub fn new_ident(ident: String, interval: Interval) -> SmartIdent {
         SmartIdent {
             ident,
-            interval: Interval {
-                line: span.line,
-                column: span.get_column() as u32,
-            },
+            interval
         }
     }
 
@@ -152,18 +136,6 @@ impl Expr {
             Expr::InfixExpr(..) => "infix".to_owned(),
         }
     }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Hash)]
-pub struct SmartIdent {
-    pub ident: String,
-    pub interval: Interval,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub struct SmartLiteral {
-    pub literal: Literal,
-    pub interval: Interval,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -188,9 +160,24 @@ pub enum Infix {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Hash)]
+pub struct RangeInterval {
+    pub start: Interval,
+    pub end: Interval,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Hash)]
 pub struct Interval {
     pub line: u32,
     pub column: u32,
+}
+
+impl Interval {
+   pub fn new(span: Span) -> Self{
+        Interval {
+            line: span.line,
+            column: span.get_column() as u32,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -238,87 +225,6 @@ impl PartialEq for Literal {
     }
 }
 
-impl Add for Literal {
-    type Output = Result<Literal, String>;
-
-    fn add(self, other: Literal) -> Result<Literal, String> {
-        match (self, other) {
-            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(Literal::FloatLiteral(l1 + l2 as f64)),
-            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(Literal::FloatLiteral(l1 as f64 + l2)),
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(Literal::FloatLiteral(l1 + l2)),
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(Literal::IntLiteral(l1 + l2)),
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(Literal::IntLiteral(l1 as i64 + l2 as i64)),
-            _                                                           => Err("Illegal operation + between types".to_owned())
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 + l2),
-        }
-    }
-}
-
-impl Sub for Literal {
-    type Output = Result<Literal, String>;
-
-    fn sub(self, other: Literal) -> Result<Literal, String> {
-        match (self, other) {
-            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(Literal::FloatLiteral(l1 - l2 as f64)),
-            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(Literal::FloatLiteral(l1 as f64 - l2)),
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(Literal::FloatLiteral(l1 - l2)),
-
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(Literal::IntLiteral(l1 - l2)),
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(Literal::IntLiteral(l1 as i64 - l2 as i64)),
-            _                                                           => Err("Illegal operation - between types".to_owned())
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 - l2),
-        }
-    }
-}
-
-impl Div for Literal {
-    type Output = Result<Literal, String>;
-
-    fn div(self, other: Literal) -> Result<Literal, String> {
-        match (self, other) {
-            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => {
-                if l2 == 0 { return Err("Cannot divide by zero-valued".to_owned()) }
-                Ok(Literal::FloatLiteral(l1 / l2 as f64))
-            },
-            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => {
-                if l2 == 0.0 { return Err("Cannot divide by zero-valued".to_owned()) }
-                Ok(Literal::FloatLiteral(l1 as f64 / l2))
-            },
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => {
-                if l2 == 0.0 { return Err("Cannot divide by zero-valued".to_owned()) }
-                Ok(Literal::FloatLiteral(l1 / l2))
-            },
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => {
-                if l2 == 0 { return Err("Cannot divide by zero-valued".to_owned()) }
-                Ok(Literal::IntLiteral(l1 / l2))
-            },
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => {
-                if !l2 { return Err("Cannot divide by zero-valued".to_owned()) }
-                Ok(Literal::IntLiteral(l1 as i64 / l2 as i64))
-            },
-            _                                                           => Err("Illegal operation / between types".to_owned())
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 / l2),
-        }
-    }
-}
-
-impl Mul for Literal {
-    type Output = Result<Literal, String>;
-
-    fn mul(self, other: Literal) -> Result<Literal, String> {
-        match (self, other) {
-            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(Literal::FloatLiteral(l1 * l2 as f64)),
-            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(Literal::FloatLiteral(l1 as f64 * l2)),
-            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(Literal::FloatLiteral(l1 * l2)),
-
-            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(Literal::IntLiteral(l1 * l2)),
-            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(Literal::IntLiteral(l1 as i64 * l2 as i64)),
-            _                                                           => Err("Illegal operation * between types".to_owned())
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 * l2),
-        }
-    }
-}
-
 impl Literal {
     pub fn to_string(&self) -> String {
         match self {
@@ -341,6 +247,155 @@ impl Literal {
             Literal::ArrayLiteral(..) => "Array".to_owned(),
             Literal::ObjectLiteral { .. } => "Object".to_owned(),
             Literal::Null => "NULL".to_owned(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq)]
+pub struct SmartIdent {
+    pub ident: String,
+    pub interval: Interval,
+}
+
+impl PartialEq for SmartIdent {
+    fn eq(&self, other: &SmartIdent) -> bool {
+        self.ident == other.ident
+    }
+}
+
+impl PartialOrd for SmartIdent {
+    fn partial_cmp(&self, other: &SmartIdent) -> Option<Ordering> {
+        self.ident.partial_cmp(&other.ident)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SmartLiteral {
+    pub literal: Literal,
+    pub interval: Interval,
+}
+
+impl PartialOrd for SmartLiteral {
+    fn partial_cmp(&self, other: &SmartLiteral) -> Option<Ordering> {
+        self.literal.partial_cmp(&other.literal)
+    }
+}
+
+impl PartialEq for SmartLiteral {
+    fn eq(&self, other: &SmartLiteral) -> bool {
+        self.literal == other.literal
+    }
+}
+
+impl Add for SmartLiteral {
+    type Output = Result<SmartLiteral, ErrorInfo>;
+
+    fn add(self, other: SmartLiteral) -> Result<SmartLiteral, ErrorInfo> {
+        match (self.literal, other.literal) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(SmartLiteral{literal: Literal::FloatLiteral(l1 + l2 as f64), interval: self.interval}),
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(SmartLiteral{literal: Literal::FloatLiteral(l1 as f64 + l2), interval: self.interval}),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(SmartLiteral{literal: Literal::FloatLiteral(l1 + l2), interval: self.interval}) ,
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(SmartLiteral{literal: Literal::IntLiteral(l1 + l2), interval: self.interval}),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(SmartLiteral{literal: Literal::IntLiteral(l1 as i64 + l2 as i64), interval: self.interval}),
+            _                                                           => Err(ErrorInfo {
+                message: "Illegal operation + between types".to_owned(),
+                interval: self.interval,
+            })
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 + l2),
+        }
+    }
+}
+
+impl Sub for SmartLiteral {
+    type Output = Result<SmartLiteral, ErrorInfo>;
+
+    fn sub(self, other: SmartLiteral) -> Result<SmartLiteral, ErrorInfo> {
+        match (self.literal, other.literal) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => Ok(SmartLiteral{literal: Literal::FloatLiteral(l1 - l2 as f64), interval: self.interval}),
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => Ok(SmartLiteral{literal: Literal::FloatLiteral(l1 as f64 - l2), interval: self.interval}),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => Ok(SmartLiteral{literal: Literal::FloatLiteral(l1 - l2), interval: self.interval}),
+
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => Ok(SmartLiteral{literal: Literal::IntLiteral(l1 - l2), interval: self.interval}),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => Ok(SmartLiteral{literal: Literal::IntLiteral(l1 as i64 - l2 as i64), interval: self.interval}),
+            _                                                           => Err(ErrorInfo {
+                message: "Illegal operation - between types".to_owned(),
+                interval: self.interval,
+            })
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 - l2),
+        }
+    }
+}
+
+impl Div for SmartLiteral {
+    type Output = Result<SmartLiteral, ErrorInfo>;
+
+    fn div(self, other: SmartLiteral) -> Result<SmartLiteral, ErrorInfo> {
+        match (self.literal, other.literal) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))        => {
+                if l2 == 0 { return Err(ErrorInfo {
+                        message: "Cannot divide by zero-valued".to_owned(),
+                        interval: self.interval,
+                    }) 
+                }
+                Ok(SmartLiteral{ literal: Literal::FloatLiteral(l1 / l2 as f64), interval: self.interval })
+            },
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))        => {
+                if l2 == 0.0 { return Err(ErrorInfo {
+                        message: "Cannot divide by zero-valued".to_owned(),
+                        interval: self.interval,
+                    })
+                }
+                Ok(SmartLiteral{ literal: Literal::FloatLiteral(l1 as f64 / l2), interval: self.interval })
+            },
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))      => {
+                if l2 == 0.0 { return Err(ErrorInfo {
+                        message: "Cannot divide by zero-valued".to_owned(),
+                        interval: self.interval,
+                    })
+                }
+                Ok(SmartLiteral{ literal: Literal::FloatLiteral(l1 / l2), interval: self.interval })
+            },
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))          => {
+                if l2 == 0 { return Err(ErrorInfo {
+                        message: "Cannot divide by zero-valued".to_owned(),
+                        interval: self.interval,
+                    })
+                }
+                Ok(SmartLiteral{literal: Literal::IntLiteral(l1 / l2) , interval: self.interval})
+            },
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))        => {
+                if !l2 {
+                    return Err(ErrorInfo {
+                        message: "Cannot divide by zero-valued".to_owned(),
+                        interval: self.interval,
+                    })
+                }
+                Ok(SmartLiteral{literal: Literal::IntLiteral(l1 as i64 / l2 as i64) , interval: self.interval})
+            },
+            _                                                           => Err(ErrorInfo {
+                message: "Illegal operation / between types".to_owned(),
+                interval: self.interval,
+            })
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 / l2),
+        }
+    }
+}
+
+impl Mul for SmartLiteral {
+    type Output = Result<SmartLiteral, ErrorInfo>;
+
+    fn mul(self, other: SmartLiteral) -> Result<SmartLiteral, ErrorInfo> {
+        match (self.literal, other.literal) {
+            (Literal::FloatLiteral(l1), Literal::IntLiteral(l2))    => Ok(SmartLiteral{ literal: Literal::FloatLiteral(l1 * l2 as f64) , interval: self.interval}),
+            (Literal::IntLiteral(l1), Literal::FloatLiteral(l2))    => Ok(SmartLiteral{ literal: Literal::FloatLiteral(l1 as f64 * l2) , interval: self.interval}),
+            (Literal::FloatLiteral(l1), Literal::FloatLiteral(l2))  => Ok(SmartLiteral{ literal: Literal::FloatLiteral(l1 * l2) , interval: self.interval}),
+            (Literal::IntLiteral(l1), Literal::IntLiteral(l2))      => Ok(SmartLiteral{ literal: Literal::IntLiteral(l1 * l2) , interval: self.interval}),
+            (Literal::BoolLiteral(l1), Literal::BoolLiteral(l2))    => Ok(SmartLiteral{ literal: Literal::IntLiteral(l1 as i64 * l2 as i64) , interval: self.interval}),
+            _                                                       => Err(ErrorInfo {
+                message: "Illegal operation * between types".to_owned(),
+                interval: self.interval,
+            })
+            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 * l2),
         }
     }
 }

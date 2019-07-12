@@ -1,7 +1,6 @@
 use crate::comment;
 use crate::parser::{ast::*, tokens::*, tools::*};
 use nom::*;
-use nom_locate::*;
 
 named!(signed_digits<Span, Span>, recognize!(
     tuple!(
@@ -11,7 +10,7 @@ named!(signed_digits<Span, Span>, recognize!(
 ));
 
 named!(pub parse_integer<Span, Expr>, do_parse!(
-    position: position!() >>
+    position: get_interval >>
     i: map_res!(map_res!(signed_digits, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
     (Expr::new_literal(Literal::IntLiteral(i), position))
 ));
@@ -27,13 +26,13 @@ named!(floating_point<Span, Span>, recognize!(
 ));
 
 named!(pub parse_float<Span, Expr>, do_parse!(
-    position: position!() >>
+    position: get_interval >>
     elem: map_res!(map_res!(floating_point, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
     (Expr::new_literal(Literal::FloatLiteral(elem), position))
 ));
 
 named!(parse_boolean<Span, Expr>, do_parse!(
-    position: position!() >>
+    position: get_interval >>
     boolean: alt!(
             do_parse!(
                 tag!(TRUE) >>

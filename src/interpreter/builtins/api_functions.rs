@@ -28,7 +28,7 @@ fn parse_api<S: BuildHasher>(
     Ok((format!("http://{}:{}/", hostname, port), map))
 }
 
-pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let (http_arg, map) = parse_api(&args)?;
 
     println!("http call {:?}", http_arg);
@@ -41,12 +41,19 @@ pub fn api<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal
             }
             Err(e) => {
                 println!("error in parsing reqwest result: {:?}", e);
-                Err("Error in parsing reqwest result".to_owned())
+                Err(ErrorInfo{
+                    message: "Error in parsing reqwest result".to_owned(),
+                    interval
+                })
             }
         },
         Err(e) => {
             println!("error in reqwest post {:?}", e);
-            Err("Error in reqwest post".to_owned())
+            Err(ErrorInfo{
+                message: "Error in reqwest post".to_owned(),
+                interval
+            })
+
         }
     }
 }

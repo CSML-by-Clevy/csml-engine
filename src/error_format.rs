@@ -47,7 +47,3 @@ pub fn format_error(interval: Interval, error_code: ErrorKind) -> ErrorInfo {
     let message = get_error_message(error_code);
     ErrorInfo { interval, message }
 }
-
-// pub fn gen_error(interval: Interval, message: String) -> ErrorInfo {
-//     ErrorInfo {interval, message}
-// }

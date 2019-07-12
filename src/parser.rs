@@ -22,8 +22,8 @@ use parse_string::parse_string;
 use tokens::*;
 use tools::*;
 
-use nom::types::*;
 use nom::{Err, *};
+use nom::types::*;
 use std::collections::HashMap;
 
 // ################# add marco in nom ecosystem
@@ -57,6 +57,7 @@ named!(parse_identexpr<Span, Expr>, do_parse!(
 
 named!(get_list<Span, Expr>, do_parse!(
     first_elem: alt!(parse_as_variable | parse_var_expr) >>
+    start: get_interval >>
     vec: fold_many0!(
         do_parse!(
             comment!(tag!(COMMA)) >>
@@ -69,7 +70,8 @@ named!(get_list<Span, Expr>, do_parse!(
             acc
         }
     ) >>
-    (Expr::VecExpr(vec))
+    end: get_interval >>
+    (Expr::VecExpr(vec, RangeInterval{start, end}))
 ));
 
 named!(parse_mandatory_expr_list<Span, Expr>, do_parse!(
@@ -132,33 +134,59 @@ named!(pub parse_as_variable<Span, Expr>, do_parse!(
 named!(parse_ask<Span, (Expr, Option<SmartIdent>)>, do_parse!(
     comment!(tag!(ASK)) >>
     opt: opt!(parse_ident) >>
+    // start: comment!(position!()) >>
+    start: get_interval >>
     block: parse_block >>
-    (Expr::Block{block_type: BlockType::Ask, arg: block}, opt)
+    end: get_interval >>
+    (Expr::Block{block_type: BlockType::Ask, arg: block, range: RangeInterval{start, end} }, opt)
 ));
 
 named!(parse_response<Span, Expr>, do_parse!(
     comment!(tag!(RESPONSE)) >>
+    start: get_interval >>
     block: parse_strick_block >>
-    (Expr::Block{block_type: BlockType::Response, arg: block})
+    end: get_interval >>
+    (Expr::Block{block_type: BlockType::Response, arg: block, range: RangeInterval{start, end}})
 ));
 
 named!(normal_ask_response<Span, Expr>, do_parse!(
+    start: get_interval >>
     ask: parse_ask  >>
     response: parse_response >>
-    (Expr::Block{block_type: BlockType::AskResponse(ask.1), arg: vec![ask.0, response]})
+    end: get_interval >>
+    (Expr::Block{
+        block_type: BlockType::AskResponse(ask.1),
+        arg: vec![ask.0, response],
+        range: RangeInterval{
+            start,
+            end
+        }
+    })
 ));
 
 named!(short_ask_response<Span, Expr>, do_parse!(
     comment!(tag!(ASK)) >>
     ident: opt!(parse_ident) >>
+    start_ask: get_interval >>
     ask: parse_root_functions >>
+    end_ask: get_interval >>
     response: many0!(parse_root_functions) >>
+    end_r: get_interval >>
     (Expr::Block{
         block_type: BlockType::AskResponse(ident),
         arg: vec![
-            Expr::Block{block_type: BlockType::Ask, arg: vec![ask]},
-            Expr::Block{block_type: BlockType::Response, arg: response},
-        ]
+            Expr::Block{
+                block_type: BlockType::Ask, 
+                arg: vec![ask],
+                range: RangeInterval{start: start_ask.clone(), end: end_ask.clone()}
+            },
+            Expr::Block{
+                block_type: BlockType::Response,
+                arg: response,
+                range: RangeInterval{start: end_ask, end: end_r.clone()}
+            },
+        ],
+        range: RangeInterval{start: start_ask, end: end_r}
     })
 ));
 
@@ -191,10 +219,16 @@ named!(parse_actions<Span, Vec<Expr> >, do_parse!(
 named!(parse_step<Span, Instruction>, do_parse!(
     ident: comment!(parse_ident) >>
     comment!(tag!(COLON)) >>
+    start: get_interval >>
     actions: comment!(parse_actions) >>
-    (Instruction { 
-        instruction_type: InstructionType::NormalStep(ident),
-        actions: Expr::Block{block_type: BlockType::Step, arg: actions}
+    end: get_interval >>
+    (Instruction {
+        instruction_type: InstructionType::NormalStep(ident.ident),
+        actions: Expr::Block{
+            block_type: BlockType::Step,
+            arg: actions,
+            range: RangeInterval{start, end}
+        }
     })
 ));
 

@@ -1,12 +1,10 @@
 use crate::comment;
-use crate::parser::ast::*;
-use crate::parser::tokens::*;
+use crate::parser::{ast::*, tokens::*, tools::get_interval};
 
 use nom::*;
-use nom_locate::position;
 
 named!(pub parse_ident<Span, SmartIdent>, do_parse!(
-    position: position!() >>
+    position: get_interval >>
     var: comment!(take_till1!(is_valid_char)) >>
     (Expr::new_ident(
         String::from_utf8(var.fragment.to_vec()).expect("error at parsing [u8] to &str"),

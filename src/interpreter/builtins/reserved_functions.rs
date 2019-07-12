@@ -3,64 +3,94 @@ use std::collections::HashMap;
 use std::hash::BuildHasher;
 
 use crate::error_format::data::ErrorInfo;
-use crate::parser::{ast::Literal, tokens::*};
+use crate::parser::{ast::{Literal, Interval}, tokens::*};
 
-pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Numeric") {
             Some(value) => Ok(value.clone()),
-            None => Err("Builtin Typing bad argument type in typing".to_owned()),
+            None => Err(ErrorInfo{
+                message: "Builtin Typing bad argument type in typing".to_owned(),
+                interval
+            })
         }
     } else {
-        Err("Builtin Typing bad number of argument".to_owned())
+        Err(ErrorInfo{
+                message: "Builtin Typing bad number of argument".to_owned(),
+                interval
+        })
     }
 }
 
-pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Numeric") {
             Some(value) => Ok(value.clone()),
-            None => Err("Builtin Typing bad argument type in wait".to_owned()),
+            None => Err(ErrorInfo{
+                message: "Builtin Typing bad argument type in wait".to_owned(),
+                interval
+            })
         }
     } else {
-        Err("Builtin Typing bad number of argument".to_owned())
+        Err(ErrorInfo{
+            message: "Builtin Typing bad number of argument".to_owned(),
+            interval
+        })
     }
 }
 
-pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Text") {
             Some(value) => Ok(value.clone()),
-            None => Err("Builtin Typing bad argument type in text".to_owned()),
+            None => Err(ErrorInfo{
+                message: "Builtin Typing bad argument type in text".to_owned(),
+                interval
+            })
         }
     } else {
-        Err("Builtin Typing bad number of argument".to_owned())
+        Err(ErrorInfo{
+                message: "Builtin Typing bad number of argument".to_owned(),
+                interval
+        })
     }
 }
 
-pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Text") {
             Some(value) => Ok(value.clone()),
-            None => Err("Builtin Typing bad argument type in img".to_owned()),
+            None => Err(ErrorInfo{
+                message: "Builtin Typing bad argument type in img".to_owned(),
+                interval
+            }),
         }
     } else {
-        Err("Builtin Typing bad number of argument".to_owned())
+        Err(ErrorInfo{
+                message: "Builtin Typing bad number of argument".to_owned(),
+                interval
+        })
     }
 }
 
-pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
         match args.get("Text") {
             Some(value) => Ok(value.clone()),
-            None => Err("Builtin Typing bad argument type in url".to_owned()),
+            None => Err(ErrorInfo{
+                message: "Builtin Typing bad argument type in url".to_owned(),
+                interval
+            }),
         }
     } else {
-        Err("Builtin Typing bad number of argument".to_owned())
+        Err(ErrorInfo{
+            message: "Builtin Typing bad number of argument".to_owned(),
+            interval
+        })
     }
 }
 
-pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>, _interval: Interval) -> Result<Literal, ErrorInfo> {
     let lit = args
         .values()
         .nth(rand::thread_rng().gen_range(0, args.len()))
@@ -68,7 +98,7 @@ pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Lite
     Ok(lit.clone())
 }
 
-fn parse_quickbutton(val: Literal, buttton_type: Literal) -> Literal {
+fn parse_quickbutton(val: Literal, buttton_type: Literal, _interval: Interval) -> Literal {
     let mut button_value = HashMap::new();
 
     button_value.insert("title".to_owned(), val.clone());
@@ -87,7 +117,7 @@ fn parse_quickbutton(val: Literal, buttton_type: Literal) -> Literal {
     }
 }
 
-fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     if let Some(elem) = map.get("Text") {
         return Ok(elem.clone());
     }
@@ -98,29 +128,33 @@ fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Result<Liter
         return Ok(elem.clone());
     }
 
-    Err(format!(
-        "Builtin Typing bad argument type in question -- {:?} === {:?}",
-        map,
-        map.keys()
-    ))
+    Err(ErrorInfo{
+        message: format!("Builtin Typing bad argument type in question -- {:?} === {:?}", map, map.keys()),
+        interval
+    })
 }
 
-pub fn button<S: BuildHasher>(args: &HashMap<String, Literal, S>) -> Result<Literal, ErrorInfo> {
+pub fn button<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
     if args.len() == 1 {
-        let elem = get_one_of(args)?;
+        let elem = get_one_of(args, interval.clone())?;
 
         Ok(parse_quickbutton(
             elem,
             Literal::StringLiteral("quick_buttons".to_owned()),
+            interval.clone()
         ))
     } else {
-        Err("Builtin Button bad number of argument".to_owned())
+        Err(ErrorInfo{
+            message: "Builtin Button bad number of argument".to_owned(),
+            interval
+        })
     }
 }
 
 pub fn question<S: BuildHasher>(
     args: &HashMap<String, Literal, S>,
     name: String,
+    interval: Interval
 ) -> Result<Literal, ErrorInfo> {
     let mut question_value = HashMap::new();
 
@@ -136,12 +170,16 @@ pub fn question<S: BuildHasher>(
         for button in array.iter() {
             match button {
                 Literal::ObjectLiteral { name, value } if name == BUTTON => {
-                    let elem = get_one_of(value)?;
+                    let elem = get_one_of(value, interval.clone())?;
 
                     accepts.push(elem.clone());
-                    buttons.push(parse_quickbutton(elem, button_type.clone()))
+                    buttons.push(parse_quickbutton(elem, button_type.clone(), interval.clone()))
                 }
-                err => return Err(format!("Builtin Typing bad argument type -> {:?}", err)),
+                err => return Err(ErrorInfo{
+                        message: format!("Builtin Typing bad argument type -> {:?}", err),
+                        interval
+                    }
+                ),
             }
         }
         question_value.insert("title".to_owned(), expr_title.clone());

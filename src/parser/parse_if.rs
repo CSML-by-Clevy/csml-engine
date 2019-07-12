@@ -28,8 +28,10 @@ named!(pub parse_else_if<Span, Box<IfStatement>>, do_parse!(
 
 named!(pub parse_else<Span, Box<IfStatement>>, do_parse!(
     comment!(tag!(ELSE)) >>
+    start: get_interval >>
     block: alt!(parse_block | parse_implicit_block) >>
-    (Box::new(IfStatement::ElseStmt(block)))
+    end: get_interval >>
+    (Box::new(IfStatement::ElseStmt(block, RangeInterval{start, end})))
 ));
 
 named!(pub parse_if<Span, Expr>, do_parse!(

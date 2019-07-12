@@ -1,10 +1,16 @@
 use crate::comment;
 use crate::parser::{ast::*, expressions_evaluation::*, tokens::*, ParserErrorType};
 
+use nom_locate::*;
 use nom::types::*;
 use nom::*;
 use std::str;
 use std::str::{FromStr, Utf8Error};
+
+named!(pub get_interval<Span, Interval>, do_parse!(
+    position: position!() >>
+    (Interval::new(position))
+));
 
 pub fn complete_byte_slice_str_from_utf8(c: Span) -> Result<CompleteStr, Utf8Error> {
     str::from_utf8(c.fragment.0).map(|s| CompleteStr(s))
