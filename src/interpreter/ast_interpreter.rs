@@ -160,7 +160,7 @@ fn match_builtin(object: SmartLiteral) -> Result<(Literal, String), ErrorInfo> {
         Literal::ObjectLiteral {ref name, ref value} if name == IMAGE => Ok((img(value, object.interval)?, name.to_owned())),
         Literal::ObjectLiteral {ref name, ref value} if name == ONE_OF => Ok((one_of(value, object.interval)?, name.to_owned())),
         Literal::ObjectLiteral {ref name, ref value} if name == QUESTION => Ok((question(value, name.to_owned(), object.interval)?, name.to_owned())),
-        Literal::ObjectLiteral {ref name, ref value} if name == BUTTON => Ok((button(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == BUTTON => Ok((button(value, &object.interval)?, name.to_owned())),
         Literal::ObjectLiteral {ref name, ref value} if name == API => Ok((api(value, object.interval)?, name.to_owned())),
         Literal::ObjectLiteral {ref name, .. } => Ok((object.literal.to_owned(), name.to_owned())),
         _ => unreachable!(),
