@@ -15,26 +15,26 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(expr: Literal) -> Self {
+    pub fn new(expr: Literal, name: String) -> Self {
         match expr {
             Literal::IntLiteral(..) => Message {
-                content_type: expr.type_to_string(),
+                content_type: name.to_lowercase(),
                 content: expr,
             },
             Literal::FloatLiteral(..) => Message {
-                content_type: expr.type_to_string(),
+                content_type: name.to_lowercase(),
                 content: expr,
             },
             Literal::StringLiteral(..) => Message {
-                content_type: expr.type_to_string(),
+                content_type: name.to_lowercase(),
                 content: expr,
             },
             Literal::BoolLiteral(..) => Message {
-                content_type: expr.type_to_string(),
+                content_type: name.to_lowercase(),
                 content: expr,
             },
             Literal::ArrayLiteral(..) => Message {
-                content_type: expr.type_to_string(),
+                content_type: name.to_lowercase(),
                 content: expr,
             },
             Literal::ObjectLiteral { ref name, .. } => Message {

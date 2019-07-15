@@ -11,7 +11,7 @@ use std::collections::HashMap;
 fn match_obj(lit1: &SmartLiteral, lit2: &SmartLiteral) -> Result<Literal, ErrorInfo> {
     let _b = BUTTON.to_owned();
     if let Literal::ObjectLiteral { name: _b, .. } = lit2.literal.clone() {
-        if let Literal::ObjectLiteral { value, .. } = match_builtin(lit2.clone())? {
+        if let Literal::ObjectLiteral { value, .. } = match_builtin(lit2.clone())?.0 {
             match value.get("payload") {
                 Some(Literal::ArrayLiteral(vec)) => {
                     return Ok(Literal::BoolLiteral(vec.contains(&lit1.literal)))
@@ -151,45 +151,18 @@ fn add_to_message(root: MessageData, action: MessageType) -> MessageData {
     }
 }
 
-fn match_builtin(object: SmartLiteral) -> Result<Literal, ErrorInfo> {
+fn match_builtin(object: SmartLiteral) -> Result<(Literal, String), ErrorInfo> {
     match object.literal {
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == TYPING => typing(value, object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == WAIT => wait(value, object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == TEXT => text(value, object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == URL => url(value, object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == IMAGE => img(value, object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == ONE_OF => one_of(value, object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == QUESTION => question(value, name.to_owned(), object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == BUTTON => button(value, object.interval),
-        Literal::ObjectLiteral {
-            ref name,
-            ref value,
-        } if name == API => api(value, object.interval),
-        Literal::ObjectLiteral { .. } => Ok(object.literal),
+        Literal::ObjectLiteral {ref name, ref value} if name == TYPING => Ok((typing(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == WAIT => Ok((wait(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == TEXT => Ok((text(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == URL => Ok((url(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == IMAGE => Ok((img(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == ONE_OF => Ok((one_of(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == QUESTION => Ok((question(value, name.to_owned(), object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == BUTTON => Ok((button(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, ref value} if name == API => Ok((api(value, object.interval)?, name.to_owned())),
+        Literal::ObjectLiteral {ref name, .. } => Ok((object.literal.to_owned(), name.to_owned())),
         _ => unreachable!(),
     }
 }
@@ -263,33 +236,54 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, ErrorI
             };
             Ok(msg)
         }
-        Expr::FunctionExpr(ReservedFunction::Normal(..)) => Ok(MessageType::Msg(Message::new(
-            match_builtin(expr_to_literal(action, data)?)?,
-        ))),
+        Expr::FunctionExpr(ReservedFunction::Normal(..)) => {
+            let (literal, name) = match_builtin(expr_to_literal(action, data)?)?;
+            Ok(MessageType::Msg(Message::new(literal, name)))
+        },
         Expr::BuilderExpr(..) => match get_var_from_ident(action, data) {
-            Ok(val) => Ok(MessageType::Msg(Message::new(val.literal))),
+            Ok(val) => {
+                let literal = val.literal;
+                let name = literal.type_to_string();
+                Ok(MessageType::Msg(Message::new(literal, name)))
+            },
             Err(e) => Err(e),
         },
-        Expr::ComplexLiteral(vec, ..) => Ok(MessageType::Msg(Message::new(
-            get_string_from_complexstring(vec, data).literal,
-        ))),
+        Expr::ComplexLiteral(vec, ..) => {
+            let literal = get_string_from_complexstring(vec, data).literal;
+            let name = literal.type_to_string();
+            Ok(MessageType::Msg(Message::new(literal, name)))
+        },
         Expr::InfixExpr(infix, exp1, exp2) => match evaluate_condition(infix, exp1, exp2, data) {
-            Ok(val) => Ok(MessageType::Msg(Message::new(val.literal))),
+            Ok(val) => {
+                let literal = val.literal;
+                let name = literal.type_to_string();
+                Ok(MessageType::Msg(Message::new(literal, name)))
+            },
             Err(e) => Err(e),
         },
         Expr::IdentExpr(ident, ..) => match get_var(ident.to_owned(), data) {
-            Ok(val) => Ok(MessageType::Msg(Message::new(val.literal))),
-            Err(_e) => Ok(MessageType::Msg(Message::new(Literal::StringLiteral(
-                "NULL".to_owned(), 
-            )))),
-            //TODO: change string null by literal NUll
+            Ok(val) => {
+                let literal = val.literal;
+                let name = literal.type_to_string();
+                Ok(MessageType::Msg(Message::new(literal, name)))
+            },
+            Err(_e) => {
+                //TODO: change string null by literal NUll
+                let literal = Literal::StringLiteral("NULL".to_owned());
+                let name = literal.type_to_string();
+                Ok(MessageType::Msg(Message::new(literal, name)))
+            }
         },
-        Expr::LitExpr { .. } => Ok(MessageType::Msg(Message::new(
-            expr_to_literal(action, data)?.literal
-        ))),
-        Expr::VecExpr(..) => Ok(MessageType::Msg(Message::new(
-            expr_to_literal(action, data)?.literal
-        ))),
+        Expr::LitExpr { .. } => {
+            let literal = expr_to_literal(action, data)?.literal;
+            let name = literal.type_to_string();
+            Ok(MessageType::Msg(Message::new(literal, name)))
+        },
+        Expr::VecExpr(..) => {
+            let literal = expr_to_literal(action, data)?.literal;
+            let name = literal.type_to_string();
+            Ok(MessageType::Msg(Message::new(literal, name)))
+        },
         e => Err(
             ErrorInfo{
                 message: format!("Error must be a valid function {:?}", e),

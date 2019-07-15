@@ -102,7 +102,7 @@ named!(parse_infix_condition<Span, Expr>, alt_complete!(
     parse_condition_group
 ));
 
-// add Null literal
+// TODO: add Null literal
 named!(parse_postfix_operator<Span, Expr>, do_parse!(
     operator: comment!(parse_not_operator) >>
     expr1: parse_arithmetic >>

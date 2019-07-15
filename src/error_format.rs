@@ -25,7 +25,7 @@ pub fn get_error_message(error_code: ErrorKind) -> String {
             "ERROR: Agruments inside brace bad format or brace missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32 => {
-            "ERROR: ( mabe missing".to_string()
+            "ERROR: ( maybe missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32 => {
             "ERROR: Agruments inside parentheses bad format or ) missing".to_string()
@@ -34,10 +34,10 @@ pub fn get_error_message(error_code: ErrorKind) -> String {
             "ERROR: Agruments inside parentheses bad format or ] missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::DoubleQuoteError as u32 => {
-            "ERROR: \" mabe missing".to_string()
+            "ERROR: \" maybe missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::DoubleBraceError as u32 => {
-            "ERROR: }} mabe missing".to_string()
+            "ERROR: }} maybe missing".to_string()
         }
         e => e.description().to_owned(),
     }
