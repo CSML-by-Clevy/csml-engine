@@ -49,6 +49,7 @@ pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
 pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
+pub const RETRIES: &str = "retries";
 
 pub const FLOW: &str = "flow";
 pub const FILE: &str = "file";
@@ -72,7 +73,7 @@ pub const INT: &str = "Int";
 pub const URL: &str = "Url";
 pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
-pub const API: &str = "API";
+pub const FN: &str = "Fn";
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
 

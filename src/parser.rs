@@ -122,12 +122,27 @@ named!(pub parse_var_expr<Span, Expr>, comment!(
 
 // ################################### As name
 
-named!(pub parse_as_variable<Span, Expr>, do_parse!(
-    expr: parse_var_expr >>
-    comment!(tag!(AS)) >>
-    name: parse_ident >>
-    (Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))))
-));
+pub fn parse_as_variable(span: Span) -> IResult<Span, Expr> {
+    let (span, expr) = parse_var_expr(span)?;
+    let (span, smart_lit) = parse_ident(span)?;
+    if smart_lit.ident != "as" {
+        return Err(Err::Error(
+            Context::Code(
+                    span,
+                    ErrorKind::Custom(ParserErrorType::DoubleBraceError as u32),
+            )
+        ))
+    }
+    let (span, name) = parse_ident(span)?;
+    (Ok((span, Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))) )))
+}
+
+// named!(pub parse_as_variable<Span, Expr>, do_parse!(
+//     expr: parse_var_expr >>
+//     comment!(tag!(AS)) >>
+//     name: parse_ident >>
+//     (Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))))
+// ));
 
 // ################################### Ask_Response
 

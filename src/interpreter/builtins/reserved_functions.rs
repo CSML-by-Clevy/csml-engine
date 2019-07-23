@@ -1,109 +1,115 @@
-use rand::Rng;
-use std::collections::HashMap;
-use std::hash::BuildHasher;
-
+use rand::seq::SliceRandom;
 use crate::error_format::data::ErrorInfo;
 use crate::parser::{ast::{Literal, Interval}, tokens::*};
 
-pub fn typing<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    if args.len() == 1 {
-        match args.get("Numeric") {
-            Some(value) => Ok(value.clone()),
-            None => Err(ErrorInfo{
-                message: "Builtin Typing bad argument type in typing".to_owned(),
-                interval
-            })
-        }
-    } else {
-        Err(ErrorInfo{
-                message: "Builtin Typing bad number of argument".to_owned(),
+pub fn typing(args: &Vec<Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let var = match Literal::search_in_obj(args, "default") {
+        Some(literal) => literal.set_name("value".to_owned()),
+        None => return Err(ErrorInfo{
+                message: "Builtin Typing expect one argument of type int or float | example: Typing(3)".to_owned(),
                 interval
         })
-    }
-}
+    };
 
-pub fn wait<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    if args.len() == 1 {
-        match args.get("Numeric") {
-            Some(value) => Ok(value.clone()),
-            None => Err(ErrorInfo{
-                message: "Builtin Typing bad argument type in wait".to_owned(),
-                interval
-            })
-        }
-    } else {
-        Err(ErrorInfo{
-            message: "Builtin Typing bad number of argument".to_owned(),
+    match var {
+        Literal::IntLiteral{..}  => Ok(Literal::object(vec![var.clone()], Some(name.to_lowercase()))),
+        Literal::FloatLiteral{..}  => Ok(Literal::object(vec![var.clone()], Some(name.to_lowercase()))),
+        _ => Err(ErrorInfo{
+            message: "Builtin Typing expect one argument of type int or float | example: Typing(3)".to_owned(),
             interval
         })
     }
 }
 
-pub fn text<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    if args.len() == 1 {
-        match args.get("Text") {
-            Some(value) => Ok(value.clone()),
-            None => Err(ErrorInfo{
-                message: "Builtin Typing bad argument type in text".to_owned(),
-                interval
-            })
-        }
-    } else {
-        Err(ErrorInfo{
-                message: "Builtin Typing bad number of argument".to_owned(),
+pub fn wait(args: &Vec<Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let var = match Literal::search_in_obj(args, "default") {
+        Some(literal) => literal.set_name("value".to_owned()),
+        None => return Err(ErrorInfo{
+                message: "Builtin Wait expect one argument of type int or float | example: Wait(3)".to_owned(),
                 interval
         })
-    }
-}
+    };
 
-pub fn img<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    if args.len() == 1 {
-        match args.get("Text") {
-            Some(value) => Ok(value.clone()),
-            None => Err(ErrorInfo{
-                message: "Builtin Typing bad argument type in img".to_owned(),
-                interval
-            }),
-        }
-    } else {
-        Err(ErrorInfo{
-                message: "Builtin Typing bad number of argument".to_owned(),
-                interval
-        })
-    }
-}
-
-pub fn url<S: BuildHasher>(args: &HashMap<String, Literal, S>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    if args.len() == 1 {
-        match args.get("Text") {
-            Some(value) => Ok(value.clone()),
-            None => Err(ErrorInfo{
-                message: "Builtin Typing bad argument type in url".to_owned(),
-                interval
-            }),
-        }
-    } else {
-        Err(ErrorInfo{
-            message: "Builtin Typing bad number of argument".to_owned(),
+    match var {
+        Literal::IntLiteral{..}  => Ok(Literal::object(vec![var.clone()], Some(name.to_lowercase()))),
+        Literal::FloatLiteral{..}  => Ok(Literal::object(vec![var.clone()], Some(name.to_lowercase()))),
+        _ => Err(ErrorInfo{
+            message: "Builtin Wait expect one argument of type int or float | example: Wait(3)".to_owned(),
             interval
         })
     }
 }
 
-pub fn one_of<S: BuildHasher>(args: &HashMap<String, Literal, S>, _interval: Interval) -> Result<Literal, ErrorInfo> {
-    let lit = args
-        .values()
-        .nth(rand::thread_rng().gen_range(0, args.len()))
-        .expect("error in get one_of");
-    Ok(lit.clone())
+pub fn text(args: &Vec<Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let var = match Literal::search_in_obj(args, "default") {
+        Some(literal) => literal.set_name("value".to_owned()),
+        None => return Err(ErrorInfo{
+                message: "Builtin Text expect one argument of type string | example: Text(\"hola\")".to_owned(),
+                interval
+        })
+    };
+
+    match var {
+        Literal::StringLiteral{..}  => Ok(Literal::object(vec![var.clone()], Some(name.to_lowercase()))),
+        _ => Err(ErrorInfo{
+            message: "Builtin Text expect one argument of type string | example: Text(\"hola\")".to_owned(),
+            interval
+        })
+    }
 }
 
-fn search_or_default<S: BuildHasher>(values: &HashMap<String, Literal, S>, name: &str, default: &Option<Literal>, interval: &Interval) -> Result<Literal, ErrorInfo> {
-    match values.get(name) {
+pub fn img(args: &Vec<Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let var = match Literal::search_in_obj(args, "default") {
+        Some(literal) => literal.set_name("value".to_owned()),
+        None => return Err(ErrorInfo{
+                message: "Builtin Image expect one argument of type string | example: Image(\"hola\")".to_owned(),
+                interval
+        })
+    };
+
+    match var {
+        Literal::StringLiteral{..}  => Ok(Literal::object(vec![var.clone()], Some(name.to_lowercase()))),
+        _ => Err(ErrorInfo{
+            message: "Builtin Image expect one argument of type string | example: Image(\"hola\")".to_owned(),
+            interval
+        })
+    }
+}
+
+pub fn url(args: &Vec<Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let var = match Literal::search_in_obj(args, "default") {
+        Some(literal) => literal.set_name("value".to_owned()),
+        None => return Err(ErrorInfo{
+                message: "Builtin Url expect one argument of type string | example: Url(\"hola\")".to_owned(),
+                interval
+        })
+    };
+
+    match var {
+        Literal::StringLiteral{..} => Ok(Literal::object(vec![var.clone()], Some(name.to_lowercase()))),
+        _ => Err(ErrorInfo{
+            message: "Builtin Url expect one argument of type string | example: Url(\"hola\")".to_owned(),
+            interval
+        })
+    }
+}
+
+pub fn one_of(args: &Vec<Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.choose(&mut rand::thread_rng()) {
+        Some(lit) => Ok(lit.to_owned()),
+        None => Err(ErrorInfo{
+            message: "Builtin OneOf expect a list of elements | example: OneOf(1, 2, 3)".to_owned(),
+            interval
+        })
+    }
+}
+
+fn search_or_default(values: &Vec<Literal>, name: &str, interval: &Interval) -> Result<Literal, ErrorInfo> {
+    match Literal::search_in_obj(values, name) {
         Some(value) => Ok(value.to_owned()),
         None => {
-            match default {
-                Some(value) => Ok(value.to_owned()),
+            match Literal::search_in_obj(values, "default") {
+                Some(value) => Ok(value.set_name(name.to_owned())),
                 None => Err(ErrorInfo{
                         message: format!("No value '{}' or default value found", name),
                         interval: interval.to_owned()
@@ -113,84 +119,57 @@ fn search_or_default<S: BuildHasher>(values: &HashMap<String, Literal, S>, name:
     }
 }
 
-pub fn button<S: BuildHasher>(values: &HashMap<String, Literal, S>, interval: &Interval) -> Result<Literal, ErrorInfo> {
-    let mut button_value = HashMap::new();
-    let default = get_one_of(values);
+pub fn button(values: &Vec<Literal>, name: String, interval: &Interval) -> Result<Literal, ErrorInfo> {
+    let mut button_value = vec![];
 
-    button_value.insert("title".to_owned(), search_or_default(values, "title", &default, interval)?);
-    button_value.insert("buttton_type".to_owned(), search_or_default(values, "buttton_type", &default, interval)?);
-    button_value.insert("accept".to_owned(), search_or_default(values, "accept", &default, interval)?);
-    button_value.insert("key".to_owned(), search_or_default(values, "key", &default, interval)?);
-    button_value.insert("value".to_owned(), search_or_default(values, "value", &default, interval)?);
-    button_value.insert("payload".to_owned(), search_or_default(values, "payload", &default, interval)?);
+    button_value.push(search_or_default(values, "title", interval)?);
+    button_value.push(Literal::string("quick_button".to_owned(), Some("buttton_type".to_owned()))); //search_or_default(values, "buttton_type", interval)?
+    button_value.push(search_or_default(values, "accept", interval)?);
+    button_value.push(search_or_default(values, "key", interval)?);
+    button_value.push(search_or_default(values, "value", interval)?);
+    button_value.push(search_or_default(values, "payload", interval)?);
 
-    Ok(Literal::ObjectLiteral {
-        name: BUTTON.to_owned(),
-        value: button_value,
-    })
+    Ok(Literal::object(button_value, Some(name)))
 }
 
-fn get_one_of<S: BuildHasher>(map: &HashMap<String, Literal, S>) -> Option<Literal> {
-    if let Some(elem) = map.get("Text") {
-        return Some(elem.clone());
-    }
-    if let Some(elem) = map.get("Numeric") {
-        return Some(elem.clone());
-    }
-    if let Some(elem) = map.get("Array") {
-        return Some(elem.clone());
-    }
-
-    None
-}
-
-fn create_accepts_from_list(buttons: &Vec<Literal>) -> Vec<Literal> {
-    buttons.iter().fold(vec![], |mut vec, elem| {
+fn create_accepts_from_list(buttons: &Literal) -> Literal {
+    if let Literal::ArrayLiteral{items, ..} = buttons {
+        let array = items.iter().fold(vec![], |mut vec, elem| {
             match elem {
-                Literal::ObjectLiteral{value, name} if name == BUTTON => {
-                    let test = value.get("accept").unwrap().clone();
-                    vec.push(test);
+                Literal::ObjectLiteral{properties, name: Some(name), ..} if name == BUTTON => {
+                    if let Some(elem) = Literal::search_in_obj(properties, "accept") {
+                        vec.push(elem.to_owned());
+                    }
                     vec
                 },
-                _ => unreachable!()
+                _ => vec
             }
-    })
-
+        });
+        Literal::object(array, Some("accepts".to_owned()))
+    } else {
+        Literal::object(vec![], Some("accepts".to_owned()))
+    }
 }
 
-pub fn question<S: BuildHasher>(
-    args: &HashMap<String, Literal, S>,
+pub fn question(
+    args: &Vec<Literal>,
     name: String,
-    interval: Interval
+    _interval: Interval
 ) -> Result<Literal, ErrorInfo> {
-    let mut question_value = HashMap::new();
-
-    let expr_title = args.get("title").expect("error in question expr_title");
-    let expr_buttons = args.get("buttons").expect("error in question expr_buttons");
-
-    let mut buttons: Vec<Literal> = vec![];
-    if let Literal::ArrayLiteral(array) = expr_buttons {
-        for literal in array.iter() {
-            match literal {
-                Literal::ObjectLiteral { name, .. } if name == BUTTON => {
-                    buttons.push(button(args, &interval)?)
-                }
-                err => return Err(ErrorInfo{
-                        message: format!("Builtin Typing bad argument type -> {:?}", err),
-                        interval
-                    }
-                ),
-            }
-        }
-
-        let accepts = create_accepts_from_list(&buttons);
-        question_value.insert("title".to_owned(), expr_title.clone());
-        question_value.insert("accepts".to_owned(), Literal::ArrayLiteral(accepts));
-        question_value.insert("buttons".to_owned(), Literal::ArrayLiteral(buttons));
+    let title = match Literal::search_in_obj(args, "title") {
+        Some(literal) => literal.to_owned(),
+        _ => Literal::string("question".to_owned(), Some("title".to_owned()))
+    };
+    let buttons = match Literal::search_in_obj(args, "buttons") {
+        Some(literal) => literal.to_owned(),
+        _ => Literal::array(vec![], Some("buttons".to_owned()))
     };
 
-    Ok(Literal::ObjectLiteral {
-        name: name.to_lowercase().to_owned(),
-        value: question_value,
-    })
+    let mut question_value = vec![];
+    let accepts = create_accepts_from_list(&buttons);
+    question_value.push(title);
+    question_value.push(accepts);
+    question_value.push(buttons);
+
+    Ok(Literal::object(question_value, Some(name.to_lowercase().to_owned())))
 }

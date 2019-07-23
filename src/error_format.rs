@@ -12,6 +12,9 @@ pub fn get_error_message(error_code: ErrorKind) -> String {
         ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32 => {
             "ERROR: Missing = after remember statement".to_string()
         }
+        ErrorKind::Custom(val) if val == ParserErrorType::AsError as u32 => {
+            "ERROR: error in as module (var as var_name)".to_string()
+        }
         ErrorKind::Custom(val) if val == ParserErrorType::GotoStepError as u32 => {
             "ERROR: Missing label name after goto".to_string()
         }
@@ -25,7 +28,7 @@ pub fn get_error_message(error_code: ErrorKind) -> String {
             "ERROR: Agruments inside brace bad format or brace missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32 => {
-            "ERROR: ( maybe missing".to_string()
+            "ERROR: list elemt type ( ... ) not found".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32 => {
             "ERROR: Agruments inside parentheses bad format or ) missing".to_string()

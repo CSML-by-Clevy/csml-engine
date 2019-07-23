@@ -15,35 +15,55 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn new(expr: Literal, name: String) -> Self {
-        match expr {
-            Literal::IntLiteral(..) => Message {
-                content_type: name.to_lowercase(),
-                content: expr,
+    pub fn new(literal: Literal) -> Self {
+        match literal {
+            Literal::IntLiteral{..} => Message {
+                content_type: "text".to_owned(),
+                content: literal.set_name("text".to_owned()),
             },
-            Literal::FloatLiteral(..) => Message {
-                content_type: name.to_lowercase(),
-                content: expr,
+            Literal::FloatLiteral{..} => Message {
+                content_type: "text".to_owned(),
+                content: literal.set_name("text".to_owned()),
             },
-            Literal::StringLiteral(..) => Message {
-                content_type: name.to_lowercase(),
-                content: expr,
+            Literal::StringLiteral{..} => Message {
+                content_type: "text".to_owned(),
+                content: literal.set_name("text".to_owned()),
             },
-            Literal::BoolLiteral(..) => Message {
-                content_type: name.to_lowercase(),
-                content: expr,
+            Literal::BoolLiteral{..} => Message {
+                content_type: "text".to_owned(),
+                content: literal.set_name("text".to_owned()),
             },
-            Literal::ArrayLiteral(..) => Message {
-                content_type: name.to_lowercase(),
-                content: expr,
+            Literal::ArrayLiteral{..} => Message {
+                content_type: "array".to_owned(),
+                content: literal,
             },
-            Literal::ObjectLiteral { ref name, .. } => Message {
-                content_type: name.to_lowercase().to_owned(),
-                content: expr,
+            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "url" => Message {
+                content_type: name.to_owned(),
+                content: value[0].clone(),
             },
-            Literal::Null => Message {
-                content_type: expr.type_to_string(),
-                content: expr,
+            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "wait" => Message {
+                content_type: name.to_owned(),
+                content: value[0].clone(),
+            },
+            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "typing" => Message {
+                content_type: name.to_owned(),
+                content: value[0].clone(),
+            },
+            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "image" => Message {
+                content_type: name.to_owned(),
+                content: value[0].clone(),
+            },
+            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "text" => Message {
+                content_type: name.to_owned(),
+                content: value[0].clone(),
+            },
+            Literal::ObjectLiteral{..} => Message {
+                content_type: literal.get_name().unwrap(),
+                content: literal,
+            },
+            Literal::Null{..} => Message{
+                content_type: literal.type_to_string(),
+                content: literal,
             },
         }
     }
@@ -89,29 +109,32 @@ impl Add for MessageData {
 impl MessageData {
     pub fn add_message(mut self, message: Message) -> Self {
         self.messages.push(message);
-
         self
     }
 
     pub fn add_to_memory(mut self, key: String, value: Literal) -> Self {
         if let Some(ref mut vec) = self.memories {
-            vec.push(Memories { key, value })
+            if let Literal::ObjectLiteral{..} = &value{
+                vec.push(Memories{key: key.clone(), value: value});
+            } else {
+                vec.push(Memories{key: key.clone(), value: value.set_name(key)});
+            }
         } else {
-            self.memories = Some(vec![Memories { key, value }]);
+            match &value {
+                Literal::ObjectLiteral{..} => self.memories = Some(vec![Memories{key: key.clone(), value: value}]),
+                _                          => self.memories = Some(vec![Memories{key: key.clone(), value: value.set_name(key) }])
+            };
         }
-
         self
     }
 
     pub fn add_next_step(mut self, next_step: &str) -> Self {
         self.next_step = Some(next_step.to_string());
-
         self
     }
 
     pub fn add_next_flow(mut self, next_step: &str) -> Self {
         self.next_flow = Some(next_step.to_string());
-
         self
     }
 }

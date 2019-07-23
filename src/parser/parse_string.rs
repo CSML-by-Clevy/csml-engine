@@ -1,4 +1,3 @@
-use crate::comment;
 use crate::parser::{
     ast::*,
     parse_var_expr,
@@ -15,7 +14,7 @@ use std::str;
 
 named!(parse_2brace<Span, (Vec<Expr>, Span)>, do_parse!(
     tag!(L2_BRACE) >>
-    vec: comment!(many_till!(parse_var_expr, tag!(R2_BRACE))) >>
+    vec: many_till!(parse_var_expr, tag!(R2_BRACE)) >>
     (vec)
 ));
 
@@ -63,9 +62,9 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
             let mut vec = vec![];
 
             if val.input_len() > 0 {
-                let string = String::from_utf8(val.fragment.to_vec())
+                let value = String::from_utf8(val.fragment.to_vec())
                     .expect("error at parsing [u8] to &str");
-                vec.push(Expr::new_literal(Literal::StringLiteral(string), position));
+                vec.push(Expr::new_literal(Literal::string(value, None), position));
             }
             match parse_brace(rest, vec) {
                 Ok((rest, vec)) => Ok((rest, vec)),
@@ -81,11 +80,11 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
             let (val, position) = get_interval(val)?;
 
             if val.input_len() > 0 {
-                let string = String::from_utf8(val.fragment.to_vec())
+                let value = String::from_utf8(val.fragment.to_vec())
                     .expect("error at parsing [u8] to &str");
                 return Ok((
                     rest,
-                    Expr::new_literal(Literal::StringLiteral(string), position),
+                    Expr::new_literal(Literal::string(value, None), position),
                 ));
             }
 

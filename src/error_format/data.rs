@@ -4,6 +4,7 @@ use crate::parser::ast::Interval;
 pub enum ParserErrorType {
     StepDuplicateError = 0,
     AssignError = 1,
+    AsError = 2,
     GotoStepError = 10,
     ImportError = 11,
     ImportStepError = 12,
