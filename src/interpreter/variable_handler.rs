@@ -1,7 +1,6 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{ast_interpreter::evaluate_condition, data::Data, json_to_rust::*};
 use crate::parser::{ast::*, tokens::*};
-use std::str::FromStr;
 
 pub fn gen_literal_form_event(
     event: &Option<Event>,
@@ -11,14 +10,14 @@ pub fn gen_literal_form_event(
         Some(event) => match event.payload {
             PayLoad { content_type: ref t, content: ref c, } 
                 if t == "text" => Ok(SmartLiteral {
-                    literal: Literal::StringLiteral(c.text.to_string()),
+                    literal: Literal::string(c.text.to_string(), None),
                     interval,
                 }
             ),
             PayLoad {content_type: ref t, content: ref c}
                 if t == "float" => match c.text.to_string().parse::<f64>() {
                 Ok(float) => Ok(SmartLiteral {
-                    literal: Literal::FloatLiteral(float),
+                    literal: Literal::float(float, None),
                     interval,
                 }),
                 Err(..) => Err(ErrorInfo {
@@ -29,7 +28,7 @@ pub fn gen_literal_form_event(
             PayLoad { content_type: ref t, content: ref c}
                 if t == "int" => match c.text.to_string().parse::<i64>() {
                 Ok(int) => Ok(SmartLiteral {
-                    literal: Literal::IntLiteral(int),
+                    literal: Literal::int(int, None),
                     interval,
                 }),
                 Err(..) => Err(ErrorInfo {
@@ -42,10 +41,7 @@ pub fn gen_literal_form_event(
                 interval,
             }),
         },
-        None => Err(ErrorInfo {
-            message: "no event is received in gen_literal_form_event".to_owned(),
-            interval,
-        }),
+        None => Ok(SmartLiteral{literal: Literal::null(), interval}),
     }
 }
 
@@ -105,6 +101,7 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
 pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match &name.ident {
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
+        var if var == RETRIES => Ok(SmartLiteral{literal: Literal::int(data.memory.retries, None), interval: name.interval.to_owned()}),
         _ => match data.step_vars.get(&name.ident) {
             Some(val) => Ok(SmartLiteral {
                 literal: val.clone(),
@@ -128,12 +125,17 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
                 }
                 new_string.push_str(&var.literal.to_string())
             }
-            Err(_) => new_string.push_str(" NULL "),
+            Err(err) => {
+                if interval.is_none() {
+                    interval = Some(err.interval)
+                }
+                new_string.push_str(&Literal::null().to_string())
+            },
         }
     }
     //TODO: check for error empty list
     SmartLiteral {
-        literal: Literal::StringLiteral(new_string),
+        literal: Literal::string(new_string, None),
         interval: interval.unwrap(),
     }
 }
@@ -189,38 +191,13 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<SmartLit
     }
 }
 
-//  TODO: Check in MemoryType r#type are correct
+// TODO: Check in MemoryType r#type are correct
 pub fn memorytype_to_literal(
     memtype: Option<&MemoryType>,
     interval: Interval,
 ) -> Result<SmartLiteral, ErrorInfo> {
     if let Some(elem) = memtype {
-        match &elem.r#type {
-            Some(t) if t == "text" => Ok(SmartLiteral {
-                literal: Literal::StringLiteral(elem.value.to_string()),
-                interval,
-            }),
-            Some(t) if t == "bool" => Ok(SmartLiteral {
-                literal: Literal::BoolLiteral(FromStr::from_str(&elem.value).unwrap()),
-                interval,
-            }),
-            Some(t) if t == "int" => Ok(SmartLiteral {
-                literal: Literal::IntLiteral(FromStr::from_str(&elem.value).unwrap()),
-                interval,
-            }),
-            Some(t) if t == "float" => Ok(SmartLiteral {
-                literal: Literal::FloatLiteral(FromStr::from_str(&elem.value).unwrap()),
-                interval,
-            }),
-            Some(_t) => Ok(SmartLiteral {
-                literal: Literal::StringLiteral(elem.value.to_string()),
-                interval,
-            }),
-            None => Ok(SmartLiteral {
-                literal: Literal::StringLiteral(elem.value.to_string()),
-                interval,
-            }),
-        }
+        Ok(SmartLiteral{literal: elem.value.clone(), interval})
     } else {
         Err(
             ErrorInfo{
@@ -258,24 +235,24 @@ pub fn memory_get<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'
         (
             Expr::IdentExpr(SmartIdent { ident, .. }),
             Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral(lit),
+                literal: Literal::StringLiteral{value, ..},
                 ..
             }),
-        ) if ident == PAST => memory.past.get(lit),
+        ) if ident == PAST => memory.past.get(value),
         (
             Expr::IdentExpr(SmartIdent { ident, .. }),
             Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral(lit),
+                literal: Literal::StringLiteral{value, ..},
                 ..
             }),
-        ) if ident == MEMORY => memory.current.get(lit),
+        ) if ident == MEMORY => memory.current.get(value),
         (
             _,
             Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral(lit),
+                literal: Literal::StringLiteral{value, ..},
                 ..
             }),
-        ) => memory.metadata.get(lit),
+        ) => memory.metadata.get(value),
         _ => None,
     }
 }
@@ -285,24 +262,24 @@ pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<
         (
             Expr::IdentExpr(SmartIdent { ident, .. }),
             Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral(lit),
+                literal: Literal::StringLiteral{value, ..},
                 ..
             }),
-        ) if ident == PAST => memory.past.get_vec(lit).unwrap().last(),
+        ) if ident == PAST => memory.past.get_vec(value).unwrap().last(),
         (
             Expr::IdentExpr(SmartIdent { ident, .. }),
             Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral(lit),
+                literal: Literal::StringLiteral{value, ..},
                 ..
             }),
-        ) if ident == MEMORY => memory.current.get_vec(lit).unwrap().last(),
+        ) if ident == MEMORY => memory.current.get_vec(value).unwrap().last(),
         (
             _,
             Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral(lit),
+                literal: Literal::StringLiteral{value, ..},
                 ..
             }),
-        ) => memory.metadata.get_vec(lit).unwrap().last(),
+        ) => memory.metadata.get_vec(value).unwrap().last(),
         _ => None,
     }
 }

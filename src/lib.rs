@@ -6,20 +6,6 @@ use error_format::data::ErrorInfo;
 use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
 use parser::{ast::*, Parser};
 use std::collections::HashMap;
-use multimap::MultiMap;
-
-pub fn add_to_memory(memory: &mut MultiMap<String, MemoryType>, vec: &[serde_json::Value]) {
-    for value in vec.iter() {
-        let memory_value: Result<MemoryType, _> = serde_json::from_value(value.clone());
-        match memory_value {
-            Ok(memory_value) => memory.insert(memory_value.key.clone(), memory_value),
-            Err(e) => println!(
-                "value is not of fomrat MemoryType {:?} error -> {:?}",
-                value, e
-            ), // error to the api
-        }
-    }
-}
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
     // add flow validations
@@ -36,33 +22,14 @@ pub fn is_trigger(flow: &Flow, string: &str) -> bool {
         for elem in vec.iter() {
             match elem {
                 Expr::LitExpr(SmartLiteral {
-                    literal: Literal::StringLiteral(tag),
+                    literal: Literal::StringLiteral{value, ..},
                     ..
-                }) if tag.to_lowercase() == string.to_lowercase() => return true,
+                }) if value.to_lowercase() == string.to_lowercase() => return true,
                 _ => continue,
             }
         }
     }
     false
-}
-
-pub fn context_to_memory(context: &JsContext) -> Memory {
-    let mut memory = Memory {
-        past: MultiMap::new(),
-        current: MultiMap::new(),
-        metadata: MultiMap::new(),
-    };
-
-    if let Some(ref vec) = context.past {
-        add_to_memory(&mut memory.past, vec);
-    }
-    if let Some(ref vec) = context.metadata {
-        add_to_memory(&mut memory.metadata, vec);
-    }
-    if let Some(ref vec) = context.current {
-        add_to_memory(&mut memory.current, vec);
-    }
-    memory
 }
 
 pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
@@ -92,7 +59,7 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
 pub fn interpret(
     ast: &Flow,
     step_name: &str,
-    context: &JsContext,
+    memory: &Memory,
     event: &Option<Event>,
 ) -> Result<String, ErrorInfo> {
     if !check_valid_flow(ast) {
@@ -103,11 +70,11 @@ pub fn interpret(
     }
 
     // dbg!(&ast);
+    // let memory = context_to_memory(context);
 
-    let memory = context_to_memory(context);
     let data = Data {
         ast,
-        memory: &memory,
+        memory: memory,
         event,
         step_vars: HashMap::new(),
     };
