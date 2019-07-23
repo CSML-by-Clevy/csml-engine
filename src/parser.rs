@@ -179,9 +179,18 @@ named!(normal_ask_response<Span, Expr>, do_parse!(
     })
 ));
 
+pub fn get_option_memory(span: Span) -> IResult<Span, Option<SmartIdent> > {
+    let (new_span, smart_ident) = parse_ident(span)?;
+    if RESERVED.contains(&&*smart_ident.ident) {
+        Ok((span, None))
+    } else {
+        Ok((new_span, Some(smart_ident)))
+    }
+}
+
 named!(short_ask_response<Span, Expr>, do_parse!(
     comment!(tag!(ASK)) >>
-    ident: opt!(parse_ident) >>
+    ident: get_option_memory >>
     start_ask: get_interval >>
     ask: parse_root_functions >>
     end_ask: get_interval >>

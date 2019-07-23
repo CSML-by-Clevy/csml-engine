@@ -10,12 +10,12 @@ crate-type = ["rlib"]
 
 [dependencies]
 nom_locate = "0.3.1"
-nom = "4.2.3"
+nom =  "4.2.3"
 rand = "0.7.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 multimap = "0.5.0"
-reqwest = "0.9.18"
+reqwest = "0.9.19"
 
 [[example]]
 name = "test_flow"

@@ -6,6 +6,9 @@ pub type Span<'a> = LocatedSpan<CompleteByteSlice<'a>>;
 pub const PORT: &str = "3002";
 
 pub const WHITE_SPACE: &str = " \t\n\r";
+pub const INLINE_COMMENT: &str = "//";
+pub const INLINE_COMMENT_HASH: &str = "#";
+
 pub const START_COMMENT: &str = "/*";
 pub const END_COMMENT: &str = "*/";
 
@@ -65,6 +68,10 @@ pub const REMEMBER: &str = "remember";
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
 pub const NULL: &str = "NULL";
+
+pub static RESERVED: &'static [&str] = &[IF, ELSE, IMPORT, AS,
+FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE,
+ASK, GOTO, MATCH, RESPONSE, REMEMBER, TRUE, FALSE, NULL];
 
 pub const TYPING: &str = "Typing";
 pub const WAIT: &str = "Wait";
