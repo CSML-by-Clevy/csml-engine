@@ -217,8 +217,7 @@ pub enum Literal {
         #[serde(rename = "type")]
         literal_type: String,
         name: Option<String>,
-        properties: Vec<Literal>,
-        // value: HashMap<String, Literal>,
+        properties: HashMap<String, Literal>,
     },
     Null{
         #[serde(rename = "type")]
@@ -345,19 +344,11 @@ impl Literal {
         }
     }
 
-    pub fn object(properties: Vec<Literal>, name: Option<String>) -> Self {
+    pub fn object(properties: HashMap<String, Literal>, name: Option<String>) -> Self {
         Literal::ObjectLiteral{
             literal_type: "object".to_owned(),
             name,
             properties,
-        }
-    }
-
-    pub fn object_form_literal(value: Literal) -> Self {
-        Literal::ObjectLiteral{
-            literal_type: "object".to_owned(),
-            name: None,
-            properties: vec![value],
         }
     }
 
