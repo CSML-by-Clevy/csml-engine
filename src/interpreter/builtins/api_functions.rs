@@ -36,7 +36,7 @@ pub fn api(args: &Vec<Literal>, interval: Interval, data: &mut Data) -> Result<L
     match reqwest::Client::new().post(&http_arg).json(&map).send() {
         Ok(ref mut arg) => match &arg.text() {
             Ok(text) => {
-                println!("reqwest post ok: ");
+                println!("reqwest post ok: {:?}", text);
                 let json: serde_json::Value = serde_json::from_str(&text).unwrap();
                 if let Some(Value::String(val)) = json.get("data") {
                     Ok(Literal::string(val.to_string(), None))
