@@ -31,12 +31,12 @@ fn parse_api(mut args: Vec<Literal>, data: &mut Data) -> Result<(String, HashMap
 pub fn api(args: &Vec<Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
     let (http_arg, map) = parse_api(args.clone(), data)?;
 
-    println!("http call {:?}", http_arg);
-    println!("map {:?}", serde_json::to_string(&map).unwrap());
+    // println!("http call {:?}", http_arg);
+    // println!("map {:?}", serde_json::to_string(&map).unwrap());
     match reqwest::Client::new().post(&http_arg).json(&map).send() {
         Ok(ref mut arg) => match &arg.text() {
             Ok(text) => {
-                println!("reqwest post ok: {:?}", text);
+                // println!("reqwest post ok: ");
                 let json: serde_json::Value = serde_json::from_str(&text).unwrap();
                 if let Some(Value::String(val)) = json.get("data") {
                     Ok(Literal::string(val.to_string(), None))
@@ -44,16 +44,16 @@ pub fn api(args: &Vec<Literal>, interval: Interval, data: &mut Data) -> Result<L
                     Ok(Literal::null())
                 }
             }
-            Err(e) => {
-                println!("error in parsing reqwest result: {:?}", e);
+            Err(_e) => {
+                // println!("error in parsing reqwest result: {:?}", e);
                 Err(ErrorInfo{
                     message: "Error in parsing reqwest result".to_owned(),
                     interval
                 })
             }
         },
-        Err(e) => {
-            println!("error in reqwest post {:?}", e);
+        Err(_e) => {
+            // println!("error in reqwest post {:?}", e);
             Err(ErrorInfo{
                 message: "Error in reqwest post".to_owned(),
                 interval
