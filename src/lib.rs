@@ -42,7 +42,7 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
         Some(Expr::Block { arg: actions, .. }) => {
             let result = interpret_block(actions, &mut data)?;
 
-            dbg!(&result);
+            // dbg!(&result);
 
             match serde_json::to_string(&result) {
                 Ok(ser) => Ok(ser),

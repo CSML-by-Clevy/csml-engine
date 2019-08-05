@@ -392,7 +392,16 @@ fn match_ask_response(
                     ..
                 },
                 None,
-                ..
+                false
+            ) => return Ok(root + interpret_block(args, data)?),
+            (
+                Expr::Block {
+                    block_type: BlockType::Ask,
+                    arg: args,
+                    ..
+                },
+                Some(..),
+                true
             ) => return Ok(root + interpret_block(args, data)?),
             (..) => continue,
         }
