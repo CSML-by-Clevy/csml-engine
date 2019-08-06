@@ -7,7 +7,7 @@ use crate::interpreter::json_to_rust::*;
 
 use serde_json::{Map, Value};
 
-pub fn create_submap(keys: &[&str], args: &Vec<Literal>) -> Result<Map<String, Value>, ErrorInfo> {
+pub fn create_submap(keys: &[&str], args: &[Literal]) -> Result<Map<String, Value>, ErrorInfo> {
     let mut map = Map::new();
 
     for elem in args.iter() {

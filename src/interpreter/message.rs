@@ -115,7 +115,7 @@ impl MessageData {
     pub fn add_to_memory(mut self, key: String, value: Literal) -> Self {
         if let Some(ref mut vec) = self.memories {
             if let Literal::ObjectLiteral{..} = &value{
-                vec.push(Memories{key: key.clone(), value: value});
+                vec.push(Memories{key: key.clone(), value});
             } else {
                 vec.push(Memories{key: key.clone(), value: value.set_name(key)});
             }

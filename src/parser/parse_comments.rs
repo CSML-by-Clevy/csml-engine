@@ -11,10 +11,11 @@ named!(pub comment_delimited<Span, Span>, preceded!(
 // INLINE_COMMENT ->  //
 // INLINE_COMMENT_HASH -> #
 // regex!(r"^(?-u).*?(\r\n|\n|$)")
+//TODO: fix bug in eof by caching error and checking if eof
 named!(
     comment_single_line<Span, Span>,
     preceded!(
-        alt!(tag!(INLINE_COMMENT) | tag!(INLINE_COMMENT_HASH)),
+        tag!(INLINE_COMMENT),
         take_until_and_consume!("\n")
     )
 );
@@ -22,7 +23,7 @@ named!(
 named!(
     comment_single_line2<Span, Span>,
     preceded!(
-        alt!(tag!(INLINE_COMMENT) | tag!(INLINE_COMMENT_HASH)),
+        tag!(INLINE_COMMENT),
         take_until_and_consume!("\r\n")
     )
 );
