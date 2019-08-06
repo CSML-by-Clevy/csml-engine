@@ -3,7 +3,7 @@ use serde::{
     Deserialize, Serialize,
 };
 
-use crate::parser::tokens::Span;
+use crate::parser::tokens::*;
 use crate::error_format::data::ErrorInfo;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -363,12 +363,12 @@ impl Literal {
 
     pub fn null() -> Self {
         Literal::Null{
-            literal_type: "null".to_owned(),
-            value: "null".to_owned(),
+            literal_type: NULL.to_owned(),
+            value: NULL.to_owned(),
         }
     }
 
-    pub fn search_in_obj<'a>(obj: &'a Vec<Literal>, name: &str) -> Option<&'a Literal> {
+    pub fn search_in_obj<'a>(obj: &'a [Literal], name: &str) -> Option<&'a Literal> {
         obj.iter().find(|&literal|
             match literal.get_name() {
             Some(ref elem) if elem == name => true,

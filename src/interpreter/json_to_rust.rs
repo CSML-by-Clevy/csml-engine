@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::parser::ast::Literal;
+use crate::parser::{ast::Literal, tokens::*};
 use multimap::MultiMap;
 use serde_json::Value;
 
@@ -166,7 +166,7 @@ pub fn json_to_literal(literal: &serde_json::Value) -> Result<Literal, String> {
                 _ => Err(format!("Object of type {} bad format", val))
             }
         },
-        Some(Value::String(val)) if val == "null"    => {
+        Some(Value::String(val)) if val == NULL    => {
             Ok(Literal::null())
         },
         e => Err(format!("bad format {:?}", e))

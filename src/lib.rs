@@ -74,7 +74,7 @@ pub fn interpret(
 
     let data = Data {
         ast,
-        memory: memory,
+        memory,
         event,
         step_vars: HashMap::new(),
     };

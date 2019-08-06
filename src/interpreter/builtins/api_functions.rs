@@ -11,7 +11,7 @@ fn parse_api(mut args: Vec<Literal>, data: &mut Data) -> Result<(String, HashMap
 
     if let Some(Literal::StringLiteral{value: fn_id, ..}) = Literal::search_in_obj(&args, "fn_id") {
         map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
-    } else if args.len() >= 1 {
+    } else if !args.is_empty() {
         if let Literal::StringLiteral{value: fn_id, ..} = &args[0] {
             map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
             args.reverse();
@@ -25,11 +25,11 @@ fn parse_api(mut args: Vec<Literal>, data: &mut Data) -> Result<(String, HashMap
 
     map.insert("data".to_owned(), Value::Object(sub_map));
     map.insert("client".to_owned(), Value::Object(client));
-    Ok((format!("{}", data.memory.fn_endpoint), map))
+    Ok((data.memory.fn_endpoint.to_string(), map))
 }
 
-pub fn api(args: &Vec<Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
-    let (http_arg, map) = parse_api(args.clone(), data)?;
+pub fn api(args: &[Literal], interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
+    let (http_arg, map) = parse_api(args.to_owned(), data)?;
 
     // println!("http call {:?}", http_arg);
     // println!("map {:?}", serde_json::to_string(&map).unwrap());

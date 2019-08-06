@@ -55,13 +55,13 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::FunctionExpr(fnexpr)                          => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e)                       => interval_from_expr(expr), // RangeInterval
         Expr::BuilderExpr(expr, _e)                         => interval_from_expr(expr),
-        Expr::IdentExpr(ident)                              => interval_from_sident(ident),
-        Expr::LitExpr(literal)                              => interval_from_sliteral(literal),
-        Expr::IfExpr(ifstmt)                                => interval_from_ifstmt(ifstmt),
+        Expr::IdentExpr(ident)                              => ident.interval.to_owned(),
+        Expr::LitExpr(literal)                              => literal.interval.to_owned(),
+        Expr::IfExpr(ifstmt)                                => interval_from_if_stmt(ifstmt),
     }
 }
 
-pub fn interval_from_ifstmt(ifstmt: &IfStatement) -> Interval {
+pub fn interval_from_if_stmt(ifstmt: &IfStatement) -> Interval {
     match ifstmt {
         IfStatement::IfStmt {ref cond, ..}  => interval_from_expr(cond),
         IfStatement::ElseStmt(_e, range)    => range.start.clone(),
@@ -70,23 +70,15 @@ pub fn interval_from_ifstmt(ifstmt: &IfStatement) -> Interval {
 
 pub fn interval_from_reserved_fn(reservedfn: &ReservedFunction) -> Interval { 
     match reservedfn {
-        ReservedFunction::Goto(_g, ident)       => interval_from_sident(ident),
+        ReservedFunction::Goto(_g, ident)       => ident.interval.to_owned(),
         ReservedFunction::Use(expr)             => interval_from_expr(expr),
         ReservedFunction::Say(expr)             => interval_from_expr(expr),
-        ReservedFunction::Remember(ident, ..)   => interval_from_sident(ident),
-        ReservedFunction::Assign(ident, ..)     => interval_from_sident(ident), 
-        ReservedFunction::As(ident, ..)         => interval_from_sident(ident),
-        ReservedFunction::Import{step_name, ..} => interval_from_sident(step_name),
-        ReservedFunction::Normal(ident, ..)     => interval_from_sident(ident),
+        ReservedFunction::Remember(ident, ..)   => ident.interval.to_owned(),
+        ReservedFunction::Assign(ident, ..)     => ident.interval.to_owned(), 
+        ReservedFunction::As(ident, ..)         => ident.interval.to_owned(),
+        ReservedFunction::Import{step_name, ..} => step_name.interval.to_owned(),
+        ReservedFunction::Normal(ident, ..)     => ident.interval.to_owned(),
     }
-}
-
-pub fn interval_from_sident(ident: &SmartIdent) -> Interval {
-    ident.interval.clone()
-}
-
-pub fn interval_from_sliteral(literal: &SmartLiteral) -> Interval {
-    literal.interval.clone()
 }
 
 // ##########################################################

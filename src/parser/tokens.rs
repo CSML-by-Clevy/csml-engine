@@ -7,7 +7,6 @@ pub const PORT: &str = "3002";
 
 pub const WHITE_SPACE: &str = " \t\n\r";
 pub const INLINE_COMMENT: &str = "//";
-pub const INLINE_COMMENT_HASH: &str = "#";
 
 pub const START_COMMENT: &str = "/*";
 pub const END_COMMENT: &str = "*/";

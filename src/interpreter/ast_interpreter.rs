@@ -10,11 +10,13 @@ use crate::interpreter::{
 fn match_obj(lit1: &SmartLiteral, lit2: &SmartLiteral) -> Result<Literal, ErrorInfo> {
     let _b = BUTTON.to_owned();
     if let Literal::ObjectLiteral{ name: Some(_b), properties, .. } = lit2.literal.clone() {
-        match Literal::search_in_obj(&properties, "payload") {
+        match Literal::search_in_obj(&properties, "accept") {
             Some(Literal::ArrayLiteral{items, ..}) => {
                 return Ok(Literal::boolean(items.contains(&lit1.literal), None))
             }
-            Some(val) => return Ok(Literal::boolean(val == &lit1.literal, None)),
+            Some(val) => {
+                return Ok(Literal::boolean(val == &lit1.literal, None))
+            },
             _ => return Ok(Literal::boolean(lit1.literal == lit2.literal, None)),
         }
     }
@@ -57,14 +59,6 @@ fn check_if_ident(expr: &Expr) -> bool {
     }
 }
 
-fn check_if_not_operator(infix: &Infix) -> bool {
-    if let Infix::Not = infix {
-        true
-    } else {
-        false
-    }
-}
-
 pub fn evaluate_condition(
     infix: &Infix,
     expr1: &Expr,
@@ -72,7 +66,7 @@ pub fn evaluate_condition(
     data: &mut Data,
 ) -> Result<SmartLiteral, ErrorInfo> {
     match (expr1, expr2) {
-        (exp1, ..) if check_if_not_operator(infix) && check_if_ident(exp1) => {
+        (exp1, ..) if Infix::Not == *infix && check_if_ident(exp1) => {
             // TODO: add interval in error
             match get_var_from_ident(exp1, data) {
                 Ok(SmartLiteral {
@@ -282,9 +276,7 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, ErrorI
                 Ok(MessageType::Msg(Message::new(literal)))
             },
             Err(_e) => {
-                //TODO: change string null by literal NUll
-                let literal = Literal::string("NULL".to_owned(), None);
-                Ok(MessageType::Msg(Message::new(literal)))
+                Ok(MessageType::Msg(Message::new(Literal::null())))
             }
         },
         Expr::LitExpr { .. } => {
