@@ -10,14 +10,14 @@ pub fn gen_literal_form_event(
         Some(event) => match event.payload {
             PayLoad { content_type: ref t, content: ref c, } 
                 if t == "text" => Ok(SmartLiteral {
-                    literal: Literal::string(c.text.to_string(), None),
+                    literal: Literal::string(c.text.to_string()),
                     interval,
                 }
             ),
             PayLoad {content_type: ref t, content: ref c}
                 if t == "float" => match c.text.to_string().parse::<f64>() {
                 Ok(float) => Ok(SmartLiteral {
-                    literal: Literal::float(float, None),
+                    literal: Literal::float(float),
                     interval,
                 }),
                 Err(..) => Err(ErrorInfo {
@@ -28,7 +28,7 @@ pub fn gen_literal_form_event(
             PayLoad { content_type: ref t, content: ref c}
                 if t == "int" => match c.text.to_string().parse::<i64>() {
                 Ok(int) => Ok(SmartLiteral {
-                    literal: Literal::int(int, None),
+                    literal: Literal::int(int),
                     interval,
                 }),
                 Err(..) => Err(ErrorInfo {
@@ -52,7 +52,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::Block{range: RangeInterval{start, ..}, ..}    => start.clone(),
         Expr::ComplexLiteral(_e, RangeInterval{start, ..})  => start.clone(),
         Expr::VecExpr(_e, RangeInterval{start, ..})         => start.clone(),
-        Expr::FunctionExpr(fnexpr)                          => interval_from_reserved_fn(fnexpr),
+        Expr::ObjectExpr(fnexpr)                          => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e)                       => interval_from_expr(expr), // RangeInterval
         Expr::BuilderExpr(expr, _e)                         => interval_from_expr(expr),
         Expr::IdentExpr(ident)                              => ident.interval.to_owned(),
@@ -68,16 +68,16 @@ pub fn interval_from_if_stmt(ifstmt: &IfStatement) -> Interval {
     }
 }
 
-pub fn interval_from_reserved_fn(reservedfn: &ReservedFunction) -> Interval { 
+pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval { 
     match reservedfn {
-        ReservedFunction::Goto(_g, ident)       => ident.interval.to_owned(),
-        ReservedFunction::Use(expr)             => interval_from_expr(expr),
-        ReservedFunction::Say(expr)             => interval_from_expr(expr),
-        ReservedFunction::Remember(ident, ..)   => ident.interval.to_owned(),
-        ReservedFunction::Assign(ident, ..)     => ident.interval.to_owned(), 
-        ReservedFunction::As(ident, ..)         => ident.interval.to_owned(),
-        ReservedFunction::Import{step_name, ..} => step_name.interval.to_owned(),
-        ReservedFunction::Normal(ident, ..)     => ident.interval.to_owned(),
+        ObjectType::Goto(_g, ident)       => ident.interval.to_owned(),
+        ObjectType::Use(expr)             => interval_from_expr(expr),
+        ObjectType::Say(expr)             => interval_from_expr(expr),
+        ObjectType::Remember(ident, ..)   => ident.interval.to_owned(),
+        ObjectType::Assign(ident, ..)     => ident.interval.to_owned(), 
+        ObjectType::As(ident, ..)         => ident.interval.to_owned(),
+        ObjectType::Import{step_name, ..} => step_name.interval.to_owned(),
+        ObjectType::Normal(ident, ..)     => ident.interval.to_owned(),
     }
 }
 
@@ -93,7 +93,7 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
 pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match &name.ident {
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
-        var if var == RETRIES => Ok(SmartLiteral{literal: Literal::int(data.memory.retries, None), interval: name.interval.to_owned()}),
+        var if var == RETRIES => Ok(SmartLiteral{literal: Literal::int(data.memory.retries), interval: name.interval.to_owned()}),
         _ => match data.step_vars.get(&name.ident) {
             Some(val) => Ok(SmartLiteral {
                 literal: val.clone(),
@@ -127,7 +127,7 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
     }
     //TODO: check for error empty list
     SmartLiteral {
-        literal: Literal::string(new_string, None),
+        literal: Literal::string(new_string),
         interval: interval.unwrap(),
     }
 }
@@ -282,9 +282,9 @@ pub fn get_memory_action(
     expr: &Expr,
 ) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
-        Expr::FunctionExpr(ReservedFunction::Normal(SmartIdent { ident, interval }, exp))
+        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, exp))
             if ident == GET_VALUE => memorytype_to_literal(memory_get(memory, name, exp), interval.clone()),
-        Expr::FunctionExpr(ReservedFunction::Normal(SmartIdent { ident, interval }, exp))
+        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, exp))
             if ident == FIRST => memorytype_to_literal(memory_first(memory, name, exp), interval.clone()),
         e => Err(
             ErrorInfo{

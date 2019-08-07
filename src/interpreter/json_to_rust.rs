@@ -1,7 +1,8 @@
+use serde_json::Value;
+use multimap::MultiMap;
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use crate::parser::{ast::Literal, tokens::*};
-use multimap::MultiMap;
-use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MemoryType {
@@ -47,44 +48,34 @@ pub struct Event {
     pub payload: PayLoad,
 }
 
-pub fn extract_form_object(literal: Literal) -> Literal {
-    if let Literal::ObjectLiteral{properties, name: None, ..} = &literal {
-        if properties.len() == 1 {
-            properties[0].clone()
-        } else {
-            literal.clone()
-        }
-    } else {
-        literal
-    }
-}
+// pub fn extract_form_object(literal: Literal) -> Literal {
+//     if let Literal::ObjectLiteral{properties, ..} = &literal {
+//         if properties.len() == 1 {
+//             properties[0].clone()
+//         } else {
+//             literal.clone()
+//         }
+//     } else {
+//         literal
+//     }
+// }
 
 pub fn json_to_literal(literal: &serde_json::Value) -> Result<Literal, String> {
 
     match literal.get("type") {
         Some(Value::String(val)) if val == "string"  => {
-            match (literal.get("value"), literal.get("name")) {
-                (Some(Value::String(string)), Some(Value::String(name))) => {
-                    Ok(Literal::string(string.to_owned(), Some(name.to_owned())))
-                }
-                (Some(Value::String(string)), None) => {
-                    Ok(Literal::string(string.to_owned(), None))
+            match literal.get("value") {
+                Some(Value::String(string)) => {
+                    Ok(Literal::string(string.to_owned()))
                 }
                 _ => Err(format!("Object of type {} bad format", val))
             }
         },
         Some(Value::String(val)) if val == "int"     => {
-            match (literal.get("value"), literal.get("name")) {
-                (Some(Value::Number(literal)), Some(Value::String(name))) => {
+            match literal.get("value") {
+                Some(Value::Number(literal)) => {
                     if let Some(int) = literal.as_i64() {
-                        Ok(Literal::int(int, Some(name.to_owned())))
-                    } else {
-                        Err(format!("value {} is not of type int", literal))
-                    }
-                }
-                (Some(Value::Number(literal)), None) => {
-                    if let Some(int) = literal.as_i64() {
-                        Ok(Literal::int(int, None))
+                        Ok(Literal::int(int))
                     } else {
                         Err(format!("value {} is not of type int", literal))
                     }
@@ -93,17 +84,10 @@ pub fn json_to_literal(literal: &serde_json::Value) -> Result<Literal, String> {
             }
         },
         Some(Value::String(val)) if val == "float"   => {
-            match (literal.get("value"), literal.get("name")) {
-                (Some(Value::Number(float)), Some(Value::String(name))) => {
+            match literal.get("value") {
+                Some(Value::Number(float)) => {
                     if let Some(literal) = float.as_f64() {
-                        Ok(Literal::float(literal, Some(name.to_owned())))
-                    } else {
-                        Err(format!("value {} is not of type float", float))
-                    }
-                }
-                (Some(Value::Number(float)), None) => {
-                    if let Some(literal) = float.as_f64() {
-                        Ok(Literal::float(literal, None))
+                        Ok(Literal::float(literal))
                     } else {
                         Err(format!("value {} is not of type float", float))
                     }
@@ -112,56 +96,35 @@ pub fn json_to_literal(literal: &serde_json::Value) -> Result<Literal, String> {
             }
         },
         Some(Value::String(val)) if val == "bool"    => {
-            match (literal.get("value"), literal.get("name")) {
-                (Some(Value::Bool(boolean)), Some(Value::String(name))) => {
-                    Ok(Literal::boolean(*boolean, Some(name.to_owned())))
-                }
-                (Some(Value::Bool(boolean)), None) => {
-                    Ok(Literal::boolean(*boolean, None))
+            match literal.get("value") {
+                Some(Value::Bool(boolean)) => {
+                    Ok(Literal::boolean(*boolean))
                 }
                 _ => Err(format!("Object of type {} bad format", val))
             }
         },
         Some(Value::String(val)) if val == "array"   => {
-            
-            match (literal.get("items"), literal.get("name")) {
-                (Some(Value::Array(val)), Some(Value::String(name))) => {
+            match literal.get("items") {
+                Some(Value::Array(val)) => {
                     let mut array: Vec<Literal> = vec![];
 
                     for literal in val.iter() {
                         array.push(json_to_literal(literal)?);
                     }
-                    Ok(Literal::array(array, Some(name.to_owned())))
-                }
-                (Some(Value::Array(val)), None) => {
-                    let mut array: Vec<Literal> = vec![];
-
-                    for literal in val.iter() {
-                        array.push(json_to_literal(literal)?);
-                    }
-                    Ok(Literal::array(array, None))
+                    Ok(Literal::array(array))
                 }
                 _ => Err(format!("Array of type {} bad format", val))
             }
         },
         Some(Value::String(val)) if val == "object"  => {
+            match literal.get("properties") {
+                Some(Value::Object(val)) => {
+                    let mut obj: HashMap<String, Literal> = HashMap::new();
 
-            match (literal.get("properties"), literal.get("name")) {
-                (Some(Value::Array(val)), Some(Value::String(name))) => {
-                    let mut array: Vec<Literal> = vec![];
-
-                    for literal in val.iter() {
-                        array.push(json_to_literal(literal)?);
+                    for (key, val) in val.iter() {
+                        obj.insert(key.to_owned(), json_to_literal(val)?);
                     }
-                    Ok(Literal::object(array, Some(name.to_owned())))
-                }
-                (Some(Value::Array(val)), None) => {
-                    let mut array: Vec<Literal> = vec![];
-
-                    for literal in val.iter() {
-                        array.push(json_to_literal(literal)?);
-                    }
-                    Ok(Literal::array(array, None))
+                    Ok(Literal::object(obj))
                 }
                 _ => Err(format!("Object of type {} bad format", val))
             }

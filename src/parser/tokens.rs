@@ -83,6 +83,9 @@ pub const FN: &str = "Fn";
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
 
+pub static BUILT_IN: &'static [&str] = &[TYPING, WAIT, TEXT, INT,
+URL, IMAGE, ONE_OF, FN, QUESTION, BUTTON];
+
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";
 pub const METADATA: &str = "metadata";

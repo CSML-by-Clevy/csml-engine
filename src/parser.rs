@@ -134,14 +134,14 @@ pub fn parse_as_variable(span: Span) -> IResult<Span, Expr> {
         ))
     }
     let (span, name) = parse_ident(span)?;
-    (Ok((span, Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))) )))
+    (Ok((span, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))) )))
 }
 
 // named!(pub parse_as_variable<Span, Expr>, do_parse!(
 //     expr: parse_var_expr >>
 //     comment!(tag!(AS)) >>
 //     name: parse_ident >>
-//     (Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))))
+//     (Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))))
 // ));
 
 // ################################### Ask_Response

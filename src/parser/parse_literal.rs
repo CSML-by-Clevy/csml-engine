@@ -12,7 +12,7 @@ named!(signed_digits<Span, Span>, recognize!(
 named!(pub parse_integer<Span, Expr>, do_parse!(
     position: get_interval >>
     i: map_res!(map_res!(signed_digits, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::new_literal(Literal::int(i, None), position))
+    (Expr::new_literal(Literal::int(i), position))
 ));
 
 named!(floating_point<Span, Span>, recognize!(
@@ -28,7 +28,7 @@ named!(floating_point<Span, Span>, recognize!(
 named!(pub parse_float<Span, Expr>, do_parse!(
     position: get_interval >>
     value: map_res!(map_res!(floating_point, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::new_literal(Literal::float(value, None), position))
+    (Expr::new_literal(Literal::float(value), position))
 ));
 
 named!(parse_boolean<Span, Expr>, do_parse!(
@@ -36,12 +36,12 @@ named!(parse_boolean<Span, Expr>, do_parse!(
     boolean: alt!(
             do_parse!(
                 tag!(TRUE) >>
-                (Literal::boolean(true, None))
+                (Literal::boolean(true))
 
             ) |
             do_parse!(
                 tag!(FALSE) >>
-                (Literal::boolean(false, None))
+                (Literal::boolean(false))
             )
     ) >>
     (Expr::new_literal(boolean, position))

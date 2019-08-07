@@ -1,5 +1,6 @@
 use crate::parser::ast::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::ops::Add;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -14,52 +15,51 @@ pub struct Message {
     pub content: Literal,
 }
 
+fn obj_to_message(properties: HashMap<String, Literal>) -> (String, Literal) {
+
+    if properties.len() > 1 {
+        ("object".to_owned(), Literal::object(properties))
+    } else if properties.len() == 1 {
+        for (k, v) in properties.iter() {
+            return (k.to_owned(), v.to_owned())
+        }
+
+        unreachable!()
+    } else {
+        unreachable!()
+    }
+}
+
 impl Message {
     pub fn new(literal: Literal) -> Self {
         match literal {
             Literal::IntLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal.set_name("text".to_owned()),
+                content: literal,
             },
             Literal::FloatLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal.set_name("text".to_owned()),
+                content: literal,
             },
             Literal::StringLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal.set_name("text".to_owned()),
+                content: literal,
             },
             Literal::BoolLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal.set_name("text".to_owned()),
+                content: literal,
             },
             Literal::ArrayLiteral{..} => Message {
                 content_type: "array".to_owned(),
                 content: literal,
             },
-            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "url" => Message {
-                content_type: name.to_owned(),
-                content: value[0].clone(),
-            },
-            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "wait" => Message {
-                content_type: name.to_owned(),
-                content: value[0].clone(),
-            },
-            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "typing" => Message {
-                content_type: name.to_owned(),
-                content: value[0].clone(),
-            },
-            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "image" => Message {
-                content_type: name.to_owned(),
-                content: value[0].clone(),
-            },
-            Literal::ObjectLiteral{name: Some(ref name), properties: ref value, ..} if name == "text" => Message {
-                content_type: name.to_owned(),
-                content: value[0].clone(),
-            },
-            Literal::ObjectLiteral{..} => Message {
-                content_type: literal.get_name().unwrap(),
-                content: literal,
+            Literal::ObjectLiteral{properties: ref value, ..} => {
+                let (content_type, content) = obj_to_message(value.to_owned());
+
+                Message {
+                    content_type,
+                    content,
+                }
             },
             Literal::Null{..} => Message{
                 content_type: literal.type_to_string(),
@@ -117,12 +117,12 @@ impl MessageData {
             if let Literal::ObjectLiteral{..} = &value{
                 vec.push(Memories{key: key.clone(), value});
             } else {
-                vec.push(Memories{key: key.clone(), value: value.set_name(key)});
+                vec.push(Memories{key: key.clone(), value: value});
             }
         } else {
             match &value {
                 Literal::ObjectLiteral{..} => self.memories = Some(vec![Memories{key: key.clone(), value: value}]),
-                _                          => self.memories = Some(vec![Memories{key: key.clone(), value: value.set_name(key) }])
+                _                          => self.memories = Some(vec![Memories{key: key.clone(), value: value}])
             };
         }
         self

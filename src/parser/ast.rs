@@ -56,7 +56,7 @@ pub enum GotoType {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub enum ReservedFunction {
+pub enum ObjectType {
     Goto(GotoType, SmartIdent),
     Use(Box<Expr>),
     Say(Box<Expr>),
@@ -100,7 +100,7 @@ pub enum Expr {
     VecExpr(Vec<Expr>, RangeInterval),
     InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval
 
-    FunctionExpr(ReservedFunction), // RangeInterval ?
+    ObjectExpr(ObjectType), // RangeInterval ?
     IfExpr(IfStatement),
     BuilderExpr(Box<Expr>, Box<Expr>),
 
@@ -130,7 +130,7 @@ impl Expr {
             Expr::VecExpr(..) => "Array".to_owned(),
             Expr::IdentExpr(SmartIdent { ident, .. }) => ident.to_owned(),
             Expr::LitExpr(SmartLiteral { literal, .. }) => literal.type_to_string(),
-            Expr::FunctionExpr(..) => "function".to_owned(),
+            Expr::ObjectExpr(..) => "function".to_owned(),
             Expr::Block { .. } => "block".to_owned(),
             Expr::IfExpr { .. } => "if".to_owned(),
             Expr::InfixExpr(..) => "infix".to_owned(),
@@ -180,48 +180,78 @@ impl Interval {
     }
 }
 
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// #[serde(untagged)]
+// pub enum Literal {
+//     StringLiteral{
+//         #[serde(rename = "type")]
+//         literal_type: String,
+//         name: Option<String>,
+//         value: String,
+//     },
+//     IntLiteral{
+//         #[serde(rename = "type")]
+//         literal_type: String,
+//         name: Option<String>,
+//         value: i64,
+//     },
+//     FloatLiteral{
+//         #[serde(rename = "type")]
+//         literal_type: String,
+//         name: Option<String>,
+//         value: f64,
+//     },
+//     BoolLiteral{
+//         #[serde(rename = "type")]
+//         literal_type: String,
+//         name: Option<String>,
+//         value: bool,
+//     },
+//     ArrayLiteral{
+//         #[serde(rename = "type")]
+//         literal_type: String,
+//         name: Option<String>,
+//         items: Vec<Literal>,
+//     },
+//     ObjectLiteral {
+//         #[serde(rename = "type")]
+//         literal_type: String,
+//         name: Option<String>,
+//         properties: HashMap<String, Literal>,
+//     },
+//     Null{
+//         #[serde(rename = "type")]
+//         literal_type: String,
+//         value: String,
+//     },
+// }
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum Literal {
     StringLiteral{
-        #[serde(rename = "type")]
-        literal_type: String,
-        name: Option<String>,
         value: String,
     },
     IntLiteral{
-        #[serde(rename = "type")]
-        literal_type: String,
-        name: Option<String>,
         value: i64,
     },
     FloatLiteral{
-        #[serde(rename = "type")]
-        literal_type: String,
-        name: Option<String>,
         value: f64,
     },
     BoolLiteral{
-        #[serde(rename = "type")]
-        literal_type: String,
-        name: Option<String>,
         value: bool,
     },
     ArrayLiteral{
-        #[serde(rename = "type")]
-        literal_type: String,
-        name: Option<String>,
         items: Vec<Literal>,
     },
-    ObjectLiteral {
-        #[serde(rename = "type")]
-        literal_type: String,
-        name: Option<String>,
+    ObjectLiteral{
+        properties: HashMap<String, Literal>,
+    },
+    FunctionLiteral{
+        name: String,
         properties: HashMap<String, Literal>,
     },
     Null{
-        #[serde(rename = "type")]
-        literal_type: String,
         value: String,
     },
 }
@@ -263,34 +293,34 @@ impl Literal {
             Literal::BoolLiteral{value, ..} => value.to_string(),
             Literal::ArrayLiteral{items, ..} => format!("{:?}", items), // serialize first
             Literal::ObjectLiteral{properties, ..} => format!("{:?}", properties),  // serialize first
-            Literal::Null{literal_type, ..} => literal_type.to_owned(),
+            Literal::Null{value, ..} => value.to_owned(),
         }
     }
 
     //TODO: rm to_owned()
-    pub fn get_name(&self) -> Option<String> {
-        match self {
-            Literal::StringLiteral{name, ..} => name.to_owned(),
-            Literal::IntLiteral{name, ..} => name.to_owned(),
-            Literal::FloatLiteral{name, ..} => name.to_owned(),
-            Literal::BoolLiteral{name, ..} => name.to_owned(),
-            Literal::ArrayLiteral{name, ..} => name.to_owned(),
-            Literal::ObjectLiteral{name, ..} => name.to_owned(),
-            Literal::Null{..} => None,
-        }
-    }
+    // pub fn get_name(&self) -> Option<String> {
+    //     match self {
+    //         Literal::StringLiteral{name, ..} => name.to_owned(),
+    //         Literal::IntLiteral{name, ..} => name.to_owned(),
+    //         Literal::FloatLiteral{name, ..} => name.to_owned(),
+    //         Literal::BoolLiteral{name, ..} => name.to_owned(),
+    //         Literal::ArrayLiteral{name, ..} => name.to_owned(),
+    //         Literal::ObjectLiteral{name, ..} => name.to_owned(),
+    //         Literal::Null{..} => None,
+    //     }
+    // }
 
-    pub fn set_name(&self, name: String) -> Self {
-        match self {
-            Literal::Null{..} => self.to_owned(),
-            Literal::StringLiteral{value, ..} => Literal::string(value.to_owned(), Some(name)),
-            Literal::IntLiteral{value, ..} => Literal::int(*value, Some(name)),
-            Literal::FloatLiteral{value, ..} => Literal::float(*value, Some(name)),
-            Literal::BoolLiteral{value, ..} => Literal::boolean(*value, Some(name)),
-            Literal::ArrayLiteral{items, ..} => Literal::array(items.to_owned(), Some(name)),
-            Literal::ObjectLiteral{properties, ..} => Literal::object(properties.to_owned(), Some(name)),
-        }
-    }
+    // pub fn set_name(&self, name: String) -> Self {
+    //     match self {
+    //         Literal::Null{..} => self.to_owned(),
+    //         Literal::StringLiteral{value, ..} => Literal::string(value.to_owned(), Some(name)),
+    //         Literal::IntLiteral{value, ..} => Literal::int(*value, Some(name)),
+    //         Literal::FloatLiteral{value, ..} => Literal::float(*value, Some(name)),
+    //         Literal::BoolLiteral{value, ..} => Literal::boolean(*value, Some(name)),
+    //         Literal::ArrayLiteral{items, ..} => Literal::array(items.to_owned(), Some(name)),
+    //         Literal::ObjectLiteral{properties, ..} => Literal::object(properties.to_owned(), Some(name)),
+    //     }
+    // }
 
     pub fn type_to_string(&self) -> String {
         match self {
@@ -300,73 +330,67 @@ impl Literal {
             Literal::BoolLiteral{..} => "bool".to_owned(),
             Literal::ArrayLiteral{..} => "array".to_owned(),
             Literal::ObjectLiteral {..} => "object".to_owned(),
-            Literal::Null{literal_type, ..} => literal_type.to_owned(),
+            Literal::Null{value, ..} => value.to_owned(),
         }
     }
 
-    pub fn float(value: f64, name: Option<String>) -> Self {
+    pub fn float(value: f64) -> Self {
         Literal::FloatLiteral{
-            literal_type: "float".to_owned(),
-            name,
-            value,
+            value
         }
     }
 
-    pub fn int(value: i64, name: Option<String>) -> Self {
+    pub fn int(value: i64) -> Self {
         Literal::IntLiteral{
-            literal_type: "int".to_owned(),
-            name,
-            value,
+            value
         }
     }
 
-    pub fn boolean(value: bool, name: Option<String>) -> Self {
+    pub fn boolean(value: bool) -> Self {
         Literal::BoolLiteral{
-            literal_type: "bool".to_owned(),
-            name,
-            value,
+            value
         }
     }
 
-    pub fn string(value: String, name: Option<String>) -> Self {
+    pub fn string(value: String) -> Self {
         Literal::StringLiteral{
-            literal_type: "string".to_owned(),
-            name,
             value,
         }
     }
 
-    pub fn array(items: Vec<Literal>, name: Option<String>) -> Self {
+    pub fn array(items: Vec<Literal>) -> Self {
         Literal::ArrayLiteral{
-            literal_type: "array".to_owned(),
-            name,
             items,
         }
     }
 
-    pub fn object(properties: HashMap<String, Literal>, name: Option<String>) -> Self {
+    pub fn object(properties: HashMap<String, Literal>) -> Self {
         Literal::ObjectLiteral{
-            literal_type: "object".to_owned(),
-            name,
             properties,
         }
     }
 
+    pub fn lit_to_obj(properties: Literal, name: String) -> Self {
+        let mut obj: HashMap<String, Literal> = HashMap::new();
+        
+        obj.insert(name, properties);
+        Literal::object(obj)
+    }
+
     pub fn null() -> Self {
         Literal::Null{
-            literal_type: NULL.to_owned(),
             value: NULL.to_owned(),
         }
     }
 
-    pub fn search_in_obj<'a>(obj: &'a [Literal], name: &str) -> Option<&'a Literal> {
-        obj.iter().find(|&literal|
-            match literal.get_name() {
-            Some(ref elem) if elem == name => true,
-            _ => false
-            }
-        )
-    }
+    // pub fn search_in_obj<'a>(obj: &'a Vec<Literal>, name: &str) -> Option<&'a Literal> {
+    //     obj.iter().find(|&literal|
+    //         match literal.get_name() {
+    //         Some(ref elem) if elem == name => true,
+    //         _ => false
+    //         }
+    //     )
+    // }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
@@ -410,11 +434,11 @@ impl Add for SmartLiteral {
 
     fn add(self, other: SmartLiteral) -> Result<SmartLiteral, ErrorInfo> {
         match (self.literal, other.literal) {
-            (Literal::FloatLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})      => Ok(SmartLiteral{literal: Literal::float(l1 + l2 as f64, None), interval: self.interval}),
-            (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})      => Ok(SmartLiteral{literal: Literal::float(l1 as f64 + l2, None), interval: self.interval}),
-            (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})    => Ok(SmartLiteral{literal: Literal::float(l1 + l2, None), interval: self.interval}) ,
-            (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})        => Ok(SmartLiteral{literal: Literal::int(l1 + l2, None), interval: self.interval}),
-            (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..})      => Ok(SmartLiteral{literal: Literal::int(l1 as i64 + l2 as i64, None), interval: self.interval}),
+            (Literal::FloatLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})      => Ok(SmartLiteral{literal: Literal::float(l1 + l2 as f64), interval: self.interval}),
+            (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})      => Ok(SmartLiteral{literal: Literal::float(l1 as f64 + l2), interval: self.interval}),
+            (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})    => Ok(SmartLiteral{literal: Literal::float(l1 + l2), interval: self.interval}) ,
+            (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})        => Ok(SmartLiteral{literal: Literal::int(l1 + l2), interval: self.interval}),
+            (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..})      => Ok(SmartLiteral{literal: Literal::int(l1 as i64 + l2 as i64), interval: self.interval}),
             _=> Err(ErrorInfo {
                 message: "Illegal operation + between types".to_owned(),
                 interval: self.interval,
@@ -429,12 +453,12 @@ impl Sub for SmartLiteral {
 
     fn sub(self, other: SmartLiteral) -> Result<SmartLiteral, ErrorInfo> {
         match (self.literal, other.literal) {
-            (Literal::FloatLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})  => Ok(SmartLiteral{literal: Literal::float(l1 - l2 as f64, None), interval: self.interval}),
-            (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})  => Ok(SmartLiteral{literal: Literal::float(l1 as f64 - l2, None), interval: self.interval}),
-            (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})=> Ok(SmartLiteral{literal: Literal::float(l1 - l2, None), interval: self.interval}),
+            (Literal::FloatLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})  => Ok(SmartLiteral{literal: Literal::float(l1 - l2 as f64), interval: self.interval}),
+            (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})  => Ok(SmartLiteral{literal: Literal::float(l1 as f64 - l2), interval: self.interval}),
+            (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})=> Ok(SmartLiteral{literal: Literal::float(l1 - l2), interval: self.interval}),
 
-            (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})    => Ok(SmartLiteral{literal: Literal::int(l1 - l2, None), interval: self.interval}),
-            (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..})  => Ok(SmartLiteral{literal: Literal::int(l1 as i64 - l2 as i64, None), interval: self.interval}),
+            (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})    => Ok(SmartLiteral{literal: Literal::int(l1 - l2), interval: self.interval}),
+            (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..})  => Ok(SmartLiteral{literal: Literal::int(l1 as i64 - l2 as i64), interval: self.interval}),
             _                                                                           => Err(ErrorInfo {
                 message: "Illegal operation - between types".to_owned(),
                 interval: self.interval,
@@ -455,7 +479,7 @@ impl Div for SmartLiteral {
                         interval: self.interval,
                     }) 
                 }
-                Ok(SmartLiteral{ literal: Literal::float(l1 / l2 as f64, None), interval: self.interval })
+                Ok(SmartLiteral{ literal: Literal::float(l1 / l2 as f64), interval: self.interval })
             },
             (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})        => {
                 if l2 == 0.0 { return Err(ErrorInfo {
@@ -463,7 +487,7 @@ impl Div for SmartLiteral {
                         interval: self.interval,
                     })
                 }
-                Ok(SmartLiteral{ literal: Literal::float(l1 as f64 / l2, None), interval: self.interval })
+                Ok(SmartLiteral{ literal: Literal::float(l1 as f64 / l2), interval: self.interval })
             },
             (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})      => {
                 if l2 == 0.0 { return Err(ErrorInfo {
@@ -471,7 +495,7 @@ impl Div for SmartLiteral {
                         interval: self.interval,
                     })
                 }
-                Ok(SmartLiteral{ literal: Literal::float(l1 / l2, None), interval: self.interval })
+                Ok(SmartLiteral{ literal: Literal::float(l1 / l2), interval: self.interval })
             },
             (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})          => {
                 if l2 == 0 { return Err(ErrorInfo {
@@ -479,7 +503,7 @@ impl Div for SmartLiteral {
                         interval: self.interval,
                     })
                 }
-                Ok(SmartLiteral{literal: Literal::int(l1 / l2, None) , interval: self.interval})
+                Ok(SmartLiteral{literal: Literal::int(l1 / l2) , interval: self.interval})
             },
             (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..})        => {
                 if !l2 {
@@ -488,7 +512,7 @@ impl Div for SmartLiteral {
                         interval: self.interval,
                     })
                 }
-                Ok(SmartLiteral{literal: Literal::int(l1 as i64 / l2 as i64, None) , interval: self.interval})
+                Ok(SmartLiteral{literal: Literal::int(l1 as i64 / l2 as i64), interval: self.interval})
             },
             _                                                           => Err(ErrorInfo {
                 message: "Illegal operation / between types".to_owned(),
@@ -504,11 +528,11 @@ impl Mul for SmartLiteral {
 
     fn mul(self, other: SmartLiteral) -> Result<SmartLiteral, ErrorInfo> {
         match (self.literal, other.literal) {
-            (Literal::FloatLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})    => Ok(SmartLiteral{ literal: Literal::float(l1 * l2 as f64, None) , interval: self.interval}),
-            (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})    => Ok(SmartLiteral{ literal: Literal::float(l1 as f64 * l2, None) , interval: self.interval}),
-            (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})  => Ok(SmartLiteral{ literal: Literal::float(l1 * l2, None) , interval: self.interval}),
-            (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})      => Ok(SmartLiteral{ literal: Literal::int(l1 * l2, None) , interval: self.interval}),
-            (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..})    => Ok(SmartLiteral{ literal: Literal::int(l1 as i64 * l2 as i64, None) , interval: self.interval}),
+            (Literal::FloatLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})    => Ok(SmartLiteral{ literal: Literal::float(l1 * l2 as f64) , interval: self.interval}),
+            (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})    => Ok(SmartLiteral{ literal: Literal::float(l1 as f64 * l2) , interval: self.interval}),
+            (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..})  => Ok(SmartLiteral{ literal: Literal::float(l1 * l2) , interval: self.interval}),
+            (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..})      => Ok(SmartLiteral{ literal: Literal::int(l1 * l2) , interval: self.interval}),
+            (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..})    => Ok(SmartLiteral{ literal: Literal::int(l1 as i64 * l2 as i64) , interval: self.interval}),
             _                                                       => Err(ErrorInfo {
                 message: "Illegal operation * between types".to_owned(),
                 interval: self.interval,
