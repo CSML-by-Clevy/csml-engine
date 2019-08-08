@@ -2,10 +2,11 @@ pub mod error_format;
 pub mod interpreter;
 pub mod parser;
 
-use error_format::data::ErrorInfo;
-use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
 use parser::{ast::*, Parser};
 use std::collections::HashMap;
+use error_format::data::ErrorInfo;
+use serde_json::{Value, json, map::Map};
+use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
     // add flow validations
@@ -41,14 +42,23 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
     match search_for(flow, name) {
         Some(Expr::Block { arg: actions, .. }) => {
             let result = interpret_block(actions, &mut data)?;
-
-            // dbg!(&result);
-
-            match serde_json::to_string(&result) {
-                Ok(ser) => Ok(ser),
-                Err(_) => unreachable!(),
+            let mut message: Map<String, Value> = Map::new();
+            let mut vec = vec![];
+            for msg in result.messages.iter() {
+                vec.push(msg.to_owned().message_to_json());
             }
-        }
+
+
+            message.insert("memories".to_owned(), match serde_json::to_value(result.memories) { Ok(val) => val, _ => json!(null) });
+            message.insert("messages".to_owned(), Value::Array(vec));
+            message.insert("next_flow".to_owned(), match serde_json::to_value(result.next_flow) { Ok(val) => val, _ => json!(null)});
+            message.insert("next_step".to_owned(), match serde_json::to_value(result.next_step) { Ok(val) => val, _ => json!(null)});
+
+            match serde_json::to_string(&message) {
+                Ok(msg) => Ok(msg),
+                _ => unreachable!()
+            } 
+        },
         _ => Err(ErrorInfo {
             interval: Interval { line: 0, column: 0 },
             message: "ERROR: Empty Flow".to_string(),

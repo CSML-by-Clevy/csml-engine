@@ -180,52 +180,6 @@ impl Interval {
     }
 }
 
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// #[serde(untagged)]
-// pub enum Literal {
-//     StringLiteral{
-//         #[serde(rename = "type")]
-//         literal_type: String,
-//         name: Option<String>,
-//         value: String,
-//     },
-//     IntLiteral{
-//         #[serde(rename = "type")]
-//         literal_type: String,
-//         name: Option<String>,
-//         value: i64,
-//     },
-//     FloatLiteral{
-//         #[serde(rename = "type")]
-//         literal_type: String,
-//         name: Option<String>,
-//         value: f64,
-//     },
-//     BoolLiteral{
-//         #[serde(rename = "type")]
-//         literal_type: String,
-//         name: Option<String>,
-//         value: bool,
-//     },
-//     ArrayLiteral{
-//         #[serde(rename = "type")]
-//         literal_type: String,
-//         name: Option<String>,
-//         items: Vec<Literal>,
-//     },
-//     ObjectLiteral {
-//         #[serde(rename = "type")]
-//         literal_type: String,
-//         name: Option<String>,
-//         properties: HashMap<String, Literal>,
-//     },
-//     Null{
-//         #[serde(rename = "type")]
-//         literal_type: String,
-//         value: String,
-//     },
-// }
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum Literal {
@@ -247,10 +201,10 @@ pub enum Literal {
     ObjectLiteral{
         properties: HashMap<String, Literal>,
     },
-    FunctionLiteral{
-        name: String,
-        properties: HashMap<String, Literal>,
-    },
+    // FunctionLiteral{
+    //     name: String,
+    //     properties: Literal,
+    // },
     Null{
         value: String,
     },

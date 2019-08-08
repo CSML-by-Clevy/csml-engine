@@ -11,7 +11,7 @@ use crate::interpreter::{
 fn match_obj(lit1: &SmartLiteral, lit2: &SmartLiteral) -> Result<Literal, ErrorInfo> {
     let _b = BUTTON.to_owned();
     if let Literal::ObjectLiteral{properties, .. } = lit2.literal.clone() {
-        match Literal::search_in_obj(&properties, "accept") {
+        match properties.get("accept") {
             Some(Literal::ArrayLiteral{items, ..}) => {
                 return Ok(Literal::boolean(items.contains(&lit1.literal)))
             }
@@ -205,6 +205,7 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorIn
             for value in vec.iter() {
                 array.push(expr_to_literal(value, data)?.literal)
             }
+
             Ok(SmartLiteral{
                     literal: Literal::array(array),
                     interval: range.start.to_owned()
@@ -226,7 +227,6 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, ErrorI
     match action {
         Expr::ObjectExpr(ObjectType::As(name, expr)) => {
             let msg = match_functions(expr, data)?;
-
             match msg {
                 MessageType::Msg(Message { ref content, .. }) => {
                     data.step_vars.insert(name.ident.to_owned(), content.clone());

@@ -1,30 +1,26 @@
 pub mod api_functions;
 pub mod reserved_functions;
 
-use crate::error_format::data::ErrorInfo;
 use crate::parser::ast::*;
-use crate::interpreter::json_to_rust::*;
-
+use std::hash::BuildHasher;
 use serde_json::{Map, Value};
+use std::collections::HashMap;
+use crate::interpreter::json_to_rust::*;
+use crate::error_format::data::ErrorInfo;
 
-pub fn create_submap(keys: &[&str], args: &[Literal]) -> Result<Map<String, Value>, ErrorInfo> {
+pub fn create_submap<S: BuildHasher>(
+    keys: &[&str],
+    args: &HashMap<String, Literal, S>,
+) -> Result<Map<String, Value>, ErrorInfo> {
     let mut map = Map::new();
 
-    for elem in args.iter() {
-        if keys.iter().find(|&&x| 
-            if let Some(value) = elem.get_name() {
-                x == value
-            } else {
-                false
+    for elem in args.keys() {
+        if keys.iter().find(|&&x| x == elem).is_none() {
+            if let Some(value) = args.get(&*elem) {
+                map.insert(elem.clone(), Value::String(value.to_string()));
             }
-        ).is_none() {
-            map.insert(
-                if let Some(name) = elem.get_name() {name.to_owned()} else {"default".to_owned()}, 
-                Value::String(elem.to_string())
-            );
         }
     }
-
     Ok(map)
 }
 

@@ -1,26 +1,21 @@
 use serde_json::Value;
 use std::collections::HashMap;
+use crate::parser::{ast::Literal};
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{data::Data, builtins::*};
-use crate::parser::{ast::Literal};
 
 // default #############################################################################
 
-fn parse_api(mut args: Vec<Literal>, data: &mut Data) -> Result<(String, HashMap<String, Value>), ErrorInfo> {
+fn parse_api(args: &HashMap<String, Literal>, data: &mut Data) -> Result<(String, HashMap<String, Value>), ErrorInfo> {
     let mut map: HashMap<String, Value> = HashMap::new();
 
-    if let Some(Literal::StringLiteral{value: fn_id, ..}) = Literal::search_in_obj(&args, "fn_id") {
+    if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get("fn_id") {
         map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
-    } else if !args.is_empty() {
-        if let Literal::StringLiteral{value: fn_id, ..} = &args[0] {
-            map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
-            args.reverse();
-            args.pop();
-            args.reverse();
-        }
+    } else if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get("default") {
+        map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
     }
 
-    let sub_map = create_submap(&["fn_id"], &args)?;
+    let sub_map = create_submap(&["fn_id", "default"], &args)?;
     let client = client_to_json(&data.memory.client);
 
     map.insert("data".to_owned(), Value::Object(sub_map));
@@ -28,8 +23,8 @@ fn parse_api(mut args: Vec<Literal>, data: &mut Data) -> Result<(String, HashMap
     Ok((data.memory.fn_endpoint.to_string(), map))
 }
 
-pub fn api(args: &[Literal], interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
-    let (http_arg, map) = parse_api(args.to_owned(), data)?;
+pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
+    let (http_arg, map) = parse_api(&args, data)?;
 
     // println!("http call {:?}", http_arg);
     // println!("map {:?}", serde_json::to_string(&map).unwrap());
@@ -39,7 +34,7 @@ pub fn api(args: &[Literal], interval: Interval, data: &mut Data) -> Result<Lite
                 // println!("reqwest post ok: ");
                 let json: serde_json::Value = serde_json::from_str(&text).unwrap();
                 if let Some(Value::String(val)) = json.get("data") {
-                    Ok(Literal::string(val.to_string(), None))
+                    Ok(Literal::string(val.to_string()))
                 } else {
                     Ok(Literal::null())
                 }

@@ -141,7 +141,7 @@ pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, 
         Expr::InfixExpr(infix, exp1, exp2) => evaluate_condition(infix, exp1, exp2, data),
         e => Err(
             ErrorInfo{
-                message: "unown variable in Ident err n#1".to_owned(),
+                message: "unown variable in Ident err get_var_from_ident".to_owned(),
                 interval: interval_from_expr(e)
             }
         )
