@@ -5,8 +5,8 @@ use crate::parser::ast::*;
 use std::hash::BuildHasher;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
-use crate::interpreter::json_to_rust::*;
 use crate::error_format::data::ErrorInfo;
+use crate::interpreter::{json_to_rust::*, message::*};
 
 pub fn create_submap<S: BuildHasher>(
     keys: &[&str],
@@ -17,7 +17,7 @@ pub fn create_submap<S: BuildHasher>(
     for elem in args.keys() {
         if keys.iter().find(|&&x| x == elem).is_none() {
             if let Some(value) = args.get(&*elem) {
-                map.insert(elem.clone(), Value::String(value.to_string()));
+                map.insert(elem.clone(), Message::lit_to_json(value.to_owned()));
             }
         }
     }

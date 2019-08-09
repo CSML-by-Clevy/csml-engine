@@ -28,7 +28,8 @@ pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) ->
 
 pub fn text(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::StringLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
+        Some(literal) => Ok(Literal::lit_to_obj(literal.to_owned(), name.to_lowercase())),
+        // Some(Literal::ObjectLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
         _ => return Err(ErrorInfo{
                 message: "Builtin Text expect one argument of type string | example: Text(\"hola\")".to_owned(),
                 interval

@@ -35,19 +35,19 @@ impl Message {
         match literal {
             Literal::IntLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal,
+                content: Literal::lit_to_obj(literal, "text".to_owned()),
             },
             Literal::FloatLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal,
+                content: Literal::lit_to_obj(literal, "text".to_owned()),
             },
             Literal::StringLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal,
+                content: Literal::lit_to_obj(literal, "text".to_owned()),
             },
             Literal::BoolLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: literal,
+                content: Literal::lit_to_obj(literal, "text".to_owned()),
             },
             Literal::ArrayLiteral{..} => Message {
                 content_type: "array".to_owned(),
@@ -61,7 +61,7 @@ impl Message {
                     content,
                 }
             },
-            Literal::Null{..} => Message{
+            Literal::Null{..} => Message {
                 content_type: literal.type_to_string(),
                 content: literal,
             },
@@ -125,6 +125,15 @@ impl Message {
 pub struct Memories {
     pub key: String,
     pub value: Literal,
+}
+
+impl Memories {
+    pub fn to_jsvalue(self) -> Value {
+        let mut map: Map<String, Value> = Map::new();
+        map.insert("key".to_owned(), json!(self.key));
+        map.insert("value".to_owned(), Message::lit_to_json(self.value));
+        Value::Object(map)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

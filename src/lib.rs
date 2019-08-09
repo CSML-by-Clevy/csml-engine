@@ -44,12 +44,18 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
             let result = interpret_block(actions, &mut data)?;
             let mut message: Map<String, Value> = Map::new();
             let mut vec = vec![];
+            let mut memories = vec![];
+
             for msg in result.messages.iter() {
                 vec.push(msg.to_owned().message_to_json());
             }
+            if let Some(mem) = result.memories {
+                for elem in mem.iter() {
+                    memories.push(elem.to_owned().to_jsvalue());
+                }
+            }
 
-
-            message.insert("memories".to_owned(), match serde_json::to_value(result.memories) { Ok(val) => val, _ => json!(null) });
+            message.insert("memories".to_owned(), Value::Array(memories));
             message.insert("messages".to_owned(), Value::Array(vec));
             message.insert("next_flow".to_owned(), match serde_json::to_value(result.next_flow) { Ok(val) => val, _ => json!(null)});
             message.insert("next_step".to_owned(), match serde_json::to_value(result.next_step) { Ok(val) => val, _ => json!(null)});

@@ -251,31 +251,6 @@ impl Literal {
         }
     }
 
-    //TODO: rm to_owned()
-    // pub fn get_name(&self) -> Option<String> {
-    //     match self {
-    //         Literal::StringLiteral{name, ..} => name.to_owned(),
-    //         Literal::IntLiteral{name, ..} => name.to_owned(),
-    //         Literal::FloatLiteral{name, ..} => name.to_owned(),
-    //         Literal::BoolLiteral{name, ..} => name.to_owned(),
-    //         Literal::ArrayLiteral{name, ..} => name.to_owned(),
-    //         Literal::ObjectLiteral{name, ..} => name.to_owned(),
-    //         Literal::Null{..} => None,
-    //     }
-    // }
-
-    // pub fn set_name(&self, name: String) -> Self {
-    //     match self {
-    //         Literal::Null{..} => self.to_owned(),
-    //         Literal::StringLiteral{value, ..} => Literal::string(value.to_owned(), Some(name)),
-    //         Literal::IntLiteral{value, ..} => Literal::int(*value, Some(name)),
-    //         Literal::FloatLiteral{value, ..} => Literal::float(*value, Some(name)),
-    //         Literal::BoolLiteral{value, ..} => Literal::boolean(*value, Some(name)),
-    //         Literal::ArrayLiteral{items, ..} => Literal::array(items.to_owned(), Some(name)),
-    //         Literal::ObjectLiteral{properties, ..} => Literal::object(properties.to_owned(), Some(name)),
-    //     }
-    // }
-
     pub fn type_to_string(&self) -> String {
         match self {
             Literal::StringLiteral{..} => "string".to_owned(),
