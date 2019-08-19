@@ -183,7 +183,6 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<SmartLit
     }
 }
 
-// TODO: Check in MemoryType r#type are correct
 pub fn memorytype_to_literal(
     memtype: Option<&MemoryType>,
     interval: Interval,

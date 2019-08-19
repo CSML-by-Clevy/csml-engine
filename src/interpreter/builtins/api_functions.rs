@@ -1,5 +1,6 @@
 use serde_json::Value;
-use std::collections::HashMap;
+use std::{env, collections::HashMap};
+use reqwest::{ClientBuilder, header::{HeaderMap, HeaderValue, ACCEPT, CONTENT_TYPE}};
 use crate::parser::{ast::Literal};
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{data::Data, builtins::*};
@@ -23,12 +24,31 @@ fn parse_api(args: &HashMap<String, Literal>, data: &mut Data) -> Result<(String
     Ok((data.memory.fn_endpoint.to_string(), map))
 }
 
+fn construct_headers() -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    let api_key = match env::var("OUT_DIR") {
+        Ok(key) => key,
+        Err(_e) => "PoePoe".to_owned()
+    };
+
+    headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("image/png"));
+    headers.insert("X-Api-Key", HeaderValue::from_str(&api_key).unwrap());
+    headers
+}
+
 pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
     let (http_arg, map) = parse_api(&args, data)?;
+    let client = ClientBuilder::new()
+            .danger_accept_invalid_certs(true)
+            .build().unwrap();
 
     // println!("http call {:?}", http_arg);
     // println!("map {:?}", serde_json::to_string(&map).unwrap());
-    match reqwest::Client::new().post(&http_arg).json(&map).send() {
+    match client.post(&http_arg)
+        .headers(construct_headers())
+        .json(&map).send() {
+
         Ok(ref mut arg) => match &arg.text() {
             Ok(text) => {
                 // println!("reqwest post ok: ");
@@ -40,7 +60,6 @@ pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) 
                 }
             }
             Err(_e) => {
-                // println!("error in parsing reqwest result: {:?}", e);
                 Err(ErrorInfo{
                     message: "Error in parsing reqwest result".to_owned(),
                     interval
@@ -48,7 +67,6 @@ pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) 
             }
         },
         Err(_e) => {
-            // println!("error in reqwest post {:?}", e);
             Err(ErrorInfo{
                 message: "Error in reqwest post".to_owned(),
                 interval
