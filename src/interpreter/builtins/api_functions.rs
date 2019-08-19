@@ -26,20 +26,21 @@ fn parse_api(args: &HashMap<String, Literal>, data: &mut Data) -> Result<(String
 
 fn construct_headers() -> HeaderMap {
     let mut headers = HeaderMap::new();
-    let api_key = match env::var("OUT_DIR") {
-        Ok(key) => key,
-        Err(_e) => "PoePoe".to_owned()
+    let api_key = match env::var("FN_X_API_KEY") {
+        Ok(key) => HeaderValue::from_str(&key).unwrap(),
+        Err(_e) => HeaderValue::from_str("PoePoe").unwrap()
     };
 
     headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("image/png"));
-    headers.insert("X-Api-Key", HeaderValue::from_str(&api_key).unwrap());
+    headers.insert("X-Api-Key", api_key);
     headers
 }
 
 pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
     let (http_arg, map) = parse_api(&args, data)?;
     let client = ClientBuilder::new()
+            .use_rustls_tls()
             .danger_accept_invalid_certs(true)
             .build().unwrap();
 
