@@ -9,7 +9,7 @@ use serde_json::{Value, json, map::Map};
 use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
-    // add flow validations
+    // TODO: add flow validations
     match Parser::parse_flow(file.as_bytes()) {
         Ok(flow) => Ok(flow),
         Err(e) => Err(e),

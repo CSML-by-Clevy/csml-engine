@@ -6,8 +6,8 @@ use crate::parser::{ast::{Literal, Interval}}; //, tokens::*
 // TODO: check nbr elemts in built-ins
 pub fn typing(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::IntLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
-        Some(Literal::FloatLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        Some(Literal::IntLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::int(*lit))),
+        Some(Literal::FloatLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::float(*lit))),
         _ => Err(ErrorInfo{
                 message: "Builtin Typing expect one argument of type int or float | example: Typing(3, ..)".to_owned(),
                 interval
@@ -17,8 +17,8 @@ pub fn typing(args: HashMap<String, Literal>, name: String, interval: Interval) 
 
 pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::IntLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
-        Some(Literal::FloatLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        Some(Literal::IntLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::int(*lit))),
+        Some(Literal::FloatLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::float(*lit))),
         _ => Err(ErrorInfo{
             message: "Builtin Wait expect one argument of type int or float | example: Wait(3)".to_owned(),
             interval
@@ -39,7 +39,7 @@ pub fn text(args: HashMap<String, Literal>, name: String, interval: Interval) ->
 
 pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::StringLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        Some(Literal::StringLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::string(lit.to_owned()))),
         _ => Err(ErrorInfo{
                 message: "Builtin Image expect one argument of type string | example: Image(\"hola\")".to_owned(),
                 interval
@@ -49,7 +49,7 @@ pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 
 pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::StringLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        Some(Literal::StringLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::string(lit.to_owned()))),
         _ => Err(ErrorInfo{
                 message: "Builtin Url expect one argument of type string | example: Url(\"hola\")".to_owned(),
                 interval
