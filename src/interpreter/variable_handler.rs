@@ -104,6 +104,21 @@ pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorI
     }
 }
 
+// TODO: remove when change message system
+fn extract_value_from_literal(literal: Literal) -> String {
+    match &literal {
+        Literal::ObjectLiteral{properties} => {
+            if let Some(value) = properties.get("text") {
+                extract_value_from_literal(value.clone())
+            }
+            else {
+                literal.to_owned().to_string()
+            }
+        },
+        literal => literal.to_owned().to_string()
+    }
+}
+
 pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLiteral {
     let mut new_string = String::new();
     let mut interval: Option<Interval> = None;
@@ -115,7 +130,8 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
                 if interval.is_none() {
                     interval = Some(var.interval)
                 }
-                new_string.push_str(&var.literal.to_string())
+                // println!(" ->>>>> {:?}" , &var.literal);
+                new_string.push_str( &extract_value_from_literal(var.literal))
             }
             Err(err) => {
                 if interval.is_none() {
@@ -125,6 +141,8 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
             },
         }
     }
+    // println!(" |{:?}| 1" , &new_string);
+    // println!(" |{:?}| 2" , Literal::string(new_string.clone()));
     //TODO: check for error empty list
     SmartLiteral {
         literal: Literal::string(new_string),
@@ -141,7 +159,7 @@ pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, 
         Expr::InfixExpr(infix, exp1, exp2) => evaluate_condition(infix, exp1, exp2, data),
         e => Err(
             ErrorInfo{
-                message: "unown variable in Ident err get_var_from_ident".to_owned(),
+                message: "unknown variable in Ident err get_var_from_ident".to_owned(),
                 interval: interval_from_expr(e)
             }
         )

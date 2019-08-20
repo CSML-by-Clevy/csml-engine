@@ -34,7 +34,7 @@ name = "csmlinterpreter"
 version = "0.1.0"
 dependencies = [
  "curl 0.4.22 (registry+https://github.com/rust-lang/crates.io-index)",
- "multimap 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "multimap 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nom 4.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "nom_locate 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -125,7 +125,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "multimap"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde 1.0.90 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -363,7 +363,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum libc 0.2.54 (registry+https://github.com/rust-lang/crates.io-index)" = "c6785aa7dd976f5fbf3b71cfd9cd49d7f783c1ff565a858d71031c6c313aa5c6"
 "checksum libz-sys 1.0.25 (registry+https://github.com/rust-lang/crates.io-index)" = "2eb5e43362e38e2bca2fd5f5134c4d4564a23a5c28e9b95411652021a8675ebe"
 "checksum memchr 2.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "88579771288728879b57485cc7d6b07d648c9f0141eb955f8ab7f9d45394468e"
-"checksum multimap 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1838fe05e64c53b9a62579020e4a12ec5947af5d703c56962d0e3b7b923bf3ba"
+"checksum multimap 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "de234f818d54830a7103b9be18ad0861d75aeb5e3c89759bc3f9a004cc39cfa3"
 "checksum nom 4.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2ad2a91a8e869eeb30b9cb3119ae87773a8f4ae617f41b1eb9c154b2905f7bd6"
 "checksum nom_locate 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6a47c112b3861d81f7fbf73892b9271af933af32bd5dee6889aa3c3fa9caed7e"
 "checksum openssl-probe 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "77af24da69f9d9341038eba93a073b1fdaaa1b788221b00a69bce9e762cb32de"

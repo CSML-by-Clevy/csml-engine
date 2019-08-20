@@ -201,10 +201,10 @@ pub enum Literal {
     ObjectLiteral{
         properties: HashMap<String, Literal>,
     },
-    // FunctionLiteral{
-    //     name: String,
-    //     properties: Literal,
-    // },
+    NamedLiteral{
+        name: String,
+        value: Box<Literal>,
+    },
     Null{
         value: String,
     },
@@ -233,6 +233,8 @@ impl PartialEq for Literal {
             (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => l1 == l2,
             (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => l1 == l2,
             (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..}) => l1 == l2,
+            (Literal::ArrayLiteral{items: l1, ..}, Literal::ArrayLiteral{items: l2, ..}) => l1 == l2,
+            (Literal::NamedLiteral{name: l1, ..}, Literal::NamedLiteral{name: l2, ..}) => l1 == l2,
             _ => false,
         }
     }
@@ -247,6 +249,7 @@ impl Literal {
             Literal::BoolLiteral{value, ..} => value.to_string(),
             Literal::ArrayLiteral{items, ..} => format!("{:?}", items), // serialize first
             Literal::ObjectLiteral{properties, ..} => format!("{:?}", properties),  // serialize first
+            Literal::NamedLiteral{..} => format!("{:?}", self),  // serialize first
             Literal::Null{value, ..} => value.to_owned(),
         }
     }
@@ -259,6 +262,7 @@ impl Literal {
             Literal::BoolLiteral{..} => "bool".to_owned(),
             Literal::ArrayLiteral{..} => "array".to_owned(),
             Literal::ObjectLiteral {..} => "object".to_owned(),
+            Literal::NamedLiteral{name, ..} => name.to_owned(),
             Literal::Null{value, ..} => value.to_owned(),
         }
     }
@@ -299,9 +303,16 @@ impl Literal {
         }
     }
 
+    pub fn name_object(name: String, value: &Literal) -> Self {
+        Literal::NamedLiteral{
+            name,
+            value: Box::new(value.to_owned())
+        }
+    }
+
     pub fn lit_to_obj(properties: Literal, name: String) -> Self {
         let mut obj: HashMap<String, Literal> = HashMap::new();
-        
+
         obj.insert(name, properties);
         Literal::object(obj)
     }
@@ -311,15 +322,6 @@ impl Literal {
             value: NULL.to_owned(),
         }
     }
-
-    // pub fn search_in_obj<'a>(obj: &'a Vec<Literal>, name: &str) -> Option<&'a Literal> {
-    //     obj.iter().find(|&literal|
-    //         match literal.get_name() {
-    //         Some(ref elem) if elem == name => true,
-    //         _ => false
-    //         }
-    //     )
-    // }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]

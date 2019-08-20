@@ -51,7 +51,7 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
             }
             if let Some(mem) = result.memories {
                 for elem in mem.iter() {
-                    memories.push(elem.to_owned().to_jsvalue());
+                    memories.push(elem.to_owned().memorie_to_jsvalue());
                 }
             }
 

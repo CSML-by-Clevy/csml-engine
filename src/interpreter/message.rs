@@ -1,7 +1,6 @@
 use std::ops::Add;
 use serde_json::{Value, json, map::Map};
 use crate::parser::ast::*;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -16,19 +15,6 @@ pub struct Message {
     pub content: Literal,
 }
 
-fn obj_to_message(properties: HashMap<String, Literal>) -> (String, Literal) {
-    if properties.len() > 1 {
-        ("object".to_owned(), Literal::object(properties))
-    } else if properties.len() == 1 {
-        for (k, _) in properties.iter() {
-            return (k.to_owned(), Literal::object(properties.clone()))
-        }
-
-        unreachable!()
-    } else {
-        unreachable!()
-    }
-}
 
 impl Message {
     pub fn new(literal: Literal) -> Self {
@@ -53,12 +39,16 @@ impl Message {
                 content_type: "array".to_owned(),
                 content: literal,
             },
-            Literal::ObjectLiteral{properties: ref value, ..} => {
-                let (content_type, content) = obj_to_message(value.to_owned());
-
+            Literal::ObjectLiteral{properties: value, ..} => {
                 Message {
-                    content_type,
-                    content,
+                    content_type: "object".to_owned(),
+                    content: Literal::object(value),
+                }
+            },
+            Literal::NamedLiteral{name, value} => {
+                Message {
+                    content_type: name.to_owned(),
+                    content: Literal::name_object(name.to_owned(), &value),
                 }
             },
             Literal::Null{..} => Message {
@@ -89,18 +79,17 @@ impl Message {
                 }
                 Value::Array(array)
             },
-            Literal::ObjectLiteral{ref properties, ..} if properties.len() < 2 => {
-                let mut map: Map<String, Value> = Map::new();
-                for (k, v) in properties.to_owned().drain().take(1) {
-                    map.insert(k.to_owned(), Message::lit_to_json(v));
-                }
-                Value::Object(map)
-            },
             Literal::ObjectLiteral{properties, ..} => {
                 let mut map: Map<String, Value> = Map::new();
                 for (k, v) in properties.to_owned().drain() {
                     map.insert(k.to_owned(), Message::lit_to_json(v));
                 }
+                Value::Object(map)
+            },
+            Literal::NamedLiteral{name, value} => {
+                let mut map: Map<String, Value> = Map::new();
+                let val = (*value).clone();
+                map.insert(name.to_owned(), Message::lit_to_json(val));
                 Value::Object(map)
             },
             Literal::Null{..} => {
@@ -115,9 +104,7 @@ impl Message {
 
         map.insert("content_type".to_owned(), json!(self.content_type));
         map.insert("content".to_owned(), value);
-        let json = Value::Object(map);
-
-        json
+        Value::Object(map)
     }
 }
 
@@ -128,7 +115,7 @@ pub struct Memories {
 }
 
 impl Memories {
-    pub fn to_jsvalue(self) -> Value {
+    pub fn memorie_to_jsvalue(self) -> Value {
         let mut map: Map<String, Value> = Map::new();
         map.insert("key".to_owned(), json!(self.key));
         map.insert("value".to_owned(), Message::lit_to_json(self.value));
@@ -178,7 +165,7 @@ impl MessageData {
             if let Literal::ObjectLiteral{..} = &value{
                 vec.push(Memories{key: key.clone(), value});
             } else {
-                vec.push(Memories{key: key.clone(), value: value});
+                vec.push(Memories{key: key.clone(), value});
             }
         } else {
             match &value {

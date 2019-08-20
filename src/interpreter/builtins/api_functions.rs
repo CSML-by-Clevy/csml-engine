@@ -1,14 +1,14 @@
+use std::hash::BuildHasher;
+use curl::easy::{Easy, List};
 use serde_json::{Value, map::Map};
 use std::{env, collections::HashMap, io::Read};
-use curl::easy::{Easy, List};
-// use reqwest::{ClientBuilder, header::{HeaderMap/, HeaderValue, ACCEPT, CONTENT_TYPE}};
 use crate::parser::{ast::Literal};
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{data::Data, builtins::*};
 
 // default #############################################################################
 
-fn parse_api(args: &HashMap<String, Literal>, data: &mut Data) -> Result<(String, String), ErrorInfo> {
+fn parse_api<S: BuildHasher>(args: &HashMap<String, Literal, S>, data: &mut Data) -> Result<(String, String), ErrorInfo> {
     let mut map: Map<String, Value> = Map::new();
 
     if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get("fn_id") {
@@ -25,39 +25,9 @@ fn parse_api(args: &HashMap<String, Literal>, data: &mut Data) -> Result<(String
     Ok((data.memory.fn_endpoint.to_string(), serde_json::to_string(&map).unwrap()))
 }
 
-pub fn api(args: HashMap<String, Literal>, _interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
+pub fn api<S: BuildHasher>(args: HashMap<String, Literal, S>, _interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
     let (http_arg, map) = parse_api(&args, data)?;
     let mut data = map.as_bytes();
-    // let client = ClientBuilder::new().build().unwrap();
-
-    // match client.post(&http_arg)
-    //     .headers(construct_headers())
-    //     .json(&map).send() {
-
-    //     Ok(ref mut arg) => match &arg.text() {
-    //         Ok(text) => {
-    //             // println!("reqwest post ok: ");
-    //             let json: serde_json::Value = serde_json::from_str(&text).unwrap();
-    //             if let Some(Value::String(val)) = json.get("data") {
-    //                 Ok(Literal::string(val.to_string()))
-    //             } else {
-    //                 Ok(Literal::null())
-    //             }
-    //         }
-    //         Err(_e) => {
-    //             Err(ErrorInfo{
-    //                 message: "Error in parsing reqwest result".to_owned(),
-    //                 interval
-    //             })
-    //         }
-    //     },
-    //     Err(_e) => {
-    //         Err(ErrorInfo{
-    //             message: "Error in reqwest post".to_owned(),
-    //             interval
-    //         })
-    //     }
-    // }
 
     let mut result = Vec::new();
     let mut easy = Easy::new();

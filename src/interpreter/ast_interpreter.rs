@@ -8,22 +8,48 @@ use crate::interpreter::{
     variable_handler::*,
 };
 
-fn match_obj(lit1: &SmartLiteral, lit2: &SmartLiteral) -> Result<Literal, ErrorInfo> {
-    let _b = BUTTON.to_owned();
-    if let Literal::ObjectLiteral{properties, .. } = lit2.literal.clone() {
-        match properties.get("accept") {
-            Some(Literal::ArrayLiteral{items, ..}) => {
-                return Ok(Literal::boolean(items.contains(&lit1.literal)))
+fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal>{
+    match name {
+        "button" => {
+            if let Literal::ObjectLiteral{properties} = lit {
+                properties.get("accept")
+            } else {
+                Some(lit)
             }
-            Some(val) => {
-                return Ok(Literal::boolean(val == &lit1.literal))
-            },
-            _ => return Ok(Literal::boolean(lit1.literal == lit2.literal)),
-        }
+        },
+        _   => Some(lit)
     }
-    Ok(Literal::boolean(lit1 == lit2))
 }
 
+//TODO: add warning when comparing some objects
+fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
+    match (&lit1, &lit2) {
+        (Literal::NamedLiteral{name: n1, value: v1}, Literal::NamedLiteral{name: n2, value: v2}) => {
+            match (priority_match(n1, v1), priority_match(n2, v2)) {
+                (Some(l1), Some(l2)) => match_obj(l1, l2),
+                (_, _) => Literal::boolean(false)
+            }
+        },
+        (Literal::NamedLiteral{name, value}, lit) => {
+            match priority_match(name, value) {
+                Some(l1) => match_obj(l1, lit),
+                _ => Literal::boolean(false)
+            }
+        },
+        (lit, Literal::NamedLiteral{name, value}) => {
+            match priority_match(name, value) {
+                Some(l1) => match_obj(l1, lit),
+                _ => Literal::boolean(false)
+            }
+        },
+        (Literal::ArrayLiteral{items: i1}, Literal::ArrayLiteral{items: i2}) => Literal::boolean(i1 == i2),
+        (Literal::ArrayLiteral{items}, lit) => Literal::boolean(items.contains(lit)),
+        (lit, Literal::ArrayLiteral{items}) => Literal::boolean(items.contains(lit)),
+        (l1, l2) => Literal::boolean(l1 == l2)
+    }
+}
+
+//TODO: add warning when comparing some objects
 fn cmp_lit(
     infix: &Infix,
     lit1: Result<SmartLiteral, ErrorInfo>,
@@ -44,7 +70,7 @@ fn cmp_lit(
         (Infix::Substraction, Ok(l1), Ok(l2)) => l1 - l2,
         (Infix::Divide, Ok(l1), Ok(l2)) => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2)) => l1 * l2,
-        (Infix::Match, Ok(ref l1), Ok(ref l2)) => Ok(SmartLiteral{literal: match_obj(l1, l2)?, interval: l1.interval.to_owned()}),
+        (Infix::Match, Ok(ref l1), Ok(ref l2)) => Ok(SmartLiteral{literal: match_obj(&l1.literal, &l2.literal), interval: l1.interval.to_owned()}),
         (_, Ok(l1), ..) => Ok(SmartLiteral{literal: Literal::boolean(false), interval: l1.interval.to_owned()}),
         (_, Err(e), ..) => Ok(SmartLiteral{literal: Literal::boolean(false), interval: e.interval.to_owned()}),
     }
@@ -189,11 +215,10 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorIn
                     }
                 )
             } else {
-                let mut test: HashMap<String, Literal> = HashMap::new();
-                test.insert(name.ident.to_owned(), Literal::object(obj));
+                let name_literal = Literal::name_object(name.ident.to_owned(), &Literal::object(obj));
                 Ok(
                     SmartLiteral {
-                        literal: Literal::object(test),
+                        literal: name_literal,
                         interval: interval_from_expr(expr)
                     }
                 )

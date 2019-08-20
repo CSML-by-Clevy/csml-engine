@@ -6,9 +6,9 @@ use crate::parser::{ast::{Literal, Interval}}; //, tokens::*
 // TODO: check nbr elemts in built-ins
 pub fn typing(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::IntLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
-        Some(Literal::FloatLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
-        _ => return Err(ErrorInfo{
+        Some(Literal::IntLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        Some(Literal::FloatLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        _ => Err(ErrorInfo{
                 message: "Builtin Typing expect one argument of type int or float | example: Typing(3, ..)".to_owned(),
                 interval
         })
@@ -17,9 +17,9 @@ pub fn typing(args: HashMap<String, Literal>, name: String, interval: Interval) 
 
 pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::IntLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
-        Some(Literal::FloatLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
-        _ => return Err(ErrorInfo{
+        Some(Literal::IntLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        Some(Literal::FloatLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        _ => Err(ErrorInfo{
             message: "Builtin Wait expect one argument of type int or float | example: Wait(3)".to_owned(),
             interval
         })
@@ -28,9 +28,9 @@ pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) ->
 
 pub fn text(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(literal) => Ok(Literal::lit_to_obj(literal.to_owned(), name.to_lowercase())),
-        // Some(Literal::ObjectLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
-        _ => return Err(ErrorInfo{
+        Some(literal) => Ok(Literal::name_object(name.to_lowercase(), literal)),
+        // Some(Literal::ObjectLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        _ => Err(ErrorInfo{
                 message: "Builtin Text expect one argument of type string | example: Text(\"hola\")".to_owned(),
                 interval
         })
@@ -39,8 +39,8 @@ pub fn text(args: HashMap<String, Literal>, name: String, interval: Interval) ->
 
 pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::StringLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
-        _ => return Err(ErrorInfo{
+        Some(Literal::StringLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        _ => Err(ErrorInfo{
                 message: "Builtin Image expect one argument of type string | example: Image(\"hola\")".to_owned(),
                 interval
         })
@@ -49,8 +49,8 @@ pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 
 pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
-        Some(Literal::StringLiteral{..}) => Ok(Literal::lit_to_obj(Literal::object(args), name.to_lowercase())),
-        _ => return Err(ErrorInfo{
+        Some(Literal::StringLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
+        _ => Err(ErrorInfo{
                 message: "Builtin Url expect one argument of type string | example: Url(\"hola\")".to_owned(),
                 interval
         })
@@ -115,29 +115,39 @@ pub fn button(values: HashMap<String, Literal>, name: String, interval: &Interva
         )?
     );
     button_value.insert("accept".to_owned(), format_accept(values.get("accept"), title));
-    button_value.insert("payload".to_owned(), search_or_default(&values, "payload", interval, None)?);
+    if let Ok(payload) = search_or_default(&values, "payload", interval, None) {
+        button_value.insert("payload".to_owned(), payload);
+    }
 
-    Ok(Literal::lit_to_obj(Literal::object(button_value), name.to_lowercase()))
+    Ok(Literal::name_object(name.to_lowercase(), &Literal::object(button_value)))
+}
+
+fn accept_to_array(literal: &Literal, mut vec: Vec<Literal>) -> Vec<Literal> {
+    match literal {
+        Literal::ObjectLiteral{properties, ..} => match properties.get("accept") {
+            Some(Literal::ArrayLiteral{items}) => {
+                vec.append(&mut items.to_owned());
+                vec
+            },
+            Some(literal) => {
+                vec.push(literal.to_owned());
+                vec
+            },
+            None => vec
+        }
+        _ => vec
+    }
 }
 
 fn accepts_from_buttons(buttons: &Literal) -> Literal {
     if let Literal::ArrayLiteral{items, ..} = buttons {
-        let array = items.iter().fold(vec![], |mut vec, elem| {
+        let array = items.iter().fold(vec![], |vec, elem| {
             match elem {
-                Literal::ObjectLiteral{properties, ..}  => {
-                    match properties.get("button") {
-                        Some(Literal::ObjectLiteral{properties, ..}) => match properties.get("accept") {
-                                Some(Literal::ArrayLiteral{items}) => {
-                                    vec.append(&mut items.to_owned());
-                                    vec
-                                },
-                                Some(literal) => {
-                                    vec.push(literal.to_owned());
-                                    vec
-                                },
-                                None => vec
-                        }
-                        _ => vec
+                Literal::NamedLiteral{name, value, ..}  => {
+                    if name == "button" {
+                        accept_to_array(value, vec)
+                    } else {
+                        vec
                     }
                 },
                 _ => vec
@@ -169,5 +179,5 @@ pub fn question(
     question.insert("accepts".to_owned(), accepts);
     question.insert("buttons".to_owned(), buttons);
 
-    Ok(Literal::lit_to_obj(Literal::object(question), name.to_lowercase().to_owned()))
+    Ok(Literal::name_object(name.to_lowercase(), &Literal::object(question)))
 }
