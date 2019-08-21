@@ -1,9 +1,9 @@
 use reqwest::{ClientBuilder, header::{HeaderMap, HeaderValue, ACCEPT, CONTENT_TYPE}};
 use serde_json::{Value, map::Map};
 use std::{env, collections::HashMap};
-use crate::parser::{ast::Literal};
+use crate::parser::{ast::Literal,};
 use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{data::Data, builtins::*};
+use crate::interpreter::{data::Data, builtins::*, json_to_rust::json_to_literal};
 
 // default #############################################################################
 
@@ -50,8 +50,16 @@ pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) 
         Ok(ref mut arg) => match &arg.text() {
             Ok(text) => {
                 let json: serde_json::Value = serde_json::from_str(&text).unwrap();
-                if let Some(Value::String(val)) = json.get("data") {
-                    Ok(Literal::string(val.to_string()))
+                if let Some(value) = json.get("data") {
+                    match json_to_literal(value) {
+                        Ok(val) => Ok(val),
+                        Err(string) => Err(
+                            ErrorInfo {
+                                message: string,
+                                interval,
+                            }
+                        )
+                    }
                 } else {
                     Ok(Literal::null())
                 }

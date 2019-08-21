@@ -14,7 +14,7 @@ pub fn gen_literal_form_event(
                     interval,
                 }
             ),
-            PayLoad {content_type: ref t, content: ref c}
+            PayLoad { content_type: ref t, content: ref c }
                 if t == "float" => match c.text.to_string().parse::<f64>() {
                 Ok(float) => Ok(SmartLiteral {
                     literal: Literal::float(float),
@@ -25,7 +25,7 @@ pub fn gen_literal_form_event(
                     interval,
                 }),
             },
-            PayLoad { content_type: ref t, content: ref c}
+            PayLoad { content_type: ref t, content: ref c }
                 if t == "int" => match c.text.to_string().parse::<i64>() {
                 Ok(int) => Ok(SmartLiteral {
                     literal: Literal::int(int),
@@ -52,7 +52,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::Block{range: RangeInterval{start, ..}, ..}    => start.clone(),
         Expr::ComplexLiteral(_e, RangeInterval{start, ..})  => start.clone(),
         Expr::VecExpr(_e, RangeInterval{start, ..})         => start.clone(),
-        Expr::ObjectExpr(fnexpr)                          => interval_from_reserved_fn(fnexpr),
+        Expr::ObjectExpr(fnexpr)                            => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e)                       => interval_from_expr(expr), // RangeInterval
         Expr::BuilderExpr(expr, _e)                         => interval_from_expr(expr),
         Expr::IdentExpr(ident)                              => ident.interval.to_owned(),

@@ -77,10 +77,18 @@ pub fn json_to_literal(literal: &serde_json::Value) -> Result<Literal, String> {
         Value::Object(val) => {
             let mut map = HashMap::new();
 
-            for (k, v) in val.iter() {
-                map.insert(k.to_owned(), json_to_literal(v)?);
+            if val.len() == 1 {
+                let value = val.iter().map(|(k, v)| {
+                    (k.to_owned(), v.to_owned())
+                }).collect::<Vec<(String, Value)>>();
+                Ok(Literal::name_object(value[0].0.clone(), &json_to_literal(&value[0].1)?))
             }
-            Ok(Literal::object(map))
+            else {
+                for (k, v) in val.iter() {
+                    map.insert(k.to_owned(), json_to_literal(v)?);
+                }
+                Ok(Literal::object(map))
+            }
         },
         Value::Null    => {
             Ok(Literal::null())

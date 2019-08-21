@@ -38,6 +38,10 @@ pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
         .get(&InstructionType::NormalStep(name.to_owned()))
 }
 
+pub fn version() -> String {
+    "CsmlV1".to_owned()
+}
+
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, ErrorInfo> {
     match search_for(flow, name) {
         Some(Expr::Block { arg: actions, .. }) => {

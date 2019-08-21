@@ -47,6 +47,7 @@ named!(parse_builderexpr<Span, Expr>, do_parse!(
     ident: parse_identexpr >>
     comment!(tag!(DOT)) >>
     exp: alt!(parse_as_variable | parse_var_expr) >>
+    // : alt!(parse_as_variable | parse_var_expr) >>
     (Expr::BuilderExpr(Box::new(ident), Box::new(exp)))
 ));
 
