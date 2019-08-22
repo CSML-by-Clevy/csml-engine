@@ -90,6 +90,7 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
     }
 }
 
+// KO: check get named obj from step vars 
 pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match &name.ident {
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),

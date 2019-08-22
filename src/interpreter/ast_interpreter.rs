@@ -184,6 +184,57 @@ fn match_builtin(name: &str, args: HashMap<String, Literal>, span: Interval, dat
     }
 }
 
+fn format_object_attributes(expr: &Expr, data: &mut Data) -> Result<HashMap<String, Literal>, ErrorInfo> {
+    let mut obj: HashMap<String, Literal> = HashMap::new();
+    let vec = match expr {
+        Expr::VecExpr(vec, ..) => vec,
+        _e                     => return Err(
+            ErrorInfo{
+                message: format!("ERROR: Object attributes {:?} bad format", expr),
+                interval: interval_from_expr(expr)
+            }
+        )
+    };
+
+    for elem in vec.iter() {
+        println!("satrt loop elem {:?}", elem);
+        match elem {
+            Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
+                println!(" search <<<<<<<<<<<<<<1 OK {:?}", var);
+                let value = expr_to_literal(var, data)?.literal;
+                println!("-------------------- OK {}", var_name.ident);
+                obj.insert(var_name.ident.to_owned(), value);
+            }
+            Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
+                println!(" search <<<<<<<<<<<<<<2 OK {:?}", value);
+                let interval = interval_from_expr(elem);                
+                let (name, literal) = normal_object_to_literal(&name.ident, value, interval, data)?;
+
+                obj.insert(name, literal);
+            }
+            _ => {
+                let value = expr_to_literal(elem, data)?.literal;
+                println!("-->>>>>>>>>>>>>>>>>>>>>> default");
+                obj.insert("default".to_owned(), value);
+            }
+        }
+    }
+
+    Ok(obj)
+}
+
+fn normal_object_to_literal(name: &str, value: &Expr, interval: Interval , data: &mut Data) -> Result<(String, Literal), ErrorInfo> {
+    let obj = format_object_attributes(value, data)?;
+    
+    if BUILT_IN.contains(&name) {
+        Ok( 
+            (name.to_owned(), match_builtin(&name, obj, interval.to_owned(), data)?)
+        )
+    } else {
+        Ok( (name.to_owned(), Literal::object(obj)) )
+    }
+}
+
 fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
         Expr::ObjectExpr(ObjectType::As(name, var)) => {
@@ -191,40 +242,19 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorIn
             data.step_vars.insert(name.ident.to_owned(), value.literal.clone());
             Ok(value)
         }
-        Expr::ObjectExpr(ObjectType::Normal(name, var)) => {
-            let mut obj: HashMap<String, Literal> = HashMap::new();
-            let expr: &Expr = var;
-
-            if let Expr::VecExpr(vec, _) = expr {
-                for elem in vec.iter() {
-                    match elem {
-                        Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
-                            let value = expr_to_literal(var, data)?.literal;
-                            obj.insert(var_name.ident.to_owned(), value);
-                        }
-                        _ => {
-                            let value = expr_to_literal(elem, data)?.literal;
-                            obj.insert("default".to_owned(), value);
-                        }
-                    }
+        Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
+            let interval = interval_from_expr(expr);
+            let (name, literal) = normal_object_to_literal(&name.ident, value, interval.to_owned(), data)?;
+            
+            Ok( SmartLiteral{ literal: Literal::name_object(name, &literal) , interval} )
+        }
+        Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
+            let value = expr_to_literal(var, data)?.literal;
+            Ok(SmartLiteral{
+                    literal: Literal::name_object(var_name.ident.to_owned(), &value),
+                    interval: interval_from_expr(expr)
                 }
-            };
-            if BUILT_IN.contains(&&*name.ident) {
-                Ok(
-                    SmartLiteral {
-                        literal: match_builtin(&name.ident, obj, interval_from_expr(expr), data)?,
-                        interval: interval_from_expr(expr)
-                    }
-                )
-            } else {
-                let name_literal = Literal::name_object(name.ident.to_owned(), &Literal::object(obj));
-                Ok(
-                    SmartLiteral {
-                        literal: name_literal,
-                        interval: interval_from_expr(expr)
-                    }
-                )
-            }
+            )
         }
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
         Expr::VecExpr(vec, range) => {
