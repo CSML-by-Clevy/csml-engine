@@ -154,7 +154,9 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
             Ok(_) => true,
             Err(_e) => false,
         },
-        Expr::LitExpr { .. } => true,
+        Expr::LitExpr( SmartLiteral{literal: Literal::BoolLiteral{value}, ..}) => *value,
+        Expr::LitExpr( SmartLiteral{literal: Literal::Null{..}, ..}) => false,
+        Expr::LitExpr( .. ) => true,
         Expr::BuilderExpr(..) => get_var_from_ident(expr, data).is_ok(), // error
         Expr::IdentExpr(ident, ..) => get_var(ident.to_owned(), data).is_ok(),      // error
         _ => false, // return error
