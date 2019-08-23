@@ -90,7 +90,6 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
     }
 }
 
-// KO: check get named obj from step vars 
 pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match &name.ident {
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
@@ -164,6 +163,7 @@ pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, 
     }
 }
 
+// TODO: tmp fn gen_literal_form_exp
 pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
         Expr::LitExpr(literal) => Ok(literal.clone()),
@@ -177,6 +177,8 @@ pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<SmartLiteral
     }
 }
 
+
+// TODO: tmp fn find_value_in_object
 fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> Result<SmartLiteral, ErrorInfo> {
     let map = match literal {
         Literal::ObjectLiteral{properties} => properties,
@@ -192,7 +194,12 @@ fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> 
                 )
             }
         }
-        _ => unreachable!() 
+        _ => return Err(
+            ErrorInfo{
+                message: "Error: Bad Expression in object builder ".to_owned(),
+                interval: interval.to_owned()
+            }
+        )
     };
 
     match expr {
@@ -201,11 +208,16 @@ fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> 
             if let Expr::IdentExpr(ident, ..) = elem {
                 let literal = match map.get(&ident.ident) {
                     Some(val) => val,
-                    None => unreachable!()
+                    None => return Err(
+                        ErrorInfo{
+                            message: format!("Error: Key {} not found in object", ident.ident),
+                            interval: ident.interval.to_owned()
+                        }
+                    )
                 };
                 find_value_in_object(literal, expr, interval)
             } else {
-                Err(
+                return Err(
                     ErrorInfo{
                         message: "Error in Object builder".to_owned(),
                         interval: interval.to_owned()
@@ -216,10 +228,20 @@ fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> 
         Expr::IdentExpr(ident, ..) => {
             match map.get(&ident.ident) {
                 Some(literal) => Ok( SmartLiteral{literal: literal.to_owned(), interval: interval.to_owned()} ),
-                None => unreachable!()
+                None => return Err(
+                    ErrorInfo{
+                        message: format!("Error: Key {} not found in object", ident.ident),
+                        interval: ident.interval.to_owned()
+                    }
+                )
             }
         },
-        _   => unreachable!()
+        e   => Err(
+            ErrorInfo{
+                message: "Error: Bad Expression in object builder ".to_owned(),
+                interval: interval_from_expr(e)
+            }
+        )
     }
 }
 
