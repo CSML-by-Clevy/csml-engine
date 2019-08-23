@@ -79,12 +79,14 @@ pub const INT: &str = "Int";
 pub const URL: &str = "Url";
 pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
-pub const FN: &str = "Fn";
+
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
+pub const OBJECT: &str = "Object";
+pub const FN: &str = "Fn";
 
 pub static BUILT_IN: &'static [&str] = &[TYPING, WAIT, TEXT, INT,
-URL, IMAGE, ONE_OF, FN, QUESTION, BUTTON];
+URL, IMAGE, ONE_OF, QUESTION, BUTTON, OBJECT, FN];
 
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";

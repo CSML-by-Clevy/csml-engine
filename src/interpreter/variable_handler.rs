@@ -131,7 +131,6 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
                 if interval.is_none() {
                     interval = Some(var.interval)
                 }
-                // println!(" ->>>>> {:?}" , &var.literal);
                 new_string.push_str( &extract_value_from_literal(var.literal))
             }
             Err(err) => {
@@ -142,8 +141,6 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
             },
         }
     }
-    // println!(" |{:?}| 1" , &new_string);
-    // println!(" |{:?}| 2" , Literal::string(new_string.clone()));
     //TODO: check for error empty list
     SmartLiteral {
         literal: Literal::string(new_string),
@@ -180,22 +177,82 @@ pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<SmartLiteral
     }
 }
 
+fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> Result<SmartLiteral, ErrorInfo> {
+    let map = match literal {
+        Literal::ObjectLiteral{properties} => properties,
+        Literal::FunctionLiteral{value, ..} => {
+            let literal: &Literal = value;
+            match literal {
+                Literal::ObjectLiteral{properties} => properties,
+                _ => return Err(
+                    ErrorInfo{
+                        message: "Error ... bad type".to_owned(),
+                        interval: interval_from_expr(expr)
+                    }
+                )
+            }
+        }
+        _ => unreachable!() 
+    };
+
+    match expr {
+        Expr::BuilderExpr(elem, expr) => {
+            let elem :&Expr = elem;
+            if let Expr::IdentExpr(ident, ..) = elem {
+                let literal = match map.get(&ident.ident) {
+                    Some(val) => val,
+                    None => unreachable!()
+                };
+                find_value_in_object(literal, expr, interval)
+            } else {
+                Err(
+                    ErrorInfo{
+                        message: "Error in Object builder".to_owned(),
+                        interval: interval.to_owned()
+                    }
+                )
+            }
+        },
+        Expr::IdentExpr(ident, ..) => {
+            match map.get(&ident.ident) {
+                Some(literal) => Ok( SmartLiteral{literal: literal.to_owned(), interval: interval.to_owned()} ),
+                None => unreachable!()
+            }
+        },
+        _   => unreachable!()
+    }
+}
+
 pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
-        Expr::BuilderExpr(elem, exp) if search_str(PAST, elem) => {
-            get_memory_action(data.memory, elem, exp)
+        Expr::BuilderExpr(elem, expr) if search_str(PAST, elem) => {
+            get_memory_action(data.memory, elem, expr)
         }
-        Expr::BuilderExpr(elem, exp) if search_str(MEMORY, elem) => {
-            get_memory_action(data.memory, elem, exp)
+        Expr::BuilderExpr(elem, expr) if search_str(MEMORY, elem) => {
+            get_memory_action(data.memory, elem, expr)
         }
-        Expr::BuilderExpr(elem, exp) if search_str(METADATA, elem) => {
-            get_memory_action(data.memory, elem, exp)
+        Expr::BuilderExpr(elem, expr) if search_str(METADATA, elem) => {
+            get_memory_action(data.memory, elem, expr)
+        }
+        Expr::BuilderExpr(elem, expr) => {
+            let elem :&Expr = elem;
+            if let Expr::IdentExpr(ident) = elem {
+                let literal = get_var(ident.clone(), data)?.literal;
+                find_value_in_object(&literal, expr, &ident.interval)
+            } else {
+                Err(
+                    ErrorInfo{
+                        message: "Error in Object builder".to_owned(),
+                        interval: interval_from_expr(elem)
+                    }
+                )
+            }
         }
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
         e => Err(
             ErrorInfo{
-                message: "Error in Exprecion builder".to_owned(),
+                message: "Error in Expression builder".to_owned(),
                 interval: interval_from_expr(e)
             }
         ),
@@ -300,10 +357,10 @@ pub fn get_memory_action(
     expr: &Expr,
 ) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
-        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, exp))
-            if ident == GET_VALUE => memorytype_to_literal(memory_get(memory, name, exp), interval.clone()),
-        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, exp))
-            if ident == FIRST => memorytype_to_literal(memory_first(memory, name, exp), interval.clone()),
+        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, expr))
+            if ident == GET_VALUE => memorytype_to_literal(memory_get(memory, name, expr), interval.clone()),
+        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, expr))
+            if ident == FIRST => memorytype_to_literal(memory_first(memory, name, expr), interval.clone()),
         e => Err(
             ErrorInfo{
                 message: "Error in memory action".to_owned(),

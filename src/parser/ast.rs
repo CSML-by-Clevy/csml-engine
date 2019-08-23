@@ -201,7 +201,7 @@ pub enum Literal {
     ObjectLiteral{
         properties: HashMap<String, Literal>,
     },
-    NamedLiteral{
+    FunctionLiteral{
         name: String,
         value: Box<Literal>,
     },
@@ -234,7 +234,7 @@ impl PartialEq for Literal {
             (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => l1 == l2,
             (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..}) => l1 == l2,
             (Literal::ArrayLiteral{items: l1, ..}, Literal::ArrayLiteral{items: l2, ..}) => l1 == l2,
-            (Literal::NamedLiteral{name: l1, ..}, Literal::NamedLiteral{name: l2, ..}) => l1 == l2,
+            (Literal::FunctionLiteral{name: l1, ..}, Literal::FunctionLiteral{name: l2, ..}) => l1 == l2,
             _ => false,
         }
     }
@@ -249,7 +249,7 @@ impl Literal {
             Literal::BoolLiteral{value, ..} => value.to_string(),
             Literal::ArrayLiteral{items, ..} => format!("{:?}", items), // serialize first
             Literal::ObjectLiteral{properties, ..} => format!("{:?}", properties),  // serialize first
-            Literal::NamedLiteral{..} => format!("{:?}", self),  // serialize first
+            Literal::FunctionLiteral{..} => format!("{:?}", self),  // serialize first
             Literal::Null{value, ..} => value.to_owned(),
         }
     }
@@ -262,7 +262,7 @@ impl Literal {
             Literal::BoolLiteral{..} => "bool".to_owned(),
             Literal::ArrayLiteral{..} => "array".to_owned(),
             Literal::ObjectLiteral {..} => "object".to_owned(),
-            Literal::NamedLiteral{name, ..} => name.to_owned(),
+            Literal::FunctionLiteral{name, ..} => name.to_owned(),
             Literal::Null{value, ..} => value.to_owned(),
         }
     }
@@ -304,7 +304,7 @@ impl Literal {
     }
 
     pub fn name_object(name: String, value: &Literal) -> Self {
-        Literal::NamedLiteral{
+        Literal::FunctionLiteral{
             name,
             value: Box::new(value.to_owned())
         }

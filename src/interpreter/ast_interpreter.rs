@@ -24,19 +24,19 @@ fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal>{
 //TODO: add warning when comparing some objects
 fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
     match (&lit1, &lit2) {
-        (Literal::NamedLiteral{name: n1, value: v1}, Literal::NamedLiteral{name: n2, value: v2}) => {
+        (Literal::FunctionLiteral{name: n1, value: v1}, Literal::FunctionLiteral{name: n2, value: v2}) => {
             match (priority_match(n1, v1), priority_match(n2, v2)) {
                 (Some(l1), Some(l2)) => match_obj(l1, l2),
                 (_, _) => Literal::boolean(false)
             }
         },
-        (Literal::NamedLiteral{name, value}, lit) => {
+        (Literal::FunctionLiteral{name, value}, lit) => {
             match priority_match(name, value) {
                 Some(l1) => match_obj(l1, lit),
                 _ => Literal::boolean(false)
             }
         },
-        (lit, Literal::NamedLiteral{name, value}) => {
+        (lit, Literal::FunctionLiteral{name, value}) => {
             match priority_match(name, value) {
                 Some(l1) => match_obj(l1, lit),
                 _ => Literal::boolean(false)
@@ -180,6 +180,7 @@ fn match_builtin(name: &str, args: HashMap<String, Literal>, span: Interval, dat
         QUESTION => Ok(question(args, name.to_owned(), span)?),
         BUTTON => Ok(button(args, name.to_owned(), &span)?),
         FN => Ok(api(args, span, data)?),
+        OBJECT => Ok(object(args)?),
         _ => Ok(text(args, name.to_owned(), span)?)
     }
 }
@@ -197,16 +198,12 @@ fn format_object_attributes(expr: &Expr, data: &mut Data) -> Result<HashMap<Stri
     };
 
     for elem in vec.iter() {
-        println!("satrt loop elem {:?}", elem);
         match elem {
             Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
-                println!(" search <<<<<<<<<<<<<<1 OK {:?}", var);
                 let value = expr_to_literal(var, data)?.literal;
-                println!("-------------------- OK {}", var_name.ident);
                 obj.insert(var_name.ident.to_owned(), value);
             }
             Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
-                println!(" search <<<<<<<<<<<<<<2 OK {:?}", value);
                 let interval = interval_from_expr(elem);                
                 let (name, literal) = normal_object_to_literal(&name.ident, value, interval, data)?;
 
@@ -214,7 +211,6 @@ fn format_object_attributes(expr: &Expr, data: &mut Data) -> Result<HashMap<Stri
             }
             _ => {
                 let value = expr_to_literal(elem, data)?.literal;
-                println!("-->>>>>>>>>>>>>>>>>>>>>> default");
                 obj.insert("default".to_owned(), value);
             }
         }
@@ -225,13 +221,19 @@ fn format_object_attributes(expr: &Expr, data: &mut Data) -> Result<HashMap<Stri
 
 fn normal_object_to_literal(name: &str, value: &Expr, interval: Interval , data: &mut Data) -> Result<(String, Literal), ErrorInfo> {
     let obj = format_object_attributes(value, data)?;
-    
+
     if BUILT_IN.contains(&name) {
-        Ok( 
+        Ok(
             (name.to_owned(), match_builtin(&name, obj, interval.to_owned(), data)?)
         )
-    } else {
-        Ok( (name.to_owned(), Literal::object(obj)) )
+    } 
+    else {
+        Err( 
+            ErrorInfo{
+                message: format!("ERROR: unknown function {}", name),
+                interval: interval.to_owned()
+            }
+        )
     }
 }
 
@@ -244,9 +246,9 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorIn
         }
         Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
             let interval = interval_from_expr(expr);
-            let (name, literal) = normal_object_to_literal(&name.ident, value, interval.to_owned(), data)?;
+            let (_name, literal) = normal_object_to_literal(&name.ident, value, interval.to_owned(), data)?;
             
-            Ok( SmartLiteral{ literal: Literal::name_object(name, &literal) , interval} )
+            Ok( SmartLiteral{ literal , interval} )
         }
         Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
             let value = expr_to_literal(var, data)?.literal;

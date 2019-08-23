@@ -15,7 +15,6 @@ pub struct Message {
     pub content: Literal,
 }
 
-
 impl Message {
     pub fn new(literal: Literal) -> Self {
         match literal {
@@ -45,7 +44,7 @@ impl Message {
                     content: Literal::object(value),
                 }
             },
-            Literal::NamedLiteral{name, value} => {
+            Literal::FunctionLiteral{name, value} => {
                 Message {
                     content_type: name.to_owned(),
                     content: Literal::name_object(name.to_owned(), &value),
@@ -86,7 +85,7 @@ impl Message {
                 }
                 Value::Object(map)
             },
-            Literal::NamedLiteral{name, value} => {
+            Literal::FunctionLiteral{name, value} => {
                 let mut map: Map<String, Value> = Map::new();
                 let val = (*value).clone();
                 map.insert(name.to_owned(), Message::lit_to_json(val));

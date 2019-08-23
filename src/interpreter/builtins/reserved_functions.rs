@@ -15,6 +15,10 @@ pub fn typing(args: HashMap<String, Literal>, name: String, interval: Interval) 
     }
 }
 
+pub fn object(object: HashMap<String, Literal>) -> Result<Literal, ErrorInfo> {
+    Ok(Literal::object(object))
+}
+
 pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
         Some(Literal::IntLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::int(*lit))),
@@ -58,9 +62,6 @@ pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 }
 
 pub fn one_of(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    println!("args = {:#?}", args);
-    println!("len = {}", args.len());
-    println!("rand = {}", rand::thread_rng().gen_range(0, args.len()));
     match args.values().nth(rand::thread_rng().gen_range(0, args.len())) {
         Some(lit) => Ok(lit.to_owned()),
         None => Err(ErrorInfo{
@@ -146,7 +147,7 @@ fn accepts_from_buttons(buttons: &Literal) -> Literal {
     if let Literal::ArrayLiteral{items, ..} = buttons {
         let array = items.iter().fold(vec![], |vec, elem| {
             match elem {
-                Literal::NamedLiteral{name, value, ..}  => {
+                Literal::FunctionLiteral{name, value, ..}  => {
                     if name == "button" {
                         accept_to_array(value, vec)
                     } else {
