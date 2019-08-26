@@ -259,6 +259,7 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorIn
                 }
             )
         }
+        Expr::BuilderExpr(..) => get_var_from_ident(expr, data),
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
         Expr::VecExpr(vec, range) => {
             let mut array = vec![];
@@ -292,15 +293,9 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo>
             Ok(lit)
         }
         Expr::ObjectExpr(ObjectType::Normal(..)) => Ok(expr_to_literal(action, data)?.literal),
-        Expr::BuilderExpr(..) => match get_var_from_ident(action, data) {
-            Ok(val) => Ok(val.literal),
-            Err(e) => Err(e),
-        },
+        Expr::BuilderExpr(..) => Ok(expr_to_literal(action, data)?.literal),
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data).literal),
-        Expr::InfixExpr(infix, exp1, exp2) => match evaluate_condition(infix, exp1, exp2, data) {
-            Ok(val) => Ok(val.literal),
-            Err(e) => Err(e),
-        },
+        Expr::InfixExpr(infix, exp1, exp2) => Ok(evaluate_condition(infix, exp1, exp2, data)?.literal),
         Expr::IdentExpr(ident, ..) => match get_var(ident.to_owned(), data) {
             Ok(val) => Ok(val.literal),
             Err(_e) => Ok(Literal::null())
@@ -341,7 +336,7 @@ fn match_actions(
         ObjectType::Goto(GotoType::Step, step_name) => Ok(root.add_next_step(&step_name.ident)),
         ObjectType::Goto(GotoType::Flow, flow_name) => Ok(root.add_next_flow(&flow_name.ident)),
         ObjectType::Remember(name, variable) => {
-            root = root.add_to_memory(name.ident.to_owned(), expr_to_literal(variable, data)?.literal);
+            root = root.add_to_memory(name.ident.to_owned(), match_functions(variable, data)?);
             Ok(root)
         }
         ObjectType::Import {
