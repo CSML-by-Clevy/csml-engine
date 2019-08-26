@@ -95,7 +95,7 @@ pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorI
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
         var if var == RETRIES => Ok(SmartLiteral{literal: Literal::int(data.memory.retries), interval: name.interval.to_owned()}),
         _ => match data.step_vars.get(&name.ident) {
-            Some(val) => gen_smartliteral(val, name.interval, &name.index),
+            Some( val) => gen_smartliteral(val, name.interval, &name.index),
             None => search_var_memory(data.memory, name),
         },
     }
@@ -277,6 +277,7 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<SmartLit
     }
 }
 
+//TODO: return Warning or Error component
 fn gen_smartliteral(literal: &Literal, interval: Interval, opt: &Option<i64>) -> Result<SmartLiteral, ErrorInfo> {
     match (literal, opt) {
         (Literal::ArrayLiteral{ref items}, Some(int)) => {

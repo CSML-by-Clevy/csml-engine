@@ -4,6 +4,7 @@ use serde::{
 };
 
 use crate::parser::tokens::*;
+use crate::interpreter::message::Message;
 use crate::error_format::data::ErrorInfo;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -248,9 +249,9 @@ impl Literal {
             Literal::IntLiteral{value, ..} => value.to_string(),
             Literal::FloatLiteral{value, ..} => value.to_string(),
             Literal::BoolLiteral{value, ..} => value.to_string(),
-            Literal::ArrayLiteral{items, ..} => format!("{:?}", items), // serialize first
-            Literal::ObjectLiteral{properties, ..} => format!("{:?}", properties),  // serialize first
-            Literal::FunctionLiteral{..} => format!("{:?}", self),  // serialize first
+            Literal::ArrayLiteral{..} => Message::lit_to_json(self.to_owned()).to_string(),
+            Literal::ObjectLiteral{..} => Message::lit_to_json(self.to_owned()).to_string(),
+            Literal::FunctionLiteral{..} => Message::lit_to_json(self.to_owned()).to_string(),
             Literal::Null{value, ..} => value.to_owned(),
         }
     }

@@ -1,4 +1,5 @@
 use rand::Rng;
+use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use crate::error_format::data::ErrorInfo;
 use crate::parser::{ast::{Literal, Interval}}; //, tokens::*
@@ -33,7 +34,6 @@ pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) ->
 pub fn text(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
         Some(literal) => Ok(Literal::name_object(name.to_lowercase(), literal)),
-        // Some(Literal::ObjectLiteral{..}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::object(args))),
         _ => Err(ErrorInfo{
                 message: "Builtin Text expect one argument of type string | example: Text(\"hola\")".to_owned(),
                 interval
@@ -74,6 +74,20 @@ pub fn one_of(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
         },
         _ => Err(ErrorInfo{
                 message: "ERROR: Builtin OneOf expect one value of type Array | example: OneOf( [1, 2, 3] )".to_owned(),
+                interval
+        })
+    }
+}
+
+pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get("default")  {
+        Some(Literal::ArrayLiteral{items}) => {
+            let mut vec = items.to_owned();
+            vec.shuffle(&mut rand::thread_rng());
+            Ok(Literal::array(vec))
+        },
+        _ => Err(ErrorInfo{
+                message: "ERROR: Builtin Shuffle expect one value of type Array | example: Shuffle( [1, 2, 3] )".to_owned(),
                 interval
         })
     }

@@ -177,6 +177,7 @@ fn match_builtin(name: &str, args: HashMap<String, Literal>, span: Interval, dat
         URL => Ok(url(args, name.to_owned(), span)?),
         IMAGE => Ok(img(args, name.to_owned(), span)?),
         ONE_OF => Ok(one_of(args, span)?),
+        SHUFFLE => Ok(shuffle(args, span)?),
         QUESTION => Ok(question(args, name.to_owned(), span)?),
         BUTTON => Ok(button(args, name.to_owned(), &span)?),
         FN => Ok(api(args, span, data)?),
@@ -282,58 +283,33 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorIn
     }
 }
 
-fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, ErrorInfo> {
+fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match action {
         Expr::ObjectExpr(ObjectType::As(name, expr)) => {
-            let msg = match_functions(expr, data)?;
-            match msg {
-                MessageType::Msg(Message { ref content, .. }) => {
-                    data.step_vars.insert(name.ident.to_owned(), content.clone());
-                }
-                MessageType::Empty => {}
-            };
-            Ok(msg)
+            let lit = match_functions(expr, data)?;
+
+            data.step_vars.insert(name.ident.to_owned(), lit.clone());
+            Ok(lit)
         }
-        Expr::ObjectExpr(ObjectType::Normal(..)) => {
-            let literal = expr_to_literal(action, data)?.literal;
-            Ok(MessageType::Msg(Message::new(literal)))
-        },
+        Expr::ObjectExpr(ObjectType::Normal(..)) => Ok(expr_to_literal(action, data)?.literal),
         Expr::BuilderExpr(..) => match get_var_from_ident(action, data) {
-            Ok(val) => {
-                let literal = val.literal;
-                Ok(MessageType::Msg(Message::new(literal)))
-            },
+            Ok(val) => Ok(val.literal),
             Err(e) => Err(e),
         },
-        Expr::ComplexLiteral(vec, ..) => {
-            let literal = get_string_from_complexstring(vec, data).literal;
-            Ok(MessageType::Msg(Message::new(literal)))
-        },
+        Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data).literal),
         Expr::InfixExpr(infix, exp1, exp2) => match evaluate_condition(infix, exp1, exp2, data) {
-            Ok(val) => {
-                let literal = val.literal;
-                Ok(MessageType::Msg(Message::new(literal)))
-            },
+            Ok(val) => Ok(val.literal),
             Err(e) => Err(e),
         },
         Expr::IdentExpr(ident, ..) => match get_var(ident.to_owned(), data) {
-            Ok(val) => {
-                let literal = val.literal;
-                Ok(MessageType::Msg(Message::new(literal)))
-            },
-            Err(_e) => {
-                Ok(MessageType::Msg(Message::new(Literal::null())))
-            }
+            Ok(val) => Ok(val.literal),
+            Err(_e) => Ok(Literal::null())
         },
         Expr::LitExpr { .. } => {
-            let literal = expr_to_literal(action, data)?.literal;
-            // println!("{:?}", literal);
-            // println!("- v2 - {:?}", Message::new(literal.clone()));
-            Ok(MessageType::Msg(Message::new(literal)))
+            Ok(expr_to_literal(action, data)?.literal)
         },
         Expr::VecExpr(..) => {
-            let literal = expr_to_literal(action, data)?.literal;
-            Ok(MessageType::Msg(Message::new(literal)))
+            Ok(expr_to_literal(action, data)?.literal)
         },
         e => Err(
             ErrorInfo{
@@ -351,7 +327,12 @@ fn match_actions(
 ) -> Result<MessageData, ErrorInfo> {
     match function {
         ObjectType::Say(arg) => {
-            Ok(add_to_message(root, match_functions(arg, data)?))
+            Ok(add_to_message(
+                root, 
+                MessageType::Msg(
+                    Message::new(match_functions(arg, data)?)
+                )
+            ))
         },
         ObjectType::Use(arg) => {
             match_functions(arg, data)?;
