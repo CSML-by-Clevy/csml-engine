@@ -327,6 +327,8 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, ErrorI
         },
         Expr::LitExpr { .. } => {
             let literal = expr_to_literal(action, data)?.literal;
+            // println!("{:?}", literal);
+            // println!("- v2 - {:?}", Message::new(literal.clone()));
             Ok(MessageType::Msg(Message::new(literal)))
         },
         Expr::VecExpr(..) => {
@@ -414,7 +416,15 @@ fn match_ask_response(
                 Some(..),
                 false
             ) => {
-                if let Some(SmartIdent { ident, interval }) = opt {
+                if let Some(SmartIdent{ident, interval, index}) = opt {
+                    if let Some(..) = index {
+                        return Err(
+                            ErrorInfo{
+                                message: "Error: Ask/Response default value is not an Array".to_owned(),
+                                interval: range.start
+                            }
+                        )
+                    };
                     root = root.add_to_memory(
                         ident.to_owned(),
                         gen_literal_form_event(data.event, interval.to_owned())?.literal,

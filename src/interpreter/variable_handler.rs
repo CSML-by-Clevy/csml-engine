@@ -95,10 +95,7 @@ pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorI
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
         var if var == RETRIES => Ok(SmartLiteral{literal: Literal::int(data.memory.retries), interval: name.interval.to_owned()}),
         _ => match data.step_vars.get(&name.ident) {
-            Some(val) => Ok(SmartLiteral {
-                literal: val.clone(),
-                interval: name.interval
-            }),
+            Some(val) => gen_smartliteral(val, name.interval, &name.index),
             None => search_var_memory(data.memory, name),
         },
     }
@@ -176,7 +173,6 @@ pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<SmartLiteral
         ),
     }
 }
-
 
 // TODO: tmp fn find_value_in_object
 fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> Result<SmartLiteral, ErrorInfo> {
@@ -281,14 +277,33 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<SmartLit
     }
 }
 
+fn gen_smartliteral(literal: &Literal, interval: Interval, opt: &Option<i64>) -> Result<SmartLiteral, ErrorInfo> {
+    match (literal, opt) {
+        (Literal::ArrayLiteral{ref items}, Some(int)) => {
+            match items.get(*int as usize) {
+                Some(value) => Ok(SmartLiteral{literal: value.to_owned(), interval}),
+                None => Err(ErrorInfo{
+                    message: format!("Error Array don't have {} index", int),
+                    interval
+                })
+            }
+        }, 
+        (_, Some(_)) => Err(ErrorInfo{
+            message: "Error value is not of type Array".to_owned(),
+            interval
+        }),
+        (literal, None) => Ok(SmartLiteral{literal: literal.to_owned(), interval})
+    }
+}
+
 pub fn memorytype_to_literal(
     memtype: Option<&MemoryType>,
     interval: Interval,
+    index: &Option<i64>,
 ) -> Result<SmartLiteral, ErrorInfo> {
-    if let Some(elem) = memtype {
-        Ok(SmartLiteral{literal: elem.value.clone(), interval})
-    } else {
-        Err(
+    match memtype {
+        Some(elem) => gen_smartliteral(&elem.value, interval, index),
+        None => Err(
             ErrorInfo{
                 message: "Error in memorytype_to_literal".to_owned(),
                 interval
@@ -302,13 +317,13 @@ pub fn memorytype_to_literal(
 pub fn search_var_memory(memory: &Memory, name: SmartIdent) -> Result<SmartLiteral, ErrorInfo> {
     match &name.ident {
         var if memory.metadata.contains_key(var) => {
-            memorytype_to_literal(memory.metadata.get(var), name.interval.clone())
+            memorytype_to_literal(memory.metadata.get(var), name.interval.clone(), &name.index)
         }
         var if memory.current.contains_key(var) => {
-            memorytype_to_literal(memory.current.get(var), name.interval.clone())
+            memorytype_to_literal(memory.current.get(var), name.interval.clone(), &name.index)
         }
         var if memory.past.contains_key(var) => {
-            memorytype_to_literal(memory.past.get(var), name.interval.clone())
+            memorytype_to_literal(memory.past.get(var), name.interval.clone(), &name.index)
         }
         _ => Err(
             ErrorInfo{
@@ -379,10 +394,10 @@ pub fn get_memory_action(
     expr: &Expr,
 ) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
-        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, expr))
-            if ident == GET_VALUE => memorytype_to_literal(memory_get(memory, name, expr), interval.clone()),
-        Expr::ObjectExpr(ObjectType::Normal(SmartIdent { ident, interval }, expr))
-            if ident == FIRST => memorytype_to_literal(memory_first(memory, name, expr), interval.clone()),
+        Expr::ObjectExpr(ObjectType::Normal(SmartIdent{ident, interval, index }, expr))
+            if ident == GET_VALUE => memorytype_to_literal(memory_get(memory, name, expr), interval.clone(), index),
+        Expr::ObjectExpr(ObjectType::Normal(SmartIdent{ident, interval, index }, expr))
+            if ident == FIRST => memorytype_to_literal(memory_first(memory, name, expr), interval.clone(), index),
         e => Err(
             ErrorInfo{
                 message: "Error in memory action".to_owned(),

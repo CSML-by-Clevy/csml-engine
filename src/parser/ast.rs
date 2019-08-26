@@ -116,10 +116,11 @@ impl Expr {
         })
     }
 
-    pub fn new_ident(ident: String, interval: Interval) -> SmartIdent {
+    pub fn new_ident(ident: String, interval: Interval, index: Option<i64>) -> SmartIdent {
         SmartIdent {
             ident,
-            interval
+            interval,
+            index
         }
     }
 
@@ -328,6 +329,7 @@ impl Literal {
 pub struct SmartIdent {
     pub ident: String,
     pub interval: Interval,
+    pub index: Option<i64>
 }
 
 impl PartialEq for SmartIdent {

@@ -62,10 +62,18 @@ pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 }
 
 pub fn one_of(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.values().nth(rand::thread_rng().gen_range(0, args.len())) {
-        Some(lit) => Ok(lit.to_owned()),
-        None => Err(ErrorInfo{
-                message: "ERROR: Builtin OneOf".to_owned(),
+    match args.get("default")  {
+        Some(Literal::ArrayLiteral{items}) => {
+            match items.iter().nth(rand::thread_rng().gen_range(0, items.len())) {
+                Some(lit) => Ok(lit.to_owned()),
+                None =>  Err(ErrorInfo{
+                    message: "ERROR: Builtin OneOf expect one value of type Array | example: OneOf( [1, 2, 3] )".to_owned(),
+                    interval
+                })
+            }
+        },
+        _ => Err(ErrorInfo{
+                message: "ERROR: Builtin OneOf expect one value of type Array | example: OneOf( [1, 2, 3] )".to_owned(),
                 interval
         })
     }

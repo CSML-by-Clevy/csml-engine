@@ -9,9 +9,14 @@ named!(signed_digits<Span, Span>, recognize!(
     )
 ));
 
+named!(pub get_int<Span, i64>, map_res!(
+    map_res!(signed_digits, complete_byte_slice_str_from_utf8),
+    complete_str_from_str
+));
+
 named!(pub parse_integer<Span, Expr>, do_parse!(
     position: get_interval >>
-    i: map_res!(map_res!(signed_digits, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
+    i: get_int >>
     (Expr::new_literal(Literal::int(i), position))
 ));
 
