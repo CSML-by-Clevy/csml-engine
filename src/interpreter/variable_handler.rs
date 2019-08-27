@@ -9,12 +9,40 @@ pub fn gen_literal_form_event(
     interval: Interval,
 ) -> Result<SmartLiteral, ErrorInfo> {
     match event {
-        Some(event) => Ok(
-            SmartLiteral {
-                    literal: event.literal.to_owned(),
+        Some(event) => match event.payload {
+            PayLoad { content_type: ref t, content: ref c, } 
+                if t == "text" => Ok(SmartLiteral {
+                    literal: Literal::string(c.text.to_string()),
                     interval,
-            }
-        ),
+                }
+            ),
+            PayLoad { content_type: ref t, content: ref c }
+                if t == "float" => match c.text.to_string().parse::<f64>() {
+                Ok(float) => Ok(SmartLiteral {
+                    literal: Literal::float(float),
+                    interval,
+                }),
+                Err(..) => Err(ErrorInfo {
+                    message: format!("event value {} is not of type float", c.text),
+                    interval,
+                }),
+            },
+            PayLoad { content_type: ref t, content: ref c }
+                if t == "int" => match c.text.to_string().parse::<i64>() {
+                Ok(int) => Ok(SmartLiteral {
+                    literal: Literal::int(int),
+                    interval,
+                }),
+                Err(..) => Err(ErrorInfo {
+                    message: format!("event value {} is not of type int", c.text),
+                    interval,
+                }),
+            },
+            _ => Err(ErrorInfo {
+                message: "event type is unown".to_owned(),
+                interval,
+            }),
+        },
         None => Ok(SmartLiteral{literal: Literal::null(), interval}),
     }
 }

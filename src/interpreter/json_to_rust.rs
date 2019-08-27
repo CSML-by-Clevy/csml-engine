@@ -31,10 +31,20 @@ pub struct Context {
     pub client: Client,
     pub fn_endpoint: String
 }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PayLoadContent {
+    pub text: String,
+}
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PayLoad {
+    pub content_type: String,
+    pub content: PayLoadContent,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
-    pub literal: Literal
+    pub payload: PayLoad,
 }
 
 pub fn parse_event(json: &serde_json::Value) -> Result<Literal, String>{
