@@ -38,8 +38,8 @@ pub struct Event {
 }
 
 pub fn parse_event(json: &serde_json::Value) -> Result<Literal, String>{
-    // let event = json.get("event").unwrap();
-    let playload = json.get("payload").unwrap();
+    let event = json.get("event").unwrap();
+    let playload = event.get("payload").unwrap();
     let content = playload.get("content").unwrap();
     let text = content.get("text").unwrap().as_str().unwrap();
 
