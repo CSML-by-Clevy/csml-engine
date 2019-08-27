@@ -3,12 +3,12 @@ use crate::parser::{ast::*, parse_basic_expr, tokens::*, tools::*};
 use nom::*;
 
 named!(or_operator<Span, Infix>, do_parse!(
-    tag!(OR) >> 
+    tag!(OR) >>
     (Infix::Or)
 ));
 
 named!(and_operator<Span, Infix>, do_parse!(
-    tag!(AND)  >> 
+    tag!(AND)  >>
     (Infix::And)
 ));
 
@@ -33,17 +33,17 @@ named!(greaterthanequal_operator<Span, Infix>, do_parse!(
 ));
 
 named!(lessthanequal_operator<Span, Infix>, do_parse!(
-    tag!(LESS_THAN_EQUAL)  >>
+    tag!(LESS_THAN_EQUAL) >>
     (Infix::LessThanEqual)
 ));
 
 named!(greaterthan_operator<Span, Infix>, do_parse!(
-    tag!(GREATER_THAN)   >> 
+    tag!(GREATER_THAN) >>
     (Infix::GreaterThan)
 ));
 
 named!(lessthan_operator<Span, Infix>, do_parse!(
-    tag!(LESS_THAN)   >> 
+    tag!(LESS_THAN) >>
     (Infix::LessThan)
 ));
 
@@ -58,26 +58,26 @@ named!(parse_infix_operators<Span, Infix>, alt!(
 ));
 
 named!(parse_not_operator<Span, Infix>, do_parse!(
-    tag!(NOT)   >> 
+    tag!(NOT) >>
     (Infix::Not)
 ));
 
 // ########################################
 
 named!(pub operator_precedence<Span, Expr>, do_parse!(
-        init: parse_and_condition >>
-        and_expr: fold_many0!(
-            do_parse!(
-                comment!(or_operator) >>
-                expr: parse_and_condition >>
-                (expr)
-            ),
-            init,
-            |acc, value:Expr| {
-                Expr::InfixExpr(Infix::Or, Box::new(acc), Box::new(value))
-            }
-        )
-        >> (and_expr)
+    init: parse_and_condition >>
+    and_expr: fold_many0!(
+        do_parse!(
+            comment!(or_operator) >>
+            expr: parse_and_condition >>
+            (expr)
+        ),
+        init,
+        |acc, value:Expr| {
+            Expr::InfixExpr(Infix::Or, Box::new(acc), Box::new(value))
+        }
+    )
+    >> (and_expr)
 ));
 
 named!(parse_and_condition<Span, Expr>, do_parse!(

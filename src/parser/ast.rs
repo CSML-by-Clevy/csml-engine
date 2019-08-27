@@ -377,7 +377,6 @@ impl Add for SmartLiteral {
                 message: "Illegal operation + between types".to_owned(),
                 interval: self.interval,
             })
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 + l2),
         }
     }
 }
@@ -397,7 +396,6 @@ impl Sub for SmartLiteral {
                 message: "Illegal operation - between types".to_owned(),
                 interval: self.interval,
             })
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 - l2),
         }
     }
 }
@@ -452,7 +450,6 @@ impl Div for SmartLiteral {
                 message: "Illegal operation / between types".to_owned(),
                 interval: self.interval,
             })
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 / l2),
         }
     }
 }
@@ -471,7 +468,6 @@ impl Mul for SmartLiteral {
                 message: "Illegal operation * between types".to_owned(),
                 interval: self.interval,
             })
-            // (Literal::StringLiteral(l1), Literal::StringLiteral(l2))    => Literal::IntLiteral(l1 * l2),
         }
     }
 }

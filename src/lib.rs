@@ -39,7 +39,7 @@ pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
 }
 
 pub fn version() -> String {
-    "CsmlV1".to_owned()
+    "CsmlV2".to_owned()
 }
 
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, ErrorInfo> {
