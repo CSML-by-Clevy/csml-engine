@@ -79,7 +79,7 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, E
 pub fn interpret(
     ast: &Flow,
     step_name: &str,
-    memory: &Memory,
+    memory: &Context,
     event: &Option<Event>,
 ) -> Result<String, ErrorInfo> {
     if !check_valid_flow(ast) {

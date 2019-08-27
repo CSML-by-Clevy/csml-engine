@@ -21,9 +21,8 @@ pub struct Client {
     pub user_id: String
 }
 
-//TODO: change to Context
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Memory {
+pub struct Context {
     pub past: MultiMap<String, MemoryType>,
     pub current: MultiMap<String, MemoryType>,
     pub metadata: MultiMap<String, MemoryType>,
@@ -33,20 +32,18 @@ pub struct Memory {
     pub fn_endpoint: String
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PayLoadContent {
-    pub text: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PayLoad {
-    pub content_type: String,
-    pub content: PayLoadContent,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Event {
-    pub payload: PayLoad,
+    pub literal: Literal
+}
+
+pub fn parse_event(json: &serde_json::Value) -> Result<Literal, String>{
+    // let event = json.get("event").unwrap();
+    let playload = json.get("payload").unwrap();
+    let content = playload.get("content").unwrap();
+    let text = content.get("text").unwrap().as_str().unwrap();
+
+    Ok(Literal::from_str(text))
 }
 
 pub fn json_to_literal(literal: &serde_json::Value) -> Result<Literal, String> {

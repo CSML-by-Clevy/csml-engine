@@ -6,10 +6,12 @@ use serde::{
 use crate::parser::tokens::*;
 use crate::interpreter::message::Message;
 use crate::error_format::data::ErrorInfo;
+use std::str::FromStr;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
+
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub struct Flow {
@@ -217,10 +219,36 @@ impl PartialOrd for Literal {
         match (self, other) {
             (Literal::StringLiteral{value: l1, ..},
                 Literal::StringLiteral{value: l2, ..}) => l1.partial_cmp(l2),
+
+            (Literal::IntLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+                Literal::IntLiteral{value, ..} => l1.partial_cmp(&value),
+                Literal::FloatLiteral{value, ..} => l1.partial_cmp(&(value as i64)),
+                _ => None
+            },
+            (Literal::StringLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+                Literal::IntLiteral{value, ..} => value.partial_cmp(l2),
+                Literal::FloatLiteral{value, ..} => (value as i64).partial_cmp(l2),
+                _ => None
+            },
+
+            (Literal::FloatLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+                Literal::IntLiteral{value, ..} => l1.partial_cmp(&(value as f64)),
+                Literal::FloatLiteral{value, ..} => l1.partial_cmp(&value),
+                _ => None
+            },
+            (Literal::StringLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+                Literal::IntLiteral{value, ..} => (value as f64).partial_cmp(l2),
+                Literal::FloatLiteral{value, ..} => value.partial_cmp(l2),
+                _ => None
+            },
+
+
             (Literal::IntLiteral{value: l1, ..}, 
                 Literal::IntLiteral{value: l2, ..}) => l1.partial_cmp(l2),
+
             (Literal::FloatLiteral{value: l1, ..}, 
                 Literal::FloatLiteral{value: l2, ..}) => l1.partial_cmp(l2),
+
             (Literal::BoolLiteral{value: l1, ..}, 
                 Literal::BoolLiteral{value: l2, ..}) => l1.partial_cmp(l2),
             _   => None,
@@ -232,6 +260,27 @@ impl PartialEq for Literal {
     fn eq(&self, other: &Literal) -> bool {
         match (self, other) {
             (Literal::StringLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => l1 == l2,
+            (Literal::IntLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+                Literal::IntLiteral{value, ..} => *l1 == value,
+                Literal::FloatLiteral{value, ..} => *l1 == value as i64 ,
+                _ => false
+            },
+            (Literal::StringLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+                Literal::IntLiteral{value, ..} => *l2 == value,
+                Literal::FloatLiteral{value, ..} => *l2 == value as i64 ,
+                _ => false
+            },
+
+            (Literal::FloatLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+                Literal::IntLiteral{value, ..} => *l1 == value as f64,
+                Literal::FloatLiteral{value, ..} => *l1 == value,
+                _ => false
+            },
+            (Literal::StringLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+                Literal::IntLiteral{value, ..} => *l2 == value as f64,
+                Literal::FloatLiteral{value, ..} => *l2 == value ,
+                _ => false
+            },
             (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => l1 == l2,
             (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => l1 == l2,
             (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..}) => l1 == l2,
@@ -266,6 +315,14 @@ impl Literal {
             Literal::ObjectLiteral {..} => "object".to_owned(),
             Literal::FunctionLiteral{name, ..} => name.to_owned(),
             Literal::Null{value, ..} => value.to_owned(),
+        }
+    }
+
+    pub fn from_str(stirng: &str)  -> Literal {
+        match (i64::from_str(stirng), f64::from_str(stirng)) {
+            (Ok(int), _) =>  Literal::int(int),
+            (_, Ok(float)) => Literal::float(float),
+            (_, _) => Literal::string(stirng.to_owned())
         }
     }
 

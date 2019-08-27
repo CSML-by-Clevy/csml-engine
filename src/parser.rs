@@ -26,23 +26,6 @@ use nom::{Err, *};
 use nom::types::*;
 use std::collections::HashMap;
 
-// ################# add marco in nom ecosystem
-
-// #[macro_export]
-// macro_rules! tag_or_error{
-//     ($tag_name:expr) => {
-//         {
-//             use nom::*;
-//             named!(parse_error<Span, Span>, return_error!(
-//                 nom::ErrorKind::Custom(102),   // 102
-//                 tag!($tag_name)
-//             ));
-//         }
-//     };
-// }
-
-// ##################################### Expr
-
 named!(parse_builderexpr<Span, Expr>, do_parse!(
     ident: parse_identexpr >>
     comment!(tag!(DOT)) >>

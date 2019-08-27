@@ -8,7 +8,7 @@ use nom::*;
 //TODO: check for errors 
 #[macro_export]
 macro_rules! take_until_and_consume_line (
-  ($i:expr, $substr:expr) => (
+  ($i:expr, $substr1:expr, $substr2:expr) => (
     {
       use nom::lib::std::result::Result::*;
       use nom::lib::std::option::Option::*;
@@ -18,13 +18,16 @@ macro_rules! take_until_and_consume_line (
 
       let input = $i;
 
-      let res: IResult<_,_> = match input.find_substring($substr) {
-        None => {
+      let res: IResult<_,_> = match (input.find_substring($substr1), input.find_substring($substr2)) {
+        (Some(index), _) => {
+          Ok(($i.slice(index+$substr1.input_len()..), $i.slice(0..index)))
+        },
+        (_, Some(index)) => {
+          Ok(($i.slice(index+$substr2.input_len()..), $i.slice(0..index)))
+        },
+        (None, None) => {
           let index = $i.fragment.len();
           Ok(($i.slice(index..), $i.slice(0..index)))
-        },
-        Some(index) => {
-          Ok(($i.slice(index+$substr.input_len()..), $i.slice(0..index)))
         },
       };
       res
@@ -39,44 +42,12 @@ named!(pub comment_delimited<Span, Span>, preceded!(
 
 named!(comment_single_line<Span, Span>, preceded!(
     tag!(INLINE_COMMENT),
-    take_until_and_consume_line!("\n")
+    take_until_and_consume_line!("\n", "\r\n")
 ));
-
-named!(comment_single_line2<Span, Span>, preceded!(
-    tag!(INLINE_COMMENT),
-    take_until_and_consume_line!("\r\n")
-));
-
-named!(single_line<Span, Span>, alt!(
-    comment_single_line |
-    comment_single_line2
-));
-
-
-named!(comment_single<Span, Span>, preceded!(
-    tag!(INLINE_COMMENT),
-    not_line_ending
-));
-
-pub fn test(input: Span) -> bool {
-    
-    match not_line_ending(input) {
-        Ok(var) => {
-            println!("OK {:?}", var);
-            true
-        },
-        Err(var)  => {
-            println!("ERR {:?}", var);
-            false
-        }
-    }
-}
-
-// ####################
 
 named!(pub all_comment<Span, Span>, alt!(
     comment_delimited   |
-    single_line
+    comment_single_line
 ));
 
 named!(pub skip<Span, Vec<Span>>, do_parse!(

@@ -89,7 +89,6 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
             }
 
             let (_val, position2) = get_interval(val)?;
-            // TODO: CHECK if it can be change for literal NULL
             Ok((rest, Expr::ComplexLiteral(vec![], RangeInterval{start: position, end: position2} )))
         }
         (_, None) => Err(Err::Failure(Context::Code(

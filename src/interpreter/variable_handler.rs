@@ -1,46 +1,20 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{ast_interpreter::evaluate_condition, data::Data, json_to_rust::*};
 use crate::parser::{ast::*, tokens::*};
+use std::collections::HashMap;
+
 
 pub fn gen_literal_form_event(
     event: &Option<Event>,
     interval: Interval,
 ) -> Result<SmartLiteral, ErrorInfo> {
     match event {
-        Some(event) => match event.payload {
-            PayLoad { content_type: ref t, content: ref c, } 
-                if t == "text" => Ok(SmartLiteral {
-                    literal: Literal::string(c.text.to_string()),
+        Some(event) => Ok(
+            SmartLiteral {
+                    literal: event.literal.to_owned(),
                     interval,
-                }
-            ),
-            PayLoad { content_type: ref t, content: ref c }
-                if t == "float" => match c.text.to_string().parse::<f64>() {
-                Ok(float) => Ok(SmartLiteral {
-                    literal: Literal::float(float),
-                    interval,
-                }),
-                Err(..) => Err(ErrorInfo {
-                    message: format!("event value {} is not of type float", c.text),
-                    interval,
-                }),
-            },
-            PayLoad { content_type: ref t, content: ref c }
-                if t == "int" => match c.text.to_string().parse::<i64>() {
-                Ok(int) => Ok(SmartLiteral {
-                    literal: Literal::int(int),
-                    interval,
-                }),
-                Err(..) => Err(ErrorInfo {
-                    message: format!("event value {} is not of type int", c.text),
-                    interval,
-                }),
-            },
-            _ => Err(ErrorInfo {
-                message: "event type is unown".to_owned(),
-                interval,
-            }),
-        },
+            }
+        ),
         None => Ok(SmartLiteral{literal: Literal::null(), interval}),
     }
 }
@@ -160,7 +134,6 @@ pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, 
     }
 }
 
-// TODO: tmp fn gen_literal_form_exp
 pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
         Expr::LitExpr(literal) => Ok(literal.clone()),
@@ -174,15 +147,14 @@ pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<SmartLiteral
     }
 }
 
-// TODO: tmp fn find_value_in_object
-fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> Result<SmartLiteral, ErrorInfo> {
-    let map = match literal {
-        Literal::ObjectLiteral{properties} => properties,
+fn get_values<'a>(literal: &'a Literal, expr: &Expr, interval: &Interval) -> Result<&'a HashMap<String, Literal>, ErrorInfo>  {
+    match literal {
+        Literal::ObjectLiteral{properties} => Ok(properties),
         Literal::FunctionLiteral{value, ..} => {
             let literal: &Literal = value;
             match literal {
-                Literal::ObjectLiteral{properties} => properties,
-                _ => return Err(
+                Literal::ObjectLiteral{properties} => Ok(properties),
+                _ => Err(
                     ErrorInfo{
                         message: "Error ... bad type".to_owned(),
                         interval: interval_from_expr(expr)
@@ -190,13 +162,18 @@ fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> 
                 )
             }
         }
-        _ => return Err(
+        _ => Err(
             ErrorInfo{
                 message: "Error: Bad Expression in object builder ".to_owned(),
                 interval: interval.to_owned()
             }
         )
-    };
+    }
+}
+
+fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> Result<SmartLiteral, ErrorInfo> {
+
+    let map = get_values(literal, expr, interval)?;
 
     match expr {
         Expr::BuilderExpr(elem, expr) => {
@@ -204,12 +181,10 @@ fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> 
             if let Expr::IdentExpr(ident, ..) = elem {
                 let literal = match map.get(&ident.ident) {
                     Some(val) => val,
-                    None => return Err(
-                        ErrorInfo{
-                            message: format!("Error: Key {} not found in object", ident.ident),
-                            interval: ident.interval.to_owned()
-                        }
-                    )
+                    None => {
+                        //TODO: replace with Error component
+                        return Ok( SmartLiteral{literal: literal.to_owned(), interval: interval.to_owned()} )
+                    }
                 };
                 find_value_in_object(literal, expr, interval)
             } else {
@@ -224,15 +199,13 @@ fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> 
         Expr::IdentExpr(ident, ..) => {
             match map.get(&ident.ident) {
                 Some(literal) => Ok( SmartLiteral{literal: literal.to_owned(), interval: interval.to_owned()} ),
-                None => return Err(
-                    ErrorInfo{
-                        message: format!("Error: Key {} not found in object", ident.ident),
-                        interval: ident.interval.to_owned()
-                    }
-                )
+                None => {
+                    //TODO: replace with Error component
+                    Ok(SmartLiteral{literal: Literal::null(), interval: interval.to_owned()})
+                }
             }
         },
-        e   => Err(
+        e => Err(
             ErrorInfo{
                 message: "Error: Bad Expression in object builder ".to_owned(),
                 interval: interval_from_expr(e)
@@ -315,7 +288,7 @@ pub fn memorytype_to_literal(
 
 // MEMORY ------------------------------------------------------------------
 
-pub fn search_var_memory(memory: &Memory, name: SmartIdent) -> Result<SmartLiteral, ErrorInfo> {
+pub fn search_var_memory(memory: &Context, name: SmartIdent) -> Result<SmartLiteral, ErrorInfo> {
     match &name.ident {
         var if memory.metadata.contains_key(var) => {
             memorytype_to_literal(memory.metadata.get(var), name.interval.clone(), &name.index)
@@ -335,7 +308,7 @@ pub fn search_var_memory(memory: &Memory, name: SmartIdent) -> Result<SmartLiter
     }
 }
 
-pub fn memory_get<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
+pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
     match (name, expr) {
         (
             Expr::IdentExpr(SmartIdent { ident, .. }),
@@ -362,7 +335,7 @@ pub fn memory_get<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'
     }
 }
 
-pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
+pub fn memory_first<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
     match (name, expr) {
         (
             Expr::IdentExpr(SmartIdent { ident, .. }),
@@ -390,7 +363,7 @@ pub fn memory_first<'a>(memory: &'a Memory, name: &Expr, expr: &Expr) -> Option<
 }
 
 pub fn get_memory_action(
-    memory: &Memory,
+    memory: &Context,
     name: &Expr,
     expr: &Expr,
 ) -> Result<SmartLiteral, ErrorInfo> {

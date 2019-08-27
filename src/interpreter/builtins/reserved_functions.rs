@@ -5,6 +5,7 @@ use crate::error_format::data::ErrorInfo;
 use crate::parser::{ast::{Literal, Interval}}; //, tokens::*
 
 // TODO: check nbr elemts in built-ins
+
 pub fn typing(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default") {
         Some(Literal::IntLiteral{value: lit}) => Ok(Literal::name_object(name.to_lowercase(), &Literal::int(*lit))),
@@ -93,7 +94,7 @@ pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Lit
     }
 }
 
-// TODO: see if search_in_obj default value is useful
+// TODO: refactor search_or_default
 fn search_or_default(values: &HashMap<String, Literal>, name: &str, interval: &Interval, default: Option<Literal>) -> Result<Literal, ErrorInfo> {
     match (values.get(name), default) {
         (Some(value), ..) => Ok(value.to_owned()),
