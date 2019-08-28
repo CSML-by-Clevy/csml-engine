@@ -1,26 +1,22 @@
-use serde_json::Value;
-use std::collections::HashMap;
+use reqwest::{ClientBuilder, header::{HeaderMap, HeaderValue, ACCEPT, CONTENT_TYPE}};
+use serde_json::{Value, map::Map};
+use std::{env, collections::HashMap};
+use crate::parser::{ast::Literal,};
 use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{data::Data, builtins::*};
-use crate::parser::{ast::Literal};
+use crate::interpreter::{data::Data, builtins::*, json_to_rust::json_to_literal};
 
 // default #############################################################################
 
-fn parse_api(mut args: Vec<Literal>, data: &mut Data) -> Result<(String, HashMap<String, Value>), ErrorInfo> {
-    let mut map: HashMap<String, Value> = HashMap::new();
+fn parse_api(args: &HashMap<String, Literal>, data: &mut Data) -> Result<(String, Map<String, Value>), ErrorInfo> {
+    let mut map: Map<String, Value> = Map::new();
 
-    if let Some(Literal::StringLiteral{value: fn_id, ..}) = Literal::search_in_obj(&args, "fn_id") {
+    if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get("fn_id") {
         map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
-    } else if !args.is_empty() {
-        if let Literal::StringLiteral{value: fn_id, ..} = &args[0] {
-            map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
-            args.reverse();
-            args.pop();
-            args.reverse();
-        }
+    } else if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get("default") {
+        map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
     }
 
-    let sub_map = create_submap(&["fn_id"], &args)?;
+    let sub_map = create_submap(&["fn_id", "default"], &args)?;
     let client = client_to_json(&data.memory.client);
 
     map.insert("data".to_owned(), Value::Object(sub_map));
@@ -28,24 +24,47 @@ fn parse_api(mut args: Vec<Literal>, data: &mut Data) -> Result<(String, HashMap
     Ok((data.memory.fn_endpoint.to_string(), map))
 }
 
-pub fn api(args: &[Literal], interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
-    let (http_arg, map) = parse_api(args.to_owned(), data)?;
+fn construct_headers() -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    let api_key = match env::var("FN_X_API_KEY") {
+        Ok(key) => HeaderValue::from_str(&key).unwrap(),
+        Err(_e) => HeaderValue::from_str("PoePoe").unwrap()
+    };
 
-    // println!("http call {:?}", http_arg);
-    // println!("map {:?}", serde_json::to_string(&map).unwrap());
-    match reqwest::Client::new().post(&http_arg).json(&map).send() {
+    headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("image/png"));
+    headers.insert("X-Api-Key", api_key);
+    headers
+}
+
+pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
+    let (http_arg, map) = parse_api(&args, data)?;
+    let client = ClientBuilder::new()
+            .use_rustls_tls()
+            .build().unwrap();
+
+    match client.post(&http_arg)
+        .headers(construct_headers())
+        .json(&map).send() {
+
         Ok(ref mut arg) => match &arg.text() {
             Ok(text) => {
-                // println!("reqwest post ok: ");
                 let json: serde_json::Value = serde_json::from_str(&text).unwrap();
-                if let Some(Value::String(val)) = json.get("data") {
-                    Ok(Literal::string(val.to_string(), None))
+                if let Some(value) = json.get("data") {
+                    match json_to_literal(value) {
+                        Ok(val) => Ok(val),
+                        Err(string) => Err(
+                            ErrorInfo {
+                                message: string,
+                                interval,
+                            }
+                        )
+                    }
                 } else {
                     Ok(Literal::null())
                 }
             }
             Err(_e) => {
-                // println!("error in parsing reqwest result: {:?}", e);
                 Err(ErrorInfo{
                     message: "Error in parsing reqwest result".to_owned(),
                     interval
@@ -53,7 +72,6 @@ pub fn api(args: &[Literal], interval: Interval, data: &mut Data) -> Result<Lite
             }
         },
         Err(_e) => {
-            // println!("error in reqwest post {:?}", e);
             Err(ErrorInfo{
                 message: "Error in reqwest post".to_owned(),
                 interval

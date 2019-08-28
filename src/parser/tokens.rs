@@ -44,11 +44,13 @@ pub const R_BRACKET: &str = "]";
 pub const L2_BRACE: &str = "{{";
 pub const R2_BRACE: &str = "}}";
 
+pub const FOREACH: &str = "foreach";
 pub const IF: &str = "if";
 pub const ELSE: &str = "else";
 
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
+pub const IN: &str = "in";
 pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
 pub const RETRIES: &str = "retries";
@@ -68,7 +70,7 @@ pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
 pub const NULL: &str = "NULL";
 
-pub static RESERVED: &'static [&str] = &[IF, ELSE, IMPORT, AS,
+pub static RESERVED: &'static [&str] = &[FOREACH, IF, ELSE, IMPORT, AS, IN,
 FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE,
 ASK, GOTO, MATCH, RESPONSE, REMEMBER, TRUE, FALSE, NULL];
 
@@ -79,9 +81,15 @@ pub const INT: &str = "Int";
 pub const URL: &str = "Url";
 pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
-pub const FN: &str = "Fn";
+pub const SHUFFLE: &str = "Shuffle";
+
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
+pub const OBJECT: &str = "Object";
+pub const FN: &str = "Fn";
+
+pub static BUILT_IN: &'static [&str] = &[TYPING, WAIT, TEXT, INT,
+URL, IMAGE, ONE_OF, SHUFFLE, QUESTION, BUTTON, OBJECT, FN];
 
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";

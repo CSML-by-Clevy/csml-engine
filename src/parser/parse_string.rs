@@ -64,7 +64,7 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
             if val.input_len() > 0 {
                 let value = String::from_utf8(val.fragment.to_vec())
                     .expect("error at parsing [u8] to &str");
-                vec.push(Expr::new_literal(Literal::string(value, None), position));
+                vec.push(Expr::new_literal(Literal::string(value), position));
             }
             match parse_brace(rest, vec) {
                 Ok((rest, vec)) => Ok((rest, vec)),
@@ -84,12 +84,11 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
                     .expect("error at parsing [u8] to &str");
                 return Ok((
                     rest,
-                    Expr::new_literal(Literal::string(value, None), position),
+                    Expr::new_literal(Literal::string(value), position),
                 ));
             }
 
             let (_val, position2) = get_interval(val)?;
-            // TODO: CHECK if it can be change for literal NULL
             Ok((rest, Expr::ComplexLiteral(vec![], RangeInterval{start: position, end: position2} )))
         }
         (_, None) => Err(Err::Failure(Context::Code(

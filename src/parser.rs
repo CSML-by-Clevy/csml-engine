@@ -4,6 +4,7 @@ pub mod parse_comments;
 pub mod parse_functions;
 pub mod parse_ident;
 pub mod parse_if;
+pub mod parse_for_loop;
 pub mod parse_import;
 pub mod parse_literal;
 pub mod parse_string;
@@ -17,6 +18,7 @@ use expressions_evaluation::operator_precedence;
 use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
 use parse_ident::parse_ident;
 use parse_if::parse_if;
+use parse_for_loop::parse_for;
 use parse_literal::parse_literalexpr;
 use parse_string::parse_string;
 use tokens::*;
@@ -26,27 +28,11 @@ use nom::{Err, *};
 use nom::types::*;
 use std::collections::HashMap;
 
-// ################# add marco in nom ecosystem
-
-// #[macro_export]
-// macro_rules! tag_or_error{
-//     ($tag_name:expr) => {
-//         {
-//             use nom::*;
-//             named!(parse_error<Span, Span>, return_error!(
-//                 nom::ErrorKind::Custom(102),   // 102
-//                 tag!($tag_name)
-//             ));
-//         }
-//     };
-// }
-
-// ##################################### Expr
-
 named!(parse_builderexpr<Span, Expr>, do_parse!(
     ident: parse_identexpr >>
     comment!(tag!(DOT)) >>
     exp: alt!(parse_as_variable | parse_var_expr) >>
+    // : alt!(parse_as_variable | parse_var_expr) >>
     (Expr::BuilderExpr(Box::new(ident), Box::new(exp)))
 ));
 
@@ -134,14 +120,14 @@ pub fn parse_as_variable(span: Span) -> IResult<Span, Expr> {
         ))
     }
     let (span, name) = parse_ident(span)?;
-    (Ok((span, Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))) )))
+    (Ok((span, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))) )))
 }
 
 // named!(pub parse_as_variable<Span, Expr>, do_parse!(
 //     expr: parse_var_expr >>
 //     comment!(tag!(AS)) >>
 //     name: parse_ident >>
-//     (Expr::FunctionExpr(ReservedFunction::As(name, Box::new(expr))))
+//     (Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))))
 // ));
 
 // ################################### Ask_Response
@@ -233,6 +219,7 @@ named!(parse_actions<Span, Vec<Expr> >, do_parse!(
     actions: many0!(
         alt!(
             parse_if            |
+            parse_for           |
             parse_root_functions|
             parse_ask_response
         )
@@ -257,6 +244,11 @@ named!(parse_step<Span, Instruction>, do_parse!(
 ));
 
 // ############################## block
+
+named!(pub parse_implicit_block<Span, Vec<Expr>>, do_parse!(
+    elem: parse_root_functions >>
+    (vec![elem])
+));
 
 named!(pub parse_strick_block<Span, Vec<Expr>>, do_parse!(
     vec: delimited!(

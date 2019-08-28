@@ -1,14 +1,12 @@
 use crate::comment;
-
 use crate::parser::{
-    ast::*, parse_block, parse_functions::parse_root_functions, tokens::*, tools::*,
+    ast::*, 
+    parse_block, 
+    parse_implicit_block, 
+    tokens::*,
+    tools::*,
 };
 use nom::*;
-
-named!(parse_implicit_block<Span, Vec<Expr>>, do_parse!(
-    elem: parse_root_functions >>
-    (vec![elem])
-));
 
 named!(pub parse_else_if<Span, Box<IfStatement>>, do_parse!(
     comment!(tag!(ELSE)) >>

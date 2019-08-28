@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::parser::{ast::*, tokens::*};
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
@@ -7,45 +8,71 @@ use crate::interpreter::{
     variable_handler::*,
 };
 
-fn match_obj(lit1: &SmartLiteral, lit2: &SmartLiteral) -> Result<Literal, ErrorInfo> {
-    let _b = BUTTON.to_owned();
-    if let Literal::ObjectLiteral{ name: Some(_b), properties, .. } = lit2.literal.clone() {
-        match Literal::search_in_obj(&properties, "accept") {
-            Some(Literal::ArrayLiteral{items, ..}) => {
-                return Ok(Literal::boolean(items.contains(&lit1.literal), None))
+fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal>{
+    match name {
+        "button" => {
+            if let Literal::ObjectLiteral{properties} = lit {
+                properties.get("accept")
+            } else {
+                Some(lit)
             }
-            Some(val) => {
-                return Ok(Literal::boolean(val == &lit1.literal, None))
-            },
-            _ => return Ok(Literal::boolean(lit1.literal == lit2.literal, None)),
-        }
+        },
+        _   => Some(lit)
     }
-    Ok(Literal::boolean(lit1 == lit2, None))
 }
 
+//TODO: add warning when comparing some objects
+fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
+    match (&lit1, &lit2) {
+        (Literal::FunctionLiteral{name: n1, value: v1}, Literal::FunctionLiteral{name: n2, value: v2}) => {
+            match (priority_match(n1, v1), priority_match(n2, v2)) {
+                (Some(l1), Some(l2)) => match_obj(l1, l2),
+                (_, _) => Literal::boolean(false)
+            }
+        },
+        (Literal::FunctionLiteral{name, value}, lit) => {
+            match priority_match(name, value) {
+                Some(l1) => match_obj(l1, lit),
+                _ => Literal::boolean(false)
+            }
+        },
+        (lit, Literal::FunctionLiteral{name, value}) => {
+            match priority_match(name, value) {
+                Some(l1) => match_obj(l1, lit),
+                _ => Literal::boolean(false)
+            }
+        },
+        (Literal::ArrayLiteral{items: i1}, Literal::ArrayLiteral{items: i2}) => Literal::boolean(i1 == i2),
+        (Literal::ArrayLiteral{items}, lit) => Literal::boolean(items.contains(lit)),
+        (lit, Literal::ArrayLiteral{items}) => Literal::boolean(items.contains(lit)),
+        (l1, l2) => Literal::boolean(l1 == l2)
+    }
+}
+
+//TODO: add warning when comparing some objects
 fn cmp_lit(
     infix: &Infix,
     lit1: Result<SmartLiteral, ErrorInfo>,
     lit2: Result<SmartLiteral, ErrorInfo>,
 ) -> Result<SmartLiteral, ErrorInfo> {
     match (infix, lit1, lit2) {
-        (Infix::NotEqual, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 != l2, None), interval: l1.interval.to_owned()}),
-        (Infix::Equal, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 == l2, None), interval: l1.interval.to_owned()}),
-        (Infix::GreaterThanEqual, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 >= l2, None), interval: l1.interval.to_owned()}),
-        (Infix::LessThanEqual, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 <= l2, None), interval: l1.interval.to_owned()}),
-        (Infix::GreaterThan, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 > l2, None), interval: l1.interval.to_owned()}),
-        (Infix::LessThan, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 < l2, None), interval: l1.interval.to_owned()}),
-        (Infix::Or, Ok(l1), Ok(..)) => Ok(SmartLiteral{literal: Literal::boolean(true, None), interval: l1.interval.to_owned()}),
-        (Infix::Or, Ok(l1), Err(..)) => Ok(SmartLiteral{literal: Literal::boolean(true, None), interval: l1.interval.to_owned()}),
-        (Infix::Or, Err(e), Ok(..)) => Ok(SmartLiteral{literal: Literal::boolean(true, None), interval: e.interval.to_owned()}),
-        (Infix::And, Ok(l1), Ok(..)) => Ok(SmartLiteral{literal: Literal::boolean(true, None), interval: l1.interval.to_owned()}),
+        (Infix::NotEqual, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 != l2), interval: l1.interval.to_owned()}),
+        (Infix::Equal, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 == l2), interval: l1.interval.to_owned()}),
+        (Infix::GreaterThanEqual, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 >= l2), interval: l1.interval.to_owned()}),
+        (Infix::LessThanEqual, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 <= l2), interval: l1.interval.to_owned()}),
+        (Infix::GreaterThan, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 > l2), interval: l1.interval.to_owned()}),
+        (Infix::LessThan, Ok(l1), Ok(l2)) => Ok(SmartLiteral{literal: Literal::boolean(l1 < l2), interval: l1.interval.to_owned()}),
+        (Infix::Or, Ok(l1), Ok(..)) => Ok(SmartLiteral{literal: Literal::boolean(true), interval: l1.interval.to_owned()}),
+        (Infix::Or, Ok(l1), Err(..)) => Ok(SmartLiteral{literal: Literal::boolean(true), interval: l1.interval.to_owned()}),
+        (Infix::Or, Err(e), Ok(..)) => Ok(SmartLiteral{literal: Literal::boolean(true), interval: e.interval.to_owned()}),
+        (Infix::And, Ok(l1), Ok(..)) => Ok(SmartLiteral{literal: Literal::boolean(true), interval: l1.interval.to_owned()}),
         (Infix::Adition, Ok(l1), Ok(l2)) => l1 + l2,
         (Infix::Substraction, Ok(l1), Ok(l2)) => l1 - l2,
         (Infix::Divide, Ok(l1), Ok(l2)) => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2)) => l1 * l2,
-        (Infix::Match, Ok(ref l1), Ok(ref l2)) => Ok(SmartLiteral{literal: match_obj(l1, l2)?, interval: l1.interval.to_owned()}),
-        (_, Ok(l1), ..) => Ok(SmartLiteral{literal: Literal::boolean(false, None), interval: l1.interval.to_owned()}),
-        (_, Err(e), ..) => Ok(SmartLiteral{literal: Literal::boolean(false, None), interval: e.interval.to_owned()}),
+        (Infix::Match, Ok(ref l1), Ok(ref l2)) => Ok(SmartLiteral{literal: match_obj(&l1.literal, &l2.literal), interval: l1.interval.to_owned()}),
+        (_, Ok(l1), ..) => Ok(SmartLiteral{literal: Literal::boolean(false), interval: l1.interval.to_owned()}),
+        (_, Err(e), ..) => Ok(SmartLiteral{literal: Literal::boolean(false), interval: e.interval.to_owned()}),
     }
 }
 
@@ -67,28 +94,27 @@ pub fn evaluate_condition(
 ) -> Result<SmartLiteral, ErrorInfo> {
     match (expr1, expr2) {
         (exp1, ..) if Infix::Not == *infix && check_if_ident(exp1) => {
-            // TODO: add interval in error
             match get_var_from_ident(exp1, data) {
                 Ok(SmartLiteral {
                     literal: Literal::BoolLiteral{value: false, ..},
                     interval,
                 }) => Ok(SmartLiteral {
-                    literal: Literal::boolean(true, None),
+                    literal: Literal::boolean(true),
                     interval,
                 }),
                 Ok(SmartLiteral {
                     literal: Literal::IntLiteral{value: 0, ..},
                     interval,
                 }) => Ok(SmartLiteral {
-                    literal: Literal::boolean(true, None),
+                    literal: Literal::boolean(true),
                     interval,
                 }),
                 Ok(SmartLiteral { interval, .. }) => Ok(SmartLiteral {
-                    literal: Literal::boolean(false, None),
+                    literal: Literal::boolean(false),
                     interval,
                 }),
                 Err(err) => Ok(SmartLiteral {
-                    literal: Literal::boolean(true, None),
+                    literal: Literal::boolean(true),
                     interval: err.interval,
                 }),
             }
@@ -128,10 +154,12 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
             Ok(_) => true,
             Err(_e) => false,
         },
-        Expr::LitExpr { .. } => true,
+        Expr::LitExpr( SmartLiteral{literal: Literal::BoolLiteral{value}, ..}) => *value,
+        Expr::LitExpr( SmartLiteral{literal: Literal::Null{..}, ..}) => false,
+        Expr::LitExpr( .. ) => true,
         Expr::BuilderExpr(..) => get_var_from_ident(expr, data).is_ok(), // error
         Expr::IdentExpr(ident, ..) => get_var(ident.to_owned(), data).is_ok(),      // error
-        _ => false,                                                      // return error
+        _ => false, // return error
     }
 }
 
@@ -142,84 +170,105 @@ fn add_to_message(root: MessageData, action: MessageType) -> MessageData {
     }
 }
 
-fn match_builtin(object: SmartLiteral, data: &mut Data) -> Result<Literal, ErrorInfo> {
-    match object.literal {
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == TYPING => {
-            Ok(typing(properties, name.to_owned(), object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == WAIT => {
-            Ok(wait(properties, name.to_owned(), object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == TEXT => {
-            Ok(text(properties, name.to_owned(), object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == URL => {
-            Ok(url(properties, name.to_owned(), object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == IMAGE => {
-            Ok(img(properties, name.to_owned(), object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == ONE_OF => {
-            Ok(one_of(properties, object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == QUESTION => {
-            Ok(question(properties, name.to_owned(), object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == BUTTON => {
-            Ok(button(properties, name.to_owned(), &object.interval)?)
-        },
-        Literal::ObjectLiteral{name: Some(ref name), ref properties, ..} if name == FN => {
-            Ok(api(properties, object.interval, data)?)
-        },
-        literal => Ok(literal.clone()),
+fn match_builtin(name: &str, args: HashMap<String, Literal>, span: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
+    match name {
+        TYPING => Ok(typing(args, name.to_owned(), span)?),
+        WAIT => Ok(wait(args, name.to_owned(), span)?),
+        URL => Ok(url(args, name.to_owned(), span)?),
+        IMAGE => Ok(img(args, name.to_owned(), span)?),
+        ONE_OF => Ok(one_of(args, span)?),
+        SHUFFLE => Ok(shuffle(args, span)?),
+        QUESTION => Ok(question(args, name.to_owned(), span)?),
+        BUTTON => Ok(button(args, name.to_owned(), &span)?),
+        FN => Ok(api(args, span, data)?),
+        OBJECT => Ok(object(args)?),
+        _ => Ok(text(args, name.to_owned(), span)?)
+    }
+}
+
+fn format_object_attributes(expr: &Expr, data: &mut Data) -> Result<HashMap<String, Literal>, ErrorInfo> {
+    let mut obj: HashMap<String, Literal> = HashMap::new();
+    let vec = match expr {
+        Expr::VecExpr(vec, ..) => vec,
+        _e                     => return Err(
+            ErrorInfo{
+                message: format!("ERROR: Object attributes {:?} bad format", expr),
+                interval: interval_from_expr(expr)
+            }
+        )
+    };
+
+    for elem in vec.iter() {
+        match elem {
+            Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
+                let value = expr_to_literal(var, data)?.literal;
+                obj.insert(var_name.ident.to_owned(), value);
+            }
+            Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
+                let interval = interval_from_expr(elem);                
+                let (name, literal) = normal_object_to_literal(&name.ident, value, interval, data)?;
+
+                obj.insert(name, literal);
+            }
+            _ => {
+                let value = expr_to_literal(elem, data)?.literal;
+                obj.insert("default".to_owned(), value);
+            }
+        }
+    }
+
+    Ok(obj)
+}
+
+fn normal_object_to_literal(name: &str, value: &Expr, interval: Interval , data: &mut Data) -> Result<(String, Literal), ErrorInfo> {
+    let obj = format_object_attributes(value, data)?;
+
+    if BUILT_IN.contains(&name) {
+        Ok(
+            (name.to_owned(), match_builtin(&name, obj, interval.to_owned(), data)?)
+        )
+    } 
+    else {
+        Err( 
+            ErrorInfo{
+                message: format!("ERROR: unknown function {}", name),
+                interval: interval.to_owned()
+            }
+        )
     }
 }
 
 fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
     match expr {
-        Expr::FunctionExpr(ReservedFunction::As(name, var)) => {
+        Expr::ObjectExpr(ObjectType::As(name, var)) => {
             let value = expr_to_literal(var, data)?;
             data.step_vars.insert(name.ident.to_owned(), value.literal.clone());
             Ok(value)
         }
-        Expr::FunctionExpr(ReservedFunction::Normal(name, var)) => {
-            let mut obj: Vec<Literal> = vec![];
-            let expr: &Expr = var;
-
-            if let Expr::VecExpr(vec, _) = expr {
-                for elem in vec.iter() {
-                    match elem {
-                        Expr::FunctionExpr(ReservedFunction::Assign(name, var)) => {
-                            let mut smart = expr_to_literal(var, data)?;
-                            smart.literal = smart.literal.set_name(name.ident.to_owned());
-                            obj.push(smart.literal);
-                        }
-                        _ => {
-                            let value = expr_to_literal(elem, data)?.literal;
-                            obj.push(value.set_name("default".to_owned()));
-                        }
-                    }
-                }
-            };
-            let value = SmartLiteral {
-                literal: Literal::object(obj, Some(name.ident.to_owned())),
-                interval: interval_from_expr(expr)
-            };
-            Ok(
-                SmartLiteral {
-                    literal: match_builtin(value, data)?,
+        Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
+            let interval = interval_from_expr(expr);
+            let (_name, literal) = normal_object_to_literal(&name.ident, value, interval.to_owned(), data)?;
+            
+            Ok( SmartLiteral{ literal , interval} )
+        }
+        Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
+            let value = expr_to_literal(var, data)?.literal;
+            Ok(SmartLiteral{
+                    literal: Literal::name_object(var_name.ident.to_owned(), &value),
                     interval: interval_from_expr(expr)
                 }
             )
         }
+        Expr::BuilderExpr(..) => get_var_from_ident(expr, data),
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
         Expr::VecExpr(vec, range) => {
             let mut array = vec![];
             for value in vec.iter() {
                 array.push(expr_to_literal(value, data)?.literal)
             }
+
             Ok(SmartLiteral{
-                    literal: Literal::array(array, None),
+                    literal: Literal::array(array),
                     interval: range.start.to_owned()
                 }
             )
@@ -235,57 +284,27 @@ fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorIn
     }
 }
 
-fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, ErrorInfo> {
+fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match action {
-        Expr::FunctionExpr(ReservedFunction::As(name, expr)) => {
-            let msg = match_functions(expr, data)?;
+        Expr::ObjectExpr(ObjectType::As(name, expr)) => {
+            let lit = match_functions(expr, data)?;
 
-            match msg {
-                MessageType::Msg(Message { ref content, .. }) => {
-                    data.step_vars.insert(name.ident.to_owned(), content.clone());
-                }
-                MessageType::Empty => {}
-            };
-            Ok(msg)
+            data.step_vars.insert(name.ident.to_owned(), lit.clone());
+            Ok(lit)
         }
-        Expr::FunctionExpr(ReservedFunction::Normal(..)) => {
-            let literal = expr_to_literal(action, data)?.literal;
-            Ok(MessageType::Msg(Message::new(literal)))
-        },
-        Expr::BuilderExpr(..) => match get_var_from_ident(action, data) {
-            Ok(val) => {
-                let literal = val.literal;
-                Ok(MessageType::Msg(Message::new(literal)))
-            },
-            Err(e) => Err(e),
-        },
-        Expr::ComplexLiteral(vec, ..) => {
-            let literal = get_string_from_complexstring(vec, data).literal;
-            Ok(MessageType::Msg(Message::new(literal)))
-        },
-        Expr::InfixExpr(infix, exp1, exp2) => match evaluate_condition(infix, exp1, exp2, data) {
-            Ok(val) => {
-                let literal = val.literal;
-                Ok(MessageType::Msg(Message::new(literal)))
-            },
-            Err(e) => Err(e),
-        },
+        Expr::ObjectExpr(ObjectType::Normal(..)) => Ok(expr_to_literal(action, data)?.literal),
+        Expr::BuilderExpr(..) => Ok(expr_to_literal(action, data)?.literal),
+        Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data).literal),
+        Expr::InfixExpr(infix, exp1, exp2) => Ok(evaluate_condition(infix, exp1, exp2, data)?.literal),
         Expr::IdentExpr(ident, ..) => match get_var(ident.to_owned(), data) {
-            Ok(val) => {
-                let literal = val.literal;
-                Ok(MessageType::Msg(Message::new(literal)))
-            },
-            Err(_e) => {
-                Ok(MessageType::Msg(Message::new(Literal::null())))
-            }
+            Ok(val) => Ok(val.literal),
+            Err(_e) => Ok(Literal::null())
         },
         Expr::LitExpr { .. } => {
-            let literal = expr_to_literal(action, data)?.literal;
-            Ok(MessageType::Msg(Message::new(literal)))
+            Ok(expr_to_literal(action, data)?.literal)
         },
         Expr::VecExpr(..) => {
-            let literal = expr_to_literal(action, data)?.literal;
-            Ok(MessageType::Msg(Message::new(literal)))
+            Ok(expr_to_literal(action, data)?.literal)
         },
         e => Err(
             ErrorInfo{
@@ -297,26 +316,30 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<MessageType, ErrorI
 }
 
 fn match_actions(
-    function: &ReservedFunction,
+    function: &ObjectType,
     mut root: MessageData,
     data: &mut Data,
 ) -> Result<MessageData, ErrorInfo> {
     match function {
-        ReservedFunction::Say(arg) => {
-            Ok(add_to_message(root, match_functions(arg, data)?))
+        ObjectType::Say(arg) => {
+            Ok(add_to_message(
+                root, 
+                MessageType::Msg(
+                    Message::new(match_functions(arg, data)?)
+                )
+            ))
         },
-        ReservedFunction::Use(arg) => {
+        ObjectType::Use(arg) => {
             match_functions(arg, data)?;
             Ok(root)
         }
-        ReservedFunction::Goto(GotoType::Step, step_name) => Ok(root.add_next_step(&step_name.ident)),
-        ReservedFunction::Goto(GotoType::Flow, flow_name) => Ok(root.add_next_flow(&flow_name.ident)),
-        ReservedFunction::Remember(name, variable) => {
-            //TODO: Exprecion to literal
-            root = root.add_to_memory(name.ident.to_owned(), expr_to_literal(variable, data)?.literal);
+        ObjectType::Goto(GotoType::Step, step_name) => Ok(root.add_next_step(&step_name.ident)),
+        ObjectType::Goto(GotoType::Flow, flow_name) => Ok(root.add_next_flow(&flow_name.ident)),
+        ObjectType::Remember(name, variable) => {
+            root = root.add_to_memory(name.ident.to_owned(), match_functions(variable, data)?);
             Ok(root)
         }
-        ReservedFunction::Import {
+        ObjectType::Import {
             step_name: name, ..
         } => {
             if let Some(Expr::Block { arg: actions, .. }) = data
@@ -369,7 +392,15 @@ fn match_ask_response(
                 Some(..),
                 false
             ) => {
-                if let Some(SmartIdent { ident, interval }) = opt {
+                if let Some(SmartIdent{ident, interval, index}) = opt {
+                    if let Some(..) = index {
+                        return Err(
+                            ErrorInfo{
+                                message: "Error: Ask/Response default value is not an Array".to_owned(),
+                                interval: range.start
+                            }
+                        )
+                    };
                     root = root.add_to_memory(
                         ident.to_owned(),
                         gen_literal_form_event(data.event, interval.to_owned())?.literal,
@@ -400,7 +431,7 @@ fn match_ask_response(
     }
     Err(
         ErrorInfo{
-            message: "Error sub block arg must be of type Expr::VecExpr".to_owned(),
+            message: "Error fail to find the correct action block bettween Ask/Response".to_owned(),
             interval: range.start
         }
     )
@@ -433,6 +464,40 @@ pub fn solve_if_statments(
     }
 }
 
+pub fn for_loop(
+    ident: &SmartIdent, 
+    i: &Option<SmartIdent>,
+    expr: &Expr,
+    block: &Vec<Expr>,
+    range: &RangeInterval,
+    mut root: MessageData,
+    data: &mut Data
+) -> Result<MessageData, ErrorInfo>  {
+    let s_lit = expr_to_literal(expr, data)?;
+    let vec = match s_lit.literal {
+        Literal::ArrayLiteral{items} => items,
+        _ => return Err(
+            ErrorInfo{
+                message: "Error in for loop, element is not itrerable".to_owned(),
+                interval: range.start.to_owned()
+            }
+        )
+    };
+
+    for (value, elem) in vec.iter().enumerate() {
+        data.step_vars.insert(ident.ident.to_owned(), elem.clone());
+        if let Some(index) = i {
+            data.step_vars.insert(index.ident.to_owned(), Literal::int(value as i64));
+        };
+        root = root + interpret_block(block, data)?;
+    }
+    data.step_vars.remove(&ident.ident);
+    if let Some(index) = i {
+        data.step_vars.remove(&index.ident);
+    };
+    Ok(root)
+}
+
 pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData {
         memories: None,
@@ -447,10 +512,9 @@ pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<MessageData,
         }
 
         match action {
-            Expr::FunctionExpr(fun) => {
-                root = match_actions(fun, root, data)?;
-            }
+            Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
             Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
+            Expr::ForExpr(ident, i, expr, block, range) => root = for_loop(ident, i, expr, block, range, root, data)?,
             Expr::Block {
                 block_type: BlockType::AskResponse(opt),
                 arg: vec,

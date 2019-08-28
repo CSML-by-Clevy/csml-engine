@@ -22,7 +22,7 @@ named!(parse_import_opt<Span, Expr>, do_parse!(
             (file_path)
         )
     ) >>
-    (Expr::FunctionExpr(ReservedFunction::Import{step_name, as_name, file_path}))
+    (Expr::ObjectExpr(ObjectType::Import{step_name, as_name, file_path}))
 ));
 
 named!(pub parse_import<Span, Expr>, do_parse!(

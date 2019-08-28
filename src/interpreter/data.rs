@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 pub struct Data<'a> {
     pub ast: &'a Flow,
-    pub memory: &'a Memory,
+    pub memory: &'a Context,
     pub event: &'a Option<Event>,
     pub step_vars: HashMap<String, Literal>,
 }

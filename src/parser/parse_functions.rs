@@ -9,7 +9,7 @@ named!(pub parse_assignation<Span, Expr>, do_parse!(
     name: parse_ident >>
     comment!(tag!(ASSIGN)) >>
     expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    (Expr::FunctionExpr(ReservedFunction::Assign(name, Box::new(expr))))
+    (Expr::ObjectExpr(ObjectType::Assign(name, Box::new(expr))))
 ));
 
 named!(get_step<Span, GotoType>, do_parse!(
@@ -33,19 +33,19 @@ named!(parse_goto<Span, Expr>, do_parse!(
         nom::ErrorKind::Custom(ParserErrorType::GotoStepError as u32),
         parse_ident
     ) >>
-    (Expr::FunctionExpr(ReservedFunction::Goto(goto_type, name)))
+    (Expr::ObjectExpr(ObjectType::Goto(goto_type, name)))
 ));
 
 named!(parse_say<Span, Expr>, do_parse!(
     comment!(tag!(SAY)) >>
     expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    (Expr::FunctionExpr(ReservedFunction::Say(Box::new(expr))))
+    (Expr::ObjectExpr(ObjectType::Say(Box::new(expr))))
 ));
 
 named!(parse_use<Span, Expr>, do_parse!(
     comment!(tag!(USE)) >>
     expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    (Expr::FunctionExpr(ReservedFunction::Use(Box::new(expr))))
+    (Expr::ObjectExpr(ObjectType::Use(Box::new(expr))))
 ));
 
 named!(parse_remember<Span, Expr>, do_parse!(
@@ -56,13 +56,13 @@ named!(parse_remember<Span, Expr>, do_parse!(
         comment!(tag!(ASSIGN))
     ) >>
     expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    (Expr::FunctionExpr(ReservedFunction::Remember(ident, Box::new(expr))))
+    (Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))))
 ));
 
 named!(pub parse_functions<Span, Expr>, do_parse!(
     name: parse_ident >>
     expr: parse_expr_list >>
-    (Expr::FunctionExpr(ReservedFunction::Normal(name, Box::new(expr))))
+    (Expr::ObjectExpr(ObjectType::Normal(name, Box::new(expr))))
 ));
 
 named!(pub parse_root_functions<Span, Expr>, do_parse!(
