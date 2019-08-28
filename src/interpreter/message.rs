@@ -18,21 +18,21 @@ pub struct Message {
 impl Message {
     pub fn new(literal: Literal) -> Self {
         match literal {
-            Literal::IntLiteral{..} => Message {
-                content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(literal, "text".to_owned()),
-            },
-            Literal::FloatLiteral{..} => Message {
-                content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(literal, "text".to_owned()),
-            },
             Literal::StringLiteral{..} => Message {
                 content_type: "text".to_owned(),
                 content: Literal::lit_to_obj(literal, "text".to_owned()),
             },
+            Literal::IntLiteral{..} => Message {
+                content_type: "text".to_owned(),
+                content: Literal::lit_to_obj(Literal::string(literal.to_string()), "text".to_owned()),
+            },
+            Literal::FloatLiteral{..} => Message {
+                content_type: "text".to_owned(),
+                content: Literal::lit_to_obj(Literal::string(literal.to_string()) , "text".to_owned()),
+            },
             Literal::BoolLiteral{..} => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(literal, "text".to_owned()),
+                content: Literal::lit_to_obj(Literal::string(literal.to_string()), "text".to_owned()),
             },
             Literal::ArrayLiteral{..} => Message {
                 content_type: "array".to_owned(),
