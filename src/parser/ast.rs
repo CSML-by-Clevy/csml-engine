@@ -102,6 +102,7 @@ pub enum Expr {
     ComplexLiteral(Vec<Expr>, RangeInterval),
     VecExpr(Vec<Expr>, RangeInterval),
     InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval
+    ForExpr(SmartIdent, Option<SmartIdent>, Box<Expr>, Vec<Expr>, RangeInterval),
 
     ObjectExpr(ObjectType), // RangeInterval ?
     IfExpr(IfStatement),
@@ -134,9 +135,10 @@ impl Expr {
             Expr::VecExpr(..) => "Array".to_owned(),
             Expr::IdentExpr(SmartIdent { ident, .. }) => ident.to_owned(),
             Expr::LitExpr(SmartLiteral { literal, .. }) => literal.type_to_string(),
-            Expr::ObjectExpr(..) => "function".to_owned(),
+            Expr::ObjectExpr(..) => "for loop".to_owned(),
+            Expr::ForExpr(..) => "function".to_owned(),
             Expr::Block { .. } => "block".to_owned(),
-            Expr::IfExpr { .. } => "if".to_owned(),
+            Expr::IfExpr(..) => "if".to_owned(),
             Expr::InfixExpr(..) => "infix".to_owned(),
         }
     }
@@ -220,23 +222,23 @@ impl PartialOrd for Literal {
             (Literal::StringLiteral{value: l1, ..},
                 Literal::StringLiteral{value: l2, ..}) => l1.partial_cmp(l2),
 
-            (Literal::IntLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+            (Literal::IntLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::str_to_literal(l2) {
                 Literal::IntLiteral{value, ..} => l1.partial_cmp(&value),
                 Literal::FloatLiteral{value, ..} => l1.partial_cmp(&(value as i64)),
                 _ => None
             },
-            (Literal::StringLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+            (Literal::StringLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => match Literal::str_to_literal(l1) {
                 Literal::IntLiteral{value, ..} => value.partial_cmp(l2),
                 Literal::FloatLiteral{value, ..} => (value as i64).partial_cmp(l2),
                 _ => None
             },
 
-            (Literal::FloatLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+            (Literal::FloatLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::str_to_literal(l2) {
                 Literal::IntLiteral{value, ..} => l1.partial_cmp(&(value as f64)),
                 Literal::FloatLiteral{value, ..} => l1.partial_cmp(&value),
                 _ => None
             },
-            (Literal::StringLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+            (Literal::StringLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => match Literal::str_to_literal(l1) {
                 Literal::IntLiteral{value, ..} => (value as f64).partial_cmp(l2),
                 Literal::FloatLiteral{value, ..} => value.partial_cmp(l2),
                 _ => None
@@ -260,23 +262,23 @@ impl PartialEq for Literal {
     fn eq(&self, other: &Literal) -> bool {
         match (self, other) {
             (Literal::StringLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => l1 == l2,
-            (Literal::IntLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+            (Literal::IntLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::str_to_literal(l2) {
                 Literal::IntLiteral{value, ..} => *l1 == value,
                 Literal::FloatLiteral{value, ..} => *l1 == value as i64 ,
                 _ => false
             },
-            (Literal::StringLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+            (Literal::StringLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => match Literal::str_to_literal(l1) {
                 Literal::IntLiteral{value, ..} => *l2 == value,
                 Literal::FloatLiteral{value, ..} => *l2 == value as i64 ,
                 _ => false
             },
 
-            (Literal::FloatLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::from_str(l2) {
+            (Literal::FloatLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => match Literal::str_to_literal(l2) {
                 Literal::IntLiteral{value, ..} => *l1 == value as f64,
                 Literal::FloatLiteral{value, ..} => *l1 == value,
                 _ => false
             },
-            (Literal::StringLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => match Literal::from_str(l1) {
+            (Literal::StringLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => match Literal::str_to_literal(l1) {
                 Literal::IntLiteral{value, ..} => *l2 == value as f64,
                 Literal::FloatLiteral{value, ..} => *l2 == value ,
                 _ => false
@@ -318,7 +320,7 @@ impl Literal {
         }
     }
 
-    pub fn from_str(stirng: &str)  -> Literal {
+    pub fn str_to_literal(stirng: &str)  -> Literal {
         match (i64::from_str(stirng), f64::from_str(stirng)) {
             (Ok(int), _) =>  Literal::int(int),
             (_, Ok(float)) => Literal::float(float),

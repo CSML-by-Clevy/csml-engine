@@ -464,6 +464,40 @@ pub fn solve_if_statments(
     }
 }
 
+pub fn for_loop(
+    ident: &SmartIdent, 
+    i: &Option<SmartIdent>,
+    expr: &Expr,
+    block: &Vec<Expr>,
+    range: &RangeInterval,
+    mut root: MessageData,
+    data: &mut Data
+) -> Result<MessageData, ErrorInfo>  {
+    let s_lit = expr_to_literal(expr, data)?;
+    let vec = match s_lit.literal {
+        Literal::ArrayLiteral{items} => items,
+        _ => return Err(
+            ErrorInfo{
+                message: "Error in for loop, element is not itrerable".to_owned(),
+                interval: range.start.to_owned()
+            }
+        )
+    };
+
+    for (value, elem) in vec.iter().enumerate() {
+        data.step_vars.insert(ident.ident.to_owned(), elem.clone());
+        if let Some(index) = i {
+            data.step_vars.insert(index.ident.to_owned(), Literal::int(value as i64));
+        };
+        root = root + interpret_block(block, data)?;
+    }
+    data.step_vars.remove(&ident.ident);
+    if let Some(index) = i {
+        data.step_vars.remove(&index.ident);
+    };
+    Ok(root)
+}
+
 pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData {
         memories: None,
@@ -478,10 +512,9 @@ pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<MessageData,
         }
 
         match action {
-            Expr::ObjectExpr(fun) => {
-                root = match_actions(fun, root, data)?;
-            }
+            Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
             Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
+            Expr::ForExpr(ident, i, expr, block, range) => root = for_loop(ident, i, expr, block, range, root, data)?,
             Expr::Block {
                 block_type: BlockType::AskResponse(opt),
                 arg: vec,

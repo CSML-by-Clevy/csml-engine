@@ -4,6 +4,7 @@ pub mod parse_comments;
 pub mod parse_functions;
 pub mod parse_ident;
 pub mod parse_if;
+pub mod parse_for_loop;
 pub mod parse_import;
 pub mod parse_literal;
 pub mod parse_string;
@@ -17,6 +18,7 @@ use expressions_evaluation::operator_precedence;
 use parse_functions::{parse_assignation, parse_functions, parse_root_functions};
 use parse_ident::parse_ident;
 use parse_if::parse_if;
+use parse_for_loop::parse_for;
 use parse_literal::parse_literalexpr;
 use parse_string::parse_string;
 use tokens::*;
@@ -217,6 +219,7 @@ named!(parse_actions<Span, Vec<Expr> >, do_parse!(
     actions: many0!(
         alt!(
             parse_if            |
+            parse_for           |
             parse_root_functions|
             parse_ask_response
         )
@@ -241,6 +244,11 @@ named!(parse_step<Span, Instruction>, do_parse!(
 ));
 
 // ############################## block
+
+named!(pub parse_implicit_block<Span, Vec<Expr>>, do_parse!(
+    elem: parse_root_functions >>
+    (vec![elem])
+));
 
 named!(pub parse_strick_block<Span, Vec<Expr>>, do_parse!(
     vec: delimited!(

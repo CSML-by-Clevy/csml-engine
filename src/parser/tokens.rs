@@ -44,11 +44,13 @@ pub const R_BRACKET: &str = "]";
 pub const L2_BRACE: &str = "{{";
 pub const R2_BRACE: &str = "}}";
 
+pub const FOR: &str = "for";
 pub const IF: &str = "if";
 pub const ELSE: &str = "else";
 
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
+pub const IN: &str = "in";
 pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
 pub const RETRIES: &str = "retries";
@@ -68,7 +70,7 @@ pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
 pub const NULL: &str = "NULL";
 
-pub static RESERVED: &'static [&str] = &[IF, ELSE, IMPORT, AS,
+pub static RESERVED: &'static [&str] = &[FOR, IF, ELSE, IMPORT, AS, IN,
 FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE,
 ASK, GOTO, MATCH, RESPONSE, REMEMBER, TRUE, FALSE, NULL];
 

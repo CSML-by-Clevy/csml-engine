@@ -47,13 +47,13 @@ pub struct Event {
     pub payload: PayLoad,
 }
 
-pub fn parse_event(json: &serde_json::Value) -> Result<Literal, String>{
+pub fn parse_event(json: &serde_json::Value) -> Result<Literal, String> {
     let event = json.get("event").unwrap();
     let playload = event.get("payload").unwrap();
     let content = playload.get("content").unwrap();
     let text = content.get("text").unwrap().as_str().unwrap();
 
-    Ok(Literal::from_str(text))
+    Ok(Literal::str_to_literal(text))
 }
 
 pub fn json_to_literal(literal: &serde_json::Value) -> Result<Literal, String> {

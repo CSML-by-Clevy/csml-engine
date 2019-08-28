@@ -1,8 +1,14 @@
 use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{ast_interpreter::evaluate_condition, data::Data, json_to_rust::*};
-use crate::parser::{ast::*, tokens::*};
+use crate::interpreter::{
+    ast_interpreter::evaluate_condition,
+    data::Data,
+    json_to_rust::{Context, Event, MemoryType, PayLoad}
+};
+use crate::parser::{
+    ast::{Expr, IfStatement, Interval, Literal, ObjectType, RangeInterval, SmartIdent, SmartLiteral}, 
+    tokens::{EVENT, FIRST, GET_VALUE, MEMORY, METADATA, PAST, RETRIES}
+};
 use std::collections::HashMap;
-
 
 pub fn gen_literal_form_event(
     event: &Option<Event>,
@@ -16,28 +22,6 @@ pub fn gen_literal_form_event(
                     interval,
                 }
             ),
-            PayLoad { content_type: ref t, content: ref c }
-                if t == "float" => match c.text.to_string().parse::<f64>() {
-                Ok(float) => Ok(SmartLiteral {
-                    literal: Literal::float(float),
-                    interval,
-                }),
-                Err(..) => Err(ErrorInfo {
-                    message: format!("event value {} is not of type float", c.text),
-                    interval,
-                }),
-            },
-            PayLoad { content_type: ref t, content: ref c }
-                if t == "int" => match c.text.to_string().parse::<i64>() {
-                Ok(int) => Ok(SmartLiteral {
-                    literal: Literal::int(int),
-                    interval,
-                }),
-                Err(..) => Err(ErrorInfo {
-                    message: format!("event value {} is not of type int", c.text),
-                    interval,
-                }),
-            },
             _ => Err(ErrorInfo {
                 message: "event type is unown".to_owned(),
                 interval,
@@ -57,6 +41,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::ObjectExpr(fnexpr)                            => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e)                       => interval_from_expr(expr), // RangeInterval
         Expr::BuilderExpr(expr, _e)                         => interval_from_expr(expr),
+        Expr::ForExpr(_, _, _, _, RangeInterval{start, ..}) => start.clone(),
         Expr::IdentExpr(ident)                              => ident.interval.to_owned(),
         Expr::LitExpr(literal)                              => literal.interval.to_owned(),
         Expr::IfExpr(ifstmt)                                => interval_from_if_stmt(ifstmt),
