@@ -88,21 +88,6 @@ pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorI
     }
 }
 
-// TODO: remove when change message system
-fn extract_value_from_literal(literal: Literal) -> String {
-    match &literal {
-        Literal::ObjectLiteral{properties} => {
-            if let Some(value) = properties.get("text") {
-                extract_value_from_literal(value.clone())
-            }
-            else {
-                literal.to_owned().to_string()
-            }
-        },
-        literal => literal.to_owned().to_string()
-    }
-}
-
 pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLiteral {
     let mut new_string = String::new();
     let mut interval: Option<Interval> = None;
@@ -114,7 +99,7 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
                 if interval.is_none() {
                     interval = Some(var.interval)
                 }
-                new_string.push_str( &extract_value_from_literal(var.literal))
+                new_string.push_str( &dbg!(var.literal.to_string()) )
             }
             Err(err) => {
                 if interval.is_none() {
@@ -201,7 +186,7 @@ fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> 
                 };
                 find_value_in_object(literal, expr, interval)
             } else {
-                return Err(
+                Err(
                     ErrorInfo{
                         message: "Error in Object builder".to_owned(),
                         interval: interval.to_owned()

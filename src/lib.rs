@@ -9,9 +9,12 @@ use serde_json::{Value, json, map::Map};
 use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
-    // TODO: add flow validations
     match Parser::parse_flow(file.as_bytes()) {
-        Ok(flow) => Ok(flow),
+        Ok(flow) => {
+            check_valid_flow(&flow)?;
+            println!("OK");
+            Ok(flow)
+        },
         Err(e) => Err(e),
     }
 }
@@ -82,12 +85,12 @@ pub fn interpret(
     memory: &Context,
     event: &Option<Event>,
 ) -> Result<String, ErrorInfo> {
-    if !check_valid_flow(ast) {
-        return Err(ErrorInfo {
-            interval: Interval { line: 0, column: 0 },
-            message: "ERROR: invalid Flow".to_string(),
-        });
-    }
+    // if !check_valid_flow(ast) {
+    //     return Err(ErrorInfo {
+    //         interval: Interval { line: 0, column: 0 },
+    //         message: "ERROR: invalid Flow".to_string(),
+    //     });
+    // }
 
     // dbg!(&ast);
     // let memory = context_to_memory(context);

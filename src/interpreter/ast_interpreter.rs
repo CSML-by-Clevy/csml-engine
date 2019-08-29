@@ -468,7 +468,7 @@ pub fn for_loop(
     ident: &SmartIdent, 
     i: &Option<SmartIdent>,
     expr: &Expr,
-    block: &Vec<Expr>,
+    block: &[Expr],
     range: &RangeInterval,
     mut root: MessageData,
     data: &mut Data

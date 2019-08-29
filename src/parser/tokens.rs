@@ -70,7 +70,7 @@ pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
 pub const NULL: &str = "NULL";
 
-pub static RESERVED: &'static [&str] = &[FOREACH, IF, ELSE, IMPORT, AS, IN,
+pub static RESERVED: &[&str] = &[FOREACH, IF, ELSE, IMPORT, AS, IN,
 FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE,
 ASK, GOTO, MATCH, RESPONSE, REMEMBER, TRUE, FALSE, NULL];
 
@@ -88,7 +88,7 @@ pub const BUTTON: &str = "Button";
 pub const OBJECT: &str = "Object";
 pub const FN: &str = "Fn";
 
-pub static BUILT_IN: &'static [&str] = &[TYPING, WAIT, TEXT, INT,
+pub static BUILT_IN: &[&str] = &[TYPING, WAIT, TEXT, INT,
 URL, IMAGE, ONE_OF, SHUFFLE, QUESTION, BUTTON, OBJECT, FN];
 
 pub const PAST: &str = "past";
