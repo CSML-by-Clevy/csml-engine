@@ -43,8 +43,8 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
             }
         },
         (Literal::ObjectLiteral{properties: p1}, Literal::ObjectLiteral{properties: p2}) => {
-            match (p1.get("object"), p2.get("object")) {
-                (Some(l1), Some(l2)) => match (priority_match("object", l1), priority_match("object", l2)) {
+            match (p1.get("button"), p2.get("button")) {
+                (Some(l1), Some(l2)) => match (priority_match("button", l1), priority_match("button", l2)) {
                     (Some(l1), Some(l2)) => match_obj(l1, l2),
                     (_, _) => Literal::boolean(false)
                 },
@@ -52,8 +52,8 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
             }
         },
         (Literal::ObjectLiteral{properties}, lit) => {
-            match properties.get("object") {
-                Some(l1) => match priority_match("object", l1) {
+            match properties.get("button") {
+                Some(l1) => match priority_match("button", l1) {
                     Some(l1) => match_obj(l1, lit),
                     _ => Literal::boolean(false)
                 },
@@ -61,8 +61,8 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
             }
         },
         (lit, Literal::ObjectLiteral{properties}) => {
-            match properties.get("object") {
-                Some(l2) => match priority_match("object", l2) {
+            match properties.get("button") {
+                Some(l2) => match priority_match("button", l2) {
                     Some(l2) => match_obj(l2, lit),
                     _ => Literal::boolean(false)
                 },
