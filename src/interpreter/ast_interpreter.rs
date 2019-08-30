@@ -25,28 +25,24 @@ fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal>{
 fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
     match (&lit1, &lit2) {
         (Literal::FunctionLiteral{name: n1, value: v1}, Literal::FunctionLiteral{name: n2, value: v2}) => {
-            println!("fl to fl");
             match (priority_match(n1, v1), priority_match(n2, v2)) {
                 (Some(l1), Some(l2)) => match_obj(l1, l2),
                 (_, _) => Literal::boolean(false)
             }
         },
         (Literal::FunctionLiteral{name, value}, lit) => {
-            println!("fl to lit");
             match priority_match(name, value) {
                 Some(l1) => match_obj(l1, lit),
                 _ => Literal::boolean(false)
             }
         },
         (lit, Literal::FunctionLiteral{name, value}) => {
-            println!("lit to fl");
             match priority_match(name, value) {
                 Some(l1) => match_obj(l1, lit),
                 _ => Literal::boolean(false)
             }
         },
         (Literal::ObjectLiteral{properties: p1}, Literal::ObjectLiteral{properties: p2}) => {
-            println!("obj to obj");
             match (p1.get("object"), p2.get("object")) {
                 (Some(l1), Some(l2)) => match (priority_match("object", l1), priority_match("object", l2)) {
                     (Some(l1), Some(l2)) => match_obj(l1, l2),
@@ -56,7 +52,6 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
             }
         },
         (Literal::ObjectLiteral{properties}, lit) => {
-            println!("obj to lit");
             match properties.get("object") {
                 Some(l1) => match priority_match("object", l1) {
                     Some(l1) => match_obj(l1, lit),
@@ -66,7 +61,6 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
             }
         },
         (lit, Literal::ObjectLiteral{properties}) => {
-            println!("lit to obj");
             match properties.get("object") {
                 Some(l2) => match priority_match("object", l2) {
                     Some(l2) => match_obj(l2, lit),
@@ -75,13 +69,11 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
                 _ => Literal::boolean(false)
             }
         },
+
         (Literal::ArrayLiteral{items: i1}, Literal::ArrayLiteral{items: i2}) => Literal::boolean(i1 == i2),
         (Literal::ArrayLiteral{items}, lit) => Literal::boolean(items.contains(lit)),
         (lit, Literal::ArrayLiteral{items}) => Literal::boolean(items.contains(lit)),
-        (l1, l2) => {
-            println!("lit to lit");
-            Literal::boolean(l1 == l2)
-        }
+        (l1, l2) => Literal::boolean(l1 == l2)
     }
 }
 
@@ -106,17 +98,13 @@ fn cmp_lit(
         (Infix::Substraction, Ok(l1), Ok(l2)) => l1 - l2,
         (Infix::Divide, Ok(l1), Ok(l2)) => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2)) => l1 * l2,
-        (Infix::Match, Ok(ref l1), Ok(ref l2)) => {
-            println!(" MATCH ");
-            Ok(SmartLiteral{literal: match_obj(&l1.literal, &l2.literal), interval: l1.interval.to_owned()})
-        },
+        (Infix::Match, Ok(ref l1), Ok(ref l2)) => Ok(SmartLiteral{literal: match_obj(&l1.literal, &l2.literal), interval: l1.interval.to_owned()}),
         (_, Ok(l1), ..) => Ok(SmartLiteral{literal: Literal::boolean(false), interval: l1.interval.to_owned()}),
         (_, Err(e), ..) => Ok(SmartLiteral{literal: Literal::boolean(false), interval: e.interval.to_owned()}),
     }
 }
 
 fn check_if_ident(expr: &Expr) -> bool {
-    println!("check_if_ident ",);
     match expr {
         Expr::LitExpr { .. } => true,
         Expr::IdentExpr(..) => true,
@@ -160,7 +148,6 @@ pub fn evaluate_condition(
             }
         }
         (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2) => {
-            println!("Start match ");
             let lit = cmp_lit(infix, get_var_from_ident(exp1, data), get_var_from_ident(exp2, data))?;
             Ok(SmartLiteral {literal: lit.literal, interval: interval_from_expr(exp1)})
         },
@@ -189,17 +176,11 @@ pub fn evaluate_condition(
 }
 
 fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
-    
-    dbg!(expr);
     match expr {
-        Expr::InfixExpr(inf, exp1, exp2) => {
-            println!("valid_condition");        
-            match evaluate_condition(inf, exp1, exp2, data) {
-            
-                Ok(SmartLiteral{literal: Literal::BoolLiteral{value: false, ..}, ..}) => false,
-                Ok(_) => true,
-                Err(_e) => false,
-            }
+        Expr::InfixExpr(inf, exp1, exp2) => match evaluate_condition(inf, exp1, exp2, data) {
+            Ok(SmartLiteral{literal: Literal::BoolLiteral{value: false, ..}, ..}) => false,
+            Ok(_) => true,
+            Err(_e) => false,
         },
         Expr::LitExpr( SmartLiteral{literal: Literal::BoolLiteral{value}, ..}) => *value,
         Expr::LitExpr( SmartLiteral{literal: Literal::Null{..}, ..}) => false,
