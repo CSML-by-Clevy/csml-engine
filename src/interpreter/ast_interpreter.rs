@@ -42,6 +42,34 @@ fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
                 _ => Literal::boolean(false)
             }
         },
+        (Literal::ObjectLiteral{properties: p1}, Literal::ObjectLiteral{properties: p2}) => {
+            match (p1.get("object"), p2.get("object")) {
+                (Some(l1), Some(l2)) => match (priority_match("object", l1), priority_match("object", l2)) {
+                    (Some(l1), Some(l2)) => match_obj(l1, l2),
+                    (_, _) => Literal::boolean(false)
+                },
+                (_, _) => Literal::boolean(false)
+            }
+        },
+        (Literal::ObjectLiteral{properties}, lit) => {
+            match properties.get("object") {
+                Some(l1) => match priority_match("object", l1) {
+                    Some(l1) => match_obj(l1, lit),
+                    _ => Literal::boolean(false)
+                },
+                _ => Literal::boolean(false)
+            }
+        },
+        (lit, Literal::ObjectLiteral{properties}) => {
+            match properties.get("object") {
+                Some(l2) => match priority_match("object", l2) {
+                    Some(l2) => match_obj(l2, lit),
+                    _ => Literal::boolean(false)
+                },
+                _ => Literal::boolean(false)
+            }
+        },
+
         (Literal::ArrayLiteral{items: i1}, Literal::ArrayLiteral{items: i2}) => Literal::boolean(i1 == i2),
         (Literal::ArrayLiteral{items}, lit) => Literal::boolean(items.contains(lit)),
         (lit, Literal::ArrayLiteral{items}) => Literal::boolean(items.contains(lit)),
@@ -468,7 +496,7 @@ pub fn for_loop(
     ident: &SmartIdent, 
     i: &Option<SmartIdent>,
     expr: &Expr,
-    block: &Vec<Expr>,
+    block: &[Expr],
     range: &RangeInterval,
     mut root: MessageData,
     data: &mut Data
@@ -507,7 +535,7 @@ pub fn interpret_block(actions: &[Expr], data: &mut Data) -> Result<MessageData,
     };
 
     for action in actions {
-        if root.next_step.is_some() {
+        if root.next_step.is_some() || root.next_flow.is_some(){
             return Ok(root);
         }
 

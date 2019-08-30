@@ -31,8 +31,7 @@ use std::collections::HashMap;
 named!(parse_builderexpr<Span, Expr>, do_parse!(
     ident: parse_identexpr >>
     comment!(tag!(DOT)) >>
-    exp: alt!(parse_as_variable | parse_var_expr) >>
-    // : alt!(parse_as_variable | parse_var_expr) >>
+    exp: alt!(parse_as_basic_variable | parse_basic_expr) >>
     (Expr::BuilderExpr(Box::new(ident), Box::new(exp)))
 ));
 
@@ -107,6 +106,21 @@ named!(pub parse_var_expr<Span, Expr>, comment!(
 ));
 
 // ################################### As name
+
+pub fn parse_as_basic_variable(span: Span) -> IResult<Span, Expr> {
+    let (span, expr) = parse_basic_expr(span)?;
+    let (span, smart_lit) = parse_ident(span)?;
+    if smart_lit.ident != "as" {
+        return Err(Err::Error(
+            Context::Code(
+                    span,
+                    ErrorKind::Custom(ParserErrorType::DoubleBraceError as u32),
+            )
+        ))
+    }
+    let (span, name) = parse_ident(span)?;
+    (Ok((span, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))) )))
+}
 
 pub fn parse_as_variable(span: Span) -> IResult<Span, Expr> {
     let (span, expr) = parse_var_expr(span)?;
