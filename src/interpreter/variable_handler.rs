@@ -99,7 +99,7 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
                 if interval.is_none() {
                     interval = Some(var.interval)
                 }
-                new_string.push_str( &dbg!(var.literal.to_string()) )
+                new_string.push_str( &var.literal.to_string() )
             }
             Err(err) => {
                 if interval.is_none() {

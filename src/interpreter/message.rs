@@ -142,11 +142,16 @@ impl Add for MessageData {
                 _ => None,
             },
             messages: [&self.messages[..], &other.messages[..]].concat(),
-            next_flow: None,
-            next_step: match (self.next_step, other.next_step) {
-                (Some(step), None) => Some(step),
-                (None, Some(step)) => Some(step),
-                (Some(step), Some(_)) => Some(step),
+            next_flow: match (&self.next_flow, &other.next_flow) {
+                (Some(flow), None) => Some(flow.to_owned()),
+                (None, Some(flow)) => Some(flow.to_owned()),
+                (Some(flow), Some(_)) => Some(flow.to_owned()),
+                _ => None,
+            },
+            next_step: match (&self.next_step, &other.next_step) {
+                (Some(step), None) => Some(step.to_owned()),
+                (None, Some(step)) => Some(step.to_owned()),
+                (Some(step), Some(_)) => Some(step.to_owned()),
                 _ => None,
             },
         }

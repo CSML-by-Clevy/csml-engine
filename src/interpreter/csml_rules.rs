@@ -2,7 +2,6 @@ use crate::parser::ast::Interval;
 use crate::parser::ast::{Expr, Flow, InstructionType};
 use crate::error_format::data::ErrorInfo;
 
-
 pub fn check_ident(expr: &str, name: &str) -> bool {
     match expr {
         string if string == name => true,
@@ -11,7 +10,6 @@ pub fn check_ident(expr: &str, name: &str) -> bool {
 }
 
 pub fn check_valid_flow(flow: &Flow) -> Result<&Flow, ErrorInfo> {
-    
     match flow.flow_instructions.get(&InstructionType::StartFlow) {
         Some(Expr::VecExpr(vec, ..)) if vec.is_empty() => {
             return Err(ErrorInfo {
@@ -33,7 +31,7 @@ pub fn check_valid_flow(flow: &Flow) -> Result<&Flow, ErrorInfo> {
     {
         return Err(ErrorInfo {
             interval: Interval { line: 0, column: 0 },
-            message: "ERROR: Flow need to have a start: step ".to_string(),
+            message: "ERROR: Flow need to have a start step ".to_string(),
         });
     }
 

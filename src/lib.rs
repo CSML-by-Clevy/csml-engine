@@ -12,7 +12,6 @@ pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
     match Parser::parse_flow(file.as_bytes()) {
         Ok(flow) => {
             check_valid_flow(&flow)?;
-            println!("OK");
             Ok(flow)
         },
         Err(e) => Err(e),
