@@ -3,13 +3,13 @@ use serde_json::{Value, json, map::Map};
 use crate::parser::ast::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum MessageType {
     Msg(Message),
     Empty,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Message {
     pub content_type: String,
     pub content: Literal,
@@ -122,7 +122,7 @@ impl Memories {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct MessageData {
     pub memories: Option<Vec<Memories>>,
     pub messages: Vec<Message>,

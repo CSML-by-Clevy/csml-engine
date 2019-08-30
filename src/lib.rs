@@ -84,16 +84,6 @@ pub fn interpret(
     memory: &Context,
     event: &Option<Event>,
 ) -> Result<String, ErrorInfo> {
-    // if !check_valid_flow(ast) {
-    //     return Err(ErrorInfo {
-    //         interval: Interval { line: 0, column: 0 },
-    //         message: "ERROR: invalid Flow".to_string(),
-    //     });
-    // }
-
-    // dbg!(&ast);
-    // let memory = context_to_memory(context);
-
     let data = Data {
         ast,
         memory,
