@@ -1,5 +1,5 @@
 use crate::comment;
-use crate::parser::{ast::*, parse_basic_expr, tokens::*, tools::*};
+use crate::parser::{ast::*, parse_var_types::{parse_basic_expr}, tokens::*, tools::*};
 use nom::*;
 
 named!(or_operator<Span, Infix>, do_parse!(

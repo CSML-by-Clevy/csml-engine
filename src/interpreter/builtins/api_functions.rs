@@ -51,17 +51,9 @@ pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) 
             Ok(text) => {
                 let json: serde_json::Value = serde_json::from_str(&text).unwrap();
                 if let Some(value) = json.get("data") {
-                    match json_to_literal(value) {
-                        Ok(val) => Ok(val),
-                        Err(string) => Err(
-                            ErrorInfo {
-                                message: string,
-                                interval,
-                            }
-                        )
-                    }
+                    json_to_literal(value, interval.clone())
                 } else {
-                    Ok(Literal::null())
+                    Ok(Literal::null(interval))
                 }
             }
             Err(_e) => {
