@@ -1,11 +1,10 @@
 use crate::parser::{
     ast::*,
-    parse_var_expr,
+    parse_var_types::parse_var_expr,
     tokens::*,
     ParserErrorType,
     tools::get_interval
 };
-
 use nom::*;
 use nom::{Err, ErrorKind as NomError};
 use nom_locate::position;
@@ -64,7 +63,7 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
             if val.input_len() > 0 {
                 let value = String::from_utf8(val.fragment.to_vec())
                     .expect("error at parsing [u8] to &str");
-                vec.push(Expr::new_literal(Literal::string(value), position));
+                vec.push(Expr::LitExpr(Literal::string(value, position)));
             }
             match parse_brace(rest, vec) {
                 Ok((rest, vec)) => Ok((rest, vec)),
@@ -84,7 +83,7 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
                     .expect("error at parsing [u8] to &str");
                 return Ok((
                     rest,
-                    Expr::new_literal(Literal::string(value), position),
+                    Expr::LitExpr(Literal::string(value, position)),
                 ));
             }
 

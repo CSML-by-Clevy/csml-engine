@@ -6,7 +6,7 @@ use parser::{ast::*, Parser};
 use std::collections::HashMap;
 use error_format::data::ErrorInfo;
 use serde_json::{Value, json, map::Map};
-use interpreter::{ast_interpreter::interpret_block, csml_rules::*, data::Data, json_to_rust::*};
+use interpreter::{ast_interpreter::interpret_scope, csml_rules::*, data::Data, json_to_rust::*};
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
     match Parser::parse_flow(file.as_bytes()) {
@@ -24,9 +24,9 @@ pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     if let Some(Expr::VecExpr(vec, ..)) = info {
         for elem in vec.iter() {
             match elem {
-                Expr::LitExpr(SmartLiteral {
-                    literal: Literal::StringLiteral{value, ..},
-                    ..
+                Expr::LitExpr(Literal::StringLiteral{
+                    value
+                    , ..
                 }) if value.to_lowercase() == string.to_lowercase() => return true,
                 _ => continue,
             }
@@ -47,7 +47,7 @@ pub fn version() -> String {
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, ErrorInfo> {
     match search_for(flow, name) {
         Some(Expr::Block { arg: actions, .. }) => {
-            let result = interpret_block(actions, &mut data)?;
+            let result = interpret_scope(actions, &mut data)?;
             let mut message: Map<String, Value> = Map::new();
             let mut vec = vec![];
             let mut memories = vec![];

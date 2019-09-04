@@ -1,10 +1,9 @@
 use crate::comment;
 use crate::parser::{
     ast::*, 
-    parse_block, 
-    parse_implicit_block, 
     tokens::*,
     tools::*,
+    parse_scope::{parse_implicit_scope, parse_scope}, 
 };
 use nom::*;
 
@@ -12,7 +11,7 @@ named!(pub parse_else_if<Span, Box<IfStatement>>, do_parse!(
     comment!(tag!(ELSE)) >>
     comment!(tag!(IF)) >>
     condition: parse_strict_condition_group >>
-    block: alt!(parse_block | parse_implicit_block) >>
+    block: alt!(parse_scope | parse_implicit_scope) >>
     opt: opt!(alt!( parse_else_if | parse_else)) >>
 
     (Box::new(
@@ -27,7 +26,7 @@ named!(pub parse_else_if<Span, Box<IfStatement>>, do_parse!(
 named!(pub parse_else<Span, Box<IfStatement>>, do_parse!(
     comment!(tag!(ELSE)) >>
     start: get_interval >>
-    block: alt!(parse_block | parse_implicit_block) >>
+    block: alt!(parse_scope | parse_implicit_scope) >>
     end: get_interval >>
     (Box::new(IfStatement::ElseStmt(block, RangeInterval{start, end})))
 ));
@@ -35,7 +34,7 @@ named!(pub parse_else<Span, Box<IfStatement>>, do_parse!(
 named!(pub parse_if<Span, Expr>, do_parse!(
     comment!(tag!(IF)) >>
     condition: parse_strict_condition_group >>
-    block: alt!(parse_block | parse_implicit_block) >>
+    block: alt!(parse_scope | parse_implicit_scope) >>
     opt: opt!(alt!( parse_else_if | parse_else)) >>
 
     (Expr::IfExpr(

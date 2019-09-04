@@ -1,94 +1,83 @@
+pub mod object;
+pub mod gen_literal;
+pub mod interval;
+pub mod memory;
+pub mod expr_to_literal;
+pub mod match_literals;
+
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::evaluate_condition,
     data::Data,
-    json_to_rust::{Context, Event, MemoryType, PayLoad}
+    ast_interpreter::{
+        if_statment::evaluate_condition,
+    },
+    variable_handler::{
+        interval::interval_from_expr,
+        memory::search_var_memory,
+        expr_to_literal::expr_to_literal,
+        gen_literal::{
+            gen_literal_form_builder,
+            gen_literal_form_event
+        },
+    }
 };
 use crate::parser::{
-    ast::{Expr, IfStatement, Interval, Literal, ObjectType, RangeInterval, SmartIdent, SmartLiteral}, 
-    tokens::{EVENT, FIRST, GET_VALUE, MEMORY, METADATA, PAST, RETRIES}
+    ast::{Expr, Interval, Literal, Identifier},
+    tokens::{EVENT, RETRIES}
 };
-use std::collections::HashMap;
 
-pub fn gen_literal_form_event(
-    event: &Option<Event>,
-    interval: Interval,
-) -> Result<SmartLiteral, ErrorInfo> {
-    match event {
-        Some(event) => match event.payload {
-            PayLoad { content_type: ref t, content: ref c, } 
-                if t == "text" => Ok(SmartLiteral {
-                    literal: Literal::string(c.text.to_string()),
-                    interval,
+//TODO: return Warning or Error component
+pub fn get_literal(literal: &Literal, opt: &Option< Box<Expr> >, data: &mut Data) -> Result<Literal, ErrorInfo> {
+    match (literal, opt) {
+        (Literal::ArrayLiteral{ref items, interval}, Some(expr)) => {
+            let index = expr_to_literal(expr, data)?;
+
+            if let Literal::IntLiteral{value, ..} = index {
+                match items.get(value as usize) {
+                    Some(lit) => Ok(lit.to_owned()),
+                    None => Err(ErrorInfo{
+                        message: format!("Error Array don't have {} index", value),
+                        interval: interval.to_owned()
+                    })
                 }
-            ),
-            _ => Err(ErrorInfo {
-                message: "event type is unown".to_owned(),
-                interval,
-            }),
-        },
-        None => Ok(SmartLiteral{literal: Literal::null(), interval}),
+            } else {
+                Err(ErrorInfo{
+                    message: format!("Error index must be of type int"),
+                    interval: index.get_interval()
+                })
+            }
+
+        }, 
+        (_, Some(_)) => Err(ErrorInfo{
+            message: "Error value is not of type Array".to_owned(),
+            interval: literal.get_interval()
+        }),
+        (literal, None) => Ok(literal.to_owned())
     }
 }
 
-// ########################################################## Interval
-
-pub fn interval_from_expr(expr: &Expr) -> Interval {
-    match expr {
-        Expr::Block{range: RangeInterval{start, ..}, ..}    => start.clone(),
-        Expr::ComplexLiteral(_e, RangeInterval{start, ..})  => start.clone(),
-        Expr::VecExpr(_e, RangeInterval{start, ..})         => start.clone(),
-        Expr::ObjectExpr(fnexpr)                            => interval_from_reserved_fn(fnexpr),
-        Expr::InfixExpr(_i, expr, _e)                       => interval_from_expr(expr), // RangeInterval
-        Expr::BuilderExpr(expr, _e)                         => interval_from_expr(expr),
-        Expr::ForExpr(_, _, _, _, RangeInterval{start, ..}) => start.clone(),
-        Expr::IdentExpr(ident)                              => ident.interval.to_owned(),
-        Expr::LitExpr(literal)                              => literal.interval.to_owned(),
-        Expr::IfExpr(ifstmt)                                => interval_from_if_stmt(ifstmt),
+fn get_var_in_stepvar(name: &str, data: &mut Data) -> Option<Literal> {
+    match data.step_vars.get(name) {
+        Some(var) => Some(var.to_owned()),
+        None => None
     }
 }
 
-pub fn interval_from_if_stmt(ifstmt: &IfStatement) -> Interval {
-    match ifstmt {
-        IfStatement::IfStmt {ref cond, ..}  => interval_from_expr(cond),
-        IfStatement::ElseStmt(_e, range)    => range.start.clone(),
-    }
-}
-
-pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval { 
-    match reservedfn {
-        ObjectType::Goto(_g, ident)       => ident.interval.to_owned(),
-        ObjectType::Use(expr)             => interval_from_expr(expr),
-        ObjectType::Say(expr)             => interval_from_expr(expr),
-        ObjectType::Remember(ident, ..)   => ident.interval.to_owned(),
-        ObjectType::Assign(ident, ..)     => ident.interval.to_owned(), 
-        ObjectType::As(ident, ..)         => ident.interval.to_owned(),
-        ObjectType::Import{step_name, ..} => step_name.interval.to_owned(),
-        ObjectType::Normal(ident, ..)     => ident.interval.to_owned(),
-    }
-}
-
-// ##########################################################
-
-pub fn search_str(name: &str, expr: &Expr) -> bool {
-    match expr {
-        Expr::IdentExpr(SmartIdent { ident, .. }) if ident == name => true,
-        _ => false,
-    }
-}
-
-pub fn get_var(name: SmartIdent, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
+pub fn get_var(name: Identifier, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match &name.ident {
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
-        var if var == RETRIES => Ok(SmartLiteral{literal: Literal::int(data.memory.retries), interval: name.interval.to_owned()}),
-        _ => match data.step_vars.get(&name.ident) {
-            Some( val) => gen_smartliteral(val, name.interval, &name.index),
-            None => search_var_memory(data.memory, name),
+        var if var == RETRIES => Ok(Literal::int(data.memory.retries, name.interval.to_owned())),
+        _ => {
+            let var = get_var_in_stepvar(&name.ident, data);
+            match var {
+                Some(val) => get_literal(&val, &name.index, data),
+                None => search_var_memory(data.memory, name, data),
+            }
         },
     }
 }
 
-pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLiteral {
+pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> Literal {
     let mut new_string = String::new();
     let mut interval: Option<Interval> = None;
 
@@ -97,26 +86,23 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> SmartLi
         match get_var_from_ident(elem, data) {
             Ok(var) => {
                 if interval.is_none() {
-                    interval = Some(var.interval)
+                    interval = Some(var.get_interval())
                 }
-                new_string.push_str( &var.literal.to_string() )
+                new_string.push_str( &var.to_string() )
             }
             Err(err) => {
                 if interval.is_none() {
                     interval = Some(err.interval)
                 }
-                new_string.push_str(&Literal::null().to_string())
+                new_string.push_str(&Literal::null(interval.clone().unwrap()).to_string())
             },
         }
     }
     //TODO: check for error empty list
-    SmartLiteral {
-        literal: Literal::string(new_string),
-        interval: interval.unwrap(),
-    }
+    Literal::string(new_string, interval.unwrap())
 }
 
-pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
+pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::LitExpr(literal) => Ok(literal.clone()),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
@@ -129,252 +115,5 @@ pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, 
                 interval: interval_from_expr(e)
             }
         )
-    }
-}
-
-pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
-    match expr {
-        Expr::LitExpr(literal) => Ok(literal.clone()),
-        Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
-        e => Err(
-            ErrorInfo{
-                message: "Expression must be a literal or an identifier".to_owned(),
-                interval: interval_from_expr(e)
-            }
-        ),
-    }
-}
-
-fn get_values<'a>(literal: &'a Literal, expr: &Expr, interval: &Interval) -> Result<&'a HashMap<String, Literal>, ErrorInfo>  {
-    match literal {
-        Literal::ObjectLiteral{properties} => Ok(properties),
-        Literal::FunctionLiteral{value, ..} => {
-            let literal: &Literal = value;
-            match literal {
-                Literal::ObjectLiteral{properties} => Ok(properties),
-                _ => Err(
-                    ErrorInfo{
-                        message: "Error ... bad type".to_owned(),
-                        interval: interval_from_expr(expr)
-                    }
-                )
-            }
-        }
-        _ => Err(
-            ErrorInfo{
-                message: "Error: Bad Expression in object builder ".to_owned(),
-                interval: interval.to_owned()
-            }
-        )
-    }
-}
-
-fn find_value_in_object(literal: &Literal, expr: &Expr, interval: &Interval) -> Result<SmartLiteral, ErrorInfo> {
-
-    let map = get_values(literal, expr, interval)?;
-
-    match expr {
-        Expr::BuilderExpr(elem, expr) => {
-            let elem :&Expr = elem;
-            if let Expr::IdentExpr(ident, ..) = elem {
-                let literal = match map.get(&ident.ident) {
-                    Some(val) => val,
-                    None => {
-                        //TODO: replace with Error component
-                        return Ok( SmartLiteral{literal: literal.to_owned(), interval: interval.to_owned()} )
-                    }
-                };
-                find_value_in_object(literal, expr, interval)
-            } else {
-                Err(
-                    ErrorInfo{
-                        message: "Error in Object builder".to_owned(),
-                        interval: interval.to_owned()
-                    }
-                )
-            }
-        },
-        Expr::IdentExpr(ident, ..) => {
-            match map.get(&ident.ident) {
-                Some(literal) => Ok( SmartLiteral{literal: literal.to_owned(), interval: interval.to_owned()} ),
-                None => {
-                    //TODO: replace with Error component
-                    Ok(SmartLiteral{literal: Literal::null(), interval: interval.to_owned()})
-                }
-            }
-        },
-        e => Err(
-            ErrorInfo{
-                message: "Error: Bad Expression in object builder ".to_owned(),
-                interval: interval_from_expr(e)
-            }
-        )
-    }
-}
-
-pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<SmartLiteral, ErrorInfo> {
-    match expr {
-        Expr::BuilderExpr(elem, expr) if search_str(PAST, elem) => {
-            get_memory_action(data.memory, elem, expr)
-        }
-        Expr::BuilderExpr(elem, expr) if search_str(MEMORY, elem) => {
-            get_memory_action(data.memory, elem, expr)
-        }
-        Expr::BuilderExpr(elem, expr) if search_str(METADATA, elem) => {
-            get_memory_action(data.memory, elem, expr)
-        }
-        Expr::BuilderExpr(elem, expr) => {
-            let elem :&Expr = elem;
-            if let Expr::IdentExpr(ident) = elem {
-                let literal = get_var(ident.clone(), data)?.literal;
-                find_value_in_object(&literal, expr, &ident.interval)
-            } else {
-                Err(
-                    ErrorInfo{
-                        message: "Error in Object builder".to_owned(),
-                        interval: interval_from_expr(elem)
-                    }
-                )
-            }
-        }
-        Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
-        Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
-        e => Err(
-            ErrorInfo{
-                message: "Error in Expression builder".to_owned(),
-                interval: interval_from_expr(e)
-            }
-        ),
-    }
-}
-
-//TODO: return Warning or Error component
-fn gen_smartliteral(literal: &Literal, interval: Interval, opt: &Option<i64>) -> Result<SmartLiteral, ErrorInfo> {
-    match (literal, opt) {
-        (Literal::ArrayLiteral{ref items}, Some(int)) => {
-            match items.get(*int as usize) {
-                Some(value) => Ok(SmartLiteral{literal: value.to_owned(), interval}),
-                None => Err(ErrorInfo{
-                    message: format!("Error Array don't have {} index", int),
-                    interval
-                })
-            }
-        }, 
-        (_, Some(_)) => Err(ErrorInfo{
-            message: "Error value is not of type Array".to_owned(),
-            interval
-        }),
-        (literal, None) => Ok(SmartLiteral{literal: literal.to_owned(), interval})
-    }
-}
-
-pub fn memorytype_to_literal(
-    memtype: Option<&MemoryType>,
-    interval: Interval,
-    index: &Option<i64>,
-) -> Result<SmartLiteral, ErrorInfo> {
-    match memtype {
-        Some(elem) => gen_smartliteral(&elem.value, interval, index),
-        None => Err(
-            ErrorInfo{
-                message: "Error in memorytype_to_literal".to_owned(),
-                interval
-            }
-        )
-    }
-}
-
-// MEMORY ------------------------------------------------------------------
-
-pub fn search_var_memory(memory: &Context, name: SmartIdent) -> Result<SmartLiteral, ErrorInfo> {
-    match &name.ident {
-        var if memory.metadata.contains_key(var) => {
-            memorytype_to_literal(memory.metadata.get(var), name.interval.clone(), &name.index)
-        }
-        var if memory.current.contains_key(var) => {
-            memorytype_to_literal(memory.current.get(var), name.interval.clone(), &name.index)
-        }
-        var if memory.past.contains_key(var) => {
-            memorytype_to_literal(memory.past.get(var), name.interval.clone(), &name.index)
-        }
-        _ => Err(
-            ErrorInfo{
-                message: "unown variable in search_var_memory".to_owned(),
-                interval: name.interval
-            }
-        )
-    }
-}
-
-pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
-    match (name, expr) {
-        (
-            Expr::IdentExpr(SmartIdent { ident, .. }),
-            Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral{value, ..},
-                ..
-            }),
-        ) if ident == PAST => memory.past.get(value),
-        (
-            Expr::IdentExpr(SmartIdent { ident, .. }),
-            Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral{value, ..},
-                ..
-            }),
-        ) if ident == MEMORY => memory.current.get(value),
-        (
-            _,
-            Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral{value, ..},
-                ..
-            }),
-        ) => memory.metadata.get(value),
-        _ => None,
-    }
-}
-
-pub fn memory_first<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a MemoryType> {
-    match (name, expr) {
-        (
-            Expr::IdentExpr(SmartIdent { ident, .. }),
-            Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral{value, ..},
-                ..
-            }),
-        ) if ident == PAST => memory.past.get_vec(value).unwrap().last(),
-        (
-            Expr::IdentExpr(SmartIdent { ident, .. }),
-            Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral{value, ..},
-                ..
-            }),
-        ) if ident == MEMORY => memory.current.get_vec(value).unwrap().last(),
-        (
-            _,
-            Expr::LitExpr(SmartLiteral {
-                literal: Literal::StringLiteral{value, ..},
-                ..
-            }),
-        ) => memory.metadata.get_vec(value).unwrap().last(),
-        _ => None,
-    }
-}
-
-pub fn get_memory_action(
-    memory: &Context,
-    name: &Expr,
-    expr: &Expr,
-) -> Result<SmartLiteral, ErrorInfo> {
-    match expr {
-        Expr::ObjectExpr(ObjectType::Normal(SmartIdent{ident, interval, index }, expr))
-            if ident == GET_VALUE => memorytype_to_literal(memory_get(memory, name, expr), interval.clone(), index),
-        Expr::ObjectExpr(ObjectType::Normal(SmartIdent{ident, interval, index }, expr))
-            if ident == FIRST => memorytype_to_literal(memory_first(memory, name, expr), interval.clone(), index),
-        e => Err(
-            ErrorInfo{
-                message: "Error in memory action".to_owned(),
-                interval: interval_from_expr(e)
-            }
-        ),
     }
 }

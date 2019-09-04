@@ -1,7 +1,6 @@
 use std::ops::Add;
 use serde_json::{Value, json, map::Map};
 use crate::parser::ast::*;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 pub enum MessageType {
@@ -17,43 +16,50 @@ pub struct Message {
 
 impl Message {
     pub fn new(literal: Literal) -> Self {
-        match literal {
-            Literal::StringLiteral{..} => Message {
+        match literal.clone() {
+            Literal::StringLiteral{interval, ..} => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(literal, "text".to_owned()),
+                content: Literal::lit_to_obj(literal, "text".to_owned(), interval),
             },
-            Literal::IntLiteral{..} => Message {
+            Literal::IntLiteral{interval,..} => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(Literal::string(literal.to_string()), "text".to_owned()),
+                content: Literal::lit_to_obj(Literal::string(literal.to_string(), literal.get_interval()), "text".to_owned(), interval),
             },
-            Literal::FloatLiteral{..} => Message {
+            Literal::FloatLiteral{interval, ..} => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(Literal::string(literal.to_string()) , "text".to_owned()),
+                content: Literal::lit_to_obj(Literal::string(literal.to_string(), literal.get_interval()) , "text".to_owned(), interval),
             },
-            Literal::BoolLiteral{..} => Message {
+            Literal::BoolLiteral{interval, ..} => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(Literal::string(literal.to_string()), "text".to_owned()),
+                content: Literal::lit_to_obj(Literal::string(literal.to_string(), literal.get_interval()), "text".to_owned(), interval),
             },
             Literal::ArrayLiteral{..} => Message {
                 content_type: "array".to_owned(),
                 content: literal,
             },
-            Literal::ObjectLiteral{properties: value, ..} => {
+            Literal::ObjectLiteral{properties: value, interval} => {
                 Message {
                     content_type: "object".to_owned(),
-                    content: Literal::object(value),
+                    content: Literal::object(value, interval),
                 }
             },
-            Literal::FunctionLiteral{name, value} => {
+            Literal::FunctionLiteral{name, value, interval} => {
                 Message {
                     content_type: name.to_owned(),
-                    content: Literal::name_object(name.to_owned(), &value),
+                    content: Literal::name_object(name.to_owned(), &value, interval),
                 }
             },
             Literal::Null{..} => Message {
                 content_type: literal.type_to_string(),
                 content: literal,
             },
+        }
+    }
+
+    pub fn add_to_message(root: MessageData, action: MessageType) -> MessageData {
+        match action {
+            MessageType::Msg(msg) => root.add_message(msg),
+            MessageType::Empty => root,
         }
     }
 
@@ -85,7 +91,7 @@ impl Message {
                 }
                 Value::Object(map)
             },
-            Literal::FunctionLiteral{name, value} => {
+            Literal::FunctionLiteral{name, value, ..} => {
                 let mut map: Map<String, Value> = Map::new();
                 let val = (*value).clone();
                 map.insert(name.to_owned(), Message::lit_to_json(val));
@@ -107,7 +113,7 @@ impl Message {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Memories {
     pub key: String,
     pub value: Literal,
