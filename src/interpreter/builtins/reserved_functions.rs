@@ -112,7 +112,7 @@ pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 pub fn one_of(args: HashMap<String, Literal>, one_of_inter: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("default")  {
         Some(Literal::ArrayLiteral{items, interval}) => {
-            match items.iter().nth(rand::thread_rng().gen_range(0, items.len())) {
+            match items.get(rand::thread_rng().gen_range(0, items.len())) {
                 Some(lit) => Ok(lit.to_owned()),
                 None =>  Err(ErrorInfo{
                     message: "ERROR: Builtin OneOf expect one value of type Array | example: OneOf( [1, 2, 3] )".to_owned(),
@@ -161,9 +161,10 @@ fn search_or_default(values: &HashMap<String, Literal>, name: &str, interval: &I
 fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
     match values {
         Some(Literal::ArrayLiteral{items, interval}) => {
-            items.to_owned().push(title);
+            let mut val = items.to_owned();
 
-            Literal::array(items.to_owned(), interval.to_owned())
+            val.push(title);
+            Literal::array(val, interval.to_owned())
         },
         Some(literal) => {
             let items = vec![literal.to_owned(), title];
@@ -179,6 +180,8 @@ fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
 
 pub fn button(values: HashMap<String, Literal>, name: String, interval: &Interval) -> Result<Literal, ErrorInfo> {
     let mut button_value = HashMap::new();
+
+    //TODO: add warning default is ignore when title is set
     let title = search_or_default(&values, "title", interval, None)?;
 
     button_value.insert("title".to_owned(), title.to_owned());

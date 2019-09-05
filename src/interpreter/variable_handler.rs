@@ -42,7 +42,7 @@ pub fn get_literal(literal: &Literal, opt: &Option< Box<Expr> >, data: &mut Data
                 }
             } else {
                 Err(ErrorInfo{
-                    message: format!("Error index must be of type int"),
+                    message: "Error index must resolve to int type".to_string(),
                     interval: index.get_interval()
                 })
             }
@@ -56,7 +56,7 @@ pub fn get_literal(literal: &Literal, opt: &Option< Box<Expr> >, data: &mut Data
     }
 }
 
-fn get_var_in_stepvar(name: &str, data: &mut Data) -> Option<Literal> {
+fn get_var_from_stepvar(name: &str, data: &mut Data) -> Option<Literal> {
     match data.step_vars.get(name) {
         Some(var) => Some(var.to_owned()),
         None => None
@@ -68,7 +68,7 @@ pub fn get_var(name: Identifier, data: &mut Data) -> Result<Literal, ErrorInfo> 
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
         var if var == RETRIES => Ok(Literal::int(data.memory.retries, name.interval.to_owned())),
         _ => {
-            let var = get_var_in_stepvar(&name.ident, data);
+            let var = get_var_from_stepvar(&name.ident, data);
             match var {
                 Some(val) => get_literal(&val, &name.index, data),
                 None => search_var_memory(data.memory, name, data),

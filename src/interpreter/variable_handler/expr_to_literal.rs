@@ -33,7 +33,7 @@ fn format_object_attributes(expr: &Expr, data: &mut Data) -> Result<HashMap<Stri
                 obj.insert(var_name.ident.to_owned(), value);
             }
             Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
-                let interval = interval_from_expr(elem);                
+                let interval = interval_from_expr(elem);
                 let (name, literal) = normal_object_to_literal(&name.ident, value, interval, data)?;
 
                 obj.insert(name, literal);
@@ -102,4 +102,122 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
             }
         )
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::interpreter::json_to_rust::{
+        Context,
+        Client,
+        Event
+    };
+    use multimap::MultiMap;
+
+    fn gen_context() -> Context {
+        Context {
+            past: MultiMap::new(),
+            current: MultiMap::new(),
+            metadata: MultiMap::new(),
+            retries: 0,
+            is_initial_step: false,
+            client: Client {
+                bot_id: "none".to_owned(),
+                channel_id: "none".to_owned(),
+                user_id: "none".to_owned()
+            },
+            fn_endpoint: "none".to_owned()
+        }
+    }
+
+    fn gen_flow() -> Flow {
+        Flow {
+            flow_instructions: HashMap::new()
+        }
+    }
+
+    fn gen_data<'a>(flow: &'a Flow, context: &'a Context, event: &'a Option<Event>) -> Data::<'a> {
+        Data::<'a> {
+            ast: flow,
+            memory: context,
+            event: event,
+            step_vars: HashMap::new(),
+        }
+    }
+
+    fn gen_interval() -> Interval {
+        Interval{line: 0, column: 0}
+    }
+
+    fn gen_range_interval() -> RangeInterval {
+        RangeInterval{
+            start: gen_interval(),
+            end: gen_interval(),
+        }
+    }
+
+    fn gen_int_literal(val: i64) -> Expr {
+        Expr::LitExpr(
+            Literal::int(val, gen_interval())
+        )
+    }
+
+    fn gen_str_literal(val: &str) -> Expr {
+        Expr::LitExpr(
+            Literal::string(val.to_owned(), gen_interval())
+        )
+    }
+    
+    fn gen_array_expr(val: Vec<Expr>) -> Expr {
+        Expr::VecExpr(val, gen_range_interval())
+    }
+
+    #[test]
+    fn ok_complex_literal() {
+        let expr = Expr::ComplexLiteral(
+            vec!(gen_int_literal(42), gen_str_literal(" != "), gen_int_literal(43)),
+            gen_range_interval()
+        );
+        let context = gen_context();
+        let flow = gen_flow();
+        let mut data = gen_data(&flow, &context, &None);
+
+        match &expr_to_literal(&expr, &mut data) {
+            Ok(Literal::StringLiteral{value, ..}) if value == "42 != 43" => {},
+            e               => panic!("{:?}", e)
+        }
+    }
+
+   #[test]
+    fn ok_objectexpr_literal() {
+        let expr = Expr::ObjectExpr(
+            ObjectType::Normal(
+                Identifier {
+                    ident: "Object".to_owned(),
+                    interval: gen_interval(),
+                    index: None
+                },
+                Box::new(
+                    gen_array_expr(
+                        vec!(gen_int_literal(42))
+                    )
+                )
+            ),
+        );
+        let context = gen_context();
+        let flow = gen_flow();
+        let mut data = gen_data(&flow, &context, &None);
+
+        match &expr_to_literal(&expr, &mut data) {
+            Ok(Literal::ObjectLiteral{properties, ..}) => {
+                match properties.get("default") {
+                    Some(Literal::IntLiteral{value: 42, ..}) => {},
+                    e => panic!(" 2-> {:?}", e)
+                    
+                }
+            },
+            e               => panic!(" 1-> {:?}", e)
+        }
+    }
+
 }
