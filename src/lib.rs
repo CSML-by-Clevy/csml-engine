@@ -5,8 +5,15 @@ pub mod parser;
 use parser::{ast::*, Parser};
 use std::collections::HashMap;
 use error_format::data::ErrorInfo;
-use serde_json::{Value, json, map::Map};
-use interpreter::{ast_interpreter::interpret_scope, csml_rules::*, data::Data, json_to_rust::*};
+// use serde_json::{Value, json, map::Map};
+
+use interpreter::{
+    ast_interpreter::interpret_scope,
+    csml_rules::check_valid_flow,
+    json_to_rust::{Context, Event},
+    data::Data,
+    message::MessageData
+};
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
     match Parser::parse_flow(file.as_bytes()) {
@@ -44,35 +51,13 @@ pub fn version() -> String {
     "CsmlV2".to_owned()
 }
 
-pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<String, ErrorInfo> {
+pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<MessageData, ErrorInfo> {
     match search_for(flow, name) {
-        Some(Expr::Block { arg: actions, .. }) => {
-            let result = interpret_scope(actions, &mut data)?;
-            let mut message: Map<String, Value> = Map::new();
-            let mut vec = vec![];
-            let mut memories = vec![];
-
-            for msg in result.messages.iter() {
-                vec.push(msg.to_owned().message_to_json());
-            }
-            if let Some(mem) = result.memories {
-                for elem in mem.iter() {
-                    memories.push(elem.to_owned().memorie_to_jsvalue());
-                }
-            }
-
-            message.insert("memories".to_owned(), Value::Array(memories));
-            message.insert("messages".to_owned(), Value::Array(vec));
-            message.insert("next_flow".to_owned(), match serde_json::to_value(result.next_flow) { Ok(val) => val, _ => json!(null)});
-            message.insert("next_step".to_owned(), match serde_json::to_value(result.next_step) { Ok(val) => val, _ => json!(null)});
-
-            match serde_json::to_string(&message) {
-                Ok(msg) => Ok(msg),
-                _ => unreachable!()
-            } 
+        Some(Expr::Block {arg: actions, .. }) => {
+            interpret_scope(actions, &mut data)
         },
         _ => Err(ErrorInfo {
-            interval: Interval { line: 0, column: 0 },
+            interval: Interval{line: 0, column: 0 },
             message: "ERROR: Empty Flow".to_string(),
         }),
     }
@@ -83,12 +68,13 @@ pub fn interpret(
     step_name: &str,
     memory: &Context,
     event: &Option<Event>,
-) -> Result<String, ErrorInfo> {
+) -> Result<MessageData, ErrorInfo> {
     let data = Data {
         ast,
         memory,
         event,
         step_vars: HashMap::new(),
     };
-    Ok(execute_step(ast, step_name, data)?)
+
+    execute_step(ast, step_name, data)
 }
