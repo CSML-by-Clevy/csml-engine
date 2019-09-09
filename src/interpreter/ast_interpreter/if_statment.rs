@@ -29,10 +29,13 @@ fn cmp_lit(
         (Infix::LessThanEqual, Ok(l1), Ok(l2))      => Ok(Literal::boolean(l1 <= l2, l1.get_interval())),
         (Infix::GreaterThan, Ok(l1), Ok(l2))        => Ok(Literal::boolean(l1 > l2, l1.get_interval())),
         (Infix::LessThan, Ok(l1), Ok(l2))           => Ok(Literal::boolean(l1 < l2, l1.get_interval())),
-        (Infix::Or, Ok(l1), Ok(..))                 => Ok(Literal::boolean(true, l1.get_interval())),
-        (Infix::Or, Ok(l1), Err(..))                => Ok(Literal::boolean(true, l1.get_interval())),
-        (Infix::Or, Err(e), Ok(..))                 => Ok(Literal::boolean(true, e.interval.to_owned())),
-        (Infix::And, Ok(l1), Ok(..))                => Ok(Literal::boolean(true, l1.get_interval())),
+        
+        (Infix::Or, Ok(l1), Ok(l2))                 => Ok(l1 | l2),
+        (Infix::Or, Ok(l1), Err(..))                => Ok(l1.is_valid()),
+        (Infix::Or, Err(_), Ok(l2))                 => Ok(l2.is_valid()),
+
+        (Infix::And, Ok(l1), Ok(l2))                => Ok(l1 & l2),
+        
         (Infix::Adition, Ok(l1), Ok(l2))            => l1 + l2,
         (Infix::Substraction, Ok(l1), Ok(l2))       => l1 - l2,
         (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,

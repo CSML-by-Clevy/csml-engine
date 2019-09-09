@@ -57,7 +57,7 @@ fn normal_object_to_literal(name: &str, value: &Expr, interval: Interval , data:
         )
     } 
     else {
-        Err( 
+        Err(
             ErrorInfo{
                 message: format!("ERROR: unknown function {}", name),
                 interval: interval.to_owned()
