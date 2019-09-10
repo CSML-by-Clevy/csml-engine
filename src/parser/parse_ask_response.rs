@@ -57,6 +57,7 @@ named!(short_ask_response<Span, Expr>, do_parse!(
     start_ask: get_interval >>
     ask: parse_root_functions >>
     end_ask: get_interval >>
+    comment!(tag!(RESPONSE)) >>
     response: many0!(parse_root_functions) >>
     end_r: get_interval >>
     (Expr::Block{

@@ -50,25 +50,14 @@ named!(parse_use<Span, Expr>, do_parse!(
 
 named!(parse_remember<Span, Expr>, do_parse!(
     comment!(tag!(REMEMBER)) >>
-    ident: comment!(complete!(parse_ident)) >>
+    expr: comment!(parse_var_expr) >>
     return_error!(
         nom::ErrorKind::Custom(ParserErrorType::AssignError as u32),
-        comment!(tag!(ASSIGN))
+        comment!(tag!(AS))
     ) >>
-    expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
+    ident: comment!(complete!(parse_ident)) >>
     (Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))))
 ));
-
-// named!(parse_remember<Span, Expr>, do_parse!(
-//     comment!(tag!(REMEMBER)) >>
-//     expr: comment!(parse_var_expr) >>
-//     return_error!(
-//         nom::ErrorKind::Custom(ParserErrorType::AssignError as u32),
-//         comment!(tag!(AS))
-//     ) >>
-//     ident: comment!(complete!(parse_ident)) >>
-//     (Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))))
-// ));
 
 named!(pub parse_functions<Span, Expr>, do_parse!(
     name: parse_ident >>

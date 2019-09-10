@@ -409,11 +409,38 @@ impl Literal {
     }
 }
 
+fn convert_to_numeric(var: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let lit = Literal::str_to_literal(var, interval);
+    match lit {
+        Literal::StringLiteral{..} => Err(ErrorInfo {
+                message: "Illegal operation between types".to_owned(),
+                interval: lit.get_interval(),
+        }),
+        lit => Ok(lit)
+    }
+}
+
 impl Add for Literal {
     type Output = Result<Literal, ErrorInfo>;
 
     fn add(self, other: Literal) -> Result<Literal, ErrorInfo> {
         match (self, other) {
+            (
+                Literal::StringLiteral{value: l1, interval: interval1}, 
+                Literal::StringLiteral{value: l2, interval: interval2}
+            )    => {
+                let lit1 = convert_to_numeric(&l1, interval1)?;
+                let lit2 = convert_to_numeric(&l2, interval2)?;
+                Ok( (lit1 + lit2)? )
+            },
+            (Literal::StringLiteral{value: l1, interval}, l2)    => {
+                let lit = convert_to_numeric(&l1, interval)?;
+                Ok( (lit + l2)? )
+            },
+            (l1, Literal::StringLiteral{value: l2, interval})    => {
+                let lit = convert_to_numeric(&l2, interval)?;
+                Ok( (l1 + lit)? )
+            },
             (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => Ok(Literal::float(l1 + l2 as f64, interval.to_owned())),
             (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})    => Ok(Literal::float(l1 as f64 + l2, interval.to_owned())),
             (Literal::FloatLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})  => Ok(Literal::float(l1 + l2, interval.to_owned())) ,
@@ -432,6 +459,22 @@ impl Sub for Literal {
 
     fn sub(self, other: Literal) -> Result<Literal, ErrorInfo> {
         match (self, other) {
+            (
+                Literal::StringLiteral{value: l1, interval: interval1}, 
+                Literal::StringLiteral{value: l2, interval: interval2}
+            )    => {
+                let lit1 = convert_to_numeric(&l1, interval1)?;
+                let lit2 = convert_to_numeric(&l2, interval2)?;
+                Ok( (lit1 - lit2)? )
+            },
+            (Literal::StringLiteral{value: l1, interval}, l2)    => {
+                let lit = convert_to_numeric(&l1, interval)?;
+                Ok( (lit - l2)? )
+            },
+            (l1, Literal::StringLiteral{value: l2, interval})    => {
+                let lit = convert_to_numeric(&l2, interval)?;
+                Ok( (l1 - lit)? )
+            },
             (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})  => Ok(Literal::float(l1 - l2 as f64, interval.to_owned())),
             (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})  => Ok(Literal::float(l1 as f64 - l2, interval.to_owned())),
             (Literal::FloatLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})=> Ok(Literal::float(l1 - l2, interval.to_owned())),
@@ -451,6 +494,22 @@ impl Div for Literal {
 
     fn div(self, other: Literal) -> Result<Literal, ErrorInfo> {
         match (self, other) {
+            (
+                Literal::StringLiteral{value: l1, interval: interval1}, 
+                Literal::StringLiteral{value: l2, interval: interval2}
+            )    => {
+                let lit1 = convert_to_numeric(&l1, interval1)?;
+                let lit2 = convert_to_numeric(&l2, interval2)?;
+                Ok( (lit1 / lit2)? )
+            },
+            (Literal::StringLiteral{value: l1, interval}, l2)    => {
+                let lit = convert_to_numeric(&l1, interval)?;
+                Ok( (lit / l2)? )
+            },
+            (l1, Literal::StringLiteral{value: l2, interval})    => {
+                let lit = convert_to_numeric(&l2, interval)?;
+                Ok( (l1 / lit)? )
+            },
             (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => {
                 if l2 == 0 { return Err(ErrorInfo {
                         message: "Cannot divide by zero-valued".to_owned(),
@@ -505,6 +564,22 @@ impl Mul for Literal {
 
     fn mul(self, other: Literal) -> Result<Literal, ErrorInfo> {
         match (self, other) {
+            (
+                Literal::StringLiteral{value: l1, interval: interval1}, 
+                Literal::StringLiteral{value: l2, interval: interval2}
+            )    => {
+                let lit1 = convert_to_numeric(&l1, interval1)?;
+                let lit2 = convert_to_numeric(&l2, interval2)?;
+                Ok( (lit1 * lit2)? )
+            },
+            (Literal::StringLiteral{value: l1, interval}, l2)    => {
+                let lit = convert_to_numeric(&l1, interval)?;
+                Ok( (lit * l2)? )
+            },
+            (l1, Literal::StringLiteral{value: l2, interval})    => {
+                let lit = convert_to_numeric(&l2, interval)?;
+                Ok( (l1 * lit)? )
+            },
             (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => Ok(Literal::float(l1 * l2 as f64, interval.to_owned()) ),
             (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})    => Ok(Literal::float(l1 as f64 * l2, interval.to_owned() )),
             (Literal::FloatLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})  => Ok(Literal::float(l1 * l2, interval.to_owned() )),
