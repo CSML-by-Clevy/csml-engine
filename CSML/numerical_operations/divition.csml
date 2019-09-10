@@ -1,0 +1,6 @@
+start:
+    use 4 as var1
+    use 2 as var2
+
+    say var1 / var2
+    goto end

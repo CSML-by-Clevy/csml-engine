@@ -5,7 +5,7 @@ use std::str::FromStr;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub, BitAnd, BitOr};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Flow {
@@ -247,9 +247,12 @@ impl PartialEq for Literal {
     fn eq(&self, other: &Literal) -> bool {
         match (self, other) {
             (Literal::StringLiteral{value: l1, ..}, Literal::StringLiteral{value: l2, ..}) => l1 == l2,
-            (Literal::IntLiteral{value: l1, interval}, Literal::StringLiteral{value: l2, ..}) => match Literal::str_to_literal(l2, interval.to_owned()) {
+            (
+                Literal::IntLiteral{value: l1, interval},
+                Literal::StringLiteral{value: l2, ..}
+            ) => match Literal::str_to_literal(l2, interval.to_owned()) {
                 Literal::IntLiteral{value, ..} => *l1 == value,
-                Literal::FloatLiteral{value, ..} => *l1 == value as i64 ,
+                Literal::FloatLiteral{value, ..} => *l1 == value as i64,
                 _ => false
             },
             (Literal::StringLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..}) => match Literal::str_to_literal(l1, interval.to_owned()) {
@@ -289,6 +292,20 @@ impl Literal {
             Literal::ObjectLiteral{..} => Message::lit_to_json(self.to_owned()).to_string(),
             Literal::FunctionLiteral{..} => Message::lit_to_json(self.to_owned()).to_string(),
             Literal::Null{value, ..} => value.to_owned(),
+        }
+    }
+
+    pub fn is_valid(&self) -> Self {
+        match self {
+            Literal::StringLiteral{..} => self.to_owned(),
+            Literal::IntLiteral{..} => self.to_owned(),
+            Literal::FloatLiteral{..} => self.to_owned(),
+            Literal::BoolLiteral{value: false, interval} => Literal::boolean(false, interval.to_owned()),
+            Literal::BoolLiteral{value: true, interval} => Literal::boolean(true, interval.to_owned()),
+            Literal::ArrayLiteral{..} => self.to_owned(),
+            Literal::ObjectLiteral{..} => self.to_owned(),
+            Literal::FunctionLiteral{..} => self.to_owned(),
+            Literal::Null{interval, ..} => Literal::boolean(false, interval.to_owned()),
         }
     }
 
@@ -397,11 +414,11 @@ impl Add for Literal {
 
     fn add(self, other: Literal) -> Result<Literal, ErrorInfo> {
         match (self, other) {
-            (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})      => Ok(Literal::float(l1 + l2 as f64, interval.to_owned())),
-            (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})      => Ok(Literal::float(l1 as f64 + l2, interval.to_owned())),
-            (Literal::FloatLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})    => Ok(Literal::float(l1 + l2, interval.to_owned())) ,
-            (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})        => Ok(Literal::int(l1 + l2, interval.to_owned())),
-            (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})      => Ok(Literal::int(l1 as i64 + l2 as i64, interval.to_owned())),
+            (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => Ok(Literal::float(l1 + l2 as f64, interval.to_owned())),
+            (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})    => Ok(Literal::float(l1 as f64 + l2, interval.to_owned())),
+            (Literal::FloatLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})  => Ok(Literal::float(l1 + l2, interval.to_owned())) ,
+            (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})      => Ok(Literal::int(l1 + l2, interval.to_owned())),
+            (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})    => Ok(Literal::int(l1 as i64 + l2 as i64, interval.to_owned())),
             (l1, _) => Err(ErrorInfo {
                 message: "Illegal operation + between types".to_owned(),
                 interval: l1.get_interval(),
@@ -421,7 +438,7 @@ impl Sub for Literal {
 
             (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => Ok(Literal::int(l1 - l2, interval.to_owned())),
             (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})  => Ok(Literal::int(l1 as i64 - l2 as i64, interval.to_owned())),
-            (l1, _)                                                                                 => Err(ErrorInfo {
+            (l1, _)                                                                           => Err(ErrorInfo {
                 message: "Illegal operation - between types".to_owned(),
                 interval: l1.get_interval(),
             })
@@ -434,7 +451,7 @@ impl Div for Literal {
 
     fn div(self, other: Literal) -> Result<Literal, ErrorInfo> {
         match (self, other) {
-            (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})        => {
+            (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => {
                 if l2 == 0 { return Err(ErrorInfo {
                         message: "Cannot divide by zero-valued".to_owned(),
                         interval: interval.to_owned(),
@@ -442,7 +459,7 @@ impl Div for Literal {
                 }
                 Ok(Literal::float(l1 / l2 as f64, interval.to_owned(),) )
             },
-            (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})        => {
+            (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})    => {
                 if l2 == 0.0 { return Err(ErrorInfo {
                         message: "Cannot divide by zero-valued".to_owned(),
                         interval: interval.to_owned(),
@@ -458,7 +475,7 @@ impl Div for Literal {
                 }
                 Ok(Literal::float(l1 / l2, interval.to_owned(),))
             },
-            (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})          => {
+            (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})      => {
                 if l2 == 0 { return Err(ErrorInfo {
                         message: "Cannot divide by zero-valued".to_owned(),
                         interval: interval.to_owned(),
@@ -466,7 +483,7 @@ impl Div for Literal {
                 }
                 Ok(Literal::int(l1 / l2, interval.to_owned(),) )
             },
-            (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})        => {
+            (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})    => {
                 if !l2 {
                     return Err(ErrorInfo {
                         message: "Cannot divide by zero-valued".to_owned(),
@@ -475,7 +492,7 @@ impl Div for Literal {
                 }
                 Ok(Literal::int(l1 as i64 / l2 as i64, interval.to_owned(),))
             },
-            (l1, _)                                                           => Err(ErrorInfo {
+            (l1, _)                                                     => Err(ErrorInfo {
                 message: "Illegal operation / between types".to_owned(),
                 interval: l1.get_interval(),
             })
@@ -497,6 +514,46 @@ impl Mul for Literal {
                 message: "Illegal operation * between types".to_owned(),
                 interval: l1.get_interval(),
             })
+        }
+    }
+}
+
+impl BitAnd for Literal {
+    type Output = Self;
+
+    fn bitand(self, other: Self) -> Literal {
+        match (self, other) {
+            (Literal::BoolLiteral{value: false, interval}, _)   => Literal::boolean(false, interval.to_owned()),
+            (_, Literal::BoolLiteral{value: false, interval})   => Literal::boolean(false, interval.to_owned()),
+            (Literal::Null{interval, ..}, _)                    => Literal::boolean(false, interval.to_owned()),
+            (_, Literal::Null{interval, ..})                    => Literal::boolean(false, interval.to_owned()),
+            (l1, ..)                                            => Literal::boolean(true, l1.get_interval()),
+        }
+    }
+}
+
+impl BitOr for Literal {
+    type Output = Self;
+
+    fn bitor(self, other: Self) -> Literal {
+        match (self, other) {
+            (
+                Literal::BoolLiteral{value: false, interval},
+                Literal::BoolLiteral{value: false, ..}
+            )   => Literal::boolean(false, interval.to_owned()),
+            (
+                Literal::Null{interval, ..}, 
+                Literal::Null{..}
+            )   => Literal::boolean(false, interval.to_owned()),
+            (
+                Literal::Null{interval, ..},
+                Literal::BoolLiteral{value: false, ..}
+            )   => Literal::boolean(false, interval.to_owned()),
+            (
+                Literal::BoolLiteral{value: false, interval},
+                Literal::Null{..},
+            )   => Literal::boolean(false, interval.to_owned()),
+            (l1, ..)    => Literal::boolean(true, l1.get_interval()),
         }
     }
 }

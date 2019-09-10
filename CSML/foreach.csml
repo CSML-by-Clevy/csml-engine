@@ -1,0 +1,6 @@
+start:
+    use ["1", "2", "3"] as arr
+    foreach (elem, index) in arr {
+        say elem
+    }
+	goto end

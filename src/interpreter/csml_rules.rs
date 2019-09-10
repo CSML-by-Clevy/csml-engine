@@ -24,10 +24,10 @@ pub fn check_valid_flow(flow: &Flow) -> Result<&Flow, ErrorInfo> {
         _ => {}
     }
 
-    if !flow
+    if flow
         .flow_instructions
         .get(&InstructionType::NormalStep("start".to_owned()))
-        .is_some()
+        .is_none()
     {
         return Err(ErrorInfo {
             interval: Interval { line: 0, column: 0 },

@@ -11,7 +11,6 @@ use crate::parser::{
     ast::{Expr, Interval, Literal, Identifier},
 };
 
-
 fn get_values<'a>(literal: &'a Literal, expr: &Expr, interval: &Interval) -> Result<&'a HashMap<String, Literal>, ErrorInfo>  {
     match literal {
         Literal::ObjectLiteral{properties, ..} => Ok(properties),
@@ -41,7 +40,7 @@ fn search_ident_in_obj(map: &HashMap<String, Literal>, ident: &Identifier, data:
         (Some(val), opt) => get_literal(val, opt, data),
         (None, _) => {
             //TODO: replace with Error component
-            return Ok( Literal::null(ident.interval.clone()) )
+            Ok( Literal::null(ident.interval.clone()) )
         }
     }
 }

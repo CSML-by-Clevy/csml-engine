@@ -1,4 +1,4 @@
-use crate::parser::ast::*;
+use crate::parser::ast::Literal;
 
 fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal>{
     match name {
@@ -47,5 +47,109 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
         (Literal::ArrayLiteral{items, interval}, lit) => Literal::boolean(items.contains(lit), interval.to_owned()),
         (lit, Literal::ArrayLiteral{items, interval}) => Literal::boolean(items.contains(lit), interval.to_owned()),
         (l1, l2) => Literal::boolean(l1 == l2, l1.get_interval())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::ast::Interval;
+    use std::collections::HashMap;
+    use crate::interpreter::{
+        builtins::reserved_functions::button
+    };
+
+    fn gen_inter() -> Interval{
+        Interval{
+            line: 0,
+            column: 0,
+        }
+    }
+
+    fn gen_button(name: &str) -> Literal {
+        let mut map = HashMap::new();
+        let interval = gen_inter();
+
+        map.insert("default".to_owned(), Literal::string(name.to_owned(), interval.clone()));
+
+        match button(map, "button".to_owned(), &interval) {
+            Ok(lit) => lit,
+            Err(..) => panic!("gen button error")
+        }
+    }
+
+    fn gen_button_multi_accept(name: &str) -> Literal {
+        let mut map = HashMap::new();
+        let interval = gen_inter();
+
+        map.insert("default".to_owned(), Literal::string(name.to_owned(), interval.clone()));
+        map.insert("accept".to_owned(), Literal::array(
+                vec!(
+                    Literal::string("val1".to_owned(), interval.clone()),
+                    Literal::string("val2".to_owned(), interval.clone()),
+                    Literal::string("val3".to_owned(), interval.clone())
+                ),
+                gen_inter()
+            )
+        );
+
+        match button(map, "button".to_owned(), &interval) {
+            Ok(lit) => lit,
+            Err(..) => panic!("gen button error")
+        }
+    }
+
+    fn match_lit_ok(lit1: &Literal, lit2: &Literal) {
+        match match_obj(&lit1, &lit2) {
+            Literal::BoolLiteral{
+                value: true,
+                ..
+            } => {}
+            _   => panic!("\n\nlit1: {:?}\n\n lit2: {:?}\n", lit1, lit2),
+        }
+    }
+
+    fn match_lit_err(lit1: &Literal, lit2: &Literal) {
+        match match_obj(&lit1, &lit2) {
+            Literal::BoolLiteral{
+                value: true,
+                ..
+            }   => panic!("\n\nlit1: {:?}\n\n lit2: {:?}\n", lit1, lit2),
+            _   => {},
+        }
+    }
+
+    #[test]
+    fn ok_match_button_button() {
+        let bt1 = gen_button("hola");
+        let bt2 = gen_button("hola");
+
+        match_lit_ok(&bt1, &bt2);
+    }
+
+    #[test]
+    fn ok_match_button_str() {
+        let bt1 = gen_button("hola");
+        let bt2 = Literal::string("hola".to_owned(), gen_inter());
+
+        match_lit_ok(&bt1, &bt2);
+        match_lit_ok(&bt2, &bt1);
+    }
+
+    #[test]
+    fn ok_match_barray_str() {
+        let bt1 = gen_button_multi_accept("hola");
+        let bt2 = Literal::string("hola".to_owned(), gen_inter());
+
+        match_lit_ok(&bt1, &bt2);
+        match_lit_ok(&bt2, &bt1);
+    }
+
+    #[test]
+    fn err_match_button_button() {
+        let bt1 = gen_button("hola");
+        let bt2 = gen_button("nop");
+
+        match_lit_err(&bt1, &bt2);
     }
 }
