@@ -33,18 +33,18 @@ pub struct Context {
     pub fn_endpoint: String
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PayLoadContent {
     pub text: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PayLoad {
     pub content_type: String,
     pub content: PayLoadContent,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
     pub payload: PayLoad,
 }
