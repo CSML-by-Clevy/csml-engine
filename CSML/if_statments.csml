@@ -1,0 +1,20 @@
+start:
+    if (event == 20) {
+        say "event == 20"
+    }
+    else if (event > 20 && event < 40 && true) {
+        say "event > 20 && event < 40"
+    }
+    else if (event >= 50) {
+        say "event >= 50"
+    }
+    else if (event < 20) {
+        say "event < 20"
+    }
+    else if (event <= 45) {
+        say "event <= 45"
+    }
+    else {
+        say "event is not int"
+    }
+    goto end

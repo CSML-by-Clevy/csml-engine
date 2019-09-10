@@ -1,0 +1,8 @@
+start:
+    use 1 as var1
+    use "3" as var2
+    use "2" as var3
+    use 4.0 as var4
+
+    say var1 + var2 * var3 / var4
+    goto end
