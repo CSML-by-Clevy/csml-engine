@@ -10,7 +10,7 @@ pub fn get_error_message(error_code: ErrorKind) -> String {
             "ERROR: Step name already exists".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32 => {
-            "ERROR: Missing = after remember statement".to_string()
+            "ERROR: Missing as after remember statement".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::AsError as u32 => {
             "ERROR: error in as module (var as var_name)".to_string()
