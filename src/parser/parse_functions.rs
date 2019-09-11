@@ -67,10 +67,10 @@ named!(pub parse_functions<Span, Expr>, do_parse!(
 
 named!(pub parse_root_functions<Span, Expr>, do_parse!(
     reserved_function: alt!(
-        parse_remember          |
-        parse_import            |
-        parse_goto              |
-        parse_say               |
+        parse_remember  |
+        parse_import    |
+        parse_goto      |
+        parse_say       |
         parse_use
     ) >>
     (reserved_function)

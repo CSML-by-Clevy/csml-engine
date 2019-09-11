@@ -8,10 +8,6 @@ edition = "2018"
 name = "csmlinterpreter"
 crate-type = ["rlib"]
 
-[features] 
-default = ["rustls-tls"]
-rustls-tls = []
-
 [dependencies]
 nom_locate = "0.3.1"
 nom =  "4.2.3"
@@ -19,7 +15,12 @@ rand = "0.7.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 multimap = "0.6.0"
-reqwest = { version = "0.9.19", features = ["rustls-tls"]}
+libc = "0.2.62"
+
+[dependencies.curl]
+version = "0.4.23"
+default-features = false
+features = ["mesalink"]
 
 [[example]]
 name = "test_flow"
