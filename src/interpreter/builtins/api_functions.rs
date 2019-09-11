@@ -58,8 +58,8 @@ pub fn api(args: HashMap<String, Literal>, interval: Interval, data: &mut Data) 
     format_and_transfer(easy, &mut result, data);
 
     let json: serde_json::Value = serde_json::from_str(& String::from_utf8_lossy(&result)).unwrap();
-    if let Some(Value::String(val)) = json.get("data") {
-        Ok(Literal::string(val.to_string(), interval))
+    if let Some(value) = json.get("data") {
+        json_to_literal(value, interval.clone())
     } else {
         Ok(Literal::null(interval))
     }
