@@ -1,14 +1,14 @@
-use crate::parser::ast::*;
+use crate::parser::ast::{Expr, IfStatement, Infix, Literal};
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
     data::Data,
     message::*,
     variable_handler::{
         get_var,
+        operations::evaluate,
         get_var_from_ident,
         interval::interval_from_expr,
         gen_literal::gen_literal_form_exp,
-        match_literals::match_obj,
     },
     ast_interpreter::{
         check_if_ident,
@@ -17,35 +17,6 @@ use crate::interpreter::{
 };
 
 //TODO: add warning when comparing some objects
-fn cmp_lit(
-    infix: &Infix,
-    lit1: Result<Literal, ErrorInfo>,
-    lit2: Result<Literal, ErrorInfo>,
-) -> Result<Literal, ErrorInfo> {
-    match (infix, lit1, lit2) {
-        (Infix::NotEqual, Ok(l1), Ok(l2))           => Ok(Literal::boolean(l1 != l2, l1.get_interval())),
-        (Infix::Equal, Ok(l1), Ok(l2))              => Ok(Literal::boolean(l1 == l2, l1.get_interval())),
-        (Infix::GreaterThanEqual, Ok(l1), Ok(l2))   => Ok(Literal::boolean(l1 >= l2, l1.get_interval())),
-        (Infix::LessThanEqual, Ok(l1), Ok(l2))      => Ok(Literal::boolean(l1 <= l2, l1.get_interval())),
-        (Infix::GreaterThan, Ok(l1), Ok(l2))        => Ok(Literal::boolean(l1 > l2, l1.get_interval())),
-        (Infix::LessThan, Ok(l1), Ok(l2))           => Ok(Literal::boolean(l1 < l2, l1.get_interval())),
-        
-        (Infix::Or, Ok(l1), Ok(l2))                 => Ok(l1 | l2),
-        (Infix::Or, Ok(l1), Err(..))                => Ok(l1.is_valid()),
-        (Infix::Or, Err(_), Ok(l2))                 => Ok(l2.is_valid()),
-
-        (Infix::And, Ok(l1), Ok(l2))                => Ok(l1 & l2),
-        
-        (Infix::Adition, Ok(l1), Ok(l2))            => l1 + l2,
-        (Infix::Substraction, Ok(l1), Ok(l2))       => l1 - l2,
-        (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,
-        (Infix::Multiply, Ok(l1), Ok(l2))           => l1 * l2,
-        (Infix::Match, Ok(ref l1), Ok(ref l2))      => Ok(match_obj(&l1, &l2)),
-        (_, Ok(l1), ..)                             => Ok(Literal::boolean(false, l1.get_interval())),
-        (_, Err(e), ..)                             => Ok(Literal::boolean(false, e.interval.to_owned())),
-    }
-}
-
 fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
     match expr {
         Expr::InfixExpr(inf, exp1, exp2) => match evaluate_condition(inf, exp1, exp2, data) {
@@ -78,19 +49,19 @@ pub fn evaluate_condition(
             }
         }
         (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2) => {
-            cmp_lit(infix, get_var_from_ident(exp1, data), get_var_from_ident(exp2, data))
+            evaluate(infix, get_var_from_ident(exp1, data), get_var_from_ident(exp2, data))
         },
-        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2)) => cmp_lit(
+        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2)) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data),
             evaluate_condition(i2, exp1, exp2, data),
         ),
-        (Expr::InfixExpr(i1, ex1, ex2), exp) => cmp_lit(
+        (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data),
             gen_literal_form_exp(exp, data),
         ),
-        (exp, Expr::InfixExpr(i1, ex1, ex2)) => cmp_lit(
+        (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
             infix,
             gen_literal_form_exp(exp, data),
             evaluate_condition(i1, ex1, ex2, data),
