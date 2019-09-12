@@ -4,6 +4,7 @@ pub mod interval;
 pub mod memory;
 pub mod expr_to_literal;
 pub mod match_literals;
+pub mod operations;
 
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{

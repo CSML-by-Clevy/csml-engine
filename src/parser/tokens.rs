@@ -15,6 +15,7 @@ pub const ADITION: &str = "+";
 pub const SUBTRACTION: &str = "-";
 pub const DIVIDE: &str = "/";
 pub const MULTIPLY: &str = "*";
+pub const REMAINDER: &str = "%";
 pub const NOT: &str = "!";
 
 pub const EQUAL: &str = "==";

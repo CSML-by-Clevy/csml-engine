@@ -127,6 +127,11 @@ named!(adition_operator<Span, Infix>, do_parse!(
     (Infix::Adition)
 ));
 
+named!(remainder_operator<Span, Infix>, do_parse!(
+    tag!(REMAINDER)  >> 
+    (Infix::Remainder)
+));
+
 named!(substraction_operator<Span, Infix>, do_parse!(
     tag!(SUBTRACTION)  >> 
     (Infix::Substraction)
@@ -164,7 +169,8 @@ named!(multiply_operator<Span, Infix>, do_parse!(
 
 named!(parse_term_operator<Span, Infix>, alt!(
     divide_operator |
-    multiply_operator
+    multiply_operator |
+    remainder_operator
 ));
 
 named!(parse_term<Span, Expr>, do_parse!(

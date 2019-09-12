@@ -5,7 +5,7 @@ use std::str::FromStr;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Sub, BitAnd, BitOr};
+use std::ops::{Add, Div, Mul, Sub, BitAnd, BitOr, Rem};
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Flow {
@@ -109,6 +109,7 @@ pub enum Infix {
     Substraction,
     Divide,
     Multiply,
+    Remainder,
 
     Not,
     Match,
@@ -587,6 +588,40 @@ impl Mul for Literal {
             (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})    => Ok(Literal::int(l1 as i64 * l2 as i64, interval.to_owned() )),
             (l1, _)                                                      => Err(ErrorInfo {
                 message: "Illegal operation * between types".to_owned(),
+                interval: l1.get_interval(),
+            })
+        }
+    }
+}
+
+impl Rem for Literal {
+    type Output = Result<Literal, ErrorInfo>;
+
+    fn rem(self, other: Literal) -> Result<Literal, ErrorInfo> {
+        match (self, other) {
+            (
+                Literal::StringLiteral{value: l1, interval: interval1}, 
+                Literal::StringLiteral{value: l2, interval: interval2}
+            )    => {
+                let lit1 = convert_to_numeric(&l1, interval1)?;
+                let lit2 = convert_to_numeric(&l2, interval2)?;
+                Ok( (lit1 % lit2)? )
+            },
+            (Literal::StringLiteral{value: l1, interval}, l2)    => {
+                let lit = convert_to_numeric(&l1, interval)?;
+                Ok( (lit % l2)? )
+            },
+            (l1, Literal::StringLiteral{value: l2, interval})    => {
+                let lit = convert_to_numeric(&l2, interval)?;
+                Ok( (l1 % lit)? )
+            },
+            (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => Ok(Literal::float(l1 % l2 as f64, interval.to_owned()) ),
+            (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})    => Ok(Literal::float(l1 as f64 % l2, interval.to_owned() )),
+            (Literal::FloatLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})  => Ok(Literal::float(l1 % l2, interval.to_owned() )),
+            (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})      => Ok(Literal::int(l1 % l2, interval.to_owned() )),
+            (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})    => Ok(Literal::int(l1 as i64 % l2 as i64, interval.to_owned() )),
+            (l1, _)             => Err(ErrorInfo {
+                message: "Illegal operation % between types".to_owned(),
                 interval: l1.get_interval(),
             })
         }

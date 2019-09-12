@@ -8,20 +8,20 @@ use multimap::MultiMap;
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
-fn format_message(event: Option<Event>, name: &str) -> MessageData {
+fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
     let file = format!("CSML/numerical_operations/{}", name);
     let text = read_file(file).unwrap();
     let flow = Parser::parse_flow(text.as_bytes()).unwrap();
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    interpret(&flow, "start", &memory, &event).unwrap()
+    interpret(&flow, step, &memory, &event).unwrap()
 }
 
 #[test]
 fn ok_addition() {
     let data = r#"{"messages":[ {"content":{"text":"5"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "addition.csml");
+    let msg = format_message(None, "addition.csml", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -32,7 +32,7 @@ fn ok_addition() {
 #[test]
 fn ok_subtraction() {
     let data = r#"{"messages":[ {"content":{"text":"-3"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "subtraction.csml");
+    let msg = format_message(None, "subtraction.csml", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -43,7 +43,7 @@ fn ok_subtraction() {
 #[test]
 fn ok_multiplication() {
     let data = r#"{"messages":[ {"content":{"text":"8"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "multiplication.csml");
+    let msg = format_message(None, "multiplication.csml", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -54,7 +54,41 @@ fn ok_multiplication() {
 #[test]
 fn ok_divition() {
     let data = r#"{"messages":[ {"content":{"text":"2"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "divition.csml");
+    let msg = format_message(None, "divition.csml", "start");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn ok_divition2() {
+    let data = r#"{"messages":[ {"content":{"text":"21"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let msg = format_message(None, "divition.csml", "div2");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn ok_divition3() {
+    let data = r#"{"messages":[ {"content":{"text":"21"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let msg = format_message(None, "divition.csml", "div3");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+
+#[test]
+fn ok_remainder() {
+    let data = r#"{"messages":[ {"content":{"text":"2"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let msg = format_message(None, "remainder.csml", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -65,7 +99,7 @@ fn ok_divition() {
 #[test]
 fn ok_string_to_numeric() {
     let data = r#"{"messages":[ {"content":{"text":"2.5"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "string_to_numeric.csml");
+    let msg = format_message(None, "string_to_numeric.csml", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
