@@ -1,10 +1,11 @@
 pub mod data;
 
 use crate::parser::ast::Interval;
+use std::str;
 use data::*;
 use nom::ErrorKind;
 
-pub fn get_error_message(error_code: ErrorKind) -> String {
+pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {
     match error_code {
         ErrorKind::Custom(val) if val == ParserErrorType::StepDuplicateError as u32 => {
             "ERROR: Step name already exists".to_string()
@@ -42,11 +43,19 @@ pub fn get_error_message(error_code: ErrorKind) -> String {
         ErrorKind::Custom(val) if val == ParserErrorType::DoubleBraceError as u32 => {
             "ERROR: }} maybe missing".to_string()
         }
+        ErrorKind::Eof => {
+            let mut s: String = str::from_utf8(code_error).expect("error in from_utf8").to_owned();
+            match s.find('\n') {
+                Some(val) => s.truncate(val),
+                None => {}
+            };
+            format!("{}", s)
+        },
         e => e.description().to_owned(),
     }
 }
 
-pub fn format_error(interval: Interval, error_code: ErrorKind) -> ErrorInfo {
-    let message = get_error_message(error_code);
+pub fn format_error(interval: Interval, error_code: ErrorKind, code_error: &[u8]) -> ErrorInfo {
+    let message = get_error_message(error_code, code_error);
     ErrorInfo { interval, message }
 }

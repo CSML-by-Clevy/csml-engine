@@ -18,7 +18,6 @@ use crate::comment;
 use crate::error_format::{data::*, *};
 use ast::*;
 use parse_ident::parse_ident;
-use parse_var_types::parse_mandatory_expr_list;
 use parse_scope::parse_root_actions;
 use tokens::*;
 use tools::*;
@@ -36,6 +35,7 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
                 return Err(format_error(
                     Interval { line: 0, column: 0 },
                     ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32),
+                    &vec!()
                 ));
             }
         }
@@ -48,7 +48,6 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
             .collect::<HashMap<InstructionType, Expr>>(),
     })
 }
-
 pub struct Parser;
 
 impl Parser {
@@ -56,19 +55,23 @@ impl Parser {
         match start_parsing(Span::new(CompleteByteSlice(slice))) {
             Ok((.., instructions)) => create_flow_from_instructions(instructions),
             Err(e) => match e {
-                Err::Error(Context::Code(span, code)) => Err(format_error(
-                    Interval {
-                        line: span.line,
-                        column: span.get_column() as u32,
-                    },
-                    code,
-                )),
+                Err::Error(Context::Code(span, code)) => {
+                    Err(format_error(
+                        Interval {
+                            line: span.line,
+                            column: span.get_column() as u32,
+                        },
+                        code,
+                        &span.fragment
+                    ))
+                },
                 Err::Failure(Context::Code(span, code)) => Err(format_error(
                     Interval {
                         line: span.line,
                         column: span.get_column() as u32,
                     },
                     code,
+                    &span.fragment
                 )),
                 Err::Incomplete(..) => Err(ErrorInfo {
                     interval: Interval { line: 0, column: 0 },
@@ -78,13 +81,6 @@ impl Parser {
         }
     }
 }
-
-named!(parse_start_flow<Span, Instruction>, do_parse!(
-    tag!(FLOW) >>
-    actions: parse_mandatory_expr_list  >>
-
-    (Instruction { instruction_type: InstructionType::StartFlow, actions })
-));
 
 named!(parse_step<Span, Instruction>, do_parse!(
     ident: comment!(parse_ident) >>
@@ -102,16 +98,10 @@ named!(parse_step<Span, Instruction>, do_parse!(
     })
 ));
 
-named!(parse_blocks<Span, Instruction>, comment!(
-    alt!(
-        parse_start_flow |
-        parse_step
-    )
-));
 
 named!(start_parsing<Span, Vec<Instruction> >, exact!(
     do_parse!(
-        flow: comment!(many0!(parse_blocks)) >>
+        flow: comment!(many0!(parse_step)) >>
         comment!(eof!()) >>
         (flow)
     )
