@@ -8,9 +8,7 @@ start:
 div2:
     use 4 as var1
     use 2 as var2
-
     say (var1 + var1) / (var2 + var1) + (2 * 10)
-
     goto end
 
 div3:

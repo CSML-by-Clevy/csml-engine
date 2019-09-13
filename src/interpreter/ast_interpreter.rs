@@ -104,7 +104,9 @@ fn match_actions(
         ObjectType::Goto(GotoType::Step, step_name) => Ok(root.add_next_step(&step_name.ident)),
         ObjectType::Goto(GotoType::Flow, flow_name) => Ok(root.add_next_flow(&flow_name.ident)),
         ObjectType::Remember(name, variable) => {
-            root = root.add_to_memory(name.ident.to_owned(), match_functions(variable, data)?);
+            let lit = match_functions(variable, data)?;
+            root = root.add_to_memory(name.ident.to_owned(), lit.clone());
+            data.step_vars.insert(name.ident.to_owned(), lit); // can be remove if we check message save memorys
             Ok(root)
         }
         ObjectType::Import {
