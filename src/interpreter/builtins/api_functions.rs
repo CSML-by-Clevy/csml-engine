@@ -1,4 +1,4 @@
-use crate::parser::{ast::Literal,};
+use crate::parser::{ast::Literal, tokens::*};
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{data::Data, builtins::*};
 
@@ -11,11 +11,11 @@ fn parse_api(args: &HashMap<String, Literal>, data: &mut Data) -> Result<(String
 
     if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get("fn_id") {
         map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
-    } else if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get("default") {
+    } else if let Some(Literal::StringLiteral{value: fn_id, ..}) = args.get(DEFAULT) {
         map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
     }
 
-    let sub_map = create_submap(&["fn_id", "default"], &args)?;
+    let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
     let client = client_to_json(&data.memory.client);
 
     map.insert("data".to_owned(), Value::Object(sub_map));

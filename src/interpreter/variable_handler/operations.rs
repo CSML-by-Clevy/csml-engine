@@ -33,8 +33,8 @@ pub fn evaluate(
         (Infix::Divide, Ok(l1), Ok(l2))             => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2))           => l1 * l2,
         (Infix::Remainder, Ok(l1), Ok(l2))          => l1 % l2,
-        (_, Err(e), ..)                             => Ok(Literal::boolean(false, e.interval.to_owned())),
-        (_, .., Err(e))                             => Ok(Literal::boolean(false, e.interval.to_owned())),
+        (_, Err(e), ..)                             => Err(e),//Ok(Literal::boolean(false, e.interval.to_owned())),
+        (_, .., Err(e))                             => Err(e),//Ok(Literal::boolean(false, e.interval.to_owned())),
         (_, Ok(l1), ..)                             => Ok(Literal::boolean(false, l1.get_interval())),
     }
 }

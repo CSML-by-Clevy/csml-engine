@@ -26,16 +26,16 @@ pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {
             "ERROR: Missing start of block { ".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::RightBraceError as u32 => {
-            "ERROR: Agruments inside brace bad format or brace missing".to_string()
+            "ERROR: Arguments inside brace bad format or brace missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32 => {
             "ERROR: list elemt type ( ... ) not found".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32 => {
-            "ERROR: Agruments inside parentheses bad format or ) missing".to_string()
+            "ERROR: Arguments inside parentheses bad format or ) missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::RightBracketError as u32 => {
-            "ERROR: Agruments inside parentheses bad format or ] missing".to_string()
+            "ERROR: Arguments inside parentheses bad format or ] missing".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::DoubleQuoteError as u32 => {
             "ERROR: \" maybe missing".to_string()

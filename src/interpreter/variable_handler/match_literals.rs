@@ -53,7 +53,7 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::ast::Interval;
+    use crate::parser::{ast::Interval, tokens::*};
     use std::collections::HashMap;
     use crate::interpreter::{
         builtins::reserved_functions::button
@@ -70,7 +70,7 @@ mod tests {
         let mut map = HashMap::new();
         let interval = gen_inter();
 
-        map.insert("default".to_owned(), Literal::string(name.to_owned(), interval.clone()));
+        map.insert(DEFAULT.to_owned(), Literal::string(name.to_owned(), interval.clone()));
 
         match button(map, "button".to_owned(), &interval) {
             Ok(lit) => lit,
@@ -82,7 +82,7 @@ mod tests {
         let mut map = HashMap::new();
         let interval = gen_inter();
 
-        map.insert("default".to_owned(), Literal::string(name.to_owned(), interval.clone()));
+        map.insert(DEFAULT.to_owned(), Literal::string(name.to_owned(), interval.clone()));
         map.insert("accept".to_owned(), Literal::array(
                 vec!(
                     Literal::string("val1".to_owned(), interval.clone()),

@@ -1,10 +1,8 @@
-use csmlinterpreter::{interpret, parse_file};
-use csmlinterpreter::interpreter::{json_to_rust::*};
-use csmlinterpreter::parser::{ast::*}; //, is_trigger
+use csmlinterpreter::{interpret, parse_file,};
+use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
+use csmlinterpreter::parser::{ast::*};
 use multimap::MultiMap;
-
-// use serde::{Deserialize, Serialize};
-// use serde_json::json;
+use serde_json::{Value, json, map::Map};
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -16,12 +14,29 @@ fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
     Ok(contents)
 }
 
-// fn match parse_file<'a>(text: &'a [u8]) -> Flow {
-//     match Parser::parse_flow(text) {
-//         Ok(flow) => flow,
-//         Err(e) => panic!("error parse file {:?}", e),
-//     }
-// }
+pub fn message_to_jsonvalue(result: MessageData) -> Value {
+    let mut message: Map<String, Value> = Map::new();
+    let mut vec = vec![];
+    let mut memories = vec![];
+
+    for msg in result.messages.iter() {
+        vec.push(msg.to_owned().message_to_json());
+    }
+
+    if let Some(mem) = result.memories {
+        for elem in mem.iter() {
+            memories.push(elem.to_owned().memorie_to_jsvalue());
+        }
+    }
+
+    message.insert("memories".to_owned(), Value::Array(memories));
+    message.insert("messages".to_owned(), Value::Array(vec));
+    message.insert("next_flow".to_owned(), match serde_json::to_value(result.next_flow) { Ok(val) => val, _ => json!(null)});
+    message.insert("next_step".to_owned(), match serde_json::to_value(result.next_step) { Ok(val) => val, _ => json!(null)});
+
+    Value::Object(message)
+}
+
 
 fn interpret_flow(flow: &Flow, step_name: &str) {
     let event = 
@@ -73,7 +88,7 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
     };
 
     match interpret(flow, step_name, &memory, &event) {
-        Ok(msg) => dbg!(msg),
+        Ok(msg) => dbg!(message_to_jsonvalue(msg)),
         Err(e) => panic!("error: {:?}", e),
     };
 }

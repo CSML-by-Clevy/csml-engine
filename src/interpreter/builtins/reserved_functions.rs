@@ -2,11 +2,11 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use crate::error_format::data::ErrorInfo;
-use crate::parser::{ast::{Literal, Interval}}; //, tokens::*
+use crate::parser::{ast::{Literal, Interval}, tokens::*};
 
 // TODO: check nbr elemts in built-ins
 pub fn typing(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get("default") {
+    match args.get(DEFAULT) {
         Some(Literal::IntLiteral{value: lit, interval}) => Ok(
             Literal::name_object(
                 name.to_lowercase(),
@@ -33,7 +33,7 @@ pub fn object(object: HashMap<String, Literal>, intrerval: Interval) -> Result<L
 }
 
 pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get("default") {
+    match args.get(DEFAULT) {
         Some(Literal::IntLiteral{value: lit, interval}) => Ok(
             Literal::name_object(
                 name.to_lowercase(), 
@@ -62,7 +62,7 @@ pub fn wait(args: HashMap<String, Literal>, name: String, interval: Interval) ->
 }
 
 pub fn text(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get("default") {
+    match args.get(DEFAULT) {
         Some(literal) => Ok(
             Literal::name_object(
                 name.to_lowercase(),
@@ -78,7 +78,7 @@ pub fn text(args: HashMap<String, Literal>, name: String, interval: Interval) ->
 }
 
 pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get("default") {
+    match args.get(DEFAULT) {
         Some(Literal::StringLiteral{value: lit, interval}) => Ok(
             Literal::name_object(
                 name.to_lowercase(),
@@ -94,7 +94,7 @@ pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 }
 
 pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get("default") {
+    match args.get(DEFAULT) {
         Some(Literal::StringLiteral{value: lit, interval}) => Ok(
             Literal::name_object(
                 name.to_lowercase(),
@@ -110,7 +110,7 @@ pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 }
 
 pub fn one_of(args: HashMap<String, Literal>, one_of_inter: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get("default")  {
+    match args.get(DEFAULT)  {
         Some(Literal::ArrayLiteral{items, interval}) => {
             match items.get(rand::thread_rng().gen_range(0, items.len())) {
                 Some(lit) => Ok(lit.to_owned()),
@@ -128,7 +128,7 @@ pub fn one_of(args: HashMap<String, Literal>, one_of_inter: Interval) -> Result<
 }
 
 pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get("default")  {
+    match args.get(DEFAULT)  {
         Some(Literal::ArrayLiteral{items, interval}) => {
             let mut vec = items.to_owned();
             vec.shuffle(&mut rand::thread_rng());
@@ -147,11 +147,11 @@ fn search_or_default(values: &HashMap<String, Literal>, name: &str, interval: &I
         (Some(value), ..) => Ok(value.to_owned()),
         (None, Some(default)) => Ok(default.to_owned()),
         (None, None) => {
-            match values.get("default") {
+            match values.get(DEFAULT) {
                 Some(value) => Ok(value.to_owned()),
                 None => Err(ErrorInfo{
-                        message: format!("No value '{}' or default value found", name),
-                        interval: interval.to_owned()
+                    message: format!("No value '{}' or default value found", name),
+                    interval: interval.to_owned()
                 })
             }
         }
@@ -181,7 +181,6 @@ fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
 pub fn button(values: HashMap<String, Literal>, name: String, interval: &Interval) -> Result<Literal, ErrorInfo> {
     let mut button_value = HashMap::new();
 
-    //TODO: add warning default is ignore when title is set
     let title = search_or_default(&values, "title", interval, None)?;
 
     button_value.insert("title".to_owned(), title.to_owned());

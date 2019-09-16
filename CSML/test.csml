@@ -1,8 +1,11 @@
 start:
+    // use Button(
+    //     OneOf(["non", "bof", "je le sens pas"])
+    //   ) as toto
   use Button("A") as btn1
   say Question(
-    title="test",
-    buttons=[
+    title = "test",
+    buttons = [
       btn1,
       Button(
         OneOf(["non", "bof", "je le sens pas"])
