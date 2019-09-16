@@ -73,16 +73,19 @@ fn ok_divition2() {
     assert_eq!(v1, v2)
 }
 
-// #[test]
-// fn ok_divition3() {
-//     let data = r#"{"messages":[ {"content":{"text":"21"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-//     let msg = format_message(None, "divition.csml", "div3");
+#[test]
+fn ok_divition3() {
+    let file = format!("CSML/numerical_operations/{}", "divition.csml");
+    let text = read_file(file).unwrap();
+    let flow = Parser::parse_flow(text.as_bytes()).unwrap();
 
-//     let v1: Value = message_to_jsonvalue(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+    let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-//     assert_eq!(v1, v2)
-// }
+    match interpret(&flow, "div3", &memory, &None) {
+        Ok(_v) => panic!("Error in div by 0"),
+        Err(_e) => {},
+    }
+}
 
 
 #[test]
