@@ -1,0 +1,12 @@
+start:
+  use Button("A") as btn1
+  say Question(
+    title="test",
+    buttons=[
+      btn1,
+      Button(
+        OneOf(["non", "bof", "je le sens pas"])
+      )
+    ]
+  )
+  goto end
