@@ -8,7 +8,7 @@ use crate::interpreter::{
         operations::evaluate,
         get_var_from_ident,
         interval::interval_from_expr,
-        gen_literal::gen_literal_form_exp,
+        gen_literal::gen_literal_form_expr,
     },
     ast_interpreter::{
         check_if_ident,
@@ -59,11 +59,11 @@ pub fn evaluate_condition(
         (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data),
-            gen_literal_form_exp(exp, data),
+            gen_literal_form_expr(exp, data),
         ),
         (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
             infix,
-            gen_literal_form_exp(exp, data),
+            gen_literal_form_expr(exp, data),
             evaluate_condition(i1, ex1, ex2, data),
         ),
         (e1, _e2) => Err(

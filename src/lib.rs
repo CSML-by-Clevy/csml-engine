@@ -5,14 +5,12 @@ pub mod parser;
 use parser::{ast::*, Parser};
 use std::collections::HashMap;
 use error_format::data::ErrorInfo;
-// use serde_json::{Value, json, map::Map};
-
 use interpreter::{
     ast_interpreter::interpret_scope,
     csml_rules::check_valid_flow,
     json_to_rust::{Context, Event},
     data::Data,
-    message::{MessageData, Message}
+    message::MessageData
 };
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
@@ -50,7 +48,6 @@ pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
 pub fn version() -> String {
     "CsmlV2".to_owned()
 }
-
 
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<MessageData, ErrorInfo> {
     match search_for(flow, name) {

@@ -22,7 +22,7 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
     }
 }
 
-pub fn gen_literal_form_exp(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
+pub fn gen_literal_form_expr(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::LitExpr(literal) => Ok(literal.clone()),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
