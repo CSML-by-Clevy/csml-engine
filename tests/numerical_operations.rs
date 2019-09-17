@@ -1,8 +1,8 @@
 mod support;
 
 use csmlinterpreter::{interpret};
-use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::Parser;
+use csmlinterpreter::interpreter::{json_to_rust::*, message::{MessageData, Message}};
+use csmlinterpreter::parser::{Parser, ast::Literal};
 use serde_json::Value;
 use multimap::MultiMap;
 
@@ -15,7 +15,7 @@ fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    interpret(&flow, step, &memory, &event).unwrap()
+    interpret(&flow, step, &memory, &event)
 }
 
 #[test]
@@ -73,6 +73,16 @@ fn ok_divition2() {
     assert_eq!(v1, v2)
 }
 
+fn check_error_component(vec: &[Message]) -> bool {
+    let comp = &vec[0];
+    match &comp.content {
+        Literal::ObjectLiteral{properties, ..} if properties.get("Error").is_some() => {
+            true
+        }
+        _ => false
+    }
+}
+
 #[test]
 fn ok_divition3() {
     let file = format!("CSML/numerical_operations/{}", "divition.csml");
@@ -81,12 +91,16 @@ fn ok_divition3() {
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    match interpret(&flow, "div3", &memory, &None) {
-        Ok(_v) => panic!("Error in div by 0"),
-        Err(_e) => {},
+    match &interpret(&flow, "div3", &memory, &None) {
+        MessageData{
+            memories: None,
+            messages: vec,
+            next_flow: None,
+            next_step: None
+        } if vec.len() == 1 && check_error_component(&vec) => {}
+        _ => panic!("Error in div by 0")
     }
 }
-
 
 #[test]
 fn ok_remainder() {

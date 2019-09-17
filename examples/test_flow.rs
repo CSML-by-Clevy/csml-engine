@@ -87,10 +87,11 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
         fn_endpoint: "toto".to_owned()
     };
 
-    match interpret(flow, step_name, &memory, &event) {
-        Ok(msg) => dbg!(message_to_jsonvalue(msg)),
-        Err(e) => panic!("error: {:?}", e),
-    };
+    dbg!(
+        message_to_jsonvalue(
+            interpret(flow, step_name, &memory, &event)
+        )
+    );
 }
 
 // use std::{env, io::Read};

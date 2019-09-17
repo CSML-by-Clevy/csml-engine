@@ -12,7 +12,7 @@ use interpreter::{
     csml_rules::check_valid_flow,
     json_to_rust::{Context, Event},
     data::Data,
-    message::MessageData
+    message::{MessageData, Message}
 };
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
@@ -51,14 +51,15 @@ pub fn version() -> String {
     "CsmlV2".to_owned()
 }
 
+
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<MessageData, ErrorInfo> {
     match search_for(flow, name) {
         Some(Expr::Block {arg: actions, .. }) => {
             interpret_scope(actions, &mut data)
         },
         _ => Err(ErrorInfo {
-            interval: Interval{line: 0, column: 0 },
-            message: "ERROR: Empty Flow".to_string(),
+            interval: Interval{line: 0, column: 0},
+            message: format!("Error: step {} not found", name),
         }),
     }
 }
@@ -68,7 +69,7 @@ pub fn interpret(
     step_name: &str,
     memory: &Context,
     event: &Option<Event>,
-) -> Result<MessageData, ErrorInfo> {
+) -> MessageData {
     let data = Data {
         ast,
         memory,
@@ -76,5 +77,7 @@ pub fn interpret(
         step_vars: HashMap::new(),
     };
 
-    execute_step(ast, step_name, data)
+    MessageData::error_to_message(
+        execute_step(ast, step_name, data)
+    )
 }
