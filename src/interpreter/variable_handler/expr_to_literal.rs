@@ -34,13 +34,13 @@ fn format_object_attributes(expr: &Expr, data: &mut Data) -> Result<HashMap<Stri
             }
             Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
                 let interval = interval_from_expr(elem);
-                let (name, literal) = normal_object_to_literal(&name.ident, value, interval, data)?;
+                let (_, literal) = normal_object_to_literal(&name.ident, value, interval, data)?;
 
-                obj.insert(name, literal);
+                obj.insert(DEFAULT.to_owned(), literal);
             }
             _ => {
                 let value = expr_to_literal(elem, data)?;
-                obj.insert("default".to_owned(), value);
+                obj.insert(DEFAULT.to_owned(), value);
             }
         }
     }
@@ -76,7 +76,7 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
         Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
             let interval = interval_from_expr(expr);
             let (_name, literal) = normal_object_to_literal(&name.ident, value, interval.to_owned(), data)?;
-            
+
             Ok(literal)
         }
         Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
@@ -210,7 +210,7 @@ mod tests {
 
         match &expr_to_literal(&expr, &mut data) {
             Ok(Literal::ObjectLiteral{properties, ..}) => {
-                match properties.get("default") {
+                match properties.get(DEFAULT) {
                     Some(Literal::IntLiteral{value: 42, ..}) => {},
                     e => panic!(" 2-> {:?}", e)
                     

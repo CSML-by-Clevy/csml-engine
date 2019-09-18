@@ -273,11 +273,16 @@ impl PartialEq for Literal {
                 _ => false
             },
             (Literal::IntLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => l1 == l2,
+            (Literal::FloatLiteral{value: l1, ..}, Literal::IntLiteral{value: l2, ..}) => *l1 == *l2 as f64,
+            (Literal::IntLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => *l1 as f64 == *l2,
             (Literal::FloatLiteral{value: l1, ..}, Literal::FloatLiteral{value: l2, ..}) => l1 == l2,
             (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..}) => l1 == l2,
             (Literal::ArrayLiteral{items: l1, ..}, Literal::ArrayLiteral{items: l2, ..}) => l1 == l2,
             (Literal::FunctionLiteral{name: l1, ..}, Literal::FunctionLiteral{name: l2, ..}) => l1 == l2,
-            _ => false,
+            _ => {
+                println!("plopsdsfehgewfdtyiewgfkh");
+                false
+            },
         }
     }
 }

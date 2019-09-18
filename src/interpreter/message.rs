@@ -1,6 +1,7 @@
 use std::ops::Add;
 use serde_json::{Value, json, map::Map};
 use crate::parser::ast::*;
+use crate::error_format::data::ErrorInfo;
 
 #[derive(Debug, Clone)]
 pub enum MessageType {
@@ -194,5 +195,28 @@ impl MessageData {
     pub fn add_next_flow(mut self, next_step: &str) -> Self {
         self.next_flow = Some(next_step.to_string());
         self
+    }
+    
+    pub fn error_to_message(resutl: Result<MessageData, ErrorInfo>) -> Self {
+        match resutl {
+            Ok(v) => v,
+            Err(ErrorInfo{message, interval}) => {
+                MessageData {
+                    memories: None,
+                    messages: vec!(
+                        Message {
+                            content_type: "text".to_owned(),
+                            content: Literal::lit_to_obj(
+                                Literal::string(message, interval.clone()),
+                                "Error".to_owned(),
+                                interval
+                            )
+                        }
+                    ),
+                    next_flow: None,
+                    next_step: None,
+                }
+            },
+        }
     }
 }

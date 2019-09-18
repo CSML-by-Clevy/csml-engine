@@ -8,7 +8,7 @@ use crate::interpreter::{
         operations::evaluate,
         get_var_from_ident,
         interval::interval_from_expr,
-        gen_literal::gen_literal_form_exp,
+        gen_literal::gen_literal_form_expr,
     },
     ast_interpreter::{
         check_if_ident,
@@ -39,6 +39,7 @@ pub fn evaluate_condition(
     expr2: &Expr,
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
+    println!("{:?} - {:?}", expr1, expr2);
     match (expr1, expr2) {
         (exp1, ..) if Infix::Not == *infix && check_if_ident(exp1) => {
             match get_var_from_ident(exp1, data) {
@@ -49,6 +50,8 @@ pub fn evaluate_condition(
             }
         }
         (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2) => {
+            println!("----------- \n{:?} \n{:?}\n", get_var_from_ident(exp1, data), get_var_from_ident(exp2, data));
+            println!("cmp \n {:?}", evaluate(infix, get_var_from_ident(exp1, data), get_var_from_ident(exp2, data)));
             evaluate(infix, get_var_from_ident(exp1, data), get_var_from_ident(exp2, data))
         },
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2)) => evaluate(
@@ -59,11 +62,11 @@ pub fn evaluate_condition(
         (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data),
-            gen_literal_form_exp(exp, data),
+            gen_literal_form_expr(exp, data),
         ),
         (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
             infix,
-            gen_literal_form_exp(exp, data),
+            gen_literal_form_expr(exp, data),
             evaluate_condition(i1, ex1, ex2, data),
         ),
         (e1, _e2) => Err(

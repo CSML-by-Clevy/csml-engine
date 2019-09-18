@@ -35,7 +35,6 @@ fn check_if_ident(expr: &Expr) -> bool {
     }
 }
 
-
 pub fn match_builtin(name: &str, args: HashMap<String, Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match name {
         TYPING => Ok(typing(args, name.to_owned(), interval)?),
@@ -51,7 +50,6 @@ pub fn match_builtin(name: &str, args: HashMap<String, Literal>, interval: Inter
         _ => Ok(text(args, name.to_owned(), interval)?)
     }
 }
-
 
 fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match action {
@@ -106,7 +104,7 @@ fn match_actions(
         ObjectType::Remember(name, variable) => {
             let lit = match_functions(variable, data)?;
             root = root.add_to_memory(name.ident.to_owned(), lit.clone());
-            data.step_vars.insert(name.ident.to_owned(), lit); // can be remove if we check message save memorys
+            data.step_vars.insert(name.ident.to_owned(), lit); // can be remove if we check if tmp var are saved in memory
             Ok(root)
         }
         ObjectType::Import {
@@ -117,7 +115,7 @@ fn match_actions(
                 .flow_instructions
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
             {
-                match interpret_scope(&actions, data) {
+                match interpret_scope(&actions, data) { //, &range.start
                     Ok(root2) => Ok(root + root2),
                     Err(err) => Err(
                         ErrorInfo{
@@ -144,6 +142,11 @@ fn match_actions(
     }
 }
 
+// fn warning_component(warning: &str, inter: &Interval) -> Literal {
+//     let string = Literal::string(warning.to_owned(), inter.to_owned());
+//     Literal::lit_to_obj(string, "Warning".to_owned(), inter.to_owned())
+// }
+
 pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData {
         memories: None,
@@ -153,7 +156,14 @@ pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData,
     };
 
     for action in actions {
-        if root.next_step.is_some() || root.next_flow.is_some(){
+        if root.next_step.is_some() || root.next_flow.is_some() {
+            // if after_ar {
+            //     root.add_to_message(
+            //         Message::new(warning_component(
+            //             "Warning: goto after ask/response block ", inter
+            //         ))
+            //     )
+            // }
             return Ok(root);
         }
 
@@ -167,6 +177,7 @@ pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData,
                 range
             } => {
                 root = match_ask_response(vec, root, data, opt, range.clone())?;
+                // after_ar = true;
             }
             e => return Err(
                 ErrorInfo{

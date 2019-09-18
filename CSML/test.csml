@@ -1,12 +1,88 @@
 start:
-  use Button("A") as btn1
-  say Question(
-    title="test",
-    buttons=[
-      btn1,
-      Button(
-        OneOf(["non", "bof", "je le sens pas"])
-      )
-    ]
-  )
-  goto end
+  say Typing(1000)
+  say "Bienvenu sur ta fiche perso"
+  say Typing(1000)
+  goto prenom
+
+prenom:
+  ask {
+    say "Comment t'appelles-tu ?"
+  }
+  response {
+    if (event == firstname) {
+      say Typing(1000)
+      say "Hello {{event}}"
+      say Typing(1000)
+      goto sexe
+    } else {
+      say Typing(1000)
+      say "Je ne connais pas ce prenom, choisis-en un autre"
+      goto prenom
+    }
+  }
+
+sexe:
+  use Button(
+  title = "Je suis un homme",
+  accept = ["homme", "mec"]
+  ) as men
+  use Button(
+  title = "Je suis une femme",
+  accept = ["femme", "meuf"]
+  ) as girl
+  use Button(
+  title = "Autre",
+  accept = ["Autre", "ni l'un ni l'autre"]
+  ) as other
+
+  ask {
+    say Question(
+      title = "Es-tu une femme, un homme ou ni l'un ni l'autre ?",
+      buttons = [
+        men, girl, other
+      ]
+    )
+  }
+  response {
+    if (event match men) {
+      remember sexe as men
+      say "Ca tombe bien j'aime les hommes"
+      goto age
+    } else if (event == girl) {
+      remember sexe as girl
+      say "Ca tombe bien j'aime les femmes"
+      goto age
+    } else if (event == other) {
+      remember sexe as other
+      say "Ca tombe bien j'aime les autres"
+      goto age
+    } else {
+      say "J'ai pas très bien compris"
+      goto sexe
+    }
+  }
+
+
+// start:
+//     // say "loop ! l = {{l}}"
+//     say l
+//     if (l == 2) { // works when using (l == "2")
+//         goto sortie
+//     } else {
+//         goto boucle
+//     }
+//     goto end
+
+      // use Button(
+    //     OneOf(["non", "bof", "je le sens pas"])
+    //   ) as toto
+  // use Button("A") as btn1
+  // say Question(
+  //   title = "test",
+  //   buttons = [
+  //     btn1,
+  //     Button(
+  //       OneOf(["non", "bof", "je le sens pas"])
+  //     )
+  //   ]
+  // )

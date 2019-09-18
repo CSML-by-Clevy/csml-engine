@@ -5,8 +5,6 @@ pub mod parser;
 use parser::{ast::*, Parser};
 use std::collections::HashMap;
 use error_format::data::ErrorInfo;
-// use serde_json::{Value, json, map::Map};
-
 use interpreter::{
     ast_interpreter::interpret_scope,
     csml_rules::check_valid_flow,
@@ -57,8 +55,8 @@ pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<MessageDa
             interpret_scope(actions, &mut data)
         },
         _ => Err(ErrorInfo {
-            interval: Interval{line: 0, column: 0 },
-            message: "ERROR: Empty Flow".to_string(),
+            interval: Interval{line: 0, column: 0},
+            message: format!("Error: step {} not found", name),
         }),
     }
 }
@@ -68,7 +66,7 @@ pub fn interpret(
     step_name: &str,
     memory: &Context,
     event: &Option<Event>,
-) -> Result<MessageData, ErrorInfo> {
+) -> MessageData {
     let data = Data {
         ast,
         memory,
@@ -76,5 +74,7 @@ pub fn interpret(
         step_vars: HashMap::new(),
     };
 
-    execute_step(ast, step_name, data)
+    MessageData::error_to_message(
+        execute_step(ast, step_name, data)
+    )
 }

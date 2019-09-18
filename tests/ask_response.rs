@@ -15,7 +15,7 @@ fn format_message(event: Option<Event>, name: &str) -> MessageData {
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    interpret(&flow, "start", &memory, &event).unwrap()
+    interpret(&flow, "start", &memory, &event)
 }
 
 #[test]
