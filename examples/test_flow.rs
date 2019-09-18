@@ -66,14 +66,14 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
         }
     );
 
-    metadata.insert("tutu".to_owned(), 
+    metadata.insert("l".to_owned(), 
         MemoryType {
             created_at: "Today".to_owned(),
             step_id: None,
             flow_id: None,
             conversation_id: None,
-            key: "tutu".to_owned(),
-            value: serde_json::Value::String("toto".to_owned()),
+            key: "l".to_owned(),
+            value: json!(2),
         }
     );
 
