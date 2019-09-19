@@ -206,7 +206,7 @@ impl MessageData {
                     memories: None,
                     messages: vec!(
                         Message {
-                            content_type: "text".to_owned(),
+                            content_type: "error".to_owned(),
                             content: Literal::name_object(
                                 "error".to_owned(),
                                 &Literal::string(msg, interval.clone()),

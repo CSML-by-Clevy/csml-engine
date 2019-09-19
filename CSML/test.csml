@@ -1,6 +1,6 @@
 start:
     // say l
-    say  0.75 == 3 / 4
+    say Url("plop")
     // remember 1 as l
     // remember  + 1 as l
     // say "loop ! l = {{test}}"
@@ -11,7 +11,7 @@ start:
     // }
     // goto end
 
-      // use Button(
+    // use Button(
     //     OneOf(["non", "bof", "je le sens pas"])
     //   ) as toto
   // use Button("A") as btn1

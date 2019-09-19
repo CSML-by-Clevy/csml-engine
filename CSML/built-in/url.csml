@@ -3,13 +3,13 @@ start:
     goto end
 
 url1:
-    say Url(href = "test")
+    say Url(url = "test")
     goto end
 
 url2:
-    say Url(href = "test", text = "plop")
+    say Url(url = "test", text = "plop")
     goto end
 
 url3:
-    say Url(href = "test", text = "plop", title = "rand")
+    say Url(url = "test", text = "plop", title = "rand")
     goto end

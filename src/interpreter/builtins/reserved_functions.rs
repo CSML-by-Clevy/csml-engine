@@ -96,10 +96,10 @@ pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut url = HashMap::new();
 
-    match &search_or_default(&args, "href", &interval, None) {
+    match &search_or_default(&args, "url", &interval, None) {
         Ok(href) if href.is_string() => {
 
-            url.insert("href".to_owned(), href.clone());
+            url.insert("url".to_owned(), href.clone());
             if let Ok(title) = search_or_default(&args, "title", &interval, Some(href.clone())) {
                 url.insert("title".to_owned(), title.to_owned());
             }
@@ -154,7 +154,7 @@ pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Lit
     }
 }
 
-pub fn lenght(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
         Some(Literal::StringLiteral{value, interval}) => {
             Ok(Literal::int(value.len() as i64, interval.to_owned()))
@@ -169,15 +169,15 @@ pub fn lenght(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
     }
 }
 
-pub fn contains(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut sub = None;
     let mut case = false;
 
-    if let Some(Literal::StringLiteral{value, ..}) = args.get("substring") {
+    if let Some(Literal::StringLiteral{value, ..}) = args.get("in") {
         sub = Some(value);
     } else if let None = sub {
         return Err(ErrorInfo{
-            message: "ERROR: Builtin contain expect substring to be of type String | example: Contain(value, substring = \"hola\", case_sensitive = true)".to_owned(),
+            message: "ERROR: Builtin Find expect substring to be of type String | example: Contain(value, in = \"hola\", case_sensitive = true)".to_owned(),
             interval
         })
     }
@@ -194,7 +194,7 @@ pub fn contains(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
             }
         },
         (_, _) => Err(ErrorInfo{
-            message: "ERROR: Builtin contain expect value to be of type String | example: Contain(value, substring = \"hola\", case_sensitive = true)".to_owned(),
+            message: "ERROR: Builtin Find expect value to be of type String | example: Contain(value, in = \"hola\", case_sensitive = true)".to_owned(),
             interval
         })
     }

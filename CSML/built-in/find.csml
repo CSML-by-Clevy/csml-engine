@@ -1,0 +1,7 @@
+start:
+    say Find("test hola plop", in = "plop")
+    goto end
+
+find1:
+    say Find("test plop ", in = "Plop", case = true)
+    goto end

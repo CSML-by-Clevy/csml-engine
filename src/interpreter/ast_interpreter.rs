@@ -45,8 +45,8 @@ pub fn match_builtin(name: &str, args: HashMap<String, Literal>, interval: Inter
         SHUFFLE => Ok(shuffle(args, interval)?),
         QUESTION => Ok(question(args, name.to_owned(), interval)?),
 
-        LENGHT => Ok(lenght(args, interval)?),
-        CONTAINS => Ok(contains(args, interval)?),
+        LENGTH => Ok(length(args, interval)?),
+        FIND => Ok(find(args, interval)?),
         RANDOM => Ok(random(interval)?),
         FLOOR => Ok(floor(args, interval)?),
 
