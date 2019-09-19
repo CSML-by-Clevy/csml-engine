@@ -279,10 +279,7 @@ impl PartialEq for Literal {
             (Literal::BoolLiteral{value: l1, ..}, Literal::BoolLiteral{value: l2, ..}) => l1 == l2,
             (Literal::ArrayLiteral{items: l1, ..}, Literal::ArrayLiteral{items: l2, ..}) => l1 == l2,
             (Literal::FunctionLiteral{name: l1, ..}, Literal::FunctionLiteral{name: l2, ..}) => l1 == l2,
-            _ => {
-                println!("plopsdsfehgewfdtyiewgfkh");
-                false
-            },
+            _ => false,
         }
     }
 }
@@ -546,7 +543,7 @@ impl Div for Literal {
                         interval: interval.to_owned(),
                     })
                 }
-                Ok(Literal::int(l1 / l2, interval.to_owned(),) )
+                Ok(Literal::float(l1 as f64 / l2 as f64 , interval.to_owned(),) )
             },
             (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})    => {
                 if !l2 {
@@ -623,7 +620,7 @@ impl Rem for Literal {
             (Literal::FloatLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})    => Ok(Literal::float(l1 % l2 as f64, interval.to_owned()) ),
             (Literal::IntLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})    => Ok(Literal::float(l1 as f64 % l2, interval.to_owned() )),
             (Literal::FloatLiteral{value: l1, interval}, Literal::FloatLiteral{value: l2, ..})  => Ok(Literal::float(l1 % l2, interval.to_owned() )),
-            (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})      => Ok(Literal::int(l1 % l2, interval.to_owned() )),
+            (Literal::IntLiteral{value: l1, interval}, Literal::IntLiteral{value: l2, ..})      => Ok(Literal::float(l1 as f64 % l2 as f64, interval.to_owned() )),
             (Literal::BoolLiteral{value: l1, interval}, Literal::BoolLiteral{value: l2, ..})    => Ok(Literal::int(l1 as i64 % l2 as i64, interval.to_owned() )),
             (l1, _)             => Err(ErrorInfo {
                 message: "Illegal operation % between types".to_owned(),

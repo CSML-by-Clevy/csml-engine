@@ -196,19 +196,20 @@ impl MessageData {
         self.next_flow = Some(next_step.to_string());
         self
     }
-    
+
     pub fn error_to_message(resutl: Result<MessageData, ErrorInfo>) -> Self {
         match resutl {
             Ok(v) => v,
             Err(ErrorInfo{message, interval}) => {
+                let msg = format!("{} at line {}, column {}", message, interval.line, interval.column);
                 MessageData {
                     memories: None,
                     messages: vec!(
                         Message {
                             content_type: "text".to_owned(),
-                            content: Literal::lit_to_obj(
-                                Literal::string(message, interval.clone()),
-                                "Error".to_owned(),
+                            content: Literal::name_object(
+                                "error".to_owned(),
+                                &Literal::string(msg, interval.clone()),
                                 interval
                             )
                         }

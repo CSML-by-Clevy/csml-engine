@@ -37,3 +37,18 @@ step3:
 
     say var1 > var2
     goto end
+
+step4:
+    import step init_obj
+
+    use OneOf(
+        [
+            var,
+            "test",
+            Button(
+                OneOf(["non", "bof", "je le sens pas"])
+            )
+        ]
+    ) as plop
+
+    say plop

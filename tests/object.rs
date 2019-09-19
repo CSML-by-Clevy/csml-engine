@@ -1,8 +1,8 @@
 mod support;
 
 use csmlinterpreter::{interpret};
-use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::Parser;
+use csmlinterpreter::interpreter::{json_to_rust::*, message::{MessageData}};
+use csmlinterpreter::parser::{Parser, ast::Literal};
 use serde_json::Value;
 use multimap::MultiMap;
 
@@ -15,6 +15,16 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
     interpret(&flow, step, &memory, &event)
+}
+
+fn check_error_component(vec: &MessageData) -> bool {
+    let comp = &vec.messages[0];
+    match &comp.content {
+        Literal::FunctionLiteral{name, ..} if name == "error" => {
+            true
+        }
+        _ => false
+    }
 }
 
 #[test]
@@ -48,4 +58,12 @@ fn ok_object_step3() {
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
+}
+
+#[test]
+fn ok_object_step4() {
+    let msg = format_message(None, "step4");
+    let res = check_error_component(&msg);
+
+    assert_eq!(res, false)
 }
