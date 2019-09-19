@@ -24,6 +24,7 @@ named!(parse_identexpr<Span, Expr>, do_parse!(
     (Expr::IdentExpr(indent))
 ));
 
+
 named!(get_list<Span, Expr>, do_parse!(
     first_elem: alt!(parse_as_variable | parse_var_expr) >>
     start: get_interval >>
@@ -43,25 +44,45 @@ named!(get_list<Span, Expr>, do_parse!(
     (Expr::VecExpr(vec, RangeInterval{start, end}))
 ));
 
+named!(get_empty_list<Span, Expr>, do_parse!(
+    comment!(tag!(L_PAREN)) >>
+    start: get_interval >>
+    comment!(parse_r_parentheses) >>
+    end: get_interval >>
+    (Expr::VecExpr(vec!(), RangeInterval{start, end}))
+));
 
 named!(pub parse_expr_list<Span, Expr>, do_parse!(
-    vec: delimited!(
-        comment!(tag!(L_PAREN)),
-        get_list,
-        comment!(parse_r_parentheses)
+    vec: alt!(
+        delimited!(
+            comment!(tag!(L_PAREN)),
+            get_list,
+            comment!(parse_r_parentheses)
+        ) |
+        get_empty_list
     ) >>
     (vec)
+));
+
+named!(get_empty_array<Span, Expr>, do_parse!(
+    comment!(tag!(L_BRACKET)) >>
+    start: get_interval >>
+    comment!(parse_r_bracket) >>
+    end: get_interval >>
+    (Expr::VecExpr(vec!(), RangeInterval{start, end}))
 ));
 
 named!(parse_expr_array<Span, Expr>, do_parse!(
-    vec: delimited!(
-        comment!(tag!(L_BRACKET)),
-        get_list,
-        comment!(parse_r_bracket)
+    vec: alt!(
+        delimited!(
+            comment!(tag!(L_BRACKET)),
+            get_list,
+            comment!(parse_r_bracket)
+        ) |
+        get_empty_array
     ) >>
     (vec)
 ));
-
 
 named!(pub parse_mandatory_expr_list<Span, Expr>, do_parse!(
     vec: delimited!(

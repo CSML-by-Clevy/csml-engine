@@ -19,7 +19,7 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
 
 #[test]
 fn ok_url() {
-    let data = r#"{"messages":[ {"content":{ "url": {"href": "test", "text": "test", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "test", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "start");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -30,7 +30,7 @@ fn ok_url() {
 
 #[test]
 fn ok_url_step1() {
-    let data = r#"{"messages":[ {"content":{ "url": {"href": "test", "text": "test", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "test", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "url1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -41,7 +41,7 @@ fn ok_url_step1() {
 
 #[test]
 fn ok_url_step2() {
-    let data = r#"{"messages":[ {"content":{ "url": {"href": "test", "text": "plop", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "plop", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "url2");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -52,7 +52,7 @@ fn ok_url_step2() {
 
 #[test]
 fn ok_url_step3() {
-    let data = r#"{"messages":[ {"content":{ "url": {"href": "test", "text": "plop", "title": "rand"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "plop", "title": "rand"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "url3");
 
     let v1: Value = message_to_jsonvalue(msg);
