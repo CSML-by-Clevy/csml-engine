@@ -1,7 +1,0 @@
-start:
-    say Contains("test hola plop", substring = "plop")
-    goto end
-
-contains1:
-    say Contains("test plop ", substring = "Plop", case = true)
-    goto end
