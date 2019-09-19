@@ -1,7 +1,7 @@
 start:
-    say Find("test hola plop", in = "plop")
+    say Find("plop", in = "test hola plop" )
     goto end
 
 find1:
-    say Find("test plop ", in = "Plop", case = true)
+    say Find("plop ", in = "Plop", case = true)
     goto end

@@ -170,14 +170,14 @@ pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
 }
 
 pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut sub = None;
+    let mut string = None;
     let mut case = false;
 
     if let Some(Literal::StringLiteral{value, ..}) = args.get("in") {
-        sub = Some(value);
-    } else if let None = sub {
+        string = Some(value);
+    } else if let None = string {
         return Err(ErrorInfo{
-            message: "ERROR: Builtin Find expect substring to be of type String | example: Contain(value, in = \"hola\", case_sensitive = true)".to_owned(),
+            message: "ERROR: Builtin Find expect in to be of type String | example: Contain(value, in = \"hola\", case_sensitive = true)".to_owned(),
             interval
         })
     }
@@ -185,16 +185,16 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
         case = *value;
     }
 
-    match (args.get(DEFAULT), sub) {
-        (Some(Literal::StringLiteral{value, interval}), Some(sub)) => {
+    match (args.get(DEFAULT), string) {
+        (Some(Literal::StringLiteral{value, interval}), Some(string)) => {
             if case {
-                Ok(Literal::boolean(value.to_lowercase().contains(&sub.to_lowercase()), interval.to_owned()))
+                Ok(Literal::boolean(string.to_lowercase().contains(&value.to_lowercase()), interval.to_owned()))
             } else {
-                Ok(Literal::boolean(value.contains(sub), interval.to_owned()))
+                Ok(Literal::boolean(string.contains(value), interval.to_owned()))
             }
         },
         (_, _) => Err(ErrorInfo{
-            message: "ERROR: Builtin Find expect value to be of type String | example: Contain(value, in = \"hola\", case_sensitive = true)".to_owned(),
+            message: "ERROR: Builtin Find expect value to be of type String | example: Find(value, in = \"hola\", case_sensitive = true)".to_owned(),
             interval
         })
     }
@@ -211,7 +211,7 @@ pub fn floor(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
             Ok(Literal::float(value.floor(), interval.to_owned()))
         },
         _ => Err(ErrorInfo{
-                message: "ERROR: Builtin Shuffle expect one value of type Array | example: Shuffle( [1, 2, 3] )".to_owned(),
+                message: "ERROR: Builtin Floor expect one argument of type float| example: Floor(4.2)".to_owned(),
                 interval
         })
     }
