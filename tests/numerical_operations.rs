@@ -64,7 +64,7 @@ fn ok_divition() {
 
 #[test]
 fn ok_divition2() {
-    let data = r#"{"messages":[ {"content":{"text":"21"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{"text":"21.333333333333332"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "divition.csml", "div2");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -76,7 +76,7 @@ fn ok_divition2() {
 fn check_error_component(vec: &[Message]) -> bool {
     let comp = &vec[0];
     match &comp.content {
-        Literal::ObjectLiteral{properties, ..} if properties.get("Error").is_some() => {
+        Literal::FunctionLiteral{name, ..} if name == "error" => {
             true
         }
         _ => false
