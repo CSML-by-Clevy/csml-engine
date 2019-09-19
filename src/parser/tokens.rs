@@ -79,19 +79,23 @@ ASK, GOTO, MATCH, DEFAULT , RESPONSE, REMEMBER, TRUE, FALSE, NULL];
 pub const TYPING: &str = "Typing";
 pub const WAIT: &str = "Wait";
 pub const TEXT: &str = "Text";
-pub const INT: &str = "Int";
 pub const URL: &str = "Url";
 pub const IMAGE: &str = "Image";
 pub const ONE_OF: &str = "OneOf";
 pub const SHUFFLE: &str = "Shuffle";
+pub const LENGHT: &str = "Lenght";
+pub const CONTAINS: &str = "Contains";
+pub const RANDOM: &str = "Random";
+pub const FLOOR: &str = "Floor";
 
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
 pub const OBJECT: &str = "Object";
 pub const FN: &str = "Fn";
 
-pub static BUILT_IN: &[&str] = &[TYPING, WAIT, TEXT, INT,
-URL, IMAGE, ONE_OF, SHUFFLE, QUESTION, BUTTON, OBJECT, FN];
+pub static BUILT_IN: &[&str] = &[TYPING, WAIT, TEXT,
+URL, IMAGE, ONE_OF, SHUFFLE, LENGHT, CONTAINS, RANDOM, FLOOR,
+QUESTION, BUTTON, OBJECT, FN];
 
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";

@@ -59,7 +59,7 @@ named!(parse_remember<Span, Expr>, do_parse!(
     (Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))))
 ));
 
-named!(pub parse_functions<Span, Expr>, do_parse!(
+named!(pub parse_actions<Span, Expr>, do_parse!(
     name: parse_ident >>
     expr: parse_expr_list >>
     (Expr::ObjectExpr(ObjectType::Normal(name, Box::new(expr))))
