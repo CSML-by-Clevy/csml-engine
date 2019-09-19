@@ -1,0 +1,15 @@
+start:
+    say Url("test")
+    goto end
+
+url1:
+    say Url(href = "test")
+    goto end
+
+url2:
+    say Url(href = "test", text = "plop")
+    goto end
+
+url3:
+    say Url(href = "test", text = "plop", title = "rand")
+    goto end

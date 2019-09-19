@@ -94,23 +94,36 @@ pub fn img(args: HashMap<String, Literal>, name: String, interval: Interval) -> 
 }
 
 pub fn url(args: HashMap<String, Literal>, name: String, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get(DEFAULT) {
-        Some(Literal::StringLiteral{value: lit, interval}) => Ok(
-            Literal::name_object(
-                name.to_lowercase(),
-                &Literal::string(lit.to_owned(), interval.to_owned()),
-                interval.to_owned()
+    let mut url = HashMap::new();
+
+    match &search_or_default(&args, "href", &interval, None) {
+        Ok(href) if href.is_string() => {
+
+            url.insert("href".to_owned(), href.clone());
+            if let Ok(title) = search_or_default(&args, "title", &interval, Some(href.clone())) {
+                url.insert("title".to_owned(), title.to_owned());
+            }
+            if let Ok(text) = search_or_default(&args, "text", &interval, Some(href.clone())) {
+                url.insert("text".to_owned(), text.to_owned());
+            }
+
+            Ok(
+                Literal::name_object(
+                    name.to_lowercase(), 
+                    &Literal::object(url, interval.clone()),
+                    interval
+                )
             )
-        ),
+        },
         _ => Err(ErrorInfo{
-                message: "Builtin Url expect one argument of type string | example: Url(\"hola\")".to_owned(),
+                message: "Builtin Url expect one argument of type string and 2 optional string argmuments: text, title | example: Url(href = \"hola\", text = \"text\", title = \"title\")".to_owned(),
                 interval
         })
     }
 }
 
 pub fn one_of(args: HashMap<String, Literal>, one_of_inter: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get(DEFAULT)  {
+    match args.get(DEFAULT) {
         Some(Literal::ArrayLiteral{items, interval}) => {
             match items.get(rand::thread_rng().gen_range(0, items.len())) {
                 Some(lit) => Ok(lit.to_owned()),
@@ -133,6 +146,69 @@ pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Lit
             let mut vec = items.to_owned();
             vec.shuffle(&mut rand::thread_rng());
             Ok(Literal::array(vec, interval.to_owned()))
+        },
+        _ => Err(ErrorInfo{
+                message: "ERROR: Builtin Shuffle expect one value of type Array | example: Shuffle( [1, 2, 3] )".to_owned(),
+                interval
+        })
+    }
+}
+
+pub fn lenght(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get(DEFAULT) {
+        Some(Literal::StringLiteral{value, interval}) => {
+            Ok(Literal::int(value.len() as i64, interval.to_owned()))
+        },
+        Some(Literal::ArrayLiteral{items, interval}) => {
+            Ok(Literal::int(items.len() as i64, interval.to_owned()))
+        },
+        _ => Err(ErrorInfo{
+                message: "ERROR: Builtin Lenght expect one value of type Array or String | example: Lenght( value )".to_owned(),
+                interval
+        })
+    }
+}
+
+pub fn contains(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let mut sub = None;
+    let mut case = false;
+
+    if let Some(Literal::StringLiteral{value, ..}) = args.get("substring") {
+        sub = Some(value);
+    } else if let None = sub {
+        return Err(ErrorInfo{
+            message: "ERROR: Builtin contain expect substring to be of type String | example: Contain(value, substring = \"hola\", case_sensitive = true)".to_owned(),
+            interval
+        })
+    }
+    if let Some(Literal::BoolLiteral{value, ..}) = args.get("case_sensitive") {
+        case = *value;
+    }
+
+    match (args.get(DEFAULT), sub) {
+        (Some(Literal::StringLiteral{value, interval}), Some(sub)) => {
+            if case {
+                Ok(Literal::boolean(value.to_lowercase().contains(&sub.to_lowercase()), interval.to_owned()))
+            } else {
+                Ok(Literal::boolean(value.contains(sub), interval.to_owned()))
+            }
+        },
+        (_, _) => Err(ErrorInfo{
+            message: "ERROR: Builtin contain expect value to be of type String | example: Contain(value, substring = \"hola\", case_sensitive = true)".to_owned(),
+            interval
+        })
+    }
+}
+
+pub fn random(interval: Interval) -> Result<Literal, ErrorInfo> {
+    let mut rng = rand::thread_rng();
+    Ok(Literal::float(rng.gen(), interval.to_owned()))
+}
+
+pub fn floor(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get(DEFAULT)  {
+        Some(Literal::FloatLiteral{value, interval}) => {
+            Ok(Literal::float(value.floor(), interval.to_owned()))
         },
         _ => Err(ErrorInfo{
                 message: "ERROR: Builtin Shuffle expect one value of type Array | example: Shuffle( [1, 2, 3] )".to_owned(),

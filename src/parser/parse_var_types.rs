@@ -9,7 +9,7 @@ use crate::parser::{
     parse_string::parse_string,
     parse_literal::parse_literalexpr,
     expressions_evaluation::operator_precedence,
-    parse_functions::{parse_assignation, parse_functions},
+    parse_actions::{parse_assignation, parse_actions},
 };
 
 named!(parse_builderexpr<Span, Expr>, do_parse!(
@@ -85,7 +85,7 @@ named!(pub parse_var_expr<Span, Expr>, comment!(
     alt!(
         parse_expr_array        |
         parse_assignation       |
-        parse_functions         |
+        parse_actions         |
         operator_precedence     |
         parse_basic_expr
     )

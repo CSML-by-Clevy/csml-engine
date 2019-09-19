@@ -1,7 +1,7 @@
 pub mod ast;
 pub mod expressions_evaluation;
 pub mod parse_comments;
-pub mod parse_functions;
+pub mod parse_actions;
 pub mod parse_ident;
 pub mod parse_if;
 pub mod parse_ask_response;

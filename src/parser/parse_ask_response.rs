@@ -3,7 +3,7 @@ use crate::parser::{
     ast::*,
     parse_scope::{parse_scope, parse_strick_scope},
     parse_ident::parse_ident,
-    parse_functions::parse_root_functions,
+    parse_actions::parse_root_functions,
     tokens::*,
     tools::*,
 };

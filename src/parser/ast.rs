@@ -346,6 +346,14 @@ impl Literal {
         }
     }
 
+    pub fn is_string(&self) -> bool {
+        if let Literal::StringLiteral{..} = self {
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn float(value: f64, interval: Interval) -> Self {
         Literal::FloatLiteral{
             value,
