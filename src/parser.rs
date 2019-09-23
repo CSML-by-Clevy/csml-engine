@@ -1,16 +1,16 @@
 pub mod ast;
 pub mod expressions_evaluation;
-pub mod parse_comments;
 pub mod parse_actions;
+pub mod parse_ask_response;
+pub mod parse_comments;
+pub mod parse_for_loop;
 pub mod parse_ident;
 pub mod parse_if;
-pub mod parse_ask_response;
-pub mod parse_var_types;
-pub mod parse_scope;
-pub mod parse_for_loop;
 pub mod parse_import;
 pub mod parse_literal;
+pub mod parse_scope;
 pub mod parse_string;
+pub mod parse_var_types;
 pub mod tokens;
 pub mod tools;
 
@@ -22,8 +22,8 @@ use parse_scope::parse_root_actions;
 use tokens::*;
 use tools::*;
 
-use nom::{Err, *};
 use nom::types::*;
+use nom::{Err, *};
 use std::collections::HashMap;
 
 fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow, ErrorInfo> {
@@ -35,7 +35,7 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
                 return Err(format_error(
                     Interval { line: 0, column: 0 },
                     ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32),
-                    &vec!()
+                    &vec![],
                 ));
             }
         }
@@ -55,23 +55,21 @@ impl Parser {
         match start_parsing(Span::new(CompleteByteSlice(slice))) {
             Ok((.., instructions)) => create_flow_from_instructions(instructions),
             Err(e) => match e {
-                Err::Error(Context::Code(span, code)) => {
-                    Err(format_error(
-                        Interval {
-                            line: span.line,
-                            column: span.get_column() as u32,
-                        },
-                        code,
-                        &span.fragment
-                    ))
-                },
+                Err::Error(Context::Code(span, code)) => Err(format_error(
+                    Interval {
+                        line: span.line,
+                        column: span.get_column() as u32,
+                    },
+                    code,
+                    &span.fragment,
+                )),
                 Err::Failure(Context::Code(span, code)) => Err(format_error(
                     Interval {
                         line: span.line,
                         column: span.get_column() as u32,
                     },
                     code,
-                    &span.fragment
+                    &span.fragment,
                 )),
                 Err::Incomplete(..) => Err(ErrorInfo {
                     interval: Interval { line: 0, column: 0 },
@@ -98,7 +96,6 @@ named!(parse_step<Span, Instruction>, do_parse!(
     })
 ));
 
-
 named!(start_parsing<Span, Vec<Instruction> >, exact!(
     do_parse!(
         flow: comment!(many0!(parse_step)) >>
@@ -106,4 +103,3 @@ named!(start_parsing<Span, Vec<Instruction> >, exact!(
         (flow)
     )
 ));
-

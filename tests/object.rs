@@ -1,10 +1,10 @@
 mod support;
 
-use csmlinterpreter::{interpret};
-use csmlinterpreter::interpreter::{json_to_rust::*, message::{MessageData}};
-use csmlinterpreter::parser::{Parser, ast::Literal};
-use serde_json::Value;
+use csmlinterpreter::interpret;
+use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
+use csmlinterpreter::parser::{ast::Literal, Parser};
 use multimap::MultiMap;
+use serde_json::Value;
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
@@ -20,10 +20,8 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
 fn check_error_component(vec: &MessageData) -> bool {
     let comp = &vec.messages[0];
     match &comp.content {
-        Literal::FunctionLiteral{name, ..} if name == "error" => {
-            true
-        }
-        _ => false
+        Literal::FunctionLiteral { name, .. } if name == "error" => true,
+        _ => false,
     }
 }
 

@@ -1,12 +1,12 @@
 pub mod api_functions;
 pub mod reserved_functions;
 
-use std::hash::BuildHasher;
-use serde_json::{Map, Value};
-use std::collections::HashMap;
-use crate::parser::ast::*;
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{json_to_rust::*, message::*};
+use crate::parser::ast::*;
+use serde_json::{Map, Value};
+use std::collections::HashMap;
+use std::hash::BuildHasher;
 
 pub fn create_submap<S: BuildHasher>(
     keys: &[&str],
@@ -28,8 +28,14 @@ fn client_to_json(client: &Client) -> Map<String, Value> {
     let mut map = Map::new();
 
     map.insert("bot_id".to_owned(), Value::String(client.bot_id.to_owned()));
-    map.insert("channel_id".to_owned(), Value::String(client.channel_id.to_owned()));
-    map.insert("user_id".to_owned(), Value::String(client.user_id.to_owned()));
+    map.insert(
+        "channel_id".to_owned(),
+        Value::String(client.channel_id.to_owned()),
+    );
+    map.insert(
+        "user_id".to_owned(),
+        Value::String(client.user_id.to_owned()),
+    );
 
     map
 }

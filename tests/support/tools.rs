@@ -1,6 +1,6 @@
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use serde_json::{Value, json, map::Map};
 use multimap::MultiMap;
+use serde_json::{json, map::Map, Value};
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -29,9 +29,9 @@ pub fn gen_context(
         client: Client {
             bot_id: "none".to_owned(),
             channel_id: "none".to_owned(),
-            user_id: "none".to_owned()
+            user_id: "none".to_owned(),
         },
-        fn_endpoint: "none".to_owned()
+        fn_endpoint: "none".to_owned(),
     }
 }
 
@@ -41,21 +41,21 @@ pub fn gen_event(event: &str) -> Event {
         payload: PayLoad {
             content_type: "text".to_owned(),
             content: PayLoadContent {
-                text: event.to_owned()
-            }
-        }
+                text: event.to_owned(),
+            },
+        },
     }
 }
 
 #[allow(dead_code)]
 pub fn gen_memory(key: &str, value: Value) -> MemoryType {
     MemoryType {
-            created_at: "Today".to_owned(),
-            step_id: None,
-            flow_id: None,
-            conversation_id: None,
-            key: key.to_owned(),
-            value,
+        created_at: "Today".to_owned(),
+        step_id: None,
+        flow_id: None,
+        conversation_id: None,
+        key: key.to_owned(),
+        value,
     }
 }
 
@@ -76,8 +76,20 @@ pub fn message_to_jsonvalue(result: MessageData) -> Value {
 
     message.insert("memories".to_owned(), Value::Array(memories));
     message.insert("messages".to_owned(), Value::Array(vec));
-    message.insert("next_flow".to_owned(), match serde_json::to_value(result.next_flow) { Ok(val) => val, _ => json!(null)});
-    message.insert("next_step".to_owned(), match serde_json::to_value(result.next_step) { Ok(val) => val, _ => json!(null)});
+    message.insert(
+        "next_flow".to_owned(),
+        match serde_json::to_value(result.next_flow) {
+            Ok(val) => val,
+            _ => json!(null),
+        },
+    );
+    message.insert(
+        "next_step".to_owned(),
+        match serde_json::to_value(result.next_step) {
+            Ok(val) => val,
+            _ => json!(null),
+        },
+    );
 
     Value::Object(message)
 }

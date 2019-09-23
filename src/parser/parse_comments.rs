@@ -5,7 +5,7 @@ use nom::*;
 
 // ####################
 
-//TODO: check for errors 
+//TODO: check for errors
 #[macro_export]
 macro_rules! take_until_and_consume_line (
   ($i:expr, $substr1:expr, $substr2:expr) => (
@@ -58,7 +58,6 @@ named!(pub skip<Span, Vec<Span>>, do_parse!(
     ) >>
     (vec.into_iter().flatten().collect())
 ));
-
 
 #[macro_export]
 macro_rules! comment (

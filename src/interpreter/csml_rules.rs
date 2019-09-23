@@ -1,6 +1,6 @@
+use crate::error_format::data::ErrorInfo;
 use crate::parser::ast::Interval;
 use crate::parser::ast::{Flow, InstructionType};
-use crate::error_format::data::ErrorInfo;
 
 pub fn check_ident(expr: &str, name: &str) -> bool {
     match expr {

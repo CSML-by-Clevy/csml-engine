@@ -1,15 +1,15 @@
 use crate::comment;
 use crate::parser::{
     ast::*,
-    parse_scope::{parse_scope, parse_strick_scope},
-    parse_ident::parse_ident,
     parse_actions::parse_root_functions,
+    parse_ident::parse_ident,
+    parse_scope::{parse_scope, parse_strick_scope},
     tokens::*,
     tools::*,
 };
 use nom::*;
 
-fn get_option_memory(span: Span) -> IResult<Span, Option<Identifier> > {
+fn get_option_memory(span: Span) -> IResult<Span, Option<Identifier>> {
     let (new_span, smart_ident) = parse_ident(span)?;
     if RESERVED.contains(&&*smart_ident.ident) {
         Ok((span, None))

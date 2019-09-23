@@ -1,9 +1,9 @@
 pub mod data;
 
 use crate::parser::ast::Interval;
-use std::str;
 use data::*;
 use nom::ErrorKind;
+use std::str;
 
 pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {
     match error_code {
@@ -15,6 +15,9 @@ pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {
         }
         ErrorKind::Custom(val) if val == ParserErrorType::AsError as u32 => {
             "ERROR: error in as module (var as var_name)".to_string()
+        }
+        ErrorKind::Custom(val) if val == ParserErrorType::NoAscii as u32 => {
+            "ERROR: non-ascii idents are not supported".to_string()
         }
         ErrorKind::Custom(val) if val == ParserErrorType::GotoStepError as u32 => {
             "ERROR: Missing label name after goto".to_string()
@@ -44,13 +47,15 @@ pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {
             "ERROR: }} maybe missing".to_string()
         }
         ErrorKind::Eof => {
-            let mut s: String = str::from_utf8(code_error).expect("error in from_utf8").to_owned();
+            let mut s: String = str::from_utf8(code_error)
+                .expect("error in from_utf8")
+                .to_owned();
             match s.find('\n') {
                 Some(val) => s.truncate(val),
                 None => {}
             };
             format!("{}", s)
-        },
+        }
         e => e.description().to_owned(),
     }
 }

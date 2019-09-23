@@ -3,16 +3,13 @@ use crate::interpreter::{
     data::Data,
     json_to_rust::{Event, PayLoad},
     variable_handler::{
-        get_var,
-        get_string_from_complexstring,
-        object::decompose_object,
-        interval::interval_from_expr,
-        memory::get_memory_action,
-    }
+        get_string_from_complexstring, get_var, interval::interval_from_expr,
+        memory::get_memory_action, object::decompose_object,
+    },
 };
 use crate::parser::{
-    ast::{Expr, Interval, Literal, Identifier},
-    tokens::{MEMORY, METADATA, PAST}
+    ast::{Expr, Identifier, Interval, Literal},
+    tokens::{MEMORY, METADATA, PAST},
 };
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {
@@ -26,12 +23,10 @@ pub fn gen_literal_form_expr(expr: &Expr, data: &mut Data) -> Result<Literal, Er
     match expr {
         Expr::LitExpr(literal) => Ok(literal.clone()),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
-        e => Err(
-            ErrorInfo{
-                message: "Expression must be a literal or an identifier".to_owned(),
-                interval: interval_from_expr(e)
-            }
-        ),
+        e => Err(ErrorInfo {
+            message: "Expression must be a literal or an identifier".to_owned(),
+            interval: interval_from_expr(e),
+        }),
     }
 }
 
@@ -52,22 +47,18 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal,
                 let literal = get_var(ident.clone(), data)?;
                 decompose_object(&literal, expr, &ident.interval, data)
             } else {
-                Err(
-                    ErrorInfo{
-                        message: "Error in Object builder".to_owned(),
-                        interval: interval_from_expr(elem)
-                    }
-                )
+                Err(ErrorInfo {
+                    message: "Error in Object builder".to_owned(),
+                    interval: interval_from_expr(elem),
+                })
             }
         }
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
-        e => Err(
-            ErrorInfo{
-                message: "Error in Expression builder".to_owned(),
-                interval: interval_from_expr(e)
-            }
-        ),
+        e => Err(ErrorInfo {
+            message: "Error in Expression builder".to_owned(),
+            interval: interval_from_expr(e),
+        }),
     }
 }
 
@@ -77,16 +68,15 @@ pub fn gen_literal_form_event(
 ) -> Result<Literal, ErrorInfo> {
     match event {
         Some(event) => match event.payload {
-            PayLoad { content_type: ref t, content: ref c, }
-                if t == "text" => Ok(
-                    Literal::string(c.text.to_string(), interval)
-                )
-            ,
+            PayLoad {
+                content_type: ref t,
+                content: ref c,
+            } if t == "text" => Ok(Literal::string(c.text.to_string(), interval)),
             _ => Err(ErrorInfo {
                 message: "event type is unown".to_owned(),
                 interval,
             }),
         },
-        None => Ok(Literal::null(interval) ),
+        None => Ok(Literal::null(interval)),
     }
 }

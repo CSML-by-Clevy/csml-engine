@@ -1,26 +1,9 @@
 start:
-    // say l
-    say Url("plop")
-    // remember 1 as l
-    // remember  + 1 as l
-    // say "loop ! l = {{test}}"
-    // if (test == 2) { // works when using (l == "2")
-    //     goto sortie
-    // } else {
-    //     goto boucle
-    // }
-    // goto end
-
-    // use Button(
-    //     OneOf(["non", "bof", "je le sens pas"])
-    //   ) as toto
-  // use Button("A") as btn1
-  // say Question(
-  //   title = "test",
-  //   buttons = [
-  //     btn1,
-  //     Button(
-  //       OneOf(["non", "bof", "je le sens pas"])
-  //     )
-  //   ]
-  // )
+  use "hola quoi que tal ?" as plop
+  if ( Find("quoi", in = plop ) ) {
+    say "quoi"
+  }
+  else {
+    say "pas quoi"
+  }
+  goto end

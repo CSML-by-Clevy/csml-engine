@@ -1,10 +1,10 @@
 use crate::comment;
 use crate::parser::{
     ast::{Expr, RangeInterval},
-    parse_scope::parse_scope, 
     parse_ident::parse_ident,
+    parse_scope::parse_scope,
     parse_var_types::{parse_as_variable, parse_var_expr},
-    tokens::{Span, FOREACH, IN, L_PAREN, R_PAREN, COMMA},
+    tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
     tools::get_interval,
 };
 use nom::{alt, do_parse, named, opt, sep, tag, ws};
@@ -37,4 +37,3 @@ named!(pub parse_for<Span, Expr>, do_parse!(
         RangeInterval{start, end}
     ))
 ));
-

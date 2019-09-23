@@ -1,14 +1,9 @@
 use crate::parser::{
-    ast::*,
-    parse_var_types::parse_var_expr,
-    tokens::*,
-    ParserErrorType,
-    tools::get_interval
+    ast::*, parse_var_types::parse_var_expr, tokens::*, tools::get_interval, ParserErrorType,
 };
 use nom::*;
 use nom::{Err, ErrorKind as NomError};
 use nom_locate::position;
-
 use std::str;
 
 named!(parse_2brace<Span, (Vec<Expr>, Span)>, do_parse!(
@@ -16,7 +11,6 @@ named!(parse_2brace<Span, (Vec<Expr>, Span)>, do_parse!(
     vec: many_till!(parse_var_expr, tag!(R2_BRACE)) >>
     (vec)
 ));
-
 
 fn parse_brace<'a>(input: Span<'a>, mut vec: Vec<Expr>) -> IResult<Span<'a>, Expr> {
     match parse_2brace(input) {
@@ -35,7 +29,16 @@ fn parse_brace<'a>(input: Span<'a>, mut vec: Vec<Expr>) -> IResult<Span<'a>, Exp
                     } else {
                         vec.push(expr);
                         let (rest2, p) = get_interval(rest2)?;
-                        Ok((rest2, Expr::ComplexLiteral(vec, RangeInterval{start: p.clone(), end: p})))
+                        Ok((
+                            rest2,
+                            Expr::ComplexLiteral(
+                                vec,
+                                RangeInterval {
+                                    start: p.clone(),
+                                    end: p,
+                                },
+                            ),
+                        ))
                     }
                 }
                 Err(e) => Err(e),
@@ -81,14 +84,20 @@ fn parse_complex_string(input: Span) -> IResult<Span, Expr> {
             if val.input_len() > 0 {
                 let value = String::from_utf8(val.fragment.to_vec())
                     .expect("error at parsing [u8] to &str");
-                return Ok((
-                    rest,
-                    Expr::LitExpr(Literal::string(value, position)),
-                ));
+                return Ok((rest, Expr::LitExpr(Literal::string(value, position))));
             }
 
             let (_val, position2) = get_interval(val)?;
-            Ok((rest, Expr::ComplexLiteral(vec![], RangeInterval{start: position, end: position2} )))
+            Ok((
+                rest,
+                Expr::ComplexLiteral(
+                    vec![],
+                    RangeInterval {
+                        start: position,
+                        end: position2,
+                    },
+                ),
+            ))
         }
         (_, None) => Err(Err::Failure(Context::Code(
             input,
@@ -105,7 +114,6 @@ named!(pub parse_string<Span, Expr>, do_parse!(
 
     (expr)
 ));
-
 
 #[cfg(test)]
 mod tests {
