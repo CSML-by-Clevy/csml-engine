@@ -2,28 +2,24 @@ pub mod ask_response;
 pub mod for_loop;
 pub mod if_statment;
 
-use std::collections::HashMap;
-use crate::parser::{ast::*, tokens::*};
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
+    ast_interpreter::{
+        ask_response::match_ask_response,
+        for_loop::for_loop,
+        if_statment::{evaluate_condition, solve_if_statments},
+    },
     builtins::{api_functions::*, reserved_functions::*},
     data::Data,
     message::*,
     variable_handler::{
-        get_var,
         expr_to_literal::expr_to_literal,
-        get_string_from_complexstring,
-        interval::{
-            interval_from_expr,
-            interval_from_reserved_fn,
-        },
-    },
-    ast_interpreter::{
-        ask_response::match_ask_response,
-        if_statment::{solve_if_statments, evaluate_condition},
-        for_loop::for_loop,
+        get_string_from_complexstring, get_var,
+        interval::{interval_from_expr, interval_from_reserved_fn},
     },
 };
+use crate::parser::{ast::*, tokens::*};
+use std::collections::HashMap;
 
 fn check_if_ident(expr: &Expr) -> bool {
     match expr {
@@ -35,7 +31,12 @@ fn check_if_ident(expr: &Expr) -> bool {
     }
 }
 
-pub fn match_builtin(name: &str, args: HashMap<String, Literal>, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
+pub fn match_builtin(
+    name: &str,
+    args: HashMap<String, Literal>,
+    interval: Interval,
+    data: &mut Data,
+) -> Result<Literal, ErrorInfo> {
     match name {
         TYPING => Ok(typing(args, name.to_owned(), interval)?),
         WAIT => Ok(wait(args, name.to_owned(), interval)?),
@@ -53,7 +54,7 @@ pub fn match_builtin(name: &str, args: HashMap<String, Literal>, interval: Inter
         BUTTON => Ok(button(args, name.to_owned(), &interval)?),
         FN => Ok(api(args, interval, data)?),
         OBJECT => Ok(object(args, interval)?),
-        _ => Ok(text(args, name.to_owned(), interval)?)
+        _ => Ok(text(args, name.to_owned(), interval)?),
     }
 }
 
@@ -70,20 +71,14 @@ fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo>
         Expr::InfixExpr(infix, exp1, exp2) => Ok(evaluate_condition(infix, exp1, exp2, data)?),
         Expr::IdentExpr(ident) => match get_var(ident.to_owned(), data) {
             Ok(val) => Ok(val),
-            Err(_e) => Ok(Literal::null(ident.interval.to_owned()))
+            Err(_e) => Ok(Literal::null(ident.interval.to_owned())),
         },
-        Expr::LitExpr { .. } => {
-            Ok(expr_to_literal(action, data)?)
-        },
-        Expr::VecExpr(..) => {
-            Ok(expr_to_literal(action, data)?)
-        },
-        e => Err(
-            ErrorInfo{
-                message: format!("Error must be a valid function {:?}", e),
-                interval: interval_from_expr(e)
-            }
-        )
+        Expr::LitExpr { .. } => Ok(expr_to_literal(action, data)?),
+        Expr::VecExpr(..) => Ok(expr_to_literal(action, data)?),
+        e => Err(ErrorInfo {
+            message: format!("Error must be a valid function {:?}", e),
+            interval: interval_from_expr(e),
+        }),
     }
 }
 
@@ -93,14 +88,10 @@ fn match_actions(
     data: &mut Data,
 ) -> Result<MessageData, ErrorInfo> {
     match function {
-        ObjectType::Say(arg) => {
-            Ok(Message::add_to_message(
-                root, 
-                MessageType::Msg(
-                    Message::new(match_functions(arg, data)?)
-                )
-            ))
-        },
+        ObjectType::Say(arg) => Ok(Message::add_to_message(
+            root,
+            MessageType::Msg(Message::new(match_functions(arg, data)?)),
+        )),
         ObjectType::Use(arg) => {
             match_functions(arg, data)?;
             Ok(root)
@@ -121,30 +112,25 @@ fn match_actions(
                 .flow_instructions
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
             {
-                match interpret_scope(&actions, data) { //, &range.start
+                match interpret_scope(&actions, data) {
+                    //, &range.start
                     Ok(root2) => Ok(root + root2),
-                    Err(err) => Err(
-                        ErrorInfo{
-                            message: format!("Error in import function {:?}", err),
-                            interval: interval_from_reserved_fn(function)
-                        }
-                    )
+                    Err(err) => Err(ErrorInfo {
+                        message: format!("Error in import function {:?}", err),
+                        interval: interval_from_reserved_fn(function),
+                    }),
                 }
             } else {
-                Err(
-                    ErrorInfo{
-                        message: format!("Error step {} not found in flow", name.ident),
-                        interval: interval_from_reserved_fn(function)
-                    }
-                )
+                Err(ErrorInfo {
+                    message: format!("Error step {} not found in flow", name.ident),
+                    interval: interval_from_reserved_fn(function),
+                })
             }
         }
-        reserved => Err(
-            ErrorInfo{
-                message: "Error must be a valid action".to_owned(),
-                interval: interval_from_reserved_fn(reserved)
-            }
-        )
+        reserved => Err(ErrorInfo {
+            message: "Error must be a valid action".to_owned(),
+            interval: interval_from_reserved_fn(reserved),
+        }),
     }
 }
 
@@ -163,34 +149,29 @@ pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData,
 
     for action in actions {
         if root.next_step.is_some() || root.next_flow.is_some() {
-            // if after_ar {
-            //     root.add_to_message(
-            //         Message::new(warning_component(
-            //             "Warning: goto after ask/response block ", inter
-            //         ))
-            //     )
-            // }
             return Ok(root);
         }
 
         match action {
             Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
             Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
-            Expr::ForExpr(ident, i, expr, block, range) => root = for_loop(ident, i, expr, block, range, root, data)?,
+            Expr::ForExpr(ident, i, expr, block, range) => {
+                root = for_loop(ident, i, expr, block, range, root, data)?
+            }
             Expr::Block {
                 block_type: BlockType::AskResponse(opt),
                 arg: vec,
-                range
+                range,
             } => {
                 root = match_ask_response(vec, root, data, opt, range.clone())?;
                 // after_ar = true;
             }
-            e => return Err(
-                ErrorInfo{
+            e => {
+                return Err(ErrorInfo {
                     message: "Block must start with a reserved keyword".to_owned(),
-                    interval: interval_from_expr(e)
-                }
-            )
+                    interval: interval_from_expr(e),
+                })
+            }
         };
     }
     Ok(root)

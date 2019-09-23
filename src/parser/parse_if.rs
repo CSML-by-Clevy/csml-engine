@@ -1,9 +1,9 @@
 use crate::comment;
 use crate::parser::{
-    ast::*, 
+    ast::*,
+    parse_scope::{parse_implicit_scope, parse_scope},
     tokens::*,
     tools::*,
-    parse_scope::{parse_implicit_scope, parse_scope}, 
 };
 use nom::*;
 

@@ -1,9 +1,9 @@
 use crate::comment;
 use crate::parser::{ast::*, expressions_evaluation::*, tokens::*, ParserErrorType};
 
-use nom_locate::*;
 use nom::types::*;
 use nom::*;
+use nom_locate::position;
 use std::str;
 use std::str::{FromStr, Utf8Error};
 

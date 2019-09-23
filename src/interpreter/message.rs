@@ -1,7 +1,7 @@
-use std::ops::Add;
-use serde_json::{Value, json, map::Map};
-use crate::parser::ast::*;
 use crate::error_format::data::ErrorInfo;
+use crate::parser::ast::*;
+use serde_json::{json, map::Map, Value};
+use std::ops::Add;
 
 #[derive(Debug, Clone)]
 pub enum MessageType {
@@ -18,39 +18,54 @@ pub struct Message {
 impl Message {
     pub fn new(literal: Literal) -> Self {
         match literal.clone() {
-            Literal::StringLiteral{interval, ..} => Message {
+            Literal::StringLiteral { interval, .. } => Message {
                 content_type: "text".to_owned(),
                 content: Literal::lit_to_obj(literal, "text".to_owned(), interval),
             },
-            Literal::IntLiteral{interval,..} => Message {
+            Literal::IntLiteral { interval, .. } => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(Literal::string(literal.to_string(), literal.get_interval()), "text".to_owned(), interval),
+                content: Literal::lit_to_obj(
+                    Literal::string(literal.to_string(), literal.get_interval()),
+                    "text".to_owned(),
+                    interval,
+                ),
             },
-            Literal::FloatLiteral{interval, ..} => Message {
+            Literal::FloatLiteral { interval, .. } => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(Literal::string(literal.to_string(), literal.get_interval()) , "text".to_owned(), interval),
+                content: Literal::lit_to_obj(
+                    Literal::string(literal.to_string(), literal.get_interval()),
+                    "text".to_owned(),
+                    interval,
+                ),
             },
-            Literal::BoolLiteral{interval, ..} => Message {
+            Literal::BoolLiteral { interval, .. } => Message {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(Literal::string(literal.to_string(), literal.get_interval()), "text".to_owned(), interval),
+                content: Literal::lit_to_obj(
+                    Literal::string(literal.to_string(), literal.get_interval()),
+                    "text".to_owned(),
+                    interval,
+                ),
             },
-            Literal::ArrayLiteral{..} => Message {
+            Literal::ArrayLiteral { .. } => Message {
                 content_type: "array".to_owned(),
                 content: literal,
             },
-            Literal::ObjectLiteral{properties: value, interval} => {
-                Message {
-                    content_type: "object".to_owned(),
-                    content: Literal::object(value, interval),
-                }
+            Literal::ObjectLiteral {
+                properties: value,
+                interval,
+            } => Message {
+                content_type: "object".to_owned(),
+                content: Literal::object(value, interval),
             },
-            Literal::FunctionLiteral{name, value, interval} => {
-                Message {
-                    content_type: name.to_owned(),
-                    content: Literal::name_object(name.to_owned(), &value, interval),
-                }
+            Literal::FunctionLiteral {
+                name,
+                value,
+                interval,
+            } => Message {
+                content_type: name.to_owned(),
+                content: Literal::name_object(name.to_owned(), &value, interval),
             },
-            Literal::Null{..} => Message {
+            Literal::Null { .. } => Message {
                 content_type: literal.type_to_string(),
                 content: literal,
             },
@@ -66,41 +81,31 @@ impl Message {
 
     pub fn lit_to_json(literal: Literal) -> Value {
         match literal {
-            Literal::StringLiteral{value, ..} => {
-                json!(value)
-            },
-            Literal::IntLiteral{value, ..} => {
-                json!(value)
-            },
-            Literal::FloatLiteral{value, ..} => {
-                json!(value)
-            },
-            Literal::BoolLiteral{value, ..} => {
-                json!(value)
-            },
-            Literal::ArrayLiteral{items, ..} => {
+            Literal::StringLiteral { value, .. } => json!(value),
+            Literal::IntLiteral { value, .. } => json!(value),
+            Literal::FloatLiteral { value, .. } => json!(value),
+            Literal::BoolLiteral { value, .. } => json!(value),
+            Literal::ArrayLiteral { items, .. } => {
                 let mut array: Vec<Value> = vec![];
                 for val in items.iter() {
                     array.push(Message::lit_to_json(val.to_owned()));
                 }
                 Value::Array(array)
-            },
-            Literal::ObjectLiteral{properties, ..} => {
+            }
+            Literal::ObjectLiteral { properties, .. } => {
                 let mut map: Map<String, Value> = Map::new();
                 for (k, v) in properties.to_owned().drain() {
                     map.insert(k.to_owned(), Message::lit_to_json(v));
                 }
                 Value::Object(map)
-            },
-            Literal::FunctionLiteral{name, value, ..} => {
+            }
+            Literal::FunctionLiteral { name, value, .. } => {
                 let mut map: Map<String, Value> = Map::new();
                 let val = (*value).clone();
                 map.insert(name.to_owned(), Message::lit_to_json(val));
                 Value::Object(map)
-            },
-            Literal::Null{..} => {
-                json!(null)
             }
+            Literal::Null { .. } => json!(null),
         }
     }
 
@@ -173,15 +178,31 @@ impl MessageData {
 
     pub fn add_to_memory(mut self, key: String, value: Literal) -> Self {
         if let Some(ref mut vec) = self.memories {
-            if let Literal::ObjectLiteral{..} = &value{
-                vec.push(Memories{key: key.clone(), value});
+            if let Literal::ObjectLiteral { .. } = &value {
+                vec.push(Memories {
+                    key: key.clone(),
+                    value,
+                });
             } else {
-                vec.push(Memories{key: key.clone(), value});
+                vec.push(Memories {
+                    key: key.clone(),
+                    value,
+                });
             }
         } else {
             match &value {
-                Literal::ObjectLiteral{..} => self.memories = Some(vec![Memories{key: key.clone(), value: value}]),
-                _                          => self.memories = Some(vec![Memories{key: key.clone(), value: value}])
+                Literal::ObjectLiteral { .. } => {
+                    self.memories = Some(vec![Memories {
+                        key: key.clone(),
+                        value: value,
+                    }])
+                }
+                _ => {
+                    self.memories = Some(vec![Memories {
+                        key: key.clone(),
+                        value: value,
+                    }])
+                }
             };
         }
         self
@@ -200,24 +221,25 @@ impl MessageData {
     pub fn error_to_message(resutl: Result<MessageData, ErrorInfo>) -> Self {
         match resutl {
             Ok(v) => v,
-            Err(ErrorInfo{message, interval}) => {
-                let msg = format!("{} at line {}, column {}", message, interval.line, interval.column);
+            Err(ErrorInfo { message, interval }) => {
+                let msg = format!(
+                    "{} at line {}, column {}",
+                    message, interval.line, interval.column
+                );
                 MessageData {
                     memories: None,
-                    messages: vec!(
-                        Message {
-                            content_type: "error".to_owned(),
-                            content: Literal::name_object(
-                                "error".to_owned(),
-                                &Literal::string(msg, interval.clone()),
-                                interval
-                            )
-                        }
-                    ),
+                    messages: vec![Message {
+                        content_type: "error".to_owned(),
+                        content: Literal::name_object(
+                            "error".to_owned(),
+                            &Literal::string(msg, interval.clone()),
+                            interval,
+                        ),
+                    }],
                     next_flow: None,
                     next_step: None,
                 }
-            },
+            }
         }
     }
 }

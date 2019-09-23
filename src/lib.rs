@@ -2,23 +2,23 @@ pub mod error_format;
 pub mod interpreter;
 pub mod parser;
 
-use parser::{ast::*, Parser};
-use std::collections::HashMap;
 use error_format::data::ErrorInfo;
 use interpreter::{
     ast_interpreter::interpret_scope,
     csml_rules::check_valid_flow,
-    json_to_rust::{Context, Event},
     data::Data,
-    message::MessageData
+    json_to_rust::{Context, Event},
+    message::MessageData,
 };
+use parser::{ast::*, Parser};
+use std::collections::HashMap;
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
     match Parser::parse_flow(file.as_bytes()) {
         Ok(flow) => {
             check_valid_flow(&flow)?;
             Ok(flow)
-        },
+        }
         Err(e) => Err(e),
     }
 }
@@ -29,10 +29,11 @@ pub fn is_trigger(flow: &Flow, string: &str) -> bool {
     if let Some(Expr::VecExpr(vec, ..)) = info {
         for elem in vec.iter() {
             match elem {
-                Expr::LitExpr(Literal::StringLiteral{
-                    value
-                    , ..
-                }) if value.to_lowercase() == string.to_lowercase() => return true,
+                Expr::LitExpr(Literal::StringLiteral { value, .. })
+                    if value.to_lowercase() == string.to_lowercase() =>
+                {
+                    return true
+                }
                 _ => continue,
             }
         }
@@ -51,11 +52,9 @@ pub fn version() -> String {
 
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<MessageData, ErrorInfo> {
     match search_for(flow, name) {
-        Some(Expr::Block {arg: actions, .. }) => {
-            interpret_scope(actions, &mut data)
-        },
+        Some(Expr::Block { arg: actions, .. }) => interpret_scope(actions, &mut data),
         _ => Err(ErrorInfo {
-            interval: Interval{line: 0, column: 0},
+            interval: Interval { line: 0, column: 0 },
             message: format!("Error: step {} not found", name),
         }),
     }
@@ -74,7 +73,5 @@ pub fn interpret(
         step_vars: HashMap::new(),
     };
 
-    MessageData::error_to_message(
-        execute_step(ast, step_name, data)
-    )
+    MessageData::error_to_message(execute_step(ast, step_name, data))
 }

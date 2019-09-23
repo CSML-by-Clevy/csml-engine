@@ -1,10 +1,10 @@
 mod support;
 
-use csmlinterpreter::{interpret};
+use csmlinterpreter::interpret;
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
 use csmlinterpreter::parser::Parser;
-use serde_json::Value;
 use multimap::MultiMap;
+use serde_json::Value;
 
 use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
@@ -39,7 +39,6 @@ fn ok_response_normal() {
 
     assert_eq!(v1, v2)
 }
-
 
 #[test]
 fn ok_ask_short() {

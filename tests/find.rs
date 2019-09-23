@@ -1,10 +1,10 @@
 mod support;
 
-use csmlinterpreter::{interpret};
-use csmlinterpreter::interpreter::{json_to_rust::*, message::{MessageData}};
+use csmlinterpreter::interpret;
+use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
 use csmlinterpreter::parser::Parser;
-use serde_json::Value;
 use multimap::MultiMap;
+use serde_json::Value;
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 

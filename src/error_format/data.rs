@@ -8,6 +8,7 @@ pub enum ParserErrorType {
     GotoStepError = 10,
     ImportError = 11,
     ImportStepError = 12,
+    NoAscii = 13,
     AcceptError = 100,
     LeftBraceError = 110,
     RightBraceError = 111,

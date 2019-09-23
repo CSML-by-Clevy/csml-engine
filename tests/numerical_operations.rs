@@ -1,10 +1,13 @@
 mod support;
 
-use csmlinterpreter::{interpret};
-use csmlinterpreter::interpreter::{json_to_rust::*, message::{MessageData, Message}};
-use csmlinterpreter::parser::{Parser, ast::Literal};
-use serde_json::Value;
+use csmlinterpreter::interpret;
+use csmlinterpreter::interpreter::{
+    json_to_rust::*,
+    message::{Message, MessageData},
+};
+use csmlinterpreter::parser::{ast::Literal, Parser};
 use multimap::MultiMap;
+use serde_json::Value;
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
@@ -76,10 +79,8 @@ fn ok_divition2() {
 fn check_error_component(vec: &[Message]) -> bool {
     let comp = &vec[0];
     match &comp.content {
-        Literal::FunctionLiteral{name, ..} if name == "error" => {
-            true
-        }
-        _ => false
+        Literal::FunctionLiteral { name, .. } if name == "error" => true,
+        _ => false,
     }
 }
 
@@ -92,13 +93,13 @@ fn ok_divition3() {
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
     match &interpret(&flow, "div3", &memory, &None) {
-        MessageData{
+        MessageData {
             memories: None,
             messages: vec,
             next_flow: None,
-            next_step: None
+            next_step: None,
         } if vec.len() == 1 && check_error_component(&vec) => {}
-        _ => panic!("Error in div by 0")
+        _ => panic!("Error in div by 0"),
     }
 }
 
