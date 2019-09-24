@@ -1,6 +1,7 @@
 use crate::error_format::data::ErrorInfo;
 use crate::parser::{
-    ast::{Interval, Literal},
+    ast::{Interval},
+    literal::Literal,
     tokens::*,
 };
 use rand::seq::SliceRandom;

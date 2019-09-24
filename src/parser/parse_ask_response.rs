@@ -1,11 +1,11 @@
 use crate::comment;
 use crate::parser::{
     ast::*,
-    parse_actions::parse_root_functions,
+    parse_actions::{parse_root_functions},
     parse_ident::parse_ident,
     parse_scope::{parse_scope, parse_strick_scope},
     tokens::*,
-    tools::*,
+    tools::get_interval,
 };
 use nom::*;
 
@@ -21,7 +21,6 @@ fn get_option_memory(span: Span) -> IResult<Span, Option<Identifier>> {
 named!(parse_ask<Span, (Expr, Option<Identifier>)>, do_parse!(
     comment!(tag!(ASK)) >>
     opt: opt!(parse_ident) >>
-    // start: comment!(position!()) >>
     start: get_interval >>
     block: parse_scope >>
     end: get_interval >>
@@ -80,4 +79,11 @@ named!(short_ask_response<Span, Expr>, do_parse!(
 
 named!(pub parse_ask_response<Span, Expr>, alt!(
     normal_ask_response | short_ask_response
+));
+
+named!(pub wait_for<Span, Expr>, do_parse!(
+    comment!(tag!("WaitFor")) >>
+    comment!(tag!("@")) >>
+    ident: comment!(complete!(parse_ident)) >>
+    (Expr::ObjectExpr(ObjectType::WaitFor(ident)))
 ));

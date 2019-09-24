@@ -1,6 +1,7 @@
 use crate::comment;
 use crate::parser::{
-    ast::{Expr, Literal},
+    ast::Expr,
+    literal::Literal,
     tokens::{Span, FALSE, TRUE},
     tools::{complete_byte_slice_str_from_utf8, complete_str_from_str, get_interval},
 };

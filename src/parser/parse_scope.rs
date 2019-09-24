@@ -10,6 +10,7 @@ named!(pub parse_root_actions<Span, Vec<Expr> >, do_parse!(
         alt!(
             parse_if            |
             parse_for           |
+            // wait_for
             parse_root_functions|
             parse_ask_response
         )

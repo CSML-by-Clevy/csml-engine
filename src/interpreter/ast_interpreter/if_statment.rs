@@ -4,17 +4,24 @@ use crate::interpreter::{
     data::Data,
     message::MessageData,
     variable_handler::{
-        gen_literal::gen_literal_form_expr, get_var_from_ident,
+        get_var, get_var_from_ident,
+        gen_literal::gen_literal_form_expr,
         interval::interval_from_expr, operations::evaluate,
     },
 };
-use crate::parser::ast::{Expr, IfStatement, Infix, Literal};
+use crate::parser::{ast::{Expr, IfStatement, Infix}, literal::Literal,};
 
 //TODO: add warning when comparing some objects
 fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
     match expr {
         Expr::LitExpr(Literal::BoolLiteral { value, .. }) => *value,
         Expr::LitExpr(Literal::Null { .. }) => false,
+        Expr::IdentExpr(ident) => match get_var(ident.to_owned(), data) {
+            Ok(Literal::BoolLiteral { value, .. }) => value,
+            Ok(Literal::Null{..}) => false,
+            Ok(_) => true,
+            Err(_) => false,
+        },
         Expr::InfixExpr(inf, exp1, exp2) => match evaluate_condition(inf, exp1, exp2, data) {
             Ok(Literal::BoolLiteral { value: false, .. }) => false,
             Ok(_) => true,
@@ -47,8 +54,8 @@ pub fn evaluate_condition(
         (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2) => {
             let var = evaluate(
                 infix,
-                get_var_from_ident(exp1, data),
-                get_var_from_ident(exp2, data),
+                match_functions(exp1, data),
+                match_functions(exp2, data),
             );
             var
         }
@@ -67,10 +74,12 @@ pub fn evaluate_condition(
             gen_literal_form_expr(exp, data),
             evaluate_condition(i1, ex1, ex2, data),
         ),
-        (e1, _e2) => Err(ErrorInfo {
+        (e1, _e2) => {
+            Err(ErrorInfo {
             message: "error in evaluate_condition function".to_owned(),
             interval: interval_from_expr(e1),
-        }),
+            })
+        },
     }
 }
 

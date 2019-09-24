@@ -1,6 +1,6 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{builtins::*, data::Data};
-use crate::parser::{ast::Literal, tokens::*};
+use crate::parser::{literal::Literal, tokens::*};
 
 use curl::easy::{Easy, List};
 use serde_json::{map::Map, Value};

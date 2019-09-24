@@ -1,5 +1,5 @@
 use crate::error_format::data::ErrorInfo;
-use crate::parser::ast::{Interval, Literal};
+use crate::parser::{ast::Interval, literal::Literal,};
 use multimap::MultiMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

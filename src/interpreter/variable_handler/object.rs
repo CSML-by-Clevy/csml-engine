@@ -3,7 +3,10 @@ use crate::interpreter::{
     data::Data,
     variable_handler::{get_literal, interval::interval_from_expr},
 };
-use crate::parser::ast::{Expr, Identifier, Interval, Literal};
+use crate::parser::{
+    ast::{Expr, Identifier, Interval},
+    literal::Literal,
+};
 use std::collections::HashMap;
 
 fn get_values<'a>(

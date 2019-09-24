@@ -2,7 +2,7 @@ mod support;
 
 use csmlinterpreter::interpret;
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::{ast::Literal, Parser};
+use csmlinterpreter::parser::{literal::Literal, Parser};
 use multimap::MultiMap;
 use serde_json::Value;
 
@@ -65,3 +65,20 @@ fn ok_object_step4() {
 
     assert_eq!(res, false)
 }
+
+#[test]
+fn ok_object_step5() {
+    let msg = format_message(None, "step5");
+    let v: Value = message_to_jsonvalue(msg);
+
+    let int = v["messages"][0]["content"]["text"]
+        .as_str()
+        .unwrap()
+        .parse::<i64>()
+        .unwrap();
+
+    if int < 1 && int > 5 {
+        panic!("Random fail {}", int);
+    }
+}
+

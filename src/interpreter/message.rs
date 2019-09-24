@@ -1,5 +1,5 @@
 use crate::error_format::data::ErrorInfo;
-use crate::parser::ast::*;
+use crate::parser::literal::Literal;
 use serde_json::{json, map::Map, Value};
 use std::ops::Add;
 

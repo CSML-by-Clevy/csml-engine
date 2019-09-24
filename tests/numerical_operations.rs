@@ -5,7 +5,7 @@ use csmlinterpreter::interpreter::{
     json_to_rust::*,
     message::{Message, MessageData},
 };
-use csmlinterpreter::parser::{ast::Literal, Parser};
+use csmlinterpreter::parser::{literal::Literal, Parser};
 use multimap::MultiMap;
 use serde_json::Value;
 

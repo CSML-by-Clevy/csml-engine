@@ -1,4 +1,4 @@
-use crate::parser::ast::Literal;
+use crate::parser::literal::Literal;
 
 fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal> {
     match name {
