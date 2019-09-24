@@ -35,6 +35,18 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
             value: json!(5),
         },
     );
+    past.insert(
+        "bool".to_owned(),
+        MemoryType {
+            created_at: "Today".to_owned(),
+            step_id: None,
+            flow_id: None,
+            conversation_id: None,
+            key: "bool".to_owned(),
+            value: json!(false),
+        },
+    );
+
     let memory = gen_context(past, MultiMap::new(), MultiMap::new(), 0, false);
 
     interpret(&flow, step, &memory, &event)
@@ -154,6 +166,17 @@ fn ok_var9_to_var9_comparison() {
 fn ok_if_func_in_condition() {
     let msg = format_message(None, "step4");
     let data = r#"{"messages":[{"content":{"text":"quoi"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn ok_if_ident_bool_condition() {
+    let msg = format_message(None, "step5");
+    let data = r#"{"messages":[{"content":{"text":"OK"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

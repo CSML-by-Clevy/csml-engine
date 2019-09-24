@@ -41,3 +41,11 @@ step4:
     say "quoi"
   }
   goto end
+
+step5:
+  if ( bool ) {
+    say "error bool if condition"
+  } else {
+    say "OK"
+  }
+  goto end
