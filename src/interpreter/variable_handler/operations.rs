@@ -1,6 +1,9 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::variable_handler::match_literals::match_obj;
-use crate::parser::ast::{Infix, Literal};
+use crate::parser::{
+    ast::{Infix},
+    literal::Literal,
+};
 
 pub fn evaluate(
     infix: &Infix,

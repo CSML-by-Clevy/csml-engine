@@ -1,9 +1,10 @@
+
 start:
-  use "hola quoi que tal ?" as plop
-  if ( Find("quoi", in = plop ) ) {
-    say "quoi"
+  use Find("a", in="xxx") as bool
+  say bool
+  if (bool) {
+    say "OK"
   }
   else {
-    say "pas quoi"
+    say "pas OK"
   }
-  goto end

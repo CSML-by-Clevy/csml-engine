@@ -50,5 +50,7 @@ step4:
             )
         ]
     ) as plop
-
     say plop
+
+step5:
+    say "{{ OneOf(["1", "2", "{{ OneOf([4, 5])  }}"])  }}"

@@ -35,5 +35,6 @@ pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval {
         ObjectType::As(ident, ..) => ident.interval.to_owned(),
         ObjectType::Import { step_name, .. } => step_name.interval.to_owned(),
         ObjectType::Normal(ident, ..) => ident.interval.to_owned(),
+        ObjectType::WaitFor(ident) => ident.interval.to_owned(),
     }
 }

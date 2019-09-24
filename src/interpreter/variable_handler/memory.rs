@@ -5,7 +5,8 @@ use crate::interpreter::{
     variable_handler::{get_literal, interval::interval_from_expr},
 };
 use crate::parser::{
-    ast::{Expr, Identifier, Interval, Literal, ObjectType},
+    ast::{Expr, Identifier, Interval, ObjectType},
+    literal::Literal,
     tokens::{FIRST, GET_VALUE, MEMORY, PAST},
 };
 

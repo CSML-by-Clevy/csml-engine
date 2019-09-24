@@ -18,7 +18,7 @@ use crate::interpreter::{
         interval::{interval_from_expr, interval_from_reserved_fn},
     },
 };
-use crate::parser::{ast::*, tokens::*};
+use crate::parser::{ast::*, tokens::*, literal::Literal,};
 use std::collections::HashMap;
 
 fn check_if_ident(expr: &Expr) -> bool {
@@ -27,6 +27,7 @@ fn check_if_ident(expr: &Expr) -> bool {
         Expr::IdentExpr(..) => true,
         Expr::BuilderExpr(..) => true,
         Expr::ComplexLiteral(..) => true,
+        Expr::ObjectExpr(..) => true, // ?
         _ => false,
     }
 }
@@ -58,7 +59,7 @@ pub fn match_builtin(
     }
 }
 
-fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
+pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match action {
         Expr::ObjectExpr(ObjectType::As(name, expr)) => {
             let lit = match_functions(expr, data)?;
@@ -133,11 +134,6 @@ fn match_actions(
         }),
     }
 }
-
-// fn warning_component(warning: &str, inter: &Interval) -> Literal {
-//     let string = Literal::string(warning.to_owned(), inter.to_owned());
-//     Literal::lit_to_obj(string, "Warning".to_owned(), inter.to_owned())
-// }
 
 pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData {

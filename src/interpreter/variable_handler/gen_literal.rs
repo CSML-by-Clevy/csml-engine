@@ -8,7 +8,8 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{Expr, Identifier, Interval, Literal},
+    ast::{Expr, Identifier, Interval},
+    literal::Literal,
     tokens::{MEMORY, METADATA, PAST},
 };
 

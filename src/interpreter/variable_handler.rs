@@ -8,7 +8,7 @@ pub mod operations;
 
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::if_statment::evaluate_condition,
+    ast_interpreter::{if_statment::evaluate_condition, match_functions},
     data::Data,
     variable_handler::{
         expr_to_literal::expr_to_literal,
@@ -18,7 +18,8 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{Expr, Identifier, Interval, Literal},
+    ast::{Expr, Identifier, Interval},
+    literal::Literal,
     tokens::{EVENT, RETRIES},
 };
 
@@ -88,7 +89,7 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> Literal
 
     //TODO: log error and catch inrterval
     for elem in exprs.iter() {
-        match get_var_from_ident(elem, data) {
+        match match_functions(elem, data) {
             Ok(var) => {
                 if interval.is_none() {
                     interval = Some(var.get_interval())

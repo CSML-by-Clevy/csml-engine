@@ -10,7 +10,7 @@ use interpreter::{
     json_to_rust::{Context, Event},
     message::MessageData,
 };
-use parser::{ast::*, Parser};
+use parser::{ast::*, Parser,};
 use std::collections::HashMap;
 
 pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
@@ -21,24 +21,6 @@ pub fn parse_file(file: String) -> Result<Flow, ErrorInfo> {
         }
         Err(e) => Err(e),
     }
-}
-
-pub fn is_trigger(flow: &Flow, string: &str) -> bool {
-    let info = flow.flow_instructions.get(&InstructionType::StartFlow);
-
-    if let Some(Expr::VecExpr(vec, ..)) = info {
-        for elem in vec.iter() {
-            match elem {
-                Expr::LitExpr(Literal::StringLiteral { value, .. })
-                    if value.to_lowercase() == string.to_lowercase() =>
-                {
-                    return true
-                }
-                _ => continue,
-            }
-        }
-    }
-    false
 }
 
 pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
