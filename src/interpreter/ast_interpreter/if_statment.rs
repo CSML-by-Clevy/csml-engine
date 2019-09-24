@@ -11,23 +11,27 @@ use crate::interpreter::{
 };
 use crate::parser::{ast::{Expr, IfStatement, Infix}, literal::Literal,};
 
+fn valid_literal(res: Result<Literal, ErrorInfo>) -> bool {
+    match res {
+        Ok(Literal::BoolLiteral{ value, .. }) => value,
+        Ok(Literal::Null{..}) => false,
+        Ok(_) => true,
+        Err(_) => false,
+    }
+}
+
 //TODO: add warning when comparing some objects
 fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
     match expr {
         Expr::LitExpr(Literal::BoolLiteral { value, .. }) => *value,
         Expr::LitExpr(Literal::Null { .. }) => false,
-        Expr::IdentExpr(ident) => match get_var(ident.to_owned(), data) {
-            Ok(Literal::BoolLiteral { value, .. }) => value,
-            Ok(Literal::Null{..}) => false,
-            Ok(_) => true,
-            Err(_) => false,
-        },
+        Expr::IdentExpr(ident) => valid_literal(get_var(ident.to_owned(), data)),
         Expr::InfixExpr(inf, exp1, exp2) => match evaluate_condition(inf, exp1, exp2, data) {
             Ok(Literal::BoolLiteral { value: false, .. }) => false,
             Ok(_) => true,
             Err(_e) => false,
         },
-        value => match_functions(value, data).is_ok(),
+        value => valid_literal(match_functions(value, data)),
     }
 }
 

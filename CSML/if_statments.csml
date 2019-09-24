@@ -49,3 +49,12 @@ step5:
     say "OK"
   }
   goto end
+
+step6:
+  if (Find("a", in = "xxx")) {
+    say "OK"
+  }
+  else {
+    say "pas OK"
+  }
+  goto end

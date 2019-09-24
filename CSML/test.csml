@@ -1,8 +1,8 @@
 
 start:
   use Find("a", in="xxx") as bool
-  say bool
-  if (bool) {
+  // say bool
+  if (Find("a", in="xxx")) {
     say "OK"
   }
   else {

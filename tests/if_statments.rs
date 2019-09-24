@@ -163,7 +163,7 @@ fn ok_var9_to_var9_comparison() {
 }
 
 #[test]
-fn ok_if_func_in_condition() {
+fn ok_if_func_in_condition_true() {
     let msg = format_message(None, "step4");
     let data = r#"{"messages":[{"content":{"text":"quoi"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
 
@@ -177,6 +177,17 @@ fn ok_if_func_in_condition() {
 fn ok_if_ident_bool_condition() {
     let msg = format_message(None, "step5");
     let data = r#"{"messages":[{"content":{"text":"OK"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn ok_if_func_in_condition_false() {
+    let msg = format_message(None, "step6");
+    let data = r#"{"messages":[{"content":{"text":"pas OK"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
