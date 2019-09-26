@@ -25,7 +25,7 @@ fn match_response(
             });
         };
         root = root.add_to_memory(
-            ident.to_owned(),
+            &ident,
             gen_literal_form_event(data.event, interval.to_owned())?,
         );
     }

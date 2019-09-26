@@ -1,6 +1,6 @@
 pub mod ast;
-pub mod literal;
 pub mod expressions_evaluation;
+pub mod literal;
 pub mod parse_actions;
 pub mod parse_ask_response;
 pub mod parse_comments;
@@ -56,22 +56,16 @@ impl Parser {
         match start_parsing(Span::new(CompleteByteSlice(slice))) {
             Ok((.., instructions)) => create_flow_from_instructions(instructions),
             Err(e) => match e {
-                Err::Error(Context::Code(span, code)) => Err(format_error(
-                    Interval {
-                        line: span.line,
-                        column: span.get_column() as u32,
-                    },
-                    code,
-                    &span.fragment,
-                )),
-                Err::Failure(Context::Code(span, code)) => Err(format_error(
-                    Interval {
-                        line: span.line,
-                        column: span.get_column() as u32,
-                    },
-                    code,
-                    &span.fragment,
-                )),
+                Err::Error(Context::Code(span, code)) | Err::Failure(Context::Code(span, code)) => {
+                    Err(format_error(
+                        Interval {
+                            line: span.line,
+                            column: span.get_column() as u32,
+                        },
+                        code,
+                        &span.fragment,
+                    ))
+                }
                 Err::Incomplete(..) => Err(ErrorInfo {
                     interval: Interval { line: 0, column: 0 },
                     message: "Incomplete".to_string(),

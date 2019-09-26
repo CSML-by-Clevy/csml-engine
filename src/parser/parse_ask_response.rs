@@ -1,7 +1,7 @@
 use crate::comment;
 use crate::parser::{
     ast::*,
-    parse_actions::{parse_root_functions},
+    parse_actions::parse_root_functions,
     parse_ident::parse_ident,
     parse_scope::{parse_scope, parse_strick_scope},
     tokens::*,

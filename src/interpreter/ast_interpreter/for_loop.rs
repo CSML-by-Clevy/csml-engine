@@ -3,7 +3,7 @@ use crate::interpreter::{
     ast_interpreter::interpret_scope, data::Data, message::*,
     variable_handler::expr_to_literal::expr_to_literal,
 };
-use crate::parser::{ast::*, literal::Literal,};
+use crate::parser::{ast::*, literal::Literal};
 
 pub fn for_loop(
     ident: &Identifier,

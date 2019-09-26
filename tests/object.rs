@@ -81,4 +81,3 @@ fn ok_object_step5() {
         panic!("Random fail {}", int);
     }
 }
-

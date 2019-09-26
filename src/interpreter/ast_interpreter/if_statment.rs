@@ -4,17 +4,19 @@ use crate::interpreter::{
     data::Data,
     message::MessageData,
     variable_handler::{
-        get_var, get_var_from_ident,
-        gen_literal::gen_literal_form_expr,
+        gen_literal::gen_literal_form_expr, get_var, get_var_from_ident,
         interval::interval_from_expr, operations::evaluate,
     },
 };
-use crate::parser::{ast::{Expr, IfStatement, Infix}, literal::Literal,};
+use crate::parser::{
+    ast::{Expr, IfStatement, Infix},
+    literal::Literal,
+};
 
 fn valid_literal(res: Result<Literal, ErrorInfo>) -> bool {
     match res {
-        Ok(Literal::BoolLiteral{ value, .. }) => value,
-        Ok(Literal::Null{..}) => false,
+        Ok(Literal::BoolLiteral { value, .. }) => value,
+        Ok(Literal::Null { .. }) => false,
         Ok(_) => true,
         Err(_) => false,
     }
@@ -26,7 +28,7 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
         Expr::LitExpr(Literal::BoolLiteral { value, .. }) => *value,
         Expr::LitExpr(Literal::Null { .. }) => false,
         Expr::IdentExpr(ident) => valid_literal(get_var(ident.to_owned(), data)),
-        Expr::InfixExpr(inf, exp1, exp2) => match evaluate_condition(inf, exp1, exp2, data) {
+        Expr::InfixExpr(inf, exp_1, exp_2) => match evaluate_condition(inf, exp_1, exp_2, data) {
             Ok(Literal::BoolLiteral { value: false, .. }) => false,
             Ok(_) => true,
             Err(_e) => false,
@@ -42,8 +44,8 @@ pub fn evaluate_condition(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     match (expr1, expr2) {
-        (exp1, ..) if Infix::Not == *infix && check_if_ident(exp1) => {
-            match get_var_from_ident(exp1, data) {
+        (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => {
+            match get_var_from_ident(exp_1, data) {
                 Ok(Literal::BoolLiteral {
                     value: false,
                     interval,
@@ -55,17 +57,15 @@ pub fn evaluate_condition(
                 Err(err) => Ok(Literal::boolean(true, err.interval)),
             }
         }
-        (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2) => {
-            evaluate(
-                infix,
-                match_functions(exp1, data),
-                match_functions(exp2, data),
-            )
-        }
-        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2)) => evaluate(
+        (exp_1, exp_2) if check_if_ident(exp_1) && check_if_ident(exp_2) => evaluate(
+            infix,
+            match_functions(exp_1, data),
+            match_functions(exp_2, data),
+        ),
+        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data),
-            evaluate_condition(i2, exp1, exp2, data),
+            evaluate_condition(i2, exp_1, exp_2, data),
         ),
         (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
             infix,
@@ -77,12 +77,10 @@ pub fn evaluate_condition(
             gen_literal_form_expr(exp, data),
             evaluate_condition(i1, ex1, ex2, data),
         ),
-        (e1, _e2) => {
-            Err(ErrorInfo {
+        (e1, _e2) => Err(ErrorInfo {
             message: "error in evaluate_condition function".to_owned(),
             interval: interval_from_expr(e1),
-            })
-        },
+        }),
     }
 }
 

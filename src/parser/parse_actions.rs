@@ -1,11 +1,11 @@
 use crate::comment;
 use crate::parser::{
     ast::*,
-    tools::get_interval,
     parse_ident::parse_ident,
     parse_import::parse_import,
     parse_var_types::{parse_as_variable, parse_expr_list, parse_var_expr},
     tokens::*,
+    tools::get_interval,
     GotoType, ParserErrorType,
 };
 use nom::*;

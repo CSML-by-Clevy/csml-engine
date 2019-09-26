@@ -1,5 +1,5 @@
 use crate::interpreter::json_to_rust::*;
-use crate::parser::{ast::*, literal::Literal,};
+use crate::parser::{ast::*, literal::Literal};
 use std::collections::HashMap;
 
 pub struct Data<'a> {

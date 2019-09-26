@@ -1,9 +1,5 @@
 use crate::error_format::data::ErrorInfo;
-use crate::parser::{
-    ast::{Interval},
-    literal::Literal,
-    tokens::*,
-};
+use crate::parser::{ast::Interval, literal::Literal, tokens::*};
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::HashMap;
@@ -231,7 +227,7 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
     }
 }
 
-pub fn random(interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn random(interval: &Interval) -> Result<Literal, ErrorInfo> {
     let mut rng = rand::thread_rng();
     Ok(Literal::float(rng.gen(), interval.to_owned()))
 }

@@ -17,8 +17,8 @@ fn get_values<'a>(
     match literal {
         Literal::ObjectLiteral { properties, .. } => Ok(properties),
         Literal::FunctionLiteral { value, .. } => {
-            let literal: &Literal = value;
-            match literal {
+            let lit: &Literal = value;
+            match lit {
                 Literal::ObjectLiteral { properties, .. } => Ok(properties),
                 _ => Err(ErrorInfo {
                     message: "Error ... bad type".to_owned(),

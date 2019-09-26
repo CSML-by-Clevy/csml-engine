@@ -18,11 +18,13 @@ pub struct Message {
 impl Message {
     pub fn new(literal: Literal) -> Self {
         match literal.clone() {
-            Literal::StringLiteral { interval, .. } => Message {
+            Literal::StringLiteral { interval, .. } => Self {
                 content_type: "text".to_owned(),
                 content: Literal::lit_to_obj(literal, "text".to_owned(), interval),
             },
-            Literal::IntLiteral { interval, .. } => Message {
+            Literal::IntLiteral { interval, .. }
+            | Literal::FloatLiteral { interval, .. }
+            | Literal::BoolLiteral { interval, .. } => Self {
                 content_type: "text".to_owned(),
                 content: Literal::lit_to_obj(
                     Literal::string(literal.to_string(), literal.get_interval()),
@@ -30,30 +32,14 @@ impl Message {
                     interval,
                 ),
             },
-            Literal::FloatLiteral { interval, .. } => Message {
-                content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(
-                    Literal::string(literal.to_string(), literal.get_interval()),
-                    "text".to_owned(),
-                    interval,
-                ),
-            },
-            Literal::BoolLiteral { interval, .. } => Message {
-                content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(
-                    Literal::string(literal.to_string(), literal.get_interval()),
-                    "text".to_owned(),
-                    interval,
-                ),
-            },
-            Literal::ArrayLiteral { .. } => Message {
+            Literal::ArrayLiteral { .. } => Self {
                 content_type: "array".to_owned(),
                 content: literal,
             },
             Literal::ObjectLiteral {
                 properties: value,
                 interval,
-            } => Message {
+            } => Self {
                 content_type: "object".to_owned(),
                 content: Literal::object(value, interval),
             },
@@ -61,11 +47,11 @@ impl Message {
                 name,
                 value,
                 interval,
-            } => Message {
+            } => Self {
                 content_type: name.to_owned(),
                 content: Literal::name_object(name.to_owned(), &value, interval),
             },
-            Literal::Null { .. } => Message {
+            Literal::Null { .. } => Self {
                 content_type: literal.type_to_string(),
                 content: literal,
             },
@@ -87,22 +73,22 @@ impl Message {
             Literal::BoolLiteral { value, .. } => json!(value),
             Literal::ArrayLiteral { items, .. } => {
                 let mut array: Vec<Value> = vec![];
-                for val in items.iter() {
-                    array.push(Message::lit_to_json(val.to_owned()));
+                for val in &items {
+                    array.push(Self::lit_to_json(val.to_owned()));
                 }
                 Value::Array(array)
             }
             Literal::ObjectLiteral { properties, .. } => {
                 let mut map: Map<String, Value> = Map::new();
                 for (k, v) in properties.to_owned().drain() {
-                    map.insert(k.to_owned(), Message::lit_to_json(v));
+                    map.insert(k.to_owned(), Self::lit_to_json(v));
                 }
                 Value::Object(map)
             }
             Literal::FunctionLiteral { name, value, .. } => {
                 let mut map: Map<String, Value> = Map::new();
                 let val = (*value).clone();
-                map.insert(name.to_owned(), Message::lit_to_json(val));
+                map.insert(name.to_owned(), Self::lit_to_json(val));
                 Value::Object(map)
             }
             Literal::Null { .. } => json!(null),
@@ -111,7 +97,7 @@ impl Message {
 
     pub fn message_to_json(self) -> Value {
         let mut map: Map<String, Value> = Map::new();
-        let value = Message::lit_to_json(self.content);
+        let value = Self::lit_to_json(self.content);
 
         map.insert("content_type".to_owned(), json!(self.content_type));
         map.insert("content".to_owned(), value);
@@ -143,10 +129,10 @@ pub struct MessageData {
 }
 
 impl Add for MessageData {
-    type Output = MessageData;
+    type Output = Self;
 
-    fn add(self, other: MessageData) -> MessageData {
-        MessageData {
+    fn add(self, other: Self) -> Self {
+        Self {
             memories: match (self.memories, other.memories) {
                 (Some(memory), None) => Some(memory),
                 (None, Some(newmemory)) => Some(newmemory),
@@ -176,34 +162,24 @@ impl MessageData {
         self
     }
 
-    pub fn add_to_memory(mut self, key: String, value: Literal) -> Self {
+    pub fn add_to_memory(mut self, key: &str, value: Literal) -> Self {
         if let Some(ref mut vec) = self.memories {
             if let Literal::ObjectLiteral { .. } = &value {
                 vec.push(Memories {
-                    key: key.clone(),
+                    key: key.to_owned(),
                     value,
                 });
             } else {
                 vec.push(Memories {
-                    key: key.clone(),
+                    key: key.to_owned(),
                     value,
                 });
             }
         } else {
-            match &value {
-                Literal::ObjectLiteral { .. } => {
-                    self.memories = Some(vec![Memories {
-                        key: key.clone(),
-                        value: value,
-                    }])
-                }
-                _ => {
-                    self.memories = Some(vec![Memories {
-                        key: key.clone(),
-                        value: value,
-                    }])
-                }
-            };
+            self.memories = Some(vec![Memories {
+                key: key.to_owned(),
+                value: value,
+            }])
         }
         self
     }
@@ -218,7 +194,7 @@ impl MessageData {
         self
     }
 
-    pub fn error_to_message(resutl: Result<MessageData, ErrorInfo>) -> Self {
+    pub fn error_to_message(resutl: Result<Self, ErrorInfo>) -> Self {
         match resutl {
             Ok(v) => v,
             Err(ErrorInfo { message, interval }) => {
@@ -226,7 +202,7 @@ impl MessageData {
                     "{} at line {}, column {}",
                     message, interval.line, interval.column
                 );
-                MessageData {
+                Self {
                     memories: None,
                     messages: vec![Message {
                         content_type: "error".to_owned(),

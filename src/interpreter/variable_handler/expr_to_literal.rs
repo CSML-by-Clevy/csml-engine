@@ -6,7 +6,7 @@ use crate::interpreter::{
         get_string_from_complexstring, get_var, get_var_from_ident, interval::interval_from_expr,
     },
 };
-use crate::parser::{ast::*, tokens::*, literal::Literal,};
+use crate::parser::{ast::*, literal::Literal, tokens::*};
 use std::collections::HashMap;
 
 fn format_object_attributes(
@@ -32,7 +32,7 @@ fn format_object_attributes(
             }
             Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
                 let interval = interval_from_expr(elem);
-                let (_, literal) = normal_object_to_literal(&name.ident, value, interval, data)?;
+                let (_, literal) = normal_object_to_literal(&name.ident, value, &interval, data)?;
 
                 obj.insert(DEFAULT.to_owned(), literal);
             }
@@ -49,7 +49,7 @@ fn format_object_attributes(
 fn normal_object_to_literal(
     name: &str,
     value: &Expr,
-    interval: Interval,
+    interval: &Interval,
     data: &mut Data,
 ) -> Result<(String, Literal), ErrorInfo> {
     let obj = format_object_attributes(value, data)?;
@@ -77,7 +77,7 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
         Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
             let interval = interval_from_expr(expr);
             let (_name, literal) =
-                normal_object_to_literal(&name.ident, value, interval.to_owned(), data)?;
+                normal_object_to_literal(&name.ident, value, &interval, data)?;
 
             Ok(literal)
         }

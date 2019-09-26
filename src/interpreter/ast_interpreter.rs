@@ -18,16 +18,16 @@ use crate::interpreter::{
         interval::{interval_from_expr, interval_from_reserved_fn},
     },
 };
-use crate::parser::{ast::*, tokens::*, literal::Literal,};
+use crate::parser::{ast::*, literal::Literal, tokens::*};
 use std::collections::HashMap;
 
 fn check_if_ident(expr: &Expr) -> bool {
     match expr {
-        Expr::LitExpr { .. } => true,
-        Expr::IdentExpr(..) => true,
-        Expr::BuilderExpr(..) => true,
-        Expr::ComplexLiteral(..) => true,
-        Expr::ObjectExpr(..) => true, // ?
+        Expr::LitExpr { .. }
+        | Expr::IdentExpr(..)
+        | Expr::BuilderExpr(..)
+        | Expr::ComplexLiteral(..)
+        | Expr::ObjectExpr(..) => true,
         _ => false,
     }
 }
@@ -49,7 +49,7 @@ pub fn match_builtin(
 
         LENGTH => Ok(length(args, interval)?),
         FIND => Ok(find(args, interval)?),
-        RANDOM => Ok(random(interval)?),
+        RANDOM => Ok(random(&interval)?),
         FLOOR => Ok(floor(args, interval)?),
 
         BUTTON => Ok(button(args, name.to_owned(), &interval)?),
@@ -66,16 +66,16 @@ pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorI
             data.step_vars.insert(name.ident.to_owned(), lit.clone());
             Ok(lit)
         }
-        Expr::ObjectExpr(ObjectType::Normal(..)) => Ok(expr_to_literal(action, data)?),
-        Expr::BuilderExpr(..) => Ok(expr_to_literal(action, data)?),
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
-        Expr::InfixExpr(infix, exp1, exp2) => Ok(evaluate_condition(infix, exp1, exp2, data)?),
+        Expr::InfixExpr(infix, exp_1, exp_2) => Ok(evaluate_condition(infix, exp_1, exp_2, data)?),
         Expr::IdentExpr(ident) => match get_var(ident.to_owned(), data) {
             Ok(val) => Ok(val),
             Err(_e) => Ok(Literal::null(ident.interval.to_owned())),
         },
-        Expr::LitExpr { .. } => Ok(expr_to_literal(action, data)?),
-        Expr::VecExpr(..) => Ok(expr_to_literal(action, data)?),
+        Expr::ObjectExpr(ObjectType::Normal(..))
+        | Expr::BuilderExpr(..)
+        | Expr::LitExpr{ .. }
+        | Expr::VecExpr(..) => Ok(expr_to_literal(action, data)?),
         e => Err(ErrorInfo {
             message: format!("Error must be a valid function {:?}", e),
             interval: interval_from_expr(e),
@@ -101,7 +101,7 @@ fn match_actions(
         ObjectType::Goto(GotoType::Flow, flow_name) => Ok(root.add_next_flow(&flow_name.ident)),
         ObjectType::Remember(name, variable) => {
             let lit = match_functions(variable, data)?;
-            root = root.add_to_memory(name.ident.to_owned(), lit.clone());
+            root = root.add_to_memory(&name.ident, lit.clone());
             data.step_vars.insert(name.ident.to_owned(), lit); // can be remove if we check if tmp var are saved in memory
             Ok(root)
         }

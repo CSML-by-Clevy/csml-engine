@@ -3,7 +3,7 @@ pub mod reserved_functions;
 
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{json_to_rust::*, message::*};
-use crate::parser::{ast::*, literal::Literal,};
+use crate::parser::{ast::*, literal::Literal};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::hash::BuildHasher;

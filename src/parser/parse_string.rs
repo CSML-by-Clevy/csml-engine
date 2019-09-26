@@ -1,9 +1,5 @@
 use crate::parser::{
-    ast::*,
-    literal::Literal,
-    parse_var_types::parse_var_expr,
-    tokens::*,
-    tools::get_interval,
+    ast::*, literal::Literal, parse_var_types::parse_var_expr, tokens::*, tools::get_interval,
     ParserErrorType,
 };
 use nom::*;

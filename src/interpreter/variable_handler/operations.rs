@@ -1,9 +1,6 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::variable_handler::match_literals::match_obj;
-use crate::parser::{
-    ast::{Infix},
-    literal::Literal,
-};
+use crate::parser::{ast::Infix, literal::Literal};
 
 pub fn evaluate(
     infix: &Infix,
@@ -32,8 +29,8 @@ pub fn evaluate(
         (Infix::Divide, Ok(l1), Ok(l2)) => l1 / l2,
         (Infix::Multiply, Ok(l1), Ok(l2)) => l1 * l2,
         (Infix::Remainder, Ok(l1), Ok(l2)) => l1 % l2,
-        (_, Err(e), ..) => Err(e), //Ok(Literal::boolean(false, e.interval.to_owned())),
-        (_, .., Err(e)) => Err(e), //Ok(Literal::boolean(false, e.interval.to_owned())),
+        (_, Err(e), ..)
+        | (_, .., Err(e)) => Err(e), //Ok(Literal::boolean(false, e.interval.to_owned())),
         (_, Ok(l1), ..) => Ok(Literal::boolean(false, l1.get_interval())),
     }
 }

@@ -2,10 +2,10 @@ use crate::error_format::data::ErrorInfo;
 use crate::interpreter::message::Message;
 use crate::parser::{ast::Interval, tokens::NULL};
 use std::{
-    collections::HashMap,
     cmp::Ordering,
+    collections::HashMap,
+    ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Sub},
     str::FromStr,
-    ops::{BitAnd, BitOr, Div, Mul, Rem, Sub, Add},
 };
 
 #[derive(Debug, Clone)]
@@ -46,7 +46,7 @@ pub enum Literal {
 }
 
 impl PartialOrd for Literal {
-    fn partial_cmp(&self, other: &Literal) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (
                 Literal::StringLiteral { value: l1, .. },
@@ -59,7 +59,7 @@ impl PartialOrd for Literal {
                     interval,
                 },
                 Literal::StringLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l2, interval.to_owned()) {
+            ) => match Self::str_to_literal(l2, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => l1.partial_cmp(&value),
                 Literal::FloatLiteral { value, .. } => l1.partial_cmp(&(value as i64)),
                 _ => None,
@@ -70,7 +70,7 @@ impl PartialOrd for Literal {
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l1, interval.to_owned()) {
+            ) => match Self::str_to_literal(l1, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => value.partial_cmp(l2),
                 Literal::FloatLiteral { value, .. } => (value as i64).partial_cmp(l2),
                 _ => None,
@@ -82,7 +82,7 @@ impl PartialOrd for Literal {
                     interval,
                 },
                 Literal::StringLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l2, interval.to_owned()) {
+            ) => match Self::str_to_literal(l2, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => l1.partial_cmp(&(value as f64)),
                 Literal::FloatLiteral { value, .. } => l1.partial_cmp(&value),
                 _ => None,
@@ -93,7 +93,7 @@ impl PartialOrd for Literal {
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l1, interval.to_owned()) {
+            ) => match Self::str_to_literal(l1, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => (value as f64).partial_cmp(l2),
                 Literal::FloatLiteral { value, .. } => value.partial_cmp(l2),
                 _ => None,
@@ -124,7 +124,7 @@ impl PartialOrd for Literal {
 }
 
 impl PartialEq for Literal {
-    fn eq(&self, other: &Literal) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
                 Literal::StringLiteral { value: l1, .. },
@@ -136,7 +136,7 @@ impl PartialEq for Literal {
                     interval,
                 },
                 Literal::StringLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l2, interval.to_owned()) {
+            ) => match Self::str_to_literal(l2, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => *l1 == value,
                 Literal::FloatLiteral { value, .. } => *l1 == value as i64,
                 _ => false,
@@ -147,7 +147,7 @@ impl PartialEq for Literal {
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l1, interval.to_owned()) {
+            ) => match Self::str_to_literal(l1, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => *l2 == value,
                 Literal::FloatLiteral { value, .. } => *l2 == value as i64,
                 _ => false,
@@ -159,7 +159,7 @@ impl PartialEq for Literal {
                     interval,
                 },
                 Literal::StringLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l2, interval.to_owned()) {
+            ) => match Self::str_to_literal(l2, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => *l1 == value as f64,
                 Literal::FloatLiteral { value, .. } => *l1 == value,
                 _ => false,
@@ -170,7 +170,7 @@ impl PartialEq for Literal {
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => match Literal::str_to_literal(l1, interval.to_owned()) {
+            ) => match Self::str_to_literal(l1, interval.to_owned()) {
                 Literal::IntLiteral { value, .. } => *l2 == value as f64,
                 Literal::FloatLiteral { value, .. } => *l2 == value,
                 _ => false,
@@ -209,30 +209,30 @@ impl Literal {
             Literal::IntLiteral { value, .. } => value.to_string(),
             Literal::FloatLiteral { value, .. } => value.to_string(),
             Literal::BoolLiteral { value, .. } => value.to_string(),
-            Literal::ArrayLiteral { .. } => Message::lit_to_json(self.to_owned()).to_string(),
-            Literal::ObjectLiteral { .. } => Message::lit_to_json(self.to_owned()).to_string(),
-            Literal::FunctionLiteral { .. } => Message::lit_to_json(self.to_owned()).to_string(),
+            Literal::ArrayLiteral { .. }
+            | Literal::ObjectLiteral { .. }
+            | Literal::FunctionLiteral { .. } => Message::lit_to_json(self.to_owned()).to_string(),
             Literal::Null { value, .. } => value.to_owned(),
         }
     }
 
     pub fn is_valid(&self) -> Self {
         match self {
-            Literal::StringLiteral { .. } => self.to_owned(),
-            Literal::IntLiteral { .. } => self.to_owned(),
-            Literal::FloatLiteral { .. } => self.to_owned(),
             Literal::BoolLiteral {
                 value: false,
                 interval,
-            } => Literal::boolean(false, interval.to_owned()),
+            } => Self::boolean(false, interval.to_owned()),
             Literal::BoolLiteral {
                 value: true,
                 interval,
-            } => Literal::boolean(true, interval.to_owned()),
-            Literal::ArrayLiteral { .. } => self.to_owned(),
-            Literal::ObjectLiteral { .. } => self.to_owned(),
-            Literal::FunctionLiteral { .. } => self.to_owned(),
-            Literal::Null { interval, .. } => Literal::boolean(false, interval.to_owned()),
+            } => Self::boolean(true, interval.to_owned()),
+            Literal::StringLiteral { .. }
+            | Literal::IntLiteral { .. }
+            | Literal::FloatLiteral { .. }
+            | Literal::ArrayLiteral { .. }
+            | Literal::ObjectLiteral { .. }
+            | Literal::FunctionLiteral { .. } => self.to_owned(),
+            Literal::Null { interval, .. } => Self::boolean(false, interval.to_owned()),
         }
     }
 
@@ -249,11 +249,11 @@ impl Literal {
         }
     }
 
-    pub fn str_to_literal(stirng: &str, interval: Interval) -> Literal {
+    pub fn str_to_literal(stirng: &str, interval: Interval) -> Self {
         match (i64::from_str(stirng), f64::from_str(stirng)) {
-            (Ok(int), _) => Literal::int(int, interval),
-            (_, Ok(float)) => Literal::float(float, interval),
-            (_, _) => Literal::string(stirng.to_owned(), interval),
+            (Ok(int), _) => Self::int(int, interval),
+            (_, Ok(float)) => Self::float(float, interval),
+            (_, _) => Self::string(stirng.to_owned(), interval),
         }
     }
 
@@ -279,45 +279,45 @@ impl Literal {
     }
 
     pub fn float(value: f64, interval: Interval) -> Self {
-        Literal::FloatLiteral { value, interval }
+        Self::FloatLiteral { value, interval }
     }
 
     pub fn int(value: i64, interval: Interval) -> Self {
-        Literal::IntLiteral { value, interval }
+        Self::IntLiteral { value, interval }
     }
 
     pub fn boolean(value: bool, interval: Interval) -> Self {
-        Literal::BoolLiteral { value, interval }
+        Self::BoolLiteral { value, interval }
     }
 
     pub fn string(value: String, interval: Interval) -> Self {
-        Literal::StringLiteral { value, interval }
+        Self::StringLiteral { value, interval }
     }
 
-    pub fn array(items: Vec<Literal>, interval: Interval) -> Self {
-        Literal::ArrayLiteral { items, interval }
+    pub fn array(items: Vec<Self>, interval: Interval) -> Self {
+        Self::ArrayLiteral { items, interval }
     }
 
-    pub fn object(properties: HashMap<String, Literal>, interval: Interval) -> Self {
-        Literal::ObjectLiteral {
+    pub fn object(properties: HashMap<String, Self>, interval: Interval) -> Self {
+        Self::ObjectLiteral {
             properties,
             interval,
         }
     }
 
-    pub fn name_object(name: String, value: &Literal, interval: Interval) -> Self {
-        Literal::FunctionLiteral {
+    pub fn name_object(name: String, value: &Self, interval: Interval) -> Self {
+        Self::FunctionLiteral {
             name,
             value: Box::new(value.to_owned()),
             interval,
         }
     }
 
-    pub fn lit_to_obj(properties: Literal, name: String, interval: Interval) -> Self {
-        let mut obj: HashMap<String, Literal> = HashMap::new();
+    pub fn lit_to_obj(properties: Self, name: String, interval: Interval) -> Self {
+        let mut obj: HashMap<String, Self> = HashMap::new();
 
         obj.insert(name, properties);
-        Literal::object(obj, interval)
+        Self::object(obj, interval)
     }
 
     pub fn null(interval: Interval) -> Self {
@@ -340,9 +340,9 @@ fn convert_to_numeric(var: &str, interval: Interval) -> Result<Literal, ErrorInf
 }
 
 impl Add for Literal {
-    type Output = Result<Literal, ErrorInfo>;
+    type Output = Result<Self, ErrorInfo>;
 
-    fn add(self, other: Literal) -> Result<Literal, ErrorInfo> {
+    fn add(self, other: Self) -> Result<Self, ErrorInfo> {
         match (self, other) {
             (
                 Literal::StringLiteral {
@@ -384,35 +384,35 @@ impl Add for Literal {
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 + l2 as f64, interval.to_owned())),
+            ) => Ok(Self::float(l1 + l2 as f64, interval.to_owned())),
             (
                 Literal::IntLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 as f64 + l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 as f64 + l2, interval.to_owned())),
             (
                 Literal::FloatLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 + l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 + l2, interval.to_owned())),
             (
                 Literal::IntLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::int(l1 + l2, interval.to_owned())),
+            ) => Ok(Self::int(l1 + l2, interval.to_owned())),
             (
                 Literal::BoolLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::BoolLiteral { value: l2, .. },
-            ) => Ok(Literal::int(l1 as i64 + l2 as i64, interval.to_owned())),
+            ) => Ok(Self::int(l1 as i64 + l2 as i64, interval.to_owned())),
             (l1, _) => Err(ErrorInfo {
                 message: "Illegal operation + between types".to_owned(),
                 interval: l1.get_interval(),
@@ -422,9 +422,9 @@ impl Add for Literal {
 }
 
 impl Sub for Literal {
-    type Output = Result<Literal, ErrorInfo>;
+    type Output = Result<Self, ErrorInfo>;
 
-    fn sub(self, other: Literal) -> Result<Literal, ErrorInfo> {
+    fn sub(self, other: Self) -> Result<Self, ErrorInfo> {
         match (self, other) {
             (
                 Literal::StringLiteral {
@@ -466,21 +466,21 @@ impl Sub for Literal {
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 - l2 as f64, interval.to_owned())),
+            ) => Ok(Self::float(l1 - l2 as f64, interval.to_owned())),
             (
                 Literal::IntLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 as f64 - l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 as f64 - l2, interval.to_owned())),
             (
                 Literal::FloatLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 - l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 - l2, interval.to_owned())),
 
             (
                 Literal::IntLiteral {
@@ -488,14 +488,14 @@ impl Sub for Literal {
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::int(l1 - l2, interval.to_owned())),
+            ) => Ok(Self::int(l1 - l2, interval.to_owned())),
             (
                 Literal::BoolLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::BoolLiteral { value: l2, .. },
-            ) => Ok(Literal::int(l1 as i64 - l2 as i64, interval.to_owned())),
+            ) => Ok(Self::int(l1 as i64 - l2 as i64, interval.to_owned())),
             (l1, _) => Err(ErrorInfo {
                 message: "Illegal operation - between types".to_owned(),
                 interval: l1.get_interval(),
@@ -505,9 +505,9 @@ impl Sub for Literal {
 }
 
 impl Div for Literal {
-    type Output = Result<Literal, ErrorInfo>;
+    type Output = Result<Self, ErrorInfo>;
 
-    fn div(self, other: Literal) -> Result<Literal, ErrorInfo> {
+    fn div(self, other: Self) -> Result<Self, ErrorInfo> {
         match (self, other) {
             (
                 Literal::StringLiteral {
@@ -556,7 +556,7 @@ impl Div for Literal {
                         interval: interval.to_owned(),
                     });
                 }
-                Ok(Literal::float(l1 / l2 as f64, interval.to_owned()))
+                Ok(Self::float(l1 / l2 as f64, interval.to_owned()))
             }
             (
                 Literal::IntLiteral {
@@ -571,7 +571,7 @@ impl Div for Literal {
                         interval: interval.to_owned(),
                     });
                 }
-                Ok(Literal::float(l1 as f64 / l2, interval.to_owned()))
+                Ok(Self::float(l1 as f64 / l2, interval.to_owned()))
             }
             (
                 Literal::FloatLiteral {
@@ -586,7 +586,7 @@ impl Div for Literal {
                         interval: interval.to_owned(),
                     });
                 }
-                Ok(Literal::float(l1 / l2, interval.to_owned()))
+                Ok(Self::float(l1 / l2, interval.to_owned()))
             }
             (
                 Literal::IntLiteral {
@@ -601,7 +601,7 @@ impl Div for Literal {
                         interval: interval.to_owned(),
                     });
                 }
-                Ok(Literal::float(l1 as f64 / l2 as f64, interval.to_owned()))
+                Ok(Self::float(l1 as f64 / l2 as f64, interval.to_owned()))
             }
             (
                 Literal::BoolLiteral {
@@ -616,7 +616,7 @@ impl Div for Literal {
                         interval: interval.to_owned(),
                     });
                 }
-                Ok(Literal::int(l1 as i64 / l2 as i64, interval.to_owned()))
+                Ok(Self::int(l1 as i64 / l2 as i64, interval.to_owned()))
             }
             (l1, _) => Err(ErrorInfo {
                 message: "Illegal operation / between types".to_owned(),
@@ -627,9 +627,9 @@ impl Div for Literal {
 }
 
 impl Mul for Literal {
-    type Output = Result<Literal, ErrorInfo>;
+    type Output = Result<Self, ErrorInfo>;
 
-    fn mul(self, other: Literal) -> Result<Literal, ErrorInfo> {
+    fn mul(self, other: Self) -> Result<Self, ErrorInfo> {
         match (self, other) {
             (
                 Literal::StringLiteral {
@@ -671,35 +671,35 @@ impl Mul for Literal {
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 * l2 as f64, interval.to_owned())),
+            ) => Ok(Self::float(l1 * l2 as f64, interval.to_owned())),
             (
                 Literal::IntLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 as f64 * l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 as f64 * l2, interval.to_owned())),
             (
                 Literal::FloatLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 * l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 * l2, interval.to_owned())),
             (
                 Literal::IntLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::int(l1 * l2, interval.to_owned())),
+            ) => Ok(Self::int(l1 * l2, interval.to_owned())),
             (
                 Literal::BoolLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::BoolLiteral { value: l2, .. },
-            ) => Ok(Literal::int(l1 as i64 * l2 as i64, interval.to_owned())),
+            ) => Ok(Self::int(l1 as i64 * l2 as i64, interval.to_owned())),
             (l1, _) => Err(ErrorInfo {
                 message: "Illegal operation * between types".to_owned(),
                 interval: l1.get_interval(),
@@ -709,9 +709,9 @@ impl Mul for Literal {
 }
 
 impl Rem for Literal {
-    type Output = Result<Literal, ErrorInfo>;
+    type Output = Result<Self, ErrorInfo>;
 
-    fn rem(self, other: Literal) -> Result<Literal, ErrorInfo> {
+    fn rem(self, other: Self) -> Result<Self, ErrorInfo> {
         match (self, other) {
             (
                 Literal::StringLiteral {
@@ -753,35 +753,35 @@ impl Rem for Literal {
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 % l2 as f64, interval.to_owned())),
+            ) => Ok(Self::float(l1 % l2 as f64, interval.to_owned())),
             (
                 Literal::IntLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 as f64 % l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 as f64 % l2, interval.to_owned())),
             (
                 Literal::FloatLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::FloatLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 % l2, interval.to_owned())),
+            ) => Ok(Self::float(l1 % l2, interval.to_owned())),
             (
                 Literal::IntLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::IntLiteral { value: l2, .. },
-            ) => Ok(Literal::float(l1 as f64 % l2 as f64, interval.to_owned())),
+            ) => Ok(Self::float(l1 as f64 % l2 as f64, interval.to_owned())),
             (
                 Literal::BoolLiteral {
                     value: l1,
                     interval,
                 },
                 Literal::BoolLiteral { value: l2, .. },
-            ) => Ok(Literal::int(l1 as i64 % l2 as i64, interval.to_owned())),
+            ) => Ok(Self::int(l1 as i64 % l2 as i64, interval.to_owned())),
             (l1, _) => Err(ErrorInfo {
                 message: "Illegal operation % between types".to_owned(),
                 interval: l1.get_interval(),
@@ -793,7 +793,7 @@ impl Rem for Literal {
 impl BitAnd for Literal {
     type Output = Self;
 
-    fn bitand(self, other: Self) -> Literal {
+    fn bitand(self, other: Self) -> Self {
         match (self, other) {
             (
                 Literal::BoolLiteral {
@@ -801,17 +801,18 @@ impl BitAnd for Literal {
                     interval,
                 },
                 _,
-            ) => Literal::boolean(false, interval.to_owned()),
-            (
+            )
+            | (
                 _,
                 Literal::BoolLiteral {
                     value: false,
                     interval,
                 },
-            ) => Literal::boolean(false, interval.to_owned()),
-            (Literal::Null { interval, .. }, _) => Literal::boolean(false, interval.to_owned()),
-            (_, Literal::Null { interval, .. }) => Literal::boolean(false, interval.to_owned()),
-            (l1, ..) => Literal::boolean(true, l1.get_interval()),
+            ) => Self::boolean(false, interval.to_owned()),
+            (Literal::Null { interval, .. }, _) | (_, Literal::Null { interval, .. }) => {
+                Self::boolean(false, interval.to_owned())
+            }
+            (l1, ..) => Self::boolean(true, l1.get_interval()),
         }
     }
 }
@@ -819,7 +820,7 @@ impl BitAnd for Literal {
 impl BitOr for Literal {
     type Output = Self;
 
-    fn bitor(self, other: Self) -> Literal {
+    fn bitor(self, other: Self) -> Self {
         match (self, other) {
             (
                 Literal::BoolLiteral {
@@ -827,21 +828,19 @@ impl BitOr for Literal {
                     interval,
                 },
                 Literal::BoolLiteral { value: false, .. },
-            ) => Literal::boolean(false, interval.to_owned()),
-            (Literal::Null { interval, .. }, Literal::Null { .. }) => {
-                Literal::boolean(false, interval.to_owned())
-            }
-            (Literal::Null { interval, .. }, Literal::BoolLiteral { value: false, .. }) => {
-                Literal::boolean(false, interval.to_owned())
-            }
-            (
+            )
+            | (
                 Literal::BoolLiteral {
                     value: false,
                     interval,
                 },
                 Literal::Null { .. },
-            ) => Literal::boolean(false, interval.to_owned()),
-            (l1, ..) => Literal::boolean(true, l1.get_interval()),
+            ) => Self::boolean(false, interval.to_owned()),
+            (Literal::Null { interval, .. }, Literal::Null { .. })
+            | (Literal::Null { interval, .. }, Literal::BoolLiteral { value: false, .. }) => {
+                Self::boolean(false, interval.to_owned())
+            }
+            (l1, ..) => Self::boolean(true, l1.get_interval()),
         }
     }
 }

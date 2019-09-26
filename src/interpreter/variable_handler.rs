@@ -112,9 +112,8 @@ pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<Literal, Error
     match expr {
         Expr::LitExpr(literal) => Ok(literal.clone()),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
-        Expr::BuilderExpr(..) => gen_literal_form_builder(expr, data),
-        Expr::ComplexLiteral(..) => gen_literal_form_builder(expr, data),
-        Expr::InfixExpr(infix, exp1, exp2) => evaluate_condition(infix, exp1, exp2, data),
+        Expr::BuilderExpr(..) | Expr::ComplexLiteral(..) => gen_literal_form_builder(expr, data),
+        Expr::InfixExpr(infix, exp_1, exp_2) => evaluate_condition(infix, exp_1, exp_2, data),
         e => Err(ErrorInfo {
             message: "unknown variable in Ident err get_var_from_ident".to_owned(),
             interval: interval_from_expr(e),

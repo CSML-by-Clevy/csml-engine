@@ -97,7 +97,7 @@ pub enum Expr {
 }
 
 impl Expr {
-    pub fn new_ident(ident: String, interval: Interval, index: Option<Box<Expr>>) -> Identifier {
+    pub fn new_ident(ident: String, interval: Interval, index: Option<Box<Self>>) -> Identifier {
         Identifier {
             ident,
             interval,
@@ -142,7 +142,7 @@ pub struct Interval {
 
 impl Interval {
     pub fn new(span: Span) -> Self {
-        Interval {
+        Self {
             line: span.line,
             column: span.get_column() as u32,
         }
@@ -157,13 +157,13 @@ pub struct Identifier {
 }
 
 impl PartialEq for Identifier {
-    fn eq(&self, other: &Identifier) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.ident == other.ident
     }
 }
 
 impl PartialOrd for Identifier {
-    fn partial_cmp(&self, other: &Identifier) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.ident.partial_cmp(&other.ident)
     }
 }
