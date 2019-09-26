@@ -136,12 +136,7 @@ fn match_actions(
 }
 
 pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData, ErrorInfo> {
-    let mut root = MessageData {
-        memories: None,
-        messages: vec![],
-        next_flow: None,
-        next_step: None,
-    };
+    let mut root = MessageData::default();
 
     for action in actions {
         if root.next_step.is_some() || root.next_flow.is_some() {
@@ -158,10 +153,7 @@ pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData,
                 block_type: BlockType::AskResponse(opt),
                 arg: vec,
                 range,
-            } => {
-                root = match_ask_response(vec, root, data, opt, range.clone())?;
-                // after_ar = true;
-            }
+            } => root = match_ask_response(vec, root, data, opt, range.clone())?,
             e => {
                 return Err(ErrorInfo {
                     message: "Block must start with a reserved keyword".to_owned(),

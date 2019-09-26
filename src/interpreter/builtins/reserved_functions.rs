@@ -206,7 +206,7 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
 
     if let Some(Literal::StringLiteral { value, .. }) = args.get("in") {
         string = Some(value);
-    } else if let None = string {
+    } else if string.is_none() {
         return Err(ErrorInfo{
             message: "ERROR: Builtin Find expect in to be of type String | example: Contain(value, in = \"hola\", case_sensitive = true)".to_owned(),
             interval

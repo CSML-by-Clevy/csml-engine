@@ -36,7 +36,7 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
                 return Err(format_error(
                     Interval { line: 0, column: 0 },
                     ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32),
-                    &vec![],
+                    &[],
                 ));
             }
         }

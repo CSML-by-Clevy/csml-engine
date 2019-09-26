@@ -50,11 +50,10 @@ pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {
             let mut s: String = str::from_utf8(code_error)
                 .expect("error in from_utf8")
                 .to_owned();
-            match s.find('\n') {
-                Some(val) => s.truncate(val),
-                None => {}
+            if let Some(val) = s.find('\n') {
+                s.truncate(val)
             };
-            format!("{}", s)
+            s.to_string()
         }
         e => e.description().to_owned(),
     }

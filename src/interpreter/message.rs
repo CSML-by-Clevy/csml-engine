@@ -134,7 +134,7 @@ impl Memories {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MessageData {
     pub memories: Option<Vec<Memories>>,
     pub messages: Vec<Message>,

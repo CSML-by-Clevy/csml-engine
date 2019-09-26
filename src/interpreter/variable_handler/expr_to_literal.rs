@@ -140,7 +140,7 @@ mod tests {
         Data::<'a> {
             ast: flow,
             memory: context,
-            event: event,
+            event,
             step_vars: HashMap::new(),
         }
     }

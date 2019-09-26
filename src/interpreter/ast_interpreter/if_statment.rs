@@ -56,12 +56,11 @@ pub fn evaluate_condition(
             }
         }
         (exp1, exp2) if check_if_ident(exp1) && check_if_ident(exp2) => {
-            let var = evaluate(
+            evaluate(
                 infix,
                 match_functions(exp1, data),
                 match_functions(exp2, data),
-            );
-            var
+            )
         }
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp1, exp2)) => evaluate(
             infix,
