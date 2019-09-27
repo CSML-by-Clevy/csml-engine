@@ -116,7 +116,7 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
 fn main() {
     let text = read_file("CSML/test.csml".to_owned()).unwrap();
 
-    let flow = match parse_file(text) {
+    let flow = match parse_file(&text) {
         Ok(flow) => flow,
         Err(e) => panic!("{:?}", e),
     };
