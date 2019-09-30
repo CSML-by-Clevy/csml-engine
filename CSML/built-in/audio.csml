@@ -1,0 +1,11 @@
+start:
+    say Audio("test")
+    goto end
+
+audio1:
+    say Audio("test", service = "youtube")
+    goto end
+
+audio2:
+    say Audio(url = "test", service = "youtube")
+    goto end

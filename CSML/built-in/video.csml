@@ -1,0 +1,11 @@
+start:
+    say Video("test")
+    goto end
+
+video1:
+    say Video("test", service = "youtube")
+    goto end
+
+video2:
+    say Video(url = "test", service = "youtube")
+    goto end
