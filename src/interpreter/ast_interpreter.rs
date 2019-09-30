@@ -51,6 +51,8 @@ pub fn match_builtin(
         FIND => Ok(find(args, interval)?),
         RANDOM => Ok(random(&interval)?),
         FLOOR => Ok(floor(args, interval)?),
+        VIDEO => Ok(video(args, name.to_owned(), interval)?),
+        AUDIO => Ok(audio(args, name.to_owned(), interval)?),
 
         BUTTON => Ok(button(args, name.to_owned(), &interval)?),
         FN => Ok(api(args, interval, data)?),

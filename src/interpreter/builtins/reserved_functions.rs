@@ -144,6 +144,69 @@ pub fn url(
     }
 }
 
+pub fn video(
+    args: HashMap<String, Literal>,
+    name: String,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    let mut url = HashMap::new();
+
+    match &search_or_default(&args, "url", &interval, None) {
+        Ok(href) if href.is_string() => {
+
+            url.insert("url".to_owned(), href.clone());
+            match args.get("service") {
+                Some(value) if value.is_string() => url.insert("service".to_owned(), value.to_owned()),
+                _ => None
+            };
+
+            Ok(
+                Literal::name_object(
+                    name.to_lowercase(), 
+                    &Literal::object(url, interval.clone()),
+                    interval
+                )
+            )
+        },
+        _ => Err(ErrorInfo{
+                message: "Builtin Video expect one argument of type string and 1 optional 'service' argument of type string | example: Video(url = \"hola\", service = \"text\")".to_owned(),
+                interval
+        })
+    }
+}
+
+pub fn audio(
+    args: HashMap<String, Literal>,
+    name: String,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    let mut url = HashMap::new();
+
+    match &search_or_default(&args, "url", &interval, None) {
+        Ok(href) if href.is_string() => {
+
+            url.insert("url".to_owned(), href.clone());
+
+            match args.get("service") {
+                Some(value) if value.is_string() => url.insert("service".to_owned(), value.to_owned()),
+                _ => None
+            };
+
+            Ok(
+                Literal::name_object(
+                    name.to_lowercase(),
+                    &Literal::object(url, interval.clone()),
+                    interval
+                )
+            )
+        },
+        _ => Err(ErrorInfo{
+                message: "Builtin Audio expect one argument of type string and 1 optional 'service' argument of type string | example: Audio(url = \"hola\", service = \"text\")".to_owned(),
+                interval
+        })
+    }
+}
+
 pub fn one_of(
     args: HashMap<String, Literal>,
     one_of_inter: Interval,
@@ -152,7 +215,7 @@ pub fn one_of(
         Some(Literal::ArrayLiteral { items, interval }) => {
             match items.get(rand::thread_rng().gen_range(0, items.len())) {
                 Some(lit) => Ok(lit.to_owned()),
-                None =>  Err(ErrorInfo{
+                None => Err(ErrorInfo{
                     message: "ERROR: Builtin OneOf expect one value of type Array | example: OneOf( [1, 2, 3] )".to_owned(),
                     interval: interval.to_owned()
                 })

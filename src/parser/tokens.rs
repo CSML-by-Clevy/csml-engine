@@ -88,6 +88,8 @@ pub const LENGTH: &str = "Length";
 pub const FIND: &str = "Find";
 pub const RANDOM: &str = "Random";
 pub const FLOOR: &str = "Floor";
+pub const VIDEO: &str = "Video";
+pub const AUDIO: &str = "Audio";
 
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
@@ -95,8 +97,8 @@ pub const OBJECT: &str = "Object";
 pub const FN: &str = "Fn";
 
 pub static BUILT_IN: &[&str] = &[
-    TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, QUESTION, BUTTON,
-    OBJECT, FN,
+    TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, 
+    FLOOR, VIDEO, AUDIO, QUESTION, BUTTON, OBJECT, FN,
 ];
 
 pub const PAST: &str = "past";
