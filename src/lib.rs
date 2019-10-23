@@ -14,22 +14,21 @@ use parser::{ast::*, Parser};
 use std::collections::HashMap;
 
 pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
-    match Parser::parse_flow(file.as_bytes()) {
+    match Parser::parse_flow(file) {
         Ok(flow) => {
             check_valid_flow(&flow)?;
             Ok(flow)
         }
-        Err(e) => Err(e),
+        Err(e) => Err(ErrorInfo {
+            message: e,
+            interval: Interval { line: 0, column: 0 },
+        }),
     }
 }
 
 pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
     flow.flow_instructions
         .get(&InstructionType::NormalStep(name.to_owned()))
-}
-
-pub fn version() -> String {
-    "CsmlV2".to_owned()
 }
 
 pub fn execute_step(flow: &Flow, name: &str, mut data: Data) -> Result<MessageData, ErrorInfo> {

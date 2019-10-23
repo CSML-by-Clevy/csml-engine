@@ -76,7 +76,7 @@ pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorI
         },
         Expr::ObjectExpr(ObjectType::Normal(..))
         | Expr::BuilderExpr(..)
-        | Expr::LitExpr{ .. }
+        | Expr::LitExpr { .. }
         | Expr::VecExpr(..) => Ok(expr_to_literal(action, data)?),
         e => Err(ErrorInfo {
             message: format!("Error must be a valid function {:?}", e),

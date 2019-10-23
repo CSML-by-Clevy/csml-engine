@@ -1,85 +1,92 @@
-use crate::comment;
 use crate::parser::{
     ast::Expr,
     literal::Literal,
+    parse_comments::comment,
     tokens::{Span, FALSE, TRUE},
-    tools::{complete_byte_slice_str_from_utf8, complete_str_from_str, get_interval},
+    tools::get_interval, //complete_byte_slice_str_from_utf8, complete_str_from_str,
 };
-use nom::*;
+use nom::{
+    branch::alt,
+    bytes::complete::tag, // take_until, take_till1
+    // multi::many0,
+    // sequence::delimited,
+    character::complete::digit1,
+    combinator::{complete, opt},
+    combinator::{map_res, recognize},
+    error::ParseError,
+    sequence::pair,
+    sequence::preceded,
+    sequence::tuple,
+    IResult,
+};
 
-named!(signed_digits<Span, Span>, recognize!(
-    tuple!(
-        opt!(alt!(tag!("+") | tag!("-"))),
-        digit
-    )
-));
+pub fn signed_digits<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span, E> {
+    recognize(tuple((opt(alt((tag("+"), tag("-")))), digit1)))(s)
+}
 
-named!(pub get_int<Span, i64>, map_res!(
-    map_res!(signed_digits, complete_byte_slice_str_from_utf8),
-    complete_str_from_str
-));
+pub fn get_int<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, i64, E> {
+    map_res(signed_digits, |s: Span| s.fragment.parse::<i64>())(s)
+}
 
-named!(pub parse_integer<Span, Expr>, do_parse!(
-    position: get_interval >>
-    i: get_int >>
-    (Expr::LitExpr(Literal::int(i, position)))
-));
+pub fn parse_integer<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, position) = get_interval(s)?;
+    let (s, int) = get_int(s)?;
+    Ok((s, Expr::LitExpr(Literal::int(int, position))))
+}
 
-named!(floating_point<Span, Span>, recognize!(
-    tuple!(
-        signed_digits,
-        complete!(pair!(
-            tag!("."),
-            digit
-        ))
-    )
-));
+pub fn floating_point<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span, E> {
+    recognize(tuple((signed_digits, complete(pair(tag("."), digit1)))))(s)
+}
 
-named!(pub parse_float<Span, Expr>, do_parse!(
-    position: get_interval >>
-    value: map_res!(map_res!(floating_point, complete_byte_slice_str_from_utf8), complete_str_from_str) >>
-    (Expr::LitExpr(Literal::float(value, position)))
-));
+pub fn parse_float<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, position) = get_interval(s)?;
+    let (s, float) = map_res(floating_point, |s: Span| s.fragment.parse::<f64>())(s)?;
+    Ok((s, Expr::LitExpr(Literal::float(float, position))))
+}
 
-named!(parse_boolean<Span, Expr>, do_parse!(
-    boolean: alt!(
-            do_parse!(
-                position: get_interval >>
-                tag!(TRUE) >>
-                (Literal::boolean(true, position))
+pub fn parse_true<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Literal, E> {
+    let (s, position) = get_interval(s)?;
+    let (s, _) = tag(TRUE)(s)?;
+    Ok((s, Literal::boolean(true, position)))
+}
 
-            ) |
-            do_parse!(
-                position: get_interval >>
-                tag!(FALSE) >>
-                (Literal::boolean(false, position))
-            )
-    ) >>
-    (Expr::LitExpr(boolean))
-));
+pub fn parse_false<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Literal, E> {
+    let (s, position) = get_interval(s)?;
+    let (s, _) = tag(FALSE)(s)?;
+    Ok((s, Literal::boolean(false, position)))
+}
 
-named!(pub parse_literalexpr<Span, Expr>, do_parse!(
-    // span: position!() >>
-    lit: comment!(
-        alt!(
-            parse_float     |
-            parse_integer   |
-            parse_boolean
-        )
-    ) >>
-    (lit)
-));
+pub fn parse_boolean<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, boolean) = alt((parse_true, parse_false))(s)?;
+    Ok((s, Expr::LitExpr(boolean)))
+}
+
+pub fn parse_literalexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    // TODO: span: preceded( comment ,  position!() ?
+    preceded(comment, alt((parse_float, parse_integer, parse_boolean)))(s)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nom::types::*;
+    use nom::{error::ErrorKind, *};
 
-    named!(pub test_literal<Span, Expr>, exact!(parse_literalexpr));
+    pub fn test_literal<'a>(s: Span<'a>) -> IResult<Span<'a>, Expr> {
+        let var = parse_literalexpr(s);
+        if let Ok((s, v)) = var {
+            if s.fragment.len() != 0 {
+                Err(Err::Error((s, ErrorKind::Tag)))
+            } else {
+                Ok((s, v))
+            }
+        } else {
+            var
+        }
+    }
 
     #[test]
     fn ok_int() {
-        let string = Span::new(CompleteByteSlice(" +42 ".as_bytes()));
+        let string = Span::new(" +42");
         match test_literal(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -88,7 +95,7 @@ mod tests {
 
     #[test]
     fn ok_float() {
-        let string = Span::new(CompleteByteSlice(" -42.42 ".as_bytes()));
+        let string = Span::new(" -42.42");
         match test_literal(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -97,7 +104,7 @@ mod tests {
 
     #[test]
     fn ok_bool() {
-        let string = Span::new(CompleteByteSlice(" true ".as_bytes()));
+        let string = Span::new(" true");
         match test_literal(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -106,7 +113,7 @@ mod tests {
 
     #[test]
     fn err_sign() {
-        let string = Span::new(CompleteByteSlice(" +++++4 ".as_bytes()));
+        let string = Span::new(" +++++4");
         match test_literal(string) {
             Ok(..) => panic!("need to fail"),
             Err(..) => {}
@@ -115,7 +122,7 @@ mod tests {
 
     #[test]
     fn err_float1() {
-        let string = Span::new(CompleteByteSlice(" 2.2.2 ".as_bytes()));
+        let string = Span::new(" 2.2.2");
         match test_literal(string) {
             Ok(..) => panic!("need to fail"),
             Err(..) => {}
@@ -124,7 +131,7 @@ mod tests {
 
     #[test]
     fn err_float2() {
-        let string = Span::new(CompleteByteSlice(" 3,2 ".as_bytes()));
+        let string = Span::new(" 3,2 ");
         match test_literal(string) {
             Ok(ok) => panic!("need to fail {:?}", ok),
             Err(..) => {}

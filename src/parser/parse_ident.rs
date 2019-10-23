@@ -1,51 +1,46 @@
-use crate::comment;
 use crate::parser::{
     ast::*,
+    parse_comments::comment,
     parse_var_types::{parse_as_variable, parse_var_expr},
     tokens::*,
     tools::get_interval,
-    ParserErrorType,
 };
-use nom::*;
-use nom::{Err, ErrorKind as NomError};
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take_till1},
+    combinator::opt,
+    error::ParseError,
+    sequence::delimited,
+    sequence::preceded,
+    *,
+};
 
-named!(parse_box_expr<Span, Box<Expr> >, do_parse!(
-    expr: alt!(parse_as_variable | parse_var_expr) >>
-    (Box::new(expr))
-));
-
-fn parse_string<'a>(input: Span<'a>) -> IResult<Span<'a>, String> {
-    let (rest, val) = take_till1!(input, is_valid_char)?;
-
-    match String::from_utf8(val.fragment.to_vec()) {
-        Ok(string) => Ok((rest, string)),
-        Err(_) => Err(Err::Failure(Context::Code(
-            rest,
-            NomError::Custom(ParserErrorType::NoAscii as u32),
-        ))),
-    }
+fn parse_box_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Box<Expr>, E> {
+    let (s, expr) = alt((parse_as_variable, parse_var_expr))(s)?;
+    Ok((s, Box::new(expr)))
 }
 
-named!(pub parse_ident<Span, Identifier>, do_parse!(
-    position: get_interval >>
-    var: comment!(parse_string) >>
-    index: opt!(
-         delimited!(
-            comment!(tag!(L_BRACKET)),
-            parse_box_expr,
-            comment!(tag!(R_BRACKET))
-        )
-    ) >>
-    (forma_ident(
-        var,
-        index, 
-        position
-    ))
-));
+fn parse_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, String, E> {
+    let (s, val) = take_till1(|c| is_valid_char(c))(s)?;
 
-pub fn is_valid_char(input: u8) -> bool {
-    let var = input as char;
-    input != b'_' && !var.is_alphanumeric()
+    // TODO: see if return String can be &str
+    Ok((s, val.fragment.to_owned()))
+}
+
+pub fn parse_ident<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+    let (s, position) = get_interval(s)?;
+    let (s, var) = preceded(comment, parse_string)(s)?;
+    let (s, index) = opt(delimited(
+        preceded(comment, tag(L_BRACKET)),
+        parse_box_expr,
+        preceded(comment, tag(R_BRACKET)),
+    ))(s)?;
+
+    Ok((s, forma_ident(var, index, position)))
+}
+
+pub fn is_valid_char(input: char) -> bool {
+    input != '_' && !input.is_alphanumeric()
 }
 
 pub fn forma_ident(ident: String, index: Option<Box<Expr>>, position: Interval) -> Identifier {

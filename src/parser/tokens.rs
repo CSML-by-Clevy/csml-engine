@@ -1,7 +1,6 @@
-use nom::types::*;
 use nom_locate::LocatedSpan;
 
-pub type Span<'a> = LocatedSpan<CompleteByteSlice<'a>>;
+pub type Span<'a> = LocatedSpan<&'a str>;
 
 pub const PORT: &str = "3002";
 

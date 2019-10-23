@@ -1,96 +1,125 @@
-use crate::comment;
 use crate::parser::{
     ast::*,
+    parse_comments::comment,
     parse_ident::parse_ident,
     parse_import::parse_import,
     parse_var_types::{parse_as_variable, parse_expr_list, parse_var_expr},
     tokens::*,
-    tools::get_interval,
-    GotoType, ParserErrorType,
+    // tools::get_interval,
+    GotoType,
 };
-use nom::*;
+use nom::{
+    branch::alt, bytes::complete::tag, combinator::complete, error::ParseError, sequence::preceded,
+    *,
+};
 
-named!(pub parse_assignation<Span, Expr>, do_parse!(
-    name: parse_ident >>
-    comment!(tag!(ASSIGN)) >>
-    expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    (Expr::ObjectExpr(ObjectType::Assign(name, Box::new(expr))))
-));
+pub fn parse_assignation<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, name) = parse_ident(s)?;
+    let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
+    let (s, expr) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    Ok((
+        s,
+        Expr::ObjectExpr(ObjectType::Assign(name, Box::new(expr))),
+    ))
+}
 
-named!(get_step<Span, GotoType>, do_parse!(
-    comment!(tag!(STEP)) >>
-    (GotoType::Step)
-));
+fn get_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
+    let (s, ..) = preceded(comment, tag(STEP))(s)?;
+    Ok((s, GotoType::Step))
+}
 
-named!(get_sub_step<Span, GotoType>, do_parse!(
-    comment!(tag!("@")) >>
-    (GotoType::SubStep)
-));
+fn get_sub_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
+    let (s, ..) = preceded(comment, tag("@"))(s)?;
+    Ok((s, GotoType::SubStep))
+}
 
-named!(get_flow<Span, GotoType>, do_parse!(
-    comment!(tag!(FLOW)) >>
-    (GotoType::Flow)
-));
+fn get_flow<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
+    let (s, ..) = preceded(comment, tag(FLOW))(s)?;
+    Ok((s, GotoType::Flow))
+}
 
-named!(get_default<Span, GotoType>, do_parse!(
-    (GotoType::Step)
-));
+fn get_default<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
+    Ok((s, GotoType::Step))
+}
 
-named!(parse_goto<Span, Expr>, do_parse!(
-    comment!(tag!(GOTO)) >>
-    goto_type: alt!(get_step | get_flow | get_sub_step | get_default) >>
-    name: return_error!(
-        nom::ErrorKind::Custom(ParserErrorType::GotoStepError as u32),
-        parse_ident
-    ) >>
-    (Expr::ObjectExpr(ObjectType::Goto(goto_type, name)))
-));
+fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ..) = preceded(comment, tag(GOTO))(s)?;
+    let (s, goto_type) = alt((get_step, get_flow, get_sub_step, get_default))(s)?;
+    let (s, name) = match parse_ident(s) {
+        Ok(vars) => vars,
+        Err(Err::Error(err)) | Err(Err::Failure(err)) => {
+            return Err(Err::Error(E::add_context(
+                s,
+                "missing step name after goto",
+                err,
+            )))
+        }
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    };
+    Ok((s, Expr::ObjectExpr(ObjectType::Goto(goto_type, name))))
+}
 
-named!(parse_say<Span, Expr>, do_parse!(
-    comment!(tag!(SAY)) >>
-    expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    (Expr::ObjectExpr(ObjectType::Say(Box::new(expr))))
-));
+fn parse_say<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ..) = preceded(comment, tag(SAY))(s)?;
+    let (s, expr) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    Ok((s, Expr::ObjectExpr(ObjectType::Say(Box::new(expr)))))
+}
 
-named!(parse_use<Span, Expr>, do_parse!(
-    comment!(tag!(USE)) >>
-    expr: complete!(alt!(parse_as_variable | parse_var_expr)) >>
-    (Expr::ObjectExpr(ObjectType::Use(Box::new(expr))))
-));
+fn parse_use<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ..) = preceded(comment, tag(USE))(s)?;
+    let (s, expr) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    Ok((s, Expr::ObjectExpr(ObjectType::Use(Box::new(expr)))))
+}
 
-named!(pub parse_sub_step<Span, Expr>, do_parse!(
-    comment!(tag!("@")) >>
-    start: get_interval >>
-    ident: comment!(complete!(parse_ident)) >>
-    end: get_interval >>
-    (Expr::Block{block_type: BlockType::SubStep(ident), arg: vec!(), range: RangeInterval{start, end}})
-));
+// fn parse_sub_step<'a, E: ParseError<Span<'a> >>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+//     let (s, ..) = preceded(comment, tag("@"))(s)?;
+//     let (s, start) = get_interval(s)?;
+//     let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
+//     let (s, end) = get_interval(s)?;
 
-named!(parse_remember<Span, Expr>, do_parse!(
-    comment!(tag!(REMEMBER)) >>
-    expr: comment!(parse_var_expr) >>
-    return_error!(
-        nom::ErrorKind::Custom(ParserErrorType::AssignError as u32),
-        comment!(tag!(AS))
-    ) >>
-    ident: comment!(complete!(parse_ident)) >>
-    (Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))))
-));
+//     Ok((s, Expr::Block{block_type: BlockType::SubStep(ident), arg: vec!(), range: RangeInterval{start, end}}))
+// }
 
-named!(pub parse_actions<Span, Expr>, do_parse!(
-    name: parse_ident >>
-    expr: parse_expr_list >>
-    (Expr::ObjectExpr(ObjectType::Normal(name, Box::new(expr))))
-));
+fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ..) = preceded(comment, tag(REMEMBER))(s)?;
+    let (s, expr) = parse_var_expr(s)?;
 
-named!(pub parse_root_functions<Span, Expr>, do_parse!(
-    reserved_function: alt!(
-        // parse_sub_step  |
-        parse_remember  |
-        parse_import    |
-        parse_goto      |
-        parse_say       |
-        parse_use
-    ) >>
-    (reserved_function)
-));
+    let (s, _) = match preceded(comment, tag(AS))(s) {
+        Ok(vars) => vars,
+        Err(Err::Error(err)) | Err(Err::Failure(err)) => {
+            return Err(Err::Error(E::add_context(
+                s,
+                "missing as name after remember var",
+                err,
+            )))
+        }
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    };
+    let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
+    Ok((
+        s,
+        Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))),
+    ))
+}
+
+pub fn parse_actions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, name) = parse_ident(s)?;
+    let (s, expr) = parse_expr_list(s)?;
+    Ok((
+        s,
+        Expr::ObjectExpr(ObjectType::Normal(name, Box::new(expr))),
+    ))
+}
+
+pub fn parse_root_functions<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Expr, E> {
+    // parse_sub_step,
+    alt((
+        parse_say,
+        parse_remember,
+        parse_import,
+        parse_goto,
+        parse_use,
+    ))(s)
+}

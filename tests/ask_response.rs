@@ -11,7 +11,7 @@ use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 fn format_message(event: Option<Event>, name: &str) -> MessageData {
     let file = format!("CSML/ask_response/{}", name);
     let text = read_file(file).unwrap();
-    let flow = Parser::parse_flow(text.as_bytes()).unwrap();
+    let flow = Parser::parse_flow(&text).unwrap();
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 

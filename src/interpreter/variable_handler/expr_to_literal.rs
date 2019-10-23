@@ -76,8 +76,7 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
         }
         Expr::ObjectExpr(ObjectType::Normal(name, value)) => {
             let interval = interval_from_expr(expr);
-            let (_name, literal) =
-                normal_object_to_literal(&name.ident, value, &interval, data)?;
+            let (_name, literal) = normal_object_to_literal(&name.ident, value, &interval, data)?;
 
             Ok(literal)
         }
@@ -210,5 +209,4 @@ mod tests {
             e => panic!(" 1-> {:?}", e),
         }
     }
-
 }

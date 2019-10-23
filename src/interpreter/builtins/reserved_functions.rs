@@ -131,7 +131,7 @@ pub fn url(
 
             Ok(
                 Literal::name_object(
-                    name.to_lowercase(), 
+                    name.to_lowercase(),
                     &Literal::object(url, interval.clone()),
                     interval
                 )

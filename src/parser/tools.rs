@@ -1,63 +1,134 @@
-use crate::comment;
-use crate::parser::{ast::*, expressions_evaluation::*, tokens::*, ParserErrorType};
+use crate::parser::{ast::*, expressions_evaluation::*, parse_comments::comment, tokens::*};
+use nom::{
+    bytes::complete::tag,
+    error::ParseError,
+    sequence::{delimited, preceded},
+    *,
+};
 
-use nom::types::*;
-use nom::*;
-use nom_locate::position;
-use std::str;
-use std::str::{FromStr, Utf8Error};
-
-named!(pub get_interval<Span, Interval>, do_parse!(
-    position: position!() >>
-    (Interval::new(position))
-));
-
-pub fn complete_byte_slice_str_from_utf8(c: Span) -> Result<CompleteStr, Utf8Error> {
-    str::from_utf8(c.fragment.0).map(|s| CompleteStr(s))
+fn position<'a, E: ParseError<Span<'a>>, T>(s: T) -> IResult<T, T, E>
+where
+    T: InputIter + InputTake,
+    E: nom::error::ParseError<T>,
+{
+    nom::bytes::complete::take(0usize)(s)
 }
 
-pub fn complete_str_from_str<F: FromStr>(c: CompleteStr) -> Result<F, F::Err> {
-    FromStr::from_str(c.0)
+pub fn get_interval<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Interval, E> {
+    let (s, pos) = position(s)?;
+    Ok((s, Interval::new(pos)))
 }
 
-named!(pub parse_l_parentheses<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::LeftParenthesesError as u32),
-    tag!(L_PAREN)
-));
+// pub fn complete_byte_slice_str_from_utf8<'a>(c: Span) -> Result<&'a str, Utf8Error> {
+//     str::from_utf8(c.fragment.0).map(|s| s)
+// }
 
-named!(pub parse_r_parentheses<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightParenthesesError as u32),
-    tag!(R_PAREN)
-));
+// pub fn complete_str_from_str<F: FromStr>(c: CompleteStr) -> Result<F, F::Err> {
+//     FromStr::from_str(c.0)
+// }
 
-named!(pub parse_strict_condition_group<Span, Expr>, delimited!(
-    comment!(parse_l_parentheses),
-    operator_precedence,
-    comment!(parse_r_parentheses)
-));
+// Err(err) => Err(Err::Failure((rest, "say error".to_owned())))
 
-named!(pub parse_condition_group<Span, Expr>, delimited!(
-    tag!(L_PAREN),
-    operator_precedence,
-    comment!(parse_r_parentheses)
-));
+pub fn parse_l_parentheses<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Span<'a>, E> {
+    match tag(L_PAREN)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(
+                input,
+                "list elemt type ( ... ) not found",
+                err,
+            )))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
 
-named!(pub parse_r_bracket<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightBracketError as u32),
-    tag!(R_BRACKET)
-));
+pub fn parse_r_parentheses<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Span<'a>, E> {
+    match tag(R_PAREN)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(
+                input,
+                "Arguments inside parentheses bad format or ) missing",
+                err,
+            )))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
 
-named!(pub parse_l_brace<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::LeftBraceError as u32),
-    tag!(L_BRACE)
-));
+pub fn parse_strict_condition_group<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Expr, E> {
+    delimited(
+        preceded(comment, parse_l_parentheses),
+        operator_precedence,
+        preceded(comment, parse_r_parentheses),
+    )(s)
+}
 
-named!(pub parse_r_brace<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::RightBraceError as u32),
-    tag!(R_BRACE)
-));
+pub fn parse_condition_group<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Expr, E> {
+    delimited(
+        preceded(comment, tag(L_PAREN)),
+        operator_precedence,
+        preceded(comment, parse_r_parentheses),
+    )(s)
+}
 
-named!(pub parse_import_step<Span, Span>, return_error!(
-    nom::ErrorKind::Custom(ParserErrorType::ImportStepError as u32),
-    tag!(STEP)
-));
+pub fn parse_r_bracket<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    match tag(R_BRACKET)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(
+                input,
+                "RightBracketError",
+                err,
+            )))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
+
+pub fn parse_l_brace<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    match tag(L_BRACE)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(input, "LeftBraceError", err)))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
+
+pub fn parse_r_brace<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    match tag(R_BRACE)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(input, "RightBraceError", err)))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
+
+pub fn parse_import_step<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Span<'a>, E> {
+    match tag(STEP)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(input, "ImportStepError", err)))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
