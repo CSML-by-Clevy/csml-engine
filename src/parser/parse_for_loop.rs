@@ -1,39 +1,45 @@
-use crate::comment;
 use crate::parser::{
-    ast::{Expr, RangeInterval},
+    ast::{Expr, Identifier, RangeInterval},
+    parse_comments::comment,
     parse_ident::parse_ident,
     parse_scope::parse_scope,
     parse_var_types::{parse_as_variable, parse_var_expr},
     tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
     tools::get_interval,
 };
-use nom::{alt, do_parse, named, opt, sep, tag, ws};
+use nom::{
+    branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *,
+};
 
-named!(pub parse_for<Span, Expr>, do_parse!(
-    comment!(tag!(FOREACH)) >>
-    start: get_interval >>
+fn pars_args<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+    let (s, _) = preceded(comment, tag(COMMA))(s)?;
+    let (s, ident) = parse_ident(s)?;
+    Ok((s, ident))
+}
 
-    comment!(tag!(L_PAREN)) >>
-    ident: parse_ident >>
-    opt: opt!(
-        do_parse!(
-            comment!(tag!(COMMA)) >>
-            var :parse_ident >>
-            (var)
-        )
-    ) >>
-    comment!(tag!(R_PAREN)) >>
+pub fn parse_for<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, _) = preceded(comment, tag(FOREACH))(s)?;
+    let (s, start) = get_interval(s)?;
 
-    comment!(tag!(IN)) >>
-    expr: alt!(parse_as_variable | parse_var_expr) >>
-    block: parse_scope >>
-    end: get_interval >>
+    let (s, _) = preceded(comment, tag(L_PAREN))(s)?;
+    let (s, ident) = parse_ident(s)?;
+    let (s, opt) = opt(pars_args)(s)?;
+    let (s, _) = preceded(comment, tag(R_PAREN))(s)?;
 
-    (Expr::ForExpr(
-        ident,
-        opt,
-        Box::new(expr),
-        block,
-        RangeInterval{start, end}
+    let (s, _) = preceded(comment, tag(IN))(s)?;
+    let (s, expr) = alt((parse_as_variable, parse_var_expr))(s)?;
+    let (s, block) = parse_scope(s)?;
+
+    let (s, end) = get_interval(s)?;
+
+    Ok((
+        s,
+        Expr::ForExpr(
+            ident,
+            opt,
+            Box::new(expr),
+            block,
+            RangeInterval { start, end },
+        ),
     ))
-));
+}

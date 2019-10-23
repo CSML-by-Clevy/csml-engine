@@ -11,6 +11,7 @@ pub struct Flow {
 #[derive(Eq, PartialEq, Debug, Clone, Hash)]
 pub enum InstructionType {
     NormalStep(String),
+    //hook ?
 }
 
 impl Display for InstructionType {

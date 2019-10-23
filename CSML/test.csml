@@ -1,10 +1,7 @@
-
 start:
-  use Find("a", in="xxx") as bool
-  say "loop          !            l = {{l}}"
-  if (Find("a", in="xxx")) {
-    say "OK"
-  }
-  else {
-    say "pas OK"
-  }
+  /* simple comment 
+  
+  
+  */
+  // sdvfdes
+  say "3"

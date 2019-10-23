@@ -15,29 +15,25 @@ pub mod parse_var_types;
 pub mod tokens;
 pub mod tools;
 
-use crate::comment;
-use crate::error_format::{data::*, *};
+use crate::error_format::CustomError;
 use ast::*;
+use parse_comments::comment;
 use parse_ident::parse_ident;
 use parse_scope::parse_root_actions;
 use tokens::*;
 use tools::*;
 
-use nom::types::*;
-use nom::{Err, *};
+use nom::error::ParseError;
+use nom::{bytes::complete::tag, multi::many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
-fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow, ErrorInfo> {
+fn create_flow_from_instructions<'a>(instructions: Vec<Instruction>) -> Result<Flow, String> {
     let mut elem = instructions.iter();
     while let Some(val) = elem.next() {
         let elem2 = elem.clone();
         for val2 in elem2 {
             if val.instruction_type == val2.instruction_type {
-                return Err(format_error(
-                    Interval { line: 0, column: 0 },
-                    ErrorKind::Custom(ParserErrorType::StepDuplicateError as u32),
-                    &[],
-                ));
+                return Err("StepDuplicateError".to_owned());
             }
         }
     }
@@ -49,52 +45,57 @@ fn create_flow_from_instructions(instructions: Vec<Instruction>) -> Result<Flow,
             .collect::<HashMap<InstructionType, Expr>>(),
     })
 }
+
 pub struct Parser;
 
 impl Parser {
-    pub fn parse_flow(slice: &[u8]) -> Result<Flow, ErrorInfo> {
-        match start_parsing(Span::new(CompleteByteSlice(slice))) {
-            Ok((.., instructions)) => create_flow_from_instructions(instructions),
+    pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, String> {
+        match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
+            Ok((.., instructions)) => match create_flow_from_instructions(instructions) {
+                Ok(val) => Ok(val),
+                Err(error) => Err(error),
+            },
             Err(e) => match e {
-                Err::Error(Context::Code(span, code)) | Err::Failure(Context::Code(span, code)) => {
-                    Err(format_error(
-                        Interval {
-                            line: span.line,
-                            column: span.get_column() as u32,
-                        },
-                        code,
-                        &span.fragment,
-                    ))
-                }
-                Err::Incomplete(..) => Err(ErrorInfo {
-                    interval: Interval { line: 0, column: 0 },
-                    message: "Incomplete".to_string(),
-                }),
+                Err::Error(err) | Err::Failure(err) => Err(err.error),
+                Err::Incomplete(_err) => unimplemented!(),
             },
         }
     }
 }
 
-named!(parse_step<Span, Instruction>, do_parse!(
-    ident: comment!(parse_ident) >>
-    comment!(tag!(COLON)) >>
-    start: get_interval >>
-    actions: comment!(parse_root_actions) >>
-    end: get_interval >>
-    (Instruction {
-        instruction_type: InstructionType::NormalStep(ident.ident),
-        actions: Expr::Block{
-            block_type: BlockType::Step,
-            arg: actions,
-            range: RangeInterval{start, end}
-        }
-    })
-));
+// preceded(comment, )(s)?;
+fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E> {
+    let (s, ident) = preceded(comment, parse_ident)(s)?;
+    let (s, _) = preceded(comment, tag(COLON))(s)?;
+    let (s, start) = get_interval(s)?;
+    let (s, actions) = preceded(comment, parse_root_actions)(s)?;
+    let (s, end) = get_interval(s)?;
 
-named!(start_parsing<Span, Vec<Instruction> >, exact!(
-    do_parse!(
-        flow: comment!(many0!(parse_step)) >>
-        comment!(eof!()) >>
-        (flow)
-    )
-));
+    Ok((
+        s,
+        Instruction {
+            instruction_type: InstructionType::NormalStep(ident.ident),
+            actions: Expr::Block {
+                block_type: BlockType::Step,
+                arg: actions,
+                range: RangeInterval { start, end },
+            },
+        },
+    ))
+}
+
+// named!(start_parsing<Span, Vec<Instruction> >, exact!(
+//     do_parse!(
+//         flow: comment!(many0!(parse_step)) >>
+//         comment!(eof!()) >>
+//         (flow)
+//     )
+// ));
+fn start_parsing<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Vec<Instruction>, E> {
+    // add comment
+    let (s, flow) = many0(parse_step)(s)?;
+    //check end of file;
+    Ok((s, flow))
+}

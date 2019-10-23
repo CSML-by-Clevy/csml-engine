@@ -1,6 +1,6 @@
 use crate::error_format::data::ErrorInfo;
-use crate::interpreter::message::Message;
 use crate::parser::{ast::Interval, tokens::NULL};
+use serde_json::{json, map::Map, Value};
 use std::{
     cmp::Ordering,
     collections::HashMap,
@@ -211,8 +211,38 @@ impl Literal {
             Literal::BoolLiteral { value, .. } => value.to_string(),
             Literal::ArrayLiteral { .. }
             | Literal::ObjectLiteral { .. }
-            | Literal::FunctionLiteral { .. } => Message::lit_to_json(self.to_owned()).to_string(),
+            | Literal::FunctionLiteral { .. } => self.to_json().to_string(),
             Literal::Null { value, .. } => value.to_owned(),
+        }
+    }
+
+    pub fn to_json(&self) -> Value {
+        match self {
+            Literal::StringLiteral { value, .. } => json!(value),
+            Literal::IntLiteral { value, .. } => json!(value),
+            Literal::FloatLiteral { value, .. } => json!(value),
+            Literal::BoolLiteral { value, .. } => json!(value),
+            Literal::ArrayLiteral { items, .. } => {
+                let mut array: Vec<Value> = vec![];
+                for val in items {
+                    array.push(val.to_json());
+                }
+                Value::Array(array)
+            }
+            Literal::ObjectLiteral { properties, .. } => {
+                let mut map: Map<String, Value> = Map::new();
+                for (k, v) in properties.to_owned().drain() {
+                    map.insert(k.to_owned(), v.to_json());
+                }
+                Value::Object(map)
+            }
+            Literal::FunctionLiteral { name, value, .. } => {
+                let mut map: Map<String, Value> = Map::new();
+                let val = (*value).clone();
+                map.insert(name.to_owned(), val.to_json());
+                Value::Object(map)
+            }
+            Literal::Null { .. } => json!(null),
         }
     }
 

@@ -10,7 +10,7 @@ use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
 fn format_message(event: Option<Event>, file: &str, step: &str) -> MessageData {
     let text = read_file(format!("CSML/built-in/{}.csml", file)).unwrap();
-    let flow = Parser::parse_flow(text.as_bytes()).unwrap();
+    let flow = Parser::parse_flow(&text).unwrap();
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 

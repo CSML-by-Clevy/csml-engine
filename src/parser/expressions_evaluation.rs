@@ -1,204 +1,220 @@
-use crate::comment;
-use crate::parser::{ast::*, parse_var_types::parse_basic_expr, tokens::*, tools::*};
-use nom::*;
+use crate::parser::{
+    ast::*, parse_comments::comment, parse_var_types::parse_basic_expr, tokens::*, tools::*,
+};
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    error::ParseError,
+    multi::fold_many0,
+    sequence::{preceded, tuple},
+    *,
+};
 
-named!(or_operator<Span, Infix>, do_parse!(
-    tag!(OR) >>
-    (Infix::Or)
-));
+pub fn or_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(OR)(s)?;
+    Ok((rest, Infix::Or))
+}
 
-named!(and_operator<Span, Infix>, do_parse!(
-    tag!(AND)  >>
-    (Infix::And)
-));
+pub fn and_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(AND)(s)?;
+    Ok((rest, Infix::And))
+}
 
-named!(notequal_operator<Span, Infix>, do_parse!(
-    tag!(NOT_EQUAL) >>
-    (Infix::NotEqual)
-));
+pub fn notequal_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(NOT_EQUAL)(s)?;
+    Ok((rest, Infix::NotEqual))
+}
 
-named!(equal_operator<Span, Infix>, do_parse!(
-    tag!(EQUAL) >>
-    (Infix::Equal)
-));
+pub fn equal_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(EQUAL)(s)?;
+    Ok((rest, Infix::Equal))
+}
 
-named!(parse_match<Span, Infix>, do_parse!(
-    tag!(MATCH) >>
-    (Infix::Match)
-));
+pub fn parse_match<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(MATCH)(s)?;
+    Ok((rest, Infix::Match))
+}
 
-named!(greaterthanequal_operator<Span, Infix>, do_parse!(
-    tag!(GREATER_THAN_EQUAL) >>
-    (Infix::GreaterThanEqual)
-));
+pub fn greaterthanequal_operator<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(GREATER_THAN_EQUAL)(s)?;
+    Ok((rest, Infix::GreaterThanEqual))
+}
 
-named!(lessthanequal_operator<Span, Infix>, do_parse!(
-    tag!(LESS_THAN_EQUAL) >>
-    (Infix::LessThanEqual)
-));
+pub fn lessthanequal_operator<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(LESS_THAN_EQUAL)(s)?;
+    Ok((rest, Infix::LessThanEqual))
+}
 
-named!(greaterthan_operator<Span, Infix>, do_parse!(
-    tag!(GREATER_THAN) >>
-    (Infix::GreaterThan)
-));
+pub fn greaterthan_operator<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(GREATER_THAN)(s)?;
+    Ok((rest, Infix::GreaterThan))
+}
 
-named!(lessthan_operator<Span, Infix>, do_parse!(
-    tag!(LESS_THAN) >>
-    (Infix::LessThan)
-));
+pub fn lessthan_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(LESS_THAN)(s)?;
+    Ok((rest, Infix::LessThan))
+}
 
-named!(parse_infix_operators<Span, Infix>, alt!(
-    notequal_operator           |
-    parse_match                 |
-    equal_operator              |
-    greaterthanequal_operator   |
-    lessthanequal_operator      |
-    greaterthan_operator        |
-    lessthan_operator
-));
+pub fn parse_infix_operators<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Infix, E> {
+    alt((
+        notequal_operator,
+        parse_match,
+        equal_operator,
+        greaterthanequal_operator,
+        lessthanequal_operator,
+        greaterthan_operator,
+        lessthan_operator,
+    ))(s)
+}
 
-named!(parse_not_operator<Span, Infix>, do_parse!(
-    tag!(NOT) >>
-    (Infix::Not)
-));
+fn parse_not_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (rest, ..) = tag(NOT)(s)?;
+    Ok((rest, Infix::Not))
+}
 
 // ########################################
 
-named!(pub operator_precedence<Span, Expr>, do_parse!(
-    init: parse_and_condition >>
-    and_expr: fold_many0!(
-        do_parse!(
-            comment!(or_operator) >>
-            expr: parse_and_condition >>
-            (expr)
-        ),
-        init,
-        |acc, value:Expr| {
-            Expr::InfixExpr(Infix::Or, Box::new(acc), Box::new(value))
-        }
-    )
-    >> (and_expr)
-));
+fn parse_or<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, _) = preceded(comment, or_operator)(s)?;
+    parse_and_condition(s)
+}
 
-named!(parse_and_condition<Span, Expr>, do_parse!(
-    init: parse_infix_condition >>
-    and_expr: fold_many0!(
-        do_parse!(
-            comment!(and_operator) >>
-            expr: parse_infix_condition >>
-            (expr)
-        ),
-        init,
-        |acc, value:Expr| {
-            Expr::InfixExpr(Infix::And, Box::new(acc), Box::new(value))
-        }
-    ) >>
-    (and_expr)
-));
+pub fn operator_precedence<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, init) = parse_and_condition(s)?;
+    fold_many0(parse_or, init, |acc, value: Expr| {
+        Expr::InfixExpr(Infix::Or, Box::new(acc), Box::new(value))
+    })(s)
+}
 
-named!(parse_infix_condition<Span, Expr>, alt_complete!(
-    parse_infix_expr                                |
-    alt!(parse_postfix_operator | parse_arithmetic) |
-    parse_condition_group
-));
+fn parse_and<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, _) = preceded(comment, and_operator)(s)?;
+    parse_infix_condition(s)
+}
 
-named!(parse_postfix_operator<Span, Expr>, do_parse!(
-    operator: comment!(parse_not_operator) >>
-    expr1: parse_arithmetic >>
-    (Expr::InfixExpr(operator, Box::new(expr1.clone()), Box::new(expr1)))
-));
+fn parse_and_condition<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, init) = parse_infix_condition(s)?;
+    fold_many0(parse_and, init, |acc, value: Expr| {
+        Expr::InfixExpr(Infix::And, Box::new(acc), Box::new(value))
+    })(s)
+}
 
-named!(parse_infix_expr<Span, Expr>, do_parse!(
-    expr1: alt!(parse_postfix_operator | parse_arithmetic) >>
-    operator: comment!(parse_infix_operators) >>
-    expr2: alt!(parse_postfix_operator | parse_arithmetic) >>
-    (Expr::InfixExpr(operator, Box::new(expr1), Box::new(expr2)))
-));
+fn parse_infix_condition<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    alt((
+        parse_infix_expr,
+        alt((parse_postfix_operator, parse_arithmetic)),
+        parse_condition_group,
+    ))(s)
+}
+
+fn parse_postfix_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, operator) = preceded(comment, parse_not_operator)(s)?;
+    let (s, expr1) = parse_arithmetic(s)?;
+    Ok((
+        s,
+        Expr::InfixExpr(operator, Box::new(expr1.clone()), Box::new(expr1)), //  InfixExpr clone in not operator or create a new expr for not??
+    ))
+}
+
+fn parse_infix_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, expr1) = alt((parse_postfix_operator, parse_arithmetic))(s)?;
+    let (s, operator) = preceded(comment, parse_infix_operators)(s)?;
+    let (s, expr2) = alt((parse_postfix_operator, parse_arithmetic))(s)?;
+
+    Ok((
+        s,
+        Expr::InfixExpr(operator, Box::new(expr1), Box::new(expr2)),
+    ))
+}
 
 // ##################################### Arithmetic Operators
-named!(parse_arithmetic<Span, Expr>,  alt!(
-    parse_item              |
-    parse_basic_expr        |
-    parse_condition_group
-));
 
-named!(adition_operator<Span, Infix>, do_parse!(
-    tag!(ADITION)  >> 
-    (Infix::Adition)
-));
+fn parse_arithmetic<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    alt((parse_item, parse_basic_expr, parse_condition_group))(s)
+}
 
-named!(remainder_operator<Span, Infix>, do_parse!(
-    tag!(REMAINDER)  >> 
-    (Infix::Remainder)
-));
+fn adition_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (s, _) = tag(ADITION)(s)?;
+    Ok((s, Infix::Adition))
+}
 
-named!(substraction_operator<Span, Infix>, do_parse!(
-    tag!(SUBTRACTION)  >> 
-    (Infix::Substraction)
-));
+fn remainder_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (s, _) = tag(REMAINDER)(s)?;
+    Ok((s, Infix::Remainder))
+}
 
-named!(parse_item_operator<Span, Infix>, alt!(
-    substraction_operator |
-    adition_operator
-));
+fn substraction_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (s, _) = tag(SUBTRACTION)(s)?;
+    Ok((s, Infix::Substraction))
+}
 
-named!(parse_item<Span, Expr>, do_parse!(
-    init: parse_term >>
-    and_expr: fold_many0!(
-        tuple!(
-            comment!(parse_item_operator),
-            parse_term
-        ),
+fn parse_item_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    alt((substraction_operator, adition_operator))(s)
+}
+
+fn parse_item<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, init) = parse_term(s)?;
+    fold_many0(
+        tuple((preceded(comment, parse_item_operator), parse_term)),
         init,
-        |acc, v:(Infix, Expr)| {
-            Expr::InfixExpr(v.0, Box::new(acc), Box::new(v.1))
-        }
-    ) >>
-    (and_expr)
-));
+        |acc, v: (Infix, Expr)| Expr::InfixExpr(v.0, Box::new(acc), Box::new(v.1)),
+    )(s)
+}
 
-named!(divide_operator<Span, Infix>, do_parse!(
-    tag!(DIVIDE)  >> 
-    (Infix::Divide)
-));
+fn divide_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (s, _) = tag(DIVIDE)(s)?;
+    Ok((s, Infix::Divide))
+}
 
-named!(multiply_operator<Span, Infix>, do_parse!(
-    tag!(MULTIPLY)  >> 
-    (Infix::Multiply)
-));
+fn multiply_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (s, _) = tag(MULTIPLY)(s)?;
+    Ok((s, Infix::Multiply))
+}
 
-named!(parse_term_operator<Span, Infix>, alt!(
-    divide_operator |
-    multiply_operator |
-    remainder_operator
-));
+fn parse_term_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    alt((divide_operator, multiply_operator, remainder_operator))(s)
+}
 
-named!(parse_term<Span, Expr>, do_parse!(
-    init: alt!(parse_basic_expr | parse_condition_group) >>
-    and_expr: fold_many0!(
-        tuple!(
-            comment!(parse_term_operator),
-            alt!(parse_basic_expr | parse_condition_group)
-        ),
+fn parse_term<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, init) = alt((parse_basic_expr, parse_condition_group))(s)?;
+    fold_many0(
+        tuple((
+            preceded(comment, parse_term_operator),
+            alt((parse_basic_expr, parse_condition_group)),
+        )),
         init,
-        |acc, v:(Infix, Expr)| {
-            Expr::InfixExpr(v.0, Box::new(acc), Box::new(v.1))
-        }
-    ) >>
-    (and_expr)
-));
+        |acc, v: (Infix, Expr)| Expr::InfixExpr(v.0, Box::new(acc), Box::new(v.1)),
+    )(s)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::comment;
-    use nom::types::*;
+    use nom::error::ErrorKind;
 
-    named!(pub test_expressions<Span, Expr>, exact!(comment!(operator_precedence)));
+    pub fn test_expressions<'a>(s: Span<'a>) -> IResult<Span<'a>, Expr> {
+        let var = preceded(comment, operator_precedence)(s);
+        if let Ok((s, v)) = var {
+            if s.fragment.len() != 0 {
+                Err(Err::Error((s, ErrorKind::Tag)))
+            } else {
+                Ok((s, v))
+            }
+        } else {
+            var
+        }
+    }
 
     #[test]
     fn ok_normal_and() {
-        let string = Span::new(CompleteByteSlice("3 && event".as_bytes()));
+        let string = Span::new("3 && event");
         match test_expressions(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -207,7 +223,7 @@ mod tests {
 
     #[test]
     fn ok_normal_or() {
-        let string = Span::new(CompleteByteSlice("3 || event".as_bytes()));
+        let string = Span::new("3 || event");
         match test_expressions(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -216,7 +232,7 @@ mod tests {
 
     #[test]
     fn ok_normal_comparator() {
-        let string = Span::new(CompleteByteSlice("3 == event".as_bytes()));
+        let string = Span::new("3 == event");
         match test_expressions(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -225,7 +241,7 @@ mod tests {
 
     #[test]
     fn ok_normal_arithmetic() {
-        let string = Span::new(CompleteByteSlice("3 + (event - 5) * 8 / 3".as_bytes()));
+        let string = Span::new("3 + (event - 5) * 8 / 3");
         match test_expressions(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -234,9 +250,7 @@ mod tests {
 
     #[test]
     fn ok_complex_expressio() {
-        let string = Span::new(CompleteByteSlice(
-            "test && (event || hola) && 4 + 3 - 2 ".as_bytes(),
-        ));
+        let string = Span::new("test && (event || hola) && 4 + 3 - 2");
         match test_expressions(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -245,7 +259,7 @@ mod tests {
 
     #[test]
     fn err_normal_comparation() {
-        let string = Span::new(CompleteByteSlice("test == hola >= event".as_bytes()));
+        let string = Span::new("test == hola >= event");
         match test_expressions(string) {
             Ok(..) => panic!("need to fail"),
             Err(..) => {}

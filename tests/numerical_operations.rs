@@ -14,7 +14,7 @@ use support::tools::{gen_context, message_to_jsonvalue, read_file};
 fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
     let file = format!("CSML/numerical_operations/{}", name);
     let text = read_file(file).unwrap();
-    let flow = Parser::parse_flow(text.as_bytes()).unwrap();
+    let flow = Parser::parse_flow(&text).unwrap();
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
@@ -88,7 +88,7 @@ fn check_error_component(vec: &[Message]) -> bool {
 fn ok_divition3() {
     let file = format!("CSML/numerical_operations/{}", "divition.csml");
     let text = read_file(file).unwrap();
-    let flow = Parser::parse_flow(text.as_bytes()).unwrap();
+    let flow = Parser::parse_flow(&text).unwrap();
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 

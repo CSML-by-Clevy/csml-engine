@@ -10,7 +10,7 @@ use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
 fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let text = read_file("CSML/if_statments.csml".to_owned()).unwrap();
-    let flow = Parser::parse_flow(text.as_bytes()).unwrap();
+    let flow = Parser::parse_flow(&text).unwrap();
 
     let mut past = MultiMap::new();
     past.insert(

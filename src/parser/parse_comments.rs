@@ -1,70 +1,58 @@
 use crate::parser::tokens::Span;
 use crate::parser::tokens::*;
 
-use nom::*;
+use nom::{
+    branch::alt,
+    bytes::complete::{tag, take_until, take_while},
+    combinator::opt,
+    error::ParseError,
+    IResult, *,
+};
 
-// ####################
+fn comment_single_line<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    let (s, _) = tag(INLINE_COMMENT)(s)?;
 
-//TODO: check for errors
-#[macro_export]
-macro_rules! take_until_and_consume_line (
-  ($i:expr, $substr1:expr, $substr2:expr) => (
-    {
-      use nom::lib::std::result::Result::*;
-      use nom::lib::std::option::Option::*;
-      use nom::InputLength;
-      use nom::FindSubstring;
-      use nom::Slice;
-
-      let input = $i;
-
-      let res: IResult<_,_> = match (input.find_substring($substr1), input.find_substring($substr2)) {
-        (Some(index), _) => {
-          Ok(($i.slice(index+$substr1.input_len()..), $i.slice(0..index)))
-        },
-        (_, Some(index)) => {
-          Ok(($i.slice(index+$substr2.input_len()..), $i.slice(0..index)))
-        },
-        (None, None) => {
-          let index = $i.fragment.len();
-          Ok(($i.slice(index..), $i.slice(0..index)))
-        },
-      };
-      res
+    let val: IResult<Span<'a>, Span<'a>, E> = take_until("\n")(s);
+    let val2: IResult<Span<'a>, Span<'a>, E> = take_until("\r\n")(s);
+    if let Ok((s, v)) = val {
+        Ok((s, v))
+    } else if let Ok((s, v)) = val2 {
+        Ok((s, v))
+    } else {
+        // if new line is not found the rest of the file is commented
+        Ok((Span::new(""), Span::new("")))
     }
-  );
-);
+}
 
-named!(pub comment_delimited<Span, Span>, preceded!(
-    tag!(START_COMMENT),
-    take_until_and_consume!(END_COMMENT)
-));
+fn comment_delimited<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    let (s, _) = tag(START_COMMENT)(s)?;
+    let val: IResult<Span<'a>, Span<'a>, E> = take_until(END_COMMENT)(s);
+    match val {
+        Ok((s, _)) => tag(END_COMMENT)(s),
+        // Error in comment_delimited is if '*/' is not found so all the rest of the file is commented
+        Err(Err::Error(_e)) | Err(Err::Failure(_e)) => Ok((Span::new(""), Span::new(""))),
+        Err(Err::Incomplete(_)) => unimplemented!(),
+    }
+}
 
-named!(comment_single_line<Span, Span>, preceded!(
-    tag!(INLINE_COMMENT),
-    take_until_and_consume_line!("\n", "\r\n")
-));
+fn all_comments<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    alt((comment_delimited, comment_single_line))(s)
+}
 
-named!(pub all_comment<Span, Span>, alt!(
-    comment_delimited   |
-    comment_single_line
-));
+pub fn comment<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    let (s, _) = opt(sp)(s)?;
+    let val = all_comments(s);
+    let (s, _) = match val {
+        Ok(val) => val,
+        Err(Err::Error((s, _val))) | Err(Err::Failure((s, _val))) => return Ok((s.clone(), s)),
+        Err(Err::Incomplete(i)) => return Err(Err::Incomplete(i)),
+    };
+    sp(s)
+}
 
-named!(pub skip<Span, Vec<Span>>, do_parse!(
-    vec: many0!(
-        ws!(
-            many0!(all_comment)
-        )
-    ) >>
-    (vec.into_iter().flatten().collect())
-));
-
-#[macro_export]
-macro_rules! comment (
-    ($i:expr, $($args:tt)*) => (
-        {
-            use crate::parser::parse_comments::skip;
-            sep!($i, skip, ws!($($args)*))
-        }
-    )
-);
+fn sp<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    let chars = " \t\r\n";
+    // nom combinators like `take_while` return a function. That function is the
+    // parser,to which we can pass the input
+    take_while(move |c| chars.contains(c))(s)
+}
