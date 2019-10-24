@@ -41,7 +41,7 @@ fn search_ident_in_obj(
     match (map.get(&ident.ident), &ident.index) {
         (Some(val), opt) => get_literal(val, opt, data),
         (None, _) => {
-            //TODO: replace with Error component
+            //TODO: replace with Error FunctionLiteral
             Ok(Literal::null(ident.interval.clone()))
         }
     }

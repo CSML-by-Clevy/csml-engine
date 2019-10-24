@@ -23,7 +23,7 @@ use crate::parser::{
     tokens::{EVENT, RETRIES},
 };
 
-//TODO: return Warning or Error component
+//TODO: return Warning or Error Component
 pub fn get_literal(
     literal: &Literal,
     opt: &Option<Box<Expr>>,
@@ -87,7 +87,7 @@ pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> Literal
     let mut new_string = String::new();
     let mut interval: Option<Interval> = None;
 
-    //TODO: log error and catch inrterval
+    //TODO: log error with span
     for elem in exprs.iter() {
         match match_functions(elem, data) {
             Ok(var) => {

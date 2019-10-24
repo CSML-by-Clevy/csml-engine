@@ -1,5 +1,5 @@
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::ast::*;
+use csmlinterpreter::parser::{ast::*, literal::Literal};
 use csmlinterpreter::{interpret, parse_file};
 use multimap::MultiMap;
 use serde_json::{json, map::Map, Value};
@@ -74,8 +74,7 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
             step_id: None,
             flow_id: None,
             conversation_id: None,
-            key: "firstname".to_owned(),
-            value: serde_json::Value::String("Alexis".to_owned()),
+            value: Literal::string("Alexis".to_owned(), Interval{column: 0, line: 0}),
         },
     );
 
@@ -86,8 +85,7 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
             step_id: None,
             flow_id: None,
             conversation_id: None,
-            key: "mavar".to_owned(),
-            value: json!(10),
+            value: Literal::int(10, Interval{column: 0, line: 0}),
         },
     );
 

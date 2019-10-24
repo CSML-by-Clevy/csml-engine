@@ -65,44 +65,47 @@ impl Message {
         }
     }
 
-    pub fn lit_to_json(literal: Literal) -> Value {
-        match literal {
-            Literal::StringLiteral { value, .. } => json!(value),
-            Literal::IntLiteral { value, .. } => json!(value),
-            Literal::FloatLiteral { value, .. } => json!(value),
-            Literal::BoolLiteral { value, .. } => json!(value),
-            Literal::ArrayLiteral { items, .. } => {
-                let mut array: Vec<Value> = vec![];
-                for val in &items {
-                    array.push(Self::lit_to_json(val.to_owned()));
-                }
-                Value::Array(array)
-            }
-            Literal::ObjectLiteral { properties, .. } => {
-                let mut map: Map<String, Value> = Map::new();
-                for (k, v) in properties.to_owned().drain() {
-                    map.insert(k.to_owned(), Self::lit_to_json(v));
-                }
-                Value::Object(map)
-            }
-            Literal::FunctionLiteral { name, value, .. } => {
-                let mut map: Map<String, Value> = Map::new();
-                let val = (*value).clone();
-                map.insert(name.to_owned(), Self::lit_to_json(val));
-                Value::Object(map)
-            }
-            Literal::Null { .. } => json!(null),
-        }
-    }
-
     pub fn message_to_json(self) -> Value {
         let mut map: Map<String, Value> = Map::new();
-        let value = Self::lit_to_json(self.content);
-
-        map.insert("content_type".to_owned(), json!(self.content_type));
-        map.insert("content".to_owned(), value);
+        let value = self.content.to_json();
+        match &self.content_type {
+            name if name == "button" => {
+                return button_to_json(json!(name), value)
+            },
+            name if name == "question" => {
+                map.insert("content_type".to_owned(), json!(name));
+                map.insert("content".to_owned(), question_to_json(value));
+            },
+            name => {
+                map.insert("content_type".to_owned(), json!(name));
+                map.insert("content".to_owned(), value);
+            }
+        }
         Value::Object(map)
     }
+}
+
+fn question_to_json(value: Value) -> Value {
+    let mut map: Map<String, Value> = Map::new();
+    map.insert("title".to_owned(), value["question"]["title"].clone());
+    let buttons = match value["question"]["buttons"].clone() {
+        Value::Array(array) => {
+            array.iter().fold(vec!(),|mut vec, elem| {
+            vec.push(button_to_json(json!("button"), elem["button"].clone()));
+            vec
+        })},
+        _ => vec!(),
+    };
+    map.insert("buttons".to_owned(), json!(buttons));
+    Value::Object(map)
+}
+
+fn button_to_json(name: Value, value: Value) -> Value {
+    let mut map: Map<String, Value> = Map::new();
+    map.insert("content_type".to_owned(), name);
+    map.insert("content".to_owned(), json!({"title": value["title"].clone(), "payload": value["payload"].clone()}));
+    map.insert("accepts".to_owned(), value["accept"].clone());
+    Value::Object(map)
 }
 
 #[derive(Debug, Clone)]
@@ -115,7 +118,7 @@ impl Memories {
     pub fn memorie_to_jsvalue(self) -> Value {
         let mut map: Map<String, Value> = Map::new();
         map.insert("key".to_owned(), json!(self.key));
-        map.insert("value".to_owned(), Message::lit_to_json(self.value));
+        map.insert("value".to_owned(), self.value.to_json());
         Value::Object(map)
     }
 }

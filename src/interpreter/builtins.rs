@@ -2,7 +2,7 @@ pub mod api_functions;
 pub mod reserved_functions;
 
 use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{json_to_rust::*, message::*};
+use crate::interpreter::{json_to_rust::*};
 use crate::parser::{ast::*, literal::Literal};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
@@ -17,7 +17,7 @@ pub fn create_submap<S: BuildHasher>(
     for elem in args.keys() {
         if keys.iter().find(|&&x| x == elem).is_none() {
             if let Some(value) = args.get(&*elem) {
-                map.insert(elem.clone(), Message::lit_to_json(value.to_owned()));
+                map.insert(elem.clone(), value.to_json());
             }
         }
     }

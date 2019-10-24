@@ -11,8 +11,7 @@ pub struct MemoryType {
     pub step_id: Option<String>,
     pub flow_id: Option<String>,
     pub conversation_id: Option<String>,
-    pub key: String,
-    pub value: serde_json::Value,
+    pub value: Literal,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -20,6 +19,16 @@ pub struct Client {
     pub bot_id: String,
     pub channel_id: String,
     pub user_id: String,
+}
+
+impl Client {
+    pub fn new(bot_id: String, channel_id: String, user_id: String) -> Self {
+        Self {
+            bot_id,
+            channel_id,
+            user_id,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,20 +42,20 @@ pub struct Context {
     pub fn_endpoint: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PayLoadContent {
-    pub text: String,
-}
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct PayLoadContent {
+//     pub text: String,
+// }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PayLoad {
-    pub content_type: String,
-    pub content: PayLoadContent,
-}
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct PayLoad {
+//     pub content_type: String,
+//     pub content: PayLoadContent,
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
-    pub payload: PayLoad,
+    pub payload: String,
 }
 
 pub fn json_to_literal(

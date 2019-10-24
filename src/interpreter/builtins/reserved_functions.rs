@@ -421,6 +421,31 @@ fn accepts_from_buttons(buttons: &Literal) -> Literal {
     }
 }
 
+fn is_button(literal: &Literal) -> bool {
+    match literal {
+        Literal::FunctionLiteral{name, ..} if name.to_lowercase() == "button" => {
+            true
+        }
+        Literal::ObjectLiteral{properties, ..} if properties.get("button").is_some() => {
+            true
+        }
+        _ => false
+    }
+}
+
+fn if_buttons(literal: &Literal) -> bool {
+    if let Literal::ArrayLiteral{items, ..} = literal {
+        for elem in items {
+            if !is_button(elem) {
+                return false
+            }
+        }
+        true
+    } else {
+        false
+    }
+}
+
 pub fn question(
     args: HashMap<String, Literal>,
     name: String,
@@ -432,8 +457,11 @@ pub fn question(
     };
 
     let buttons = match args.get("buttons") {
-        Some(literal) => literal.to_owned(),
-        _ => Literal::array(vec![], interval.clone()),
+        Some(literal) if if_buttons(literal) => literal.to_owned(),
+        _ => return Err(ErrorInfo {
+            message: "ERROR: argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]".to_owned(),
+            interval,
+        }),
     };
 
     let accepts = accepts_from_buttons(&buttons);
