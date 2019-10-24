@@ -2,9 +2,10 @@ mod support;
 
 use csmlinterpreter::interpret;
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::Parser;
+use csmlinterpreter::parser::{Parser, ast::Interval, literal::Literal};
+
 use multimap::MultiMap;
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
@@ -20,8 +21,7 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
             step_id: None,
             flow_id: None,
             conversation_id: None,
-            key: "var10".to_owned(),
-            value: json!(10),
+            value: Literal::int(10, Interval{column: 0, line: 0}),
         },
     );
     past.insert(
@@ -31,8 +31,7 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
             step_id: None,
             flow_id: None,
             conversation_id: None,
-            key: "var5".to_owned(),
-            value: json!(5),
+            value: Literal::int(5, Interval{column: 0, line: 0}),
         },
     );
     past.insert(
@@ -42,13 +41,11 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
             step_id: None,
             flow_id: None,
             conversation_id: None,
-            key: "bool".to_owned(),
-            value: json!(false),
+            value: Literal::boolean(false, Interval{column: 0, line: 0}),
         },
     );
 
     let memory = gen_context(past, MultiMap::new(), MultiMap::new(), 0, false);
-
     interpret(&flow, step, &memory, &event)
 }
 

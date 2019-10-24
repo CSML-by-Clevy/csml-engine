@@ -1,7 +1,7 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
     data::Data,
-    json_to_rust::{Event, PayLoad},
+    json_to_rust::{Event},
     variable_handler::{
         get_string_from_complexstring, get_var, interval::interval_from_expr,
         memory::get_memory_action, object::decompose_object,
@@ -68,16 +68,7 @@ pub fn gen_literal_form_event(
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     match event {
-        Some(event) => match event.payload {
-            PayLoad {
-                content_type: ref t,
-                content: ref c,
-            } if t == "text" => Ok(Literal::string(c.text.to_string(), interval)),
-            _ => Err(ErrorInfo {
-                message: "event type is unown".to_owned(),
-                interval,
-            }),
-        },
+        Some(Event{payload}) => Ok(Literal::string(payload.to_owned(), interval)),
         None => Ok(Literal::null(interval)),
     }
 }

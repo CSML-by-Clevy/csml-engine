@@ -1,7 +1,7 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
     data::Data,
-    json_to_rust::{json_to_literal, Context, MemoryType},
+    json_to_rust::{Context, MemoryType},
     variable_handler::{get_literal, interval::interval_from_expr},
 };
 use crate::parser::{
@@ -17,7 +17,7 @@ pub fn memorytype_to_literal(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     match memtype {
-        Some(elem) => get_literal(&json_to_literal(&elem.value, interval)?, index, data),
+        Some(elem) => get_literal(&elem.value, index, data),
         None => Err(ErrorInfo {
             message: "Error in memorytype_to_literal".to_owned(),
             interval,

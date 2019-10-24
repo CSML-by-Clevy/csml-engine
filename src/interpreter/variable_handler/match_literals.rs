@@ -13,7 +13,7 @@ fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal> {
     }
 }
 
-//TODO: add warning when comparing some objects
+//TODO: Refactor with macros
 pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
     match (&lit1, &lit2) {
         (

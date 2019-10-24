@@ -1,4 +1,5 @@
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
+use csmlinterpreter::parser::literal::Literal;
 use multimap::MultiMap;
 use serde_json::{json, map::Map, Value};
 
@@ -38,23 +39,17 @@ pub fn gen_context(
 #[allow(dead_code)]
 pub fn gen_event(event: &str) -> Event {
     Event {
-        payload: PayLoad {
-            content_type: "text".to_owned(),
-            content: PayLoadContent {
-                text: event.to_owned(),
-            },
-        },
+        payload: event.to_owned()
     }
 }
 
 #[allow(dead_code)]
-pub fn gen_memory(key: &str, value: Value) -> MemoryType {
+pub fn gen_memory(value: Literal) -> MemoryType {
     MemoryType {
         created_at: "Today".to_owned(),
         step_id: None,
         flow_id: None,
         conversation_id: None,
-        key: key.to_owned(),
         value,
     }
 }
