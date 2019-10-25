@@ -1,7 +1,33 @@
 start:
-  /* simple comment 
+  use Button("b1") as b1
+  use Button("b2") as b2
+  use Button("b3") as b3
+
+  use [b1, b2, b3] as list
+
+  use Question(
+    title = "plop",
+    buttons = list
+  ) as q1
+  say q1
+  goto end
+
+init:
+  use Button("b1", hook = "next") as b1
+  use Button("b2", hook = "next2") as b2
+
+test:
+  import step init
+  say "hola"
+  say Question(
+    title = "plop", buttons = []
+  )
   
-  
-  */
-  // sdvfdes
-  say "3"
+  if (event match Button("b1")) {
+    goto test2
+  } 
+  say "hola2"
+  goto end
+
+goto test2:
+  goto end

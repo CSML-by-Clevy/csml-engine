@@ -82,7 +82,7 @@ pub enum IfStatement {
 pub enum Expr {
     Block {
         block_type: BlockType,
-        arg: Vec<Expr>,
+        arg: Vec<Expr>, // HM<line?, Expr> change to hashmap in order to make step by step interactions with the manager
         range: RangeInterval,
     },
     ComplexLiteral(Vec<Expr>, RangeInterval),
