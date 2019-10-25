@@ -6,6 +6,13 @@ use std::fmt::{Display, Formatter};
 #[derive(PartialEq, Debug, Clone)]
 pub struct Flow {
     pub flow_instructions: HashMap<InstructionType, Expr>,
+    pub flow_type: FlowType
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum FlowType {
+    Normal,
+    Recursive
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Hash)]

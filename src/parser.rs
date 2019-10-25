@@ -19,16 +19,18 @@ use crate::error_format::CustomError;
 use ast::*;
 use parse_comments::comment;
 use parse_ident::parse_ident;
-use parse_scope::parse_root_actions;
+use parse_scope::parse_root;
 use tokens::*;
 use tools::*;
 
 use nom::error::ParseError;
-use nom::{bytes::complete::tag, multi::many0, sequence::preceded, Err, *};
+use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
-fn create_flow_from_instructions<'a>(instructions: Vec<Instruction>) -> Result<Flow, String> {
+fn create_flow_from_instructions<'a>(instructions: Vec<Instruction>, flow_type: FlowType) -> Result<Flow, String> {
     let mut elem = instructions.iter();
+    
+    // TODO: see if it can be checked in parsing
     while let Some(val) = elem.next() {
         let elem2 = elem.clone();
         for val2 in elem2 {
@@ -43,6 +45,7 @@ fn create_flow_from_instructions<'a>(instructions: Vec<Instruction>) -> Result<F
             .into_iter()
             .map(|elem| (elem.instruction_type, elem.actions))
             .collect::<HashMap<InstructionType, Expr>>(),
+        flow_type
     })
 }
 
@@ -51,7 +54,7 @@ pub struct Parser;
 impl Parser {
     pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, String> {
         match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
-            Ok((.., instructions)) => match create_flow_from_instructions(instructions) {
+            Ok((.., (instructions, ftype))) => match create_flow_from_instructions(instructions, ftype) {
                 Ok(val) => Ok(val),
                 Err(error) => Err(error),
             },
@@ -64,38 +67,49 @@ impl Parser {
 }
 
 // preceded(comment, )(s)?;
-fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E> {
+fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Instruction, FlowType), E> {
     let (s, ident) = preceded(comment, parse_ident)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
     let (s, start) = get_interval(s)?;
-    let (s, actions) = preceded(comment, parse_root_actions)(s)?;
+    let (s, (actions, flow_type)) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;
 
     Ok((
         s,
-        Instruction {
-            instruction_type: InstructionType::NormalStep(ident.ident),
-            actions: Expr::Block {
-                block_type: BlockType::Step,
-                arg: actions,
-                range: RangeInterval { start, end },
+        (
+            Instruction {
+                instruction_type: InstructionType::NormalStep(ident.ident),
+                actions: Expr::Block {
+                    block_type: BlockType::Step,
+                    arg: actions,
+                    range: RangeInterval { start, end },
+                },
             },
-        },
+            flow_type
+        ),
     ))
 }
 
-// named!(start_parsing<Span, Vec<Instruction> >, exact!(
-//     do_parse!(
-//         flow: comment!(many0!(parse_step)) >>
-//         comment!(eof!()) >>
-//         (flow)
-//     )
-// ));
 fn start_parsing<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
-) -> IResult<Span<'a>, Vec<Instruction>, E> {
+) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
     // add comment
-    let (s, flow) = many0(parse_step)(s)?;
+    let mut flow_type = FlowType::Recursive;
+
+    let (s, (flow, boolean)) = fold_many0(
+        parse_step,
+        (Vec::new(), false),
+        |(mut acc, mut boolean), (item, ftype)| {
+            if let FlowType::Normal = ftype {
+                boolean = true;
+            };
+            acc.push(item);
+            (acc, boolean)
+        }
+    )(s)?;
+    if boolean {
+        flow_type = FlowType::Normal;
+    };
     //check end of file;
-    Ok((s, flow))
+    Ok((s, (flow, flow_type)))
 }

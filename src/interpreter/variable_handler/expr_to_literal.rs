@@ -132,6 +132,7 @@ mod tests {
     fn gen_flow() -> Flow {
         Flow {
             flow_instructions: HashMap::new(),
+            flow_type: FlowType::Normal
         }
     }
 

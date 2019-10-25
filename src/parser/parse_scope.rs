@@ -3,7 +3,7 @@ use crate::parser::{
     parse_comments::comment, parse_for_loop::parse_for, parse_if::parse_if, tokens::*, tools::*,
 };
 use nom::{
-    branch::alt, bytes::complete::tag, error::ParseError, multi::many0, sequence::delimited,
+    branch::alt, bytes::complete::tag, error::ParseError, multi::{many0, fold_many0}, sequence::delimited,
     sequence::preceded, *,
 };
 
@@ -17,6 +17,38 @@ pub fn parse_root_actions<'a, E: ParseError<Span<'a>>>(
         parse_root_functions,
         parse_ask_response,
     )))(s)
+}
+
+
+pub fn parse_root<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Vec<Expr>, FlowType), E> {
+
+    let mut flow_type = FlowType::Recursive;
+
+    let (s, (exprs, boolean)) = fold_many0(
+        alt((
+            parse_if,
+            parse_for,
+            // wait_for
+            parse_root_functions,
+            parse_ask_response,
+        )),
+        (Vec::new(), false),
+        | (mut acc, mut boolean), expr| {
+            if let Expr::Block{block_type: BlockType::AskResponse(_), ..} = expr {
+                boolean = true;
+            }
+            acc.push(expr);
+            (acc, boolean)
+        }
+    )(s)?;
+
+    if boolean {
+        flow_type = FlowType::Normal;
+    }
+
+    Ok((s, (exprs, flow_type)))
 }
 
 pub fn parse_implicit_scope<'a, E: ParseError<Span<'a>>>(
