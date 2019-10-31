@@ -1,6 +1,14 @@
 start:
   say Image("img")
   say Video("video")
+  /*
+  */
+  //
+  //
+  //
+  //
+  /*
+  */
   say Audio("audio")
   say Url("url")
   say Text("text")

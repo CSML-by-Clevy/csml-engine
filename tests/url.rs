@@ -19,7 +19,7 @@ fn format_message(event: Option<Event>, file: &str, step: &str) -> MessageData {
 
 #[test]
 fn ok_url() {
-    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "test", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test", "text": "test", "title": "test"},"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "url", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -30,7 +30,7 @@ fn ok_url() {
 
 #[test]
 fn ok_url_step1() {
-    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "test", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test", "text": "test", "title": "test" },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "url", "url1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -41,7 +41,7 @@ fn ok_url_step1() {
 
 #[test]
 fn ok_url_step2() {
-    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "plop", "title": "test"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test", "text": "plop", "title": "test" },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "url", "url2");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -52,7 +52,7 @@ fn ok_url_step2() {
 
 #[test]
 fn ok_url_step3() {
-    let data = r#"{"messages":[ {"content":{ "url": {"url": "test", "text": "plop", "title": "rand"} },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test", "text": "plop", "title": "rand" },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "url", "url3");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -64,7 +64,7 @@ fn ok_url_step3() {
 
 #[test]
 fn ok_video() {
-    let data = r#"{"messages":[ {"content":{ "video": {"url": "test"} },"content_type":"video"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test" },"content_type":"video"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "video", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -75,7 +75,7 @@ fn ok_video() {
 
 #[test]
 fn ok_video_step2() {
-    let data = r#"{"messages":[ {"content":{ "video": {"url": "test", "service": "youtube"} },"content_type":"video"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test", "service": "youtube" },"content_type":"video"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "video", "video1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -86,7 +86,7 @@ fn ok_video_step2() {
 
 #[test]
 fn ok_video_step3() {
-    let data = r#"{"messages":[ {"content":{ "video": {"url": "test", "service": "youtube"} },"content_type":"video"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test", "service": "youtube" },"content_type":"video"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "video", "video2");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -97,7 +97,7 @@ fn ok_video_step3() {
 
 #[test]
 fn ok_audio() {
-    let data = r#"{"messages":[ {"content":{ "audio": {"url": "test"} },"content_type":"audio"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test" },"content_type":"audio"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "audio", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -108,7 +108,7 @@ fn ok_audio() {
 
 #[test]
 fn ok_audio_step2() {
-    let data = r#"{"messages":[ {"content":{ "audio": {"url": "test", "service": "youtube"} },"content_type":"audio"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{"url": "test", "service": "youtube" },"content_type":"audio"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "audio", "audio1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -119,7 +119,7 @@ fn ok_audio_step2() {
 
 #[test]
 fn ok_audio_step3() {
-    let data = r#"{"messages":[ {"content":{ "audio": {"url": "test", "service": "youtube"} },"content_type":"audio"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "url": "test", "service": "youtube" },"content_type":"audio"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "audio", "audio2");
 
     let v1: Value = message_to_jsonvalue(msg);

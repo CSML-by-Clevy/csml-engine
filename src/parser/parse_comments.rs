@@ -5,6 +5,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_until, take_while},
     combinator::opt,
+    multi::many0,
     error::ParseError,
     IResult, *,
 };
@@ -35,18 +36,20 @@ fn comment_delimited<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     }
 }
 
+// many0()
 fn all_comments<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+    let (s, _) = opt(sp)(s)?;
     alt((comment_delimited, comment_single_line))(s)
 }
 
 pub fn comment<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    let (s, _) = opt(sp)(s)?;
-    let val = all_comments(s);
+    let val = many0(all_comments)(s);
     let (s, _) = match val {
         Ok(val) => val,
         Err(Err::Error((s, _val))) | Err(Err::Failure((s, _val))) => return Ok((s.clone(), s)),
         Err(Err::Incomplete(i)) => return Err(Err::Incomplete(i)),
     };
+    // Ok((s, s))
     sp(s)
 }
 
