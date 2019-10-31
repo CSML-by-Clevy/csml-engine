@@ -18,19 +18,15 @@ pub struct Message {
 impl Message {
     pub fn new(literal: Literal) -> Self {
         match literal.clone() {
-            Literal::StringLiteral { interval, .. } => Self {
+            Literal::StringLiteral { .. } => Self {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(literal, "text".to_owned(), interval),
+                content: literal,
             },
             Literal::IntLiteral { interval, .. }
             | Literal::FloatLiteral { interval, .. }
             | Literal::BoolLiteral { interval, .. } => Self {
                 content_type: "text".to_owned(),
-                content: Literal::lit_to_obj(
-                    Literal::string(literal.to_string(), literal.get_interval()),
-                    "text".to_owned(),
-                    interval,
-                ),
+                content: Literal::string(literal.to_string(), interval)
             },
             Literal::ArrayLiteral { .. } => Self {
                 content_type: "array".to_owned(),
