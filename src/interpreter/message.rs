@@ -46,10 +46,10 @@ impl Message {
             Literal::FunctionLiteral {
                 name,
                 value,
-                interval,
+                interval: _,
             } => Self {
                 content_type: name.to_owned(),
-                content: Literal::name_object(name.to_owned(), &value, interval),
+                content: *value,
             },
             Literal::Null { .. } => Self {
                 content_type: literal.type_to_string(),
@@ -75,6 +75,9 @@ impl Message {
             name if name == "question" => {
                 map.insert("content_type".to_owned(), json!(name));
                 map.insert("content".to_owned(), question_to_json(value));
+            },
+            name if name == "button" => {
+                return button_to_json(json!(name), value)
             },
             name => {
                 map.insert("content_type".to_owned(), json!(name));

@@ -29,7 +29,7 @@ use std::collections::HashMap;
 
 fn create_flow_from_instructions<'a>(instructions: Vec<Instruction>, flow_type: FlowType) -> Result<Flow, String> {
     let mut elem = instructions.iter();
-    
+
     // TODO: see if it can be checked in parsing
     while let Some(val) = elem.next() {
         let elem2 = elem.clone();

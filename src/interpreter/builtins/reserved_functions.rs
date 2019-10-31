@@ -94,51 +94,23 @@ pub fn img(
     name: String,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    match args.get(DEFAULT) {
-        Some(Literal::StringLiteral {
-            value: lit,
-            interval,
-        }) => Ok(Literal::name_object(
-            name.to_lowercase(),
-            &Literal::string(lit.to_owned(), interval.to_owned()),
-            interval.to_owned(),
-        )),
-        _ => Err(ErrorInfo {
-            message: "Builtin Image expect one argument of type string | example: Image(\"hola\")"
-                .to_owned(),
-            interval,
-        }),
-    }
-}
-
-pub fn url(
-    args: HashMap<String, Literal>,
-    name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    let mut url = HashMap::new();
+    let mut properties = HashMap::new();
 
     match &search_or_default(&args, "url", &interval, None) {
         Ok(href) if href.is_string() => {
 
-            url.insert("url".to_owned(), href.clone());
-            if let Ok(title) = search_or_default(&args, "title", &interval, Some(href.clone())) {
-                url.insert("title".to_owned(), title.to_owned());
-            }
-            if let Ok(text) = search_or_default(&args, "text", &interval, Some(href.clone())) {
-                url.insert("text".to_owned(), text.to_owned());
-            }
+            properties.insert("url".to_owned(), href.clone());
 
             Ok(
                 Literal::name_object(
                     name.to_lowercase(),
-                    &Literal::object(url, interval.clone()),
+                    &Literal::object(properties, interval.clone()),
                     interval
                 )
             )
         },
         _ => Err(ErrorInfo{
-                message: "Builtin Url expect one argument of type string and 2 optional string argmuments: text, title | example: Url(href = \"hola\", text = \"text\", title = \"title\")".to_owned(),
+                message: "Builtin Image expect one argument of type string | example: Image(\"hola\")".to_owned(),
                 interval
         })
     }
@@ -149,21 +121,21 @@ pub fn video(
     name: String,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    let mut url = HashMap::new();
+    let mut properties = HashMap::new();
 
     match &search_or_default(&args, "url", &interval, None) {
         Ok(href) if href.is_string() => {
 
-            url.insert("url".to_owned(), href.clone());
+            properties.insert("url".to_owned(), href.clone());
             match args.get("service") {
-                Some(value) if value.is_string() => url.insert("service".to_owned(), value.to_owned()),
+                Some(value) if value.is_string() => properties.insert("service".to_owned(), value.to_owned()),
                 _ => None
             };
 
             Ok(
                 Literal::name_object(
-                    name.to_lowercase(), 
-                    &Literal::object(url, interval.clone()),
+                    name.to_lowercase(),
+                    &Literal::object(properties, interval.clone()),
                     interval
                 )
             )
@@ -202,6 +174,39 @@ pub fn audio(
         },
         _ => Err(ErrorInfo{
                 message: "Builtin Audio expect one argument of type string and 1 optional 'service' argument of type string | example: Audio(url = \"hola\", service = \"text\")".to_owned(),
+                interval
+        })
+    }
+}
+
+pub fn url(
+    args: HashMap<String, Literal>,
+    name: String,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    let mut url = HashMap::new();
+
+    match &search_or_default(&args, "url", &interval, None) {
+        Ok(href) if href.is_string() => {
+
+            url.insert("url".to_owned(), href.clone());
+            if let Ok(title) = search_or_default(&args, "title", &interval, Some(href.clone())) {
+                url.insert("title".to_owned(), title.to_owned());
+            }
+            if let Ok(text) = search_or_default(&args, "text", &interval, Some(href.clone())) {
+                url.insert("text".to_owned(), text.to_owned());
+            }
+
+            Ok(
+                Literal::name_object(
+                    name.to_lowercase(),
+                    &Literal::object(url, interval.clone()),
+                    interval
+                )
+            )
+        },
+        _ => Err(ErrorInfo{
+                message: "Builtin Url expect one argument of type string and 2 optional string argmuments: text, title | example: Url(href = \"hola\", text = \"text\", title = \"title\")".to_owned(),
                 interval
         })
     }

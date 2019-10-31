@@ -50,7 +50,7 @@ pub fn search_var_memory(
             data,
         ),
         _ => Err(ErrorInfo {
-            message: "unown variable in search_var_memory".to_owned(),
+            message: "unknown variable in search_var_memory".to_owned(),
             interval: name.interval,
         }),
     }

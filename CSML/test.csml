@@ -1,4 +1,11 @@
 start:
+  say Image("img")
+  say Video("video")
+  say Audio("audio")
+  say Url("url")
+  goto end
+
+plop:
   use Button("b1") as b1
   use Button("b2") as b2
   use Button("b3") as b3
