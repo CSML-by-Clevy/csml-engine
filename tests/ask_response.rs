@@ -20,7 +20,7 @@ fn format_message(event: Option<Event>, name: &str) -> MessageData {
 
 #[test]
 fn ok_ask_normal() {
-    let data = r#"{"messages":[{"content":{"text":"ask"},"content_type":"text"}],"next_flow":null,"memories":[ {"key":"myvar", "value": 4} ],"next_step":"end"}"#;
+    let data = r#"{"messages":[{"content":"ask","content_type":"text"}],"next_flow":null,"memories":[ {"key":"myvar", "value": 4} ],"next_step":"end"}"#;
     let msg = format_message(None, "normal.csml");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -31,7 +31,7 @@ fn ok_ask_normal() {
 
 #[test]
 fn ok_response_normal() {
-    let data = r#"{"messages":[{"content":{"text":"response"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[{"content":"response","content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(Some(gen_event("22")), "normal.csml");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -42,7 +42,7 @@ fn ok_response_normal() {
 
 #[test]
 fn ok_ask_short() {
-    let data = r#"{"messages":[{"content":{"text":"ask"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":null}"#;
+    let data = r#"{"messages":[{"content":"ask","content_type":"text"}],"next_flow":null,"memories":[],"next_step":null}"#;
     let msg = format_message(None, "short.csml");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -53,7 +53,7 @@ fn ok_ask_short() {
 
 #[test]
 fn ok_response_short() {
-    let data = r#"{"messages":[{"content":{"text":"response"},"content_type":"text"}],"next_flow":null,"memories":[{"key":"myvar", "value": "22"}],"next_step":null}"#;
+    let data = r#"{"messages":[{"content":"response","content_type":"text"}],"next_flow":null,"memories":[{"key":"myvar", "value": "22"}],"next_step":null}"#;
     let msg = format_message(Some(gen_event("22")), "short.csml");
 
     let v1: Value = message_to_jsonvalue(msg);

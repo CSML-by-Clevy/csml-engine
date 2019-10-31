@@ -18,12 +18,12 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
 }
 
 #[test]
-fn ok_url() {
+fn ok_random() {
     let msg = format_message(None, "start");
 
     let v: Value = message_to_jsonvalue(msg);
 
-    let float = v["messages"][0]["content"]["text"]
+    let float = v["messages"][0]["content"]
         .as_str()
         .unwrap()
         .parse::<f64>()
