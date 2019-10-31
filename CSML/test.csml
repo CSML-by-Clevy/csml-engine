@@ -3,6 +3,7 @@ start:
   say Video("video")
   say Audio("audio")
   say Url("url")
+  say Text("text")
   goto end
 
 plop:
