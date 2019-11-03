@@ -1,9 +1,10 @@
 start:
-  say Image("img")
-  say Video("video")
-  say Audio("audio")
-  say Url("url")
-  say Text("text")
+  use Button("b1", hook = "next") as b1
+  use Button("b2", hook = "next2") as b2
+
+  say Question(
+    title = "plop", buttons = [b1, b2]
+  )
   goto end
 
 plop:
@@ -28,7 +29,7 @@ test:
   import step init
   say "hola"
   say Question(
-    title = "plop", buttons = []
+    title = "plop", buttons = [b1, b2]
   )
   
   if (event match Button("b1")) {

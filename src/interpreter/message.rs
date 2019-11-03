@@ -86,8 +86,8 @@ impl Message {
 
 fn question_to_json(value: Value) -> Value {
     let mut map: Map<String, Value> = Map::new();
-    map.insert("title".to_owned(), value["question"]["title"].clone());
-    let buttons = match value["question"]["buttons"].clone() {
+    map.insert("title".to_owned(), value["title"].clone());
+    let buttons = match value["buttons"].clone() {
         Value::Array(array) => {
             array.iter().fold(vec!(),|mut vec, elem| {
             vec.push(button_to_json(json!("button"), elem["button"].clone()));
