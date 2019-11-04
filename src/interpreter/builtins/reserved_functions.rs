@@ -463,10 +463,7 @@ pub fn question(
     name: String,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    let title = match args.get("title") {
-        Some(literal) => literal.to_owned(),
-        _ => Literal::string("question".to_owned(), interval.clone()),
-    };
+    let title = search_or_default(&args, "title", &interval, None)?;
 
     let buttons = match args.get("buttons") {
         Some(literal) if if_buttons(literal) => literal.to_owned(),
