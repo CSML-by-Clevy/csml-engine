@@ -1,4 +1,9 @@
 start:
+  say "hola"
+  say Text("hola")
+  goto end
+
+plop3:
   use Button("b1", hook = "next") as b1
   use Button("b2", hook = "next2") as b2
 

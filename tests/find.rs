@@ -19,7 +19,7 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
 
 #[test]
 fn ok_find() {
-    let data = r#"{"messages":[ {"content":"true","content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "text": "true"  },"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "start");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -30,7 +30,7 @@ fn ok_find() {
 
 #[test]
 fn ok_find_step1() {
-    let data = r#"{"messages":[ {"content":"false","content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{ "text": "false" },"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "find1");
 
     let v1: Value = message_to_jsonvalue(msg);

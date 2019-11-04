@@ -19,7 +19,7 @@ fn format_message(event: Option<Event>) -> MessageData {
 
 #[test]
 fn ok_foreach() {
-    let data = r#"{"messages":[ {"content":"1","content_type":"text"}, {"content":"2","content_type":"text"}, {"content":"3","content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content": { "text": "1" } ,"content_type":"text"}, {"content": { "text": "2" } ,"content_type":"text"}, {"content": { "text": "3" } ,"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None);
 
     let v1: Value = message_to_jsonvalue(msg);

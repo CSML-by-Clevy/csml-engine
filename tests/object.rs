@@ -27,7 +27,7 @@ fn check_error_component(vec: &MessageData) -> bool {
 
 #[test]
 fn ok_object_step1() {
-    let data = r#"{"messages":[ {"content": "1","content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{"text":"1"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "step1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -38,7 +38,7 @@ fn ok_object_step1() {
 
 #[test]
 fn ok_object_step2() {
-    let data = r#"{"messages":[ {"content": "4","content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{"text":"4"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "step2");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -49,7 +49,7 @@ fn ok_object_step2() {
 
 #[test]
 fn ok_object_step3() {
-    let data = r#"{"messages":[ {"content": "true","content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data = r#"{"messages":[ {"content":{"text":"true"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "step3");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -71,7 +71,7 @@ fn ok_object_step5() {
     let msg = format_message(None, "step5");
     let v: Value = message_to_jsonvalue(msg);
 
-    let int = v["messages"][0]["content"]
+    let int = v["messages"][0]["content"]["text"]
         .as_str()
         .unwrap()
         .parse::<i64>()

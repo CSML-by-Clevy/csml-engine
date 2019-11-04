@@ -23,7 +23,7 @@ fn ok_random() {
 
     let v: Value = message_to_jsonvalue(msg);
 
-    let float = v["messages"][0]["content"]
+    let float = v["messages"][0]["content"]["text"]
         .as_str()
         .unwrap()
         .parse::<f64>()

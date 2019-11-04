@@ -76,11 +76,18 @@ pub fn text(
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
-        Some(literal) => Ok(Literal::name_object(
-            name.to_lowercase(),
-            literal,
-            literal.get_interval(),
-        )),
+        Some(literal) => {
+            let interval = literal.get_interval();
+            Ok(Literal::name_object(
+                name.to_lowercase(),
+                &Literal::name_object(
+                    name.to_lowercase(),
+                    literal,
+                    interval.clone()
+                ),
+                interval,
+            ))
+        },
         _ => Err(ErrorInfo {
             message: "Builtin Text expect one argument of type string | example: Text(\"hola\")"
                 .to_owned(),
