@@ -1,0 +1,24 @@
+start:
+    use Button("b1") as b1
+    use Button("b2") as b2
+
+    say Question(
+        title = "title", buttons = [b1, b2]
+    )
+    goto end
+
+question1:
+    use Button("b1") as b1
+    use Button("b2") as b2
+
+    say Question(
+        "title", buttons = [b1, b2]
+    )
+    goto end
+
+question2:
+    use Button("b1") as b1
+    use Button("b2") as b2
+
+    say Question(buttons = [b1, b2])
+    goto end

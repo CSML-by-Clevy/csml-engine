@@ -24,7 +24,11 @@ pub fn typing(
             interval,
         }) => Ok(Literal::name_object(
             name.to_lowercase(),
-            &Literal::float(*lit, interval.to_owned()),
+            &Literal::name_object(
+                "duration".to_owned(),
+                &Literal::float(*lit, interval.to_owned()),
+                interval.clone()
+            ),
             interval.to_owned(),
         )),
         _ => Err(ErrorInfo {
@@ -59,7 +63,11 @@ pub fn wait(
             interval,
         }) => Ok(Literal::name_object(
             name.to_lowercase(),
-            &Literal::float(*lit, interval.to_owned()),
+            &Literal::name_object(
+                "duration".to_owned(),
+                &Literal::float(*lit, interval.to_owned()),
+                interval.clone()
+            ),
             interval.to_owned(),
         )),
         _ => Err(ErrorInfo {
@@ -463,8 +471,6 @@ pub fn question(
     name: String,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    let title = search_or_default(&args, "title", &interval, None)?;
-
     let buttons = match args.get("buttons") {
         Some(literal) if if_buttons(literal) => literal.to_owned(),
         _ => return Err(ErrorInfo {
@@ -475,7 +481,10 @@ pub fn question(
 
     let accepts = accepts_from_buttons(&buttons);
     let mut question = HashMap::new();
-    question.insert("title".to_owned(), title);
+
+    if let Ok(title) = search_or_default(&args, "title", &interval, None) {
+        question.insert("title".to_owned(), title);
+    }
     question.insert("accepts".to_owned(), accepts);
     question.insert("buttons".to_owned(), buttons);
 

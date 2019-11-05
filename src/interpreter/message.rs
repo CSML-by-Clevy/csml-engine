@@ -100,7 +100,6 @@ fn question_to_json(value: Value) -> Value {
         val => {map.insert("title".to_owned(), val);}
     };
 
-    // if let message
     let buttons = match value["buttons"].clone() {
         Value::Array(array) => {
             array.iter().fold(vec!(),|mut vec, elem| {
@@ -223,7 +222,7 @@ impl MessageData {
                     messages: vec![Message {
                         content_type: "error".to_owned(),
                         content: Literal::name_object(
-                            "error".to_owned(),
+                            "text".to_owned(),
                             &Literal::string(msg, interval.clone()),
                             interval,
                         ),
