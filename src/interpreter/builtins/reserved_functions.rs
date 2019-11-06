@@ -16,7 +16,11 @@ pub fn typing(
             interval,
         }) => Ok(Literal::name_object(
             name.to_lowercase(),
-            &Literal::int(*lit, interval.to_owned()),
+            &Literal::name_object(
+                "duration".to_owned(),
+                &Literal::int(*lit, interval.to_owned()),
+                interval.clone()
+            ),
             interval.to_owned(),
         )),
         Some(Literal::FloatLiteral {
@@ -55,7 +59,11 @@ pub fn wait(
             interval,
         }) => Ok(Literal::name_object(
             name.to_lowercase(),
-            &Literal::int(*lit, interval.to_owned()),
+            &Literal::name_object(
+                "duration".to_owned(),
+                &Literal::int(*lit, interval.to_owned()),
+                interval.clone()
+            ),
             interval.to_owned(),
         )),
         Some(Literal::FloatLiteral {
