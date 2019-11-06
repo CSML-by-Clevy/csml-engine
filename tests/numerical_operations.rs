@@ -79,7 +79,7 @@ fn ok_divition2() {
 fn check_error_component(vec: &[Message]) -> bool {
     let comp = &vec[0];
     match &comp.content {
-        Literal::FunctionLiteral { name, .. } if name == "error" => true,
+        Literal::FunctionLiteral { name, .. } if name == "text" => true,
         _ => false,
     }
 }
@@ -98,8 +98,9 @@ fn ok_divition3() {
             messages: vec,
             next_flow: None,
             next_step: None,
+            ..
         } if vec.len() == 1 && check_error_component(&vec) => {}
-        _ => panic!("Error in div by 0"),
+        e => panic!("Error in div by 0 {:?}", e),
     }
 }
 
