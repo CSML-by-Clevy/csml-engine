@@ -73,7 +73,7 @@ impl Parser {
                         }
                     )
                 },
-                Err::Incomplete(err) => unimplemented!(),
+                Err::Incomplete(_err) => unimplemented!(),
             },
         }
     }
