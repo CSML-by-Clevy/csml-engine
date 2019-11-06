@@ -15,7 +15,7 @@ pub mod parse_var_types;
 pub mod tokens;
 pub mod tools;
 
-use crate::error_format::CustomError;
+use crate::error_format::{CustomError, ErrorInfo};
 use ast::*;
 use parse_comments::comment;
 use parse_ident::parse_ident;
@@ -23,7 +23,7 @@ use parse_scope::parse_root;
 use tokens::*;
 use tools::*;
 
-use nom::error::ParseError;
+use nom::error::{ParseError, ErrorKind};
 use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
@@ -52,19 +52,33 @@ fn create_flow_from_instructions<'a>(instructions: Vec<Instruction>, flow_type: 
 pub struct Parser;
 
 impl Parser {
-    pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, String> {
+    pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
         match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
-            Ok((.., (instructions, ftype))) => match create_flow_from_instructions(instructions, ftype) {
+            Ok((s, (instructions, ftype))) => match create_flow_from_instructions(instructions, ftype) {
                 Ok(val) => Ok(val),
-                Err(error) => Err(error),
+                Err(error) => Err({
+                    ErrorInfo{
+                            message: error,
+                            interval: Interval{ line: s.line, column: s.get_column() as u32},
+                    }
+                    
+                }),
             },
             Err(e) => match e {
-                Err::Error(err) | Err::Failure(err) => Err(err.error),
-                Err::Incomplete(_err) => unimplemented!(),
+                Err::Error(err) | Err::Failure(err) => {
+                    Err(
+                        ErrorInfo{
+                            message: err.error.to_owned(),
+                            interval: Interval{ line: err.input.line, column: err.input.get_column() as u32},
+                        }
+                    )
+                },
+                Err::Incomplete(err) => unimplemented!(),
             },
         }
     }
 }
+
 
 // preceded(comment, )(s)?;
 fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Instruction, FlowType), E> {
@@ -111,5 +125,12 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
         flow_type = FlowType::Normal;
     };
     //check end of file;
-    Ok((s, (flow, flow_type)))
+    let (last, _) = comment(s)?;
+    if last.fragment.len() != 0 {
+        // CustomError{input: last, error: "unknown keyword".to_owned()})
+        Err(Err::Failure(E::from_error_kind(last, ErrorKind::Tag)))
+    } else {
+        Ok((s, (flow, flow_type)))
+    }
+
 }

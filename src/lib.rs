@@ -19,10 +19,7 @@ pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
             check_valid_flow(&flow)?;
             Ok(flow)
         }
-        Err(e) => Err(ErrorInfo {
-            message: e,
-            interval: Interval { line: 0, column: 0 },
-        }),
+        Err(e) => Err(e),
     }
 }
 
