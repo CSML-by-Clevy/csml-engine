@@ -42,6 +42,3 @@ test:
   } 
   say "hola2"
   goto end
-
-goto test2:
-  goto end

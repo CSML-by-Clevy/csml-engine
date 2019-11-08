@@ -73,12 +73,11 @@ impl Parser {
                         }
                     )
                 },
-                Err::Incomplete(_err) => unimplemented!(),
+                Err::Incomplete(_err) => unreachable!(),
             },
         }
     }
 }
-
 
 // preceded(comment, )(s)?;
 fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Instruction, FlowType), E> {
