@@ -14,7 +14,7 @@ use crate::interpreter::{
         expr_to_literal::expr_to_literal,
         gen_literal::{gen_literal_form_builder, gen_literal_form_event},
         interval::interval_from_expr,
-        memory::search_var_memory,
+        memory::{search_var_memory},
     },
 };
 use crate::parser::{

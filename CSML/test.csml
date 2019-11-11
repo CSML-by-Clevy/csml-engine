@@ -1,7 +1,5 @@
 start:
-  say NULL
-  say event
-  say ret
+  say _metadata.mavar
   // say (test && (event || hola) && 4 + 3 - 2)
   goto end
 

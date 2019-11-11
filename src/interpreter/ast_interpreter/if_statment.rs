@@ -9,7 +9,7 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{Expr, IfStatement, Infix, BlockType, Interval},
+    ast::{Expr, IfStatement, Infix, BlockType},
     literal::Literal,
 };
 
@@ -45,8 +45,7 @@ pub fn evaluate_condition(
         (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => {
             Ok(Literal::BoolLiteral {
                 value: !valid_literal(get_var_from_ident(exp_1, data)),
-                // TODO: tmp need a get interval form EXPR
-                interval: Interval{line: 0, column: 0},
+                interval: interval_from_expr(exp_1),
             })
         }
         (exp_1, exp_2) if check_if_ident(exp_1) && check_if_ident(exp_2) => evaluate(

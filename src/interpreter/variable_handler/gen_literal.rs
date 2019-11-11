@@ -4,13 +4,13 @@ use crate::interpreter::{
     json_to_rust::{Event},
     variable_handler::{
         get_string_from_complexstring, get_var, interval::interval_from_expr,
-        memory::get_memory_action, object::decompose_object,
+        memory::{get_memory_action, search_in_metadata}, object::decompose_object,
     },
 };
 use crate::parser::{
     ast::{Expr, Identifier, Interval},
     literal::Literal,
-    tokens::{MEMORY, METADATA, PAST},
+    tokens::{MEMORY, PAST, _METADATA},
 };
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {
@@ -31,17 +31,36 @@ pub fn gen_literal_form_expr(expr: &Expr, data: &mut Data) -> Result<Literal, Er
     }
 }
 
+// tmp 
+fn valid_metadata(expr: &Expr) -> bool {
+    match expr {
+        Expr::IdentExpr(Identifier{ident, ..} ) if ident == _METADATA => true,
+        _ => false
+    }
+}
+// tmp
+fn extract_indent(expr: &Expr) -> Result<Identifier, ErrorInfo> {
+    match expr {
+        Expr::IdentExpr(ident) => Ok(ident.to_owned()),
+        _ => Err(ErrorInfo {
+            message: "_metadata expect symple identifier | ex: _metadata.firstname".to_owned(),
+            interval: interval_from_expr(expr),
+        }),
+    }
+}
+
 pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match expr {
+        Expr::BuilderExpr(elem, expr) if valid_metadata(elem) => {
+            let ident = extract_indent(expr)?;
+            search_in_metadata(data.memory, ident, data)
+        },
         Expr::BuilderExpr(elem, expr) if search_str(PAST, elem) => {
             get_memory_action(data.memory, elem, expr, data)
         }
         Expr::BuilderExpr(elem, expr) if search_str(MEMORY, elem) => {
             get_memory_action(data.memory, elem, expr, data)
-        }
-        Expr::BuilderExpr(elem, expr) if search_str(METADATA, elem) => {
-            get_memory_action(data.memory, elem, expr, data)
-        }
+        },
         Expr::BuilderExpr(elem, expr) => {
             let elem: &Expr = elem;
             if let Expr::IdentExpr(ident) = elem {
@@ -53,7 +72,7 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal,
                     interval: interval_from_expr(elem),
                 })
             }
-        }
+        },
         Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
         e => Err(ErrorInfo {

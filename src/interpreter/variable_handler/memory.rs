@@ -25,18 +25,28 @@ pub fn memorytype_to_literal(
     }
 }
 
+pub fn search_in_metadata(
+    memory: &Context,
+    name: Identifier,
+    data: &mut Data,
+) -> Result<Literal, ErrorInfo> {
+    match memory.metadata.contains_key(&name.ident) {
+        true => memorytype_to_literal(
+            memory.metadata.get(&name.ident),
+            name.interval.clone(),
+            &name.index,
+            data,
+        ),
+        false => Ok(Literal::null(name.interval.to_owned())),
+    }
+}
+
 pub fn search_var_memory(
     memory: &Context,
     name: Identifier,
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     match &name.ident {
-        var if memory.metadata.contains_key(var) => memorytype_to_literal(
-            memory.metadata.get(var),
-            name.interval.clone(),
-            &name.index,
-            data,
-        ),
         var if memory.current.contains_key(var) => memorytype_to_literal(
             memory.current.get(var),
             name.interval.clone(),

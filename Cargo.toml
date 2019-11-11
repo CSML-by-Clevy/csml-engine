@@ -24,3 +24,6 @@ features = ["mesalink"]
 
 [[example]]
 name = "test_flow"
+
+[[example]]
+name = "valid"

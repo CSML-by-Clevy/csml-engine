@@ -65,6 +65,7 @@ pub const GOTO: &str = "goto";
 pub const MATCH: &str = "match";
 pub const DEFAULT: &str = "default";
 pub const REMEMBER: &str = "remember";
+pub const _METADATA: &str = "_metadata";
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
@@ -72,7 +73,7 @@ pub const NULL: &str = "NULL";
 
 pub static RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, DEFAULT, REMEMBER, TRUE, FALSE, NULL,
+    MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL,
 ];
 
 pub const TYPING: &str = "Typing";
@@ -101,7 +102,7 @@ pub static BUILT_IN: &[&str] = &[
 
 pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";
-pub const METADATA: &str = "metadata";
+// pub const METADATA: &str = "metadata";
 
 pub const FROMEFILE: &str = "FromFile";
 pub const GET_VALUE: &str = "getvalue";
