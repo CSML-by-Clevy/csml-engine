@@ -45,7 +45,6 @@ pub fn message_to_jsonvalue(result: MessageData) -> Value {
             _ => json!(null),
         },
     );
-
     Value::Object(message)
 }
 
@@ -62,9 +61,6 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
     // Some(Event{
     //     literal: Literal::string("42".to_owned())
     // });
-
-    // let v: Value = serde_json::from_str(data).unwrap();
-
     let mut metadata = MultiMap::new();
 
     metadata.insert(
@@ -104,12 +100,9 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
     };
 
     dbg!(message_to_jsonvalue(interpret(
-        flow, step_name, &memory, &event
+        flow, step_name, &memory, &event, None, None
     )));
 }
-
-// use std::{env, io::Read};
-// use curl::easy::{Easy, List};
 
 fn main() {
     let text = read_file("CSML/test.csml".to_owned()).unwrap();
@@ -120,19 +113,11 @@ fn main() {
     };
 
     interpret_flow(&flow, "start");
-
-    // println!("flow -> {:?}", flow);
-    // println!("n-------------------------------------njson -> {:?}", serde_json::to_string(&flow).unwrap() );
 }
 
 // ((1 + 3) > 6) && var
-
 // if (true == (7 && (7 - (3+(2*1)) == 2)))) {
 //     goto toto
 // }
-
-// List(1, 2) => [1, 2]
-
 // "{{(1 + 3)}} {{var}}"
-
 // ((1 + 3) > 6) + var

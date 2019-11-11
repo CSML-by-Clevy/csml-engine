@@ -17,7 +17,7 @@ fn pars_args<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Iden
     Ok((s, ident))
 }
 
-pub fn parse_for<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+pub fn parse_foreach<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, _) = preceded(comment, tag(FOREACH))(s)?;
     let (s, start) = get_interval(s)?;
 
@@ -34,7 +34,7 @@ pub fn parse_for<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, 
 
     Ok((
         s,
-        Expr::ForExpr(
+        Expr::ForEachExpr(
             ident,
             opt,
             Box::new(expr),

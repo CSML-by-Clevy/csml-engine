@@ -9,7 +9,7 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{Expr, IfStatement, Infix},
+    ast::{Expr, IfStatement, Infix, BlockType},
     literal::Literal,
 };
 
@@ -96,7 +96,7 @@ pub fn solve_if_statments(
             then_branch,
         } => {
             if valid_condition(cond, data) {
-                root = root + interpret_scope(consequence, data)?;
+                root = root + interpret_scope(&BlockType::IfLoop, consequence, data)?;
                 return Ok(root);
             }
             if let Some(then) = then_branch {
@@ -105,7 +105,7 @@ pub fn solve_if_statments(
             Ok(root)
         }
         IfStatement::ElseStmt(consequence, ..) => {
-            root = root + interpret_scope(consequence, data)?;
+            root = root + interpret_scope(&BlockType::IfLoop, consequence, data)?;
             Ok(root)
         }
     }

@@ -2,6 +2,7 @@ use crate::error_format::data::ErrorInfo;
 use crate::parser::literal::Literal;
 use serde_json::{json, map::Map, Value};
 use std::ops::Add;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub enum MessageType {
@@ -139,6 +140,8 @@ impl Memories {
 pub struct MessageData {
     pub memories: Option<Vec<Memories>>,
     pub messages: Vec<Message>,
+    pub step_vars: Option<HashMap<String, Literal>>,
+    pub index: i64,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
 }
@@ -155,6 +158,8 @@ impl Add for MessageData {
                 _ => None,
             },
             messages: [&self.messages[..], &other.messages[..]].concat(),
+            // TODO: refactor
+            step_vars: self.step_vars.clone(), 
             next_flow: match (&self.next_flow, &other.next_flow) {
                 (Some(flow), None) => Some(flow.to_owned()),
                 (None, Some(flow)) => Some(flow.to_owned()),
@@ -167,6 +172,7 @@ impl Add for MessageData {
                 (Some(step), Some(_)) => Some(step.to_owned()),
                 _ => None,
             },
+            index: self.index,
         }
     }
 }
@@ -227,8 +233,10 @@ impl MessageData {
                             interval,
                         ),
                     }],
+                    step_vars: None,
                     next_flow: None,
                     next_step: None,
+                    index: 0,
                 }
             }
         }

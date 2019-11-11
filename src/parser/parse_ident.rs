@@ -20,7 +20,7 @@ fn parse_box_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>,
     Ok((s, Box::new(expr)))
 }
 
-fn parse_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, String, E> {
+pub fn parse_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, String, E> {
     let (s, val) = take_till1(|c| is_valid_char(c))(s)?;
 
     // TODO: see if return String can be &str

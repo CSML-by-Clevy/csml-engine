@@ -1,9 +1,0 @@
-start:
-    ask {
-        remember 4 as myvar
-        say "ask"
-    }
-    response {
-        say "response"
-    }
-    goto end

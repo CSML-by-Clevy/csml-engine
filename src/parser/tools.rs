@@ -1,7 +1,7 @@
 use crate::parser::{ast::*, expressions_evaluation::*, parse_comments::comment, tokens::*};
 use nom::{
     bytes::complete::tag,
-    error::ParseError,
+    error::{ParseError}, //ErrorKind
     sequence::{delimited, preceded},
     *,
 };
@@ -14,10 +14,26 @@ where
     nom::bytes::complete::take(0usize)(s)
 }
 
+// fn position<'a, E: ParseError<Span<'a>>, T, G: Interval>(s: T) -> IResult<T, G, E>
+// where
+//     T: InputIter + InputTake,
+//     E: nom::error::ParseError<T>,
+// {
+//     let (s, pos) = nom::bytes::complete::take(0usize)(s)?;
+//      Ok((s, Interval::new(pos)))
+// }
+
+
 pub fn get_interval<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Interval, E> {
     let (s, pos) = position(s)?;
     Ok((s, Interval::new(pos)))
 }
+
+//  CompareResult::Ok => Ok(i.take_split(tag_len)),
+//   _ => {
+//     let e: ErrorKind = ErrorKind::Tag;
+//     Err(Err::Error(Error::from_error_kind(i, e)))
+//   }
 
 // pub fn complete_byte_slice_str_from_utf8<'a>(c: Span) -> Result<&'a str, Utf8Error> {
 //     str::from_utf8(c.fragment.0).map(|s| s)

@@ -1,5 +1,0 @@
-start:
-    ask myvar
-        say "ask"
-    response
-        say "response"

@@ -1,6 +1,8 @@
 start:
   say "hola"
   say Text("hola")
+  hold
+  say event
   goto end
 
 plop3:
