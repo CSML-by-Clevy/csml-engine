@@ -9,7 +9,7 @@ pub fn for_loop(
     ident: &Identifier,
     i: &Option<Identifier>,
     expr: &Expr,
-    block: &[Expr],
+    block: &Block,
     range: &RangeInterval,
     mut root: MessageData,
     data: &mut Data,
@@ -33,7 +33,7 @@ pub fn for_loop(
                 Literal::int(value as i64, elem.get_interval()),
             );
         };
-        root = root + interpret_scope(block, data)?;
+        root = root + interpret_scope(&BlockType::IfLoop, block, data)?;
     }
     data.step_vars.remove(&ident.ident);
     if let Some(index) = i {

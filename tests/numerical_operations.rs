@@ -8,7 +8,6 @@ use csmlinterpreter::interpreter::{
 use csmlinterpreter::parser::{literal::Literal, Parser};
 use multimap::MultiMap;
 use serde_json::Value;
-
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
 fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
@@ -18,7 +17,7 @@ fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    interpret(&flow, step, &memory, &event)
+    interpret(&flow, step, &memory, &event, None, None)
 }
 
 #[test]
@@ -92,12 +91,13 @@ fn ok_divition3() {
 
     let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    match &interpret(&flow, "div3", &memory, &None) {
+    match &interpret(&flow, "div3", &memory, &None, None, None) {
         MessageData {
             memories: None,
             messages: vec,
             next_flow: None,
             next_step: None,
+            index: 0,
             ..
         } if vec.len() == 1 && check_error_component(&vec) => {}
         e => panic!("Error in div by 0 {:?}", e),

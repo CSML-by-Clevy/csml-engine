@@ -1,11 +1,11 @@
 use crate::parser::{
     ast::*,
     parse_comments::comment,
-    parse_ident::parse_ident,
+    parse_ident::{parse_ident, parse_string},
     parse_import::parse_import,
     parse_var_types::{parse_as_variable, parse_expr_list, parse_var_expr},
     tokens::*,
-    // tools::get_interval,
+    tools::get_interval,
     GotoType,
 };
 use nom::{
@@ -28,9 +28,9 @@ fn get_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoT
     Ok((s, GotoType::Step))
 }
 
-fn get_sub_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
+fn get_hook<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
     let (s, ..) = preceded(comment, tag("@"))(s)?;
-    Ok((s, GotoType::SubStep))
+    Ok((s, GotoType::Hook))
 }
 
 fn get_flow<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
@@ -44,7 +44,7 @@ fn get_default<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Go
 
 fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = preceded(comment, tag(GOTO))(s)?;
-    let (s, goto_type) = alt((get_step, get_flow, get_sub_step, get_default))(s)?;
+    let (s, goto_type) = alt((get_step, get_flow, get_hook, get_default))(s)?;
     let (s, name) = match parse_ident(s) {
         Ok(vars) => vars,
         Err(Err::Error(err)) | Err(Err::Failure(err)) => {
@@ -71,14 +71,11 @@ fn parse_use<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr
     Ok((s, Expr::ObjectExpr(ObjectType::Use(Box::new(expr)))))
 }
 
-// fn parse_sub_step<'a, E: ParseError<Span<'a> >>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-//     let (s, ..) = preceded(comment, tag("@"))(s)?;
-//     let (s, start) = get_interval(s)?;
-//     let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
-//     let (s, end) = get_interval(s)?;
-
-//     Ok((s, Expr::Block{block_type: BlockType::SubStep(ident), arg: vec!(), range: RangeInterval{start, end}}))
-// }
+fn parse_hold<'a, E: ParseError<Span<'a> >>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, inter) = get_interval(s)?;
+    let (s, ..) = preceded(comment, tag(HOLD))(s)?;
+    Ok((s, Expr::ObjectExpr(ObjectType::Hold(inter))))
+}
 
 fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = preceded(comment, tag(REMEMBER))(s)?;
@@ -111,15 +108,23 @@ pub fn parse_actions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     ))
 }
 
+pub fn parse_hook<'a, E: ParseError<Span<'a> >>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ..) = preceded(comment, tag("@"))(s)?;
+    //TODO: add error if ident not found
+    let (s, name) = parse_string(s)?;
+
+    Ok((s, Expr::Hook(name)))
+}
+
 pub fn parse_root_functions<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Expr, E> {
-    // parse_sub_step,
     alt((
         parse_say,
         parse_remember,
         parse_import,
         parse_goto,
         parse_use,
+        parse_hold,
     ))(s)
 }

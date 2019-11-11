@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
+// TODO: Check format of MemoryType
 #[derive(Debug, Clone)]
 pub struct MemoryType {
     pub created_at: String,

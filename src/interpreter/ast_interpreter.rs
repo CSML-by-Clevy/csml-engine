@@ -5,7 +5,7 @@ pub mod if_statment;
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
     ast_interpreter::{
-        ask_response::match_ask_response,
+        // ask_response::match_ask_response,
         for_loop::for_loop,
         if_statment::{evaluate_condition, solve_if_statments},
     },
@@ -110,12 +110,12 @@ fn match_actions(
         ObjectType::Import {
             step_name: name, ..
         } => {
-            if let Some(Expr::Block { arg: actions, .. }) = data
+            if let Some(Expr::Scope { scope: actions, block_type, .. }) = data
                 .ast
                 .flow_instructions
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
             {
-                match interpret_scope(&actions, data) {
+                match interpret_scope(block_type, actions, data) {
                     //, &range.start
                     Ok(root2) => Ok(root + root2),
                     Err(err) => Err(ErrorInfo {
@@ -137,25 +137,61 @@ fn match_actions(
     }
 }
 
-pub fn interpret_scope(actions: &[Expr], data: &mut Data) -> Result<MessageData, ErrorInfo> {
+pub fn interpret_scope(block_type: &BlockType, actions: &Block, data: &mut Data) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData::default();
 
-    for action in actions {
+    for (i, action) in actions.commands.iter().enumerate() {
         if root.next_step.is_some() || root.next_flow.is_some() {
             return Ok(root);
         }
 
         match action {
+            Expr::ObjectExpr(ObjectType::Hold(interval)) => {
+                match block_type {
+                    BlockType::Step => {},
+                    _ => return Err(ErrorInfo {
+                        message: "no hold allowed in if/foreach blocks".to_owned(),
+                        interval: interval.to_owned(),
+                    })
+                };
+                root.index = (i + 1) as i64;
+                return Ok(root)
+            },
             Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
             Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
-            Expr::ForExpr(ident, i, expr, block, range) => {
+            Expr::ForEachExpr(ident, i, expr, block, range) => {
                 root = for_loop(ident, i, expr, block, range, root, data)?
             }
-            Expr::Block {
-                block_type: BlockType::AskResponse(opt),
-                arg: vec,
-                range,
-            } => root = match_ask_response(vec, root, data, opt, range.clone())?,
+            e => {
+                return Err(ErrorInfo {
+                    message: "Block must start with a reserved keyword".to_owned(),
+                    interval: interval_from_expr(e),
+                })
+            }
+        };
+    }
+    Ok(root)
+}
+
+pub fn interpret_scope_at_index(actions: &Block, data: &mut Data, index: i64) -> Result<MessageData, ErrorInfo> {
+    let mut root = MessageData::default();
+    let vec = actions.commands.clone().split_off(index as usize);
+
+    for (i, action) in vec.iter().enumerate() {
+        if root.next_step.is_some() || root.next_flow.is_some() {
+            return Ok(root);
+        }
+
+        match action {
+            Expr::ObjectExpr(ObjectType::Hold(_)) => {
+                root.index = (i as i64) + index + 1;
+                return Ok(root)
+            },
+            Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
+            Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
+            Expr::ForEachExpr(ident, i, expr, block, range) => {
+                root = for_loop(ident, i, expr, block, range, root, data)?
+            }
             e => {
                 return Err(ErrorInfo {
                     message: "Block must start with a reserved keyword".to_owned(),

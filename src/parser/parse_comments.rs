@@ -54,8 +54,7 @@ pub fn comment<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Sp
 }
 
 fn sp<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    let chars = " \t\r\n";
     // nom combinators like `take_while` return a function. That function is the
     // parser,to which we can pass the input
-    take_while(move |c| chars.contains(c))(s)
+    take_while(move |c| WHITE_SPACE.contains(c))(s)
 }

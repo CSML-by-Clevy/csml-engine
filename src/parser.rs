@@ -2,7 +2,7 @@ pub mod ast;
 pub mod expressions_evaluation;
 pub mod literal;
 pub mod parse_actions;
-pub mod parse_ask_response;
+// pub mod parse_ask_response;
 pub mod parse_comments;
 pub mod parse_for_loop;
 pub mod parse_ident;
@@ -24,7 +24,7 @@ use tokens::*;
 use tools::*;
 
 use nom::error::{ParseError, ErrorKind};
-use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
+use nom::{ branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
 fn create_flow_from_instructions<'a>(instructions: Vec<Instruction>, flow_type: FlowType) -> Result<Flow, String> {
@@ -73,18 +73,28 @@ impl Parser {
                         }
                     )
                 },
-                Err::Incomplete(_err) => unreachable!(),
+                Err::Incomplete(_err) => unimplemented!(),
             },
         }
     }
 }
 
-// preceded(comment, )(s)?;
+pub fn preceded2<I, O1, O2, E: ParseError<I>, F, G>(first: F, second: G, name: String) -> impl Fn(I) -> IResult<I, O2, E>
+where
+  F: Fn(I) -> IResult<I, O1, E>,
+  G: Fn(I, String) -> IResult<I, O2, E>,
+{
+  move |input: I| {
+    let (input, _) = first(input)?;
+    second(input, name.clone())
+  }
+}
+
 fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Instruction, FlowType), E> {
     let (s, ident) = preceded(comment, parse_ident)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
     let (s, start) = get_interval(s)?;
-    let (s, (actions, flow_type)) = preceded(comment, parse_root)(s)?;
+    let (s, (actions, flow_type)) = preceded2(comment, parse_root, ident.ident.clone())(s)?;
     let (s, end) = get_interval(s)?;
 
     Ok((
@@ -92,14 +102,14 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (In
         (
             Instruction {
                 instruction_type: InstructionType::NormalStep(ident.ident),
-                actions: Expr::Block {
+                actions: Expr::Scope {
                     block_type: BlockType::Step,
-                    arg: actions,
+                    scope: actions,
                     range: RangeInterval { start, end },
                 },
             },
             flow_type
-        ),
+        )
     ))
 }
 
@@ -124,12 +134,23 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
         flow_type = FlowType::Normal;
     };
     //check end of file;
+    // preceded(comment, s)?
     let (last, _) = comment(s)?;
     if last.fragment.len() != 0 {
         // CustomError{input: last, error: "unknown keyword".to_owned()})
-        Err(Err::Failure(E::from_error_kind(last, ErrorKind::Tag)))
+        let res : IResult<Span<'a>, Span<'a>, E> = preceded(comment, 
+            alt((
+                tag("ask"), 
+                tag("response")
+            ))
+        )(last);
+
+        let error = match res {
+            Ok(_) => E::add_context(last, "use the new keyword hold to ask for user input https://docs.csml.dev/#hold", E::from_error_kind(last, ErrorKind::Tag)),
+            _  => E::from_error_kind(last, ErrorKind::Tag),
+        };
+        Err(Err::Failure(error))
     } else {
         Ok((s, (flow, flow_type)))
     }
-
 }

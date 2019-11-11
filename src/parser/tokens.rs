@@ -60,11 +60,10 @@ pub const FILE: &str = "file";
 pub const STEP: &str = "step";
 pub const SAY: &str = "say";
 pub const USE: &str = "use";
-pub const ASK: &str = "ask";
+pub const HOLD: &str = "hold";
 pub const GOTO: &str = "goto";
 pub const MATCH: &str = "match";
 pub const DEFAULT: &str = "default";
-pub const RESPONSE: &str = "response";
 pub const REMEMBER: &str = "remember";
 
 pub const TRUE: &str = "true";
@@ -72,8 +71,8 @@ pub const FALSE: &str = "false";
 pub const NULL: &str = "NULL";
 
 pub static RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, IN, FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE, ASK, GOTO,
-    MATCH, DEFAULT, RESPONSE, REMEMBER, TRUE, FALSE, NULL,
+    FOREACH, IF, ELSE, IMPORT, AS, IN, FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
+    MATCH, DEFAULT, REMEMBER, TRUE, FALSE, NULL,
 ];
 
 pub const TYPING: &str = "Typing";

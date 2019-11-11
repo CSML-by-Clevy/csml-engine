@@ -37,7 +37,7 @@ pub struct Instruction {
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum GotoType {
-    SubStep,
+    Hook,
     Step,
     Flow,
 }
@@ -45,7 +45,7 @@ pub enum GotoType {
 #[derive(PartialEq, Debug, Clone)]
 pub enum ObjectType {
     Goto(GotoType, Identifier),
-    WaitFor(Identifier),
+    Hold(Interval),
     Use(Box<Expr>),
     Say(Box<Expr>),
     Remember(Identifier, Box<Expr>),
@@ -60,43 +60,65 @@ pub enum ObjectType {
 }
 
 #[derive(PartialEq, Debug, Clone)]
+pub struct Block {
+    pub commands: Vec<Expr>,
+    pub hooks: Vec<Hook>
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub struct Hook {
+    pub index: i64,
+    pub name: String,
+    pub step: String
+}
+
+impl Block {
+    pub fn new() -> Self {
+        Block {
+            commands: Vec::new(),
+            hooks: Vec::new()
+        }
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub enum BlockType {
-    Ask,
-    Response,
-    AskResponse(Option<Identifier>),
-    SubStep(Identifier),
-    Step,
+    LoopBlock,
+    Block,
+    IfLoop,
+    Step
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum IfStatement {
     IfStmt {
         cond: Box<Expr>,
-        consequence: Vec<Expr>,
+        consequence: Block,
         then_branch: Option<Box<IfStatement>>,
     },
-    ElseStmt(Vec<Expr>, RangeInterval),
+    ElseStmt(Block, RangeInterval),
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Expr {
-    Block {
+    Scope {
         block_type: BlockType,
-        arg: Vec<Expr>, // HM<line?, Expr> change to hashmap in order to make step by step interactions with the manager
+        scope: Block,
         range: RangeInterval,
     },
     ComplexLiteral(Vec<Expr>, RangeInterval),
     VecExpr(Vec<Expr>, RangeInterval),
     InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval
-    ForExpr(
+    ForEachExpr(
         Identifier,
         Option<Identifier>,
         Box<Expr>,
-        Vec<Expr>,
+        Block,
         RangeInterval,
     ),
 
     ObjectExpr(ObjectType), // RangeInterval ?
+    Hook(String),
     IfExpr(IfStatement),
     BuilderExpr(Box<Expr>, Box<Expr>),
 
