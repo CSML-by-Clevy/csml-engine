@@ -3,7 +3,7 @@ use crate::parser::{
     expressions_evaluation::operator_precedence,
     parse_actions::{parse_actions, parse_assignation},
     parse_comments::comment,
-    parse_ident::parse_ident,
+    parse_ident::{parse_ident, get_tag, parse_ident_no_check},
     parse_literal::parse_literalexpr,
     parse_string::parse_string,
     tokens::*,
@@ -12,7 +12,7 @@ use crate::parser::{
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    error::{ErrorKind, ParseError},
+    error::ParseError,
     multi::fold_many0,
     sequence::delimited,
     sequence::preceded,
@@ -27,7 +27,8 @@ fn parse_builderexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
 }
 
 fn parse_identexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ident) = parse_ident(s)?;
+    // let (s, ident) = parse_ident(s)?;
+    let (s, ident) = parse_ident_no_check(s)?;
     Ok((s, Expr::IdentExpr(ident)))
 }
 
@@ -99,8 +100,8 @@ pub fn parse_basic_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
     preceded(
         comment,
         alt((
-            parse_actions,
             parse_literalexpr,
+            parse_actions,
             parse_builderexpr,
             parse_string,
             parse_identexpr,
@@ -124,28 +125,33 @@ pub fn parse_as_basic_variable<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Expr, E> {
     let (s, expr) = parse_basic_expr(s)?;
-    let (s, smart_lit) = parse_ident(s)?;
-    if smart_lit.ident != "as" {
-        return Err(Err::Error(E::add_context(
+    let s = match get_tag(s, AS) {
+        Err(Err::Error(err))
+        | Err(Err::Failure(err)) => return Err(Err::Error(E::add_context(
             s,
-            "Error msg for parse_as_basic_variable",
-            E::from_error_kind(s, ErrorKind::Tag),
-        )));
-    }
+            "msg for parse_as_basic_variable",
+            err,
+        ))),
+        Err(Err::Incomplete(err)) => return Err(Err::Incomplete(err)),
+        Ok((var, ..)) => var,
+    };
     let (s, name) = parse_ident(s)?;
     (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))))))
 }
 
 pub fn parse_as_variable<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, expr) = parse_var_expr(s)?;
-    let (s, smart_lit) = parse_ident(s)?;
-    if smart_lit.ident != "as" {
-        return Err(Err::Error(E::add_context(
+    // TODO: get_ident ?
+    let s = match get_tag(s, AS) {
+        Err(Err::Error(err))
+        | Err(Err::Failure(err)) => return Err(Err::Error(E::add_context(
             s,
-            "Error msg for parse_as_basic_variable",
-            E::from_error_kind(s, ErrorKind::Tag),
-        )));
-    }
+            "msg for parse_as_basic_variable",
+            err,
+        ))),
+        Err(Err::Incomplete(err)) => return Err(Err::Incomplete(err)),
+        Ok((var, ..)) => var,
+    };
     let (s, name) = parse_ident(s)?;
     (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))))))
 }

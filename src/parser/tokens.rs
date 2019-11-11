@@ -95,7 +95,7 @@ pub const OBJECT: &str = "Object";
 pub const FN: &str = "Fn";
 
 pub static BUILT_IN: &[&str] = &[
-    TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, 
+    TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM,
     FLOOR, VIDEO, AUDIO, QUESTION, BUTTON, OBJECT, FN,
 ];
 

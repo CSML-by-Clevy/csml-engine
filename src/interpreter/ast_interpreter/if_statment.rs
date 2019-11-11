@@ -9,13 +9,15 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{Expr, IfStatement, Infix, BlockType},
+    ast::{Expr, IfStatement, Infix, BlockType, Interval},
     literal::Literal,
 };
 
 fn valid_literal(res: Result<Literal, ErrorInfo>) -> bool {
     match res {
         Ok(Literal::BoolLiteral { value, .. }) => value,
+        Ok(Literal::IntLiteral { value, .. }) => value.is_positive(),
+        Ok(Literal::FloatLiteral { value, .. }) => value.is_normal(),
         Ok(Literal::Null { .. }) => false,
         Ok(_) => true,
         Err(_) => false,
@@ -28,11 +30,7 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
         Expr::LitExpr(Literal::BoolLiteral { value, .. }) => *value,
         Expr::LitExpr(Literal::Null { .. }) => false,
         Expr::IdentExpr(ident) => valid_literal(get_var(ident.to_owned(), data)),
-        Expr::InfixExpr(inf, exp_1, exp_2) => match evaluate_condition(inf, exp_1, exp_2, data) {
-            Ok(Literal::BoolLiteral { value: false, .. }) => false,
-            Ok(_) => true,
-            Err(_e) => false,
-        },
+        Expr::InfixExpr(inf, exp_1, exp_2) => valid_literal(evaluate_condition(inf, exp_1, exp_2, data)),
         value => valid_literal(match_functions(value, data)),
     }
 }
@@ -45,17 +43,11 @@ pub fn evaluate_condition(
 ) -> Result<Literal, ErrorInfo> {
     match (expr1, expr2) {
         (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => {
-            match get_var_from_ident(exp_1, data) {
-                Ok(Literal::BoolLiteral {
-                    value: false,
-                    interval,
-                }) => Ok(Literal::boolean(true, interval)),
-                Ok(Literal::IntLiteral { value: 0, interval }) => {
-                    Ok(Literal::boolean(true, interval))
-                }
-                Ok(literal) => Ok(Literal::boolean(false, literal.get_interval())),
-                Err(err) => Ok(Literal::boolean(true, err.interval)),
-            }
+            Ok(Literal::BoolLiteral {
+                value: !valid_literal(get_var_from_ident(exp_1, data)),
+                // TODO: tmp need a get interval form EXPR
+                interval: Interval{line: 0, column: 0},
+            })
         }
         (exp_1, exp_2) if check_if_ident(exp_1) && check_if_ident(exp_2) => evaluate(
             infix,

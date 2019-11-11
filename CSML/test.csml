@@ -1,5 +1,21 @@
 start:
-  // say "hola"
-  say hola
-  say Text(hola)
+  say NULL
+  say event
+  say ret
+  // say (test && (event || hola) && 4 + 3 - 2)
   goto end
+
+// sayplop:
+// goto end
+
+// usetruc:
+// goto end
+
+// rememberererrere:
+// goto end
+
+// gotorerrere:
+// goto end
+
+// gotorerrsaere:
+// goto end

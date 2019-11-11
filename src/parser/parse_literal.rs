@@ -1,15 +1,15 @@
 use crate::parser::{
     ast::Expr,
     literal::Literal,
+    tokens::NULL,
+    parse_ident::get_tag,
     parse_comments::comment,
     tokens::{Span, FALSE, TRUE},
-    tools::get_interval, //complete_byte_slice_str_from_utf8, complete_str_from_str,
+    tools::get_interval, 
 };
 use nom::{
     branch::alt,
-    bytes::complete::tag, // take_until, take_till1
-    // multi::many0,
-    // sequence::delimited,
+    bytes::complete::tag, 
     character::complete::digit1,
     combinator::{complete, opt},
     combinator::{map_res, recognize},
@@ -61,9 +61,15 @@ pub fn parse_boolean<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     Ok((s, Expr::LitExpr(boolean)))
 }
 
+pub fn parse_null<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, position) = get_interval(s)?;
+    let (s, _) = get_tag(s, NULL)?;
+    Ok((s, Expr::LitExpr(Literal::null(position))))
+}
+
 pub fn parse_literalexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     // TODO: span: preceded( comment ,  position!() ?
-    preceded(comment, alt((parse_float, parse_integer, parse_boolean)))(s)
+    preceded(comment, alt((parse_float, parse_integer, parse_boolean, parse_null)))(s)
 }
 
 #[cfg(test)]

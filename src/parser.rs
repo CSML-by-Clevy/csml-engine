@@ -133,11 +133,8 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
     if boolean {
         flow_type = FlowType::Normal;
     };
-    //check end of file;
-    // preceded(comment, s)?
     let (last, _) = comment(s)?;
     if last.fragment.len() != 0 {
-        // CustomError{input: last, error: "unknown keyword".to_owned()})
         let res : IResult<Span<'a>, Span<'a>, E> = preceded(comment, 
             alt((
                 tag("ask"), 
@@ -151,6 +148,7 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
         };
         Err(Err::Failure(error))
     } else {
+        // println!("flow => {:#?}", flow);
         Ok((s, (flow, flow_type)))
     }
 }

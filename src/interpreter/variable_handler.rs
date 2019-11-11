@@ -72,7 +72,7 @@ fn get_var_from_stepvar(name: &str, data: &mut Data) -> Option<Literal> {
 pub fn get_var(name: Identifier, data: &mut Data) -> Result<Literal, ErrorInfo> {
     match &name.ident {
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
-        var if var == RETRIES => Ok(Literal::int(data.memory.retries, name.interval.to_owned())),
+        var if var == RETRIES => Ok(Literal::int(data.memory.retries, name.interval.to_owned())), // tmp
         _ => {
             let var = get_var_from_stepvar(&name.ident, data);
             match var {

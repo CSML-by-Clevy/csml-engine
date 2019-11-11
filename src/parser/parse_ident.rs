@@ -12,6 +12,7 @@ use nom::{
     error::ParseError,
     sequence::delimited,
     sequence::preceded,
+    error::ErrorKind,
     *,
 };
 
@@ -23,13 +24,40 @@ fn parse_box_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>,
 pub fn parse_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, String, E> {
     let (s, val) = take_till1(|c| is_valid_char(c))(s)?;
 
-    // TODO: see if return String can be &str
+    // TODO: see if return String can be &str ?
     Ok((s, val.fragment.to_owned()))
+}
+
+pub fn parse_ident_no_check<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+    let (s, position) = get_interval(s)?;
+    let (s, var) = preceded(comment, parse_string)(s)?;
+
+    let (s, index) = opt(delimited(
+        preceded(comment, tag(L_BRACKET)),
+        parse_box_expr,
+        preceded(comment, tag(R_BRACKET)),
+    ))(s)?;
+
+    Ok((s, forma_ident(var, index, position)))
+
 }
 
 pub fn parse_ident<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
     let (s, position) = get_interval(s)?;
     let (s, var) = preceded(comment, parse_string)(s)?;
+
+    // TODO: change check to another fn ??
+    if RESERVED.contains(&&(*var)) {
+        return Err(
+            Err::Failure(
+                E::add_context(
+                    s, 
+                    "reserved keyword can't be used as identifier",
+                    E::from_error_kind(s, ErrorKind::Tag)
+                )
+            )
+        );
+    }
     let (s, index) = opt(delimited(
         preceded(comment, tag(L_BRACKET)),
         parse_box_expr,
@@ -45,4 +73,13 @@ pub fn is_valid_char(input: char) -> bool {
 
 pub fn forma_ident(ident: String, index: Option<Box<Expr>>, position: Interval) -> Identifier {
     Expr::new_ident(ident, position, index)
+}
+
+pub fn get_tag<'a, E: ParseError<Span<'a>>>(s: Span<'a>, tag: &str) -> IResult<Span<'a>, (), E> {
+    let (new_s, var) = preceded(comment, parse_string)(s)?;
+    if var == tag {
+        Ok((new_s, ()))
+    } else{
+        Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+    }
 }
