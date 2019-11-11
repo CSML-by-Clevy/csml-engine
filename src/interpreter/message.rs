@@ -56,9 +56,13 @@ impl Message {
                 content_type: name.to_owned(),
                 content: *value,
             },
-            Literal::Null { .. } => Self {
-                content_type: literal.type_to_string(),
-                content: literal,
+            Literal::Null { interval, .. } => Self {
+                content_type: "text".to_owned(),
+                content: Literal::name_object(
+                    "text".to_lowercase(),
+                    &Literal::null(interval.to_owned()),
+                    interval.clone()
+                ),
             },
         }
     }

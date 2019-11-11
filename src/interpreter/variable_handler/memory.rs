@@ -49,10 +49,8 @@ pub fn search_var_memory(
             &name.index,
             data,
         ),
-        _ => Err(ErrorInfo {
-            message: "unknown variable in search_var_memory".to_owned(),
-            interval: name.interval,
-        }),
+        // TODO: ERROR msg or NULL retrun ?
+        _ => Ok(Literal::null(name.interval.to_owned())),
     }
 }
 
