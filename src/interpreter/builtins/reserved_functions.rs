@@ -98,7 +98,7 @@ pub fn text(
                 name.to_lowercase(),
                 &Literal::name_object(
                     name.to_lowercase(),
-                    literal,
+                    &Literal::string(literal.to_string(), interval.clone()),
                     interval.clone()
                 ),
                 interval,

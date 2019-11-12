@@ -1,6 +1,6 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::match_builtin,
+    ast_interpreter::{match_builtin, if_statment::evaluate_condition},
     data::Data,
     variable_handler::{
         get_string_from_complexstring, get_var, get_var_from_ident, interval::interval_from_expr,
@@ -18,7 +18,7 @@ fn format_object_attributes(
         Expr::VecExpr(vec, ..) => vec,
         _e => {
             return Err(ErrorInfo {
-                message: format!("ERROR: Object attributes {:?} bad format", expr),
+                message: format!("Object attributes {:?} bad format", expr),
                 interval: interval_from_expr(expr),
             })
         }
@@ -60,8 +60,8 @@ fn normal_object_to_literal(
             match_builtin(&name, obj, interval.to_owned(), data)?,
         ))
     } else {
-        Err(ErrorInfo {
-            message: format!("ERROR: unknown function {}", name),
+        Err(ErrorInfo{
+            message: format!("Unknown function {}", name),
             interval: interval.to_owned(),
         })
     }
@@ -100,8 +100,11 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
         }
         Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), data)?),
         Expr::LitExpr(literal) => Ok(literal.clone()),
+        // TODO: duplicate of get_var_from_ident in variable_handler
+        Expr::InfixExpr(infix, exp_1, exp_2) => evaluate_condition(infix, exp_1, exp_2, data),
         e => Err(ErrorInfo {
-            message: format!("ERROR: Expr {:?} can't be converted to Literal", expr),
+            // expr
+            message: format!("Expr can't be converted to Literal"), 
             interval: interval_from_expr(e),
         }),
     }

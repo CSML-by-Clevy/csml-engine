@@ -1,7 +1,12 @@
 start:
-  say _metadata.mavar
+  // say Floor(Random() * 1000)
+  // say _metadata.mavar
+  // use "var" as test
+  // say Text("{{toto.zer}}")
+  // say test.rand
+	// say Text("{{NULL}}")
   // say (test && (event || hola) && 4 + 3 - 2)
-  goto end
+  hold
 
 // sayplop:
 // goto end
