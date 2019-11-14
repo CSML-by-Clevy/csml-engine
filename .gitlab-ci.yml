@@ -9,3 +9,6 @@ rust-latest:
     - cargo test --verbose
   tags:
     - rust
+  only:
+    - dev
+    - master
