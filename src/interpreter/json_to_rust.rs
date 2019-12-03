@@ -5,16 +5,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
-// TODO: Check format of MemoryType
-#[derive(Debug, Clone)]
-pub struct MemoryType {
-    pub created_at: String,
-    pub step_id: Option<String>,
-    pub flow_id: Option<String>,
-    pub conversation_id: Option<String>,
-    pub value: Literal,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Client {
     pub bot_id: String,
@@ -32,11 +22,12 @@ impl Client {
     }
 }
 
+// TODO: MultiMap to Hasmap ?
 #[derive(Debug, Clone)]
 pub struct Context {
-    pub past: MultiMap<String, MemoryType>,
-    pub current: MultiMap<String, MemoryType>,
-    pub metadata: MultiMap<String, MemoryType>,
+    pub past: MultiMap<String, Literal>,
+    pub current: MultiMap<String, Literal>,
+    pub metadata: MultiMap<String, Literal>,
     pub retries: i64,
     pub is_initial_step: bool,
     pub client: Client,

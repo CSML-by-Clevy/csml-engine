@@ -12,9 +12,12 @@ use crate::interpreter::{
     data::Data,
     message::*,
     variable_handler::{
+        get_literal, get_index,
+        memory::search_in_memory_type,
         expr_to_literal::expr_to_literal,
-        get_string_from_complexstring, get_var,
+        get_string_from_complexstring, get_var, get_var_from_mem,
         interval::{interval_from_expr, interval_from_reserved_fn},
+        object::update_value_in_object,
     },
 };
 use crate::parser::{ast::*, literal::Literal, tokens::*};
@@ -35,7 +38,7 @@ pub fn match_builtin(
     name: &str,
     args: HashMap<String, Literal>,
     interval: Interval,
-    data: &mut Data,
+    data: &Data,
 ) -> Result<Literal, ErrorInfo> {
     match name {
         TYPING => Ok(typing(args, name.to_owned(), interval)?),
@@ -84,6 +87,98 @@ pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorI
     }
 }
 
+pub fn get_path(path: &[Expr], data: &mut Data) -> Result<Vec<Path>, ErrorInfo> {
+    let mut vec = vec!();
+
+    for node in path.iter() {
+        match node {
+            Expr::IdentExpr(Identifier{ident, index, ..}) => {
+                match get_index(index.to_owned(), data)? {
+                    Some(lit) => vec.push(Path::AtIndex(ident.to_owned(), lit.to_owned())),
+                    None => vec.push(Path::Normal(ident.to_owned())),
+                };
+            },
+            Expr::ObjectExpr(ObjectType::Normal(name, expr)) =>
+                vec.push(Path::Exec(name.ident.to_owned(), expr_to_literal(expr, data)? ))
+            ,
+            err => return Err( ErrorInfo{
+                message: format!("Bad Expression Type: 'in value.expression' expression need to be of type identifier"),
+                interval: interval_from_expr(err),
+            }),
+        };
+    }
+    Ok(vec)
+}
+
+fn get_var_info<'a>(
+    expr: &'a Expr,
+    data: &'a mut Data,
+) -> Result<(&'a mut Literal, String, String, Option<Vec<Path>>, Option<Literal>), ErrorInfo> {
+    match expr {
+        Expr::BuilderExpr(BuilderType::Normal(var), path) => {
+            let index = get_index(var.index.clone(), data)?;
+            let path = get_path(path, data)?;
+            let (lit, name, mem_type) = get_var_from_mem(var.to_owned(), data)?;
+            Ok((lit, name, mem_type, Some(path), index))
+        }
+        Expr::IdentExpr(var) => {
+            let index = get_index(var.index.clone(), data)?;
+            let (lit, name, mem_type) = match search_in_memory_type(var, data) {
+                Ok(_) => get_var_from_mem(var.to_owned(), data)?,
+                Err(_) => {
+                    let lit = Literal::null(var.interval.to_owned());
+                    data.step_vars.insert(var.ident.to_owned(), lit.clone());
+                    get_var_from_mem(var.to_owned(), data)?
+                }
+            };
+            Ok((lit, name, mem_type, None, index))
+        }
+        e => Err(ErrorInfo {
+            message: format!("No methods available for this Literal type"),
+            interval: interval_from_expr(e),
+        }),
+    }
+}
+
+fn update_literal(
+    lit: &mut Literal,
+    path: Option<Vec<Path>>,
+    new_lit: Option<Literal>,
+    interval: Interval,
+) -> Result<(), ErrorInfo> {
+    match path {
+        None => {
+            if let Some(new_lit) = new_lit {
+                *lit = new_lit;
+            }
+            Ok(())
+        }
+        Some(path) => {
+            update_value_in_object(lit, new_lit, &path, &interval)?;
+            Ok(())
+        }
+    }
+}
+
+fn save_literal_in_mem(
+    lit: Literal,
+    name: String,
+    mem_type: String,
+    data: &mut Data,
+    mut root: MessageData,
+) -> MessageData {
+    if mem_type == "remember" {
+        // add mesage to rememeber new value
+        root = root.add_to_memory(&name, lit.clone());
+        // add value in current mem
+        // TODO: update existing value
+        data.memory.current.insert(name, lit);
+    } else {
+        data.step_vars.insert(name, lit);
+    }
+    root
+}
+
 fn match_actions(
     function: &ObjectType,
     mut root: MessageData,
@@ -98,18 +193,38 @@ fn match_actions(
             match_functions(arg, data)?;
             Ok(root)
         }
+        ObjectType::Do(DoType::Update(old, new)) => {
+            //TODO: make error if try to change _metadata
+            let new_value = match_functions(new, data)?;
+            let (lit, name, mem_type, path, index) = get_var_info(old, data)?;
+            let inter = lit.get_interval();
+            update_literal(get_literal(lit, index)?, path, Some(new_value), inter)?;
+            Ok(save_literal_in_mem(lit.to_owned(), name, mem_type, data, root))
+        }
+        ObjectType::Do(DoType::Exec(expr)) => {
+            if let Ok((lit, name, mem_type, path, index)) = get_var_info(expr, data) {
+                let inter = lit.get_interval();
+                update_literal(get_literal(lit, index)? , path, None, inter)?;
+                return Ok(save_literal_in_mem(lit.to_owned(), name, mem_type, data, root));
+            }
+            Ok(root)
+        }
         ObjectType::Goto(GotoType::Step, step_name) => Ok(root.add_next_step(&step_name.ident)),
         ObjectType::Goto(GotoType::Flow, flow_name) => Ok(root.add_next_flow(&flow_name.ident)),
         ObjectType::Remember(name, variable) => {
             let lit = match_functions(variable, data)?;
             root = root.add_to_memory(&name.ident, lit.clone());
-            data.step_vars.insert(name.ident.to_owned(), lit); // can be remove if we check if tmp var are saved in memory
+            data.memory.current.insert(name.ident.to_owned(), lit);
             Ok(root)
         }
         ObjectType::Import {
             step_name: name, ..
         } => {
-            if let Some(Expr::Scope { scope: actions, block_type, .. }) = data
+            if let Some(Expr::Scope {
+                scope: actions,
+                block_type,
+                ..
+            }) = data
                 .ast
                 .flow_instructions
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
@@ -136,7 +251,11 @@ fn match_actions(
     }
 }
 
-pub fn interpret_scope(block_type: &BlockType, actions: &Block, data: &mut Data) -> Result<MessageData, ErrorInfo> {
+pub fn interpret_scope(
+    block_type: &BlockType,
+    actions: &Block,
+    data: &mut Data,
+) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData::default();
 
     for (i, action) in actions.commands.iter().enumerate() {
@@ -147,15 +266,17 @@ pub fn interpret_scope(block_type: &BlockType, actions: &Block, data: &mut Data)
         match action {
             Expr::ObjectExpr(ObjectType::Hold(interval)) => {
                 match block_type {
-                    BlockType::Step => {},
-                    _ => return Err(ErrorInfo {
-                        message: "no hold allowed in if/foreach blocks".to_owned(),
-                        interval: interval.to_owned(),
-                    })
+                    BlockType::Step => {}
+                    _ => {
+                        return Err(ErrorInfo {
+                            message: "no hold allowed in if/foreach blocks".to_owned(),
+                            interval: interval.to_owned(),
+                        })
+                    }
                 };
                 root.index = (i + 1) as i64;
-                return Ok(root)
-            },
+                return Ok(root);
+            }
             Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
             Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
             Expr::ForEachExpr(ident, i, expr, block, range) => {
@@ -172,7 +293,11 @@ pub fn interpret_scope(block_type: &BlockType, actions: &Block, data: &mut Data)
     Ok(root)
 }
 
-pub fn interpret_scope_at_index(actions: &Block, data: &mut Data, index: i64) -> Result<MessageData, ErrorInfo> {
+pub fn interpret_scope_at_index(
+    actions: &Block,
+    data: &mut Data,
+    index: i64,
+) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData::default();
     let vec = actions.commands.clone().split_off(index as usize);
 
@@ -184,8 +309,8 @@ pub fn interpret_scope_at_index(actions: &Block, data: &mut Data, index: i64) ->
         match action {
             Expr::ObjectExpr(ObjectType::Hold(_)) => {
                 root.index = (i as i64) + index + 1;
-                return Ok(root)
-            },
+                return Ok(root);
+            }
             Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
             Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
             Expr::ForEachExpr(ident, i, expr, block, range) => {

@@ -15,9 +15,9 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 
 #[allow(dead_code)]
 pub fn gen_context(
-    past: MultiMap<String, MemoryType>,
-    current: MultiMap<String, MemoryType>,
-    metadata: MultiMap<String, MemoryType>,
+    past: MultiMap<String, Literal>,
+    current: MultiMap<String, Literal>,
+    metadata: MultiMap<String, Literal>,
     retries: i64,
     is_initial_step: bool,
 ) -> Context {
@@ -39,20 +39,20 @@ pub fn gen_context(
 #[allow(dead_code)]
 pub fn gen_event(event: &str) -> Event {
     Event {
-        payload: event.to_owned()
+        payload: event.to_owned(),
     }
 }
 
-#[allow(dead_code)]
-pub fn gen_memory(value: Literal) -> MemoryType {
-    MemoryType {
-        created_at: "Today".to_owned(),
-        step_id: None,
-        flow_id: None,
-        conversation_id: None,
-        value,
-    }
-}
+// #[allow(dead_code)]
+// pub fn gen_memory(value: Literal) -> MemoryType {
+//     MemoryType {
+//         created_at: "Today".to_owned(),
+//         step_id: None,
+//         flow_id: None,
+//         conversation_id: None,
+//         value,
+//     }
+// }
 
 pub fn message_to_jsonvalue(result: MessageData) -> Value {
     let mut message: Map<String, Value> = Map::new();

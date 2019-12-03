@@ -51,6 +51,7 @@ pub const ELSE: &str = "else";
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
 pub const IN: &str = "in";
+pub const DO: &str = "do";
 pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
 pub const RETRIES: &str = "retries";
@@ -72,8 +73,8 @@ pub const FALSE: &str = "false";
 pub const NULL: &str = "NULL";
 
 pub static RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, IN, FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL,
+    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE, HOLD,
+    GOTO, MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL,
 ];
 
 pub const TYPING: &str = "Typing";
@@ -96,8 +97,8 @@ pub const OBJECT: &str = "Object";
 pub const FN: &str = "Fn";
 
 pub static BUILT_IN: &[&str] = &[
-    TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM,
-    FLOOR, VIDEO, AUDIO, QUESTION, BUTTON, OBJECT, FN,
+    TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, VIDEO, AUDIO,
+    QUESTION, BUTTON, OBJECT, FN,
 ];
 
 pub const PAST: &str = "past";

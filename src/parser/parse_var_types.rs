@@ -3,31 +3,54 @@ use crate::parser::{
     expressions_evaluation::operator_precedence,
     parse_actions::{parse_actions, parse_assignation},
     parse_comments::comment,
-    parse_ident::{parse_ident, get_tag, parse_ident_no_check},
+    parse_ident::{get_tag, parse_ident, parse_ident_no_check},
     parse_literal::parse_literalexpr,
     parse_string::parse_string,
     tokens::*,
     tools::*,
 };
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    error::ParseError,
-    multi::fold_many0,
-    sequence::delimited,
-    sequence::preceded,
-    *,
+    branch::alt, bytes::complete::tag, error::ParseError, multi::fold_many0, sequence::delimited,
+    sequence::preceded, *,
 };
 
-fn parse_builderexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ident) = parse_identexpr(s)?;
+fn get_builder_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    alt((parse_actions, parse_identexpr))(s)
+}
+
+fn parse_path<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ident) = get_builder_expr(s)?;
     let (s, _) = preceded(comment, tag(DOT))(s)?;
-    let (s, exp) = alt((parse_builderexpr, parse_identexpr))(s)?;
-    Ok((s, Expr::BuilderExpr(Box::new(ident), Box::new(exp))))
+    Ok((s, ident))
+}
+
+fn get_builder_type<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, BuilderType, E> {
+    let (s, ident) = parse_ident_no_check(s)?;
+    let (s, _) = preceded(comment, tag(DOT))(s)?;
+
+    // TODO: check for _metadata[n] | err ?
+    if ident.ident == "_metadata" {
+        Ok((s, BuilderType::Metadata(ident.interval)))
+    } else {
+        Ok((s, BuilderType::Normal(ident)))
+    }
+}
+
+fn parse_builderexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, builder_type) = get_builder_type(s)?;
+
+    let (s, mut vec) = fold_many0(parse_path, vec![], |mut acc: Vec<_>, item| {
+        acc.push(item);
+        acc
+    })(s)?;
+
+    // TODO: last can be a fn
+    let (s, last_elem) = get_builder_expr(s)?;
+    vec.push(last_elem);
+    Ok((s, Expr::BuilderExpr(builder_type, vec)))
 }
 
 fn parse_identexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    // let (s, ident) = parse_ident(s)?;
     let (s, ident) = parse_ident_no_check(s)?;
     Ok((s, Expr::IdentExpr(ident)))
 }
@@ -126,12 +149,13 @@ pub fn parse_as_basic_variable<'a, E: ParseError<Span<'a>>>(
 ) -> IResult<Span<'a>, Expr, E> {
     let (s, expr) = parse_basic_expr(s)?;
     let s = match get_tag(s, AS) {
-        Err(Err::Error(err))
-        | Err(Err::Failure(err)) => return Err(Err::Error(E::add_context(
-            s,
-            "msg for parse_as_basic_variable",
-            err,
-        ))),
+        Err(Err::Error(err)) | Err(Err::Failure(err)) => {
+            return Err(Err::Error(E::add_context(
+                s,
+                "msg for parse_as_basic_variable",
+                err,
+            )))
+        }
         Err(Err::Incomplete(err)) => return Err(Err::Incomplete(err)),
         Ok((var, ..)) => var,
     };
@@ -143,12 +167,13 @@ pub fn parse_as_variable<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Sp
     let (s, expr) = parse_var_expr(s)?;
     // TODO: get_ident ?
     let s = match get_tag(s, AS) {
-        Err(Err::Error(err))
-        | Err(Err::Failure(err)) => return Err(Err::Error(E::add_context(
-            s,
-            "msg for parse_as_basic_variable",
-            err,
-        ))),
+        Err(Err::Error(err)) | Err(Err::Failure(err)) => {
+            return Err(Err::Error(E::add_context(
+                s,
+                "msg for parse_as_variable",
+                err,
+            )))
+        }
         Err(Err::Incomplete(err)) => return Err(Err::Incomplete(err)),
         Ok((var, ..)) => var,
     };

@@ -1,15 +1,19 @@
 use crate::parser::{
     ast::*,
     parse_comments::comment,
-    parse_ident::{parse_ident, parse_ident_no_check, parse_string, get_tag},
+    parse_ident::{get_tag, parse_ident, parse_ident_no_check, parse_string},
     parse_import::parse_import,
-    parse_var_types::{parse_as_variable, parse_expr_list, parse_var_expr},
+    parse_var_types::{parse_as_variable, parse_basic_expr, parse_expr_list, parse_var_expr},
     tokens::*,
     tools::get_interval,
     GotoType,
 };
 use nom::{
-    branch::alt, bytes::complete::tag, combinator::complete, error::ParseError, sequence::preceded,
+    branch::alt,
+    bytes::complete::tag,
+    combinator::{complete, opt},
+    error::ParseError,
+    sequence::preceded,
     *,
 };
 
@@ -71,28 +75,51 @@ fn parse_use<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr
     Ok((s, Expr::ObjectExpr(ObjectType::Use(Box::new(expr)))))
 }
 
-fn parse_hold<'a, E: ParseError<Span<'a> >>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, inter) = get_interval(s)?; 
+fn parse_do_update<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ..) = preceded(comment, tag(ASSIGN))(s)?;
+    let (s, new) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    Ok((s, new))
+}
+
+fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, ..) = get_tag(s, DO)?;
+    let (s, old) = complete(alt((parse_as_variable, parse_basic_expr)))(s)?;
+
+    let (s, do_type) = match opt(parse_do_update)(s)? {
+        (s, Some(new)) => (s, DoType::Update(Box::new(old), Box::new(new))),
+        (s, None) => (s, DoType::Exec(Box::new(old))),
+    };
+
+    Ok((s, Expr::ObjectExpr(ObjectType::Do(do_type))))
+}
+
+fn parse_hold<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, inter) = get_interval(s)?;
     let (s, ..) = get_tag(s, HOLD)?;
     Ok((s, Expr::ObjectExpr(ObjectType::Hold(inter))))
 }
 
+fn parse_as_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
+    let (s, expr) = parse_var_expr(s)?;
+    let (s, _) = get_tag(s, AS)?;
+    let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
+    Ok((s, (expr, ident)))
+}
+
+fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
+    let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
+    let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
+    let (s, expr) = parse_var_expr(s)?;
+    Ok((s, (expr, ident)))
+}
+
 fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = get_tag(s, REMEMBER)?;
-    let (s, expr) = parse_var_expr(s)?;
+    let (s, (expr, ident)) = alt((
+        parse_as_remember,
+        parse_assign_remember,
+    ))(s)?;
 
-    let (s, _) = match get_tag(s, AS) {
-        Ok(vars) => vars,
-        Err(Err::Error(err)) | Err(Err::Failure(err)) => {
-            return Err(Err::Error(E::add_context(
-                s,
-                "missing as name after remember var",
-                err,
-            )))
-        }
-        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
-    };
-    let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
     Ok((
         s,
         Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))),
@@ -100,7 +127,6 @@ fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>,
 }
 
 pub fn parse_actions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    // let (s, name) = parse_ident(s)?;
     let (s, name) = parse_ident_no_check(s)?;
     let (s, expr) = parse_expr_list(s)?;
     Ok((
@@ -109,7 +135,7 @@ pub fn parse_actions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     ))
 }
 
-pub fn parse_hook<'a, E: ParseError<Span<'a> >>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+pub fn parse_hook<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = preceded(comment, tag("@"))(s)?;
     //TODO: add error if ident not found
     let (s, name) = parse_string(s)?;
@@ -126,6 +152,7 @@ pub fn parse_root_functions<'a, E: ParseError<Span<'a>>>(
         parse_import,
         parse_goto,
         parse_use,
+        parse_do,
         parse_hold,
     ))(s)
 }

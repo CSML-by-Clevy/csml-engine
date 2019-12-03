@@ -1,5 +1,8 @@
 use crate::error_format::data::ErrorInfo;
-use crate::parser::{ast::Interval, tokens::NULL};
+use crate::parser::{
+    ast::{Interval},
+    tokens::NULL,
+};
 use serde_json::{json, map::Map, Value};
 use std::{
     cmp::Ordering,
@@ -203,6 +206,30 @@ impl PartialEq for Literal {
 }
 
 impl Literal {
+    pub fn exec<'a>(
+        &'a mut self,
+        func: &str,
+        args: Literal,
+    ) -> &'a mut Self {
+        match self {
+            Literal::ArrayLiteral { ref mut items, .. } => {
+                match func {
+                    name if "pop" == name => {
+                        items.pop();
+                    }
+                    name if "push" == name => {
+                        if let Literal::ArrayLiteral {items: args, ..} = args {
+                            items.push(args[0].to_owned());
+                        };
+                    }
+                    _ => (),
+                };
+            }
+            _ => (), // error
+        };
+        self
+    }
+
     pub fn to_string(&self) -> String {
         match self {
             Literal::StringLiteral { value, .. } => value.to_owned(),
@@ -285,6 +312,35 @@ impl Literal {
             (_, Ok(float)) => Self::float(float, interval),
             (_, _) => Self::string(stirng.to_owned(), interval),
         }
+    }
+
+    pub fn set_interval(&mut self, new_interval: Interval) {
+        match self {
+            Literal::StringLiteral { ref mut interval, .. } => {
+                *interval = new_interval;
+            }
+            Literal::IntLiteral { ref mut interval, .. } => {
+                *interval = new_interval;
+            }
+            Literal::FloatLiteral { ref mut interval, .. } => {
+                *interval = new_interval;
+            }
+            Literal::BoolLiteral { ref mut interval, .. } => {
+                *interval = new_interval;
+            }
+            Literal::ArrayLiteral { ref mut interval, .. } => {
+                *interval = new_interval;
+            }
+            Literal::ObjectLiteral { ref mut interval, .. } => {
+                *interval = new_interval;
+            }
+            Literal::FunctionLiteral { ref mut interval, .. } => {
+                *interval = new_interval;
+            }
+            Literal::Null { ref mut  interval, .. } => {
+                *interval = new_interval;
+            }
+        };
     }
 
     pub fn get_interval(&self) -> Interval {

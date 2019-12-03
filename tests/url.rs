@@ -12,9 +12,9 @@ fn format_message(event: Option<Event>, file: &str, step: &str) -> MessageData {
     let text = read_file(format!("CSML/built-in/{}.csml", file)).unwrap();
     let flow = Parser::parse_flow(&text).unwrap();
 
-    let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
+    let mut context = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    interpret(&flow, step, &memory, &event, None, None)
+    interpret(&flow, step, &mut context, &event, None, None)
 }
 
 #[test]
@@ -60,7 +60,6 @@ fn ok_url_step3() {
 
     assert_eq!(v1, v2)
 }
-
 
 #[test]
 fn ok_video() {

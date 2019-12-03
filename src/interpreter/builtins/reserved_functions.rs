@@ -19,7 +19,7 @@ pub fn typing(
             &Literal::name_object(
                 "duration".to_owned(),
                 &Literal::int(*lit, interval.to_owned()),
-                interval.clone()
+                interval.clone(),
             ),
             interval.to_owned(),
         )),
@@ -31,7 +31,7 @@ pub fn typing(
             &Literal::name_object(
                 "duration".to_owned(),
                 &Literal::float(*lit, interval.to_owned()),
-                interval.clone()
+                interval.clone(),
             ),
             interval.to_owned(),
         )),
@@ -62,7 +62,7 @@ pub fn wait(
             &Literal::name_object(
                 "duration".to_owned(),
                 &Literal::int(*lit, interval.to_owned()),
-                interval.clone()
+                interval.clone(),
             ),
             interval.to_owned(),
         )),
@@ -74,7 +74,7 @@ pub fn wait(
             &Literal::name_object(
                 "duration".to_owned(),
                 &Literal::float(*lit, interval.to_owned()),
-                interval.clone()
+                interval.clone(),
             ),
             interval.to_owned(),
         )),
@@ -99,11 +99,11 @@ pub fn text(
                 &Literal::name_object(
                     name.to_lowercase(),
                     &Literal::string(literal.to_string(), interval.clone()),
-                    interval.clone()
+                    interval.clone(),
                 ),
                 interval,
             ))
-        },
+        }
         _ => Err(ErrorInfo {
             message: "Builtin Text expect one argument of type string | example: Text(\"hola\")"
                 .to_owned(),
@@ -121,21 +121,19 @@ pub fn img(
 
     match &search_or_default(&args, "url", &interval, None) {
         Ok(href) if href.is_string() => {
-
             properties.insert("url".to_owned(), href.clone());
 
-            Ok(
-                Literal::name_object(
-                    name.to_lowercase(),
-                    &Literal::object(properties, interval.clone()),
-                    interval
-                )
-            )
-        },
-        _ => Err(ErrorInfo{
-                message: "Builtin Image expect one argument of type string | example: Image(\"hola\")".to_owned(),
-                interval
-        })
+            Ok(Literal::name_object(
+                name.to_lowercase(),
+                &Literal::object(properties, interval.clone()),
+                interval,
+            ))
+        }
+        _ => Err(ErrorInfo {
+            message: "Builtin Image expect one argument of type string | example: Image(\"hola\")"
+                .to_owned(),
+            interval,
+        }),
     }
 }
 
@@ -281,7 +279,7 @@ pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
             Ok(Literal::int(items.len() as i64, interval.to_owned()))
         },
         _ => Err(ErrorInfo{
-                message: "ERROR: Builtin Lenght expect one value of type Array or String | example: Lenght( value )".to_owned(),
+                message: "ERROR: Builtin Length expect one value of type Array or String | example: Length( value )".to_owned(),
                 interval
         })
     }
@@ -451,21 +449,17 @@ fn accepts_from_buttons(buttons: &Literal) -> Literal {
 
 fn is_button(literal: &Literal) -> bool {
     match literal {
-        Literal::FunctionLiteral{name, ..} if name.to_lowercase() == "button" => {
-            true
-        }
-        Literal::ObjectLiteral{properties, ..} if properties.get("button").is_some() => {
-            true
-        }
-        _ => false
+        Literal::FunctionLiteral { name, .. } if name.to_lowercase() == "button" => true,
+        Literal::ObjectLiteral { properties, .. } if properties.get("button").is_some() => true,
+        _ => false,
     }
 }
 
 fn if_buttons(literal: &Literal) -> bool {
-    if let Literal::ArrayLiteral{items, ..} = literal {
+    if let Literal::ArrayLiteral { items, .. } = literal {
         for elem in items {
             if !is_button(elem) {
-                return false
+                return false;
             }
         }
         true
@@ -482,7 +476,7 @@ pub fn question(
     let buttons = match args.get("buttons") {
         Some(literal) if if_buttons(literal) => literal.to_owned(),
         _ => return Err(ErrorInfo {
-            message: "ERROR: argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]".to_owned(),
+            message: "argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]".to_owned(),
             interval,
         }),
     };

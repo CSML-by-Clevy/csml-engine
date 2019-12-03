@@ -9,7 +9,7 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{Expr, IfStatement, Infix, BlockType},
+    ast::{BlockType, Expr, IfStatement, Infix},
     literal::Literal,
 };
 
@@ -30,7 +30,9 @@ fn valid_condition(expr: &Expr, data: &mut Data) -> bool {
         Expr::LitExpr(Literal::BoolLiteral { value, .. }) => *value,
         Expr::LitExpr(Literal::Null { .. }) => false,
         Expr::IdentExpr(ident) => valid_literal(get_var(ident.to_owned(), data)),
-        Expr::InfixExpr(inf, exp_1, exp_2) => valid_literal(evaluate_condition(inf, exp_1, exp_2, data)),
+        Expr::InfixExpr(inf, exp_1, exp_2) => {
+            valid_literal(evaluate_condition(inf, exp_1, exp_2, data))
+        }
         value => valid_literal(match_functions(value, data)),
     }
 }
@@ -42,12 +44,10 @@ pub fn evaluate_condition(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     match (expr1, expr2) {
-        (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => {
-            Ok(Literal::BoolLiteral {
-                value: !valid_literal(get_var_from_ident(exp_1, data)),
-                interval: interval_from_expr(exp_1),
-            })
-        }
+        (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => Ok(Literal::BoolLiteral {
+            value: !valid_literal(get_var_from_ident(exp_1, data)),
+            interval: interval_from_expr(exp_1),
+        }),
         (exp_1, exp_2) if check_if_ident(exp_1) && check_if_ident(exp_2) => evaluate(
             infix,
             match_functions(exp_1, data),
