@@ -1,8 +1,8 @@
 use crate::error_format::data::ErrorInfo;
 use crate::parser::literal::Literal;
 use serde_json::{json, map::Map, Value};
-use std::ops::Add;
 use std::collections::HashMap;
+use std::ops::Add;
 
 #[derive(Debug, Clone)]
 pub enum MessageType {
@@ -21,11 +21,7 @@ impl Message {
         match literal.clone() {
             Literal::StringLiteral { interval, .. } => Self {
                 content_type: "text".to_owned(),
-                content: Literal::name_object(
-                    "text".to_lowercase(),
-                    &literal,
-                    interval.clone()
-                ),
+                content: Literal::name_object("text".to_lowercase(), &literal, interval.clone()),
             },
             Literal::IntLiteral { interval, .. }
             | Literal::FloatLiteral { interval, .. }
@@ -34,8 +30,8 @@ impl Message {
                 content: Literal::name_object(
                     "text".to_lowercase(),
                     &Literal::string(literal.to_string(), interval.clone()),
-                    interval
-                )
+                    interval,
+                ),
             },
             Literal::ArrayLiteral { .. } => Self {
                 content_type: "array".to_owned(),
@@ -61,7 +57,7 @@ impl Message {
                 content: Literal::name_object(
                     "text".to_lowercase(),
                     &Literal::null(interval.to_owned()),
-                    interval.clone()
+                    interval.clone(),
                 ),
             },
         }
@@ -78,16 +74,12 @@ impl Message {
         let mut map: Map<String, Value> = Map::new();
         let value = self.content.to_json();
         match &self.content_type {
-            name if name == "button" => {
-                return button_to_json(json!(name), value)
-            },
+            name if name == "button" => return button_to_json(json!(name), value),
             name if name == "question" => {
                 map.insert("content_type".to_owned(), json!(name));
                 map.insert("content".to_owned(), question_to_json(value));
-            },
-            name if name == "button" => {
-                return button_to_json(json!(name), value)
-            },
+            }
+            name if name == "button" => return button_to_json(json!(name), value),
             name => {
                 map.insert("content_type".to_owned(), json!(name));
                 map.insert("content".to_owned(), value);
@@ -102,16 +94,17 @@ fn question_to_json(value: Value) -> Value {
 
     match value["title"].clone() {
         Value::Null => (),
-        val => {map.insert("title".to_owned(), val);}
+        val => {
+            map.insert("title".to_owned(), val);
+        }
     };
 
     let buttons = match value["buttons"].clone() {
-        Value::Array(array) => {
-            array.iter().fold(vec!(),|mut vec, elem| {
+        Value::Array(array) => array.iter().fold(vec![], |mut vec, elem| {
             vec.push(button_to_json(json!("button"), elem["button"].clone()));
             vec
-        })},
-        _ => vec!(),
+        }),
+        _ => vec![],
     };
     map.insert("buttons".to_owned(), json!(buttons));
     Value::Object(map)
@@ -120,7 +113,10 @@ fn question_to_json(value: Value) -> Value {
 fn button_to_json(name: Value, value: Value) -> Value {
     let mut map: Map<String, Value> = Map::new();
     map.insert("content_type".to_owned(), name);
-    map.insert("content".to_owned(), json!({"title": value["title"].clone(), "payload": value["payload"].clone()}));
+    map.insert(
+        "content".to_owned(),
+        json!({"title": value["title"].clone(), "payload": value["payload"].clone()}),
+    );
     map.insert("accepts".to_owned(), value["accept"].clone());
     Value::Object(map)
 }
@@ -163,7 +159,7 @@ impl Add for MessageData {
             },
             messages: [&self.messages[..], &other.messages[..]].concat(),
             // TODO: refactor
-            step_vars: self.step_vars.clone(), 
+            step_vars: self.step_vars.clone(),
             next_flow: match (&self.next_flow, &other.next_flow) {
                 (Some(flow), None) => Some(flow.to_owned()),
                 (None, Some(flow)) => Some(flow.to_owned()),

@@ -6,13 +6,13 @@ use std::fmt::{Display, Formatter};
 #[derive(PartialEq, Debug, Clone)]
 pub struct Flow {
     pub flow_instructions: HashMap<InstructionType, Expr>,
-    pub flow_type: FlowType
+    pub flow_type: FlowType,
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum FlowType {
     Normal,
-    Recursive
+    Recursive,
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Hash)]
@@ -43,10 +43,17 @@ pub enum GotoType {
 }
 
 #[derive(PartialEq, Debug, Clone)]
+pub enum DoType {
+    Update(Box<Expr>, Box<Expr>),
+    Exec(Box<Expr>),
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub enum ObjectType {
     Goto(GotoType, Identifier),
     Hold(Interval),
     Use(Box<Expr>),
+    Do(DoType),
     Say(Box<Expr>),
     Remember(Identifier, Box<Expr>),
     Assign(Identifier, Box<Expr>),
@@ -62,21 +69,21 @@ pub enum ObjectType {
 #[derive(PartialEq, Debug, Clone)]
 pub struct Block {
     pub commands: Vec<Expr>,
-    pub hooks: Vec<Hook>
+    pub hooks: Vec<Hook>,
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct Hook {
     pub index: i64,
     pub name: String,
-    pub step: String
+    pub step: String,
 }
 
 impl Block {
     pub fn new() -> Self {
         Block {
             commands: Vec::new(),
-            hooks: Vec::new()
+            hooks: Vec::new(),
         }
     }
 }
@@ -86,7 +93,7 @@ pub enum BlockType {
     LoopBlock,
     Block,
     IfLoop,
-    Step
+    Step,
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -97,6 +104,28 @@ pub enum IfStatement {
         then_branch: Option<Box<IfStatement>>,
     },
     ElseStmt(Block, RangeInterval),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum Path {
+    Normal(String),
+    AtIndex(String, Literal),
+    Exec(String, Literal),
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum BuilderType {
+    Metadata(Interval),
+    Normal(Identifier),
+}
+
+impl BuilderType {
+    pub fn get_interval<'a>(&'a self) -> &'a Interval {
+        match self {
+            Self::Metadata(interval) => interval,
+            Self::Normal(identifier) => &identifier.interval,
+        }
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -120,7 +149,7 @@ pub enum Expr {
     ObjectExpr(ObjectType), // RangeInterval ?
     Hook(String),
     IfExpr(IfStatement),
-    BuilderExpr(Box<Expr>, Box<Expr>),
+    BuilderExpr(BuilderType, Vec<Expr>),
 
     IdentExpr(Identifier),
     LitExpr(Literal),

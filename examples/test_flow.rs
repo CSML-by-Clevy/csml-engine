@@ -4,6 +4,7 @@ use csmlinterpreter::{interpret, parse_file};
 use multimap::MultiMap;
 use serde_json::{json, map::Map, Value};
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -49,15 +50,15 @@ pub fn message_to_jsonvalue(result: MessageData) -> Value {
 }
 
 fn interpret_flow(flow: &Flow, step_name: &str) {
-    let event = None;
-    // Some(Event{
-    //     payload: PayLoad {
-    //         content_type: "text".to_owned(),
-    //         content: PayLoadContent {
-    //             text: "4".to_owned()
-    //         }
-    //     }
-    // });
+    // None;
+    let event = Some(Event {
+        payload: "Trending".to_owned(), // payload: PayLoad {
+                                        //     content_type: "text".to_owned(),
+                                        //     content: PayLoadContent {
+                                        //         text: "Trending".to_owned()
+                                        //     }
+                                        // }
+    });
     // Some(Event{
     //     literal: Literal::string("42".to_owned())
     // });
@@ -65,27 +66,29 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
 
     metadata.insert(
         "firstname".to_owned(),
-        MemoryType {
-            created_at: "Today".to_owned(),
-            step_id: None,
-            flow_id: None,
-            conversation_id: None,
-            value: Literal::string("Alexis".to_owned(), Interval{column: 0, line: 0}),
-        },
+        Literal::string("Alexis".to_owned(), Interval { column: 0, line: 0 }),
     );
 
     metadata.insert(
         "mavar".to_owned(),
-        MemoryType {
-            created_at: "Today".to_owned(),
-            step_id: None,
-            flow_id: None,
-            conversation_id: None,
-            value: Literal::int(10, Interval{column: 0, line: 0}),
-        },
+        Literal::int(10, Interval { column: 0, line: 0 }),
     );
 
-    let memory = Context {
+    let mut obj = HashMap::new();
+    obj.insert(
+        "var1".to_owned(),
+        Literal::int(1, Interval { column: 0, line: 0 }),
+    );
+    obj.insert(
+        "var2".to_owned(),
+        Literal::int(10, Interval { column: 0, line: 0 }),
+    );
+    metadata.insert(
+        "obj".to_owned(),
+        Literal::object(obj, Interval { column: 0, line: 0 }),
+    );
+
+    let mut context = Context {
         past: MultiMap::new(),
         current: MultiMap::new(),
         metadata: metadata,
@@ -100,7 +103,12 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
     };
 
     dbg!(message_to_jsonvalue(interpret(
-        flow, step_name, &memory, &event, None, None
+        flow,
+        step_name,
+        &mut context,
+        &event,
+        None,
+        None
     )));
 }
 

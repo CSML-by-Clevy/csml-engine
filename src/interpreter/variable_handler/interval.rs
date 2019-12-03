@@ -1,4 +1,4 @@
-use crate::parser::ast::{Expr, IfStatement, Interval, ObjectType, RangeInterval};
+use crate::parser::ast::{DoType, Expr, IfStatement, Interval, ObjectType, RangeInterval};
 
 pub fn interval_from_expr(expr: &Expr) -> Interval {
     match expr {
@@ -9,13 +9,13 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::ComplexLiteral(_e, RangeInterval { start, .. }) => start.clone(),
         Expr::VecExpr(_e, RangeInterval { start, .. }) => start.clone(),
         Expr::ObjectExpr(fnexpr) => interval_from_reserved_fn(fnexpr),
-        Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval
-        Expr::BuilderExpr(expr, _e) => interval_from_expr(expr),
+        Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
+        Expr::BuilderExpr(builder_type, _) => builder_type.get_interval().to_owned(),
         Expr::ForEachExpr(_, _, _, _, RangeInterval { start, .. }) => start.clone(),
         Expr::IdentExpr(ident) => ident.interval.to_owned(),
         Expr::LitExpr(literal) => literal.get_interval(),
         Expr::IfExpr(ifstmt) => interval_from_if_stmt(ifstmt),
-        Expr::Hook(_) => unimplemented!()
+        Expr::Hook(_) => unimplemented!(),
     }
 }
 
@@ -30,6 +30,8 @@ pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval {
     match reservedfn {
         ObjectType::Goto(_g, ident) => ident.interval.to_owned(),
         ObjectType::Use(expr) => interval_from_expr(expr),
+        ObjectType::Do(DoType::Update(expr, ..)) => interval_from_expr(expr),
+        ObjectType::Do(DoType::Exec(expr)) => interval_from_expr(expr),
         ObjectType::Say(expr) => interval_from_expr(expr),
         ObjectType::Remember(ident, ..) => ident.interval.to_owned(),
         ObjectType::Assign(ident, ..) => ident.interval.to_owned(),

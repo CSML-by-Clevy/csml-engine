@@ -1,6 +1,6 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::{match_builtin, if_statment::evaluate_condition},
+    ast_interpreter::{if_statment::evaluate_condition, match_builtin},
     data::Data,
     variable_handler::{
         get_string_from_complexstring, get_var, get_var_from_ident, interval::interval_from_expr,
@@ -60,7 +60,7 @@ fn normal_object_to_literal(
             match_builtin(&name, obj, interval.to_owned(), data)?,
         ))
     } else {
-        Err(ErrorInfo{
+        Err(ErrorInfo {
             message: format!("Unknown function {}", name),
             interval: interval.to_owned(),
         })
@@ -104,7 +104,7 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
         Expr::InfixExpr(infix, exp_1, exp_2) => evaluate_condition(infix, exp_1, exp_2, data),
         e => Err(ErrorInfo {
             // expr
-            message: format!("Expr can't be converted to Literal"), 
+            message: format!("Expr can't be converted to Literal"),
             interval: interval_from_expr(e),
         }),
     }
@@ -135,11 +135,15 @@ mod tests {
     fn gen_flow() -> Flow {
         Flow {
             flow_instructions: HashMap::new(),
-            flow_type: FlowType::Normal
+            flow_type: FlowType::Normal,
         }
     }
 
-    fn gen_data<'a>(flow: &'a Flow, context: &'a Context, event: &'a Option<Event>) -> Data<'a> {
+    fn gen_data<'a>(
+        flow: &'a Flow,
+        context: &'a mut Context,
+        event: &'a Option<Event>,
+    ) -> Data<'a> {
         Data::<'a> {
             ast: flow,
             memory: context,
@@ -181,9 +185,9 @@ mod tests {
             ],
             gen_range_interval(),
         );
-        let context = gen_context();
+        let mut context = gen_context();
         let flow = gen_flow();
-        let mut data = gen_data(&flow, &context, &None);
+        let mut data = gen_data(&flow, &mut context, &None);
 
         match &expr_to_literal(&expr, &mut data) {
             Ok(Literal::StringLiteral { value, .. }) if value == "42 != 43" => {}
@@ -201,9 +205,9 @@ mod tests {
             },
             Box::new(gen_array_expr(vec![gen_int_literal(42)])),
         ));
-        let context = gen_context();
+        let mut context = gen_context();
         let flow = gen_flow();
-        let mut data = gen_data(&flow, &context, &None);
+        let mut data = gen_data(&flow, &mut context, &None);
 
         match &expr_to_literal(&expr, &mut data) {
             Ok(Literal::ObjectLiteral { properties, .. }) => match properties.get(DEFAULT) {

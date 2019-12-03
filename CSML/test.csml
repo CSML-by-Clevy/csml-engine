@@ -1,24 +1,124 @@
+// - remember truc = machin / OK 
+// - remember machin as truc / OK (warning deprecated)
+
+// - use toto as tutu / OK (warning deprecated)
+// - do plop[3] = 14 / OK (do var_name = value)
+// - n'importe quoi as toto en variable temporaire / OK (as var_name)
+
+// use as plop OK
+// do plop as truc OK
+// do truc = 7 OK
+// do truc.plop[1] = 2   // array OK
+
+// do truc.plop.toto = 4 // obj update toto OK
+// do truc.plop.toto = 4 // obj new var toto OK
+
+// do truc.plop.push(4)   // array Ok
+// do truc.plop.pop()     // array Ok
+
+// ------------------------------------ later
+// do truc.plop.delete(1) // array
+// do truc.plop.toto.delete() // obj
+
 start:
+    // remember event as toto
+    remember toto = 3
+    // do toto.aze.xxx = 123
+    say toto
+    // do toto = 4
+    // say toto
+    goto end
+    // say ""
+    // say Question(buttons=[Button("aaa")])
+
+    // say Question("dsaipdhiosahdsoa", buttons=[
+    // 	"pouet"
+    // ])
+    remember Object(
+        // value = "val",
+        // toto = Object(
+        // plop = 4,
+        // action2 = Object(
+        //     toto = "toto",
+        //     tutu = "tutu"
+        // )
+        // ),
+        // test = Object(pui = 7),
+        vec = [Object(test = 1) , 2, 3, 4, 5]
+    ) as var
+  // say _metadata.obj.var1
+    say var
+    do var.vec[0] = "hola"
+    say var
+    // do var = [2]
+    // do index = "this is the index"
+    say index
+    // do var[index] = "plop"
+    // say var
+//   do hola.alexis.plop = 4
+//   do var.vec.push("hola")
+  //   say plop
+  // .push()// vec
+  // .pop() // vec
+  // .pop() // obj
+//   say "{{var}}"
+
+  // use 5 as plop
+  // remember 5 as plop
+  // say plop
+  // do plop = 6
+  // say plop
+  goto end
+
+  // --------------------------------------------------- NEW
+  // remember truc = 4
+  // remember truc as 4
+
+  // use 6 as plop // warning
+  // do plop[1] = 3 // [5, 6]
+
+  // remember toto = 4
+  // do plop.push(30) // [2, 3, 4, 5, 30]
+
+  // remember toto = 4
+
+  // // ------------------------ 1
+  // // 1keyword 2keyword var = value
+  // // var/let/.. keep/save/remember plop = 4
+  // // let plop = 4
+  // // ------------------------
+
+  // do Fn(..) as plop
+  // do [2, 3, 4, 5] as plop
+  // do plop.push(30) // [5, 7, 30]
+
+  // say Question(
+  //   title = "dsfsddscvf"
+  //   but = [asdasdasdasdas]
+  // ) as toto
+
+  //remember ((toto = 4) as tutu)
+  // --------------------------------------------------- 
+
   // say Floor(Random() * 1000)
   // say _metadata.mavar
   // use "var" as test
   // say Text("{{toto.zer}}")
   // say test.rand
-	// say Text("{{NULL}}")
+  // say Text("{{NULL}}")
   // say (test && (event || hola) && 4 + 3 - 2)
-  hold
 
-// sayplop:
-// goto end
+  // sayplop:
+  //   goto end
 
-// usetruc:
-// goto end
+  // usetruc:
+  // goto end
 
-// rememberererrere:
-// goto end
+  // rememberererrere:
+  // goto end
 
-// gotorerrere:
-// goto end
+  // gotorerrere:
+  // goto end
 
-// gotorerrsaere:
-// goto end
+  // gotorerrsaere:
+  // goto end

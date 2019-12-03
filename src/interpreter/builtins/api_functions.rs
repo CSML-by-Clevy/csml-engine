@@ -8,7 +8,7 @@ use std::{collections::HashMap, env, io::Read};
 
 fn parse_api(
     args: &HashMap<String, Literal>,
-    data: &mut Data,
+    data: &Data,
 ) -> Result<(String, String), ErrorInfo> {
     let mut map: Map<String, Value> = Map::new();
 
@@ -57,7 +57,7 @@ fn format_and_transfer(mut easy: Easy, result: &mut Vec<u8>, mut data: &[u8]) {
 pub fn api(
     args: HashMap<String, Literal>,
     interval: Interval,
-    data: &mut Data,
+    data: &Data,
 ) -> Result<Literal, ErrorInfo> {
     let (http_arg, map) = parse_api(&args, data)?;
     let data = map.as_bytes();

@@ -14,7 +14,7 @@ use crate::interpreter::{
         expr_to_literal::expr_to_literal,
         gen_literal::{gen_literal_form_builder, gen_literal_form_event},
         interval::interval_from_expr,
-        memory::{search_var_memory},
+        memory::{search_var_memory, search_in_memory_type},
     },
 };
 use crate::parser::{
@@ -23,49 +23,57 @@ use crate::parser::{
     tokens::{EVENT, RETRIES},
 };
 
-//TODO: return Warning or Error Component
-pub fn get_literal(
-    literal: &Literal,
-    opt: &Option<Box<Expr>>,
+pub fn get_index(
+    index: Option<Box<Expr>>,
     data: &mut Data,
-) -> Result<Literal, ErrorInfo> {
-    match (literal, opt) {
-        (
-            Literal::ArrayLiteral {
-                ref items,
-                interval,
-            },
-            Some(expr),
-        ) => {
-            let index = expr_to_literal(expr, data)?;
-
-            if let Literal::IntLiteral { value, .. } = index {
-                match items.get(value as usize) {
-                    Some(lit) => Ok(lit.to_owned()),
-                    None => Err(ErrorInfo {
-                        message: format!("Error Array don't have {} index", value),
-                        interval: interval.to_owned(),
-                    }),
-                }
-            } else {
-                Err(ErrorInfo {
-                    message: "Error index must resolve to int type".to_string(),
-                    interval: index.get_interval(),
-                })
-            }
-        }
-        (_, Some(_)) => Err(ErrorInfo {
-            message: "Error value is not of type Array".to_owned(),
-            interval: literal.get_interval(),
-        }),
-        (literal, None) => Ok(literal.to_owned()),
+) -> Result<Option<Literal>, ErrorInfo> {
+    match index {
+        Some(expr) => Ok(Some(expr_to_literal(&expr, data)?)),
+        None => Ok(None)
     }
 }
 
-fn get_var_from_stepvar(name: &str, data: &mut Data) -> Option<Literal> {
-    match data.step_vars.get(name) {
-        Some(var) => Some(var.to_owned()),
-        None => None,
+//TODO: return Warning or Error Component
+pub fn get_literal<'a>(
+    literal: &'a mut Literal,
+    index: Option<Literal>,
+) -> Result<&'a mut Literal, ErrorInfo> {
+    let interval = literal.get_interval();
+
+    match (literal, index) {
+        (
+            Literal::ArrayLiteral {
+                ref mut items,
+                interval,
+            },
+            Some(
+                Literal::IntLiteral{value, ..}
+            ),
+        ) => {
+            match items.get_mut(value as usize) {
+                Some(lit) => Ok(lit),
+                None => Err(ErrorInfo {
+                    message: format!("Array don't have {} index", value),
+                    interval: interval.to_owned(),
+                }),
+            }
+        },
+        (literal, None) => Ok(literal),
+        (_, Some(_)) => Err(ErrorInfo {
+            message: "value is not of type Array".to_owned(),
+            interval,
+        }),
+    }
+}
+
+
+fn get_var_from_stepvar<'a>(name: &Identifier, data: &'a mut Data) -> Result<&'a mut Literal, ErrorInfo > {
+    match data.step_vars.get_mut(&name.ident) {
+        Some(var) => Ok(var),
+        None => Err(ErrorInfo {
+            message: format!("no variable named < {} > in memory", name.ident),
+            interval: name.interval.to_owned(),
+        }),
     }
 }
 
@@ -74,11 +82,29 @@ pub fn get_var(name: Identifier, data: &mut Data) -> Result<Literal, ErrorInfo> 
         var if var == EVENT => gen_literal_form_event(data.event, name.interval),
         var if var == RETRIES => Ok(Literal::int(data.memory.retries, name.interval.to_owned())), // tmp
         _ => {
-            let var = get_var_from_stepvar(&name.ident, data);
-            match var {
-                Some(val) => get_literal(&val, &name.index, data),
-                None => search_var_memory(data.memory, name, data),
-            }
+            let interval = name.interval.to_owned();
+            let index = get_index(name.index.clone(), data)?;
+            let lit = match get_var_from_mem(name, data){
+                Ok((lit, ..)) => get_literal(lit, index)?.to_owned(),
+                Err(_) => Literal::null(interval)
+            };
+            Ok(lit)
+        }
+    }
+}
+
+pub fn get_var_from_mem<'a>(
+    name: Identifier,
+    data: &'a mut Data,
+) -> Result<(&'a mut Literal, String, String), ErrorInfo> {
+    match search_in_memory_type(&name, data)? {
+        var if var == "use" => {
+            let lit = get_var_from_stepvar(&name, data)?;
+            Ok((lit, name.ident, "use".to_owned()))
+        },
+        _ => {
+            let lit = search_var_memory(name.clone(), data)?;
+            Ok((lit, name.ident, "remember".to_owned()))
         }
     }
 }

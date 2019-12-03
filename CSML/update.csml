@@ -1,0 +1,62 @@
+start:
+    goto init_obj
+
+init_obj:
+    use Object(
+        value = "val",
+        toto = Object( 
+            plop = 4,
+            action2 = Object(
+                toto = "toto",
+                tutu = "tutu"
+            )
+        ),
+        test = Object(pui = 7),
+        vec = [ Object(test = 1) , 2, 3, 4, 5]
+
+    ) as var
+
+step1:
+    import step init_obj
+
+    say var.vec[0].test
+    do var.vec[0].test = 4
+    say var.vec[0].test
+
+    goto end
+
+step2:
+    import step init_obj
+
+    say var.vec
+    do var.vec[0] = 1
+    say var.vec
+
+    goto end
+
+step3:
+    use [1] as vec
+
+    say vec
+    do vec[0] = 2
+    say vec
+
+    goto end
+
+step4:
+    use [1] as vec
+
+    say vec
+    do vec.push(2)
+    say vec
+
+    goto end
+
+step5:
+    use [1, 2] as vec
+
+    say vec
+    do vec.pop()
+    say vec
+
+    goto end

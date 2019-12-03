@@ -1,7 +1,7 @@
 use crate::parser::{ast::*, expressions_evaluation::*, parse_comments::comment, tokens::*};
 use nom::{
     bytes::complete::tag,
-    error::{ParseError}, //ErrorKind
+    error::ParseError, //ErrorKind
     sequence::{delimited, preceded},
     *,
 };
@@ -22,7 +22,6 @@ where
 //     let (s, pos) = nom::bytes::complete::take(0usize)(s)?;
 //      Ok((s, Interval::new(pos)))
 // }
-
 
 pub fn get_interval<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Interval, E> {
     let (s, pos) = position(s)?;

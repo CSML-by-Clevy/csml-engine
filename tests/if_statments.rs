@@ -2,7 +2,7 @@ mod support;
 
 use csmlinterpreter::interpret;
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::{Parser, ast::Interval, literal::Literal};
+use csmlinterpreter::parser::{ast::Interval, literal::Literal, Parser};
 
 use multimap::MultiMap;
 use serde_json::Value;
@@ -16,37 +16,19 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let mut past = MultiMap::new();
     past.insert(
         "var10".to_owned(),
-        MemoryType {
-            created_at: "Today".to_owned(),
-            step_id: None,
-            flow_id: None,
-            conversation_id: None,
-            value: Literal::int(10, Interval{column: 0, line: 0}),
-        },
+        Literal::int(10, Interval { column: 0, line: 0 }),
     );
     past.insert(
         "var5".to_owned(),
-        MemoryType {
-            created_at: "Today".to_owned(),
-            step_id: None,
-            flow_id: None,
-            conversation_id: None,
-            value: Literal::int(5, Interval{column: 0, line: 0}),
-        },
+        Literal::int(5, Interval { column: 0, line: 0 }),
     );
     past.insert(
         "bool".to_owned(),
-        MemoryType {
-            created_at: "Today".to_owned(),
-            step_id: None,
-            flow_id: None,
-            conversation_id: None,
-            value: Literal::boolean(false, Interval{column: 0, line: 0}),
-        },
+        Literal::boolean(false, Interval { column: 0, line: 0 }),
     );
 
-    let memory = gen_context(past, MultiMap::new(), MultiMap::new(), 0, false);
-    interpret(&flow, step, &memory, &event, None, None)
+    let mut context = gen_context(past, MultiMap::new(), MultiMap::new(), 0, false);
+    interpret(&flow, step, &mut context, &event, None, None)
 }
 
 #[test]

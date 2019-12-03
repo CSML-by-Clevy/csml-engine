@@ -12,9 +12,9 @@ fn format_message(event: Option<Event>) -> MessageData {
     let text = read_file("CSML/foreach.csml".to_owned()).unwrap();
     let flow = Parser::parse_flow(&text).unwrap();
 
-    let memory = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
+    let mut context = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
 
-    interpret(&flow, "start", &memory, &event, None, None)
+    interpret(&flow, "start", &mut context, &event, None, None)
 }
 
 #[test]

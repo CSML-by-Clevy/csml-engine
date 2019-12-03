@@ -5,8 +5,8 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_until, take_while},
     combinator::opt,
-    multi::many0,
     error::ParseError,
+    multi::many0,
     IResult, *,
 };
 
@@ -36,7 +36,6 @@ fn comment_delimited<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     }
 }
 
-// many0()
 fn all_comments<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
     let (s, _) = opt(sp)(s)?;
     alt((comment_delimited, comment_single_line))(s)
