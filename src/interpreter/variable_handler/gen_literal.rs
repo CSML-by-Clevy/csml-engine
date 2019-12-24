@@ -1,8 +1,8 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
+    ast_interpreter::get_path,
     data::Data,
     json_to_rust::Event,
-    ast_interpreter::get_path,
     variable_handler::{
         get_string_from_complexstring,
         get_var,
@@ -12,7 +12,7 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{BuilderType, Expr, Identifier, Interval},
+    ast::{BuilderType, Expr, Identifier, Interval, RangeInterval},
     literal::Literal,
     // tokens::{_METADATA}, MEMORY, PAST,
 };
@@ -49,7 +49,7 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal,
             let path = get_path(&path, data)?;
             get_value_in_object(&literal, &path, &ident.interval)
         }
-        Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
+        Expr::ComplexLiteral(vec, RangeInterval{start, ..}) => Ok(get_string_from_complexstring(vec, start.to_owned(), data)),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
         e => Err(ErrorInfo {
             message: "Error in Expression builder".to_owned(),

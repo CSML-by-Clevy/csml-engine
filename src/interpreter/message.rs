@@ -128,12 +128,29 @@ pub struct Memories {
 }
 
 impl Memories {
+    pub fn new(key: String, value: Literal) -> Self {
+        Self { key, value }
+    }
+
     pub fn memorie_to_jsvalue(self) -> Value {
         let mut map: Map<String, Value> = Map::new();
         map.insert("key".to_owned(), json!(self.key));
         map.insert("value".to_owned(), self.value.to_json());
         Value::Object(map)
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum MSG {
+    Memorie(Memories),
+    Message(Message),
+    Hold {
+        index: i64,
+        step_vars: HashMap<String, Literal>,
+    },
+    NextFlow(String),
+    NextStep(String),
+    Error(Message),
 }
 
 #[derive(Debug, Clone, Default)]

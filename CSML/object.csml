@@ -9,7 +9,8 @@ init_obj:
             plop = 4,
             action2 = Object(
                 toto = "toto",
-                tutu = "tutu"
+                tutu = "tutu",
+                empty = ""
             )
         ),
         test = Object(pui = 7),

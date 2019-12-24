@@ -89,7 +89,7 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
             ))
         }
         Expr::BuilderExpr(..) => get_var_from_ident(expr, data),
-        Expr::ComplexLiteral(vec, ..) => Ok(get_string_from_complexstring(vec, data)),
+        Expr::ComplexLiteral(vec, RangeInterval{start, ..}) => Ok(get_string_from_complexstring(vec, start.to_owned(), data)),
         Expr::VecExpr(vec, range) => {
             let mut array = vec![];
             for value in vec.iter() {
@@ -113,6 +113,7 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
 #[cfg(test)]
 mod tests {
     use super::*;
+    use curl::easy::Easy;
     use crate::interpreter::json_to_rust::{Client, Context, Event};
     use multimap::MultiMap;
 
@@ -148,6 +149,7 @@ mod tests {
             ast: flow,
             memory: context,
             event,
+            curl: Easy::new(),
             step_vars: HashMap::new(),
         }
     }

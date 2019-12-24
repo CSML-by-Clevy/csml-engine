@@ -1,7 +1,5 @@
 use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{
-    variable_handler::{get_literal},
-};
+use crate::interpreter::variable_handler::get_literal;
 use crate::parser::{
     ast::{Interval, Path},
     literal::Literal,
@@ -34,22 +32,13 @@ fn search_ident_in_obj<'a>(
     new_lit: &Option<Literal>,
 ) -> Result<Option<&'a mut Literal>, ErrorInfo> {
     match map.contains_key(name) {
-        true => {
-            Ok(
-                Some(
-                    get_literal(
-                        map.get_mut(name).unwrap(),
-                        index,
-                    )?
-                )
-            )
-        },
+        true => Ok(Some(get_literal(map.get_mut(name).unwrap(), index)?)),
         false => {
             if let (Some(lit), true) = (new_lit, last) {
                 map.insert(name.to_owned(), lit.to_owned());
                 Ok(None)
             } else {
-                Err(ErrorInfo{
+                Err(ErrorInfo {
                     message: format!("{} does not exist in Object", name),
                     interval: interval.to_owned(),
                 })
@@ -74,22 +63,29 @@ pub fn get_value_in_object(
                 };
                 match search_ident_in_obj(map, name, None, interval.to_owned(), false, &None)? {
                     Some(lit) => index_lit = lit,
-                    None => return Ok(Literal::null(interval.clone()))
+                    None => return Ok(Literal::null(interval.clone())),
                 };
-            },
+            }
             Path::AtIndex(name, index) => {
                 let map = match get_properties_form_object(index_lit, interval) {
                     Ok(val) => val,
                     //TODO: return warning if literal is not a object
                     Err(..) => return Ok(Literal::null(interval.clone())),
                 };
-                match search_ident_in_obj(map, name, Some(index.to_owned()), interval.to_owned(), false, &None)? {
+                match search_ident_in_obj(
+                    map,
+                    name,
+                    Some(index.to_owned()),
+                    interval.to_owned(),
+                    false,
+                    &None,
+                )? {
                     Some(lit) => index_lit = lit,
-                    None => return Ok(Literal::null(interval.clone()))
+                    None => return Ok(Literal::null(interval.clone())),
                 };
-            },
-            Path::Exec(name, vars) => { 
-                index_lit.exec(name, vars.to_owned());
+            }
+            Path::Exec(name, vars) => {
+                index_lit.exec(name, vars.to_owned())?;
             }
         }
     }
@@ -109,29 +105,45 @@ pub fn update_value_in_object(
                 let map = match get_properties_form_object(literal, interval) {
                     Ok(val) => val,
                     //TODO: return warning if literal is not a object
-                    Err(..) =>  return Err(ErrorInfo{
-                        message: format!("{} does not exist in Object", name),
-                        interval: interval.to_owned(),
-                    })
+                    Err(..) => {
+                        return Err(ErrorInfo {
+                            message: format!("{} does not exist in Object", name),
+                            interval: interval.to_owned(),
+                        })
+                    }
                 };
-                match search_ident_in_obj(map, name, None, interval.to_owned(), i == last, &new_lit)? {
+                match search_ident_in_obj(
+                    map,
+                    name,
+                    None,
+                    interval.to_owned(),
+                    i == last,
+                    &new_lit,
+                )? {
                     Some(lit) => literal = lit,
-                    None => return Ok(())
+                    None => return Ok(()),
                 };
-            },
+            }
             Path::AtIndex(name, index) => {
                 let map = match get_properties_form_object(literal, interval) {
                     Ok(val) => val,
                     //TODO: return warning if literal is not a object
                     Err(..) => return Ok(()),
                 };
-                match search_ident_in_obj(map, name, Some(index.to_owned()), interval.to_owned(), i == last, &new_lit)? {
+                match search_ident_in_obj(
+                    map,
+                    name,
+                    Some(index.to_owned()),
+                    interval.to_owned(),
+                    i == last,
+                    &new_lit,
+                )? {
                     Some(lit) => literal = lit,
-                    None => return Ok(())
+                    None => return Ok(()),
                 };
-            },
-            Path::Exec(name, vars) => { 
-                literal.exec(name, vars.to_owned());
+            }
+            Path::Exec(name, vars) => {
+                literal.exec(name, vars.to_owned())?;
             }
         }
     }

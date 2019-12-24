@@ -14,7 +14,7 @@ use crate::interpreter::{
         expr_to_literal::expr_to_literal,
         gen_literal::{gen_literal_form_builder, gen_literal_form_event},
         interval::interval_from_expr,
-        memory::{search_var_memory, search_in_memory_type},
+        memory::{search_in_memory_type, search_var_memory},
     },
 };
 use crate::parser::{
@@ -23,13 +23,10 @@ use crate::parser::{
     tokens::{EVENT, RETRIES},
 };
 
-pub fn get_index(
-    index: Option<Box<Expr>>,
-    data: &mut Data,
-) -> Result<Option<Literal>, ErrorInfo> {
+pub fn get_index(index: Option<Box<Expr>>, data: &mut Data) -> Result<Option<Literal>, ErrorInfo> {
     match index {
         Some(expr) => Ok(Some(expr_to_literal(&expr, data)?)),
-        None => Ok(None)
+        None => Ok(None),
     }
 }
 
@@ -46,17 +43,13 @@ pub fn get_literal<'a>(
                 ref mut items,
                 interval,
             },
-            Some(
-                Literal::IntLiteral{value, ..}
-            ),
-        ) => {
-            match items.get_mut(value as usize) {
-                Some(lit) => Ok(lit),
-                None => Err(ErrorInfo {
-                    message: format!("Array don't have {} index", value),
-                    interval: interval.to_owned(),
-                }),
-            }
+            Some(Literal::IntLiteral { value, .. }),
+        ) => match items.get_mut(value as usize) {
+            Some(lit) => Ok(lit),
+            None => Err(ErrorInfo {
+                message: format!("Array don't have {} index", value),
+                interval: interval.to_owned(),
+            }),
         },
         (literal, None) => Ok(literal),
         (_, Some(_)) => Err(ErrorInfo {
@@ -66,8 +59,10 @@ pub fn get_literal<'a>(
     }
 }
 
-
-fn get_var_from_stepvar<'a>(name: &Identifier, data: &'a mut Data) -> Result<&'a mut Literal, ErrorInfo > {
+fn get_var_from_stepvar<'a>(
+    name: &Identifier,
+    data: &'a mut Data,
+) -> Result<&'a mut Literal, ErrorInfo> {
     match data.step_vars.get_mut(&name.ident) {
         Some(var) => Ok(var),
         None => Err(ErrorInfo {
@@ -84,9 +79,9 @@ pub fn get_var(name: Identifier, data: &mut Data) -> Result<Literal, ErrorInfo> 
         _ => {
             let interval = name.interval.to_owned();
             let index = get_index(name.index.clone(), data)?;
-            let lit = match get_var_from_mem(name, data){
+            let lit = match get_var_from_mem(name, data) {
                 Ok((lit, ..)) => get_literal(lit, index)?.to_owned(),
-                Err(_) => Literal::null(interval)
+                Err(_) => Literal::null(interval),
             };
             Ok(lit)
         }
@@ -101,7 +96,7 @@ pub fn get_var_from_mem<'a>(
         var if var == "use" => {
             let lit = get_var_from_stepvar(&name, data)?;
             Ok((lit, name.ident, "use".to_owned()))
-        },
+        }
         _ => {
             let lit = search_var_memory(name.clone(), data)?;
             Ok((lit, name.ident, "remember".to_owned()))
@@ -109,29 +104,21 @@ pub fn get_var_from_mem<'a>(
     }
 }
 
-pub fn get_string_from_complexstring(exprs: &[Expr], data: &mut Data) -> Literal {
+pub fn get_string_from_complexstring(exprs: &[Expr], interval: Interval ,data: &mut Data) -> Literal {
     let mut new_string = String::new();
-    let mut interval: Option<Interval> = None;
 
     //TODO: log error with span
     for elem in exprs.iter() {
         match match_functions(elem, data) {
             Ok(var) => {
-                if interval.is_none() {
-                    interval = Some(var.get_interval())
-                }
                 new_string.push_str(&var.to_string())
-            }
-            Err(err) => {
-                if interval.is_none() {
-                    interval = Some(err.interval)
-                }
-                new_string.push_str(&Literal::null(interval.clone().unwrap()).to_string())
+            },
+            Err(_) => {
+                new_string.push_str(&Literal::null(interval.clone()).to_string())
             }
         }
     }
-    //TODO: check for error empty list
-    Literal::string(new_string, interval.unwrap())
+    Literal::string(new_string, interval)
 }
 
 pub fn get_var_from_ident(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
