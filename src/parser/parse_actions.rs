@@ -99,14 +99,18 @@ fn parse_hold<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Exp
     Ok((s, Expr::ObjectExpr(ObjectType::Hold(inter))))
 }
 
-fn parse_as_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
+fn parse_as_remember<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Expr, Identifier), E> {
     let (s, expr) = parse_var_expr(s)?;
     let (s, _) = get_tag(s, AS)?;
     let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
     Ok((s, (expr, ident)))
 }
 
-fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
+fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Expr, Identifier), E> {
     let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
     let (s, expr) = parse_var_expr(s)?;
@@ -115,10 +119,7 @@ fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Sp
 
 fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = get_tag(s, REMEMBER)?;
-    let (s, (expr, ident)) = alt((
-        parse_as_remember,
-        parse_assign_remember,
-    ))(s)?;
+    let (s, (expr, ident)) = alt((parse_as_remember, parse_assign_remember))(s)?;
 
     Ok((
         s,

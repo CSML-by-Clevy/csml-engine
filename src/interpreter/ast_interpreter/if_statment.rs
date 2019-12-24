@@ -1,8 +1,9 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::{check_if_ident, interpret_scope, match_functions},
+    ast_interpreter::{check_if_ident, interpret_scope, interpret_scope_mpsc, match_functions},
     data::Data,
     message::MessageData,
+    message::MSG,
     variable_handler::{
         gen_literal::gen_literal_form_expr, get_var, get_var_from_ident,
         interval::interval_from_expr, operations::evaluate,
@@ -12,6 +13,7 @@ use crate::parser::{
     ast::{BlockType, Expr, IfStatement, Infix},
     literal::Literal,
 };
+use std::sync::mpsc;
 
 fn valid_literal(res: Result<Literal, ErrorInfo>) -> bool {
     match res {
@@ -97,6 +99,36 @@ pub fn solve_if_statments(
         }
         IfStatement::ElseStmt(consequence, ..) => {
             root = root + interpret_scope(&BlockType::IfLoop, consequence, data)?;
+            Ok(root)
+        }
+    }
+}
+
+// ################################ mpsc
+
+pub fn solve_if_statments_mpsc(
+    statment: &IfStatement,
+    mut root: MessageData,
+    data: &mut Data,
+    sender: mpsc::Sender<MSG>,
+) -> Result<MessageData, ErrorInfo> {
+    match statment {
+        IfStatement::IfStmt {
+            cond,
+            consequence,
+            then_branch,
+        } => {
+            if valid_condition(cond, data) {
+                root = root + interpret_scope_mpsc(&BlockType::IfLoop, consequence, data, sender)?;
+                return Ok(root);
+            }
+            if let Some(then) = then_branch {
+                return solve_if_statments_mpsc(then, root, data, sender);
+            }
+            Ok(root)
+        }
+        IfStatement::ElseStmt(consequence, ..) => {
+            root = root + interpret_scope_mpsc(&BlockType::IfLoop, consequence, data, sender)?;
             Ok(root)
         }
     }

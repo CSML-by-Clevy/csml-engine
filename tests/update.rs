@@ -2,7 +2,7 @@ mod support;
 
 use csmlinterpreter::interpret;
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::{Parser};
+use csmlinterpreter::parser::Parser;
 use multimap::MultiMap;
 use serde_json::Value;
 
@@ -17,10 +17,8 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
     interpret(&flow, step, &mut context, &event, None, None)
 }
 
-
 #[test]
 fn ok_update_step1() {
-    
     let data = r#"{"messages":[ {"content":{"text":"1"},"content_type":"text"}, {"content":{"text":"4"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "step1");
 

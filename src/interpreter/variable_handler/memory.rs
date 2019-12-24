@@ -1,8 +1,8 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
+    ast_interpreter::get_path,
     data::Data,
     json_to_rust::Context,
-    ast_interpreter::get_path,
     variable_handler::{interval::interval_from_expr, object::get_value_in_object}, //get_literal,
 };
 use crate::parser::{
@@ -25,7 +25,6 @@ use crate::parser::{
 //         }),
 //     }
 // }
-
 
 fn extract_indent(expr: &Expr) -> Result<Identifier, ErrorInfo> {
     match expr {
@@ -61,13 +60,10 @@ pub fn search_in_memory_type<'a>(name: &Identifier, data: &Data) -> Result<Strin
     match (
         data.memory.current.get_vec(&name.ident),
         data.memory.past.get_vec(&name.ident),
-        data.step_vars.get(&name.ident)
+        data.step_vars.get(&name.ident),
     ) {
         (_, _, Some(_)) => Ok("use".to_owned()),
-        (_, Some(_), _) |
-        (Some(_), _, _) => {
-            Ok("remember".to_owned())
-        },
+        (_, Some(_), _) | (Some(_), _, _) => Ok("remember".to_owned()),
         (None, None, None) => Err(ErrorInfo {
             message: format!("no variable named < {} > in memory", name.ident),
             interval: name.interval.to_owned(),
@@ -75,7 +71,10 @@ pub fn search_in_memory_type<'a>(name: &Identifier, data: &Data) -> Result<Strin
     }
 }
 
-pub fn search_var_memory<'a>(name: Identifier, data: &'a mut Data) -> Result<&'a mut Literal, ErrorInfo> {
+pub fn search_var_memory<'a>(
+    name: Identifier,
+    data: &'a mut Data,
+) -> Result<&'a mut Literal, ErrorInfo> {
     match (
         data.memory.current.get_mut(&name.ident),
         data.memory.past.get_mut(&name.ident),
@@ -83,11 +82,11 @@ pub fn search_var_memory<'a>(name: Identifier, data: &'a mut Data) -> Result<&'a
         (Some(lit), _) => {
             lit.set_interval(name.interval);
             Ok(lit)
-        },
+        }
         (_, Some(lit)) => {
             lit.set_interval(name.interval);
             Ok(lit)
-        },
+        }
         (None, None) => Err(ErrorInfo {
             message: format!("no variable named < {} > in memory", name.ident),
             interval: name.interval.to_owned(),

@@ -1,8 +1,5 @@
 use crate::error_format::data::ErrorInfo;
-use crate::parser::{
-    ast::{Interval},
-    tokens::NULL,
-};
+use crate::parser::{ast::Interval, tokens::NULL};
 use serde_json::{json, map::Map, Value};
 use std::{
     cmp::Ordering,
@@ -206,28 +203,26 @@ impl PartialEq for Literal {
 }
 
 impl Literal {
-    pub fn exec<'a>(
-        &'a mut self,
-        func: &str,
-        args: Literal,
-    ) -> &'a mut Self {
+    pub fn exec<'a>(&'a mut self, func: &str, args: Literal) -> Result<(), ErrorInfo> {
         match self {
-            Literal::ArrayLiteral { ref mut items, .. } => {
-                match func {
-                    name if "pop" == name => {
-                        items.pop();
-                    }
-                    name if "push" == name => {
-                        if let Literal::ArrayLiteral {items: args, ..} = args {
-                            items.push(args[0].to_owned());
-                        };
-                    }
-                    _ => (),
-                };
-            }
-            _ => (), // error
-        };
-        self
+            Literal::ArrayLiteral { ref mut items, .. } => match func {
+                name if "pop" == name => {
+                    items.pop();
+                    Ok(())
+                }
+                name if "push" == name => {
+                    if let Literal::ArrayLiteral { items: args, .. } = args {
+                        items.push(args[0].to_owned());
+                    };
+                    Ok(())
+                }
+                _ => Ok(()),
+            },
+            _ => Err(ErrorInfo {
+                message: "Illegal methode for type".to_owned(),
+                interval: self.get_interval(),
+            }),
+        }
     }
 
     pub fn to_string(&self) -> String {
@@ -316,28 +311,44 @@ impl Literal {
 
     pub fn set_interval(&mut self, new_interval: Interval) {
         match self {
-            Literal::StringLiteral { ref mut interval, .. } => {
+            Literal::StringLiteral {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
-            Literal::IntLiteral { ref mut interval, .. } => {
+            Literal::IntLiteral {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
-            Literal::FloatLiteral { ref mut interval, .. } => {
+            Literal::FloatLiteral {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
-            Literal::BoolLiteral { ref mut interval, .. } => {
+            Literal::BoolLiteral {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
-            Literal::ArrayLiteral { ref mut interval, .. } => {
+            Literal::ArrayLiteral {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
-            Literal::ObjectLiteral { ref mut interval, .. } => {
+            Literal::ObjectLiteral {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
-            Literal::FunctionLiteral { ref mut interval, .. } => {
+            Literal::FunctionLiteral {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
-            Literal::Null { ref mut  interval, .. } => {
+            Literal::Null {
+                ref mut interval, ..
+            } => {
                 *interval = new_interval;
             }
         };
