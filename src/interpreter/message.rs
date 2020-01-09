@@ -153,7 +153,15 @@ pub enum MSG {
     Error(Message),
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExitCondition {
+    Goto,
+    Error,
+    Break,
+    Hold,
+}
+
+#[derive(Debug, Clone)]
 pub struct MessageData {
     pub memories: Option<Vec<Memories>>,
     pub messages: Vec<Message>,
@@ -161,6 +169,21 @@ pub struct MessageData {
     pub index: i64,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
+    pub exit_condition: Option<ExitCondition>,
+}
+
+impl Default for MessageData {
+    fn default() -> Self {
+        Self {
+            memories: None,
+            messages: Vec::new(),
+            step_vars: None,
+            index: 0,
+            next_flow: None,
+            next_step: None,
+            exit_condition: None
+        }
+    }
 }
 
 impl Add for MessageData {
@@ -190,6 +213,12 @@ impl Add for MessageData {
                 _ => None,
             },
             index: self.index,
+            exit_condition: match (&self.exit_condition, &other.exit_condition) {
+                (Some(exit_condition), None) => Some(exit_condition.to_owned()),
+                (None, Some(exit_condition)) => Some(exit_condition.to_owned()),
+                (Some(exit_condition), Some(_)) => Some(exit_condition.to_owned()),
+                _ => None,
+            },
         }
     }
 }
@@ -232,8 +261,8 @@ impl MessageData {
         self
     }
 
-    pub fn error_to_message(resutl: Result<Self, ErrorInfo>) -> Self {
-        match resutl {
+    pub fn error_to_message(result: Result<Self, ErrorInfo>) -> Self {
+        match result {
             Ok(v) => v,
             Err(ErrorInfo { message, interval }) => {
                 let msg = format!(
@@ -254,6 +283,7 @@ impl MessageData {
                     next_flow: None,
                     next_step: None,
                     index: 0,
+                    exit_condition: None, 
                 }
             }
         }

@@ -2,7 +2,7 @@ pub mod ast;
 pub mod expressions_evaluation;
 pub mod literal;
 pub mod parse_actions;
-// pub mod parse_ask_response;
+pub mod parse_object;
 pub mod parse_comments;
 pub mod parse_for_loop;
 pub mod parse_ident;
@@ -14,6 +14,7 @@ pub mod parse_string;
 pub mod parse_var_types;
 pub mod tokens;
 pub mod tools;
+pub mod singleton;
 
 use crate::error_format::{CustomError, ErrorInfo};
 use ast::*;

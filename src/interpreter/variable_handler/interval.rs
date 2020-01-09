@@ -7,6 +7,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
             ..
         } => start.clone(),
         Expr::ComplexLiteral(_e, RangeInterval { start, .. }) => start.clone(),
+        Expr::MapExpr(_e, RangeInterval { start, .. }) => start.clone(),
         Expr::VecExpr(_e, RangeInterval { start, .. }) => start.clone(),
         Expr::ObjectExpr(fnexpr) => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
@@ -39,5 +40,6 @@ pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval {
         ObjectType::Import { step_name, .. } => step_name.interval.to_owned(),
         ObjectType::Normal(ident, ..) => ident.interval.to_owned(),
         ObjectType::Hold(interval) => interval.to_owned(),
+        ObjectType::Break(interval) => interval.to_owned(),
     }
 }

@@ -1,18 +1,20 @@
 use crate::parser::{
     ast::*,
     parse_comments::comment,
-    parse_ident::{get_tag, parse_ident, parse_ident_no_check, parse_string},
+    parse_ident::{get_tag, parse_ident, parse_ident_no_check, get_string},
     parse_import::parse_import,
-    parse_var_types::{parse_as_variable, parse_basic_expr, parse_expr_list, parse_var_expr},
+    parse_var_types::{parse_basic_expr, parse_expr_list, parse_var_expr},
+    // expressions_evaluation::operator_precedence,
     tokens::*,
     tools::get_interval,
     GotoType,
+    singleton::*,
 };
 use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{complete, opt},
-    error::ParseError,
+    error::*,
     sequence::preceded,
     *,
 };
@@ -20,7 +22,7 @@ use nom::{
 pub fn parse_assignation<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, name) = parse_ident_no_check(s)?;
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
-    let (s, expr) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    let (s, expr) = parse_var_expr(s)?;
     Ok((
         s,
         Expr::ObjectExpr(ObjectType::Assign(name, Box::new(expr))),
@@ -28,7 +30,8 @@ pub fn parse_assignation<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Sp
 }
 
 fn get_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
-    let (s, ..) = get_tag(s, STEP)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, STEP)(s)?;
     Ok((s, GotoType::Step))
 }
 
@@ -38,7 +41,8 @@ fn get_hook<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoT
 }
 
 fn get_flow<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E> {
-    let (s, ..) = get_tag(s, FLOW)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, FLOW)(s)?;
     Ok((s, GotoType::Flow))
 }
 
@@ -47,7 +51,8 @@ fn get_default<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Go
 }
 
 fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ..) = get_tag(s, GOTO)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, GOTO)(s)?;
     let (s, goto_type) = alt((get_step, get_flow, get_hook, get_default))(s)?;
     let (s, name) = match parse_ident(s) {
         Ok(vars) => vars,
@@ -60,30 +65,36 @@ fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Exp
         }
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };
+
+    State::clear();
+
     Ok((s, Expr::ObjectExpr(ObjectType::Goto(goto_type, name))))
 }
 
 fn parse_say<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ..) = get_tag(s, SAY)?;
-    let (s, expr) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, SAY)(s)?;
+    let (s, expr) = parse_var_expr(s)?;
     Ok((s, Expr::ObjectExpr(ObjectType::Say(Box::new(expr)))))
 }
 
 fn parse_use<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ..) = get_tag(s, USE)?;
-    let (s, expr) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, USE)(s)?;
+    let (s, expr) = parse_var_expr(s)?;
     Ok((s, Expr::ObjectExpr(ObjectType::Use(Box::new(expr)))))
 }
 
 fn parse_do_update<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = preceded(comment, tag(ASSIGN))(s)?;
-    let (s, new) = complete(alt((parse_as_variable, parse_var_expr)))(s)?;
+    let (s, new) = parse_var_expr(s)?;
     Ok((s, new))
 }
 
 fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ..) = get_tag(s, DO)?;
-    let (s, old) = complete(alt((parse_as_variable, parse_basic_expr)))(s)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, DO)(s)?;
+    let (s, old) = parse_basic_expr(s)?;
 
     let (s, do_type) = match opt(parse_do_update)(s)? {
         (s, Some(new)) => (s, DoType::Update(Box::new(old), Box::new(new))),
@@ -95,22 +106,35 @@ fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr,
 
 fn parse_hold<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, inter) = get_interval(s)?;
-    let (s, ..) = get_tag(s, HOLD)?;
-    Ok((s, Expr::ObjectExpr(ObjectType::Hold(inter))))
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, HOLD)(s)?;
+
+    match State::get() {
+        State::Loop => Err(Err::Failure(E::add_context(s, "Hold cannot be used inside a foreach", E::from_error_kind(s, ErrorKind::Tag)))),
+        State::Normal => Ok((s, Expr::ObjectExpr(ObjectType::Hold(inter)))),
+    }
 }
 
-fn parse_as_remember<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, (Expr, Identifier), E> {
+fn parse_break<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    let (s, inter) = get_interval(s)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, BREAK)(s)?;
+
+    match State::get() {
+        State::Loop => Ok((s, Expr::ObjectExpr(ObjectType::Break(inter)))),
+        State::Normal => Err(Err::Failure(E::add_context(s, "Break can only be used inside a foreach", E::from_error_kind(s, ErrorKind::Tag)))),
+    }
+}
+
+fn parse_as_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
     let (s, expr) = parse_var_expr(s)?;
-    let (s, _) = get_tag(s, AS)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, _) = get_tag(name, AS)(s)?;
     let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
     Ok((s, (expr, ident)))
 }
 
-fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, (Expr, Identifier), E> {
+fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
     let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
     let (s, expr) = parse_var_expr(s)?;
@@ -118,7 +142,8 @@ fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(
 }
 
 fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ..) = get_tag(s, REMEMBER)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, REMEMBER)(s)?;
     let (s, (expr, ident)) = alt((parse_as_remember, parse_assign_remember))(s)?;
 
     Ok((
@@ -139,7 +164,7 @@ pub fn parse_actions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
 pub fn parse_hook<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = preceded(comment, tag("@"))(s)?;
     //TODO: add error if ident not found
-    let (s, name) = parse_string(s)?;
+    let (s, name) = get_string(s)?;
 
     Ok((s, Expr::Hook(name)))
 }
@@ -155,5 +180,6 @@ pub fn parse_root_functions<'a, E: ParseError<Span<'a>>>(
         parse_use,
         parse_do,
         parse_hold,
+        parse_break,
     ))(s)
 }

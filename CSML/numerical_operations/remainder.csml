@@ -2,6 +2,6 @@ start:
     use 2 as var1
     use 3 as var2
 
-    use var1 % var2 as var
+    use (var1 % var2) as var
     say var
     goto end

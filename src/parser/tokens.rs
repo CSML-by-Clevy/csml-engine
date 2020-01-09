@@ -67,6 +67,7 @@ pub const MATCH: &str = "match";
 pub const DEFAULT: &str = "default";
 pub const REMEMBER: &str = "remember";
 pub const _METADATA: &str = "_metadata";
+pub const BREAK: &str = "break";
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
@@ -74,7 +75,7 @@ pub const NULL: &str = "NULL";
 
 pub static RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, RETRIES, FLOW, FILE, STEP, SAY, USE, HOLD,
-    GOTO, MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL,
+    GOTO, MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
 ];
 
 pub const TYPING: &str = "Typing";

@@ -24,33 +24,6 @@ pub fn parse_root_actions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<S
     )(s)
 }
 
-// TODO: tmp
-// pub fn parse_root<'a, E: ParseError<Span<'a>>>(
-//     s: Span<'a>,
-//     step: String,
-// ) -> IResult<Span<'a>, Block, E> {
-//     fold_many0(
-//         alt((
-//             parse_if,
-//             parse_foreach,
-//             parse_hook,
-//             parse_root_functions
-//         )),
-//         Block::new(), |mut acc: Block, item| {
-//             if let Expr::Hook(name) = item {
-//                 acc.hooks.push(Hook {
-//                     index: acc.commands.len() as i64,
-//                     name,
-//                     step: step.clone()
-//                 })
-//             } else {
-//                 acc.commands.push(item)
-//             }
-//             acc
-//         }
-//     )(s)
-// }
-
 pub fn parse_root<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
     step: String,

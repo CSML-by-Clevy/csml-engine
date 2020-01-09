@@ -1,5 +1,5 @@
 use crate::parser::{
-    ast::*, parse_comments::comment, parse_var_types::parse_basic_expr, tokens::*, tools::*,
+    ast::*, parse_comments::comment, parse_var_types::parse_basic_expr, tokens::*,
 };
 use nom::{
     branch::alt,
@@ -96,58 +96,46 @@ pub fn operator_precedence<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<
 
 fn parse_and<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, _) = preceded(comment, and_operator)(s)?;
-    parse_infix_condition(s)
+    parse_infix_expr(s)
 }
 
 fn parse_and_condition<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, init) = parse_infix_condition(s)?;
+    let (s, init) = parse_infix_expr(s)?;
     fold_many0(parse_and, init, |acc, value: Expr| {
         Expr::InfixExpr(Infix::And, Box::new(acc), Box::new(value))
     })(s)
 }
 
-fn parse_infix_condition<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    alt((
-        parse_infix_expr,
-        alt((parse_postfix_operator, parse_arithmetic)),
-        parse_condition_group,
-    ))(s)
-}
-
 fn parse_postfix_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, operator) = preceded(comment, parse_not_operator)(s)?;
-    let (s, expr1) = parse_arithmetic(s)?;
+    let (s, expr) = parse_item(s)?;
     Ok((
         s,
-        Expr::InfixExpr(operator, Box::new(expr1.clone()), Box::new(expr1)), //  InfixExpr clone in not operator or create a new expr for not??
+        // TODO: InfixExpr clone in not operator or create a new expr for not??
+        Expr::InfixExpr(operator, Box::new(expr.clone()), Box::new(expr)), 
     ))
 }
 
 fn parse_infix_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, expr1) = alt((parse_postfix_operator, parse_arithmetic))(s)?;
-    let (s, operator) = preceded(comment, parse_infix_operators)(s)?;
-    let (s, expr2) = alt((parse_postfix_operator, parse_arithmetic))(s)?;
-
-    Ok((
-        s,
-        Expr::InfixExpr(operator, Box::new(expr1), Box::new(expr2)),
-    ))
+    let (s, expr1) = alt((parse_postfix_operator, parse_item))(s)?;
+    let infix: IResult<Span<'a>, Infix, E> = preceded(comment, parse_infix_operators)(s);
+    match infix {
+        Ok((s, operator)) => {
+            let (s, expr2) = alt((parse_postfix_operator, parse_item))(s)?;
+            Ok((
+                s,
+                Expr::InfixExpr(operator, Box::new(expr1), Box::new(expr2)),
+            ))
+        }
+        Err(_) => Ok((s, expr1))
+    }
 }
 
 // ##################################### Arithmetic Operators
 
-fn parse_arithmetic<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    alt((parse_item, parse_basic_expr, parse_condition_group))(s)
-}
-
 fn adition_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
     let (s, _) = tag(ADITION)(s)?;
     Ok((s, Infix::Adition))
-}
-
-fn remainder_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
-    let (s, _) = tag(REMAINDER)(s)?;
-    Ok((s, Infix::Remainder))
 }
 
 fn substraction_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
@@ -178,16 +166,21 @@ fn multiply_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     Ok((s, Infix::Multiply))
 }
 
+fn remainder_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (s, _) = tag(REMAINDER)(s)?;
+    Ok((s, Infix::Remainder))
+}
+
 fn parse_term_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
     alt((divide_operator, multiply_operator, remainder_operator))(s)
 }
 
 fn parse_term<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, init) = alt((parse_basic_expr, parse_condition_group))(s)?;
+    let (s, init) = parse_basic_expr(s)?;
     fold_many0(
         tuple((
             preceded(comment, parse_term_operator),
-            alt((parse_basic_expr, parse_condition_group)),
+            parse_basic_expr,
         )),
         init,
         |acc, v: (Infix, Expr)| Expr::InfixExpr(v.0, Box::new(acc), Box::new(v.1)),

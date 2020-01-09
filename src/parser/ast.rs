@@ -64,6 +64,7 @@ pub enum ObjectType {
         file_path: Option<Identifier>,
     },
     Normal(Identifier, Box<Expr>),
+    Break(Interval),
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -136,8 +137,9 @@ pub enum Expr {
         range: RangeInterval,
     },
     ComplexLiteral(Vec<Expr>, RangeInterval),
+    MapExpr(HashMap<String, Expr>, RangeInterval),
     VecExpr(Vec<Expr>, RangeInterval),
-    InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval
+    InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval ?
     ForEachExpr(
         Identifier,
         Option<Identifier>,
