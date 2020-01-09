@@ -1,22 +1,19 @@
 use crate::parser::{
-    ast::Expr,
     literal::Literal,
+    ast::Expr,
     parse_comments::comment,
-    parse_ident::get_tag,
-    tokens::NULL,
-    tokens::{Span, FALSE, TRUE},
+    parse_ident::{get_tag, get_string},
+    tokens::*,
     tools::get_interval,
 };
+
 use nom::{
     branch::alt,
-    bytes::complete::tag,
-    character::complete::digit1,
-    combinator::{complete, opt},
-    combinator::{map_res, recognize},
-    error::ParseError,
-    sequence::pair,
-    sequence::preceded,
-    sequence::tuple,
+    bytes::complete::{ tag},
+    character::complete::{digit1},
+    combinator::{map_res, recognize, complete, opt},
+    error::{ParseError},
+    sequence::{pair, tuple, preceded,},
     IResult,
 };
 
@@ -44,6 +41,10 @@ pub fn parse_float<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>
     Ok((s, Expr::LitExpr(Literal::float(float, position))))
 }
 
+pub fn parse_number<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+    alt((parse_float, parse_integer))(s)
+}
+
 pub fn parse_true<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Literal, E> {
     let (s, position) = get_interval(s)?;
     let (s, _) = tag(TRUE)(s)?;
@@ -63,7 +64,8 @@ pub fn parse_boolean<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
 
 pub fn parse_null<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, position) = get_interval(s)?;
-    let (s, _) = get_tag(s, NULL)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, _) = get_tag(name, NULL)(s)?;
     Ok((s, Expr::LitExpr(Literal::null(position))))
 }
 
@@ -71,7 +73,7 @@ pub fn parse_literalexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Sp
     // TODO: span: preceded( comment ,  position!() ?
     preceded(
         comment,
-        alt((parse_float, parse_integer, parse_boolean, parse_null)),
+        alt((parse_number, parse_boolean, parse_null)),
     )(s)
 }
 

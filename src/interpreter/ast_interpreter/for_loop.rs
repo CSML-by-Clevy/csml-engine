@@ -23,7 +23,7 @@ pub fn for_loop(
         Literal::ArrayLiteral { items, .. } => items,
         _ => {
             return Err(ErrorInfo {
-                message: "Error in for loop, Expression is not itrerable".to_owned(),
+                message: "Error in for loop, Expression is not iterable".to_owned(),
                 interval: range.start.to_owned(),
             })
         }
@@ -37,8 +37,14 @@ pub fn for_loop(
                 Literal::int(value as i64, elem.get_interval()),
             );
         };
+
         root = root + interpret_scope(&BlockType::IfLoop, block, data)?;
+        if root.exit_condition.is_some() {
+            root.exit_condition = None; 
+            break;
+        }
     }
+
     data.step_vars.remove(&ident.ident);
     if let Some(index) = i {
         data.step_vars.remove(&index.ident);
@@ -63,7 +69,7 @@ pub fn for_loop_mpsc(
         Literal::ArrayLiteral { items, .. } => items,
         _ => {
             return Err(ErrorInfo {
-                message: "Error in for loop, Expression is not itrerable".to_owned(),
+                message: "Error in for loop, Expression is not iterable".to_owned(),
                 interval: range.start.to_owned(),
             })
         }
@@ -77,7 +83,12 @@ pub fn for_loop_mpsc(
                 Literal::int(value as i64, elem.get_interval()),
             );
         };
+
         root = root + interpret_scope_mpsc(&BlockType::IfLoop, block, data, sender.clone())?;
+        if root.exit_condition.is_some() {
+            root.exit_condition = None; 
+            break;
+        }
     }
     data.step_vars.remove(&ident.ident);
     if let Some(index) = i {

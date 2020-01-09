@@ -1,12 +1,11 @@
 use crate::parser::{
     ast::*,
     parse_comments::comment,
-    parse_var_types::{parse_as_variable, parse_var_expr},
+    parse_var_types::parse_var_expr,
     tokens::*,
     tools::get_interval,
 };
 use nom::{
-    branch::alt,
     bytes::complete::{tag, take_till1},
     combinator::opt,
     error::ErrorKind,
@@ -17,11 +16,11 @@ use nom::{
 };
 
 fn parse_box_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Box<Expr>, E> {
-    let (s, expr) = alt((parse_as_variable, parse_var_expr))(s)?;
+    let (s, expr) = parse_var_expr(s)?;
     Ok((s, Box::new(expr)))
 }
 
-pub fn parse_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, String, E> {
+pub fn get_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, String, E> {
     let (s, val) = take_till1(|c| is_valid_char(c))(s)?;
 
     // TODO: see if return String can be &str ?
@@ -32,7 +31,7 @@ pub fn parse_ident_no_check<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Identifier, E> {
     let (s, position) = get_interval(s)?;
-    let (s, var) = preceded(comment, parse_string)(s)?;
+    let (s, var) = preceded(comment, get_string)(s)?;
 
     let (s, index) = opt(delimited(
         preceded(comment, tag(L_BRACKET)),
@@ -45,7 +44,7 @@ pub fn parse_ident_no_check<'a, E: ParseError<Span<'a>>>(
 
 pub fn parse_ident<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
     let (s, position) = get_interval(s)?;
-    let (s, var) = preceded(comment, parse_string)(s)?;
+    let (s, var) = preceded(comment, get_string)(s)?;
 
     // TODO: change check to another fn ??
     if RESERVED.contains(&&(*var)) {
@@ -72,11 +71,15 @@ pub fn forma_ident(ident: String, index: Option<Box<Expr>>, position: Interval) 
     Expr::new_ident(ident, position, index)
 }
 
-pub fn get_tag<'a, E: ParseError<Span<'a>>>(s: Span<'a>, tag: &str) -> IResult<Span<'a>, (), E> {
-    let (new_s, var) = preceded(comment, parse_string)(s)?;
-    if var == tag {
-        Ok((new_s, ()))
-    } else {
-        Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+pub fn get_tag<I, E: ParseError<I>>(
+    var: String,
+    tag: &str
+) -> impl Fn(I) -> IResult<I, (), E> + '_ {
+    move |input: I| {
+        if var == tag {
+            Ok((input, ()))
+        } else {
+            Err(Err::Error(E::from_error_kind(input, ErrorKind::Tag)))
+        }
     }
 }

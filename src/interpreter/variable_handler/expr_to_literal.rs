@@ -88,6 +88,14 @@ pub fn expr_to_literal(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInf
                 interval_from_expr(expr),
             ))
         }
+        Expr::MapExpr(map, RangeInterval{start, ..}) => {
+            let mut object = HashMap::new();
+            
+            for (key, value) in map.iter() {
+                object.insert(key.to_owned(), expr_to_literal(&value, data)?);
+            }
+            Ok(Literal::object(object, start.to_owned()))
+        }
         Expr::BuilderExpr(..) => get_var_from_ident(expr, data),
         Expr::ComplexLiteral(vec, RangeInterval{start, ..}) => Ok(get_string_from_complexstring(vec, start.to_owned(), data)),
         Expr::VecExpr(vec, range) => {

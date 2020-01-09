@@ -1,4 +1,28 @@
 start:
-  say ""
-  use Object("") as toto
+  do var = {
+        "value": "val",
+        "toto": {
+            "plop": 4,
+            "acions2": {
+                "toto": "toto",
+                "tutu": "tutu",
+                "empty": ""
+            }
+        },
+        "test": {
+            "pui":7
+        },
+        "vec": [ { "test": 1 }, 2, 3, 4, 5]
+  }
+  if () {
+    hold
+    say "gadsfdf"
+  }
+  hold
+
+  say var
   goto end
+
+[2, 2]
+
+index: Vec<i32> 

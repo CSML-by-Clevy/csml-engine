@@ -2,6 +2,6 @@ start:
     use 1 as var1
     use 4 as var2
 
-    use var1 + var2 as test
+    use (var1 + var2) as test
     say "{{test}}"
     goto end

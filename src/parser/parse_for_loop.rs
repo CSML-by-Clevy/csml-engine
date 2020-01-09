@@ -3,12 +3,13 @@ use crate::parser::{
     parse_comments::comment,
     parse_ident::parse_ident,
     parse_scope::parse_scope,
-    parse_var_types::{parse_as_variable, parse_var_expr},
+    parse_var_types::parse_var_expr,
     tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
     tools::get_interval,
+    singleton::*,
 };
 use nom::{
-    branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *,
+    bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *,
 };
 
 fn pars_args<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
@@ -27,8 +28,12 @@ pub fn parse_foreach<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     let (s, _) = preceded(comment, tag(R_PAREN))(s)?;
 
     let (s, _) = preceded(comment, tag(IN))(s)?;
-    let (s, expr) = alt((parse_as_variable, parse_var_expr))(s)?;
+    let (s, expr) = parse_var_expr(s)?;
+
+    State::set(State::Loop);
+
     let (s, block) = parse_scope(s)?;
+    State::set(State::Normal);
 
     let (s, end) = get_interval(s)?;
 

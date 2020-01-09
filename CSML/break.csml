@@ -1,0 +1,48 @@
+start:
+    use ["Hello", "World"] as array
+    foreach (s, index) in array {
+            say s
+	    break
+    }
+
+break_test_0:
+    use ["Hello", "World"] as array
+    foreach (s) in array {
+        say s
+        foreach (s) in array {
+            break
+        }
+    }
+
+break_test_1:
+    use ["Hello", "World"] as array
+    foreach (s, index) in array {
+        say s
+        foreach (s, index) in array {
+            foreach (s, index) in array {
+                break
+            }
+            break
+        }
+    }
+
+break_test_2:
+    use ["Hello", "World"] as array
+    foreach (s, index) in array {
+        foreach (s, index) in array {
+            say s
+            if (index == 1) {
+                break
+            }
+        }
+    }
+
+break_test_3:
+    use ["Hello", "World"] as array
+    foreach (s) in array {
+        say s
+        goto foo
+        foreach (s) in array {
+            break
+        }
+    }

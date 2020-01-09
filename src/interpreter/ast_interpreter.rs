@@ -76,6 +76,7 @@ pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorI
             Err(_e) => Ok(Literal::null(ident.interval.to_owned())),
         },
         Expr::ObjectExpr(ObjectType::Normal(..))
+        | Expr::MapExpr(..)
         | Expr::BuilderExpr(..)
         | Expr::LitExpr { .. }
         | Expr::VecExpr(..) => Ok(expr_to_literal(action, data)?),
@@ -229,8 +230,14 @@ fn match_actions(
             }
             Ok(root)
         }
-        ObjectType::Goto(GotoType::Step, step_name) => Ok(root.add_next_step(&step_name.ident)),
-        ObjectType::Goto(GotoType::Flow, flow_name) => Ok(root.add_next_flow(&flow_name.ident)),
+        ObjectType::Goto(GotoType::Step, step_name) => {
+            root.exit_condition = Some(ExitCondition::Goto);
+            return Ok(root.add_next_step(&step_name.ident))
+        }
+        ObjectType::Goto(GotoType::Flow, flow_name) => {
+            root.exit_condition = Some(ExitCondition::Goto);
+            return Ok(root.add_next_flow(&flow_name.ident))
+        }
         ObjectType::Remember(name, variable) => {
             let lit = match_functions(variable, data)?;
             root = root.add_to_memory(&name.ident, lit.clone());
@@ -282,14 +289,18 @@ pub fn interpret_scope(
         if root.next_step.is_some() || root.next_flow.is_some() {
             return Ok(root);
         }
-
+        
         match action {
+            Expr::ObjectExpr(ObjectType::Break(..)) => {
+                root.exit_condition = Some(ExitCondition::Break);
+                return Ok(root);
+            }
             Expr::ObjectExpr(ObjectType::Hold(interval)) => {
                 match block_type {
                     BlockType::Step => {}
                     _ => {
                         return Err(ErrorInfo {
-                            message: "no hold allowed in if/foreach blocks".to_owned(),
+                            message: "no hold allowed in if blocks".to_owned(),
                             interval: interval.to_owned(),
                         })
                     }
@@ -297,8 +308,12 @@ pub fn interpret_scope(
                 root.index = (i + 1) as i64;
                 return Ok(root);
             }
-            Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
-            Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
+            Expr::ObjectExpr(fun) => {
+                root = match_actions(fun, root, data)?
+            }
+            Expr::IfExpr(ref ifstatement) => {
+                root = solve_if_statments(ifstatement, root, data)?
+            }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
                 root = for_loop(ident, i, expr, block, range, root, data)?
             }
@@ -327,12 +342,20 @@ pub fn interpret_scope_at_index(
         }
 
         match action {
+            Expr::ObjectExpr(ObjectType::Break(..)) => {
+                root.exit_condition = Some(ExitCondition::Break);
+                return Ok(root);
+            }
             Expr::ObjectExpr(ObjectType::Hold(_)) => {
                 root.index = (i as i64) + index + 1;
                 return Ok(root);
             }
-            Expr::ObjectExpr(fun) => root = match_actions(fun, root, data)?,
-            Expr::IfExpr(ref ifstatement) => root = solve_if_statments(ifstatement, root, data)?,
+            Expr::ObjectExpr(fun) => {
+                root = match_actions(fun, root, data)?
+            }
+            Expr::IfExpr(ref ifstatement) => {
+                root = solve_if_statments(ifstatement, root, data)?
+            }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
                 root = for_loop(ident, i, expr, block, range, root, data)?
             }
@@ -402,11 +425,13 @@ fn match_actions_mpsc(
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
             send_msg(&sender, MSG::NextStep(step_name.ident.clone()));
-            Ok(root.add_next_step(&step_name.ident))
+            root.exit_condition = Some(ExitCondition::Goto);
+            return Ok(root.add_next_step(&step_name.ident))
         }
         ObjectType::Goto(GotoType::Flow, flow_name) => {
             send_msg(&sender, MSG::NextFlow(flow_name.ident.clone()));
-            Ok(root.add_next_flow(&flow_name.ident))
+            root.exit_condition = Some(ExitCondition::Goto);
+            return Ok(root.add_next_flow(&flow_name.ident))
         }
         ObjectType::Remember(name, variable) => {
             let lit = match_functions(variable, data)?;
@@ -468,12 +493,16 @@ pub fn interpret_scope_mpsc(
         }
 
         match action {
+            Expr::ObjectExpr(ObjectType::Break(..)) => {
+                root.exit_condition = Some(ExitCondition::Break);
+                return Ok(root);
+            }
             Expr::ObjectExpr(ObjectType::Hold(interval)) => {
                 match block_type {
                     BlockType::Step => {}
                     _ => {
                         return Err(ErrorInfo {
-                            message: "no hold allowed in if/foreach blocks".to_owned(),
+                            message: "no hold allowed in if blocks".to_owned(),
                             interval: interval.to_owned(),
                         })
                     }
@@ -524,7 +553,11 @@ pub fn interpret_scope_at_index_mpsc(
         }
 
         match action {
-            Expr::ObjectExpr(ObjectType::Hold(_)) => {
+            Expr::ObjectExpr(ObjectType::Break(..)) => {
+                root.exit_condition = Some(ExitCondition::Break);
+                return Ok(root);
+            }
+            Expr::ObjectExpr(ObjectType::Hold(..)) => {
                 root.index = (i as i64) + index + 1;
                 send_msg(
                     &sender,
