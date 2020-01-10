@@ -1,6 +1,5 @@
 use crate::error_format::data::ErrorInfo;
 use crate::parser::{ast::Interval, literal::Literal};
-use multimap::MultiMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -22,12 +21,11 @@ impl Client {
     }
 }
 
-// TODO: MultiMap to Hasmap ?
 #[derive(Debug, Clone)]
 pub struct Context {
-    pub past: MultiMap<String, Literal>,
-    pub current: MultiMap<String, Literal>,
-    pub metadata: MultiMap<String, Literal>,
+    pub past: HashMap<String, Literal>,
+    pub current: HashMap<String, Literal>,
+    pub metadata: HashMap<String, Literal>,
     pub retries: i64,
     pub is_initial_step: bool,
     pub client: Client,

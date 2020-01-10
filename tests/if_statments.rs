@@ -3,8 +3,7 @@ mod support;
 use csmlinterpreter::interpret;
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
 use csmlinterpreter::parser::{ast::Interval, literal::Literal, Parser};
-
-use multimap::MultiMap;
+use std::collections::HashMap;
 use serde_json::Value;
 
 use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
@@ -13,7 +12,7 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let text = read_file("CSML/if_statments.csml".to_owned()).unwrap();
     let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut past = MultiMap::new();
+    let mut past = HashMap::new();
     past.insert(
         "var10".to_owned(),
         Literal::int(10, Interval { column: 0, line: 0 }),
@@ -27,7 +26,7 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
         Literal::boolean(false, Interval { column: 0, line: 0 }),
     );
 
-    let mut context = gen_context(past, MultiMap::new(), MultiMap::new(), 0, false);
+    let mut context = gen_context(past, HashMap::new(), HashMap::new(), 0, false);
     interpret(&flow, step, &mut context, &event, None, None)
 }
 

@@ -1,7 +1,7 @@
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
 use csmlinterpreter::parser::literal::Literal;
-use multimap::MultiMap;
 use serde_json::{json, map::Map, Value};
+use std::collections::HashMap;
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -15,9 +15,9 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 
 #[allow(dead_code)]
 pub fn gen_context(
-    past: MultiMap<String, Literal>,
-    current: MultiMap<String, Literal>,
-    metadata: MultiMap<String, Literal>,
+    past: HashMap<String, Literal>,
+    current: HashMap<String, Literal>,
+    metadata: HashMap<String, Literal>,
     retries: i64,
     is_initial_step: bool,
 ) -> Context {
