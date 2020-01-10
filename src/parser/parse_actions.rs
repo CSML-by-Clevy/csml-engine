@@ -3,8 +3,7 @@ use crate::parser::{
     parse_comments::comment,
     parse_ident::{get_tag, parse_ident, parse_ident_no_check, get_string},
     parse_import::parse_import,
-    parse_var_types::{parse_basic_expr, parse_expr_list, parse_var_expr},
-    // expressions_evaluation::operator_precedence,
+    parse_var_types::{parse_expr_list, parse_var_expr},
     tokens::*,
     tools::get_interval,
     GotoType,
@@ -13,7 +12,7 @@ use crate::parser::{
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    combinator::{complete, opt},
+    combinator::opt,
     error::*,
     sequence::preceded,
     *,
@@ -94,9 +93,10 @@ fn parse_do_update<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>
 fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, DO)(s)?;
-    let (s, old) = parse_basic_expr(s)?;
+    let (s, old) = parse_var_expr(s)?;
 
     let (s, do_type) = match opt(parse_do_update)(s)? {
+        (s, Some(Expr::ObjectExpr(ObjectType::Assign(ident, expr)))) => (s, DoType::Update(Box::new(Expr::IdentExpr(ident)), expr)),
         (s, Some(new)) => (s, DoType::Update(Box::new(old), Box::new(new))),
         (s, None) => (s, DoType::Exec(Box::new(old))),
     };
@@ -126,29 +126,18 @@ fn parse_break<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ex
     }
 }
 
-fn parse_as_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
-    let (s, expr) = parse_var_expr(s)?;
-    let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, _) = get_tag(name, AS)(s)?;
-    let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
-    Ok((s, (expr, ident)))
-}
-
-fn parse_assign_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Identifier), E> {
-    let (s, ident) = preceded(comment, complete(parse_ident))(s)?;
-    let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
-    let (s, expr) = parse_var_expr(s)?;
-    Ok((s, (expr, ident)))
-}
-
 fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, REMEMBER)(s)?;
-    let (s, (expr, ident)) = alt((parse_as_remember, parse_assign_remember))(s)?;
-
+    let (s, expr) = parse_var_expr(s)?;
+    let (expr, ident) = match expr {
+        Expr::ObjectExpr(ObjectType::Assign(ident, expr))
+        | Expr::ObjectExpr(ObjectType::As(ident, expr)) => (expr, ident),
+        _ => return Err(Err::Failure(E::add_context(s, "Remember bad format", E::from_error_kind(s, ErrorKind::Tag)))),
+    };
     Ok((
         s,
-        Expr::ObjectExpr(ObjectType::Remember(ident, Box::new(expr))),
+        Expr::ObjectExpr(ObjectType::Remember(ident, expr)),
     ))
 }
 
