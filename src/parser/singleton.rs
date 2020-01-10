@@ -73,7 +73,7 @@ impl State {
         let hashmap = &mut CONTEXT.lock().unwrap().state;
 
         if hashmap.contains_key(&thread_id) == true {
-            hashmap.get_mut(&thread_id).unwrap().clear();
+            hashmap.remove(&thread_id);
         }
     }
 }
