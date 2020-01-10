@@ -23,6 +23,7 @@ use parse_ident::parse_ident;
 use parse_scope::parse_root;
 use tokens::*;
 use tools::*;
+use crate::parser::singleton::*;
 
 use nom::error::{ErrorKind, ParseError};
 use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
@@ -73,13 +74,16 @@ impl Parser {
                 }
             }
             Err(e) => match e {
-                Err::Error(err) | Err::Failure(err) => Err(ErrorInfo {
-                    message: err.error.to_owned(),
-                    interval: Interval {
-                        line: err.input.line,
-                        column: err.input.get_column() as u32,
-                    },
-                }),
+                Err::Error(err) | Err::Failure(err) => {
+                    State::clear();
+                    Err(ErrorInfo {
+                        message: err.error.to_owned(),
+                        interval: Interval {
+                            line: err.input.line,
+                            column: err.input.get_column() as u32,
+                        },
+                    })
+                },
                 Err::Incomplete(_err) => unimplemented!(),
             },
         }
