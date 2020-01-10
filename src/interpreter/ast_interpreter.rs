@@ -204,6 +204,7 @@ fn match_actions(
         }
         ObjectType::Do(DoType::Update(old, new)) => {
             //TODO: make error if try to change _metadata
+            println!("=> {:?}", old);
             let new_value = match_functions(new, data)?;
             let (lit, name, mem_type, path, index) = get_var_info(old, data)?;
             let inter = lit.get_interval();

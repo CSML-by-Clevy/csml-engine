@@ -1,9 +1,26 @@
 start:
-  // remember 3 as toto2
-  // remember toto = 3
-  do {"test": 2} 
-  // do toto.hola as toto2
-  // do toto = 3
-  // do toto.plop = 3
-  do toto
-  goto end
+    do var = {
+        "value": "val",
+        "toto": {
+            "plop": 4,
+            "acions2": {
+                "toto": "toto",
+                "tutu": "tutu",
+                "empty": ""
+            }
+        },
+        "test": {
+            "pui":7
+        },
+        "vec": [{"test": 1}, 2, 3, 4, 5]
+    }
+
+    say "{{var}}"
+    // say var.vec[0].test
+    // say var.toto.plop
+    
+    // use var.toto.plop as var1
+    // use var.vec[0].test as var2
+
+    // say var1 > var2
+    goto end

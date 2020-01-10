@@ -3,7 +3,8 @@ use crate::parser::{
     parse_comments::comment,
     parse_ident::{get_tag, parse_ident, parse_ident_no_check, get_string},
     parse_import::parse_import,
-    parse_var_types::{parse_expr_list, parse_var_expr},
+    parse_var_types::{parse_basic_expr, parse_expr_list, parse_var_expr},
+    expressions_evaluation::operator_precedence,
     tokens::*,
     tools::get_interval,
     GotoType,
@@ -86,20 +87,27 @@ fn parse_use<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr
 
 fn parse_do_update<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, ..) = preceded(comment, tag(ASSIGN))(s)?;
-    let (s, new) = parse_var_expr(s)?;
+    let (s, new) = operator_precedence(s)?;
     Ok((s, new))
 }
 
 fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, DO)(s)?;
-    let (s, old) = parse_var_expr(s)?;
+    let (s, old) = parse_basic_expr(s)?;
+
+    println!("-> {:?}\n", old);
 
     let (s, do_type) = match opt(parse_do_update)(s)? {
-        (s, Some(Expr::ObjectExpr(ObjectType::Assign(ident, expr)))) => (s, DoType::Update(Box::new(Expr::IdentExpr(ident)), expr)),
+        (s, Some(Expr::ObjectExpr(ObjectType::Assign(ident, expr)))) => {
+            println!("--------");
+            (s, DoType::Update(Box::new(Expr::IdentExpr(ident)), expr))
+        },
         (s, Some(new)) => (s, DoType::Update(Box::new(old), Box::new(new))),
         (s, None) => (s, DoType::Exec(Box::new(old))),
     };
+
+    println!("-> {:?}\n", do_type);
 
     Ok((s, Expr::ObjectExpr(ObjectType::Do(do_type))))
 }

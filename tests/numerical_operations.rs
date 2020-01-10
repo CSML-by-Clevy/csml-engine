@@ -6,7 +6,7 @@ use csmlinterpreter::interpreter::{
     message::{Message, MessageData},
 };
 use csmlinterpreter::parser::{literal::Literal, Parser};
-use multimap::MultiMap;
+use std::collections::HashMap;
 use serde_json::Value;
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
@@ -15,7 +15,7 @@ fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
     let text = read_file(file).unwrap();
     let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut context = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
+    let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
     interpret(&flow, step, &mut context, &event, None, None)
 }
@@ -89,7 +89,7 @@ fn ok_divition3() {
     let text = read_file(file).unwrap();
     let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut context = gen_context(MultiMap::new(), MultiMap::new(), MultiMap::new(), 0, false);
+    let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
     match &interpret(&flow, "div3", &mut context, &None, None, None) {
         MessageData {

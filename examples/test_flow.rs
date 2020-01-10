@@ -1,10 +1,9 @@
 use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
 use csmlinterpreter::parser::{ast::*, literal::Literal};
 use csmlinterpreter::{interpret, parse_file};
-use multimap::MultiMap;
+use std::collections::HashMap;
 use serde_json::{json, map::Map, Value};
 
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -62,7 +61,7 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
     // Some(Event{
     //     literal: Literal::string("42".to_owned())
     // });
-    let mut metadata = MultiMap::new();
+    let mut metadata = HashMap::new();
 
     metadata.insert(
         "firstname".to_owned(),
@@ -89,8 +88,8 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
     );
 
     let mut context = Context {
-        past: MultiMap::new(),
-        current: MultiMap::new(),
+        past: HashMap::new(),
+        current: HashMap::new(),
         metadata: metadata,
         retries: 42,
         is_initial_step: false,

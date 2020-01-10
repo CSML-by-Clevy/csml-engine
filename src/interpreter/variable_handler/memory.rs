@@ -58,8 +58,8 @@ pub fn search_in_metadata(path: &[Expr], data: &mut Data) -> Result<Literal, Err
 
 pub fn search_in_memory_type<'a>(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {
     match (
-        data.memory.current.get_vec(&name.ident),
-        data.memory.past.get_vec(&name.ident),
+        data.memory.current.get(&name.ident),
+        data.memory.past.get(&name.ident),
         data.step_vars.get(&name.ident),
     ) {
         (_, _, Some(_)) => Ok("use".to_owned()),
@@ -109,22 +109,22 @@ pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&
     }
 }
 
-pub fn memory_first<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a Literal> {
-    match (name, expr) {
-        (
-            Expr::IdentExpr(Identifier { ident, .. }),
-            Expr::LitExpr(Literal::StringLiteral { value, .. }),
-        ) if ident == PAST => memory.past.get_vec(value).unwrap().last(),
-        (
-            Expr::IdentExpr(Identifier { ident, .. }),
-            Expr::LitExpr(Literal::StringLiteral { value, .. }),
-        ) if ident == MEMORY => memory.current.get_vec(value).unwrap().last(),
-        (_, Expr::LitExpr(Literal::StringLiteral { value, .. })) => {
-            memory.metadata.get_vec(value).unwrap().last()
-        }
-        _ => None,
-    }
-}
+// pub fn memory_first<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a Literal> {
+//     match (name, expr) {
+//         (
+//             Expr::IdentExpr(Identifier { ident, .. }),
+//             Expr::LitExpr(Literal::StringLiteral { value, .. }),
+//         ) if ident == PAST => memory.past.get_vec(value).unwrap().last(),
+//         (
+//             Expr::IdentExpr(Identifier { ident, .. }),
+//             Expr::LitExpr(Literal::StringLiteral { value, .. }),
+//         ) if ident == MEMORY => memory.current.get_vec(value).unwrap().last(),
+//         (_, Expr::LitExpr(Literal::StringLiteral { value, .. })) => {
+//             memory.metadata.get_vec(value).unwrap().last()
+//         }
+//         _ => None,
+//     }
+// }
 
 // pub fn get_memory_action(
 //     memory: &Context,

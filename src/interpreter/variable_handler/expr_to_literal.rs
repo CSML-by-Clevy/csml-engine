@@ -123,13 +123,13 @@ mod tests {
     use super::*;
     use curl::easy::Easy;
     use crate::interpreter::json_to_rust::{Client, Context, Event};
-    use multimap::MultiMap;
+    use std::collections::HashMap;
 
     fn gen_context() -> Context {
         Context {
-            past: MultiMap::new(),
-            current: MultiMap::new(),
-            metadata: MultiMap::new(),
+            past: HashMap::new(),
+            current: HashMap::new(),
+            metadata: HashMap::new(),
             retries: 0,
             is_initial_step: false,
             client: Client {
