@@ -96,18 +96,13 @@ fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr,
     let (s, ..) = get_tag(name, DO)(s)?;
     let (s, old) = parse_basic_expr(s)?;
 
-    println!("-> {:?}\n", old);
-
     let (s, do_type) = match opt(parse_do_update)(s)? {
         (s, Some(Expr::ObjectExpr(ObjectType::Assign(ident, expr)))) => {
-            println!("--------");
             (s, DoType::Update(Box::new(Expr::IdentExpr(ident)), expr))
         },
         (s, Some(new)) => (s, DoType::Update(Box::new(old), Box::new(new))),
         (s, None) => (s, DoType::Exec(Box::new(old))),
     };
-
-    println!("-> {:?}\n", do_type);
 
     Ok((s, Expr::ObjectExpr(ObjectType::Do(do_type))))
 }
