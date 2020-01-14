@@ -52,7 +52,7 @@ pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal,
         Expr::ComplexLiteral(vec, RangeInterval{start, ..}) => Ok(get_string_from_complexstring(vec, start.to_owned(), data)),
         Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
         e => Err(ErrorInfo {
-            message: "Error in Expression builder".to_owned(),
+            message: "Expression builder".to_owned(),
             interval: interval_from_expr(e),
         }),
     }

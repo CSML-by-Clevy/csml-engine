@@ -6,25 +6,10 @@ use crate::interpreter::{
     variable_handler::{interval::interval_from_expr, object::get_value_in_object}, //get_literal,
 };
 use crate::parser::{
-    ast::{Expr, Identifier}, //, ObjectType
+    ast::{Expr, Identifier},
     literal::Literal,
-    tokens::{MEMORY, PAST}, // FIRST, GET_VALUE,
+    tokens::{MEMORY, PAST},
 };
-
-// pub fn memorytype_to_literal(
-//     mem: Option<&Literal>,
-//     interval: Interval,
-//     index: &Option<Box<Expr>>,
-//     data: &mut Data,
-// ) -> Result<Literal, ErrorInfo> {
-//     match mem {
-//         Some(elem) => get_literal(&elem, index, data),
-//         None => Err(ErrorInfo {
-//             message: "Error in memorytype_to_literal".to_owned(),
-//             interval,
-//         }),
-//     }
-// }
 
 fn extract_indent(expr: &Expr) -> Result<Identifier, ErrorInfo> {
     match expr {
@@ -108,60 +93,3 @@ pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&
         _ => None,
     }
 }
-
-// pub fn memory_first<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a Literal> {
-//     match (name, expr) {
-//         (
-//             Expr::IdentExpr(Identifier { ident, .. }),
-//             Expr::LitExpr(Literal::StringLiteral { value, .. }),
-//         ) if ident == PAST => memory.past.get_vec(value).unwrap().last(),
-//         (
-//             Expr::IdentExpr(Identifier { ident, .. }),
-//             Expr::LitExpr(Literal::StringLiteral { value, .. }),
-//         ) if ident == MEMORY => memory.current.get_vec(value).unwrap().last(),
-//         (_, Expr::LitExpr(Literal::StringLiteral { value, .. })) => {
-//             memory.metadata.get_vec(value).unwrap().last()
-//         }
-//         _ => None,
-//     }
-// }
-
-// pub fn get_memory_action(
-//     memory: &Context,
-//     name: &Expr,
-//     expr: &Expr,
-//     data: &mut Data,
-// ) -> Result<Literal, ErrorInfo> {
-//     match expr {
-//         Expr::ObjectExpr(ObjectType::Normal(
-//             Identifier {
-//                 ident,
-//                 interval,
-//                 index,
-//             },
-//             expr,
-//         )) if ident == GET_VALUE => memorytype_to_literal(
-//             memory_get(memory, name, expr),
-//             interval.clone(),
-//             index,
-//             data,
-//         ),
-//         Expr::ObjectExpr(ObjectType::Normal(
-//             Identifier {
-//                 ident,
-//                 interval,
-//                 index,
-//             },
-//             expr,
-//         )) if ident == FIRST => memorytype_to_literal(
-//             memory_first(memory, name, expr),
-//             interval.clone(),
-//             index,
-//             data,
-//         ),
-//         e => Err(ErrorInfo {
-//             message: "Error in memory action".to_owned(),
-//             interval: interval_from_expr(e),
-//         }),
-//     }
-// }

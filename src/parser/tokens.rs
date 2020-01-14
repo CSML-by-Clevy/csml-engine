@@ -34,6 +34,7 @@ pub const DOT: &str = ".";
 pub const SEMICOLON: &str = ";";
 pub const COLON: &str = ":";
 pub const DOUBLE_QUOTE: &str = "\"";
+pub const UNDERSCORE: char = '_';
 
 pub const L_PAREN: &str = "(";
 pub const R_PAREN: &str = ")";

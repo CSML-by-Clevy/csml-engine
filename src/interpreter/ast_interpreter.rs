@@ -81,7 +81,7 @@ pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorI
         | Expr::LitExpr { .. }
         | Expr::VecExpr(..) => Ok(expr_to_literal(action, data)?),
         e => Err(ErrorInfo {
-            message: format!("Error must be a valid function {:?}", e),
+            message: format!("invalid function {:?}", e),
             interval: interval_from_expr(e),
         }),
     }
@@ -261,19 +261,19 @@ fn match_actions(
                     //, &range.start
                     Ok(root2) => Ok(root + root2),
                     Err(err) => Err(ErrorInfo {
-                        message: format!("Error in import function {:?}", err),
+                        message: format!("invalid import function {:?}", err),
                         interval: interval_from_reserved_fn(function),
                     }),
                 }
             } else {
                 Err(ErrorInfo {
-                    message: format!("Error step {} not found in flow", name.ident),
+                    message: format!("invalid step {} not found in flow", name.ident),
                     interval: interval_from_reserved_fn(function),
                 })
             }
         }
         reserved => Err(ErrorInfo {
-            message: "Error must be a valid action".to_owned(),
+            message: "invalid action".to_owned(),
             interval: interval_from_reserved_fn(reserved),
         }),
     }
@@ -462,19 +462,19 @@ fn match_actions_mpsc(
                     //, &range.start
                     Ok(root2) => Ok(root + root2),
                     Err(err) => Err(ErrorInfo {
-                        message: format!("Error in import function {:?}", err),
+                        message: format!("invalid import function {:?}", err),
                         interval: interval_from_reserved_fn(function),
                     }),
                 }
             } else {
                 Err(ErrorInfo {
-                    message: format!("Error step {} not found in flow", name.ident),
+                    message: format!("invalid step {} not found in flow", name.ident),
                     interval: interval_from_reserved_fn(function),
                 })
             }
         }
         reserved => Err(ErrorInfo {
-            message: "Error must be a valid action".to_owned(),
+            message: "invalid action".to_owned(),
             interval: interval_from_reserved_fn(reserved),
         }),
     }

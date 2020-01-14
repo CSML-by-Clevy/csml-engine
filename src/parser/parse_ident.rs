@@ -64,7 +64,7 @@ pub fn parse_ident<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>
 }
 
 pub fn is_valid_char(input: char) -> bool {
-    input != '_' && !input.is_alphanumeric()
+    input != UNDERSCORE && !input.is_alphanumeric()
 }
 
 pub fn forma_ident(ident: String, index: Option<Box<Expr>>, position: Interval) -> Identifier {

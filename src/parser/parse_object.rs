@@ -7,9 +7,9 @@ use crate::parser::{
 };
 
 use nom::{
-    bytes::complete::{escaped, tag},
+    bytes::complete::tag,
     multi::separated_list,
-    character::complete::{alphanumeric1 as alphanumeric, one_of},
+    bytes::complete::take_while,
     combinator::{cut, map},
     error::{context, ParseError},
     sequence::{preceded, separated_pair, terminated},
@@ -17,18 +17,17 @@ use nom::{
 };
 
 fn parse_str<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    escaped(alphanumeric, '\\', one_of("\"n\\"))(s)
+    take_while(|c: char| c == UNDERSCORE || c.is_alphanumeric())(s)
 }
 
 fn string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    context("string",
+    context("invalid JSON key format expect alphanumeric or _",
       preceded(
         tag(DOUBLE_QUOTE),
         cut(terminated(
             parse_str,
             tag(DOUBLE_QUOTE)
     ))))(s)
-  
 }
 
 fn key_value<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Span<'a>, Expr), E> {
@@ -37,17 +36,15 @@ fn key_value<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Spa
 
 pub fn parse_object<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, object) = context(
-        "object",
-        preceded(tag(L_BRACE),
-        cut(terminated(
+    let (s, object) = 
+    preceded(tag(L_BRACE),
+            terminated(
         map(
             separated_list(preceded(comment, tag(COMMA)), key_value),
             |tuple_vec| {
             tuple_vec.into_iter().map(|(k, v)| (String::from(k.fragment), v)).collect()
         }),
         preceded(comment, tag(R_BRACE)),
-        ))
     ))(s)?;
     let (s, end) = preceded(comment, get_interval)(s)?;
 

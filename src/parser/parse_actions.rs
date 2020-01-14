@@ -74,6 +74,7 @@ fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Exp
 fn parse_say<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, SAY)(s)?;
+
     let (s, expr) = parse_var_expr(s)?;
     Ok((s, Expr::ObjectExpr(ObjectType::Say(Box::new(expr)))))
 }

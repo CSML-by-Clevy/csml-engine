@@ -23,7 +23,7 @@ pub fn for_loop(
         Literal::ArrayLiteral { items, .. } => items,
         _ => {
             return Err(ErrorInfo {
-                message: "Error in for loop, Expression is not iterable".to_owned(),
+                message: "invalid Expression in foreach loop, Expression is not iterable".to_owned(),
                 interval: range.start.to_owned(),
             })
         }
@@ -69,7 +69,7 @@ pub fn for_loop_mpsc(
         Literal::ArrayLiteral { items, .. } => items,
         _ => {
             return Err(ErrorInfo {
-                message: "Error in for loop, Expression is not iterable".to_owned(),
+                message: "invalid Expression in foreach loop, Expression is not iterable".to_owned(),
                 interval: range.start.to_owned(),
             })
         }
