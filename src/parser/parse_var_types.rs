@@ -13,10 +13,10 @@ use crate::parser::{
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    combinator::cut,
+    combinator::{cut, opt},
     error::{context, ParseError},
     multi::{separated_list, fold_many0},
-    sequence::{preceded, terminated},
+    sequence::{preceded, terminated, tuple},
     IResult,
 };
 
@@ -64,11 +64,14 @@ fn parse_identexpr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>
 
 pub fn parse_expr_list<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, vec) = context(
+    let (s, (vec, _)) = context(
       "list",
       preceded(tag(L_PAREN),
       cut(terminated(
-        separated_list(preceded(comment, tag(COMMA)), parse_var_expr),
+        tuple((
+            separated_list(preceded(comment, tag(COMMA)), parse_var_expr),
+            opt(preceded(comment, tag(COMMA)))
+        )),
         preceded(comment, parse_r_parentheses)))
     ))(s)?;
     let (s, end) = get_interval(s)?;
@@ -77,12 +80,15 @@ pub fn parse_expr_list<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span
 
 pub fn parse_expr_array<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, vec) = context(
+    let (s, (vec, _)) = context(
       "array",
       preceded(tag(L_BRACKET),
-      cut(terminated(
-        separated_list(preceded(comment, tag(COMMA)), parse_basic_expr),
-        preceded(comment, parse_r_bracket)))
+        cut(terminated(
+            tuple((
+                separated_list(preceded(comment, tag(COMMA)), parse_basic_expr),
+                opt(preceded(comment, tag(COMMA)))
+            )),
+            preceded(comment, parse_r_bracket)))
     ))(s)?;
     let (s, end) = get_interval(s)?;
     Ok((s, Expr::VecExpr(vec, RangeInterval { start, end })))

@@ -1,47 +1,51 @@
 start:
-    say {
-    "attachment": {
-      "type": "template",
-      "payload": {
-        "templatetype": "generic",
-        "elements": [
-          {
-            "title": "Mood and Cognition",
-            "image_url": "https://cdn.clevy.io/customerdata/danone/csml_demo_bot_waters/mood.png",
-            "buttons": [
-              {
-                "type": "postback",
-                "title": "Mood and Cognition",
-                "payload": "Mood and Cognition"
-              }
-            ]
-          },
-          {
-            "title": "Health",
-            "image_url": "https://cdn.clevy.io/customerdata/danone/csml_demo_bot_waters/health.png",
-            "buttons": [
-              {
-                "type": "postback",
-                "title": "Health",
-                "payload": "Health"
-              }
-            ]
-          },
-          {
-            "title": "Sport and Wellness",
-            "image_url": "https://cdn.clevy.io/customerdata/danone/csml_demo_bot_waters/sport.png",
-            "buttons": [
-              {
-                "type": "postback",
-                "title": "Sport and Wellness",
-                "payload": "Sport and Wellness"
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
+  //   say {
+  //   "attachment": {
+  //     "type": "template",
+  //     "payload": {
+  //       "templatetype": "generic",
+  //       "elements": [
+  //         {
+  //           "title": "Mood and Cognition",
+  //           "image_url": "https://cdn.clevy.io/customerdata/danone/csml_demo_bot_waters/mood.png",
+  //           "buttons": [
+  //             {
+  //               "type": "postback",
+  //               "title": "Mood and Cognition",
+  //               "payload": "Mood and Cognition"
+  //             }
+  //           ]
+  //         },
+  //         {
+  //           "title": "Health",
+  //           "image_url": "https://cdn.clevy.io/customerdata/danone/csml_demo_bot_waters/health.png",
+  //           "buttons": [
+  //             {
+  //               "type": "postback",
+  //               "title": "Health",
+  //               "payload": "Health"
+  //             }
+  //           ]
+  //         },
+  //         {
+  //           "title": "Sport and Wellness",
+  //           "image_url": "https://cdn.clevy.io/customerdata/danone/csml_demo_bot_waters/sport.png",
+  //           "buttons": [
+  //             {
+  //               "type": "postback",
+  //               "title": "Sport and Wellness",
+  //               "payload": "Sport and Wellness"
+  //             }
+  //           ]
+  //         }
+  //       ]
+  //     }
+  //   }
+  // }
+    say Find(
+      "plop", 
+      in = "test hola plop"
+    )
     // say var.vec[0].test
     // say var.toto.plop
     

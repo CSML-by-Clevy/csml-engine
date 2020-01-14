@@ -11,11 +11,10 @@ init_obj:
                 toto = "toto",
                 tutu = "tutu",
                 empty = ""
-            )
+            ),
         ),
         test = Object(pui = 7),
-        vec = [ Object(test = 1) , 2, 3, 4, 5]
-
+        vec = [Object(test = 1) , 2, 3, 4, 5, 6],
     ) as var
 
 step1:

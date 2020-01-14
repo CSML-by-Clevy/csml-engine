@@ -9,19 +9,19 @@ use crate::parser::{
 use nom::{
     bytes::complete::tag,
     multi::separated_list,
-    bytes::complete::take_while,
-    combinator::{cut, map},
+    bytes::complete::take_till1,
+    combinator::{cut, map, opt},
     error::{context, ParseError},
-    sequence::{preceded, separated_pair, terminated},
+    sequence::{preceded, separated_pair, terminated, tuple},
     IResult,
 };
 
 fn parse_str<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    take_while(|c: char| c == UNDERSCORE || c.is_alphanumeric())(s)
+    take_till1(|c: char| "\"".contains(c))(s)
 }
 
 fn string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    context("invalid JSON key format expect alphanumeric or _",
+    context("invalid JSON key format",
       preceded(
         tag(DOUBLE_QUOTE),
         cut(terminated(
@@ -36,16 +36,20 @@ fn key_value<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Spa
 
 pub fn parse_object<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, object) = 
+    let (s, (object, _)) = 
     preceded(tag(L_BRACE),
+        tuple((
             terminated(
-        map(
-            separated_list(preceded(comment, tag(COMMA)), key_value),
-            |tuple_vec| {
-            tuple_vec.into_iter().map(|(k, v)| (String::from(k.fragment), v)).collect()
-        }),
-        preceded(comment, tag(R_BRACE)),
-    ))(s)?;
+                map(
+                    separated_list(preceded(comment, tag(COMMA)), key_value),
+                    |tuple_vec| {
+                    tuple_vec.into_iter().map(|(k, v)| (String::from(k.fragment), v)).collect()
+                }),
+                preceded(comment, tag(R_BRACE)),
+            ),
+            opt(preceded(comment, tag(COLON)))
+        ))
+    )(s)?;
     let (s, end) = preceded(comment, get_interval)(s)?;
 
     Ok((s, Expr::MapExpr(object, RangeInterval{start, end})))

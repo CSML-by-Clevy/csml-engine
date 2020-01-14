@@ -1,5 +1,5 @@
 start:
-    say Find("plop", in = "test hola plop" )
+    say Find("plop", in = "test hola plop")
     goto end
 
 find1:

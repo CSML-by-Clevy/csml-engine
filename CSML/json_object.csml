@@ -4,7 +4,7 @@ start:
 
 init_obj:
     do var = {
-        "value_type": "val",
+        "value@toto": "val",
         "toto": {
             "plop": 4,
             "acions2": {
@@ -13,16 +13,16 @@ init_obj:
                 "empty": ""
             }
         },
-        "test": {
+        "^\nplop!@#$%^^*)(": {
             "pui":7
         },
-        "ve_c": [{"test": 1}, 2, 3, 4, 5]
+        "vec": [{"test": 1}, 2, 3, 4, 5]
     }
 
 step1:
     import step init_obj
 
-    say var.ve_c[0].test
+    say var.vec[0].test
     goto end
 
 step2:
@@ -35,7 +35,7 @@ step3:
     import step init_obj
 
     use var.toto.plop as var1
-    use var.ve_c[0].test as var2
+    use var.vec[0].test as var2
 
     say var1 > var2
     goto end
