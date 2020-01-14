@@ -179,7 +179,7 @@ fn save_literal_in_mem(
     if mem_type == "remember" {
         // add mesage to rememeber new value
         root = root.add_to_memory(&name, lit.clone());
-        // add value in current mem
+        // add value in current mem);
         // TODO: update existing value
         data.memory.current.insert(name, lit);
     } else {
@@ -187,6 +187,32 @@ fn save_literal_in_mem(
     }
     root
 }
+
+fn save_literal_in_mem_mpsc(
+    lit: Literal,
+    name: String,
+    mem_type: String,
+    data: &mut Data,
+    mut root: MessageData,
+    sender: mpsc::Sender<MSG>,
+) -> MessageData {
+    if mem_type == "remember" {
+        // add mesage to rememeber new value
+        root = root.add_to_memory(&name, lit.clone());
+        // add value in current mem
+
+        send_msg(
+            &sender,
+            MSG::Memorie(Memories::new(name.clone(), lit.clone())),
+        );
+
+        data.memory.current.insert(name, lit);
+    } else {
+        data.step_vars.insert(name, lit);
+    }
+    root
+}
+
 
 fn match_actions(
     function: &ObjectType,
@@ -204,7 +230,6 @@ fn match_actions(
         }
         ObjectType::Do(DoType::Update(old, new)) => {
             //TODO: make error if try to change _metadata
-            println!("=> {:?}", old);
             let new_value = match_functions(new, data)?;
             let (lit, name, mem_type, path, index) = get_var_info(old, data)?;
             let inter = lit.get_interval();
@@ -402,12 +427,13 @@ fn match_actions_mpsc(
             let (lit, name, mem_type, path, index) = get_var_info(old, data)?;
             let inter = lit.get_interval();
             update_literal(get_literal(lit, index)?, path, Some(new_value), inter)?;
-            Ok(save_literal_in_mem(
+            Ok(save_literal_in_mem_mpsc(
                 lit.to_owned(),
                 name,
                 mem_type,
                 data,
                 root,
+                sender.clone(),
             ))
         }
         ObjectType::Do(DoType::Exec(expr)) => {
