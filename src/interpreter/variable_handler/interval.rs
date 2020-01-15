@@ -16,7 +16,6 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::IdentExpr(ident) => ident.interval.to_owned(),
         Expr::LitExpr(literal) => literal.get_interval(),
         Expr::IfExpr(ifstmt) => interval_from_if_stmt(ifstmt),
-        Expr::Hook(_) => unimplemented!(),
     }
 }
 

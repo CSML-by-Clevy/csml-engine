@@ -1,6 +1,7 @@
 use crate::error_format::data::ErrorInfo;
+use std::sync::mpsc;
 use crate::interpreter::{
-    ast_interpreter::{check_if_ident, interpret_scope, interpret_scope_mpsc, match_functions},
+    ast_interpreter::{check_if_ident, interpret_scope, match_functions},
     data::Data,
     message::MessageData,
     message::MSG,
@@ -10,10 +11,14 @@ use crate::interpreter::{
     },
 };
 use crate::parser::{
-    ast::{BlockType, Expr, IfStatement, Infix},
+    ast::{
+        Expr,
+        IfStatement,
+        Infix,
+        InstructionInfo
+    },
     literal::Literal,
 };
-use std::sync::mpsc;
 
 fn valid_literal(res: Result<Literal, ErrorInfo>) -> bool {
     match res {
@@ -81,6 +86,9 @@ pub fn solve_if_statments(
     statment: &IfStatement,
     mut root: MessageData,
     data: &mut Data,
+    instruction_index: usize,
+    instruction_info: &InstructionInfo,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match statment {
         IfStatement::IfStmt {
@@ -88,47 +96,37 @@ pub fn solve_if_statments(
             consequence,
             then_branch,
         } => {
-            if valid_condition(cond, data) {
-                root = root + interpret_scope(&BlockType::IfLoop, consequence, data)?;
+            if instruction_index <= instruction_info.index {
+                if valid_condition(cond, data) {
+                    root = root + interpret_scope(consequence, data, instruction_index, sender)?;
+                    return Ok(root);
+                }
+                if let Some((then, _)) = then_branch {
+                    return solve_if_statments(then, root, data, instruction_index, instruction_info, sender);
+                }
                 return Ok(root);
             }
-            if let Some(then) = then_branch {
-                return solve_if_statments(then, root, data);
+
+            if then_branch.is_some() {
+                let (then_branch, then_index) = then_branch.as_ref().unwrap();
+
+                if instruction_index < then_index.index {
+                    root = root + interpret_scope(consequence, data, instruction_index, sender) ?;
+                    return Ok(root);
+                }
+                else {
+                    return solve_if_statments(&then_branch, root, data, instruction_index, instruction_info, sender);
+                }
             }
+
+            if instruction_index != instruction_info.index {
+                root = root + interpret_scope(consequence, data, instruction_index, sender) ?;
+            }
+
             Ok(root)
         }
         IfStatement::ElseStmt(consequence, ..) => {
-            root = root + interpret_scope(&BlockType::IfLoop, consequence, data)?;
-            Ok(root)
-        }
-    }
-}
-
-// ################################ mpsc
-
-pub fn solve_if_statments_mpsc(
-    statment: &IfStatement,
-    mut root: MessageData,
-    data: &mut Data,
-    sender: mpsc::Sender<MSG>,
-) -> Result<MessageData, ErrorInfo> {
-    match statment {
-        IfStatement::IfStmt {
-            cond,
-            consequence,
-            then_branch,
-        } => {
-            if valid_condition(cond, data) {
-                root = root + interpret_scope_mpsc(&BlockType::IfLoop, consequence, data, sender)?;
-                return Ok(root);
-            }
-            if let Some(then) = then_branch {
-                return solve_if_statments_mpsc(then, root, data, sender);
-            }
-            Ok(root)
-        }
-        IfStatement::ElseStmt(consequence, ..) => {
-            root = root + interpret_scope_mpsc(&BlockType::IfLoop, consequence, data, sender)?;
+            root = root + interpret_scope(consequence, data, instruction_index, sender)?;
             Ok(root)
         }
     }

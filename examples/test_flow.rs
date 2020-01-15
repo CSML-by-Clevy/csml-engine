@@ -107,7 +107,8 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
         &mut context,
         &event,
         None,
-        None
+        0,
+        None,
     )));
 }
 
