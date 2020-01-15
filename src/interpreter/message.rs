@@ -3,6 +3,8 @@ use crate::parser::literal::Literal;
 use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::ops::Add;
+use std::sync::mpsc;
+use crate::interpreter::ast_interpreter::send_msg;
 
 #[derive(Debug, Clone)]
 pub enum MessageType {
@@ -145,7 +147,7 @@ pub enum MSG {
     Memorie(Memories),
     Message(Message),
     Hold {
-        index: i64,
+        instruction_index: usize,
         step_vars: HashMap<String, Literal>,
     },
     NextFlow(String),
@@ -166,7 +168,7 @@ pub struct MessageData {
     pub memories: Option<Vec<Memories>>,
     pub messages: Vec<Message>,
     pub step_vars: Option<HashMap<String, Literal>>,
-    pub index: i64,
+    pub instruction_index: usize,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
     pub exit_condition: Option<ExitCondition>,
@@ -178,7 +180,7 @@ impl Default for MessageData {
             memories: None,
             messages: Vec::new(),
             step_vars: None,
-            index: 0,
+            instruction_index: 0,
             next_flow: None,
             next_step: None,
             exit_condition: None
@@ -212,7 +214,7 @@ impl Add for MessageData {
                 (Some(step), Some(_)) => Some(step.to_owned()),
                 _ => None,
             },
-            index: self.index,
+            instruction_index: self.instruction_index,
             exit_condition: match (&self.exit_condition, &other.exit_condition) {
                 (Some(exit_condition), None) => Some(exit_condition.to_owned()),
                 (None, Some(exit_condition)) => Some(exit_condition.to_owned()),
@@ -261,29 +263,40 @@ impl MessageData {
         self
     }
 
-    pub fn error_to_message(result: Result<Self, ErrorInfo>) -> Self {
+    pub fn error_to_message(
+        result: Result<Self, ErrorInfo>,
+        sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Self {
         match result {
             Ok(v) => v,
             Err(ErrorInfo { message, interval }) => {
-                let msg = format!(
-                    "{} at line {}, column {}",
-                    message, interval.line, interval.column
-                );
+                let msg = Literal::string(format!(
+                    "{} at line {}, column {}", message, interval.line, interval.column
+                ), interval.clone());
+
+                send_msg(sender, MSG::Error(Message {
+                    content_type: "error".to_owned(),
+                    content: Literal::name_object(
+                        "text".to_owned(),
+                        &msg,
+                        interval.clone(),
+                    ),
+                }));
                 Self {
                     memories: None,
                     messages: vec![Message {
                         content_type: "error".to_owned(),
                         content: Literal::name_object(
                             "text".to_owned(),
-                            &Literal::string(msg, interval.clone()),
+                            &msg,
                             interval,
                         ),
                     }],
                     step_vars: None,
                     next_flow: None,
                     next_step: None,
-                    index: 0,
-                    exit_condition: None, 
+                    instruction_index: 0,
+                    exit_condition: None,
                 }
             }
         }

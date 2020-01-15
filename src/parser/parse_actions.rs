@@ -8,7 +8,9 @@ use crate::parser::{
     tokens::*,
     tools::get_interval,
     GotoType,
-    singleton::*,
+    context::*,
+    parse_for_loop::parse_foreach,
+    parse_if::parse_if,
 };
 use nom::{
     branch::alt,
@@ -50,7 +52,7 @@ fn get_default<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Go
     Ok((s, GotoType::Step))
 }
 
-fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, GOTO)(s)?;
     let (s, goto_type) = alt((get_step, get_flow, get_hook, get_default))(s)?;
@@ -66,24 +68,37 @@ fn parse_goto<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Exp
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };
 
-    State::clear();
+    let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
 
-    Ok((s, Expr::ObjectExpr(ObjectType::Goto(goto_type, name))))
+    Context::clear_state();
+    Context::inc_index();
+
+    Ok((s, (Expr::ObjectExpr(ObjectType::Goto(goto_type, name)), instruction_info)))
 }
 
-fn parse_say<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_say<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, SAY)(s)?;
 
     let (s, expr) = parse_var_expr(s)?;
-    Ok((s, Expr::ObjectExpr(ObjectType::Say(Box::new(expr)))))
+
+    let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+
+    Context::inc_index();
+
+    Ok((s, (Expr::ObjectExpr(ObjectType::Say(Box::new(expr))), instruction_info)))
 }
 
-fn parse_use<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_use<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, USE)(s)?;
     let (s, expr) = parse_var_expr(s)?;
-    Ok((s, Expr::ObjectExpr(ObjectType::Use(Box::new(expr)))))
+
+    let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+
+    Context::inc_index();
+
+    Ok((s, (Expr::ObjectExpr(ObjectType::Use(Box::new(expr))), instruction_info)))
 }
 
 fn parse_do_update<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
@@ -92,7 +107,7 @@ fn parse_do_update<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>
     Ok((s, new))
 }
 
-fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, DO)(s)?;
     let (s, old) = parse_basic_expr(s)?;
@@ -105,32 +120,44 @@ fn parse_do<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr,
         (s, None) => (s, DoType::Exec(Box::new(old))),
     };
 
-    Ok((s, Expr::ObjectExpr(ObjectType::Do(do_type))))
+    let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+
+    Context::inc_index();
+
+    Ok((s, (Expr::ObjectExpr(ObjectType::Do(do_type)), instruction_info)))
 }
 
-fn parse_hold<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_hold<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, inter) = get_interval(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
-    match State::get() {
+    match Context::get_state() {
         State::Loop => Err(Err::Failure(E::add_context(s, "Hold cannot be used inside a foreach", E::from_error_kind(s, ErrorKind::Tag)))),
-        State::Normal => Ok((s, Expr::ObjectExpr(ObjectType::Hold(inter)))),
+        State::Normal => {
+            let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+            Context::inc_index();
+            Ok((s, (Expr::ObjectExpr(ObjectType::Hold(inter)), instruction_info)))
+        }
     }
 }
 
-fn parse_break<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_break<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, inter) = get_interval(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, BREAK)(s)?;
 
-    match State::get() {
-        State::Loop => Ok((s, Expr::ObjectExpr(ObjectType::Break(inter)))),
+    match Context::get_state() {
+        State::Loop => {
+            let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+            Context::inc_index();
+            Ok((s, (Expr::ObjectExpr(ObjectType::Break(inter)), instruction_info)))
+        }
         State::Normal => Err(Err::Failure(E::add_context(s, "Break can only be used inside a foreach", E::from_error_kind(s, ErrorKind::Tag)))),
     }
 }
 
-fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, REMEMBER)(s)?;
     let (s, expr) = parse_var_expr(s)?;
@@ -139,9 +166,14 @@ fn parse_remember<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>,
         | Expr::ObjectExpr(ObjectType::As(ident, expr)) => (expr, ident),
         _ => return Err(Err::Failure(E::add_context(s, "Remember bad format", E::from_error_kind(s, ErrorKind::Tag)))),
     };
+
+    let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+
+    Context::inc_index();
+
     Ok((
         s,
-        Expr::ObjectExpr(ObjectType::Remember(ident, expr)),
+        (Expr::ObjectExpr(ObjectType::Remember(ident, expr)), instruction_info),
     ))
 }
 
@@ -154,21 +186,15 @@ pub fn parse_actions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     ))
 }
 
-pub fn parse_hook<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, ..) = preceded(comment, tag("@"))(s)?;
-    //TODO: add error if ident not found
-    let (s, name) = get_string(s)?;
-
-    Ok((s, Expr::Hook(name)))
-}
-
 pub fn parse_root_functions<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
-) -> IResult<Span<'a>, Expr, E> {
+) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     alt((
+        parse_if,
+        parse_foreach,
+        parse_import,
         parse_say,
         parse_remember,
-        parse_import,
         parse_goto,
         parse_use,
         parse_do,
