@@ -4,8 +4,8 @@ pub mod if_statment;
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
     ast_interpreter::{
-        for_loop::{for_loop, for_loop_mpsc},
-        if_statment::{evaluate_condition, solve_if_statments, solve_if_statments_mpsc},
+        for_loop::for_loop,
+        if_statment::{evaluate_condition, solve_if_statments},
     },
     builtins::{api_functions::*, reserved_functions::*},
     data::Data,
@@ -21,6 +21,12 @@ use crate::interpreter::{
 use crate::parser::{ast::*, literal::Literal, tokens::*};
 use std::collections::HashMap;
 use std::sync::mpsc;
+
+pub fn send_msg(sender: &Option<mpsc::Sender<MSG>>, msg: MSG) {
+    if let Some(sender) = sender {
+        sender.send(msg).unwrap();
+    }
+}
 
 fn check_if_ident(expr: &Expr) -> bool {
     match expr {
@@ -175,37 +181,13 @@ fn save_literal_in_mem(
     mem_type: String,
     data: &mut Data,
     mut root: MessageData,
-) -> MessageData {
-    if mem_type == "remember" {
-        // add mesage to rememeber new value
-        root = root.add_to_memory(&name, lit.clone());
-        // add value in current mem);
-        // TODO: update existing value
-        data.memory.current.insert(name, lit);
-    } else {
-        data.step_vars.insert(name, lit);
-    }
-    root
-}
-
-fn save_literal_in_mem_mpsc(
-    lit: Literal,
-    name: String,
-    mem_type: String,
-    data: &mut Data,
-    mut root: MessageData,
-    sender: mpsc::Sender<MSG>,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     if mem_type == "remember" {
         // add mesage to rememeber new value
         root = root.add_to_memory(&name, lit.clone());
         // add value in current mem
-
-        send_msg(
-            &sender,
-            MSG::Memorie(Memories::new(name.clone(), lit.clone())),
-        );
-
+        send_msg(sender, MSG::Memorie(Memories::new(name.clone(), lit.clone())));
         data.memory.current.insert(name, lit);
     } else {
         data.step_vars.insert(name, lit);
@@ -213,17 +195,19 @@ fn save_literal_in_mem_mpsc(
     root
 }
 
-
 fn match_actions(
     function: &ObjectType,
     mut root: MessageData,
     data: &mut Data,
+    instruction_index: usize,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match function {
-        ObjectType::Say(arg) => Ok(Message::add_to_message(
-            root,
-            MessageType::Msg(Message::new(match_functions(arg, data)?)),
-        )),
+        ObjectType::Say(arg) => {
+            let msg = Message::new(match_functions(arg, data)?);
+            send_msg(&sender, MSG::Message(msg.clone()));
+            Ok(Message::add_to_message(root, MessageType::Msg(msg)))
+        },
         ObjectType::Use(arg) => {
             match_functions(arg, data)?;
             Ok(root)
@@ -240,6 +224,7 @@ fn match_actions(
                 mem_type,
                 data,
                 root,
+                sender
             ))
         }
         ObjectType::Do(DoType::Exec(expr)) => {
@@ -252,200 +237,7 @@ fn match_actions(
                     mem_type,
                     data,
                     root,
-                ));
-            }
-            Ok(root)
-        }
-        ObjectType::Goto(GotoType::Step, step_name) => {
-            root.exit_condition = Some(ExitCondition::Goto);
-            return Ok(root.add_next_step(&step_name.ident))
-        }
-        ObjectType::Goto(GotoType::Flow, flow_name) => {
-            root.exit_condition = Some(ExitCondition::Goto);
-            return Ok(root.add_next_flow(&flow_name.ident))
-        }
-        ObjectType::Remember(name, variable) => {
-            let lit = match_functions(variable, data)?;
-            root = root.add_to_memory(&name.ident, lit.clone());
-            data.memory.current.insert(name.ident.to_owned(), lit);
-            Ok(root)
-        }
-        ObjectType::Import {
-            step_name: name, ..
-        } => {
-            if let Some(Expr::Scope {
-                scope: actions,
-                block_type,
-                ..
-            }) = data
-                .ast
-                .flow_instructions
-                .get(&InstructionType::NormalStep(name.ident.to_owned()))
-            {
-                match interpret_scope(block_type, actions, data) {
-                    //, &range.start
-                    Ok(root2) => Ok(root + root2),
-                    Err(err) => Err(ErrorInfo {
-                        message: format!("invalid import function {:?}", err),
-                        interval: interval_from_reserved_fn(function),
-                    }),
-                }
-            } else {
-                Err(ErrorInfo {
-                    message: format!("invalid step {} not found in flow", name.ident),
-                    interval: interval_from_reserved_fn(function),
-                })
-            }
-        }
-        reserved => Err(ErrorInfo {
-            message: "invalid action".to_owned(),
-            interval: interval_from_reserved_fn(reserved),
-        }),
-    }
-}
-
-pub fn interpret_scope(
-    block_type: &BlockType,
-    actions: &Block,
-    data: &mut Data,
-) -> Result<MessageData, ErrorInfo> {
-    let mut root = MessageData::default();
-
-    for (i, action) in actions.commands.iter().enumerate() {
-        if root.next_step.is_some() || root.next_flow.is_some() {
-            return Ok(root);
-        }
-        
-        match action {
-            Expr::ObjectExpr(ObjectType::Break(..)) => {
-                root.exit_condition = Some(ExitCondition::Break);
-                return Ok(root);
-            }
-            Expr::ObjectExpr(ObjectType::Hold(interval)) => {
-                match block_type {
-                    BlockType::Step => {}
-                    _ => {
-                        return Err(ErrorInfo {
-                            message: "no hold allowed in if blocks".to_owned(),
-                            interval: interval.to_owned(),
-                        })
-                    }
-                };
-                root.index = (i + 1) as i64;
-                return Ok(root);
-            }
-            Expr::ObjectExpr(fun) => {
-                root = match_actions(fun, root, data)?
-            }
-            Expr::IfExpr(ref ifstatement) => {
-                root = solve_if_statments(ifstatement, root, data)?
-            }
-            Expr::ForEachExpr(ident, i, expr, block, range) => {
-                root = for_loop(ident, i, expr, block, range, root, data)?
-            }
-            e => {
-                return Err(ErrorInfo {
-                    message: "Block must start with a reserved keyword".to_owned(),
-                    interval: interval_from_expr(e),
-                })
-            }
-        };
-    }
-    Ok(root)
-}
-
-pub fn interpret_scope_at_index(
-    actions: &Block,
-    data: &mut Data,
-    index: i64,
-) -> Result<MessageData, ErrorInfo> {
-    let mut root = MessageData::default();
-    let vec = actions.commands.clone().split_off(index as usize);
-
-    for (i, action) in vec.iter().enumerate() {
-        if root.next_step.is_some() || root.next_flow.is_some() {
-            return Ok(root);
-        }
-
-        match action {
-            Expr::ObjectExpr(ObjectType::Break(..)) => {
-                root.exit_condition = Some(ExitCondition::Break);
-                return Ok(root);
-            }
-            Expr::ObjectExpr(ObjectType::Hold(_)) => {
-                root.index = (i as i64) + index + 1;
-                return Ok(root);
-            }
-            Expr::ObjectExpr(fun) => {
-                root = match_actions(fun, root, data)?
-            }
-            Expr::IfExpr(ref ifstatement) => {
-                root = solve_if_statments(ifstatement, root, data)?
-            }
-            Expr::ForEachExpr(ident, i, expr, block, range) => {
-                root = for_loop(ident, i, expr, block, range, root, data)?
-            }
-            e => {
-                return Err(ErrorInfo {
-                    message: "Block must start with a reserved keyword".to_owned(),
-                    interval: interval_from_expr(e),
-                })
-            }
-        };
-    }
-    Ok(root)
-}
-
-///////////////////////////// TODO: tmp mpsc
-/////////////////////////////
-/////////////////////////////
-/////////////////////////////
-
-fn send_msg(sender: &mpsc::Sender<MSG>, msg: MSG) {
-    sender.send(msg).unwrap();
-}
-
-fn match_actions_mpsc(
-    function: &ObjectType,
-    mut root: MessageData,
-    data: &mut Data,
-    sender: mpsc::Sender<MSG>,
-) -> Result<MessageData, ErrorInfo> {
-    match function {
-        ObjectType::Say(arg) => {
-            let msg = Message::new(match_functions(arg, data)?);
-            send_msg(&sender, MSG::Message(msg.clone()));
-            Ok(Message::add_to_message(root, MessageType::Msg(msg)))
-        }
-        ObjectType::Use(arg) => {
-            match_functions(arg, data)?;
-            Ok(root)
-        }
-        ObjectType::Do(DoType::Update(old, new)) => {
-            //TODO: make error if try to change _metadata
-            let new_value = match_functions(new, data)?;
-            let (lit, name, mem_type, path, index) = get_var_info(old, data)?;
-            let inter = lit.get_interval();
-            update_literal(get_literal(lit, index)?, path, Some(new_value), inter)?;
-            Ok(save_literal_in_mem_mpsc(
-                lit.to_owned(),
-                name,
-                mem_type,
-                data,
-                root,
-                sender.clone(),
-            ))
-        }
-        ObjectType::Do(DoType::Exec(expr)) => {
-            if let Ok((lit, name, mem_type, path, index)) = get_var_info(expr, data) {
-                let inter = lit.get_interval();
-                update_literal(get_literal(lit, index)?, path, None, inter)?;
-                return Ok(save_literal_in_mem(
-                    lit.to_owned(),
-                    name,
-                    mem_type,
-                    data,
-                    root,
+                    sender,
                 ));
             }
             Ok(root)
@@ -477,14 +269,14 @@ fn match_actions_mpsc(
         } => {
             if let Some(Expr::Scope {
                 scope: actions,
-                block_type,
+                block_type: _,
                 ..
             }) = data
                 .ast
                 .flow_instructions
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
             {
-                match interpret_scope(block_type, actions, data) {
+                match interpret_scope(actions, data, instruction_index, sender) {
                     //, &range.start
                     Ok(root2) => Ok(root + root2),
                     Err(err) => Err(ErrorInfo {
@@ -506,104 +298,49 @@ fn match_actions_mpsc(
     }
 }
 
-pub fn interpret_scope_mpsc(
-    block_type: &BlockType,
+pub fn interpret_scope(
     actions: &Block,
     data: &mut Data,
-    sender: mpsc::Sender<MSG>,
+    instruction_index: usize,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData::default();
 
-    for (i, action) in actions.commands.iter().enumerate() {
+    for (action, instruction_info) in actions.commands.iter() {
+        let instruction_total = instruction_info.index + instruction_info.total;
+        if instruction_index > instruction_total {
+            continue;
+        }
+
         if root.next_step.is_some() || root.next_flow.is_some() {
             return Ok(root);
         }
-
-        match action {
-            Expr::ObjectExpr(ObjectType::Break(..)) => {
-                root.exit_condition = Some(ExitCondition::Break);
-                return Ok(root);
-            }
-            Expr::ObjectExpr(ObjectType::Hold(interval)) => {
-                match block_type {
-                    BlockType::Step => {}
-                    _ => {
-                        return Err(ErrorInfo {
-                            message: "no hold allowed in if blocks".to_owned(),
-                            interval: interval.to_owned(),
-                        })
-                    }
-                };
-
-                root.index = (i + 1) as i64;
-                send_msg(
-                    &sender,
-                    MSG::Hold {
-                        index: root.index,
-                        step_vars: data.step_vars.clone(),
-                    },
-                );
-                return Ok(root);
-            }
-            Expr::ObjectExpr(fun) => {
-                root = match_actions_mpsc(fun, root, data, mpsc::Sender::clone(&sender))?
-            }
-            Expr::IfExpr(ref ifstatement) => {
-                root = solve_if_statments_mpsc(ifstatement, root, data, sender.clone())?
-            }
-            Expr::ForEachExpr(ident, i, expr, block, range) => {
-                root = for_loop_mpsc(ident, i, expr, block, range, root, data, sender.clone())?
-            }
-            e => {
-                return Err(ErrorInfo {
-                    message: "Block must start with a reserved keyword".to_owned(),
-                    interval: interval_from_expr(e),
-                })
-            }
-        };
-    }
-    Ok(root)
-}
-
-pub fn interpret_scope_at_index_mpsc(
-    actions: &Block,
-    data: &mut Data,
-    index: i64,
-    sender: mpsc::Sender<MSG>,
-) -> Result<MessageData, ErrorInfo> {
-    let mut root = MessageData::default();
-    let vec = actions.commands.clone().split_off(index as usize);
-
-    for (i, action) in vec.iter().enumerate() {
-        if root.next_step.is_some() || root.next_flow.is_some() {
-            return Ok(root);
-        }
-
+        
         match action {
             Expr::ObjectExpr(ObjectType::Break(..)) => {
                 root.exit_condition = Some(ExitCondition::Break);
                 return Ok(root);
             }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
-                root.index = (i as i64) + index + 1;
                 send_msg(
                     &sender,
                     MSG::Hold {
-                        index: root.index,
+                        instruction_index: instruction_info.index + 1,
                         step_vars: data.step_vars.clone(),
                     },
                 );
                 return Ok(root);
             }
             Expr::ObjectExpr(fun) => {
-                root = match_actions_mpsc(fun, root, data, mpsc::Sender::clone(&sender))?
+                root = match_actions(fun, root, data, instruction_index, &sender)?
             }
             Expr::IfExpr(ref ifstatement) => {
-                root = solve_if_statments_mpsc(ifstatement, root, data, sender.clone())?
+                root = solve_if_statments(ifstatement, root, data, instruction_index, instruction_info, &sender)?;
             }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
-                root = for_loop_mpsc(ident, i, expr, block, range, root, data, sender.clone())?
+                root = for_loop(ident, i, expr, block, range, root, data, instruction_index, &sender)?
             }
+
             e => {
                 return Err(ErrorInfo {
                     message: "Block must start with a reserved keyword".to_owned(),
@@ -612,5 +349,6 @@ pub fn interpret_scope_at_index_mpsc(
             }
         };
     }
+
     Ok(root)
 }
