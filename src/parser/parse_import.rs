@@ -1,4 +1,4 @@
-use crate::parser::{ast::*, parse_comments::comment, parse_ident::*, tokens::*, tools::*};
+use crate::parser::{ast::*, parse_comments::comment, parse_ident::*, tokens::*, tools::*, context::*};
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
 fn step_namet<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
@@ -33,10 +33,15 @@ pub fn parse_import_opt<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
     ))
 }
 
-pub fn parse_import<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+pub fn parse_import<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, _) = tag(IMPORT)(s)?;
     let (s, name) = parse_import_opt(s)?;
-    Ok((s, name))
+
+    let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+
+    Context::inc_index();
+
+    Ok((s, (name, instruction_info)))
 }
 
 #[cfg(test)]
@@ -44,7 +49,7 @@ mod tests {
     use super::*;
     use nom::error::ErrorKind;
 
-    pub fn test_import<'a>(s: Span<'a>) -> IResult<Span<'a>, Expr> {
+    pub fn test_import<'a>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo)> {
         let var = parse_import(s);
         if let Ok((s, v)) = var {
             if s.fragment.len() != 0 {

@@ -68,8 +68,14 @@ pub enum ObjectType {
 }
 
 #[derive(PartialEq, Debug, Clone)]
+pub struct InstructionInfo {
+    pub index: usize,
+    pub total: usize,
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub struct Block {
-    pub commands: Vec<Expr>,
+    pub commands: Vec<(Expr, InstructionInfo)>,
     pub hooks: Vec<Hook>,
 }
 
@@ -102,7 +108,7 @@ pub enum IfStatement {
     IfStmt {
         cond: Box<Expr>,
         consequence: Block,
-        then_branch: Option<Box<IfStatement>>,
+        then_branch: Option<(Box<IfStatement>, InstructionInfo)>,
     },
     ElseStmt(Block, RangeInterval),
 }
@@ -147,12 +153,9 @@ pub enum Expr {
         Block,
         RangeInterval,
     ),
-
     ObjectExpr(ObjectType), // RangeInterval ?
-    Hook(String),
     IfExpr(IfStatement),
     BuilderExpr(BuilderType, Vec<Expr>),
-
     IdentExpr(Identifier),
     LitExpr(Literal),
 }

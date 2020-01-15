@@ -14,7 +14,7 @@ pub mod parse_string;
 pub mod parse_var_types;
 pub mod tokens;
 pub mod tools;
-pub mod singleton;
+pub mod context;
 
 use crate::error_format::{CustomError, ErrorInfo};
 use ast::*;
@@ -23,7 +23,7 @@ use parse_ident::parse_ident;
 use parse_scope::parse_root;
 use tokens::*;
 use tools::*;
-use crate::parser::singleton::*;
+use crate::parser::context::*;
 
 use nom::error::{ErrorKind, ParseError};
 use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
@@ -75,7 +75,8 @@ impl Parser {
             }
             Err(e) => match e {
                 Err::Error(err) | Err::Failure(err) => {
-                    State::clear();
+                    Context::clear_state();
+                    Context::clear_index();
                     Err(ErrorInfo {
                         message: err.error.to_owned(),
                         interval: Interval {
@@ -107,26 +108,26 @@ where
 
 fn parse_step<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
-) -> IResult<Span<'a>, (Instruction, FlowType), E> {
+) -> IResult<Span<'a>, Instruction, E> {
     let (s, ident) = preceded(comment, parse_ident)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
+
+    Context::clear_index();
+
     let (s, start) = get_interval(s)?;
-    let (s, (actions, flow_type)) = preceded2(comment, parse_root, ident.ident.clone())(s)?;
+    let (s, actions) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;
 
     Ok((
         s,
-        (
-            Instruction {
-                instruction_type: InstructionType::NormalStep(ident.ident),
-                actions: Expr::Scope {
-                    block_type: BlockType::Step,
-                    scope: actions,
-                    range: RangeInterval { start, end },
-                },
+        Instruction {
+            instruction_type: InstructionType::NormalStep(ident.ident),
+            actions: Expr::Scope {
+                block_type: BlockType::Step,
+                scope: actions,
+                range: RangeInterval { start, end },
             },
-            flow_type,
-        ),
+        },
     ))
 }
 
@@ -134,22 +135,18 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
     // add comment
-    let mut flow_type = FlowType::Recursive;
+    // TODO: handle FlowType::Recursive with Context
+    let flow_type = FlowType::Normal;
 
-    let (s, (flow, boolean)) = fold_many0(
+    let (s, flow) = fold_many0(
         parse_step,
-        (Vec::new(), false),
-        |(mut acc, mut boolean), (item, ftype)| {
-            if let FlowType::Normal = ftype {
-                boolean = true;
-            };
+        Vec::new(),
+        |mut acc, item| {
             acc.push(item);
-            (acc, boolean)
+            acc
         },
     )(s)?;
-    if boolean {
-        flow_type = FlowType::Normal;
-    };
+    
     let (last, _) = comment(s)?;
     if last.fragment.len() != 0 {
         let res: IResult<Span<'a>, Span<'a>, E> =

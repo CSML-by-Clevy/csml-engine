@@ -17,7 +17,7 @@ fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
 
     let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
-    interpret(&flow, step, &mut context, &event, None, None)
+    interpret(&flow, step, &mut context, &event, None, 0, None)
 }
 
 #[test]
@@ -91,13 +91,13 @@ fn ok_divition3() {
 
     let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
-    match &interpret(&flow, "div3", &mut context, &None, None, None) {
+    match &interpret(&flow, "div3", &mut context, &None, None, 0, None) {
         MessageData {
             memories: None,
             messages: vec,
             next_flow: None,
             next_step: None,
-            index: 0,
+            instruction_index: 0,
             ..
         } if vec.len() == 1 && check_error_component(&vec) => {}
         e => panic!("Error in div by 0 {:?}", e),
