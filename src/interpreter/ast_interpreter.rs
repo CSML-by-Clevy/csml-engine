@@ -203,18 +203,11 @@ fn match_actions(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match function {
-<<<<<<< HEAD
         ObjectType::Say(arg) => {
             let msg = Message::new(match_functions(arg, data)?);
             send_msg(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(root, MessageType::Msg(msg)))
         },
-=======
-        ObjectType::Say(arg) => Ok(Message::add_to_message(
-            root,
-            MessageType::Msg(Message::new(match_functions(arg, data)?)),
-        )),
->>>>>>> 6dc023c53f548a17fb18054162aa1767f5513b1c
         ObjectType::Use(arg) => {
             match_functions(arg, data)?;
             Ok(root)
@@ -250,33 +243,24 @@ fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
-<<<<<<< HEAD
             send_msg(&sender, MSG::NextStep(step_name.ident.clone()));
-=======
->>>>>>> 6dc023c53f548a17fb18054162aa1767f5513b1c
             root.exit_condition = Some(ExitCondition::Goto);
             return Ok(root.add_next_step(&step_name.ident))
         }
         ObjectType::Goto(GotoType::Flow, flow_name) => {
-<<<<<<< HEAD
             send_msg(&sender, MSG::NextFlow(flow_name.ident.clone()));
-=======
->>>>>>> 6dc023c53f548a17fb18054162aa1767f5513b1c
             root.exit_condition = Some(ExitCondition::Goto);
             return Ok(root.add_next_flow(&flow_name.ident))
         }
         ObjectType::Remember(name, variable) => {
             let lit = match_functions(variable, data)?;
             root = root.add_to_memory(&name.ident, lit.clone());
-<<<<<<< HEAD
 
             send_msg(
                 &sender,
                 MSG::Memorie(Memories::new(name.ident.to_owned(), lit.clone())),
             );
 
-=======
->>>>>>> 6dc023c53f548a17fb18054162aa1767f5513b1c
             data.memory.current.insert(name.ident.to_owned(), lit);
             Ok(root)
         }
