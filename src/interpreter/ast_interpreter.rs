@@ -199,7 +199,7 @@ fn match_actions(
     function: &ObjectType,
     mut root: MessageData,
     data: &mut Data,
-    instruction_index: usize,
+    instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match function {
@@ -301,18 +301,20 @@ fn match_actions(
 pub fn interpret_scope(
     actions: &Block,
     data: &mut Data,
-    instruction_index: usize,
+    instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let mut root = MessageData::default();
 
     for (action, instruction_info) in actions.commands.iter() {
         let instruction_total = instruction_info.index + instruction_info.total;
-        if instruction_index > instruction_total {
-            continue;
+        if let Some(instruction_index) = instruction_index {
+            if instruction_index >= instruction_total {
+                continue;
+            }
         }
 
-        if root.next_step.is_some() || root.next_flow.is_some() {
+        if root.exit_condition.is_some() {
             return Ok(root);
         }
         
@@ -322,10 +324,11 @@ pub fn interpret_scope(
                 return Ok(root);
             }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
+                root.exit_condition = Some(ExitCondition::Hold);
                 send_msg(
                     &sender,
                     MSG::Hold {
-                        instruction_index: instruction_info.index + 1,
+                        instruction_index: instruction_info.index,
                         step_vars: data.step_vars.clone(),
                     },
                 );

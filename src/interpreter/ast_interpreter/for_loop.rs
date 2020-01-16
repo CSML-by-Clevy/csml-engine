@@ -17,7 +17,7 @@ pub fn for_loop(
     range: &RangeInterval,
     mut root: MessageData,
     data: &mut Data,
-    instruction_index: usize,
+    instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let s_lit = expr_to_literal(expr, data)?;
@@ -41,9 +41,12 @@ pub fn for_loop(
         };
 
         root = root + interpret_scope(block, data, instruction_index, sender)?;
-        if root.exit_condition.is_some() {
+        if let Some(ExitCondition::Break) = root.exit_condition {
             root.exit_condition = None;
-            break;
+            break
+        }
+        else if root.exit_condition.is_some() {
+            break
         }
     }
     data.step_vars.remove(&ident.ident);

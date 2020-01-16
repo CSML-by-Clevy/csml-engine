@@ -36,19 +36,19 @@ fn key_value<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Spa
 
 pub fn parse_object<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, (object, _)) = 
+    let (s, (object, _)) =
     preceded(tag(L_BRACE),
-        tuple((
-            terminated(
-                map(
-                    separated_list(preceded(comment, tag(COMMA)), key_value),
-                    |tuple_vec| {
-                    tuple_vec.into_iter().map(|(k, v)| (String::from(k.fragment), v)).collect()
-                }),
-                preceded(comment, tag(R_BRACE)),
-            ),
-            opt(preceded(comment, tag(COLON)))
-        ))
+             terminated(
+                 tuple((
+                     map(
+                         separated_list(preceded(comment, tag(COMMA)), key_value),
+                         |tuple_vec| {
+                             tuple_vec.into_iter().map(|(k, v)| (String::from(k.fragment), v)).collect()
+                         }),
+                     opt(preceded(comment, tag(COMMA)))
+                 )),
+                 preceded(comment, tag(R_BRACE)),
+             ),
     )(s)?;
     let (s, end) = preceded(comment, get_interval)(s)?;
 

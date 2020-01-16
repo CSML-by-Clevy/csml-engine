@@ -14,7 +14,7 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
 
     let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
-    interpret(&flow, step, &mut context, &event, None, 0, None)
+    interpret(&flow, step, &mut context, &event, None, None, None)
 }
 
 fn check_error_component(vec: &MessageData) -> bool {

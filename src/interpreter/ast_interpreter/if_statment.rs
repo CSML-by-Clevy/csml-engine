@@ -15,7 +15,8 @@ use crate::parser::{
         Expr,
         IfStatement,
         Infix,
-        InstructionInfo
+        InstructionInfo,
+        Block,
     },
     literal::Literal,
 };
@@ -82,11 +83,31 @@ pub fn evaluate_condition(
     }
 }
 
+fn evaluate_if_condition(
+    cond: &Expr,
+    mut root: MessageData,
+    data: &mut Data,
+    consequence: &Block,
+    instruction_index: Option<usize>,
+    instruction_info: &InstructionInfo,
+    sender: &Option<mpsc::Sender<MSG>>,
+    then_branch: &Option<(Box<IfStatement>, InstructionInfo)>,
+) -> Result<MessageData, ErrorInfo> {
+    if valid_condition(cond, data) {
+        root = root + interpret_scope(consequence, data, instruction_index, sender)?;
+        return Ok(root);
+    }
+    if let Some((then, _)) = then_branch {
+        return solve_if_statments(then, root, data, instruction_index, instruction_info, sender);
+    }
+    return Ok(root);
+}
+
 pub fn solve_if_statments(
     statment: &IfStatement,
     mut root: MessageData,
     data: &mut Data,
-    instruction_index: usize,
+    instruction_index: Option<usize>,
     instruction_info: &InstructionInfo,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
@@ -96,33 +117,29 @@ pub fn solve_if_statments(
             consequence,
             then_branch,
         } => {
-            if instruction_index <= instruction_info.index {
-                if valid_condition(cond, data) {
-                    root = root + interpret_scope(consequence, data, instruction_index, sender)?;
-                    return Ok(root);
+            match instruction_index {
+                Some(index) if index <= instruction_info.index => {
+                    return evaluate_if_condition(cond, root, data, consequence, instruction_index, instruction_info, sender, then_branch);
                 }
-                if let Some((then, _)) = then_branch {
-                    return solve_if_statments(then, root, data, instruction_index, instruction_info, sender);
+                Some(index) => {
+                    if let Some((then_branch, then_index)) = then_branch {
+                        if index < then_index.index {
+                            root = root + interpret_scope(consequence, data, instruction_index, sender) ?;
+                            return Ok(root);
+                        }
+                        else {
+                            return solve_if_statments(&then_branch, root, data, instruction_index, instruction_info, sender);
+                        }
+                    }
+
+                    if index != instruction_info.index {
+                        root = root + interpret_scope(consequence, data, instruction_index, sender) ?;
+                    }
                 }
-                return Ok(root);
+                None => {
+                    return evaluate_if_condition(cond, root, data, consequence, instruction_index, instruction_info, sender, then_branch);
+                }
             }
-
-            if then_branch.is_some() {
-                let (then_branch, then_index) = then_branch.as_ref().unwrap();
-
-                if instruction_index < then_index.index {
-                    root = root + interpret_scope(consequence, data, instruction_index, sender) ?;
-                    return Ok(root);
-                }
-                else {
-                    return solve_if_statments(&then_branch, root, data, instruction_index, instruction_info, sender);
-                }
-            }
-
-            if instruction_index != instruction_info.index {
-                root = root + interpret_scope(consequence, data, instruction_index, sender) ?;
-            }
-
             Ok(root)
         }
         IfStatement::ElseStmt(consequence, ..) => {

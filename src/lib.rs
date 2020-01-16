@@ -40,7 +40,7 @@ pub fn execute_step(
     flow: &Flow,
     name: &str,
     mut data: Data,
-    instruction_index: usize,
+    instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match search_for(flow, name) {
@@ -65,7 +65,7 @@ pub fn interpret(
     memory: &mut Context,
     event: &Option<Event>,
     step_vars: Option<HashMap<String, Literal>>,
-    instruction_index: usize,
+    instruction_index: Option<usize>,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let curl = Easy::new();

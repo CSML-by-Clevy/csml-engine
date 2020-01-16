@@ -17,7 +17,7 @@ fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
 
     let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
-    interpret(&flow, step, &mut context, &event, None, 0, None)
+    interpret(&flow, step, &mut context, &event, None, None, None)
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn ok_divition3() {
 
     let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
-    match &interpret(&flow, "div3", &mut context, &None, None, 0, None) {
+    match &interpret(&flow, "div3", &mut context, &None, None, None, None) {
         MessageData {
             memories: None,
             messages: vec,
