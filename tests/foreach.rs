@@ -14,7 +14,7 @@ fn format_message(event: Option<Event>) -> MessageData {
 
     let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
 
-    interpret(&flow, "start", &mut context, &event, None, 0, None)
+    interpret(&flow, "start", &mut context, &event, None, None, None)
 }
 
 #[test]
