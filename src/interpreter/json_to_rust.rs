@@ -55,9 +55,9 @@ pub fn json_to_literal(
     match literal {
         Value::String(val) => Ok(Literal::string(val.to_owned(), interval)),
         Value::Number(val) => {
-            if let Some(float) = val.as_f64() {
+            if let (true, Some(float)) = (val.is_f64(), val.as_f64()) {
                 Ok(Literal::float(float, interval))
-            } else if let Some(int) = val.as_i64() {
+            } else if let (true, Some(int)) = (val.is_i64() , val.as_i64()){
                 Ok(Literal::int(int, interval))
             } else {
                 Err(ErrorInfo {

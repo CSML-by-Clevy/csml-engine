@@ -239,7 +239,7 @@ fn match_actions(
                     root,
                     sender,
                 ));
-            }
+            } else if let Ok(_) = match_functions(expr, data) {()}
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
