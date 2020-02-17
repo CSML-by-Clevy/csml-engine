@@ -1,20 +1,22 @@
-use crate::parser::ast::{DoType, Expr, IfStatement, Interval, ObjectType, RangeInterval};
+use crate::parser::ast::{
+    DoType, Expr, Function, IfStatement, Interval, ObjectType, RangeInterval,
+};
 
 pub fn interval_from_expr(expr: &Expr) -> Interval {
     match expr {
         Expr::Scope {
             range: RangeInterval { start, .. },
             ..
-        } => start.clone(),
-        Expr::ComplexLiteral(_e, RangeInterval { start, .. }) => start.clone(),
-        Expr::MapExpr(_e, RangeInterval { start, .. }) => start.clone(),
-        Expr::VecExpr(_e, RangeInterval { start, .. }) => start.clone(),
+        } => *start,
+        Expr::ComplexLiteral(_e, RangeInterval { start, .. }) => *start,
+        Expr::MapExpr(_e, RangeInterval { start, .. }) => *start,
+        Expr::VecExpr(_e, RangeInterval { start, .. }) => *start,
         Expr::ObjectExpr(fnexpr) => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
-        Expr::BuilderExpr(builder_type, _) => builder_type.get_interval().to_owned(),
-        Expr::ForEachExpr(_, _, _, _, RangeInterval { start, .. }) => start.clone(),
+        // Expr::BuilderExpr(builder_type, _) => builder_type.get_interval().to_owned(),
+        Expr::ForEachExpr(_, _, _, _, RangeInterval { start, .. }) => *start,
         Expr::IdentExpr(ident) => ident.interval.to_owned(),
-        Expr::LitExpr(literal) => literal.get_interval(),
+        Expr::LitExpr(literal) => literal.interval.to_owned(),
         Expr::IfExpr(ifstmt) => interval_from_if_stmt(ifstmt),
     }
 }
@@ -22,7 +24,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
 pub fn interval_from_if_stmt(ifstmt: &IfStatement) -> Interval {
     match ifstmt {
         IfStatement::IfStmt { ref cond, .. } => interval_from_expr(cond),
-        IfStatement::ElseStmt(_e, range) => range.start.clone(),
+        IfStatement::ElseStmt(_e, range) => range.start,
     }
 }
 
@@ -37,7 +39,7 @@ pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval {
         ObjectType::Assign(ident, ..) => ident.interval.to_owned(),
         ObjectType::As(ident, ..) => ident.interval.to_owned(),
         ObjectType::Import { step_name, .. } => step_name.interval.to_owned(),
-        ObjectType::Normal(ident, ..) => ident.interval.to_owned(),
+        ObjectType::Normal(Function { interval, .. }) => interval.to_owned(),
         ObjectType::Hold(interval) => interval.to_owned(),
         ObjectType::Break(interval) => interval.to_owned(),
     }

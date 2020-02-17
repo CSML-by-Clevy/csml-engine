@@ -1,0 +1,11 @@
+start:
+    say Length("Hello")
+    goto end
+
+step_0:
+	say Length(["Hello", "World"])
+	goto end
+
+step_1:
+	say Length(42)
+	goto end

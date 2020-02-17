@@ -1,26 +1,28 @@
-use crate::parser::{ast::*, parse_comments::comment, parse_ident::*, tokens::*, tools::*, context::*};
+use crate::parser::{
+    ast::*, context::*, parse_comments::comment, parse_idents::*, tokens::*, tools::*,
+};
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
-fn step_namet<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+fn step_name<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
     let (s, _) = preceded(comment, parse_import_step)(s)?;
-    let (s, name) = parse_ident(s)?;
+    let (s, name) = parse_idents(s)?;
     Ok((s, name))
 }
 
 fn as_name<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
     let (s, _) = preceded(comment, tag(AS))(s)?;
-    let (s, name) = parse_ident(s)?;
+    let (s, name) = parse_idents(s)?;
     Ok((s, name))
 }
 
 fn file_path<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
-    let (s, _) = preceded(comment, tag(FROMEFILE))(s)?;
-    let (s, name) = parse_ident(s)?;
+    let (s, _) = preceded(comment, tag(FROM_FILE))(s)?;
+    let (s, name) = parse_idents(s)?;
     Ok((s, name))
 }
 
 pub fn parse_import_opt<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, step_name) = step_namet(s)?;
+    let (s, step_name) = step_name(s)?;
     let (s, as_name) = opt(as_name)(s)?;
     let (s, file_path) = opt(file_path)(s)?;
     Ok((
@@ -33,11 +35,16 @@ pub fn parse_import_opt<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
     ))
 }
 
-pub fn parse_import<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
+pub fn parse_import<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, _) = tag(IMPORT)(s)?;
     let (s, name) = parse_import_opt(s)?;
 
-    let instruction_info = InstructionInfo{index:Context::get_index(), total:0};
+    let instruction_info = InstructionInfo {
+        index: Context::get_index(),
+        total: 0,
+    };
 
     Context::inc_index();
 
@@ -49,7 +56,7 @@ mod tests {
     use super::*;
     use nom::error::ErrorKind;
 
-    pub fn test_import<'a>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo)> {
+    pub fn test_import(s: Span) -> IResult<Span, (Expr, InstructionInfo)> {
         let var = parse_import(s);
         if let Ok((s, v)) = var {
             if s.fragment.len() != 0 {

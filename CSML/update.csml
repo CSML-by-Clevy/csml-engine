@@ -2,7 +2,7 @@ start:
     goto init_obj
 
 init_obj:
-    use Object(
+    do Object(
         value = "val",
         toto = Object( 
             plop = 4,
@@ -35,7 +35,7 @@ step2:
     goto end
 
 step3:
-    use [1] as vec
+    do [1] as vec
 
     say vec
     do vec[0] = 2
@@ -44,7 +44,7 @@ step3:
     goto end
 
 step4:
-    use [1] as vec
+    do [1] as vec
 
     say vec
     do vec.push(2)
@@ -53,7 +53,7 @@ step4:
     goto end
 
 step5:
-    use [1, 2] as vec
+    do [1, 2] as vec
 
     say vec
     do vec.pop()

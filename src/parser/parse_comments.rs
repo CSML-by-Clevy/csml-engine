@@ -45,7 +45,7 @@ pub fn comment<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Sp
     let val = many0(all_comments)(s);
     let (s, _) = match val {
         Ok(val) => val,
-        Err(Err::Error((s, _val))) | Err(Err::Failure((s, _val))) => return Ok((s.clone(), s)),
+        Err(Err::Error((s, _val))) | Err(Err::Failure((s, _val))) => return Ok((s, s)),
         Err(Err::Incomplete(i)) => return Err(Err::Incomplete(i)),
     };
     // Ok((s, s))

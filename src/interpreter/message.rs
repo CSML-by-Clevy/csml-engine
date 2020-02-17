@@ -1,10 +1,15 @@
 use crate::error_format::data::ErrorInfo;
+use crate::interpreter::ast_interpreter::send_msg;
 use crate::parser::literal::Literal;
+use crate::primitive::{object::PrimitiveObject, string::PrimitiveString};
 use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::ops::Add;
 use std::sync::mpsc;
-use crate::interpreter::ast_interpreter::send_msg;
+
+////////////////////////////////////////////////////////////////////////////////
+// DATA STRUCTURES
+////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone)]
 pub enum MessageType {
@@ -15,54 +20,50 @@ pub enum MessageType {
 #[derive(Debug, Clone)]
 pub struct Message {
     pub content_type: String,
-    pub content: Literal,
+    pub content: serde_json::Value,
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn question_to_json(mut value: Value) -> Value {
+    if let Value::Array(ref mut array) = value["buttons"] {
+        for elem in array.iter_mut() {
+            if let Value::Object(ref mut map) = elem {
+                map.insert("content_type".to_owned(), json!("button"));
+                let title = map["title"].clone();
+                let payload = map["title"].clone();
+                map.insert(
+                    "content".to_owned(),
+                    json!({"title": title, "payload": payload}),
+                );
+            }
+        }
+    }
+    value
+}
+
+fn button_to_json(name: Value, mut value: Value) -> Value {
+    if let Value::Object(ref mut map) = value {
+        map.insert("content_type".to_owned(), name);
+        let title = map["title"].clone();
+        let payload = map["title"].clone();
+        map.insert(
+            "content".to_owned(),
+            json!({"title": title, "payload": payload}),
+        );
+    }
+    value
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// METHOD FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 impl Message {
     pub fn new(literal: Literal) -> Self {
-        match literal.clone() {
-            Literal::StringLiteral { interval, .. } => Self {
-                content_type: "text".to_owned(),
-                content: Literal::name_object("text".to_lowercase(), &literal, interval.clone()),
-            },
-            Literal::IntLiteral { interval, .. }
-            | Literal::FloatLiteral { interval, .. }
-            | Literal::BoolLiteral { interval, .. } => Self {
-                content_type: "text".to_owned(),
-                content: Literal::name_object(
-                    "text".to_lowercase(),
-                    &Literal::string(literal.to_string(), interval.clone()),
-                    interval,
-                ),
-            },
-            Literal::ArrayLiteral { .. } => Self {
-                content_type: "array".to_owned(),
-                content: literal,
-            },
-            Literal::ObjectLiteral {
-                properties: value,
-                interval,
-            } => Self {
-                content_type: "object".to_owned(),
-                content: Literal::object(value, interval),
-            },
-            Literal::FunctionLiteral {
-                name,
-                value,
-                interval: _,
-            } => Self {
-                content_type: name.to_owned(),
-                content: *value,
-            },
-            Literal::Null { interval, .. } => Self {
-                content_type: "text".to_owned(),
-                content: Literal::name_object(
-                    "text".to_lowercase(),
-                    &Literal::null(interval.to_owned()),
-                    interval.clone(),
-                ),
-            },
-        }
+        literal.primitive.to_msg(literal.content_type)
     }
 
     pub fn add_to_message(root: MessageData, action: MessageType) -> MessageData {
@@ -74,71 +75,40 @@ impl Message {
 
     pub fn message_to_json(self) -> Value {
         let mut map: Map<String, Value> = Map::new();
-        let value = self.content.to_json();
+
         match &self.content_type {
-            name if name == "button" => return button_to_json(json!(name), value),
+            name if name == "button" => {
+                map.insert("content_type".to_owned(), json!(name));
+                map.insert(
+                    "content".to_owned(),
+                    button_to_json(json!(name), self.content),
+                );
+            }
             name if name == "question" => {
                 map.insert("content_type".to_owned(), json!(name));
-                map.insert("content".to_owned(), question_to_json(value));
+                map.insert("content".to_owned(), question_to_json(self.content));
             }
-            name if name == "button" => return button_to_json(json!(name), value),
             name => {
                 map.insert("content_type".to_owned(), json!(name));
-                map.insert("content".to_owned(), value);
+                map.insert("content".to_owned(), self.content);
             }
         }
         Value::Object(map)
     }
-}
-
-fn question_to_json(value: Value) -> Value {
-    let mut map: Map<String, Value> = Map::new();
-
-    match value["title"].clone() {
-        Value::Null => (),
-        val => {
-            map.insert("title".to_owned(), val);
-        }
-    };
-
-    let buttons = match value["buttons"].clone() {
-        Value::Array(array) => array.iter().fold(vec![], |mut vec, elem| {
-            vec.push(button_to_json(json!("button"), elem["button"].clone()));
-            vec
-        }),
-        _ => vec![],
-    };
-    map.insert("buttons".to_owned(), json!(buttons));
-    Value::Object(map)
-}
-
-fn button_to_json(name: Value, value: Value) -> Value {
-    let mut map: Map<String, Value> = Map::new();
-    map.insert("content_type".to_owned(), name);
-    map.insert(
-        "content".to_owned(),
-        json!({"title": value["title"].clone(), "payload": value["payload"].clone()}),
-    );
-    map.insert("accepts".to_owned(), value["accept"].clone());
-    Value::Object(map)
 }
 
 #[derive(Debug, Clone)]
 pub struct Memories {
     pub key: String,
-    pub value: Literal,
+    pub value: Value,
 }
 
 impl Memories {
     pub fn new(key: String, value: Literal) -> Self {
-        Self { key, value }
-    }
-
-    pub fn memorie_to_jsvalue(self) -> Value {
-        let mut map: Map<String, Value> = Map::new();
-        map.insert("key".to_owned(), json!(self.key));
-        map.insert("value".to_owned(), self.value.to_json());
-        Value::Object(map)
+        Self {
+            key,
+            value: value.primitive.to_json(),
+        }
     }
 }
 
@@ -148,11 +118,19 @@ pub enum MSG {
     Message(Message),
     Hold {
         instruction_index: usize,
-        step_vars: HashMap<String, Literal>,
+        step_vars: serde_json::Value,
     },
     NextFlow(String),
     NextStep(String),
     Error(Message),
+}
+
+pub fn step_vars_to_json(map: HashMap<String, Literal>) -> Value {
+    let mut json_map = Map::new();
+    for (key, val) in map.iter() {
+        json_map.insert(key.to_owned(), val.primitive.to_json());
+    }
+    serde_json::json!(json_map)
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -183,7 +161,7 @@ impl Default for MessageData {
             instruction_index: 0,
             next_flow: None,
             next_step: None,
-            exit_condition: None
+            exit_condition: None,
         }
     }
 }
@@ -231,26 +209,18 @@ impl MessageData {
         self
     }
 
-    pub fn add_to_memory(mut self, key: &str, value: Literal) -> Self {
+    pub fn add_to_memory(&mut self, key: &str, value: Literal) {
         if let Some(ref mut vec) = self.memories {
-            if let Literal::ObjectLiteral { .. } = &value {
-                vec.push(Memories {
-                    key: key.to_owned(),
-                    value,
-                });
-            } else {
-                vec.push(Memories {
-                    key: key.to_owned(),
-                    value,
-                });
-            }
+            vec.push(Memories {
+                key: key.to_owned(),
+                value: value.primitive.to_json(),
+            });
         } else {
             self.memories = Some(vec![Memories {
                 key: key.to_owned(),
-                value: value,
+                value: value.primitive.to_json(),
             }])
-        }
-        self
+        };
     }
 
     pub fn add_next_step(mut self, next_step: &str) -> Self {
@@ -270,27 +240,34 @@ impl MessageData {
         match result {
             Ok(v) => v,
             Err(ErrorInfo { message, interval }) => {
-                let msg = Literal::string(format!(
-                    "{} at line {}, column {}", message, interval.line, interval.column
-                ), interval.clone());
-
-                send_msg(sender, MSG::Error(Message {
-                    content_type: "error".to_owned(),
-                    content: Literal::name_object(
-                        "text".to_owned(),
-                        &msg,
-                        interval.clone(),
+                let msg = PrimitiveString::get_literal(
+                    "string",
+                    &format!(
+                        "{} at line {}, column {}",
+                        message, interval.line, interval.column
                     ),
-                }));
+                    interval,
+                );
+
+                let mut hashmap = HashMap::new();
+
+                hashmap.insert("error".to_owned(), msg);
+
+                let literal = PrimitiveObject::get_literal("error", &hashmap, interval);
+
+                send_msg(
+                    sender,
+                    MSG::Error(Message {
+                        content_type: "error".to_owned(),
+                        content: literal.primitive.to_json(),
+                    }),
+                );
+
                 Self {
                     memories: None,
                     messages: vec![Message {
                         content_type: "error".to_owned(),
-                        content: Literal::name_object(
-                            "text".to_owned(),
-                            &msg,
-                            interval,
-                        ),
+                        content: literal.primitive.to_json(),
                     }],
                     step_vars: None,
                     next_flow: None,

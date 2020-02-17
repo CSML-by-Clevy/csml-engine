@@ -1,13 +1,16 @@
 use crate::error_format::data::ErrorInfo;
+use crate::interpreter::ast_interpreter::interpret_scope;
 use crate::interpreter::{
-    ast_interpreter::interpret_scope,
-    data::Data,
-    message::MSG,
-    message::*,
-    variable_handler::expr_to_literal::expr_to_literal,
+    data::Data, message::MSG, message::*, variable_handler::expr_to_literal::expr_to_literal,
 };
-use crate::parser::{ast::*, literal::Literal};
+use crate::parser::ast::*;
+use crate::parser::literal::Literal;
+use crate::primitive::int::PrimitiveInt;
 use std::sync::mpsc;
+
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
 
 pub fn for_loop(
     ident: &Identifier,
@@ -20,33 +23,35 @@ pub fn for_loop(
     instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-    let s_lit = expr_to_literal(expr, data)?;
-    let vec = match s_lit {
-        Literal::ArrayLiteral { items, .. } => items,
-        _ => {
+    let literal = expr_to_literal(expr, data, &mut root, sender)?;
+
+    let array = match Literal::get_value::<Vec<Literal>>(&literal.primitive) {
+        Ok(res) => res,
+        Err(_) => {
             return Err(ErrorInfo {
-                message: "invalid Expression in foreach loop, Expression is not iterable".to_owned(),
+                message: "invalid Expression in foreach loop, Expression is not iterable"
+                    .to_owned(),
                 interval: range.start.to_owned(),
             })
         }
     };
 
-    for (value, elem) in vec.iter().enumerate() {
-        data.step_vars.insert(ident.ident.to_owned(), elem.clone());
+    for (value, elem) in array.iter().enumerate() {
+        data.step_vars
+            .insert(ident.ident.to_owned(), elem.to_owned());
         if let Some(index) = i {
             data.step_vars.insert(
                 index.ident.to_owned(),
-                Literal::int(value as i64, elem.get_interval()),
+                PrimitiveInt::get_literal("int", value as i64, elem.interval.to_owned()),
             );
         };
 
         root = root + interpret_scope(block, data, instruction_index, sender)?;
         if let Some(ExitCondition::Break) = root.exit_condition {
             root.exit_condition = None;
-            break
-        }
-        else if root.exit_condition.is_some() {
-            break
+            break;
+        } else if root.exit_condition.is_some() {
+            break;
         }
     }
     data.step_vars.remove(&ident.ident);

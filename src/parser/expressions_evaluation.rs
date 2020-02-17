@@ -20,7 +20,7 @@ pub fn and_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a
     Ok((rest, Infix::And))
 }
 
-pub fn notequal_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+pub fn not_equal_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
     let (rest, ..) = tag(NOT_EQUAL)(s)?;
     Ok((rest, Infix::NotEqual))
 }
@@ -35,28 +35,28 @@ pub fn parse_match<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>
     Ok((rest, Infix::Match))
 }
 
-pub fn greaterthanequal_operator<'a, E: ParseError<Span<'a>>>(
+pub fn greater_than_equal_operator<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Infix, E> {
     let (rest, ..) = tag(GREATER_THAN_EQUAL)(s)?;
     Ok((rest, Infix::GreaterThanEqual))
 }
 
-pub fn lessthanequal_operator<'a, E: ParseError<Span<'a>>>(
+pub fn less_than_equal_operator<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Infix, E> {
     let (rest, ..) = tag(LESS_THAN_EQUAL)(s)?;
     Ok((rest, Infix::LessThanEqual))
 }
 
-pub fn greaterthan_operator<'a, E: ParseError<Span<'a>>>(
+pub fn greater_than_operator<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Infix, E> {
     let (rest, ..) = tag(GREATER_THAN)(s)?;
     Ok((rest, Infix::GreaterThan))
 }
 
-pub fn lessthan_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+pub fn less_than_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
     let (rest, ..) = tag(LESS_THAN)(s)?;
     Ok((rest, Infix::LessThan))
 }
@@ -65,13 +65,13 @@ pub fn parse_infix_operators<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Infix, E> {
     alt((
-        notequal_operator,
+        not_equal_operator,
         parse_match,
         equal_operator,
-        greaterthanequal_operator,
-        lessthanequal_operator,
-        greaterthan_operator,
-        lessthan_operator,
+        greater_than_equal_operator,
+        less_than_equal_operator,
+        greater_than_operator,
+        less_than_operator,
     ))(s)
 }
 
@@ -112,7 +112,7 @@ fn parse_postfix_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<S
     Ok((
         s,
         // TODO: InfixExpr clone in not operator or create a new expr for not??
-        Expr::InfixExpr(operator, Box::new(expr.clone()), Box::new(expr)), 
+        Expr::InfixExpr(operator, Box::new(expr.clone()), Box::new(expr)),
     ))
 }
 
@@ -127,24 +127,24 @@ fn parse_infix_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a
                 Expr::InfixExpr(operator, Box::new(expr1), Box::new(expr2)),
             ))
         }
-        Err(_) => Ok((s, expr1))
+        Err(_) => Ok((s, expr1)),
     }
 }
 
 // ##################################### Arithmetic Operators
 
-fn adition_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
-    let (s, _) = tag(ADITION)(s)?;
-    Ok((s, Infix::Adition))
+fn addition_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+    let (s, _) = tag(ADDITION)(s)?;
+    Ok((s, Infix::Addition))
 }
 
-fn substraction_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
+fn subtraction_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
     let (s, _) = tag(SUBTRACTION)(s)?;
-    Ok((s, Infix::Substraction))
+    Ok((s, Infix::Subtraction))
 }
 
 fn parse_item_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Infix, E> {
-    alt((substraction_operator, adition_operator))(s)
+    alt((subtraction_operator, addition_operator))(s)
 }
 
 fn parse_item<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
@@ -178,10 +178,7 @@ fn parse_term_operator<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span
 fn parse_term<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
     let (s, init) = parse_basic_expr(s)?;
     fold_many0(
-        tuple((
-            preceded(comment, parse_term_operator),
-            parse_basic_expr,
-        )),
+        tuple((preceded(comment, parse_term_operator), parse_basic_expr)),
         init,
         |acc, v: (Infix, Expr)| Expr::InfixExpr(v.0, Box::new(acc), Box::new(v.1)),
     )(s)
@@ -192,7 +189,7 @@ mod tests {
     use super::*;
     use nom::error::ErrorKind;
 
-    pub fn test_expressions<'a>(s: Span<'a>) -> IResult<Span<'a>, Expr> {
+    pub fn test_expressions(s: Span) -> IResult<Span, Expr> {
         let var = preceded(comment, operator_precedence)(s);
         if let Ok((s, v)) = var {
             if s.fragment.len() != 0 {

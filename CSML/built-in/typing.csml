@@ -1,0 +1,10 @@
+start:
+	goto end
+
+typing_0:
+	say Typing()
+	goto end
+
+typing_1:
+	say Typing(10)
+	goto end

@@ -1,0 +1,119 @@
+start:
+    goto end
+
+step_0:
+    remember obj = {}
+
+    say obj.clear()
+
+    do obj.insert(42, "Hello")
+
+    say obj.clear()
+
+step_1:
+    remember obj = {}
+
+    say obj.contains("42")
+
+    do obj.insert("42", "Hello")
+
+    say obj.contains("42")
+
+step_2:
+    remember obj = {}
+
+    say obj.remove("42")
+
+    do obj.insert("Hello", 42)
+
+    do obj.remove("Hello")
+
+step_3:
+    remember obj = {}
+
+    say obj.is_empty()
+    say obj.length()
+
+    do obj.insert("42", "Hello")
+
+    say obj.is_empty()
+    say obj.length()
+
+    do obj.clear()
+
+    say obj.is_empty()
+    say obj.length()
+
+step_4:
+    remember obj = {}
+
+    do obj.insert("toto", "tutu")
+
+    say obj.contains("toto")
+
+step_5:
+    remember obj = {}
+
+    say obj.keys()
+    say obj.values()
+
+    do obj["_1"] = "toto"
+    do obj.insert("_2", "toto")
+    do obj._3 = "toto"
+
+    foreach (k) in obj.keys() {
+        say obj.contains(k)
+    }
+
+    foreach (v) in obj.values() {
+        say v
+    }
+
+step_6:
+    do obj = {}
+
+    say obj.keys()
+    say obj.values()
+
+    do obj["_1"] = "toto"
+    do obj.insert("_2", "toto")
+    do obj._3 = "toto"
+
+    foreach (k) in obj.keys() {
+        say obj.contains(k)
+    }
+
+    foreach (v) in obj.values() {
+        say v
+    }
+
+step_7:
+    use {} as obj
+
+    say obj.keys()
+    say obj.values()
+
+    do obj["_1"] = "toto"
+    do obj.insert("_2", "toto")
+    do obj._3 = "toto"
+
+    foreach (k) in obj.keys() {
+        say obj.contains(k)
+    }
+
+    foreach (v) in obj.values() {
+        say v
+    }
+
+
+step_8:
+    use {} as obj
+
+    do obj.insert("Hello", "Hello")
+    do obj.insert("World", "World")
+
+    do obj.clear_values()
+
+    foreach (value) in obj.values() {
+        say value
+    }

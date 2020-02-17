@@ -1,0 +1,55 @@
+start:
+    goto end
+
+step_0:
+    remember vec = []
+
+    do vec.push(42)
+
+step_1:
+    remember vec = [42]
+
+    say vec.pop()
+    say vec
+
+step_2:
+    remember vec = [42]
+
+    say vec.is_empty()
+
+    do vec.clear()
+
+    say vec.is_empty()
+
+step_3:
+    remember vec = [42]
+
+    do vec.insert_at(0, 24)
+
+    say vec.length()
+
+    say vec[0]
+
+    do vec.remove_at(0)
+
+    say vec[0]
+
+step_4:
+    remember vec = []
+
+    do vec.insert_at(-1, 42)
+
+step_5:
+    remember vec = []
+
+    do vec.insert_at(1, 42)
+
+step_6:
+    remember vec = []
+
+    do vec.remove_at(-1)
+
+step_7:
+    remember vec = []
+
+    do vec.remove_at(1)

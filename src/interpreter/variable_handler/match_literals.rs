@@ -1,110 +1,58 @@
+// use crate::error_format::data::ErrorInfo;
 use crate::parser::literal::Literal;
+use crate::primitive::{array::PrimitiveArray, boolean::PrimitiveBoolean, object::PrimitiveObject};
 
-fn priority_match<'a>(name: &str, lit: &'a Literal) -> Option<&'a Literal> {
-    match name {
-        "button" => {
-            if let Literal::ObjectLiteral { properties, .. } = lit {
-                properties.get("accept")
-            } else {
-                Some(lit)
-            }
-        }
-        _ => Some(lit),
+fn get_accept(lit: &Literal) -> Option<&Literal> {
+    let val = lit
+        .primitive
+        .as_any()
+        .downcast_ref::<PrimitiveObject>()?
+        .value
+        .get("accepts")?;
+    Some(val)
+}
+
+// TODO: change when exec
+fn containst(lit1: &Literal, lit2: &Literal) -> Literal {
+    match lit1.primitive.as_any().downcast_ref::<PrimitiveArray>() {
+        Some(array) => PrimitiveBoolean::get_literal(
+            "boolean",
+            array.value.contains(lit2),
+            lit1.interval.to_owned(),
+        ),
+        None => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
     }
 }
 
-//TODO: Refactor with macros
 pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
-    match (&lit1, &lit2) {
-        (
-            Literal::ObjectLiteral {
-                properties: p1,
-                interval,
-            },
-            Literal::ObjectLiteral { properties: p2, .. },
-        ) => match (p1.get("button"), p2.get("button")) {
-            (Some(l1), Some(l2)) => {
-                match (priority_match("button", l1), priority_match("button", l2)) {
-                    (Some(l1), Some(l2)) => match_obj(l1, l2),
-                    (_, _) => Literal::boolean(false, interval.to_owned()),
-                }
-            }
-            (_, _) => Literal::boolean(false, interval.to_owned()),
-        },
-        (
-            Literal::ObjectLiteral {
-                properties,
-                interval,
-            },
-            lit,
-        ) => match properties.get("button") {
-            Some(l1) => match priority_match("button", l1) {
-                Some(l1) => match_obj(l1, lit),
-                _ => Literal::boolean(false, interval.to_owned()),
-            },
-            _ => Literal::boolean(false, interval.to_owned()),
-        },
-        (lit, Literal::ObjectLiteral { properties, .. }) => match properties.get("button") {
-            Some(l2) => match priority_match("button", l2) {
-                Some(l2) => match_obj(l2, lit),
-                _ => Literal::boolean(false, lit.get_interval()),
-            },
-            _ => Literal::boolean(false, lit.get_interval()),
-        },
-        (
-            Literal::FunctionLiteral {
-                name: n1,
-                value: v1,
-                ..
-            },
-            Literal::FunctionLiteral {
-                name: n2,
-                value: v2,
-                ..
-            },
-        ) if n1 == "button" && n2 == "button" => {
-            match (priority_match(n1, v1), priority_match(n2, v2)) {
+    match (&lit1.content_type, &lit2.content_type) {
+        (b1, b2) if (b1 == "button" || b1 == "object") && (b2 == "button" || b2 == "object") => {
+            match (get_accept(lit1), get_accept(lit2)) {
                 (Some(l1), Some(l2)) => match_obj(l1, l2),
-                (_, _) => Literal::boolean(false, v1.get_interval()),
+                (_, _) => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
             }
         }
-        (
-            Literal::FunctionLiteral {
-                name: n1,
-                value: v1,
-                ..
-            },
-            lit,
-        ) if n1 == "button" => match priority_match(n1, v1) {
-            Some(l1) => match_obj(l1, lit),
-            _ => Literal::boolean(false, v1.get_interval()),
+
+        (.., button) if (button == "button" || button == "object") => match get_accept(lit2) {
+            Some(l2) => match_obj(lit1, l2),
+            None => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
         },
-        (
-            lit,
-            Literal::FunctionLiteral {
-                name: n2,
-                value: v2,
-                ..
-            },
-        ) if n2 == "button" => match priority_match(n2, v2) {
-            Some(l2) => match_obj(lit, l2),
-            _ => Literal::boolean(false, lit.get_interval()),
+        (button, ..) if (button == "button" || button == "object") => match get_accept(lit1) {
+            Some(l1) => match_obj(l1, lit2),
+            None => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
         },
 
-        (
-            Literal::ArrayLiteral {
-                items: i1,
-                interval,
-            },
-            Literal::ArrayLiteral { items: i2, .. },
-        ) => Literal::boolean(i1 == i2, interval.to_owned()),
-        (Literal::ArrayLiteral { items, interval }, lit) => {
-            Literal::boolean(items.contains(lit), interval.to_owned())
+        (array1, array2) if array1 == "array" && array2 == "array" => {
+            PrimitiveBoolean::get_literal("boolean", lit1 == lit2, lit1.interval.to_owned())
         }
-        (lit, Literal::ArrayLiteral { items, interval }) => {
-            Literal::boolean(items.contains(lit), interval.to_owned())
-        }
-        (l1, l2) => Literal::boolean(l1 == l2, l1.get_interval()),
+        (.., array) if array == "array" => containst(lit2, lit1),
+        (array, ..) if array == "array" => containst(lit1, lit2),
+
+        (..) => PrimitiveBoolean::get_literal(
+            "boolean",
+            lit1.primitive == lit2.primitive.to_owned(),
+            lit1.interval,
+        ),
     }
 }
 
@@ -113,6 +61,8 @@ mod tests {
     use super::*;
     use crate::interpreter::builtins::reserved_functions::button;
     use crate::parser::{ast::Interval, tokens::*};
+    use crate::primitive::array::PrimitiveArray;
+    use crate::primitive::string::PrimitiveString;
     use std::collections::HashMap;
 
     fn gen_inter() -> Interval {
@@ -125,10 +75,10 @@ mod tests {
 
         map.insert(
             DEFAULT.to_owned(),
-            Literal::string(name.to_owned(), interval.clone()),
+            PrimitiveString::get_literal("string", name, interval),
         );
 
-        match button(map, "button".to_owned(), &interval) {
+        match button(map, "button".to_owned(), interval) {
             Ok(lit) => lit,
             Err(..) => panic!("gen button error"),
         }
@@ -140,38 +90,37 @@ mod tests {
 
         map.insert(
             DEFAULT.to_owned(),
-            Literal::string(name.to_owned(), interval.clone()),
+            PrimitiveString::get_literal("string", name, interval),
         );
         map.insert(
-            "accept".to_owned(),
-            Literal::array(
-                vec![
-                    Literal::string("val1".to_owned(), interval.clone()),
-                    Literal::string("val2".to_owned(), interval.clone()),
-                    Literal::string("val3".to_owned(), interval.clone()),
+            "accepts".to_owned(),
+            PrimitiveArray::get_literal(
+                "array",
+                &vec![
+                    PrimitiveString::get_literal("string", "val1", interval),
+                    PrimitiveString::get_literal("string", "val2", interval),
+                    PrimitiveString::get_literal("string", "val3", interval),
                 ],
                 gen_inter(),
             ),
         );
 
-        match button(map, "button".to_owned(), &interval) {
+        match button(map, "button".to_owned(), interval) {
             Ok(lit) => lit,
             Err(..) => panic!("gen button error"),
         }
     }
 
     fn match_lit_ok(lit1: &Literal, lit2: &Literal) {
-        match match_obj(&lit1, &lit2) {
-            Literal::BoolLiteral { value: true, .. } => {}
+        match match_obj(&lit1, &lit2).primitive.as_bool() {
+            boolean if boolean => {}
             _ => panic!("\n\nlit1: {:?}\n\n lit2: {:?}\n", lit1, lit2),
         }
     }
 
     fn match_lit_err(lit1: &Literal, lit2: &Literal) {
-        match match_obj(&lit1, &lit2) {
-            Literal::BoolLiteral { value: true, .. } => {
-                panic!("\n\nlit1: {:?}\n\n lit2: {:?}\n", lit1, lit2)
-            }
+        match match_obj(&lit1, &lit2).primitive.as_bool() {
+            boolean if boolean => panic!("\n\n lit1: {:#?}\n\n lit2: {:#?}\n", lit1, lit2),
             _ => {}
         }
     }
@@ -187,7 +136,7 @@ mod tests {
     #[test]
     fn ok_match_button_str() {
         let bt1 = gen_button("hola");
-        let bt2 = Literal::string("hola".to_owned(), gen_inter());
+        let bt2 = PrimitiveString::get_literal("string", "hola", gen_inter());
 
         match_lit_ok(&bt1, &bt2);
         match_lit_ok(&bt2, &bt1);
@@ -196,7 +145,7 @@ mod tests {
     #[test]
     fn ok_match_barray_str() {
         let bt1 = gen_button_multi_accept("hola");
-        let bt2 = Literal::string("hola".to_owned(), gen_inter());
+        let bt2 = PrimitiveString::get_literal("string", "hola", gen_inter());
 
         match_lit_ok(&bt1, &bt2);
         match_lit_ok(&bt2, &bt1);

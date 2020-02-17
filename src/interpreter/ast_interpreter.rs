@@ -8,17 +8,18 @@ use crate::interpreter::{
         if_statment::{evaluate_condition, solve_if_statments},
     },
     builtins::{api_functions::*, reserved_functions::*},
-    data::Data,
+    data::{Data, MemoryType},
     message::*,
     variable_handler::{
+        exec_path_actions,
         expr_to_literal::expr_to_literal,
-        get_index, get_literal, get_string_from_complexstring, get_var, get_var_from_mem,
+        get_string_from_complexstring, get_var, get_var_from_mem,
         interval::{interval_from_expr, interval_from_reserved_fn},
-        memory::search_in_memory_type,
-        object::update_value_in_object,
+        memory::{save_literal_in_mem, search_in_memory_type},
     },
 };
 use crate::parser::{ast::*, literal::Literal, tokens::*};
+use crate::primitive::null::PrimitiveNull;
 use std::collections::HashMap;
 use std::sync::mpsc;
 
@@ -32,7 +33,6 @@ fn check_if_ident(expr: &Expr) -> bool {
     match expr {
         Expr::LitExpr { .. }
         | Expr::IdentExpr(..)
-        | Expr::BuilderExpr(..)
         | Expr::ComplexLiteral(..)
         | Expr::ObjectExpr(..) => true,
         _ => false,
@@ -46,46 +46,55 @@ pub fn match_builtin(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     match name {
+        // CUSTOM
         TYPING => typing(args, name.to_owned(), interval),
         WAIT => wait(args, name.to_owned(), interval),
         URL => url(args, name.to_owned(), interval),
         IMAGE => img(args, name.to_owned(), interval),
-        ONE_OF => one_of(args, interval),
-        SHUFFLE => shuffle(args, interval),
         QUESTION => question(args, name.to_owned(), interval),
-
-        LENGTH => length(args, interval),
-        FIND => find(args, interval),
-        RANDOM => random(&interval),
-        FLOOR => floor(args, interval),
         VIDEO => video(args, name.to_owned(), interval),
         AUDIO => audio(args, name.to_owned(), interval),
-
-        BUTTON => button(args, name.to_owned(), &interval),
-        FN => api(args, interval, data),
+        BUTTON => button(args, name.to_owned(), interval),
         OBJECT => object(args, interval),
+
+        // DEFAULT
+        FN => api(args, interval, data),
+        ONE_OF => one_of(args, interval),
+        SHUFFLE => shuffle(args, interval),
+        LENGTH => length(args, interval),
+        FIND => find(args, interval),
+        RANDOM => random(interval),
+        FLOOR => floor(args, interval),
         _ => text(args, name.to_owned(), interval),
     }
 }
 
-pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
+pub fn match_functions(
+    action: &Expr,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
     match action {
         Expr::ObjectExpr(ObjectType::As(name, expr)) => {
-            let lit = match_functions(expr, data)?;
+            let lit = match_functions(expr, data, root, sender)?;
             data.step_vars.insert(name.ident.to_owned(), lit.clone());
             Ok(lit)
         }
-        Expr::ComplexLiteral(vec, RangeInterval{start, ..}) => Ok(get_string_from_complexstring(vec, start.to_owned(), data)),
-        Expr::InfixExpr(infix, exp_1, exp_2) => Ok(evaluate_condition(infix, exp_1, exp_2, data)?),
-        Expr::IdentExpr(ident) => match get_var(ident.to_owned(), data) {
+        Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => Ok(
+            get_string_from_complexstring(vec, start.to_owned(), data, root, sender),
+        ),
+        Expr::InfixExpr(infix, exp_1, exp_2) => {
+            Ok(evaluate_condition(infix, exp_1, exp_2, data, root, sender)?)
+        }
+        Expr::IdentExpr(ident) => match get_var(ident.to_owned(), data, root, sender) {
             Ok(val) => Ok(val),
-            Err(_e) => Ok(Literal::null(ident.interval.to_owned())),
+            Err(e) => Err(e),
         },
         Expr::ObjectExpr(ObjectType::Normal(..))
         | Expr::MapExpr(..)
-        | Expr::BuilderExpr(..)
         | Expr::LitExpr { .. }
-        | Expr::VecExpr(..) => Ok(expr_to_literal(action, data)?),
+        | Expr::VecExpr(..) => Ok(expr_to_literal(action, data, root, sender)?),
         e => Err(ErrorInfo {
             message: format!("invalid function {:?}", e),
             interval: interval_from_expr(e),
@@ -93,106 +102,34 @@ pub fn match_functions(action: &Expr, data: &mut Data) -> Result<Literal, ErrorI
     }
 }
 
-pub fn get_path(path: &[Expr], data: &mut Data) -> Result<Vec<Path>, ErrorInfo> {
-    let mut vec = vec![];
-
-    for node in path.iter() {
-        match node {
-            Expr::IdentExpr(Identifier{ident, index, ..}) => {
-                match get_index(index.to_owned(), data)? {
-                    Some(lit) => vec.push(Path::AtIndex(ident.to_owned(), lit.to_owned())),
-                    None => vec.push(Path::Normal(ident.to_owned())),
-                };
-            },
-            Expr::ObjectExpr(ObjectType::Normal(name, expr)) =>
-                vec.push(Path::Exec(name.ident.to_owned(), expr_to_literal(expr, data)? ))
-            ,
-            err => return Err( ErrorInfo{
-                message: format!("Bad Expression Type: 'in value.expression' expression need to be of type identifier"),
-                interval: interval_from_expr(err),
-            }),
-        };
-    }
-    Ok(vec)
-}
-
 fn get_var_info<'a>(
     expr: &'a Expr,
     data: &'a mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<
     (
         &'a mut Literal,
         String,
-        String,
-        Option<Vec<Path>>,
-        Option<Literal>,
+        MemoryType,
+        Option<Vec<(Interval, PathLiteral)>>,
     ),
     ErrorInfo,
 > {
     match expr {
-        Expr::BuilderExpr(BuilderType::Normal(var), path) => {
-            let index = get_index(var.index.clone(), data)?;
-            let path = get_path(path, data)?;
-            let (lit, name, mem_type) = get_var_from_mem(var.to_owned(), data)?;
-            Ok((lit, name, mem_type, Some(path), index))
-        }
-        Expr::IdentExpr(var) => {
-            let index = get_index(var.index.clone(), data)?;
-            let (lit, name, mem_type) = match search_in_memory_type(var, data) {
-                Ok(_) => get_var_from_mem(var.to_owned(), data)?,
-                Err(_) => {
-                    let lit = Literal::null(var.interval.to_owned());
-                    data.step_vars.insert(var.ident.to_owned(), lit.clone());
-                    get_var_from_mem(var.to_owned(), data)?
-                }
-            };
-            Ok((lit, name, mem_type, None, index))
-        }
+        Expr::IdentExpr(var) => match search_in_memory_type(var, data) {
+            Ok(_) => get_var_from_mem(var.to_owned(), data, root, sender),
+            Err(_) => {
+                let lit = PrimitiveNull::get_literal("null", var.interval.to_owned());
+                data.step_vars.insert(var.ident.to_owned(), lit);
+                get_var_from_mem(var.to_owned(), data, root, sender)
+            }
+        },
         e => Err(ErrorInfo {
-            message: format!("No methods available for this Literal type"),
+            message: "expression need to be of type variable".to_owned(),
             interval: interval_from_expr(e),
         }),
     }
-}
-
-fn update_literal(
-    lit: &mut Literal,
-    path: Option<Vec<Path>>,
-    new_lit: Option<Literal>,
-    interval: Interval,
-) -> Result<(), ErrorInfo> {
-    match path {
-        None => {
-            if let Some(new_lit) = new_lit {
-                *lit = new_lit;
-            }
-            Ok(())
-        }
-        Some(path) => {
-            update_value_in_object(lit, new_lit, &path, &interval)?;
-            Ok(())
-        }
-    }
-}
-
-fn save_literal_in_mem(
-    lit: Literal,
-    name: String,
-    mem_type: String,
-    data: &mut Data,
-    mut root: MessageData,
-    sender: &Option<mpsc::Sender<MSG>>,
-) -> MessageData {
-    if mem_type == "remember" {
-        // add mesage to rememeber new value
-        root = root.add_to_memory(&name, lit.clone());
-        // add value in current mem
-        send_msg(sender, MSG::Memorie(Memories::new(name.clone(), lit.clone())));
-        data.memory.current.insert(name, lit);
-    } else {
-        data.step_vars.insert(name, lit);
-    }
-    root
 }
 
 fn match_actions(
@@ -204,57 +141,47 @@ fn match_actions(
 ) -> Result<MessageData, ErrorInfo> {
     match function {
         ObjectType::Say(arg) => {
-            let msg = Message::new(match_functions(arg, data)?);
+            let msg = Message::new(match_functions(arg, data, &mut root, sender)?);
             send_msg(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(root, MessageType::Msg(msg)))
-        },
+        }
         ObjectType::Use(arg) => {
-            match_functions(arg, data)?;
+            match_functions(arg, data, &mut root, sender)?;
             Ok(root)
         }
         ObjectType::Do(DoType::Update(old, new)) => {
-            //TODO: make error if try to change _metadata
-            let new_value = match_functions(new, data)?;
-            let (lit, name, mem_type, path, index) = get_var_info(old, data)?;
-            let inter = lit.get_interval();
-            update_literal(get_literal(lit, index)?, path, Some(new_value), inter)?;
-            Ok(save_literal_in_mem(
+            let new_value = match_functions(new, data, &mut root, sender)?;
+            let (lit, name, mem_type, path) = get_var_info(old, data, &mut root, sender)?;
+            exec_path_actions(lit, Some(new_value), &path, &mem_type)?;
+            save_literal_in_mem(
                 lit.to_owned(),
                 name,
-                mem_type,
+                &mem_type,
+                true,
                 data,
-                root,
-                sender
-            ))
+                &mut root,
+                sender,
+            );
+
+            Ok(root)
         }
         ObjectType::Do(DoType::Exec(expr)) => {
-            if let Ok((lit, name, mem_type, path, index)) = get_var_info(expr, data) {
-                let inter = lit.get_interval();
-                update_literal(get_literal(lit, index)?, path, None, inter)?;
-                return Ok(save_literal_in_mem(
-                    lit.to_owned(),
-                    name,
-                    mem_type,
-                    data,
-                    root,
-                    sender,
-                ));
-            } else if let Ok(_) = match_functions(expr, data) {()}
+            match_functions(expr, data, &mut root, sender)?;
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
             send_msg(&sender, MSG::NextStep(step_name.ident.clone()));
             root.exit_condition = Some(ExitCondition::Goto);
-            return Ok(root.add_next_step(&step_name.ident))
+            Ok(root.add_next_step(&step_name.ident))
         }
         ObjectType::Goto(GotoType::Flow, flow_name) => {
             send_msg(&sender, MSG::NextFlow(flow_name.ident.clone()));
             root.exit_condition = Some(ExitCondition::Goto);
-            return Ok(root.add_next_flow(&flow_name.ident))
+            Ok(root.add_next_flow(&flow_name.ident))
         }
         ObjectType::Remember(name, variable) => {
-            let lit = match_functions(variable, data)?;
-            root = root.add_to_memory(&name.ident, lit.clone());
+            let lit = match_functions(variable, data, &mut root, sender)?;
+            root.add_to_memory(&name.ident, lit.clone());
 
             send_msg(
                 &sender,
@@ -267,11 +194,7 @@ fn match_actions(
         ObjectType::Import {
             step_name: name, ..
         } => {
-            if let Some(Expr::Scope {
-                scope: actions,
-                block_type: _,
-                ..
-            }) = data
+            if let Some(Expr::Scope { scope: actions, .. }) = data
                 .ast
                 .flow_instructions
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
@@ -317,7 +240,7 @@ pub fn interpret_scope(
         if root.exit_condition.is_some() {
             return Ok(root);
         }
-        
+
         match action {
             Expr::ObjectExpr(ObjectType::Break(..)) => {
                 root.exit_condition = Some(ExitCondition::Break);
@@ -329,7 +252,7 @@ pub fn interpret_scope(
                     &sender,
                     MSG::Hold {
                         instruction_index: instruction_info.index,
-                        step_vars: data.step_vars.clone(),
+                        step_vars: step_vars_to_json(data.step_vars.clone()),
                     },
                 );
                 return Ok(root);
@@ -338,10 +261,27 @@ pub fn interpret_scope(
                 root = match_actions(fun, root, data, instruction_index, &sender)?
             }
             Expr::IfExpr(ref ifstatement) => {
-                root = solve_if_statments(ifstatement, root, data, instruction_index, instruction_info, &sender)?;
+                root = solve_if_statments(
+                    ifstatement,
+                    root,
+                    data,
+                    instruction_index,
+                    instruction_info,
+                    &sender,
+                )?;
             }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
-                root = for_loop(ident, i, expr, block, range, root, data, instruction_index, &sender)?
+                root = for_loop(
+                    ident,
+                    i,
+                    expr,
+                    block,
+                    range,
+                    root,
+                    data,
+                    instruction_index,
+                    &sender,
+                )?
             }
 
             e => {

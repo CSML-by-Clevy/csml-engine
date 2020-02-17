@@ -1,7 +1,8 @@
 use crate::parser::{
-    ast::*, literal::Literal, parse_comments::comment, parse_var_types::parse_var_expr, tokens::*,
+    ast::*, parse_comments::comment, parse_var_types::parse_var_expr, tokens::*,
     tools::get_interval,
 };
+use crate::primitive::string::PrimitiveString;
 use nom::{
     bytes::complete::tag,
     error::{ErrorKind, ParseError},
@@ -11,16 +12,23 @@ use nom::{
 };
 use std::str;
 
-pub fn parse_2brace<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E> {
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn parse_2brace<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, _) = tag(L2_BRACE)(s)?;
     let (s, (vec, _)) = many_till(parse_var_expr, preceded(comment, tag(R2_BRACE)))(s)?;
     Ok((s, vec))
 }
 
-fn parse_brace<'a, E: ParseError<Span<'a>>>(
-    input: Span<'a>,
-    mut vec: Vec<Expr>,
-) -> IResult<Span<'a>, Expr, E> {
+fn parse_brace<'a, E>(input: Span<'a>, mut vec: Vec<Expr>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     match parse_2brace(input) {
         Ok((s, mut exprs)) => {
             vec.append(&mut exprs);
@@ -39,13 +47,7 @@ fn parse_brace<'a, E: ParseError<Span<'a>>>(
                         let (s2, p) = get_interval(s2)?;
                         Ok((
                             s2,
-                            Expr::ComplexLiteral(
-                                vec,
-                                RangeInterval {
-                                    start: p.clone(),
-                                    end: p,
-                                },
-                            ),
+                            Expr::ComplexLiteral(vec, RangeInterval { start: p, end: p }),
                         ))
                     }
                 }
@@ -62,18 +64,25 @@ fn get_distance(input: &Span, key_char: &str) -> (Option<usize>, Option<usize>) 
     (distance_to_key, distance_double_quote)
 }
 
-fn parse_complex_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     match get_distance(&s, L2_BRACE) {
         (Some(distance_to_l2brace), Some(distance_double_quote))
             if distance_to_l2brace < distance_double_quote =>
         {
             let (s, val) = s.take_split(distance_to_l2brace);
-            let (val, position) = get_interval(val)?;
+            let (val, interval) = get_interval(val)?;
             let mut vec = vec![];
 
             if val.input_len() > 0 {
-                let value = val.fragment.to_owned();
-                vec.push(Expr::LitExpr(Literal::string(value, position)));
+                let expression = Expr::LitExpr(PrimitiveString::get_literal(
+                    "string",
+                    val.fragment,
+                    interval,
+                ));
+                vec.push(expression);
             }
             parse_brace(s, vec)
             //  {
@@ -86,21 +95,26 @@ fn parse_complex_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
         }
         (_, Some(distance_double_quote)) => {
             let (s, val) = s.take_split(distance_double_quote);
-            let (val, position) = get_interval(val)?;
+            let (val, interval_start) = get_interval(val)?;
 
             if val.input_len() > 0 {
-                let value = val.fragment.to_owned();
-                return Ok((s, Expr::LitExpr(Literal::string(value, position))));
+                let expression = Expr::LitExpr(PrimitiveString::get_literal(
+                    "string",
+                    val.fragment,
+                    interval_start,
+                ));
+
+                return Ok((s, expression));
             }
 
-            let (_val, position2) = get_interval(val)?;
+            let (_, interval_end) = get_interval(val)?;
             Ok((
                 s,
                 Expr::ComplexLiteral(
                     vec![],
                     RangeInterval {
-                        start: position,
-                        end: position2,
+                        start: interval_start,
+                        end: interval_end,
                     },
                 ),
             ))
@@ -113,16 +127,27 @@ fn parse_complex_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
     }
 }
 
-pub fn parse_string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     // let (s, pos) = get_interval(s)?;
     delimited(tag(DOUBLE_QUOTE), parse_complex_string, tag(DOUBLE_QUOTE))(s)
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// TEST FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    pub fn test_string<'a>(s: Span<'a>) -> IResult<Span<'a>, Expr> {
+    pub fn test_string(s: Span) -> IResult<Span, Expr> {
         preceded(comment, parse_string)(s)
     }
 
@@ -181,7 +206,7 @@ mod tests {
     }
 
     #[test]
-    fn err_complex_string_no_right_braket() {
+    fn err_complex_string_no_right_bracket() {
         let string = Span::new("  \"complex string {{ \"  ");
         match test_string(string) {
             Ok(..) => panic!("need to fail"),
@@ -190,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn err_complex_string_no_left_braket() {
+    fn err_complex_string_no_left_bracket() {
         let string = Span::new("  \"complex string  }}\"  ");
         match test_string(string) {
             Ok(..) => {}

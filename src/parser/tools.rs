@@ -28,7 +28,7 @@ pub fn parse_l_parentheses<'a, E: ParseError<Span<'a>>>(
             let err = E::from_error_kind(input, err);
             Err(Err::Failure(E::add_context(
                 input,
-                "list elemt type ( ... ) not found",
+                "list elem type ( ... ) not found",
                 err,
             )))
         }

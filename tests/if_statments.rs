@@ -1,33 +1,28 @@
-mod support;
+pub mod support;
 
 use csmlinterpreter::interpret;
-use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::{ast::Interval, literal::Literal, Parser};
-use std::collections::HashMap;
+use csmlinterpreter::interpreter::{data::*, message::MessageData};
 use serde_json::Value;
 
 use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
 fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let text = read_file("CSML/if_statments.csml".to_owned()).unwrap();
-    let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut past = HashMap::new();
-    past.insert(
-        "var10".to_owned(),
-        Literal::int(10, Interval { column: 0, line: 0 }),
-    );
-    past.insert(
-        "var5".to_owned(),
-        Literal::int(5, Interval { column: 0, line: 0 }),
-    );
-    past.insert(
-        "bool".to_owned(),
-        Literal::boolean(false, Interval { column: 0, line: 0 }),
+    let mut past = serde_json::map::Map::new();
+    past.insert("var10".to_owned(), serde_json::json!(10));
+    past.insert("var5".to_owned(), serde_json::json!(5));
+    past.insert("bool".to_owned(), serde_json::json!(false));
+
+    let context = gen_context(
+        serde_json::json!(past),
+        serde_json::json!({}),
+        serde_json::json!({}),
+        0,
+        false,
     );
 
-    let mut context = gen_context(past, HashMap::new(), HashMap::new(), 0, false);
-    interpret(&flow, step, &mut context, &event, None, None, None)
+    interpret(&text, step, context, &event, None, None, None)
 }
 
 #[test]

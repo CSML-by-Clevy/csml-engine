@@ -54,3 +54,12 @@ pub struct ErrorInfo {
     pub message: String,
     pub interval: Interval,
 }
+
+impl ErrorInfo {
+    pub fn format_error(&self) -> String {
+        format!(
+            "{} at line {}, column {}",
+            self.message, self.interval.line, self.interval.column
+        )
+    }
+}

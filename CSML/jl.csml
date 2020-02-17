@@ -1,0 +1,4 @@
+start:
+remember obj = {
+    "s":"Hello",
+}

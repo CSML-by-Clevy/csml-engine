@@ -1,10 +1,10 @@
 use lazy_static::*;
+use std::collections::*;
 use std::sync::*;
 use std::thread::*;
-use std::collections::*;
 
 lazy_static! {
-    static ref CONTEXT: Mutex<Context> = Mutex::new(Context{
+    static ref CONTEXT: Mutex<Context> = Mutex::new(Context {
         state: HashMap::new(),
         warning: Vec::new(),
         index: HashMap::new(),
@@ -12,7 +12,7 @@ lazy_static! {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// DATA STRUCTURES 
+// DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Copy, Clone)]
@@ -21,7 +21,7 @@ pub enum State {
     Loop,
 }
 
-/// TODO: Check for usize ofverflow vuln !
+// TODO: Check for usize overflow vuln !
 #[derive(Debug)]
 pub struct Context {
     state: HashMap<ThreadId, Vec<State>>,
@@ -38,7 +38,7 @@ impl Context {
         let thread_id = current().id();
         let hashmap = &mut CONTEXT.lock().unwrap().index;
 
-        if hashmap.contains_key(&thread_id) == true {
+        if hashmap.contains_key(&thread_id) {
             hashmap.remove(&thread_id);
         }
     }
@@ -47,9 +47,7 @@ impl Context {
         let thread_id = current().id();
         let hashmap = &mut CONTEXT.lock().unwrap().index;
 
-        if hashmap.contains_key(&thread_id) == false {
-            hashmap.insert(thread_id, 0);
-        }
+        hashmap.entry(thread_id).or_insert(0);
 
         let result: usize = *(hashmap.get(&thread_id).unwrap());
 
@@ -60,20 +58,18 @@ impl Context {
         let thread_id = current().id();
         let hashmap = &mut CONTEXT.lock().unwrap().index;
 
-        if hashmap.contains_key(&thread_id) == false {
-            hashmap.insert(thread_id, 0);
-        }
+        hashmap.entry(thread_id).or_insert(0);
 
         let result: usize = *(hashmap.get(&thread_id).unwrap());
 
-        return result;
+        result
     }
 
     pub fn clear_state() {
         let thread_id = current().id();
         let hashmap = &mut CONTEXT.lock().unwrap().state;
 
-        if hashmap.contains_key(&thread_id) == true {
+        if hashmap.contains_key(&thread_id) {
             hashmap.remove(&thread_id);
         }
     }
@@ -82,9 +78,7 @@ impl Context {
         let thread_id = current().id();
         let hashmap = &mut CONTEXT.lock().unwrap().state;
 
-        if hashmap.contains_key(&thread_id) == false {
-            hashmap.insert(thread_id, Vec::new());
-        }
+        hashmap.entry(thread_id).or_insert_with(Vec::new);
 
         match state {
             State::Loop => {
@@ -100,14 +94,14 @@ impl Context {
         let thread_id = current().id();
         let hashmap = &mut CONTEXT.lock().unwrap().state;
 
-        if hashmap.contains_key(&thread_id) == false {
+        if !hashmap.contains_key(&thread_id) {
             return State::Normal;
         }
 
         if hashmap.get(&thread_id).unwrap().is_empty() {
             return State::Normal;
         }
-       
-        return State::Loop;
+
+        State::Loop
     }
 }
