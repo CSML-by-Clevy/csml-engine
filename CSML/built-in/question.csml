@@ -22,3 +22,7 @@ question2:
 
     say Question(buttons = [b1, b2])
     goto end
+
+simple_0:
+    say Button("hello")
+    goto end

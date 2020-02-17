@@ -1,35 +1,35 @@
 pub mod ast;
+pub mod context;
 pub mod expressions_evaluation;
 pub mod literal;
 pub mod parse_actions;
-pub mod parse_object;
 pub mod parse_comments;
 pub mod parse_for_loop;
-pub mod parse_ident;
+pub mod parse_idents;
 pub mod parse_if;
 pub mod parse_import;
 pub mod parse_literal;
+pub mod parse_object;
 pub mod parse_scope;
 pub mod parse_string;
 pub mod parse_var_types;
 pub mod tokens;
 pub mod tools;
-pub mod context;
 
 use crate::error_format::{CustomError, ErrorInfo};
+use crate::parser::context::*;
 use ast::*;
 use parse_comments::comment;
-use parse_ident::parse_ident;
+use parse_idents::parse_idents;
 use parse_scope::parse_root;
 use tokens::*;
 use tools::*;
-use crate::parser::context::*;
 
 use nom::error::{ErrorKind, ParseError};
 use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
-fn create_flow_from_instructions<'a>(
+fn create_flow_from_instructions(
     instructions: Vec<Instruction>,
     flow_type: FlowType,
 ) -> Result<Flow, String> {
@@ -59,8 +59,8 @@ pub struct Parser;
 impl Parser {
     pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
         match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
-            Ok((s, (instructions, ftype))) => {
-                match create_flow_from_instructions(instructions, ftype) {
+            Ok((s, (instructions, flow_type))) => {
+                match create_flow_from_instructions(instructions, flow_type) {
                     Ok(val) => Ok(val),
                     Err(error) => Err({
                         ErrorInfo {
@@ -84,7 +84,7 @@ impl Parser {
                             column: err.input.get_column() as u32,
                         },
                     })
-                },
+                }
                 Err::Incomplete(_err) => unimplemented!(),
             },
         }
@@ -106,10 +106,8 @@ where
     }
 }
 
-fn parse_step<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, Instruction, E> {
-    let (s, ident) = preceded(comment, parse_ident)(s)?;
+fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E> {
+    let (s, ident) = preceded(comment, parse_idents)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
 
     Context::clear_index();
@@ -138,17 +136,13 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
     // TODO: handle FlowType::Recursive with Context
     let flow_type = FlowType::Normal;
 
-    let (s, flow) = fold_many0(
-        parse_step,
-        Vec::new(),
-        |mut acc, item| {
-            acc.push(item);
-            acc
-        },
-    )(s)?;
-    
+    let (s, flow) = fold_many0(parse_step, Vec::new(), |mut acc, item| {
+        acc.push(item);
+        acc
+    })(s)?;
+
     let (last, _) = comment(s)?;
-    if last.fragment.len() != 0 {
+    if !last.fragment.is_empty() {
         let res: IResult<Span<'a>, Span<'a>, E> =
             preceded(comment, alt((tag("ask"), tag("response"))))(last);
 

@@ -1,23 +1,26 @@
-mod support;
+pub mod support;
 
 use csmlinterpreter::interpret;
 use csmlinterpreter::interpreter::{
-    json_to_rust::*,
+    data::*,
     message::{Message, MessageData},
 };
-use csmlinterpreter::parser::{literal::Literal, Parser};
-use std::collections::HashMap;
 use serde_json::Value;
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
 fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
     let file = format!("CSML/numerical_operations/{}", name);
     let text = read_file(file).unwrap();
-    let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
+    let context = gen_context(
+        serde_json::json!({}),
+        serde_json::json!({}),
+        serde_json::json!({}),
+        0,
+        false,
+    );
 
-    interpret(&flow, step, &mut context, &event, None, None, None)
+    interpret(&text, step, context, &event, None, None, None)
 }
 
 #[test]
@@ -65,7 +68,7 @@ fn ok_divition() {
 }
 
 #[test]
-fn ok_divition2() {
+fn ok_division_2() {
     let data = r#"{"messages":[ {"content":{"text":"21.333333333333332"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(None, "divition.csml", "div2");
 
@@ -77,21 +80,24 @@ fn ok_divition2() {
 
 fn check_error_component(vec: &[Message]) -> bool {
     let comp = &vec[0];
-    match &comp.content {
-        Literal::FunctionLiteral { name, .. } if name == "text" => true,
-        _ => false,
-    }
+
+    return comp.content.is_object();
 }
 
 #[test]
-fn ok_divition3() {
+fn ok_division_3() {
     let file = format!("CSML/numerical_operations/{}", "divition.csml");
     let text = read_file(file).unwrap();
-    let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
+    let context = gen_context(
+        serde_json::json!({}),
+        serde_json::json!({}),
+        serde_json::json!({}),
+        0,
+        false,
+    );
 
-    match &interpret(&flow, "div3", &mut context, &None, None, None, None) {
+    match &interpret(&text, "div3", context, &None, None, None, None) {
         MessageData {
             memories: None,
             messages: vec,

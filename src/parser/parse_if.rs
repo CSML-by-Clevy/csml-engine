@@ -1,10 +1,10 @@
 use crate::parser::{
     ast::*,
+    context::*,
     parse_comments::comment,
     parse_scope::{parse_implicit_scope, parse_scope},
     tokens::*,
     tools::*,
-    context::*,
 };
 use nom::{
     branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *,
@@ -25,15 +25,21 @@ pub fn parse_else_if<'a, E: ParseError<Span<'a>>>(
     let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
 
     let new_index = Context::get_index() - 1;
-    let instruction_info = InstructionInfo{index:index, total:new_index - index};
+    let instruction_info = InstructionInfo {
+        index,
+        total: new_index - index,
+    };
 
     Ok((
         s,
-        (Box::new(IfStatement::IfStmt {
-            cond: Box::new(condition),
-            consequence: block,
-            then_branch: opt,
-        }), instruction_info)
+        (
+            Box::new(IfStatement::IfStmt {
+                cond: Box::new(condition),
+                consequence: block,
+                then_branch: opt,
+            }),
+            instruction_info,
+        ),
     ))
 }
 
@@ -51,15 +57,23 @@ pub fn parse_else<'a, E: ParseError<Span<'a>>>(
     let (s, end) = get_interval(s)?;
 
     let new_index = Context::get_index() - 1;
-    let instruction_info = InstructionInfo{index:index, total:new_index - index};
+    let instruction_info = InstructionInfo {
+        index,
+        total: new_index - index,
+    };
 
     Ok((
         s,
-        (Box::new(IfStatement::ElseStmt(block, RangeInterval { start, end })), instruction_info)
+        (
+            Box::new(IfStatement::ElseStmt(block, RangeInterval { start, end })),
+            instruction_info,
+        ),
     ))
 }
 
-pub fn parse_if<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
+pub fn parse_if<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
     let (s, _) = preceded(comment, tag(IF))(s)?;
     let (s, condition) = parse_strict_condition_group(s)?;
 
@@ -71,15 +85,21 @@ pub fn parse_if<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (
     let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
 
     let new_index = Context::get_index() - 1;
-    let instruction_info = InstructionInfo{index:index, total:new_index - index};
+    let instruction_info = InstructionInfo {
+        index,
+        total: new_index - index,
+    };
 
     Ok((
         s,
-        (Expr::IfExpr(IfStatement::IfStmt {
-            cond: Box::new(condition),
-            consequence: block,
-            then_branch: opt, 
-        }), instruction_info)
+        (
+            Expr::IfExpr(IfStatement::IfStmt {
+                cond: Box::new(condition),
+                consequence: block,
+                then_branch: opt,
+            }),
+            instruction_info,
+        ),
     ))
 }
 
@@ -87,7 +107,7 @@ pub fn parse_if<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (
 mod tests {
     use super::*;
 
-    pub fn test_if<'a>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo)> {
+    pub fn test_if(s: Span) -> IResult<Span, (Expr, InstructionInfo)> {
         preceded(comment, parse_if)(s)
     }
 

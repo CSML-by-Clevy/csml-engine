@@ -1,20 +1,23 @@
 mod support;
 
 use csmlinterpreter::interpret;
-use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::Parser;
-use std::collections::HashMap;
+use csmlinterpreter::interpreter::{data::*, message::MessageData};
 use serde_json::Value;
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
 fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let text = read_file("CSML/break.csml".to_owned()).unwrap();
-    let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
+    let context = gen_context(
+        serde_json::json!({}),
+        serde_json::json!({}),
+        serde_json::json!({}),
+        0,
+        false,
+    );
 
-    interpret(&flow, step, &mut context, &event, None, None, None)
+    interpret(&text, step, context, &event, None, None, None)
 }
 
 #[test]

@@ -1,0 +1,12 @@
+start:
+    say _metadata
+    goto end
+
+step1:
+    say _metadata.var
+    goto end
+
+step2:
+    say _metadata["var"]
+
+    goto end

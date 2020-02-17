@@ -1,21 +1,17 @@
 use crate::error_format::data::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::get_path,
-    data::Data,
-    json_to_rust::Event,
-    variable_handler::{
-        get_string_from_complexstring,
-        get_var,
-        interval::interval_from_expr,
-        memory::search_in_metadata, //get_memory_action
-        object::get_value_in_object,
-    },
+    // ast_interpreter::get_path,
+    data::{Data, Event, MemoryType},
+    json_to_rust::json_to_literal,
+    message::{MessageData, MSG},
+    variable_handler::{exec_path_actions, get_var, interval::interval_from_expr, resolve_path},
 };
 use crate::parser::{
-    ast::{BuilderType, Expr, Identifier, Interval, RangeInterval},
+    ast::{Expr, Identifier, Interval, PathExpr},
     literal::Literal,
-    // tokens::{_METADATA}, MEMORY, PAST,
 };
+use crate::primitive::{null::PrimitiveNull, string::PrimitiveString};
+use std::sync::mpsc;
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {
     match expr {
@@ -24,10 +20,15 @@ pub fn search_str(name: &str, expr: &Expr) -> bool {
     }
 }
 
-pub fn gen_literal_form_expr(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
+pub fn gen_literal_form_expr(
+    expr: &Expr,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::LitExpr(literal) => Ok(literal.clone()),
-        Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
+        Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data, root, sender),
         e => Err(ErrorInfo {
             message: "Expression must be a literal or an identifier".to_owned(),
             interval: interval_from_expr(e),
@@ -35,35 +36,38 @@ pub fn gen_literal_form_expr(expr: &Expr, data: &mut Data) -> Result<Literal, Er
     }
 }
 
-pub fn gen_literal_form_builder(expr: &Expr, data: &mut Data) -> Result<Literal, ErrorInfo> {
-    match expr {
-        Expr::BuilderExpr(BuilderType::Metadata(..), path) => search_in_metadata(path, data),
-        // Expr::BuilderExpr(elem, expr) if search_str(PAST, elem) => {
-        //     get_memory_action(data.memory, elem, expr, data)
-        // }
-        // Expr::BuilderExpr(elem, expr) if search_str(MEMORY, elem) => {
-        //     get_memory_action(data.memory, elem, expr, data)
-        // }
-        Expr::BuilderExpr(BuilderType::Normal(ident), path) => {
-            let literal = get_var(ident.to_owned(), data)?;
-            let path = get_path(&path, data)?;
-            get_value_in_object(&literal, &path, &ident.interval)
-        }
-        Expr::ComplexLiteral(vec, RangeInterval{start, ..}) => Ok(get_string_from_complexstring(vec, start.to_owned(), data)),
-        Expr::IdentExpr(ident, ..) => get_var(ident.clone(), data),
-        e => Err(ErrorInfo {
-            message: "Expression builder".to_owned(),
-            interval: interval_from_expr(e),
-        }),
-    }
-}
-
 pub fn gen_literal_form_event(
-    event: &Option<Event>,
     interval: Interval,
+    path: Option<Vec<(Interval, PathExpr)>>,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
-    match event {
-        Some(Event { payload }) => Ok(Literal::string(payload.to_owned(), interval)),
-        None => Ok(Literal::null(interval)),
+    match path {
+        Some(path) => {
+            let path = resolve_path(path, data, root, sender)?;
+            match data.event {
+                Some(event) => {
+                    let mut lit = json_to_literal(&event.metadata, interval.to_owned())?;
+                    let (lit, _tmp_mem_update) = exec_path_actions(
+                        &mut lit,
+                        None,
+                        &Some(path),
+                        &MemoryType::Event(event.content_type.to_owned()),
+                    )?;
+                    Ok(lit)
+                }
+                //TODO: Add Warning for nonexisting key
+                None => Ok(PrimitiveNull::get_literal("null", interval.to_owned())),
+            }
+        }
+        None => match data.event {
+            Some(Event { content, .. }) => Ok(PrimitiveString::get_literal(
+                "string",
+                content,
+                interval.to_owned(),
+            )),
+            None => Ok(PrimitiveNull::get_literal("null", interval.to_owned())),
+        },
     }
 }

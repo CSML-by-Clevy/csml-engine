@@ -1,0 +1,48 @@
+start:
+    goto end
+
+regex_0:
+    remember var = "Hello"
+    say var.match("[A-Z]")
+    goto end
+
+regex_1:
+    remember var = "hello"
+    say var.match("[A-Z]")
+    goto end
+
+regex_2:
+    remember var = "Hello World"
+    say var.match("[A-Z]")
+    goto end
+
+regex_3:
+    remember var = "Hello World"
+    say var.match(3)
+    goto end
+
+regex_4:
+    remember var = "Hello World"
+    say var.match()
+    goto end
+
+regex_5:
+    remember var = "Batman"
+    say var.match("(?i)bat")
+    goto end
+
+regex_6:
+    remember var = "Ceci est une question ? Oui ou non"
+    say var.contains("[?]")
+    goto end
+
+
+regex_7:
+    remember var = "0123456789"
+    say var.match("[0-3]")
+    goto end
+
+regex_8:
+    remember var = "Hel14lo"
+    say var.match("[0-9]")
+    goto end

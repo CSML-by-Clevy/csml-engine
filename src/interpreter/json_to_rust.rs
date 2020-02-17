@@ -1,64 +1,27 @@
 use crate::error_format::data::ErrorInfo;
 use crate::parser::{ast::Interval, literal::Literal};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Client {
-    pub bot_id: String,
-    pub channel_id: String,
-    pub user_id: String,
-}
-
-impl Client {
-    pub fn new(bot_id: String, channel_id: String, user_id: String) -> Self {
-        Self {
-            bot_id,
-            channel_id,
-            user_id,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Context {
-    pub past: HashMap<String, Literal>,
-    pub current: HashMap<String, Literal>,
-    pub metadata: HashMap<String, Literal>,
-    pub retries: i64,
-    pub is_initial_step: bool,
-    pub client: Client,
-    pub fn_endpoint: String,
-}
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct PayLoadContent {
-//     pub text: String,
-// }
-
-// #[derive(Serialize, Deserialize, Debug, Clone)]
-// pub struct PayLoad {
-//     pub content_type: String,
-//     pub content: PayLoadContent,
-// }
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Event {
-    pub payload: String,
-}
+use crate::primitive::{
+    array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
+    null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString,
+};
 
 pub fn json_to_literal(
     literal: &serde_json::Value,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     match literal {
-        Value::String(val) => Ok(Literal::string(val.to_owned(), interval)),
-        Value::Number(val) => {
+        serde_json::Value::String(val) => Ok(PrimitiveString::get_literal("string", val, interval)),
+        serde_json::Value::Bool(val) => {
+            Ok(PrimitiveBoolean::get_literal("boolean", *val, interval))
+        }
+        serde_json::Value::Null => Ok(PrimitiveNull::get_literal("null", interval)),
+        serde_json::Value::Number(val) => {
             if let (true, Some(float)) = (val.is_f64(), val.as_f64()) {
-                Ok(Literal::float(float, interval))
-            } else if let (true, Some(int)) = (val.is_i64() , val.as_i64()){
-                Ok(Literal::int(int, interval))
+                Ok(PrimitiveFloat::get_literal("float", float, interval))
+            } else if let (true, Some(int)) = (val.is_i64(), val.as_i64()) {
+                Ok(PrimitiveInt::get_literal("int", int, interval))
             } else {
                 Err(ErrorInfo {
                     message: format!("Number of type {} bad format", val),
@@ -66,23 +29,23 @@ pub fn json_to_literal(
                 })
             }
         }
-        Value::Bool(val) => Ok(Literal::boolean(val.to_owned(), interval)),
-        Value::Array(val) => {
+        serde_json::Value::Array(val) => {
             let mut vec = vec![];
 
             for elem in val {
-                vec.push(json_to_literal(elem, interval.clone())?);
+                vec.push(json_to_literal(elem, interval)?);
             }
-            Ok(Literal::array(vec, interval))
+
+            Ok(PrimitiveArray::get_literal("array", &vec, interval))
         }
-        Value::Object(val) => {
+        serde_json::Value::Object(val) => {
             let mut map = HashMap::new();
 
             for (k, v) in val.iter() {
-                map.insert(k.to_owned(), json_to_literal(v, interval.clone())?);
+                map.insert(k.to_owned(), json_to_literal(v, interval)?);
             }
-            Ok(Literal::object(map, interval))
+
+            Ok(PrimitiveObject::get_literal("object", &map, interval))
         }
-        Value::Null => Ok(Literal::null(interval)),
     }
 }

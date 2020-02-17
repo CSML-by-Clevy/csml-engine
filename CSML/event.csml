@@ -1,0 +1,15 @@
+start:
+    goto end
+
+step_0:
+    say event
+
+step_1:
+    say event.toto
+    say event.toto.yolo
+
+step_2:
+    say event.get_type()
+
+step_3:
+    say event.get_metadata()

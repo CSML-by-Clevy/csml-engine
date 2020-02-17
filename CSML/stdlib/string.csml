@@ -1,0 +1,31 @@
+start:
+    goto end
+
+step_0:
+    remember s = "Hello "
+
+    do s.append("World")
+
+    say s
+
+    do s.to_upper_case()
+
+    say s
+
+    say s.to_lower_case()
+
+step_1:
+    remember s = "Hello"
+
+    say s.contains("H")
+    say s.contains("Hello")
+    say s.contains("(?i)He")
+
+step_2:
+    remember s = "Hello"
+
+    say s.starts_with("(?i)He")
+    say s.ends_with("o")
+    say s.starts_with("el")
+    say s.starts_with("O")
+    say s.ends_with("l")

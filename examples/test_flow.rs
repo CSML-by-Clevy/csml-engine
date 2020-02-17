@@ -1,7 +1,6 @@
-use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::{ast::*, literal::Literal};
-use csmlinterpreter::{interpret, parse_file};
-use std::collections::HashMap;
+use csmlinterpreter::interpreter::{data::*, message::MessageData};
+// use csmlinterpreter::parser::ast::*;
+use csmlinterpreter::interpret; //parse_file
 use serde_json::{json, map::Map, Value};
 
 use std::fs::File;
@@ -25,7 +24,9 @@ pub fn message_to_jsonvalue(result: MessageData) -> Value {
 
     if let Some(mem) = result.memories {
         for elem in mem.iter() {
-            memories.push(elem.to_owned().memorie_to_jsvalue());
+            let mut map = Map::new();
+            map.insert(elem.key.to_owned(), elem.value.to_owned());
+            memories.push(json!(map));
         }
     }
 
@@ -48,49 +49,28 @@ pub fn message_to_jsonvalue(result: MessageData) -> Value {
     Value::Object(message)
 }
 
-fn interpret_flow(flow: &Flow, step_name: &str) {
-    // None;
+fn interpret_flow(flow: &str, step_name: &str) {
+    // let event = None;
     let event = Some(Event {
-        payload: "Trending".to_owned(), // payload: PayLoad {
-                                        //     content_type: "text".to_owned(),
-                                        //     content: PayLoadContent {
-                                        //         text: "Trending".to_owned()
-                                        //     }
-                                        // }
+        content_type: "payload".to_owned(),
+        content: "plop".to_owned(),
+        metadata: json!(null),
     });
-    // Some(Event{
-    //     literal: Literal::string("42".to_owned())
-    // });
-    let mut metadata = HashMap::new();
+    let mut metadata = Map::new();
 
-    metadata.insert(
-        "firstname".to_owned(),
-        Literal::string("Alexis".to_owned(), Interval { column: 0, line: 0 }),
-    );
+    metadata.insert("firstname".to_owned(), json!("Alexis"));
 
-    metadata.insert(
-        "mavar".to_owned(),
-        Literal::int(10, Interval { column: 0, line: 0 }),
-    );
+    metadata.insert("mavar".to_owned(), json!(10));
 
-    let mut obj = HashMap::new();
-    obj.insert(
-        "var1".to_owned(),
-        Literal::int(1, Interval { column: 0, line: 0 }),
-    );
-    obj.insert(
-        "var2".to_owned(),
-        Literal::int(10, Interval { column: 0, line: 0 }),
-    );
-    metadata.insert(
-        "obj".to_owned(),
-        Literal::object(obj, Interval { column: 0, line: 0 }),
-    );
+    let mut obj = Map::new();
+    obj.insert("var1".to_owned(), json!(1));
+    obj.insert("var2".to_owned(), json!(42));
+    metadata.insert("obj".to_owned(), json!(obj));
 
-    let mut context = Context {
-        past: HashMap::new(),
-        current: HashMap::new(),
-        metadata: metadata,
+    let context = ContextJson {
+        past: serde_json::json!({}),
+        current: serde_json::json!({}),
+        metadata: json!(metadata),
         retries: 42,
         is_initial_step: false,
         client: Client {
@@ -102,23 +82,17 @@ fn interpret_flow(flow: &Flow, step_name: &str) {
     };
 
     dbg!(message_to_jsonvalue(interpret(
-        flow,
-        step_name,
-        &mut context,
-        &event,
-        None,
-        None,
-        None,
+        flow, step_name, context, &event, None, None, None,
     )));
 }
 
 fn main() {
-    let text = read_file("CSML/test.csml".to_owned()).unwrap();
+    let flow = read_file("CSML/test.csml".to_owned()).unwrap();
 
-    let flow = match parse_file(&text) {
-        Ok(flow) => flow,
-        Err(e) => panic!("{:?}", e),
-    };
+    // let flow = match parse_file(&text) {
+    //     Ok(flow) => flow,
+    //     Err(e) => panic!("{:?}", e),
+    // };
 
     interpret_flow(&flow, "start");
 }

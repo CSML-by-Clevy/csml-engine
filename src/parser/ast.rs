@@ -1,9 +1,10 @@
-use crate::parser::{literal::Literal, tokens::*};
+use crate::parser::literal::Literal;
+use crate::parser::tokens::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Flow {
     pub flow_instructions: HashMap<InstructionType, Expr>,
     pub flow_type: FlowType,
@@ -24,12 +25,12 @@ pub enum InstructionType {
 impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionType::NormalStep(ref ident) => write!(f, "{}", ident),
+            InstructionType::NormalStep(ref idents) => write!(f, "{}", idents),
         }
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Instruction {
     pub instruction_type: InstructionType,
     pub actions: Expr,
@@ -42,13 +43,21 @@ pub enum GotoType {
     Flow,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum DoType {
     Update(Box<Expr>, Box<Expr>),
     Exec(Box<Expr>),
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
+pub struct Function {
+    pub name: String,
+    pub interval: Interval,
+    // TODO: update to Vec<Expr>
+    pub args: Box<Expr>,
+}
+
+#[derive(Debug, Clone)]
 pub enum ObjectType {
     Goto(GotoType, Identifier),
     Hold(Interval),
@@ -63,7 +72,7 @@ pub enum ObjectType {
         as_name: Option<Identifier>,
         file_path: Option<Identifier>,
     },
-    Normal(Identifier, Box<Expr>),
+    Normal(Function),
     Break(Interval),
 }
 
@@ -73,7 +82,7 @@ pub struct InstructionInfo {
     pub total: usize,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Block {
     pub commands: Vec<(Expr, InstructionInfo)>,
     pub hooks: Vec<Hook>,
@@ -86,9 +95,9 @@ pub struct Hook {
     pub step: String,
 }
 
-impl Block {
-    pub fn new() -> Self {
-        Block {
+impl Default for Block {
+    fn default() -> Self {
+        Self {
             commands: Vec::new(),
             hooks: Vec::new(),
         }
@@ -103,7 +112,7 @@ pub enum BlockType {
     Step,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum IfStatement {
     IfStmt {
         cond: Box<Expr>,
@@ -113,39 +122,13 @@ pub enum IfStatement {
     ElseStmt(Block, RangeInterval),
 }
 
-#[derive(PartialEq, Debug, Clone)]
-pub enum Path {
-    Normal(String),
-    AtIndex(String, Literal),
-    Exec(String, Literal),
-}
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum BuilderType {
-    Metadata(Interval),
-    Normal(Identifier),
-}
-
-impl BuilderType {
-    pub fn get_interval<'a>(&'a self) -> &'a Interval {
-        match self {
-            Self::Metadata(interval) => interval,
-            Self::Normal(identifier) => &identifier.interval,
-        }
-    }
-}
-
-#[derive(PartialEq, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     Scope {
         block_type: BlockType,
         scope: Block,
         range: RangeInterval,
     },
-    ComplexLiteral(Vec<Expr>, RangeInterval),
-    MapExpr(HashMap<String, Expr>, RangeInterval),
-    VecExpr(Vec<Expr>, RangeInterval),
-    InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval ?
     ForEachExpr(
         Identifier,
         Option<Identifier>,
@@ -153,27 +136,37 @@ pub enum Expr {
         Block,
         RangeInterval,
     ),
-    ObjectExpr(ObjectType), // RangeInterval ?
+    ComplexLiteral(Vec<Expr>, RangeInterval),
+    MapExpr(HashMap<String, Expr>, RangeInterval),
+    VecExpr(Vec<Expr>, RangeInterval),
+    InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval ?
+    ObjectExpr(ObjectType),                 // RangeInterval ?
     IfExpr(IfStatement),
-    BuilderExpr(BuilderType, Vec<Expr>),
+
+    // BuilderExpr(BuilderType, Vec<Expr>),
     IdentExpr(Identifier),
+
     LitExpr(Literal),
 }
 
 impl Expr {
-    pub fn new_ident(ident: String, interval: Interval, index: Option<Box<Self>>) -> Identifier {
+    pub fn new_idents(
+        ident: String,
+        interval: Interval,
+        path: Option<Vec<(Interval, PathExpr)>>,
+    ) -> Identifier {
         Identifier {
             ident,
             interval,
-            index,
+            path,
         }
     }
 }
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Infix {
-    Adition,
-    Substraction,
+    Addition,
+    Subtraction,
     Divide,
     Multiply,
     Remainder,
@@ -198,7 +191,7 @@ pub struct RangeInterval {
     pub end: Interval,
 }
 
-#[derive(PartialEq, Debug, Clone, Eq, Hash)]
+#[derive(PartialEq, Debug, Clone, Eq, Hash, Copy)]
 pub struct Interval {
     pub line: u32,
     pub column: u32,
@@ -214,10 +207,29 @@ impl Interval {
 }
 
 #[derive(Debug, Clone)]
+pub enum PathExpr {
+    ExprIndex(Expr),
+    StringIndex(String),
+    Func(Function),
+}
+
+#[derive(Debug, Clone)]
+pub enum PathLiteral {
+    VecIndex(usize),
+    MapIndex(String),
+    Func {
+        name: String,
+        interval: Interval,
+        // TODO: update to Vec<Literal>
+        args: Literal,
+    },
+}
+
+#[derive(Debug, Clone)]
 pub struct Identifier {
     pub ident: String,
     pub interval: Interval,
-    pub index: Option<Box<Expr>>,
+    pub path: Option<Vec<(Interval, PathExpr)>>,
 }
 
 impl PartialEq for Identifier {

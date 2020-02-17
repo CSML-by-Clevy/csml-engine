@@ -10,7 +10,7 @@ pub const INLINE_COMMENT: &str = "//";
 pub const START_COMMENT: &str = "/*";
 pub const END_COMMENT: &str = "*/";
 
-pub const ADITION: &str = "+";
+pub const ADDITION: &str = "+";
 pub const SUBTRACTION: &str = "-";
 pub const DIVIDE: &str = "/";
 pub const MULTIPLY: &str = "*";
@@ -107,6 +107,6 @@ pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";
 // pub const METADATA: &str = "metadata";
 
-pub const FROMEFILE: &str = "FromFile";
-pub const GET_VALUE: &str = "getvalue";
+pub const FROM_FILE: &str = "FromFile";
+pub const GET_VALUE: &str = "GetValue";
 pub const FIRST: &str = "first";

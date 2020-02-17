@@ -1,0 +1,37 @@
+start:
+    goto end
+
+array:
+    remember var = []
+    say var.type_of()
+    goto end
+
+boolean:
+    remember var = true
+    say var.type_of()
+    goto end
+
+float:
+    remember var = 0.42
+    say var.type_of()
+    goto end
+
+int:
+    remember var = 0
+    say var.type_of()
+    goto end
+
+null:
+    remember var = NULL
+    say var.type_of()
+    goto end
+
+object:
+    remember var = {}
+    say var.type_of()
+    goto end
+
+string:
+    remember var = ""
+    say var.type_of()
+    goto end

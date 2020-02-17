@@ -9,3 +9,7 @@ text1:
 text2:
     say ""
     goto end
+
+text3:
+	say NULL
+	goto end

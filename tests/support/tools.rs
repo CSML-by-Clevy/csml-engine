@@ -1,7 +1,5 @@
-use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::literal::Literal;
+use csmlinterpreter::interpreter::{data::*, message::MessageData};
 use serde_json::{json, map::Map, Value};
-use std::collections::HashMap;
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -15,13 +13,13 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 
 #[allow(dead_code)]
 pub fn gen_context(
-    past: HashMap<String, Literal>,
-    current: HashMap<String, Literal>,
-    metadata: HashMap<String, Literal>,
+    past: serde_json::Value,
+    current: serde_json::Value,
+    metadata: serde_json::Value,
     retries: i64,
     is_initial_step: bool,
-) -> Context {
-    Context {
+) -> ContextJson {
+    ContextJson {
         past,
         current,
         metadata,
@@ -39,7 +37,9 @@ pub fn gen_context(
 #[allow(dead_code)]
 pub fn gen_event(event: &str) -> Event {
     Event {
-        payload: event.to_owned(),
+        content_type: "payload".to_lowercase(),
+        content: event.to_owned(),
+        metadata: json!(null),
     }
 }
 
@@ -65,7 +65,12 @@ pub fn message_to_jsonvalue(result: MessageData) -> Value {
 
     if let Some(mem) = result.memories {
         for elem in mem.iter() {
-            memories.push(elem.to_owned().memorie_to_jsvalue());
+            let mut map = Map::new();
+            map.insert("key".to_owned(), json!(elem.key.to_owned()));
+            map.insert("value".to_owned(), elem.value.to_owned());
+            //TODO: UPDATE
+            // map.insert(elem.key.to_owned(), elem.value.to_owned());
+            memories.push(json!(map));
         }
     }
 

@@ -1,28 +1,28 @@
 mod support;
 
 use csmlinterpreter::interpret;
-use csmlinterpreter::interpreter::{json_to_rust::*, message::MessageData};
-use csmlinterpreter::parser::{literal::Literal, Parser};
-use std::collections::HashMap;
+use csmlinterpreter::interpreter::{data::*, message::MessageData};
 use serde_json::Value;
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
 fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let text = read_file("CSML/object.csml".to_owned()).unwrap();
-    let flow = Parser::parse_flow(&text).unwrap();
 
-    let mut context = gen_context(HashMap::new(), HashMap::new(), HashMap::new(), 0, false);
+    let context = gen_context(
+        serde_json::json!({}),
+        serde_json::json!({}),
+        serde_json::json!({}),
+        0,
+        false,
+    );
 
-    interpret(&flow, step, &mut context, &event, None, None, None)
+    interpret(&text, step, context, &event, None, None, None)
 }
 
 fn check_error_component(vec: &MessageData) -> bool {
     let comp = &vec.messages[0];
-    match &comp.content {
-        Literal::FunctionLiteral { name, .. } if name == "error" => true,
-        _ => false,
-    }
+    comp.content_type == "error"
 }
 
 #[test]

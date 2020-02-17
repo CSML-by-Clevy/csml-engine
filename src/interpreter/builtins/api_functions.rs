@@ -1,28 +1,40 @@
 use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{builtins::*, data::Data};
+use crate::interpreter::{builtins::*, data::Data, json_to_rust::json_to_literal};
 use crate::parser::{literal::Literal, tokens::*};
 
+use crate::primitive::{null::PrimitiveNull, PrimitiveType};
 use curl::{
     easy::{Easy, List},
     Error,
 };
-use serde_json::{map::Map, Value};
 use std::{collections::HashMap, env, io::Read};
 
 fn parse_api(args: &HashMap<String, Literal>, data: &Data) -> Result<(String, String), ErrorInfo> {
-    let mut map: Map<String, Value> = Map::new();
+    let mut map: Map<String, serde_json::Value> = serde_json::Map::new();
 
-    if let Some(Literal::StringLiteral { value: fn_id, .. }) = args.get("fn_id") {
-        map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
-    } else if let Some(Literal::StringLiteral { value: fn_id, .. }) = args.get(DEFAULT) {
-        map.insert("function_id".to_owned(), Value::String(fn_id.to_owned()));
+    if let Some(literal) = args.get("fn_id") {
+        if literal.primitive.get_type() == PrimitiveType::PrimitiveString {
+            let fn_id = Literal::get_value::<String>(&literal.primitive).unwrap();
+            map.insert(
+                "function_id".to_owned(),
+                serde_json::Value::String(fn_id.to_owned()),
+            );
+        }
+    } else if let Some(literal) = args.get(DEFAULT) {
+        if literal.primitive.get_type() == PrimitiveType::PrimitiveString {
+            let fn_id = Literal::get_value::<String>(&literal.primitive).unwrap();
+            map.insert(
+                "function_id".to_owned(),
+                serde_json::Value::String(fn_id.to_owned()),
+            );
+        }
     }
 
     let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
     let client = client_to_json(&data.memory.client);
 
-    map.insert("data".to_owned(), Value::Object(sub_map));
-    map.insert("client".to_owned(), Value::Object(client));
+    map.insert("data".to_owned(), serde_json::Value::Object(sub_map));
+    map.insert("client".to_owned(), serde_json::Value::Object(client));
     Ok((
         data.memory.fn_endpoint.to_string(),
         serde_json::to_string(&map).unwrap(),
@@ -76,15 +88,15 @@ pub fn api(
         Err(err) => {
             return Err(ErrorInfo {
                 message: format!("{}", err),
-                interval: interval.clone(),
+                interval,
             })
         }
     };
 
     let json: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(&result)).unwrap();
     if let Some(value) = json.get("data") {
-        json_to_literal(value, interval.clone())
+        json_to_literal(value, interval)
     } else {
-        Ok(Literal::null(interval))
+        Ok(PrimitiveNull::get_literal("null", interval))
     }
 }

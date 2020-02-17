@@ -15,10 +15,10 @@ start:
     goto end
 
 step1:
-    if (var10 > 9) {
-        say "var10 > 9"
-    }
-    goto end
+  if (var10 > 9) {
+      say "var10 > 9"
+  }
+  goto end
 
 step2:
     if (var10 > var5) {
