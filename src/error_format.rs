@@ -1,6 +1,6 @@
 pub mod data;
 
-use crate::parser::ast::Interval;
+use crate::data::ast::Interval;
 pub use data::{CustomError, ErrorInfo};
 
 // pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {

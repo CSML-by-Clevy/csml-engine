@@ -1,6 +1,5 @@
-use crate::parser::{
-    ast::*, context::*, parse_comments::comment, parse_idents::*, tokens::*, tools::*,
-};
+use crate::data::{ast::*, tokens::*};
+use crate::parser::{parse_comments::comment, parse_idents::*, tools::*, StateContext};
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
 fn step_name<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
@@ -42,11 +41,11 @@ pub fn parse_import<'a, E: ParseError<Span<'a>>>(
     let (s, name) = parse_import_opt(s)?;
 
     let instruction_info = InstructionInfo {
-        index: Context::get_index(),
+        index: StateContext::get_index(),
         total: 0,
     };
 
-    Context::inc_index();
+    StateContext::inc_index();
 
     Ok((s, (name, instruction_info)))
 }

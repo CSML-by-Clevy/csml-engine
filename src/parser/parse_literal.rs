@@ -1,13 +1,11 @@
-use crate::parser::literal::Literal;
+use crate::data::{ast::*, tokens::*, Literal};
 use crate::parser::{
-    ast::Expr,
     parse_comments::comment,
     parse_idents::{get_string, get_tag},
-    tokens::*,
     tools::get_interval,
 };
 
-use crate::primitive::{
+use crate::data::primitive::{
     boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt, null::PrimitiveNull,
 };
 use nom::{

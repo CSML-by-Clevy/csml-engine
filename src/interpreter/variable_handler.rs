@@ -5,22 +5,23 @@ pub mod match_literals;
 pub mod memory;
 pub mod operations;
 
-use crate::error_format::data::ErrorInfo;
+pub use expr_to_literal::expr_to_literal;
+
+use crate::data::{
+    ast::{Expr, Function, Identifier, Interval, PathExpr, PathLiteral},
+    tokens::{EVENT, _METADATA},
+    Data, Literal,
+};
+use crate::data::{MemoryType, MessageData, MSG};
+use crate::error_format::ErrorInfo;
 use crate::interpreter::{
     ast_interpreter::match_functions,
-    data::{Data, MemoryType},
-    message::{MessageData, MSG},
     variable_handler::{
         gen_literal::gen_literal_form_event,
         memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
     },
 };
-use crate::parser::{
-    ast::{Expr, Function, Identifier, Interval, PathExpr, PathLiteral},
-    literal::Literal,
-    tokens::{EVENT, _METADATA},
-};
-use crate::primitive::{
+use crate::data::primitive::{
     null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
 };
 use std::collections::HashMap;

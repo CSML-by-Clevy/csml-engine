@@ -1,5 +1,6 @@
-use crate::parser::literal::Literal;
-use crate::parser::tokens::*;
+use crate::data::tokens::*;
+use crate::data::Literal;
+
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};

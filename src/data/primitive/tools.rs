@@ -1,6 +1,5 @@
-use crate::error_format::data::ErrorInfo;
-use crate::parser::ast::Interval;
-use crate::parser::literal::Literal;
+use crate::data::{ast::Interval, Literal};
+use crate::error_format::ErrorInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE

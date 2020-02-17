@@ -1,10 +1,9 @@
-pub mod ast;
-pub mod context;
+pub mod csml_rules;
 pub mod expressions_evaluation;
-pub mod literal;
 pub mod parse_actions;
 pub mod parse_comments;
 pub mod parse_for_loop;
+pub mod parse_functions;
 pub mod parse_idents;
 pub mod parse_if;
 pub mod parse_import;
@@ -13,16 +12,16 @@ pub mod parse_object;
 pub mod parse_scope;
 pub mod parse_string;
 pub mod parse_var_types;
-pub mod tokens;
+pub mod state_context;
 pub mod tools;
 
+pub use state_context::{ExitCondition, State, StateContext};
+
+use crate::data::{ast::*, tokens::*};
 use crate::error_format::{CustomError, ErrorInfo};
-use crate::parser::context::*;
-use ast::*;
 use parse_comments::comment;
 use parse_idents::parse_idents;
 use parse_scope::parse_root;
-use tokens::*;
 use tools::*;
 
 use nom::error::{ErrorKind, ParseError};
@@ -75,8 +74,8 @@ impl Parser {
             }
             Err(e) => match e {
                 Err::Error(err) | Err::Failure(err) => {
-                    Context::clear_state();
-                    Context::clear_index();
+                    StateContext::clear_state();
+                    StateContext::clear_index();
                     Err(ErrorInfo {
                         message: err.error.to_owned(),
                         interval: Interval {
@@ -110,7 +109,7 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
     let (s, ident) = preceded(comment, parse_idents)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
 
-    Context::clear_index();
+    StateContext::clear_index();
 
     let (s, start) = get_interval(s)?;
     let (s, actions) = preceded(comment, parse_root)(s)?;

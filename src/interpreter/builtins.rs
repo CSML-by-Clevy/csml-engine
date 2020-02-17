@@ -1,41 +1,46 @@
-pub mod api_functions;
-pub mod reserved_functions;
+pub mod api;
+pub mod buttons;
+pub mod format;
+pub mod functions;
+pub mod media;
+pub mod tools;
 
-use crate::error_format::data::ErrorInfo;
-use crate::interpreter::data::Client;
-use crate::parser::{ast::*, literal::Literal};
-use serde_json::{Map, Value};
+use crate::data::{ast::*, tokens::*, Data, Literal};
+use crate::error_format::ErrorInfo;
 use std::collections::HashMap;
-use std::hash::BuildHasher;
 
-pub fn create_submap<S: BuildHasher>(
-    keys: &[&str],
-    args: &HashMap<String, Literal, S>,
-) -> Result<Map<String, Value>, ErrorInfo> {
-    let mut map = Map::new();
+use api::api;
+use buttons::button;
+use format::*;
+use functions::*;
+use media::*;
 
-    for elem in args.keys() {
-        if keys.iter().find(|&&x| x == elem).is_none() {
-            if let Some(literal) = args.get(&*elem) {
-                map.insert(elem.clone(), literal.primitive.to_json());
-            }
-        }
+pub fn match_builtin(
+    name: &str,
+    args: HashMap<String, Literal>,
+    interval: Interval,
+    data: &mut Data,
+) -> Result<Literal, ErrorInfo> {
+    match name {
+        // CUSTOM
+        TYPING => typing(args, name.to_owned(), interval),
+        WAIT => wait(args, name.to_owned(), interval),
+        URL => url(args, name.to_owned(), interval),
+        IMAGE => img(args, name.to_owned(), interval),
+        QUESTION => question(args, name.to_owned(), interval),
+        VIDEO => video(args, name.to_owned(), interval),
+        AUDIO => audio(args, name.to_owned(), interval),
+        BUTTON => button(args, name.to_owned(), interval),
+        OBJECT => object(args, interval),
+
+        // DEFAULT
+        FN => api(args, interval, data),
+        ONE_OF => one_of(args, interval),
+        SHUFFLE => shuffle(args, interval),
+        LENGTH => length(args, interval),
+        FIND => find(args, interval),
+        RANDOM => random(interval),
+        FLOOR => floor(args, interval),
+        _ => text(args, name.to_owned(), interval),
     }
-    Ok(map)
-}
-
-fn client_to_json(client: &Client) -> Map<String, Value> {
-    let mut map = Map::new();
-
-    map.insert("bot_id".to_owned(), Value::String(client.bot_id.to_owned()));
-    map.insert(
-        "channel_id".to_owned(),
-        Value::String(client.channel_id.to_owned()),
-    );
-    map.insert(
-        "user_id".to_owned(),
-        Value::String(client.user_id.to_owned()),
-    );
-
-    map
 }

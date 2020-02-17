@@ -1,19 +1,17 @@
-use crate::error_format::data::ErrorInfo;
+use crate::data::{
+    ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
+    Data, Literal, MessageData, MSG,
+};
+use crate::error_format::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::{check_if_ident, interpret_scope, match_functions},
-    data::Data,
-    message::MessageData,
-    message::MSG,
+    ast_interpreter::match_functions,
+    interpret_scope,
     variable_handler::{
         gen_literal::gen_literal_form_expr, get_var, interval::interval_from_expr,
         operations::evaluate,
     },
 };
-use crate::parser::{
-    ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
-    literal::Literal,
-};
-use crate::primitive::boolean::PrimitiveBoolean;
+use crate::data::primitive::boolean::PrimitiveBoolean;
 use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +67,16 @@ fn evaluate_if_condition(
         )
     } else {
         Ok(root)
+    }
+}
+
+fn check_if_ident(expr: &Expr) -> bool {
+    match expr {
+        Expr::LitExpr { .. }
+        | Expr::IdentExpr(..)
+        | Expr::ComplexLiteral(..)
+        | Expr::ObjectExpr(..) => true,
+        _ => false,
     }
 }
 

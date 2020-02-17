@@ -1,12 +1,11 @@
-use crate::error_format::data::ErrorInfo;
+use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
+use crate::error_format::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::{if_statment::evaluate_condition, match_builtin},
-    data::Data,
-    message::{MessageData, MSG},
+    ast_interpreter::evaluate_condition,
+    builtins::match_builtin,
     variable_handler::{get_string_from_complexstring, get_var, interval::interval_from_expr},
 };
-use crate::parser::{ast::*, literal::Literal, tokens::*};
-use crate::primitive::{array::PrimitiveArray, object::PrimitiveObject};
+use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use std::{collections::HashMap, sync::mpsc};
 
 fn format_function_args(

@@ -1,16 +1,14 @@
+use crate::data::{ast::*, tokens::*};
 use crate::parser::{
-    ast::*,
-    context::*,
     expressions_evaluation::operator_precedence,
     parse_comments::comment,
     parse_for_loop::parse_foreach,
     parse_idents::{get_string, get_tag, parse_idents, parse_idents_no_check},
     parse_if::parse_if,
     parse_import::parse_import,
-    parse_var_types::{parse_basic_expr, parse_expr_list, parse_var_expr},
-    tokens::*,
+    parse_var_types::{parse_basic_expr, parse_var_expr},
     tools::get_interval,
-    GotoType,
+    GotoType, State, StateContext,
 };
 use nom::{branch::alt, bytes::complete::tag, combinator::opt, error::*, sequence::preceded, *};
 
@@ -64,12 +62,12 @@ fn parse_goto<'a, E: ParseError<Span<'a>>>(
     };
 
     let instruction_info = InstructionInfo {
-        index: Context::get_index(),
+        index: StateContext::get_index(),
         total: 0,
     };
 
-    Context::clear_state();
-    Context::inc_index();
+    StateContext::clear_state();
+    StateContext::inc_index();
 
     Ok((
         s,
@@ -89,11 +87,11 @@ fn parse_say<'a, E: ParseError<Span<'a>>>(
     let (s, expr) = parse_var_expr(s)?;
 
     let instruction_info = InstructionInfo {
-        index: Context::get_index(),
+        index: StateContext::get_index(),
         total: 0,
     };
 
-    Context::inc_index();
+    StateContext::inc_index();
 
     Ok((
         s,
@@ -112,11 +110,11 @@ fn parse_use<'a, E: ParseError<Span<'a>>>(
     let (s, expr) = parse_var_expr(s)?;
 
     let instruction_info = InstructionInfo {
-        index: Context::get_index(),
+        index: StateContext::get_index(),
         total: 0,
     };
 
-    Context::inc_index();
+    StateContext::inc_index();
 
     Ok((
         s,
@@ -150,11 +148,11 @@ fn parse_do<'a, E: ParseError<Span<'a>>>(
     };
 
     let instruction_info = InstructionInfo {
-        index: Context::get_index(),
+        index: StateContext::get_index(),
         total: 0,
     };
 
-    Context::inc_index();
+    StateContext::inc_index();
 
     Ok((
         s,
@@ -169,7 +167,7 @@ fn parse_hold<'a, E: ParseError<Span<'a>>>(
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
-    match Context::get_state() {
+    match StateContext::get_state() {
         State::Loop => Err(Err::Failure(E::add_context(
             s,
             "Hold cannot be used inside a foreach",
@@ -177,10 +175,10 @@ fn parse_hold<'a, E: ParseError<Span<'a>>>(
         ))),
         State::Normal => {
             let instruction_info = InstructionInfo {
-                index: Context::get_index(),
+                index: StateContext::get_index(),
                 total: 0,
             };
-            Context::inc_index();
+            StateContext::inc_index();
             Ok((
                 s,
                 (Expr::ObjectExpr(ObjectType::Hold(inter)), instruction_info),
@@ -196,13 +194,13 @@ fn parse_break<'a, E: ParseError<Span<'a>>>(
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, BREAK)(s)?;
 
-    match Context::get_state() {
+    match StateContext::get_state() {
         State::Loop => {
             let instruction_info = InstructionInfo {
-                index: Context::get_index(),
+                index: StateContext::get_index(),
                 total: 0,
             };
-            Context::inc_index();
+            StateContext::inc_index();
             Ok((
                 s,
                 (Expr::ObjectExpr(ObjectType::Break(inter)), instruction_info),
@@ -235,11 +233,11 @@ fn parse_remember<'a, E: ParseError<Span<'a>>>(
     };
 
     let instruction_info = InstructionInfo {
-        index: Context::get_index(),
+        index: StateContext::get_index(),
         total: 0,
     };
 
-    Context::inc_index();
+    StateContext::inc_index();
 
     Ok((
         s,
@@ -248,19 +246,6 @@ fn parse_remember<'a, E: ParseError<Span<'a>>>(
             instruction_info,
         ),
     ))
-}
-
-pub fn parse_functions<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, interval) = get_interval(s)?;
-    let (s, name) = get_string(s)?;
-    let (s, expr) = parse_expr_list(s)?;
-    let func = Function {
-        name,
-        interval,
-        args: Box::new(expr),
-    };
-
-    Ok((s, Expr::ObjectExpr(ObjectType::Normal(func))))
 }
 
 pub fn parse_root_functions<'a, E: ParseError<Span<'a>>>(

@@ -4,7 +4,7 @@ use std::sync::*;
 use std::thread::*;
 
 lazy_static! {
-    static ref CONTEXT: Mutex<Context> = Mutex::new(Context {
+    static ref CONTEXT: Mutex<StateContext> = Mutex::new(StateContext {
         state: HashMap::new(),
         warning: Vec::new(),
         index: HashMap::new(),
@@ -15,6 +15,14 @@ lazy_static! {
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExitCondition {
+    Goto,
+    Error,
+    Break,
+    Hold,
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum State {
     Normal,
@@ -23,7 +31,7 @@ pub enum State {
 
 // TODO: Check for usize overflow vuln !
 #[derive(Debug)]
-pub struct Context {
+pub struct StateContext {
     state: HashMap<ThreadId, Vec<State>>,
     warning: Vec<String>,
     index: HashMap<ThreadId, usize>,
@@ -33,7 +41,7 @@ pub struct Context {
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl Context {
+impl StateContext {
     pub fn clear_index() {
         let thread_id = current().id();
         let hashmap = &mut CONTEXT.lock().unwrap().index;

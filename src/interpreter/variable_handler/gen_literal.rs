@@ -1,16 +1,13 @@
-use crate::error_format::data::ErrorInfo;
+use crate::data::{
+    ast::{Expr, Identifier, Interval, PathExpr},
+    Data, Event, Literal, MemoryType, MessageData, MSG,
+};
+use crate::error_format::ErrorInfo;
 use crate::interpreter::{
-    // ast_interpreter::get_path,
-    data::{Data, Event, MemoryType},
     json_to_rust::json_to_literal,
-    message::{MessageData, MSG},
     variable_handler::{exec_path_actions, get_var, interval::interval_from_expr, resolve_path},
 };
-use crate::parser::{
-    ast::{Expr, Identifier, Interval, PathExpr},
-    literal::Literal,
-};
-use crate::primitive::{null::PrimitiveNull, string::PrimitiveString};
+use crate::data::primitive::{null::PrimitiveNull, string::PrimitiveString};
 use std::sync::mpsc;
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {

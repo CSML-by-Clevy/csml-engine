@@ -1,6 +1,7 @@
-use csmlinterpreter::interpreter::{data::*, message::MessageData};
-// use csmlinterpreter::parser::ast::*;
-use csmlinterpreter::interpret; //parse_file
+use csmlinterpreter::{
+    data::{Client, ContextJson, Event, MessageData},
+    interpret,
+};
 use serde_json::{json, map::Map, Value};
 
 use std::fs::File;

@@ -1,6 +1,4 @@
-use crate::parser::tokens::Span;
-use crate::parser::tokens::*;
-
+use crate::data::tokens::*;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_until, take_while},

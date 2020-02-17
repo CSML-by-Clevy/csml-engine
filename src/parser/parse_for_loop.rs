@@ -1,12 +1,10 @@
-use crate::parser::{
+use crate::data::{
     ast::{Expr, Identifier, InstructionInfo, RangeInterval},
-    context::*,
-    parse_comments::comment,
-    parse_idents::parse_idents,
-    parse_scope::parse_scope,
-    parse_var_types::parse_var_expr,
     tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
-    tools::get_interval,
+};
+use crate::parser::{
+    parse_comments::comment, parse_idents::parse_idents, parse_scope::parse_scope,
+    parse_var_types::parse_var_expr, tools::get_interval, State, StateContext,
 };
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
@@ -30,17 +28,17 @@ pub fn parse_foreach<'a, E: ParseError<Span<'a>>>(
     let (s, _) = preceded(comment, tag(IN))(s)?;
     let (s, expr) = parse_var_expr(s)?;
 
-    let index = Context::get_index();
+    let index = StateContext::get_index();
 
-    Context::inc_index();
+    StateContext::inc_index();
 
-    Context::set_state(State::Loop);
+    StateContext::set_state(State::Loop);
     let (s, block) = parse_scope(s)?;
-    Context::set_state(State::Normal);
+    StateContext::set_state(State::Normal);
 
     let (s, end) = get_interval(s)?;
 
-    let new_index = Context::get_index() - 1;
+    let new_index = StateContext::get_index() - 1;
     let instruction_info = InstructionInfo {
         index,
         total: new_index - index,

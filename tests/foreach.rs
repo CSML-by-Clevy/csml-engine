@@ -1,7 +1,7 @@
 mod support;
 
+use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
-use csmlinterpreter::interpreter::{data::*, message::MessageData};
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 

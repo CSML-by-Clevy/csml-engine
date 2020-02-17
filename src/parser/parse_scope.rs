@@ -1,6 +1,5 @@
-use crate::parser::{
-    ast::*, parse_actions::parse_root_functions, parse_comments::comment, tokens::*, tools::*,
-};
+use crate::data::{ast::*, tokens::*};
+use crate::parser::{parse_actions::parse_root_functions, parse_comments::comment, tools::*};
 use nom::{
     bytes::complete::tag, error::ParseError, multi::fold_many0, sequence::delimited,
     sequence::preceded, *,

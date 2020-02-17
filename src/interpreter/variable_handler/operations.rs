@@ -1,7 +1,7 @@
-use crate::error_format::data::ErrorInfo;
+use crate::data::{ast::Infix, Literal};
+use crate::error_format::ErrorInfo;
 use crate::interpreter::variable_handler::match_literals::match_obj;
-use crate::parser::{ast::Infix, literal::Literal};
-use crate::primitive::boolean::PrimitiveBoolean;
+use crate::data::primitive::boolean::PrimitiveBoolean;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
@@ -115,15 +115,11 @@ pub fn evaluate(
 
 #[cfg(test)]
 mod test_operation {
-    use crate::parser::ast::Interval;
-    use crate::primitive::array::PrimitiveArray;
-    use crate::primitive::boolean::PrimitiveBoolean;
-    use crate::primitive::float::PrimitiveFloat;
-    use crate::primitive::int::PrimitiveInt;
-    use crate::primitive::null::PrimitiveNull;
-    use crate::primitive::object::PrimitiveObject;
-    use crate::primitive::string::PrimitiveString;
-    use crate::primitive::PrimitiveType;
+    use crate::data::ast::Interval;
+    use crate::data::primitive::{
+        array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
+        null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
+    };
     use std::collections::HashMap;
 
     use super::*;

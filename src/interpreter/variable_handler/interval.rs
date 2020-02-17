@@ -1,6 +1,4 @@
-use crate::parser::ast::{
-    DoType, Expr, Function, IfStatement, Interval, ObjectType, RangeInterval,
-};
+use crate::data::ast::{DoType, Expr, Function, IfStatement, Interval, ObjectType, RangeInterval};
 
 pub fn interval_from_expr(expr: &Expr) -> Interval {
     match expr {

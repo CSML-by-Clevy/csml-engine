@@ -1,13 +1,13 @@
+use crate::data::{ast::*, tokens::*};
 use crate::parser::{
-    ast::*,
     expressions_evaluation::operator_precedence,
-    parse_actions::{parse_assignation, parse_functions},
+    parse_actions::parse_assignation,
     parse_comments::comment,
+    parse_functions::parse_functions,
     parse_idents::{get_string, get_tag, parse_idents, parse_idents_expr},
     parse_literal::parse_literal_expr,
     parse_object::parse_object,
     parse_string::parse_string,
-    tokens::*,
     tools::*,
 };
 use nom::{

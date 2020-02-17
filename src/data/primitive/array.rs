@@ -1,15 +1,9 @@
-use crate::error_format::data::ErrorInfo;
-use crate::interpreter::data::MemoryType;
-use crate::interpreter::message::Message;
-use crate::parser::ast::Interval;
-use crate::parser::literal::Literal;
-use crate::primitive::boolean::PrimitiveBoolean;
-use crate::primitive::int::PrimitiveInt;
-use crate::primitive::null::PrimitiveNull;
-use crate::primitive::string::PrimitiveString;
-use crate::primitive::tools::check_usage;
-use crate::primitive::Right;
-use crate::primitive::{Primitive, PrimitiveType};
+use crate::data::{Interval, MemoryType, Message, Literal};
+use crate::error_format::ErrorInfo;
+use crate::data::primitive::{
+    PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
+    tools::check_usage, Primitive, PrimitiveType, Right,
+};
 use lazy_static::*;
 use serde_json::json;
 use std::cmp::Ordering;

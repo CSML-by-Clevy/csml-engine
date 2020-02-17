@@ -7,22 +7,20 @@ pub mod object;
 pub mod string;
 pub mod tools;
 
-use crate::error_format::data::ErrorInfo;
-use crate::interpreter::data::MemoryType;
-use crate::interpreter::message::Message;
-use crate::parser::ast::Interval;
-use crate::parser::literal::Literal;
-use crate::primitive::string::PrimitiveString;
-use crate::primitive::tools::*;
-use crate::primitive::{float::PrimitiveFloat, int::PrimitiveInt};
+pub use float::PrimitiveFloat;
+pub use int::PrimitiveInt;
+pub use object::PrimitiveObject;
+pub use string::PrimitiveString;
+pub use array::PrimitiveArray;
+pub use boolean::PrimitiveBoolean;
+pub use null::PrimitiveNull;
+
+use crate::data::{Interval, Literal, MemoryType, Message};
+use crate::error_format::ErrorInfo;
+use crate::data::primitive::tools::*;
+
 use std::cmp::Ordering;
-use std::ops::Add;
-use std::ops::BitAnd;
-use std::ops::BitOr;
-use std::ops::Div;
-use std::ops::Mul;
-use std::ops::Rem;
-use std::ops::Sub;
+use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Sub};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES

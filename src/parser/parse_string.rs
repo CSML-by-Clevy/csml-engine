@@ -1,8 +1,8 @@
+use crate::data::{ast::*, tokens::*};
 use crate::parser::{
-    ast::*, parse_comments::comment, parse_var_types::parse_var_expr, tokens::*,
-    tools::get_interval,
+    parse_comments::comment, parse_var_types::parse_var_expr, tools::get_interval,
 };
-use crate::primitive::string::PrimitiveString;
+use crate::data::primitive::string::PrimitiveString;
 use nom::{
     bytes::complete::tag,
     error::{ErrorKind, ParseError},

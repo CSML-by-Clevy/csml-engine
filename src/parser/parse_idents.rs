@@ -1,12 +1,7 @@
+use crate::data::{ast::*, tokens::*};
 use crate::parser::{
-    ast::*,
-    // parse_object::string,
-    // parse_literal::get_int,
-    expressions_evaluation::operator_precedence,
-    parse_comments::comment,
-    parse_var_types::parse_expr_list,
-    tokens::*,
-    tools::get_interval,
+    expressions_evaluation::operator_precedence, parse_comments::comment,
+    parse_var_types::parse_expr_list, tools::get_interval,
 };
 use nom::{
     branch::alt,

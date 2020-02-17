@@ -1,13 +1,12 @@
-use crate::error_format::data::ErrorInfo;
-use crate::parser::ast::Interval;
-use crate::parser::ast::{Flow, InstructionType};
+use crate::data::ast::{Flow, InstructionType, Interval};
+use crate::error_format::ErrorInfo;
 
-pub fn check_ident(expr: &str, name: &str) -> bool {
-    match expr {
-        string if string == name => true,
-        _ => false,
-    }
-}
+// pub fn check_ident(expr: &str, name: &str) -> bool {
+//     match expr {
+//         string if string == name => true,
+//         _ => false,
+//     }
+// }
 
 pub fn check_valid_flow(flow: &Flow) -> Result<&Flow, ErrorInfo> {
     if flow

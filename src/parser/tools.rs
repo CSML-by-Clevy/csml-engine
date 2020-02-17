@@ -1,4 +1,8 @@
-use crate::parser::{ast::*, expressions_evaluation::*, parse_comments::comment, tokens::*};
+use crate::data::{
+    ast::{Expr, Interval},
+    tokens::*,
+};
+use crate::parser::{expressions_evaluation::*, parse_comments::comment};
 use nom::{
     bytes::complete::tag,
     error::ParseError,

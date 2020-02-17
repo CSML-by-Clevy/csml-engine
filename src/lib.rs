@@ -1,18 +1,17 @@
+pub mod data;
 pub mod error_format;
 pub mod interpreter;
 pub mod parser;
-pub mod primitive;
 
-use crate::interpreter::ast_interpreter::interpret_scope;
-use crate::interpreter::data::{get_hashmap, ContextJson, Data, Event};
-use crate::interpreter::message::MessageData;
-use crate::interpreter::message::MSG;
+use crate::data::context::get_hashmap;
+use data::{ast::*, ContextJson, Data, Event, MessageData, MSG};
+use error_format::ErrorInfo;
+use interpreter::interpret_scope;
+use parser::csml_rules::check_valid_flow;
+use parser::Parser;
+
 use curl::easy::Easy;
-use error_format::data::ErrorInfo;
-use interpreter::csml_rules::check_valid_flow;
-use parser::{ast::*, Parser};
-use std::collections::HashMap;
-use std::sync::mpsc;
+use std::{collections::HashMap, sync::mpsc};
 
 pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
     match Parser::parse_flow(file) {

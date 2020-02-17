@@ -1,15 +1,12 @@
-use crate::error_format::data::ErrorInfo;
-use crate::interpreter::data::MemoryType;
-use crate::interpreter::message::Message;
-use crate::parser::ast::Interval;
-use crate::parser::literal::Literal;
-use crate::primitive::float::PrimitiveFloat;
-use crate::primitive::object::PrimitiveObject;
-use crate::primitive::string::PrimitiveString;
-use crate::primitive::tools::check_division_by_zero_i64;
-use crate::primitive::tools::check_usage;
-use crate::primitive::Right;
-use crate::primitive::{Primitive, PrimitiveType};
+use crate::data::{ast::Interval, memories::MemoryType, message::Message, Literal};
+use crate::error_format::ErrorInfo;
+use crate::data::primitive::int::PrimitiveInt;
+use crate::data::primitive::object::PrimitiveObject;
+use crate::data::primitive::string::PrimitiveString;
+use crate::data::primitive::tools::check_division_by_zero_f64;
+use crate::data::primitive::tools::check_usage;
+use crate::data::primitive::Right;
+use crate::data::primitive::{Primitive, PrimitiveType};
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -18,8 +15,11 @@ use std::collections::HashMap;
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-type PrimitiveMethod =
-    fn(int: &mut PrimitiveInt, args: &[Literal], interval: Interval) -> Result<Literal, ErrorInfo>;
+type PrimitiveMethod = fn(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo>;
 
 lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
@@ -28,22 +28,40 @@ lazy_static! {
         // type_of() -> Primitive<String>
         map.insert("type_of", (type_of as PrimitiveMethod, Right::Read));
 
-        // to_string() ->  Primitive<String>
+        // to_string() -> Primitive<String>
         map.insert("to_string", (to_string as PrimitiveMethod, Right::Read));
 
-        // pow(Primitive<Int>) -> Primitive<Int>
+        // abs() -> Primitive<Float>
+        map.insert("abs", (abs as PrimitiveMethod, Right::Read));
+
+        // cos() -> Primitive<Float>
+        map.insert("cos", (cos as PrimitiveMethod, Right::Read));
+
+        // pow(Primitive<Float>) -> Primitive<Float>
         map.insert("pow", (pow as PrimitiveMethod, Right::Read));
 
-        // abs() -> Primitive<Int>
-        map.insert("abs", (abs as PrimitiveMethod, Right::Read));
+        // floor() -> Primitive<Float>
+        map.insert("floor", (floor as PrimitiveMethod, Right::Read));
+
+        // ceil() -> Primitive<Float>
+        map.insert("ceil", (ceil as PrimitiveMethod, Right::Read));
+
+        // round() -> Primitive<Float>
+        map.insert("round", (round as PrimitiveMethod, Right::Read));
+
+        // sin() -> Primitive<Float>
+        map.insert("sin", (sin as PrimitiveMethod, Right::Read));
+
+        // sqrt() -> Primitive<Float>
+        map.insert("sqrt", (sqrt as PrimitiveMethod, Right::Read));
 
         map
     };
 }
 
 #[derive(PartialEq, Debug, Clone)]
-pub struct PrimitiveInt {
-    pub value: i64,
+pub struct PrimitiveFloat {
+    pub value: f64,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,17 +69,17 @@ pub struct PrimitiveInt {
 ////////////////////////////////////////////////////////////////////////////////
 
 fn type_of(
-    _int: &mut PrimitiveInt,
+    _float: &mut PrimitiveFloat,
     args: &[Literal],
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     check_usage(args, 0, "type_of()", interval)?;
 
-    Ok(PrimitiveString::get_literal("string", "int", interval))
+    Ok(PrimitiveString::get_literal("string", "float", interval))
 }
 
 fn to_string(
-    int: &mut PrimitiveInt,
+    float: &mut PrimitiveFloat,
     args: &[Literal],
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
@@ -69,13 +87,41 @@ fn to_string(
 
     Ok(PrimitiveString::get_literal(
         "string",
-        &int.to_string(),
+        &float.to_string(),
         interval,
     ))
 }
 
-fn pow(int: &mut PrimitiveInt, args: &[Literal], interval: Interval) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 1, "pow(Primitive<Int>)", interval)?;
+fn abs(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "abs()", interval)?;
+
+    let result = float.value.abs();
+
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn cos(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "cos()", interval)?;
+
+    let result = float.value.cos();
+
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn pow(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 1, "pow(Primitive<Float>)", interval)?;
 
     let literal = match args.get(0) {
         Some(res) => res,
@@ -87,38 +133,90 @@ fn pow(int: &mut PrimitiveInt, args: &[Literal], interval: Interval) -> Result<L
         }
     };
 
-    match Literal::get_value::<i64>(&literal.primitive) {
+    match Literal::get_value::<f64>(&literal.primitive) {
         Ok(res) => {
-            let result = int.value.pow(*res as u32);
+            let result = float.value.powf(*res);
 
-            Ok(PrimitiveInt::get_literal("int", result, interval))
+            Ok(PrimitiveFloat::get_literal("float", result, interval))
         }
         Err(_) => Err(ErrorInfo {
-            message: "usage: parameter must be of type int".to_owned(),
+            message: "usage: parameter must be of type float".to_owned(),
             interval,
         }),
     }
 }
 
-fn abs(int: &mut PrimitiveInt, args: &[Literal], interval: Interval) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "abs()", interval)?;
+fn floor(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "floor()", interval)?;
 
-    let result = int.value.abs();
+    let result = float.value.floor();
 
-    Ok(PrimitiveInt::get_literal("int", result, interval))
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn ceil(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "ceil()", interval)?;
+
+    let result = float.value.ceil();
+
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn round(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "round()", interval)?;
+
+    let result = float.value.round();
+
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn sin(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "sin()", interval)?;
+
+    let result = float.value.sin();
+
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn sqrt(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "sqrt()", interval)?;
+
+    let result = float.value.sqrt();
+
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl PrimitiveInt {
-    pub fn new(value: i64) -> Self {
+impl PrimitiveFloat {
+    pub fn new(value: f64) -> Self {
         Self { value }
     }
 
-    pub fn get_literal(content_type: &str, int: i64, interval: Interval) -> Literal {
-        let primitive = Box::new(PrimitiveInt::new(int));
+    pub fn get_literal(content_type: &str, float: f64, interval: Interval) -> Literal {
+        let primitive = Box::new(PrimitiveFloat::new(float));
 
         Literal {
             content_type: content_type.to_owned(),
@@ -128,7 +226,7 @@ impl PrimitiveInt {
     }
 }
 
-impl Primitive for PrimitiveInt {
+impl Primitive for PrimitiveFloat {
     fn do_exec(
         &mut self,
         name: &str,
@@ -143,7 +241,7 @@ impl Primitive for PrimitiveInt {
         }
 
         Err(ErrorInfo {
-            message: format!("unknown method '{}' for type Int", name),
+            message: format!("unknown method '{}' for type Float", name),
             interval,
         })
     }
@@ -168,7 +266,7 @@ impl Primitive for PrimitiveInt {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value + other.value;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+            return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
         Err(ErrorInfo {
@@ -181,7 +279,7 @@ impl Primitive for PrimitiveInt {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value - other.value;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+            return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
         Err(ErrorInfo {
@@ -192,17 +290,11 @@ impl Primitive for PrimitiveInt {
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            check_division_by_zero_i64(self.value, other.value)?;
+            check_division_by_zero_f64(self.value, other.value)?;
 
-            if self.value % other.value != 0 {
-                let result = self.value as f64 / other.value as f64;
+            let result = self.value / other.value;
 
-                return Ok(Box::new(PrimitiveFloat::new(result)));
-            } else {
-                let result = self.value / other.value;
-
-                return Ok(Box::new(PrimitiveInt::new(result)));
-            }
+            return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
         Err(ErrorInfo {
@@ -215,7 +307,7 @@ impl Primitive for PrimitiveInt {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value * other.value;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+            return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
         Err(ErrorInfo {
@@ -228,7 +320,7 @@ impl Primitive for PrimitiveInt {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value % other.value;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+            return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
         Err(ErrorInfo {
@@ -239,7 +331,7 @@ impl Primitive for PrimitiveInt {
 
     fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value & other.value;
+            let result = self.value as i64 & other.value as i64;
 
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
@@ -252,7 +344,7 @@ impl Primitive for PrimitiveInt {
 
     fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value | other.value;
+            let result = self.value as i64 | other.value as i64;
 
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
@@ -272,7 +364,7 @@ impl Primitive for PrimitiveInt {
     }
 
     fn get_type(&self) -> PrimitiveType {
-        PrimitiveType::PrimitiveInt
+        PrimitiveType::PrimitiveFloat
     }
 
     fn as_box_clone(&self) -> Box<dyn Primitive> {
@@ -288,7 +380,7 @@ impl Primitive for PrimitiveInt {
     }
 
     fn as_bool(&self) -> bool {
-        self.value.is_positive()
+        self.value.is_normal()
     }
 
     fn get_value(&self) -> &dyn std::any::Any {
@@ -305,7 +397,7 @@ impl Primitive for PrimitiveInt {
         hashmap.insert(
             "text".to_owned(),
             Literal {
-                content_type: "int".to_owned(),
+                content_type: "float".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.to_string())),
                 interval: Interval { column: 0, line: 0 },
             },

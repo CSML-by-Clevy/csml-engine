@@ -1,6 +1,5 @@
-use crate::parser::{
-    ast::*, parse_comments::comment, parse_var_types::parse_basic_expr, tokens::*,
-};
+use crate::data::{ast::*, tokens::*};
+use crate::parser::{parse_comments::comment, parse_var_types::parse_basic_expr};
 use nom::{
     branch::alt,
     bytes::complete::tag,

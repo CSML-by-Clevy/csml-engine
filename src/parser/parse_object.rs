@@ -1,9 +1,7 @@
+use crate::data::{ast::*, tokens::*};
+// ast::{Expr, RangeInterval},
 use crate::parser::{
-    ast::{Expr, RangeInterval},
-    parse_comments::comment,
-    parse_var_types::parse_basic_expr,
-    tokens::*,
-    tools::get_interval,
+    parse_comments::comment, parse_var_types::parse_basic_expr, tools::get_interval,
 };
 
 use nom::{

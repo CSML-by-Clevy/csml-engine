@@ -1,8 +1,8 @@
-use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{builtins::*, data::Data, json_to_rust::json_to_literal};
-use crate::parser::{literal::Literal, tokens::*};
+use crate::data::{ast::Interval, tokens::*, Data, Literal};
+use crate::error_format::ErrorInfo;
+use crate::interpreter::{builtins::tools::*, json_to_literal};
+use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
 
-use crate::primitive::{null::PrimitiveNull, PrimitiveType};
 use curl::{
     easy::{Easy, List},
     Error,
@@ -10,7 +10,7 @@ use curl::{
 use std::{collections::HashMap, env, io::Read};
 
 fn parse_api(args: &HashMap<String, Literal>, data: &Data) -> Result<(String, String), ErrorInfo> {
-    let mut map: Map<String, serde_json::Value> = serde_json::Map::new();
+    let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 
     if let Some(literal) = args.get("fn_id") {
         if literal.primitive.get_type() == PrimitiveType::PrimitiveString {

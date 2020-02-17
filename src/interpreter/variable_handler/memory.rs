@@ -1,15 +1,11 @@
-use crate::error_format::data::ErrorInfo;
-use crate::interpreter::{
-    ast_interpreter::send_msg,
-    data::{Context, Data, MemoryType},
-    message::{Memories, MessageData, MSG},
-};
-use crate::parser::{
+use crate::data::{
     ast::{Expr, Identifier},
-    literal::Literal,
+    send_msg,
     tokens::{MEMORY, PAST},
+    Context, Data, Literal, Memories, MemoryType, MessageData, MSG,
 };
-use crate::primitive::PrimitiveType;
+use crate::error_format::ErrorInfo;
+use crate::data::primitive::PrimitiveType;
 use std::sync::mpsc;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {

@@ -1,4 +1,4 @@
-use crate::parser::ast::Interval;
+use crate::data::ast::Interval;
 use nom::error::{ErrorKind, ParseError};
 
 #[derive(Clone, Debug, PartialEq)]
