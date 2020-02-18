@@ -10,6 +10,7 @@ use crate::parser::{
     parse_string::parse_string,
     tools::*,
 };
+
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -17,6 +18,7 @@ use nom::{
     error::{context, ParseError},
     multi::separated_list,
     sequence::{preceded, terminated, tuple},
+    Err::Failure,
     IResult,
 };
 
@@ -87,15 +89,12 @@ pub fn parse_as_idents<'a, E: ParseError<Span<'a>>>(
     let arg: IResult<Span<'a>, String, E> = preceded(comment, get_string)(s);
     match arg {
         Err(_) => Ok((s, expr)),
-        Ok((s2, tmp)) => {
-            let as_idents: IResult<Span<'a>, Identifier, E> =
-                preceded(get_tag(tmp, AS), parse_idents)(s2);
-
-            if let Ok((s, name)) = as_idents {
-                (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))))))
-            } else {
-                Ok((s, expr))
-            }
-        }
+        Ok((s2, tmp)) => match preceded(get_tag(tmp, AS), parse_idents)(s2) {
+            Ok((s, name)) => (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr)))))),
+            Err(err) => match err {
+                Failure(err) => Err(Failure(err)),
+                _ => Ok((s, expr)),
+            },
+        },
     }
 }

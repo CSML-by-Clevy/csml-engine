@@ -7,17 +7,17 @@ pub mod object;
 pub mod string;
 pub mod tools;
 
-pub use float::PrimitiveFloat;
-pub use int::PrimitiveInt;
-pub use object::PrimitiveObject;
-pub use string::PrimitiveString;
 pub use array::PrimitiveArray;
 pub use boolean::PrimitiveBoolean;
+pub use float::PrimitiveFloat;
+pub use int::PrimitiveInt;
 pub use null::PrimitiveNull;
+pub use object::PrimitiveObject;
+pub use string::PrimitiveString;
 
+use crate::data::primitive::tools::*;
 use crate::data::{Interval, Literal, MemoryType, Message};
 use crate::error_format::ErrorInfo;
-use crate::data::primitive::tools::*;
 
 use std::cmp::Ordering;
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Sub};

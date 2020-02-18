@@ -1,8 +1,8 @@
+use crate::data::primitive::{PrimitiveObject, PrimitiveType};
 use crate::data::Client;
 use crate::data::Interval;
 use crate::data::Literal;
 use crate::interpreter::json_to_literal;
-use crate::data::primitive::{PrimitiveObject, PrimitiveType};
 
 use nom::lib::std::collections::HashMap;
 

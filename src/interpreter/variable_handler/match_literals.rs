@@ -1,6 +1,8 @@
 // use crate::error_format::ErrorInfo;
+use crate::data::primitive::{
+    array::PrimitiveArray, boolean::PrimitiveBoolean, object::PrimitiveObject,
+};
 use crate::data::Literal;
-use crate::data::primitive::{array::PrimitiveArray, boolean::PrimitiveBoolean, object::PrimitiveObject};
 
 fn get_accept(lit: &Literal) -> Option<&Literal> {
     let val = lit
@@ -59,10 +61,10 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data::{ast::Interval, tokens::*};
-    use crate::interpreter::builtins::buttons::button;
     use crate::data::primitive::array::PrimitiveArray;
     use crate::data::primitive::string::PrimitiveString;
+    use crate::data::{ast::Interval, tokens::*};
+    use crate::interpreter::builtins::buttons::button;
     use std::collections::HashMap;
 
     fn gen_inter() -> Interval {

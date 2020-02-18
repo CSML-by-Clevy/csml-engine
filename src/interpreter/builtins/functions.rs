@@ -1,8 +1,8 @@
-use crate::data::{ast::Interval, tokens::*, Literal};
-use crate::error_format::ErrorInfo;
 use crate::data::primitive::{
     array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
 };
+use crate::data::{ast::Interval, tokens::*, Literal};
+use crate::error_format::ErrorInfo;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::HashMap;

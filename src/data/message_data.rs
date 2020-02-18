@@ -1,7 +1,7 @@
+use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use crate::data::{send_msg, Literal, Memories, Message, MSG};
 use crate::error_format::ErrorInfo;
 use crate::parser::ExitCondition;
-use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 
 use core::ops::Add;
 use nom::lib::std::collections::HashMap;

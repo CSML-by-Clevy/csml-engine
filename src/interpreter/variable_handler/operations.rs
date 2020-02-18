@@ -1,7 +1,7 @@
+use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::{ast::Infix, Literal};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::variable_handler::match_literals::match_obj;
-use crate::data::primitive::boolean::PrimitiveBoolean;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
