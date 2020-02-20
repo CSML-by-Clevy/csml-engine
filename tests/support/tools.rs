@@ -13,14 +13,12 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 
 #[allow(dead_code)]
 pub fn gen_context(
-    past: serde_json::Value,
     current: serde_json::Value,
     metadata: serde_json::Value,
     retries: i64,
     is_initial_step: bool,
 ) -> ContextJson {
     ContextJson {
-        past,
         current,
         metadata,
         retries,

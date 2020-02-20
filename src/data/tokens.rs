@@ -103,9 +103,7 @@ pub static BUILT_IN: &[&str] = &[
     QUESTION, BUTTON, OBJECT, FN,
 ];
 
-pub const PAST: &str = "past";
 pub const MEMORY: &str = "memory";
-// pub const METADATA: &str = "metadata";
 
 pub const FROM_FILE: &str = "FromFile";
 pub const GET_VALUE: &str = "GetValue";

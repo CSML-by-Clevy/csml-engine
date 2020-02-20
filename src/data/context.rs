@@ -8,7 +8,6 @@ use nom::lib::std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct ContextJson {
-    pub past: serde_json::Value,
     pub current: serde_json::Value,
     pub metadata: serde_json::Value,
     pub retries: i64,
@@ -18,7 +17,6 @@ pub struct ContextJson {
 }
 #[derive(Debug, Clone)]
 pub struct Context {
-    pub past: HashMap<String, Literal>,
     pub current: HashMap<String, Literal>,
     pub metadata: HashMap<String, Literal>,
     pub retries: i64,
@@ -41,12 +39,10 @@ pub fn get_hashmap(lit: &serde_json::Value) -> HashMap<String, Literal> {
 
 impl ContextJson {
     pub fn to_literal(self) -> Context {
-        let past = get_hashmap(&self.past);
         let current = get_hashmap(&self.current);
         let metadata = get_hashmap(&self.metadata);
 
         Context {
-            past,
             current,
             metadata,
             retries: self.retries,

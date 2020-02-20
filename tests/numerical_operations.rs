@@ -12,7 +12,6 @@ fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
     let context = gen_context(
         serde_json::json!({}),
         serde_json::json!({}),
-        serde_json::json!({}),
         0,
         false,
     );
@@ -87,7 +86,6 @@ fn ok_division_3() {
     let text = read_file(file).unwrap();
 
     let context = gen_context(
-        serde_json::json!({}),
         serde_json::json!({}),
         serde_json::json!({}),
         0,
