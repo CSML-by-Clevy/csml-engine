@@ -69,7 +69,6 @@ fn interpret_flow(flow: &str, step_name: &str) {
     metadata.insert("obj".to_owned(), json!(obj));
 
     let context = ContextJson {
-        past: serde_json::json!({}),
         current: serde_json::json!({}),
         metadata: json!(metadata),
         retries: 42,

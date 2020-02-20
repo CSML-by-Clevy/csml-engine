@@ -12,7 +12,6 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let context = gen_context(
         serde_json::json!({}),
         serde_json::json!({}),
-        serde_json::json!({}),
         0,
         false,
     );
