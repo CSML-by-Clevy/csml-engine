@@ -74,6 +74,9 @@ lazy_static! {
         // ends_with_regex(Primitive<String>) -> Primitive<Boolean>
         map.insert("ends_with_regex", (ends_with_regex as PrimitiveMethod, Right::Read));
 
+        // match_regex(Primitive<String>) -> Primitive<Array>
+        map.insert("match_regex", (do_match_regex as PrimitiveMethod, Right::Read));
+
         map
     };
 }
@@ -134,6 +137,7 @@ fn do_match(
 
     let mut s: &str = &string.value;
     let mut vector: Vec<Literal> = Vec::new();
+
     let args = match args.get(0) {
         Some(res) => res,
         None => {
@@ -154,28 +158,17 @@ fn do_match(
         }
     };
 
-    let action = match Regex::new(pattern) {
-        Ok(res) => res,
-        Err(_) => {
-            return Err(ErrorInfo {
-                message: "usage: parameter must be a valid regex expression".to_owned(),
-                interval,
-            });
-        }
-    };
-
-    while let Some(result) = action.find(&s) {
+    for result in s.matches(pattern) {
         vector.push(PrimitiveString::get_literal(
             "string",
-            &s[result.start()..result.end()],
+            result,
             interval,
         ));
-        s = &s[result.end()..];
     }
 
-    match vector.len() {
-        0 => Ok(PrimitiveNull::get_literal("null", interval)),
-        _ => Ok(PrimitiveArray::get_literal("array", &vector, interval)),
+    match vector.is_empty() {
+        true => Ok(PrimitiveNull::get_literal("null", interval)),
+        false => Ok(PrimitiveArray::get_literal("array", &vector, interval)),
     }
 }
 
@@ -467,6 +460,60 @@ fn ends_with_regex(
     }
 
     Ok(PrimitiveBoolean::get_literal("boolean", false, interval))
+}
+
+fn do_match_regex(
+    string: &mut PrimitiveString,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 1, "match(Primitive<String>)", interval)?;
+
+    let mut s: &str = &string.value;
+    let mut vector: Vec<Literal> = Vec::new();
+    let args = match args.get(0) {
+        Some(res) => res,
+        None => {
+            return Err(ErrorInfo {
+                message: "usage: need to have one parameter".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    let pattern = match Literal::get_value::<String>(&args.primitive) {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(ErrorInfo {
+                message: "usage: parameter must be of type string".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    let action = match Regex::new(pattern) {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(ErrorInfo {
+                message: "usage: parameter must be a valid regex expression".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    while let Some(result) = action.find(&s) {
+        vector.push(PrimitiveString::get_literal(
+            "string",
+            &s[result.start()..result.end()],
+            interval,
+        ));
+        s = &s[result.end()..];
+    }
+
+    match vector.is_empty() {
+        true => Ok(PrimitiveNull::get_literal("null", interval)),
+        false => Ok(PrimitiveArray::get_literal("array", &vector, interval)),
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -3,17 +3,17 @@ start:
 
 regex_0:
     remember var = "Hello"
-    say var.match("[A-Z]")
+    say var.match_regex("[A-Z]")
     goto end
 
 regex_1:
     remember var = "hello"
-    say var.match("[A-Z]")
+    say var.match_regex("[A-Z]")
     goto end
 
 regex_2:
     remember var = "Hello World"
-    say var.match("[A-Z]")
+    say var.match_regex("[A-Z]")
     goto end
 
 regex_3:
@@ -28,7 +28,7 @@ regex_4:
 
 regex_5:
     remember var = "Batman"
-    say var.match("(?i)bat")
+    say var.match_regex("(?i)bat")
     goto end
 
 regex_6:
@@ -38,10 +38,10 @@ regex_6:
 
 regex_7:
     remember var = "0123456789"
-    say var.match("[0-3]")
+    say var.match_regex("[0-3]")
     goto end
 
 regex_8:
     remember var = "Hel14lo"
-    say var.match("[0-9]")
+    say var.match_regex("[0-9]")
     goto end
