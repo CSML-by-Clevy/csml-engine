@@ -21,7 +21,7 @@ int:
     say var.type_of()
     goto end
 
-null:
+_null:
     remember var = NULL
     say var.type_of()
     goto end

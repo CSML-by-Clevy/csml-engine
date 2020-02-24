@@ -1,0 +1,3 @@
+start:
+    // fail
+    do foreach as key

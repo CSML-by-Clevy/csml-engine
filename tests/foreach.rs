@@ -1,31 +1,151 @@
 mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::ast::Flow;
+use csmlinterpreter::error_format::ErrorInfo;
+use csmlinterpreter::parse_file;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file};
+use support::tools::read_file;
 
-fn format_message(event: Option<Event>) -> MessageData {
-    let text = read_file("CSML/foreach.csml".to_owned()).unwrap();
+fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
+    let text = read_file(filepath).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-        serde_json::json!({}),
-        0,
-        false,
-    );
+    parse_file(&text)
+}
 
-    interpret(&text, "start", context, &event, None, None, None)
+////////////////////////////////////////////////////////////////////////////////
+/// FOREACH VALID SYNTAX
+////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn foreach_0() {
+    let result = match format_message("CSML/syntax/foreach/foreach_0.csml".to_owned()) {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    assert!(result);
 }
 
 #[test]
-fn ok_foreach() {
-    let data = r#"{"messages":[ {"content": { "text": "1" } ,"content_type":"text"}, {"content": { "text": "2" } ,"content_type":"text"}, {"content": { "text": "3" } ,"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None);
+fn foreach_1() {
+    let result = match format_message("CSML/syntax/foreach/foreach_1.csml".to_owned()) {
+        Ok(_) => true,
+        Err(_) => false,
+    };
 
-    let v1: serde_json::Value = message_to_jsonvalue(msg);
-    let v2: serde_json::Value = serde_json::from_str(data).unwrap();
+    assert!(result);
+}
 
-    assert_eq!(v1, v2)
+#[test]
+fn foreach_2() {
+    let result = match format_message("CSML/syntax/foreach/foreach_2.csml".to_owned()) {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_3() {
+    let result = match format_message("CSML/syntax/foreach/foreach_3.csml".to_owned()) {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_4() {
+    let result = match format_message("CSML/syntax/foreach/foreach_4.csml".to_owned()) {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_5() {
+    let result = match format_message("CSML/syntax/foreach/foreach_5.csml".to_owned()) {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    assert!(result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// FOREACH INVALID SYNTAX
+////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn foreach_6() {
+    let result = match format_message("CSML/syntax/foreach/foreach_6.csml".to_owned()) {
+        Ok(_) => false,
+        Err(_) => true,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_7() {
+    let result = match format_message("CSML/syntax/foreach/foreach_7.csml".to_owned()) {
+        Ok(_) => false,
+        Err(_) => true,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_8() {
+    let result = match format_message("CSML/syntax/foreach/foreach_8.csml".to_owned()) {
+        Ok(_) => false,
+        Err(_) => true,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_9() {
+    let result = match format_message("CSML/syntax/foreach/foreach_9.csml".to_owned()) {
+        Ok(_) => false,
+        Err(_) => true,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_10() {
+    let result = match format_message("CSML/syntax/foreach/foreach_10.csml".to_owned()) {
+        Ok(_) => false,
+        Err(_) => true,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_11() {
+    let result = match format_message("CSML/syntax/foreach/foreach_11.csml".to_owned()) {
+        Ok(_) => false,
+        Err(_) => true,
+    };
+
+    assert!(result);
+}
+
+#[test]
+fn foreach_12() {
+    let result = match format_message("CSML/syntax/foreach/foreach_12.csml".to_owned()) {
+        Ok(_) => false,
+        Err(_) => true,
+    };
+
+    assert!(result);
 }

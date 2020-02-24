@@ -1,9 +1,7 @@
 use crate::data::{ast::*, tokens::*, Literal};
-use crate::parser::{
-    parse_comments::comment,
-    parse_idents::{get_string, get_tag},
-    tools::get_interval,
-};
+use crate::parser::tools::get_string;
+use crate::parser::tools::get_tag;
+use crate::parser::{parse_comments::comment, tools::get_interval};
 
 use crate::data::primitive::{
     boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt, null::PrimitiveNull,
@@ -71,7 +69,6 @@ fn parse_true<'a, E>(s: Span<'a>) -> IResult<Span<'a>, PrimitiveBoolean, E>
 where
     E: ParseError<Span<'a>>,
 {
-    // let (s, interval) = get_interval(s)?;
     let (s, _) = tag(TRUE)(s)?;
 
     Ok((s, PrimitiveBoolean::new(true)))
@@ -81,12 +78,8 @@ fn parse_false<'a, E>(s: Span<'a>) -> IResult<Span<'a>, PrimitiveBoolean, E>
 where
     E: ParseError<Span<'a>>,
 {
-    // let (s, interval) = get_interval(s)?;
-    // REFACTO
     let (s, _) = tag(FALSE)(s)?;
 
-    // Ok((s, Literal::boolean(false, position)))
-    // REFACTO
     Ok((s, PrimitiveBoolean::new(false)))
 }
 
@@ -113,7 +106,7 @@ where
 {
     let (s, interval) = get_interval(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, _) = get_tag(name, NULL)(s)?;
+    let (s, _) = get_tag(name.to_ascii_uppercase(), NULL_UPPERCASE)(s)?;
 
     let expression = Expr::LitExpr(PrimitiveNull::get_literal("null", interval));
 

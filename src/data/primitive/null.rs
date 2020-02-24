@@ -3,7 +3,9 @@ use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, memories::MemoryType, message::Message, tokens::NULL, Literal};
+use crate::data::{
+    ast::Interval, memories::MemoryType, message::Message, tokens::NULL_UPPERCASE, Literal,
+};
 use crate::error_format::ErrorInfo;
 use lazy_static::*;
 use std::cmp::Ordering;
@@ -175,7 +177,7 @@ impl Primitive for PrimitiveNull {
     }
 
     fn get_value(&self) -> &dyn std::any::Any {
-        &NULL
+        &NULL_UPPERCASE
     }
 
     fn get_mut_value(&mut self) -> &mut dyn std::any::Any {

@@ -1,8 +1,7 @@
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{ast::*, tokens::*};
-use crate::parser::{
-    parse_comments::comment, parse_var_types::parse_var_expr, tools::get_interval,
-};
+use crate::parser::operator::parse_operator;
+use crate::parser::{parse_comments::comment, tools::get_interval};
 use nom::{
     bytes::complete::tag,
     error::{ErrorKind, ParseError},
@@ -21,7 +20,8 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = tag(L2_BRACE)(s)?;
-    let (s, (vec, _)) = many_till(parse_var_expr, preceded(comment, tag(R2_BRACE)))(s)?;
+    let (s, (vec, _)) = many_till(parse_operator, preceded(comment, tag(R2_BRACE)))(s)?;
+
     Ok((s, vec))
 }
 
@@ -135,7 +135,6 @@ pub fn parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    // let (s, pos) = get_interval(s)?;
     delimited(tag(DOUBLE_QUOTE), parse_complex_string, tag(DOUBLE_QUOTE))(s)
 }
 

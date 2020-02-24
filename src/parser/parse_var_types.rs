@@ -1,14 +1,12 @@
 use crate::data::{ast::*, tokens::*};
+use crate::parser::operator::parse_operator;
+use crate::parser::parse_actions::parse_assignation_without_path;
+use crate::parser::parse_idents::parse_idents_as;
+use crate::parser::parse_idents::parse_idents_utilisation;
+use crate::parser::parse_parenthesis::parse_r_parentheses;
 use crate::parser::{
-    expressions_evaluation::operator_precedence,
-    parse_actions::parse_assignation,
-    parse_comments::comment,
-    parse_functions::parse_functions,
-    parse_idents::{get_string, get_tag, parse_idents, parse_idents_expr},
-    parse_literal::parse_literal_expr,
-    parse_object::parse_object,
-    parse_string::parse_string,
-    tools::*,
+    parse_comments::comment, parse_functions::parse_functions, parse_literal::parse_literal_expr,
+    parse_object::parse_object, parse_string::parse_string, tools::*,
 };
 
 use nom::{
@@ -17,12 +15,59 @@ use nom::{
     combinator::{cut, opt},
     error::{context, ParseError},
     multi::separated_list,
-    sequence::{preceded, terminated, tuple},
-    Err::Failure,
-    IResult,
+    sequence::{delimited, preceded, terminated, tuple},
+    IResult, *,
 };
 
-pub fn parse_expr_list<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn parse_r_bracket<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    match tag(R_BRACKET)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(
+                input,
+                "RightBracketError",
+                err,
+            )))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
+
+fn parse_condition_group<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    delimited(
+        preceded(comment, tag(L_PAREN)),
+        parse_operator,
+        preceded(comment, parse_r_parentheses),
+    )(s)
+}
+
+fn parse_idents_expr_utilisation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, idents) = parse_idents_utilisation(s)?;
+    Ok((s, Expr::IdentExpr(idents)))
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_expr_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, start) = preceded(comment, get_interval)(s)?;
     let (s, (vec, _)) = context(
         "list",
@@ -30,7 +75,10 @@ pub fn parse_expr_list<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span
             tag(L_PAREN),
             cut(terminated(
                 tuple((
-                    separated_list(preceded(comment, tag(COMMA)), parse_var_expr),
+                    separated_list(
+                        preceded(comment, tag(COMMA)),
+                        alt((parse_assignation_without_path, parse_operator)),
+                    ),
                     opt(preceded(comment, tag(COMMA))),
                 )),
                 preceded(comment, parse_r_parentheses),
@@ -38,10 +86,14 @@ pub fn parse_expr_list<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span
         ),
     )(s)?;
     let (s, end) = get_interval(s)?;
+
     Ok((s, Expr::VecExpr(vec, RangeInterval { start, end })))
 }
 
-pub fn parse_expr_array<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+pub fn parse_expr_array<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, start) = preceded(comment, get_interval)(s)?;
     let (s, (vec, _)) = context(
         "array",
@@ -49,7 +101,7 @@ pub fn parse_expr_array<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
             tag(L_BRACKET),
             cut(terminated(
                 tuple((
-                    separated_list(preceded(comment, tag(COMMA)), parse_basic_expr),
+                    separated_list(preceded(comment, tag(COMMA)), parse_operator),
                     opt(preceded(comment, tag(COMMA))),
                 )),
                 preceded(comment, parse_r_bracket),
@@ -57,10 +109,14 @@ pub fn parse_expr_array<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
         ),
     )(s)?;
     let (s, end) = get_interval(s)?;
+
     Ok((s, Expr::VecExpr(vec, RangeInterval { start, end })))
 }
 
-pub fn parse_basic_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+pub fn parse_basic_expr<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, expr) = preceded(
         comment,
         alt((
@@ -70,31 +126,9 @@ pub fn parse_basic_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
             parse_literal_expr,
             parse_functions,
             parse_string,
-            parse_idents_expr,
+            parse_idents_expr_utilisation,
         )),
     )(s)?;
 
-    parse_as_idents(s, expr)
-}
-
-pub fn parse_var_expr<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
-    let (s, expr) = preceded(comment, alt((parse_assignation, operator_precedence)))(s)?;
-    parse_as_idents(s, expr)
-}
-
-pub fn parse_as_idents<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-    expr: Expr,
-) -> IResult<Span<'a>, Expr, E> {
-    let arg: IResult<Span<'a>, String, E> = preceded(comment, get_string)(s);
-    match arg {
-        Err(_) => Ok((s, expr)),
-        Ok((s2, tmp)) => match preceded(get_tag(tmp, AS), parse_idents)(s2) {
-            Ok((s, name)) => (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr)))))),
-            Err(err) => match err {
-                Failure(err) => Err(Failure(err)),
-                _ => Ok((s, expr)),
-            },
-        },
-    }
+    parse_idents_as(s, expr)
 }

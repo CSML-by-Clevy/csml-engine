@@ -1,0 +1,5 @@
+start:
+    // fail
+    foreach (key) in key = value {
+
+    }

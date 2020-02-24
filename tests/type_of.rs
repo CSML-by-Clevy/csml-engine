@@ -67,7 +67,7 @@ fn ok_type_of_int() {
 #[test]
 fn ok_type_of_null() {
     let data = r#"{"memories":[{"key":"var", "value":null}], "messages":[{"content":{"text":"null"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
-    let msg = format_message(None, "null");
+    let msg = format_message(None, "_null");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
