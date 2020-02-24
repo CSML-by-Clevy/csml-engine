@@ -10,7 +10,6 @@ fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let text = read_file("CSML/metadata.csml".to_owned()).unwrap();
     let context = gen_context(
         serde_json::json!({}),
-        serde_json::json!({}),
         serde_json::json!({"var": 42}),
         0,
         false,

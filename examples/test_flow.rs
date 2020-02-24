@@ -14,7 +14,7 @@ fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
     Ok(contents)
 }
 
-pub fn message_to_jsonvalue(result: MessageData) -> Value {
+pub fn format_message(result: MessageData) -> Value {
     let mut message: Map<String, Value> = Map::new();
     let mut vec = vec![];
     let mut memories = vec![];
@@ -69,7 +69,6 @@ fn interpret_flow(flow: &str, step_name: &str) {
     metadata.insert("obj".to_owned(), json!(obj));
 
     let context = ContextJson {
-        past: serde_json::json!({}),
         current: serde_json::json!({}),
         metadata: json!(metadata),
         retries: 42,
@@ -82,7 +81,7 @@ fn interpret_flow(flow: &str, step_name: &str) {
         fn_endpoint: "toto".to_owned(),
     };
 
-    dbg!(message_to_jsonvalue(interpret(
+    dbg!(format_message(interpret(
         flow, step_name, context, &event, None, None, None,
     )));
 }
@@ -90,17 +89,5 @@ fn interpret_flow(flow: &str, step_name: &str) {
 fn main() {
     let flow = read_file("CSML/test.csml".to_owned()).unwrap();
 
-    // let flow = match parse_file(&text) {
-    //     Ok(flow) => flow,
-    //     Err(e) => panic!("{:?}", e),
-    // };
-
     interpret_flow(&flow, "start");
 }
-
-// ((1 + 3) > 6) && var
-// if (true == (7 && (7 - (3+(2*1)) == 2)))) {
-//     goto toto
-// }
-// "{{(1 + 3)}} {{var}}"
-// ((1 + 3) > 6) + var

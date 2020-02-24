@@ -13,14 +13,12 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 
 #[allow(dead_code)]
 pub fn gen_context(
-    past: serde_json::Value,
     current: serde_json::Value,
     metadata: serde_json::Value,
     retries: i64,
     is_initial_step: bool,
 ) -> ContextJson {
     ContextJson {
-        past,
         current,
         metadata,
         retries,
@@ -43,17 +41,7 @@ pub fn gen_event(event: &str) -> Event {
     }
 }
 
-// #[allow(dead_code)]
-// pub fn gen_memory(value: Literal) -> MemoryType {
-//     MemoryType {
-//         created_at: "Today".to_owned(),
-//         step_id: None,
-//         flow_id: None,
-//         conversation_id: None,
-//         value,
-//     }
-// }
-
+#[allow(dead_code)]
 pub fn message_to_jsonvalue(result: MessageData) -> Value {
     let mut message: Map<String, Value> = Map::new();
     let mut vec = vec![];
@@ -93,12 +81,3 @@ pub fn message_to_jsonvalue(result: MessageData) -> Value {
 
     Value::Object(message)
 }
-
-// metadata.insert(
-//     "firstname".to_owned(),
-//     gen_memory("firstname", Value::String("Alexis".to_owned()) )
-// );
-// metadata.insert(
-//     "tutu".to_owned(),
-//     gen_memory("tutu", Value::String("toto".to_owned()))
-// );

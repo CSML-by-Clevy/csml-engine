@@ -9,14 +9,13 @@ use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 fn format_message(event: Option<Event>, step: &str) -> MessageData {
     let text = read_file("CSML/if_statments.csml".to_owned()).unwrap();
 
-    let mut past = serde_json::map::Map::new();
-    past.insert("var10".to_owned(), serde_json::json!(10));
-    past.insert("var5".to_owned(), serde_json::json!(5));
-    past.insert("bool".to_owned(), serde_json::json!(false));
+    let mut current = serde_json::map::Map::new();
+    current.insert("var10".to_owned(), serde_json::json!(10));
+    current.insert("var5".to_owned(), serde_json::json!(5));
+    current.insert("bool".to_owned(), serde_json::json!(false));
 
     let context = gen_context(
-        serde_json::json!(past),
-        serde_json::json!({}),
+        serde_json::json!(current),
         serde_json::json!({}),
         0,
         false,
