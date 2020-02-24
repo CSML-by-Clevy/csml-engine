@@ -33,9 +33,8 @@ regex_5:
 
 regex_6:
     remember var = "Ceci est une question ? Oui ou non"
-    say var.contains("[?]")
+    say var.contains_regex("[?]")
     goto end
-
 
 regex_7:
     remember var = "0123456789"

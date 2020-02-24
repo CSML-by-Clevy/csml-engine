@@ -65,6 +65,15 @@ lazy_static! {
         // ends_with(Primitive<String>) -> Primitive<Boolean>
         map.insert("ends_with", (ends_with as PrimitiveMethod, Right::Read));
 
+        // contains(Primitive<String>) -> Primitive<Boolean>
+        map.insert("contains_regex", (contains_regex as PrimitiveMethod, Right::Read));
+
+        // starts_with(Primitive<String>) -> Primitive<Boolean>
+        map.insert("starts_with_regex", (starts_with_regex as PrimitiveMethod, Right::Read));
+
+        // ends_with_regex(Primitive<String>) -> Primitive<Boolean>
+        map.insert("ends_with_regex", (ends_with_regex as PrimitiveMethod, Right::Read));
+
         map
     };
 }
@@ -257,6 +266,38 @@ fn contains(
         }
     };
 
+    let result = string.value.contains(pattern);
+
+    Ok(PrimitiveBoolean::get_literal("boolean", result, interval))
+}
+
+fn contains_regex(
+    string: &mut PrimitiveString,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 1, "contains_regex(Primitive<String>)", interval)?;
+
+    let args = match args.get(0) {
+        Some(res) => res,
+        None => {
+            return Err(ErrorInfo {
+                message: "usage: need to have one parameter".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    let pattern = match Literal::get_value::<String>(&args.primitive) {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(ErrorInfo {
+                message: "usage: parameter must be of type string".to_owned(),
+                interval,
+            });
+        }
+    };
+
     let action = match Regex::new(pattern) {
         Ok(res) => res,
         Err(_) => {
@@ -278,6 +319,38 @@ fn starts_with(
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     check_usage(args, 1, "starts_with(Primitive<String>)", interval)?;
+
+    let args = match args.get(0) {
+        Some(res) => res,
+        None => {
+            return Err(ErrorInfo {
+                message: "usage: need to have one parameter".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    let pattern = match Literal::get_value::<String>(&args.primitive) {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(ErrorInfo {
+                message: "usage: parameter must be of type string".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    let result = string.value.starts_with(pattern);
+
+    Ok(PrimitiveBoolean::get_literal("boolean", result, interval))
+}
+
+fn starts_with_regex(
+    string: &mut PrimitiveString,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 1, "starts_with_regex(Primitive<String>)", interval)?;
 
     let args = match args.get(0) {
         Some(res) => res,
@@ -323,7 +396,39 @@ fn ends_with(
     args: &[Literal],
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 1, "starts_with(Primitive<String>)", interval)?;
+    check_usage(args, 1, "ends_with(Primitive<String>)", interval)?;
+
+    let args = match args.get(0) {
+        Some(res) => res,
+        None => {
+            return Err(ErrorInfo {
+                message: "usage: need to have one parameter".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    let pattern = match Literal::get_value::<String>(&args.primitive) {
+        Ok(res) => res,
+        Err(_) => {
+            return Err(ErrorInfo {
+                message: "usage: parameter must be of type string".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    let result = string.value.ends_with(pattern);
+
+    Ok(PrimitiveBoolean::get_literal("boolean", result, interval))
+}
+
+fn ends_with_regex(
+    string: &mut PrimitiveString,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 1, "ends_with_regex(Primitive<String>)", interval)?;
 
     let args = match args.get(0) {
         Some(res) => res,
