@@ -1,0 +1,10 @@
+start:
+	goto end
+
+wait_0:
+	say Wait()
+	goto end
+
+wait_1:
+	say Wait(10)
+	goto end
