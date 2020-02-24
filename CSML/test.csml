@@ -1,9 +1,9 @@
 start:
-  remember obj = {
-    "key": 1 + 1
-  }
+  remember string = "Hello World"
 
-  say obj.type_of()
+  say string.match("a")
+  say string.match("o")
+  say string.match_regex("o")
 
   goto end
 //     // remember vec = [1, 2, 3]
