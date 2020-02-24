@@ -9,6 +9,8 @@ use serde_json::json;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::usize;
+use rand::Rng;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -50,6 +52,9 @@ lazy_static! {
 
         // remove_at(Primitive<Int>) ->  Primitive<T>
         map.insert("remove_at", (remove_at as PrimitiveMethod, Right::Write));
+
+        // one_of() -> Primitive<T>
+        map.insert("one_of", (one_of as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -243,6 +248,20 @@ fn remove_at(
             interval,
         }),
     }
+}
+
+fn one_of(
+    array: &mut PrimitiveArray,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "one_of()", interval)?;
+
+    if let Some(res) = array.value.get(rand::thread_rng().gen_range(0, array.value.len())) {
+        return Ok(res.to_owned());
+    }
+
+    Ok(PrimitiveNull::get_literal("null", interval))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

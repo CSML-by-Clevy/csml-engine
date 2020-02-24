@@ -19,13 +19,13 @@ step_1:
 
     say s.contains("H")
     say s.contains("Hello")
-    say s.contains("(?i)He")
+    say s.contains_regex("(?i)He")
 
 step_2:
     remember s = "Hello"
 
-    say s.starts_with("(?i)He")
+    say s.starts_with_regex("(?i)He")
     say s.ends_with("o")
     say s.starts_with("el")
     say s.starts_with("O")
-    say s.ends_with("l")
+    say s.ends_with_regex("[l]")
