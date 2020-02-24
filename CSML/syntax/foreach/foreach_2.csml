@@ -1,0 +1,5 @@
+start:
+    // pass
+    foreach (key, value) in [] as tmp {
+
+    }

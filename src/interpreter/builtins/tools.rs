@@ -1,6 +1,6 @@
+use crate::data::primitive::array::PrimitiveArray;
 use crate::data::{ast::Interval, tokens::DEFAULT, Client, Literal};
 use crate::error_format::ErrorInfo;
-use crate::data::primitive::array::PrimitiveArray;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::hash::BuildHasher;

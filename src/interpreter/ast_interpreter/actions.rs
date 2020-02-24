@@ -1,3 +1,4 @@
+use crate::data::primitive::null::PrimitiveNull;
 use crate::data::{
     ast::*, message::*, msg::send_msg, Data, Literal, Memories, MemoryType, MessageData, MSG,
 };
@@ -8,7 +9,6 @@ use crate::interpreter::{
     variable_handler::{exec_path_actions, get_var_from_mem, interval::*, memory::*},
 };
 use crate::parser::ExitCondition;
-use crate::data::primitive::null::PrimitiveNull;
 
 use std::sync::mpsc;
 

@@ -1,9 +1,9 @@
+use crate::data::primitive::int::PrimitiveInt;
 use crate::data::{ast::*, Data, Literal, MessageData, MSG};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::interpret_scope;
 use crate::interpreter::variable_handler::expr_to_literal::expr_to_literal;
 use crate::parser::ExitCondition;
-use crate::data::primitive::int::PrimitiveInt;
 use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////

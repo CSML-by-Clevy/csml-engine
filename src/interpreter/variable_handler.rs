@@ -7,6 +7,9 @@ pub mod operations;
 
 pub use expr_to_literal::expr_to_literal;
 
+use crate::data::primitive::{
+    null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
+};
 use crate::data::{
     ast::{Expr, Function, Identifier, Interval, PathExpr, PathLiteral},
     tokens::{EVENT, _METADATA},
@@ -20,9 +23,6 @@ use crate::interpreter::{
         gen_literal::gen_literal_form_event,
         memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
     },
-};
-use crate::data::primitive::{
-    null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
 };
 use std::collections::HashMap;
 use std::slice::Iter;

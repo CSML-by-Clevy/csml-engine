@@ -2,31 +2,45 @@ use crate::data::{
     ast::{Expr, Identifier, InstructionInfo, RangeInterval},
     tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
 };
+use crate::parser::operator::parse_operator;
+use crate::parser::parse_idents::parse_idents_assignation_without_path;
 use crate::parser::{
-    parse_comments::comment, parse_idents::parse_idents, parse_scope::parse_scope,
-    parse_var_types::parse_var_expr, tools::get_interval, State, StateContext,
+    parse_comments::comment, parse_scope::parse_scope, tools::get_interval, State, StateContext,
 };
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
-fn pars_args<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+fn pars_args<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, _) = preceded(comment, tag(COMMA))(s)?;
-    let (s, idents) = parse_idents(s)?;
+    let (s, idents) = parse_idents_assignation_without_path(s)?;
+
     Ok((s, idents))
 }
 
-pub fn parse_foreach<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_foreach<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, _) = preceded(comment, tag(FOREACH))(s)?;
     let (s, start) = get_interval(s)?;
 
     let (s, _) = preceded(comment, tag(L_PAREN))(s)?;
-    let (s, idents) = parse_idents(s)?;
+    let (s, idents) = parse_idents_assignation_without_path(s)?;
     let (s, opt) = opt(pars_args)(s)?;
     let (s, _) = preceded(comment, tag(R_PAREN))(s)?;
 
     let (s, _) = preceded(comment, tag(IN))(s)?;
-    let (s, expr) = parse_var_expr(s)?;
+    let (s, expr) = parse_operator(s)?;
 
     let index = StateContext::get_index();
 

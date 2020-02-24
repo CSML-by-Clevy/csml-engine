@@ -1,26 +1,60 @@
 use crate::data::{ast::*, tokens::*};
-use crate::parser::{parse_comments::comment, parse_idents::*, tools::*, StateContext};
+use crate::parser::{parse_comments::comment, parse_idents::*, StateContext};
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
-fn step_name<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+////////////////////////////////////////////////////////////////////////////////
+/// TOOL FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+fn parse_import_step<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    match tag(STEP)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
+            let err = E::from_error_kind(input, err);
+            Err(Err::Failure(E::add_context(input, "ImportStepError", err)))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn step_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, _) = preceded(comment, parse_import_step)(s)?;
-    let (s, name) = parse_idents(s)?;
+    let (s, name) = parse_idents_assignation_without_path(s)?;
     Ok((s, name))
 }
 
-fn as_name<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+fn as_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, _) = preceded(comment, tag(AS))(s)?;
-    let (s, name) = parse_idents(s)?;
+    let (s, name) = parse_idents_assignation_without_path(s)?;
     Ok((s, name))
 }
 
-fn file_path<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E> {
+fn file_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, _) = preceded(comment, tag(FROM_FILE))(s)?;
-    let (s, name) = parse_idents(s)?;
+    let (s, name) = parse_idents_assignation_without_path(s)?;
     Ok((s, name))
 }
 
-pub fn parse_import_opt<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+fn parse_import_opt<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, step_name) = step_name(s)?;
     let (s, as_name) = opt(as_name)(s)?;
     let (s, file_path) = opt(file_path)(s)?;
@@ -34,9 +68,14 @@ pub fn parse_import_opt<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Spa
     ))
 }
 
-pub fn parse_import<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, (Expr, InstructionInfo), E> {
+////////////////////////////////////////////////////////////////////////////////
+/// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, _) = tag(IMPORT)(s)?;
     let (s, name) = parse_import_opt(s)?;
 
@@ -49,6 +88,10 @@ pub fn parse_import<'a, E: ParseError<Span<'a>>>(
 
     Ok((s, (name, instruction_info)))
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// TEST FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 #[cfg(test)]
 mod tests {

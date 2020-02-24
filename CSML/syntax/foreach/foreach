@@ -1,0 +1,85 @@
+////////////////////////////////////////////////////////////////////////////////
+/// FOREACH VALID SYNTAX
+////////////////////////////////////////////////////////////////////////////////
+
+start:
+    // pass
+    foreach (key, value) in key {
+
+    }
+
+start:
+    // pass
+    foreach (key, value) in key as tmp {
+
+    }
+
+start:
+    // pass
+    foreach (key, value) in [] as tmp {
+
+    }
+
+start:
+    // pass
+    foreach (key) in key {
+
+    }
+
+start:
+    // pass
+    foreach (key) in key as tmp {
+
+    }
+
+start:
+    // pass
+    foreach (key) in [] as tmp {
+
+    }
+
+////////////////////////////////////////////////////////////////////////////////
+/// AS INVALID SYNTAX
+////////////////////////////////////////////////////////////////////////////////
+
+start:
+    // fail
+    foreach () in key {
+
+    }
+
+start:
+    // fail
+    foreach (event) in key {
+
+    }
+
+start:
+    // fail
+    foreach (key = value) in key {
+
+    }
+
+start:
+    // fail
+    foreach (key) in key = value {
+
+    }
+
+start:
+    // fail
+    foreach (key = value) in key {
+
+    }
+
+start:
+    // fail
+    foreach (42) in key {
+
+    }
+
+start:
+    // fail
+    foreach (key as tmp) in key {
+
+    }

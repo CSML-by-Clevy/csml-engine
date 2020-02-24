@@ -1,3 +1,4 @@
+use crate::data::primitive::PrimitiveType;
 use crate::data::{
     ast::{Expr, Identifier},
     send_msg,
@@ -5,7 +6,6 @@ use crate::data::{
     Context, Data, Literal, Memories, MemoryType, MessageData, MSG,
 };
 use crate::error_format::ErrorInfo;
-use crate::data::primitive::PrimitiveType;
 use std::sync::mpsc;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {

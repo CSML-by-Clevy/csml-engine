@@ -1,3 +1,4 @@
+use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
@@ -5,7 +6,6 @@ use crate::interpreter::{
     builtins::match_builtin,
     variable_handler::{get_string_from_complexstring, get_var, interval::interval_from_expr},
 };
-use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use std::{collections::HashMap, sync::mpsc};
 
 fn format_function_args(

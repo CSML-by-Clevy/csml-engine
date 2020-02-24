@@ -1,8 +1,7 @@
 use crate::data::{ast::*, tokens::*};
+use crate::parser::operator::parse_operator::parse_operator;
 // ast::{Expr, RangeInterval},
-use crate::parser::{
-    parse_comments::comment, parse_var_types::parse_basic_expr, tools::get_interval,
-};
+use crate::parser::{parse_comments::comment, tools::get_interval};
 
 use nom::{
     bytes::complete::tag,
@@ -14,11 +13,21 @@ use nom::{
     IResult,
 };
 
-fn parse_str<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn parse_str<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
+where
+    E: ParseError<Span<'a>>,
+{
     take_till1(|c: char| "\"".contains(c))(s)
 }
 
-pub fn string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+fn string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
+where
+    E: ParseError<Span<'a>>,
+{
     context(
         "invalid string format",
         preceded(
@@ -28,15 +37,25 @@ pub fn string<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Spa
     )(s)
 }
 
-fn key_value<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, (Span<'a>, Expr), E> {
+fn key_value<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Span<'a>, Expr), E>
+where
+    E: ParseError<Span<'a>>,
+{
     separated_pair(
         preceded(comment, string),
         cut(preceded(comment, tag(COLON))),
-        parse_basic_expr,
+        parse_operator,
     )(s)
 }
 
-pub fn parse_object<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> {
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_object<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let (s, start) = preceded(comment, get_interval)(s)?;
     let (s, (object, _)) = preceded(
         tag(L_BRACE),

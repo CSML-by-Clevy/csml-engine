@@ -1,3 +1,4 @@
+use crate::data::primitive::{null::PrimitiveNull, string::PrimitiveString};
 use crate::data::{
     ast::{Expr, Identifier, Interval, PathExpr},
     Data, Event, Literal, MemoryType, MessageData, MSG,
@@ -7,7 +8,6 @@ use crate::interpreter::{
     json_to_rust::json_to_literal,
     variable_handler::{exec_path_actions, get_var, interval::interval_from_expr, resolve_path},
 };
-use crate::data::primitive::{null::PrimitiveNull, string::PrimitiveString};
 use std::sync::mpsc;
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {

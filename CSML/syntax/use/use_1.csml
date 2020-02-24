@@ -1,0 +1,3 @@
+start:
+    // pass
+    use obj.value as key

@@ -1,5 +1,3 @@
-use crate::data::{ast::Interval, memories::MemoryType, message::Message, Literal};
-use crate::error_format::ErrorInfo;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::float::PrimitiveFloat;
@@ -10,6 +8,8 @@ use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
+use crate::data::{ast::Interval, memories::MemoryType, message::Message, Literal};
+use crate::error_format::ErrorInfo;
 use lazy_static::*;
 use regex::Regex;
 use std::cmp::Ordering;

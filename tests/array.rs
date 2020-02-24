@@ -50,39 +50,39 @@ fn array_step_1() {
     assert_eq!(v1, v2)
 }
 
-// #[test]
-// fn array_step_2() {
-//     let data = r#"
-//         {
-//             "memories":[{"key":"vec", "value": [42]}, {"key":"vec", "value": []}],
-//             "messages":[{"content":{"text": "false"},"content_type":"text"}, {"content":{"text": "true"}, "content_type":"text"}],
-//             "next_flow":null,
-//             "next_step":null
-//         }"#;
-//     let msg = format_message(None, "step_2");
+#[test]
+fn array_step_2() {
+    let data = r#"
+        {
+            "memories":[{"key":"vec", "value": [42]}, {"key":"vec", "value": []}],
+            "messages":[{"content":{"text": "false"},"content_type":"text"}, {"content":{"text": "true"}, "content_type":"text"}],
+            "next_flow":null,
+            "next_step":null
+        }"#;
+    let msg = format_message(None, "step_2");
 
-//     let v1: Value = message_to_jsonvalue(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-//     assert_eq!(v1, v2)
-// }
+    assert_eq!(v1, v2)
+}
 
-// #[test]
-// fn array_step_3() {
-//     let data = r#"
-//         {
-//             "memories":[{"key":"vec", "value": [42]}, {"key":"vec", "value": [24, 42]}, {"key":"vec", "value": [42]}],
-//             "messages":[{"content":{"text": "2"}, "content_type":"text"}, {"content":{"text": "24"}, "content_type":"text"}, {"content":{"text": "42"}, "content_type":"text"}],
-//             "next_flow":null,
-//             "next_step":null
-//         }"#;
-//     let msg = format_message(None, "step_3");
+#[test]
+fn array_step_3() {
+    let data = r#"
+        {
+            "memories":[{"key":"vec", "value": [42]}, {"key":"vec", "value": [24, 42]}, {"key":"vec", "value": [42]}],
+            "messages":[{"content":{"text": "2"}, "content_type":"text"}, {"content":{"text": "24"}, "content_type":"text"}, {"content":{"text": "42"}, "content_type":"text"}],
+            "next_flow":null,
+            "next_step":null
+        }"#;
+    let msg = format_message(None, "step_3");
 
-//     let v1: Value = message_to_jsonvalue(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-//     assert_eq!(v1, v2)
-// }
+    assert_eq!(v1, v2)
+}
 
 #[test]
 fn array_step_4() {

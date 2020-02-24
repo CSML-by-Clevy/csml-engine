@@ -1,7 +1,7 @@
+use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
 use crate::data::{ast::Interval, tokens::*, Data, Literal};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{builtins::tools::*, json_to_literal};
-use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
 
 use curl::{
     easy::{Easy, List},

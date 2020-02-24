@@ -1,6 +1,6 @@
+use crate::data::primitive::Primitive;
 use crate::data::Interval;
 use crate::error_format::ErrorInfo;
-use crate::data::primitive::Primitive;
 
 use std::cmp::Ordering;
 

@@ -8,8 +8,8 @@ pub mod memories;
 pub mod message;
 pub mod message_data;
 pub mod msg;
-pub mod tokens;
 pub mod primitive;
+pub mod tokens;
 
 pub use ast::Interval;
 pub use client::Client;

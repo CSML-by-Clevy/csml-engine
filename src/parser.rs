@@ -1,26 +1,30 @@
 pub mod csml_rules;
-pub mod expressions_evaluation;
+pub mod operator;
 pub mod parse_actions;
+pub mod parse_braces;
 pub mod parse_comments;
-pub mod parse_for_loop;
+pub mod parse_foreach;
 pub mod parse_functions;
+pub mod parse_goto;
 pub mod parse_idents;
 pub mod parse_if;
 pub mod parse_import;
 pub mod parse_literal;
 pub mod parse_object;
+pub mod parse_parenthesis;
+pub mod parse_path;
 pub mod parse_scope;
 pub mod parse_string;
 pub mod parse_var_types;
 pub mod state_context;
 pub mod tools;
 
+use crate::parser::parse_idents::parse_idents_assignation_without_path;
 pub use state_context::{ExitCondition, State, StateContext};
 
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{CustomError, ErrorInfo};
 use parse_comments::comment;
-use parse_idents::parse_idents;
 use parse_scope::parse_root;
 use tools::*;
 
@@ -106,7 +110,7 @@ where
 }
 
 fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E> {
-    let (s, ident) = preceded(comment, parse_idents)(s)?;
+    let (s, ident) = preceded(comment, parse_idents_assignation_without_path)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
 
     StateContext::clear_index();

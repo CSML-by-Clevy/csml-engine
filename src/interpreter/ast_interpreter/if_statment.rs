@@ -1,3 +1,4 @@
+use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::{
     ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
     Data, Literal, MessageData, MSG,
@@ -11,7 +12,6 @@ use crate::interpreter::{
         operations::evaluate,
     },
 };
-use crate::data::primitive::boolean::PrimitiveBoolean;
 use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////

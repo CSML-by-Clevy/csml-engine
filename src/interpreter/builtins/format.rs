@@ -1,7 +1,7 @@
+use crate::data::primitive::{object::PrimitiveObject, string::PrimitiveString, PrimitiveType};
 use crate::data::{ast::Interval, tokens::*, Literal};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::builtins::tools::*;
-use crate::data::primitive::{object::PrimitiveObject, string::PrimitiveString, PrimitiveType};
 use std::collections::HashMap;
 
 pub fn text(
