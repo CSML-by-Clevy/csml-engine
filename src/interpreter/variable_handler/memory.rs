@@ -10,8 +10,8 @@ use std::sync::mpsc;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {
     match (
-        data.step_vars.get(&name.ident),
         data.memory.current.get(&name.ident),
+        data.step_vars.get(&name.ident),
     ) {
         (_, Some(_)) => Ok("use".to_owned()),
         (Some(_), _) => Ok("remember".to_owned()),
