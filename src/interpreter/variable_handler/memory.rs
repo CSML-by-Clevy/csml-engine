@@ -10,11 +10,11 @@ use std::sync::mpsc;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {
     match (
-        data.memory.current.get(&name.ident),
         data.step_vars.get(&name.ident),
+        data.memory.current.get(&name.ident),
     ) {
-        (Some(_), _) => Ok("remember".to_owned()),
         (_, Some(_)) => Ok("use".to_owned()),
+        (Some(_), _) => Ok("remember".to_owned()),
         (None, None) => Err(ErrorInfo {
             message: format!("no variable named < {} > in memory", name.ident),
             interval: name.interval.to_owned(),
