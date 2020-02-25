@@ -55,7 +55,6 @@ pub const IN: &str = "in";
 pub const DO: &str = "do";
 pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
-pub const RETRIES: &str = "retries";
 
 pub const FLOW: &str = "flow";
 pub const FILE: &str = "file";
@@ -85,7 +84,6 @@ pub static RESERVED: &[&str] = &[
     DO,
     FROM,
     EVENT,
-    RETRIES,
     FLOW,
     FILE,
     STEP,
@@ -106,7 +104,7 @@ pub static RESERVED: &[&str] = &[
 
 // TODO: at some point (when function doesnt have a key like find(in)) ut back in inside reserved
 pub static UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FROM, RETRIES, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FROM, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
     MATCH, DEFAULT, REMEMBER, BREAK,
 ];
 
@@ -119,7 +117,6 @@ pub static ASSIGNATION_RESERVED: &[&str] = &[
     DO,
     FROM,
     EVENT,
-    RETRIES,
     FLOW,
     FILE,
     STEP,

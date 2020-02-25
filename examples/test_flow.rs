@@ -71,8 +71,6 @@ fn interpret_flow(flow: &str, step_name: &str) {
     let context = ContextJson {
         current: serde_json::json!({}),
         metadata: json!(metadata),
-        retries: 42,
-        is_initial_step: false,
         client: Client {
             bot_id: "1".to_owned(),
             channel_id: "2".to_owned(),

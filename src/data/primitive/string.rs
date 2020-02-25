@@ -135,7 +135,6 @@ fn do_match(
 ) -> Result<Literal, ErrorInfo> {
     check_usage(args, 1, "match(Primitive<String>)", interval)?;
 
-    let mut s: &str = &string.value;
     let mut vector: Vec<Literal> = Vec::new();
 
     let args = match args.get(0) {
@@ -158,7 +157,7 @@ fn do_match(
         }
     };
 
-    for result in s.matches(pattern) {
+    for result in string.value.matches(pattern) {
         vector.push(PrimitiveString::get_literal(
             "string",
             result,

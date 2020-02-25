@@ -12,8 +12,6 @@ fn format_message(event: Option<Event>, name: &str, step: &str) -> MessageData {
     let context = gen_context(
         serde_json::json!({}),
         serde_json::json!({}),
-        0,
-        false,
     );
 
     interpret(&text, step, context, &event, None, None, None)
@@ -88,8 +86,6 @@ fn ok_division_3() {
     let context = gen_context(
         serde_json::json!({}),
         serde_json::json!({}),
-        0,
-        false,
     );
 
     match &interpret(&text, "div3", context, &None, None, None, None) {

@@ -10,8 +10,6 @@ use nom::lib::std::collections::HashMap;
 pub struct ContextJson {
     pub current: serde_json::Value,
     pub metadata: serde_json::Value,
-    pub retries: i64,
-    pub is_initial_step: bool,
     pub client: Client,
     pub fn_endpoint: String,
 }
@@ -19,8 +17,6 @@ pub struct ContextJson {
 pub struct Context {
     pub current: HashMap<String, Literal>,
     pub metadata: HashMap<String, Literal>,
-    pub retries: i64,
-    pub is_initial_step: bool,
     pub client: Client,
     pub fn_endpoint: String,
 }
@@ -45,8 +41,6 @@ impl ContextJson {
         Context {
             current,
             metadata,
-            retries: self.retries,
-            is_initial_step: self.is_initial_step,
             client: self.client,
             fn_endpoint: self.fn_endpoint,
         }

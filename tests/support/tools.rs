@@ -15,14 +15,10 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 pub fn gen_context(
     current: serde_json::Value,
     metadata: serde_json::Value,
-    retries: i64,
-    is_initial_step: bool,
 ) -> ContextJson {
     ContextJson {
         current,
         metadata,
-        retries,
-        is_initial_step,
         client: Client {
             bot_id: "none".to_owned(),
             channel_id: "none".to_owned(),
