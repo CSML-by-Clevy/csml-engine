@@ -39,7 +39,7 @@ lazy_static! {
         // to_string() -> Primitive<String>
         map.insert("to_string", (to_string as PrimitiveMethod, Right::Read));
 
-        // contains(Primitive<T>) -> Primitive<Boolean>
+        // contains(Primitive<String>) -> Primitive<Boolean>
         map.insert("contains", (contains as PrimitiveMethod, Right::Read));
 
         // is_empty() -> Primitive<Boolean>
@@ -53,6 +53,9 @@ lazy_static! {
 
         // values() -> Primitive<Array>
         map.insert("values", (values as PrimitiveMethod, Right::Read));
+
+        // is_number() -> Primitive<Boolean>
+        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -74,7 +77,7 @@ lazy_static! {
         // clear_values() -> Primitive<Null>
         map.insert("clear_values", (clear_values as PrimitiveMethod, Right::Write));
 
-        // contains(Primitive<T>) -> Primitive<Boolean>
+        // contains(Primitive<String>) -> Primitive<Boolean>
         map.insert("contains", (contains as PrimitiveMethod, Right::Read));
 
         // insert(Primitive<String>, Primitive<T>) -> Primitive<Null>
@@ -94,6 +97,9 @@ lazy_static! {
 
         // values() -> Primitive<Array>
         map.insert("values", (values as PrimitiveMethod, Right::Read));
+
+        // is_number() -> Primitive<Boolean>
+        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -190,7 +196,7 @@ fn contains(
     interval: Interval,
     _content_type: &str,
 ) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 1, "contains(Primitive<Int, Float, String>)", interval)?;
+    check_usage(args, 1, "contains(Primitive<String>)", interval)?;
 
     let literal = match args.get(0) {
         Some(res) => res,
@@ -347,6 +353,17 @@ fn get_metadata(
         primitive: Box::new(object.clone()),
         interval,
     })
+}
+
+fn is_number(
+    _object: &mut PrimitiveObject,
+    args: &[Literal],
+    interval: Interval,
+    _content_type: &str,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "is_number()", interval)?;
+
+    Ok(PrimitiveBoolean::get_literal("boolean", false, interval))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

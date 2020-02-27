@@ -1,4 +1,5 @@
 use crate::data::primitive::object::PrimitiveObject;
+use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
@@ -30,6 +31,9 @@ lazy_static! {
 
         // to_string() -> Primitive<String>
         map.insert("to_string", (to_string as PrimitiveMethod, Right::Read));
+
+        // is_number() -> Primitive<Boolean>
+        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -64,6 +68,16 @@ fn to_string(
         &null.to_string(),
         interval,
     ))
+}
+
+fn is_number(
+    _null: &mut PrimitiveNull,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "is_number()", interval)?;
+
+    Ok(PrimitiveBoolean::get_literal("boolean", false, interval))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,6 @@
 use crate::data::primitive::int::PrimitiveInt;
 use crate::data::primitive::object::PrimitiveObject;
+use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_division_by_zero_f64;
 use crate::data::primitive::tools::check_usage;
@@ -37,7 +38,7 @@ lazy_static! {
         // cos() -> Primitive<Float>
         map.insert("cos", (cos as PrimitiveMethod, Right::Read));
 
-        // pow(Primitive<Float>) -> Primitive<Float>
+        // pow(Primitive<Int || Float>) -> Primitive<Float>
         map.insert("pow", (pow as PrimitiveMethod, Right::Read));
 
         // floor() -> Primitive<Float>
@@ -54,6 +55,18 @@ lazy_static! {
 
         // sqrt() -> Primitive<Float>
         map.insert("sqrt", (sqrt as PrimitiveMethod, Right::Read));
+
+        // tan() -> Primitive<Float>
+        map.insert("tan", (tan as PrimitiveMethod, Right::Read));
+
+        // is_number() -> Primitive<Boolean>
+        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
+
+        // to_int() -> Primitive<Int>
+        map.insert("to_int", (to_int as PrimitiveMethod, Right::Read));
+
+        // to_float() -> Primitive<Int>
+        map.insert("to_float", (to_float as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -121,7 +134,7 @@ fn pow(
     args: &[Literal],
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 1, "pow(Primitive<Float>)", interval)?;
+    check_usage(args, 1, "pow(Primitive<Int || Float>)", interval)?;
 
     let literal = match args.get(0) {
         Some(res) => res,
@@ -133,17 +146,22 @@ fn pow(
         }
     };
 
-    match Literal::get_value::<f64>(&literal.primitive) {
-        Ok(res) => {
-            let result = float.value.powf(*res);
+    if let Ok(res) = Literal::get_value::<f64>(&literal.primitive) {
+        let result = float.value.powf(*res);
 
-            Ok(PrimitiveFloat::get_literal("float", result, interval))
-        }
-        Err(_) => Err(ErrorInfo {
-            message: "usage: parameter must be of type float".to_owned(),
-            interval,
-        }),
+        return Ok(PrimitiveFloat::get_literal("float", result, interval));
     }
+    if let Ok(res) = Literal::get_value::<i64>(&literal.primitive) {
+        let res = *res as f64;
+        let result = float.value.powf(res);
+
+        return Ok(PrimitiveFloat::get_literal("float", result, interval));
+    }
+
+    Err(ErrorInfo {
+        message: "usage: parameter must be of type float or int".to_owned(),
+        interval,
+    })
 }
 
 fn floor(
@@ -204,6 +222,48 @@ fn sqrt(
     let result = float.value.sqrt();
 
     Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn tan(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "tan()", interval)?;
+
+    let result = float.value.tan();
+
+    Ok(PrimitiveFloat::get_literal("float", result, interval))
+}
+
+fn is_number(
+    _float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "is_number()", interval)?;
+
+    Ok(PrimitiveBoolean::get_literal("boolean", true, interval))
+}
+
+fn to_int(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "to_int()", interval)?;
+
+    Ok(PrimitiveInt::get_literal("int", float.value as i64, interval))
+}
+
+fn to_float(
+    float: &mut PrimitiveFloat,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "to_float()", interval)?;
+
+    Ok(PrimitiveFloat::get_literal("float", float.value, interval))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

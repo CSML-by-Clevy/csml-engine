@@ -8,11 +8,11 @@ step_0:
 
     say s
 
-    do s.to_upper_case()
+    do s.to_uppercase()
 
     say s
 
-    say s.to_lower_case()
+    say s.to_lowercase()
 
 step_1:
     remember s = "Hello"

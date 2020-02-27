@@ -1,3 +1,30 @@
 start:
-  say "hello"
+  use [] as types
+
+  do types.push([])
+  do types.push(true)
+  do types.push(42.42)
+  do types.push(42)
+  do types.push(NULL)
+  do types.push({})
+
+  foreach (key) in types {
+    say key.is_number()
+  }
+
+  do types.clear()
+
+  do types.push("")
+  do types.push("hello")
+  do types.push("+42")
+  do types.push("-42")
+  do types.push("4.2")
+  do types.push("42")
+  do types.push("hello42")
+  do types.push("42hello")
+
+  foreach (key) in types {
+    say key.is_number()
+  }
+
   goto end
