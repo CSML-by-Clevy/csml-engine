@@ -50,11 +50,11 @@ lazy_static! {
         // is_empty() -> Primitive<Boolean>
         map.insert("is_empty", (is_empty as PrimitiveMethod, Right::Read));
 
-        // to_lower_case() -> Primitive<String>
-        map.insert("to_lower_case", (to_lower_case as PrimitiveMethod, Right::Write));
+        // to_lower_case() -> Primitive<Null>
+        map.insert("to_lowercase", (to_lowercase as PrimitiveMethod, Right::Write));
 
-        // to_upper_case() -> Primitive<String>
-        map.insert("to_upper_case", (to_upper_case as PrimitiveMethod, Right::Write));
+        // to_upper_case() -> Primitive<Null>
+        map.insert("to_uppercase", (to_uppercase as PrimitiveMethod, Right::Write));
 
         // contains(Primitive<String>) -> Primitive<Boolean>
         map.insert("contains", (contains as PrimitiveMethod, Right::Read));
@@ -76,6 +76,9 @@ lazy_static! {
 
         // match_regex(Primitive<String>) -> Primitive<Array>
         map.insert("match_regex", (do_match_regex as PrimitiveMethod, Right::Read));
+        
+        // is_number() -> Primitive<Boolean>
+        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -207,24 +210,24 @@ fn is_empty(
     Ok(PrimitiveBoolean::get_literal("boolean", result, interval))
 }
 
-fn to_lower_case(
+fn to_lowercase(
     string: &mut PrimitiveString,
     args: &[Literal],
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "to_lower_case()", interval)?;
+    check_usage(args, 0, "to_lowercase()", interval)?;
 
     string.value.make_ascii_lowercase();
 
     Ok(PrimitiveNull::get_literal("null", interval))
 }
 
-fn to_upper_case(
+fn to_uppercase(
     string: &mut PrimitiveString,
     args: &[Literal],
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "to_upper_case()", interval)?;
+    check_usage(args, 0, "to_uppercase()", interval)?;
 
     string.value.make_ascii_uppercase();
 
@@ -513,6 +516,18 @@ fn do_match_regex(
         true => Ok(PrimitiveNull::get_literal("null", interval)),
         false => Ok(PrimitiveArray::get_literal("array", &vector, interval)),
     }
+}
+
+fn is_number(
+    string: &mut PrimitiveString,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "is_number()", interval)?;
+
+    let result = string.value.parse::<f64>().is_ok();
+
+    Ok(PrimitiveBoolean::get_literal("string", result, interval))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

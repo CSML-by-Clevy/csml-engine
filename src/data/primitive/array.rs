@@ -56,6 +56,12 @@ lazy_static! {
         // one_of() -> Primitive<T>
         map.insert("one_of", (one_of as PrimitiveMethod, Right::Read));
 
+        // join(Primitive<String>) -> Primitive<String>
+        map.insert("join", (join as PrimitiveMethod, Right::Read));
+
+        // is_number() -> Primitive<Boolean>
+        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
+
         map
     };
 }
@@ -262,6 +268,59 @@ fn one_of(
     }
 
     Ok(PrimitiveNull::get_literal("null", interval))
+}
+
+fn join(
+    array: &mut PrimitiveArray,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 1, "join(Primitive<String>)", interval)?;
+
+    let mut result = String::new();
+
+    let literal = match args.get(0) {
+        Some(res) => res,
+        None => {
+            return Err(ErrorInfo {
+                message: "usage: need to have one parameter".to_owned(),
+                interval,
+            });
+        }
+    };
+
+    match Literal::get_value::<String>(&literal.primitive) {
+        Ok(separater) => {
+            let length = array.value.len();
+
+            for (index, string) in array.value.iter().enumerate() {
+                result.push_str(&string.primitive.to_string());
+
+                if index + 1 !=  length {
+                    result.push_str(separater);
+                }
+            }
+
+            match result.is_empty() {
+                true => Ok(PrimitiveNull::get_literal("null", interval)),
+                false => Ok(PrimitiveString::get_literal("string", &result, interval)),
+            }
+        }
+        Err(_) => Err(ErrorInfo {
+            message: "usage: first parameter must be of type string".to_owned(),
+            interval,
+        }),
+    }
+}
+
+fn is_number(
+    _array: &mut PrimitiveArray,
+    args: &[Literal],
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    check_usage(args, 0, "is_number()", interval)?;
+
+    Ok(PrimitiveBoolean::get_literal("boolean", false, interval))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

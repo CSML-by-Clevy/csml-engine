@@ -125,3 +125,47 @@ fn array_step_7() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn array_step_8() {
+    let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: join(Primitive<String>) at line 60, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
+    let msg = format_message(None, "step_8");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_step_9() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":null}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
+    let msg = format_message(None, "step_9");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_step_10() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
+    let msg = format_message(None, "step_10");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_step_11() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"1,2"}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
+    let msg = format_message(None, "step_11");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

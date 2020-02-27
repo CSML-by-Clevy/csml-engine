@@ -53,3 +53,23 @@ step_7:
     remember vec = []
 
     do vec.remove_at(1)
+
+step_8:
+    remember vec = []
+
+    say vec.join()
+
+step_9:
+    do vec = []
+
+    say vec.join(",")
+
+step_10:
+    do vec = [1]
+
+    say vec.join(",")
+
+step_11:
+    do vec = [1, 2]
+
+    say vec.join(",")
