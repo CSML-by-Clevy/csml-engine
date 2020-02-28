@@ -1,5 +1,5 @@
-use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::boolean::PrimitiveBoolean;
+use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
@@ -24,14 +24,18 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        // type_of() -> Primitive<String>
-        map.insert("type_of", (type_of as PrimitiveMethod, Right::Read));
-
-        // to_string() -> Primitive<String>
-        map.insert("to_string", (to_string as PrimitiveMethod, Right::Read));
-
-        // is_number() -> Primitive<Boolean>
-        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
+        map.insert(
+            "type_of",
+            (PrimitiveNull::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveNull::to_string as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_number",
+            (PrimitiveNull::is_number as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -41,41 +45,39 @@ lazy_static! {
 pub struct PrimitiveNull {}
 
 ////////////////////////////////////////////////////////////////////////////////
-// PRIVATE FUNCTIONS
+// METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn type_of(
-    _null: &mut PrimitiveNull,
-    args: &[Literal],
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "type_of()", interval)?;
+impl PrimitiveNull {
+    fn type_of(
+        _null: &mut PrimitiveNull,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "type_of()", interval)?;
 
-    Ok(PrimitiveString::get_literal("string", "Null", interval))
-}
+        Ok(PrimitiveString::get_literal("Null", interval))
+    }
 
-fn to_string(
-    null: &mut PrimitiveNull,
-    args: &[Literal],
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "to_string()", interval)?;
+    fn to_string(
+        null: &mut PrimitiveNull,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "to_string()", interval)?;
 
-    Ok(PrimitiveString::get_literal(
-        "string",
-        &null.to_string(),
-        interval,
-    ))
-}
+        Ok(PrimitiveString::get_literal(&null.to_string(), interval))
+    }
 
-fn is_number(
-    _null: &mut PrimitiveNull,
-    args: &[Literal],
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "is_number()", interval)?;
+    fn is_number(
+        _null: &mut PrimitiveNull,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "is_number()", interval)?;
 
-    Ok(PrimitiveBoolean::get_literal("boolean", false, interval))
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,11 +91,11 @@ impl Default for PrimitiveNull {
 }
 
 impl PrimitiveNull {
-    pub fn get_literal(content_type: &str, interval: Interval) -> Literal {
+    pub fn get_literal(interval: Interval) -> Literal {
         let primitive = Box::new(PrimitiveNull::default());
 
         Literal {
-            content_type: content_type.to_owned(),
+            content_type: "null".to_owned(),
             primitive,
             interval,
         }
@@ -208,8 +210,8 @@ impl Primitive for PrimitiveNull {
             },
         );
 
-        let result =
-            PrimitiveObject::get_literal("text", &hashmap, Interval { column: 0, line: 0 });
+        let mut result = PrimitiveObject::get_literal(&hashmap, Interval { column: 0, line: 0 });
+        result.set_content_type("text");
 
         Message {
             content_type: result.content_type,

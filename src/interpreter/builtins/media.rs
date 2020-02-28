@@ -23,7 +23,10 @@ pub fn url(
                 url.insert("text".to_owned(), text);
             }
 
-            Ok(PrimitiveObject::get_literal("url", &url, interval))
+            let mut result = PrimitiveObject::get_literal(&url, interval);
+            result.set_content_type("url");
+
+            Ok(result)
         },
         _ => Err(ErrorInfo{
                 message: "Builtin Url expect one argument of type string and 2 optional string argmuments: text, title | example: Url(href = \"hola\", text = \"text\", title = \"title\")".to_owned(),
@@ -43,7 +46,10 @@ pub fn img(
         Ok(href) if href.primitive.get_type() == PrimitiveType::PrimitiveString => {
             img.insert("url".to_owned(), href.clone());
 
-            Ok(PrimitiveObject::get_literal("image", &img, interval))
+            let mut result = PrimitiveObject::get_literal(&img, interval);
+            result.set_content_type("image");
+
+            Ok(result)
         }
         _ => Err(ErrorInfo {
             message: "Builtin Image expect one argument of type string | example: Image(\"hola\")"
@@ -71,7 +77,10 @@ pub fn video(
                 _ => None
             };
 
-            Ok(PrimitiveObject::get_literal("video", &video, interval))
+            let mut result = PrimitiveObject::get_literal(&video, interval);
+            result.set_content_type("video");
+
+            Ok(result)
         },
         _ => Err(ErrorInfo{
                 message: "Builtin Video expect one argument of type string and 1 optional 'service' argument of type string | example: Video(url = \"hola\", service = \"text\")".to_owned(),
@@ -99,7 +108,10 @@ pub fn audio(
                 _ => None
             };
 
-            Ok(PrimitiveObject::get_literal("audio", &audio, interval))
+            let mut result = PrimitiveObject::get_literal(&audio, interval);
+            result.set_content_type("audio");
+
+            Ok(result)
 
         },
         _ => Err(ErrorInfo{

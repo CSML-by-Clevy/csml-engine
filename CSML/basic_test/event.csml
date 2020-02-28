@@ -13,3 +13,6 @@ step_2:
 
 step_3:
     say event.get_metadata()
+
+step_4:
+    say event.is_number()

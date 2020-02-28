@@ -143,7 +143,7 @@ fn loop_path(
                 Some(new_lit) => lit = new_lit,
                 None => {
                     return Ok((
-                        PrimitiveNull::get_literal("null", interval.to_owned()),
+                        PrimitiveNull::get_literal(interval.to_owned()),
                         tmp_update_var,
                     ))
                 }
@@ -151,7 +151,7 @@ fn loop_path(
             PathLiteral::MapIndex(key) => {
                 if let (Some(ref new), 0) = (&new, path.len()) {
                     let args = [
-                        PrimitiveString::get_literal("string", key, interval.to_owned()),
+                        PrimitiveString::get_literal(key, interval.to_owned()),
                         new.to_owned(),
                     ];
 
@@ -168,7 +168,7 @@ fn loop_path(
                         Some(new_lit) => lit = new_lit,
                         None => {
                             return Ok((
-                                PrimitiveNull::get_literal("null", interval.to_owned()),
+                                PrimitiveNull::get_literal(interval.to_owned()),
                                 tmp_update_var,
                             ))
                         }
@@ -228,7 +228,7 @@ pub fn get_literal_form_metadata(
     let mut lit = match path.get(0) {
         Some((inter, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
             Some(lit) => lit.to_owned(),
-            None => PrimitiveNull::get_literal("null", inter.to_owned()),
+            None => PrimitiveNull::get_literal(inter.to_owned()),
         },
         Some((inter, _)) => {
             return Err(ErrorInfo {
@@ -264,7 +264,6 @@ pub fn get_var(
                 get_literal_form_metadata(&path, data)
             }
             None => Ok(PrimitiveObject::get_literal(
-                "object",
                 &data.context.metadata,
                 interval.to_owned(),
             )),
@@ -283,7 +282,7 @@ pub fn get_var(
                 );
                 Ok(new_literal)
             }
-            Err(_) => Ok(PrimitiveNull::get_literal("null", interval.to_owned())),
+            Err(_) => Ok(PrimitiveNull::get_literal(interval.to_owned())),
         },
     }
 }
@@ -334,11 +333,16 @@ pub fn get_string_from_complexstring(
         match match_functions(elem, data, root, sender) {
             Ok(var) => new_string.push_str(&var.primitive.to_string()),
             Err(_) => {
-                let literal = PrimitiveNull::get_literal("text", interval.to_owned());
+                let mut literal = PrimitiveNull::get_literal(interval.to_owned());
+                literal.set_content_type("text");
+
                 new_string.push_str(&literal.primitive.to_string());
             }
         }
     }
 
-    PrimitiveString::get_literal("text", &new_string, interval)
+    let mut result = PrimitiveString::get_literal(&new_string, interval);
+    result.set_content_type("text");
+
+    result
 }

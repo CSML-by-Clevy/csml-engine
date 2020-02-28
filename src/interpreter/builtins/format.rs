@@ -11,7 +11,6 @@ pub fn text(
 ) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
         Some(literal) => Ok(PrimitiveString::get_literal(
-            "string",
             &literal.primitive.to_string(),
             literal.interval,
         )),
@@ -24,7 +23,7 @@ pub fn text(
 }
 
 pub fn object(object: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    Ok(PrimitiveObject::get_literal("object", &object, interval))
+    Ok(PrimitiveObject::get_literal(&object, interval))
 }
 
 pub fn question(
@@ -53,9 +52,10 @@ pub fn question(
     question.insert("accepts".to_owned(), accepts);
     question.insert("buttons".to_owned(), buttons);
 
-    Ok(PrimitiveObject::get_literal(
-        "question", &question, interval,
-    ))
+    let mut result = PrimitiveObject::get_literal(&question, interval);
+    result.set_content_type("question");
+
+    Ok(result)
 }
 
 // TODO: check nbr elemts in built-ins
@@ -72,7 +72,11 @@ pub fn typing(
                 || literal.primitive.get_type() == PrimitiveType::PrimitiveFloat =>
         {
             typing.insert("duration".to_owned(), literal.to_owned());
-            Ok(PrimitiveObject::get_literal("typing", &typing, interval))
+
+            let mut result = PrimitiveObject::get_literal(&typing, interval);
+            result.set_content_type("typing");
+
+            Ok(result)
         }
         _ => Err(ErrorInfo {
             message:
@@ -97,7 +101,10 @@ pub fn wait(
         {
             wait.insert("duration".to_owned(), literal.to_owned());
 
-            Ok(PrimitiveObject::get_literal("wait", &wait, interval))
+            let mut result = PrimitiveObject::get_literal(&wait, interval);
+            result.set_content_type("wait");
+
+            Ok(result)
         }
         _ => Err(ErrorInfo {
             message: "Builtin Wait expect one argument of type int or float | example: Wait(3)"

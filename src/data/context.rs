@@ -8,7 +8,7 @@ use crate::interpreter::json_to_literal;
 use nom::lib::std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub struct ApiInfo{
+pub struct ApiInfo {
     pub client: Client,
     pub fn_endpoint: String,
 }
@@ -27,11 +27,10 @@ impl ContextJson {
             current: serde_json::json!({}),
             metadata: serde_json::json!({}),
             api_info: None,
-            hold: None
+            hold: None,
         }
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Context {

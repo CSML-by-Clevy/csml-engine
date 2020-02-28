@@ -4,7 +4,7 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
+use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
 fn format_message(event: Event, file: &str, step: &str) -> MessageData {
     let text = read_file(format!("CSML/basic_test/built-in/{}.csml", file)).unwrap();

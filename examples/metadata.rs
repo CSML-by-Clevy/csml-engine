@@ -1,5 +1,5 @@
 use csmlinterpreter::{
-    data::{ContextJson, MessageData, Event},
+    data::{ContextJson, Event, MessageData},
     interpret,
 };
 use serde_json::{json, map::Map, Value};
@@ -66,7 +66,7 @@ fn interpret_flow(flow: &str) {
     let mut step = "start".to_owned();
 
     while step != "end" {
-        let messages = interpret(flow, &step, context.clone(), &event, None,);
+        let messages = interpret(flow, &step, context.clone(), &event, None);
         dbg!(format_message(&messages));
 
         match &messages.next_step {

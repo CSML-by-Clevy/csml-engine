@@ -96,7 +96,7 @@ pub fn evaluate_condition(
         (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => {
             let value = !valid_literal(match_functions(exp_1, data, root, sender));
             let interval = interval_from_expr(exp_1);
-            Ok(PrimitiveBoolean::get_literal("boolean", value, interval))
+            Ok(PrimitiveBoolean::get_literal(value, interval))
         }
         (exp_1, exp_2) if check_if_ident(exp_1) && check_if_ident(exp_2) => evaluate(
             infix,

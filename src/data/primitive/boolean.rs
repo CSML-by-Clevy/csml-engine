@@ -24,14 +24,18 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        // type_of() -> Primitive<String>
-        map.insert("type_of", (type_of as PrimitiveMethod, Right::Read));
-
-        // to_string() -> Primitive<String>
-        map.insert("to_string", (to_string as PrimitiveMethod, Right::Read));
-
-        // is_number() -> Primitive<Boolean>
-        map.insert("is_number", (is_number as PrimitiveMethod, Right::Read));
+        map.insert(
+            "type_of",
+            (PrimitiveBoolean::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveBoolean::to_string as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_number",
+            (PrimitiveBoolean::is_number as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -43,41 +47,39 @@ pub struct PrimitiveBoolean {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// PRIVATE FUNCTIONS
+// METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn type_of(
-    _boolean: &mut PrimitiveBoolean,
-    args: &[Literal],
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "type_of()", interval)?;
+impl PrimitiveBoolean {
+    fn type_of(
+        _boolean: &mut PrimitiveBoolean,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "type_of()", interval)?;
 
-    Ok(PrimitiveString::get_literal("string", "boolean", interval))
-}
+        Ok(PrimitiveString::get_literal("boolean", interval))
+    }
 
-fn to_string(
-    boolean: &mut PrimitiveBoolean,
-    args: &[Literal],
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "to_string()", interval)?;
+    fn to_string(
+        boolean: &mut PrimitiveBoolean,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "to_string()", interval)?;
 
-    Ok(PrimitiveString::get_literal(
-        "string",
-        &boolean.to_string(),
-        interval,
-    ))
-}
+        Ok(PrimitiveString::get_literal(&boolean.to_string(), interval))
+    }
 
-fn is_number(
-    _boolean: &mut PrimitiveBoolean,
-    args: &[Literal],
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    check_usage(args, 0, "is_number()", interval)?;
+    fn is_number(
+        _boolean: &mut PrimitiveBoolean,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "is_number()", interval)?;
 
-    Ok(PrimitiveBoolean::get_literal("boolean", true, interval))
+        Ok(PrimitiveBoolean::get_literal(true, interval))
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,11 +91,11 @@ impl PrimitiveBoolean {
         Self { value }
     }
 
-    pub fn get_literal(content_type: &str, boolean: bool, interval: Interval) -> Literal {
+    pub fn get_literal(boolean: bool, interval: Interval) -> Literal {
         let primitive = Box::new(PrimitiveBoolean::new(boolean));
 
         Literal {
-            content_type: content_type.to_owned(),
+            content_type: "boolean".to_owned(),
             primitive,
             interval,
         }
@@ -275,8 +277,8 @@ impl Primitive for PrimitiveBoolean {
             },
         );
 
-        let result =
-            PrimitiveObject::get_literal("text", &hashmap, Interval { column: 0, line: 0 });
+        let mut result = PrimitiveObject::get_literal(&hashmap, Interval { column: 0, line: 0 });
+        result.set_content_type("text");
 
         Message {
             content_type: result.content_type,
