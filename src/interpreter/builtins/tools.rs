@@ -59,9 +59,9 @@ pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
                     Err(..) => vec,
                 }
             });
-            PrimitiveArray::get_literal("array", &array, buttons.interval)
+            PrimitiveArray::get_literal(&array, buttons.interval)
         }
-        Err(..) => PrimitiveArray::get_literal("array", &[], buttons.interval),
+        Err(..) => PrimitiveArray::get_literal(&[], buttons.interval),
     }
 }
 
@@ -92,7 +92,7 @@ pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
 
                 vector.push(title);
 
-                PrimitiveArray::get_literal("array", &vector, literal.interval)
+                PrimitiveArray::get_literal(&vector, literal.interval)
             }
             Err(_) => {
                 let mut vector = Vec::new();
@@ -100,7 +100,7 @@ pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
                 vector.push(literal.to_owned());
                 vector.push(title);
 
-                PrimitiveArray::get_literal("array", &vector, literal.interval)
+                PrimitiveArray::get_literal(&vector, literal.interval)
             }
         },
         None => {
@@ -108,7 +108,7 @@ pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
 
             items.push(title.to_owned());
 
-            PrimitiveArray::get_literal("array", &items, title.interval)
+            PrimitiveArray::get_literal(&items, title.interval)
         }
     }
 }

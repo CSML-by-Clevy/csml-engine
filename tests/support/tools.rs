@@ -17,7 +17,7 @@ pub fn gen_context(current: serde_json::Value, metadata: serde_json::Value) -> C
         current,
         metadata,
         api_info: None,
-        hold: None
+        hold: None,
     }
 }
 

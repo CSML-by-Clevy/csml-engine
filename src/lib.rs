@@ -13,22 +13,12 @@ use parser::Parser;
 use curl::easy::Easy;
 use std::{collections::HashMap, sync::mpsc};
 
-pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
-    match Parser::parse_flow(file) {
-        Ok(flow) => {
-            check_valid_flow(&flow)?;
-            Ok(flow)
-        }
-        Err(e) => Err(e),
-    }
-}
-
-pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
+fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
     flow.flow_instructions
         .get(&InstructionType::NormalStep(name.to_owned()))
 }
 
-pub fn execute_step(
+fn execute_step(
     flow: &Flow,
     name: &str,
     mut data: Data,
@@ -43,6 +33,16 @@ pub fn execute_step(
             interval: Interval { line: 0, column: 0 },
             message: format!("Error: step {} not found", name),
         }),
+    }
+}
+
+pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
+    match Parser::parse_flow(file) {
+        Ok(flow) => {
+            check_valid_flow(&flow)?;
+            Ok(flow)
+        }
+        Err(e) => Err(e),
     }
 }
 
@@ -82,7 +82,7 @@ pub fn interpret(
         context: &mut context,
         event,
         curl,
-        step_vars
+        step_vars,
     };
 
     MessageData::error_to_message(

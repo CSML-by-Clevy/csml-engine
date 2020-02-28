@@ -1,4 +1,4 @@
-use crate::data::primitive::{string::PrimitiveString};
+use crate::data::primitive::string::PrimitiveString;
 use crate::data::{
     ast::{Expr, Identifier, Interval, PathExpr},
     Data, Literal, MemoryType, MessageData, MSG,
@@ -53,7 +53,6 @@ pub fn gen_literal_form_event(
             Ok(lit)
         }
         None => Ok(PrimitiveString::get_literal(
-            "string",
             &data.event.content,
             interval.to_owned(),
         )),

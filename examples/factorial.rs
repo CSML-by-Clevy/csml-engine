@@ -1,6 +1,6 @@
 use csmlinterpreter::{
-    data::{ContextJson, MessageData, Event},
-    interpret, 
+    data::{ContextJson, Event, MessageData},
+    interpret,
 };
 use serde_json::{json, map::Map, Value};
 

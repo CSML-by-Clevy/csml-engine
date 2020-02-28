@@ -4,7 +4,7 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
+use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
 fn format_message(event: Event, step: &str) -> MessageData {
     let text = read_file("CSML/basic_test/stdlib/regex.csml".to_owned()).unwrap();

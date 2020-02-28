@@ -67,7 +67,7 @@ fn interpret_flow(flow: &str) {
     let mut step = "start".to_owned();
 
     while step != "end" {
-        let messages = interpret(flow, &step, context.clone(), &event, None,);
+        let messages = interpret(flow, &step, context.clone(), &event, None);
         if let Some(ref mem) = &messages.memories {
             for res in mem.iter() {
                 memory.insert(res.key.to_owned(), res.value.to_owned());

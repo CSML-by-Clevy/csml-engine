@@ -1,5 +1,5 @@
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
-use crate::data::{send_msg, Literal, Memories, Message, MSG, Hold};
+use crate::data::{send_msg, Hold, Literal, Memories, Message, MSG};
 use crate::error_format::ErrorInfo;
 use crate::parser::ExitCondition;
 
@@ -103,7 +103,6 @@ impl MessageData {
             Ok(v) => v,
             Err(ErrorInfo { message, interval }) => {
                 let msg = PrimitiveString::get_literal(
-                    "string",
                     &format!(
                         "{} at line {}, column {}",
                         message, interval.line, interval.column
@@ -115,7 +114,8 @@ impl MessageData {
 
                 hashmap.insert("error".to_owned(), msg);
 
-                let literal = PrimitiveObject::get_literal("error", &hashmap, interval);
+                let mut literal = PrimitiveObject::get_literal(&hashmap, interval);
+                literal.set_content_type("error");
 
                 send_msg(
                     sender,

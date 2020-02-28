@@ -40,7 +40,7 @@ pub fn for_loop(
         if let Some(index) = i {
             data.step_vars.insert(
                 index.ident.to_owned(),
-                PrimitiveInt::get_literal("int", value as i64, elem.interval.to_owned()),
+                PrimitiveInt::get_literal(value as i64, elem.interval.to_owned()),
             );
         };
 

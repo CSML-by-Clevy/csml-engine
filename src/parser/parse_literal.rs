@@ -34,7 +34,7 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, int) = get_int(s)?;
 
-    let expression = Expr::LitExpr(PrimitiveInt::get_literal("int", int, interval));
+    let expression = Expr::LitExpr(PrimitiveInt::get_literal(int, interval));
 
     Ok((s, expression))
 }
@@ -53,7 +53,7 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, float) = map_res(floating_point, |s: Span| s.fragment.parse::<f64>())(s)?;
 
-    let expression = Expr::LitExpr(PrimitiveFloat::get_literal("float", float, interval));
+    let expression = Expr::LitExpr(PrimitiveFloat::get_literal(float, interval));
 
     Ok((s, expression))
 }
@@ -108,7 +108,7 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, _) = get_tag(name.to_ascii_lowercase(), NULL)(s)?;
 
-    let expression = Expr::LitExpr(PrimitiveNull::get_literal("null", interval));
+    let expression = Expr::LitExpr(PrimitiveNull::get_literal(interval));
 
     Ok((s, expression))
 }

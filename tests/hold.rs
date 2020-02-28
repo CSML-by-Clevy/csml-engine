@@ -1,23 +1,22 @@
 mod support;
 
-use csmlinterpreter::data::{Event, MessageData, Hold};
+use csmlinterpreter::data::{Event, Hold, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
+use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
-fn format_message(
-    event: Event,
-    step: &str,
-    instruction_index: Option<usize>,
-) -> MessageData {
+fn format_message(event: Event, step: &str, instruction_index: Option<usize>) -> MessageData {
     let text = read_file("CSML/basic_test/hold.csml".to_owned()).unwrap();
     // instruction_index
     let mut context = gen_context(serde_json::json!({}), serde_json::json!({}));
     if let Some(index) = instruction_index {
-        context.hold = Some(Hold{index, step_vars: serde_json::json!({})});
+        context.hold = Some(Hold {
+            index,
+            step_vars: serde_json::json!({}),
+        });
     };
-    interpret(&text, step, context, &event, None,)
+    interpret(&text, step, context, &event, None)
 }
 
 #[test]

@@ -4,15 +4,12 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
+use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
 fn format_message(event: Event, step: &str) -> MessageData {
     let text = read_file("CSML/basic_test/stdlib/object.csml".to_owned()).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-    );
+    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
     interpret(&text, step, context, &event, None)
 }

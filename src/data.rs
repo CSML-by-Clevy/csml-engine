@@ -14,7 +14,7 @@ pub mod tokens;
 
 pub use ast::Interval;
 pub use client::Client;
-pub use context::{Context, ContextJson, ApiInfo};
+pub use context::{ApiInfo, Context, ContextJson};
 pub use data::Data;
 pub use event::Event;
 pub use hold::Hold;

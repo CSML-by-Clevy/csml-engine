@@ -50,7 +50,7 @@ pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Lit
                     let mut vec = res.to_owned();
                     vec.shuffle(&mut rand::thread_rng());
 
-                    Ok(PrimitiveArray::get_literal("array", &vec, literal.interval))
+                    Ok(PrimitiveArray::get_literal(&vec, literal.interval))
                 }
                 Err(_) => Err(ErrorInfo{
                         message: "ERROR: Builtin Shuffle expect one value of type Array | example: Shuffle( [1, 2, 3] )".to_owned(),
@@ -69,10 +69,10 @@ pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
     match args.get(DEFAULT) {
         Some(literal) => {
             if let Ok(res) = Literal::get_value::<Vec<Literal>>(&literal.primitive) {
-                return Ok(PrimitiveInt::get_literal("int", res.len() as i64, literal.interval))
+                return Ok(PrimitiveInt::get_literal(res.len() as i64, literal.interval))
             }
             if let Ok(res) = Literal::get_value::<String>(&literal.primitive) {
-                return Ok(PrimitiveInt::get_literal("int", res.len() as i64, literal.interval))
+                return Ok(PrimitiveInt::get_literal(res.len() as i64, literal.interval))
             }
 
             Err(ErrorInfo{
@@ -113,9 +113,9 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
             match Literal::get_value::<String>(&literal.primitive) {
                 Ok(res) => {
                     if case {
-                        Ok(PrimitiveBoolean::get_literal("boolean", string.contains(res), interval))
+                        Ok(PrimitiveBoolean::get_literal(string.contains(res), interval))
                     } else {
-                        Ok(PrimitiveBoolean::get_literal("boolean", string.to_lowercase().contains(&res.to_lowercase()), interval))
+                        Ok(PrimitiveBoolean::get_literal(string.to_lowercase().contains(&res.to_lowercase()), interval))
                     }
                 }
                 Err(_) => Err(ErrorInfo{
@@ -136,17 +136,13 @@ pub fn random(interval: Interval) -> Result<Literal, ErrorInfo> {
 
     let random: f64 = rng.gen();
 
-    Ok(PrimitiveFloat::get_literal("float", random, interval))
+    Ok(PrimitiveFloat::get_literal(random, interval))
 }
 
 pub fn floor(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
         Some(literal) => match Literal::get_value::<f64>(&literal.primitive) {
-            Ok(res) => Ok(PrimitiveFloat::get_literal(
-                "float",
-                res.floor(),
-                literal.interval,
-            )),
+            Ok(res) => Ok(PrimitiveFloat::get_literal(res.floor(), literal.interval)),
             Err(_) => Err(ErrorInfo {
                 message:
                     "ERROR: Builtin Floor expect one argument of type float| example: Floor(4.2)"

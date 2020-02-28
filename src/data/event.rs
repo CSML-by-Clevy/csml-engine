@@ -11,6 +11,6 @@ impl Event {
             content_type: "text".to_owned(),
             content: text.to_owned(),
             metadata: serde_json::json!({}),
-        } 
+        }
     }
 }

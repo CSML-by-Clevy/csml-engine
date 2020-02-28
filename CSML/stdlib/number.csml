@@ -1,0 +1,50 @@
+start:
+    goto end
+
+int_0:
+    use 42 as int
+
+    do result = int.pow(2)
+
+    say result
+    say result.type_of()
+
+int_1:
+    use 42 as int
+
+    do result = int.pow(2.2)
+
+    say result
+    say result.type_of()
+
+float_0:
+    use 42.0 as float
+
+    do result = float.pow(2)
+
+    say result
+    say result.type_of()
+
+float_1:
+    use 42.0 as float
+
+    do result = float.pow(2.2)
+
+    say result
+    say result.type_of()
+
+string_0:
+    use "42" as string
+
+    do result = string.pow(2)
+
+    say result
+    say result.type_of()
+
+string_1:
+    use "42.0" as string
+
+    do result = string.pow(2.2)
+
+    say result
+    say result.type_of()

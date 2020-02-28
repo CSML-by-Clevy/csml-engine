@@ -77,11 +77,8 @@ where
             let mut vec = vec![];
 
             if val.input_len() > 0 {
-                let expression = Expr::LitExpr(PrimitiveString::get_literal(
-                    "string",
-                    val.fragment,
-                    interval,
-                ));
+                let expression =
+                    Expr::LitExpr(PrimitiveString::get_literal(val.fragment, interval));
                 vec.push(expression);
             }
             parse_brace(s, vec)
@@ -98,11 +95,8 @@ where
             let (val, interval_start) = get_interval(val)?;
 
             if val.input_len() > 0 {
-                let expression = Expr::LitExpr(PrimitiveString::get_literal(
-                    "string",
-                    val.fragment,
-                    interval_start,
-                ));
+                let expression =
+                    Expr::LitExpr(PrimitiveString::get_literal(val.fragment, interval_start));
 
                 return Ok((s, expression));
             }

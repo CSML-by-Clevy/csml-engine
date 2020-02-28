@@ -102,11 +102,7 @@ pub fn expr_to_literal(
             for (key, value) in map.iter() {
                 object.insert(key.to_owned(), expr_to_literal(&value, data, root, sender)?);
             }
-            Ok(PrimitiveObject::get_literal(
-                "object",
-                &object,
-                start.to_owned(),
-            ))
+            Ok(PrimitiveObject::get_literal(&object, start.to_owned()))
         }
         Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => Ok(
             get_string_from_complexstring(vec, start.to_owned(), data, root, sender),
@@ -117,11 +113,7 @@ pub fn expr_to_literal(
                 array.push(expr_to_literal(value, data, root, sender)?)
             }
 
-            Ok(PrimitiveArray::get_literal(
-                "array",
-                &array,
-                range.start.to_owned(),
-            ))
+            Ok(PrimitiveArray::get_literal(&array, range.start.to_owned()))
         }
         Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), data, root, sender)?),
         Expr::LitExpr(literal) => Ok(literal.clone()),

@@ -17,12 +17,10 @@ fn get_accept(lit: &Literal) -> Option<&Literal> {
 // TODO: change when exec
 fn containst(lit1: &Literal, lit2: &Literal) -> Literal {
     match lit1.primitive.as_any().downcast_ref::<PrimitiveArray>() {
-        Some(array) => PrimitiveBoolean::get_literal(
-            "boolean",
-            array.value.contains(lit2),
-            lit1.interval.to_owned(),
-        ),
-        None => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
+        Some(array) => {
+            PrimitiveBoolean::get_literal(array.value.contains(lit2), lit1.interval.to_owned())
+        }
+        None => PrimitiveBoolean::get_literal(false, lit1.interval.to_owned()),
     }
 }
 
@@ -31,27 +29,26 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
         (b1, b2) if (b1 == "button" || b1 == "object") && (b2 == "button" || b2 == "object") => {
             match (get_accept(lit1), get_accept(lit2)) {
                 (Some(l1), Some(l2)) => match_obj(l1, l2),
-                (_, _) => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
+                (_, _) => PrimitiveBoolean::get_literal(false, lit1.interval.to_owned()),
             }
         }
 
         (.., button) if (button == "button" || button == "object") => match get_accept(lit2) {
             Some(l2) => match_obj(lit1, l2),
-            None => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
+            None => PrimitiveBoolean::get_literal(false, lit1.interval.to_owned()),
         },
         (button, ..) if (button == "button" || button == "object") => match get_accept(lit1) {
             Some(l1) => match_obj(l1, lit2),
-            None => PrimitiveBoolean::get_literal("boolean", false, lit1.interval.to_owned()),
+            None => PrimitiveBoolean::get_literal(false, lit1.interval.to_owned()),
         },
 
         (array1, array2) if array1 == "array" && array2 == "array" => {
-            PrimitiveBoolean::get_literal("boolean", lit1 == lit2, lit1.interval.to_owned())
+            PrimitiveBoolean::get_literal(lit1 == lit2, lit1.interval.to_owned())
         }
         (.., array) if array == "array" => containst(lit2, lit1),
         (array, ..) if array == "array" => containst(lit1, lit2),
 
         (..) => PrimitiveBoolean::get_literal(
-            "boolean",
             lit1.primitive == lit2.primitive.to_owned(),
             lit1.interval,
         ),
@@ -77,7 +74,7 @@ mod tests {
 
         map.insert(
             DEFAULT.to_owned(),
-            PrimitiveString::get_literal("string", name, interval),
+            PrimitiveString::get_literal(name, interval),
         );
 
         match button(map, "button".to_owned(), interval) {
@@ -92,16 +89,15 @@ mod tests {
 
         map.insert(
             DEFAULT.to_owned(),
-            PrimitiveString::get_literal("string", name, interval),
+            PrimitiveString::get_literal(name, interval),
         );
         map.insert(
             "accepts".to_owned(),
             PrimitiveArray::get_literal(
-                "array",
                 &vec![
-                    PrimitiveString::get_literal("string", "val1", interval),
-                    PrimitiveString::get_literal("string", "val2", interval),
-                    PrimitiveString::get_literal("string", "val3", interval),
+                    PrimitiveString::get_literal("val1", interval),
+                    PrimitiveString::get_literal("val2", interval),
+                    PrimitiveString::get_literal("val3", interval),
                 ],
                 gen_inter(),
             ),
@@ -138,7 +134,7 @@ mod tests {
     #[test]
     fn ok_match_button_str() {
         let bt1 = gen_button("hola");
-        let bt2 = PrimitiveString::get_literal("string", "hola", gen_inter());
+        let bt2 = PrimitiveString::get_literal("hola", gen_inter());
 
         match_lit_ok(&bt1, &bt2);
         match_lit_ok(&bt2, &bt1);
@@ -147,7 +143,7 @@ mod tests {
     #[test]
     fn ok_match_barray_str() {
         let bt1 = gen_button_multi_accept("hola");
-        let bt2 = PrimitiveString::get_literal("string", "hola", gen_inter());
+        let bt2 = PrimitiveString::get_literal("hola", gen_inter());
 
         match_lit_ok(&bt1, &bt2);
         match_lit_ok(&bt2, &bt1);

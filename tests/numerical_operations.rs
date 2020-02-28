@@ -3,7 +3,7 @@ pub mod support;
 use csmlinterpreter::data::{Event, Message, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
-use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
+use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
 fn format_message(event: Event, name: &str, step: &str) -> MessageData {
     let file = format!("CSML/basic_test/numerical_operations/{}", name);

@@ -16,7 +16,7 @@ pub struct Literal {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// METHOD FUNCTIONS
+// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Literal {
@@ -44,6 +44,10 @@ impl Literal {
                 interval: Interval { column: 0, line: 0 },
             })
         }
+    }
+
+    pub fn set_content_type(&mut self, content_type: &str) {
+        self.content_type = content_type.to_owned();
     }
 }
 

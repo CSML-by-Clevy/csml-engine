@@ -1,5 +1,5 @@
 use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
-use crate::data::{ast::Interval, tokens::*, Data, Literal, ApiInfo, Client};
+use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{builtins::tools::*, json_to_literal};
 
@@ -9,7 +9,11 @@ use curl::{
 };
 use std::{collections::HashMap, env, io::Read};
 
-fn parse_api(args: &HashMap<String, Literal>, client: Client, fn_endpoint: String) -> Result<(String, String), ErrorInfo> {
+fn parse_api(
+    args: &HashMap<String, Literal>,
+    client: Client,
+    fn_endpoint: String,
+) -> Result<(String, String), ErrorInfo> {
     let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 
     if let Some(literal) = args.get("fn_id") {
@@ -35,10 +39,7 @@ fn parse_api(args: &HashMap<String, Literal>, client: Client, fn_endpoint: Strin
 
     map.insert("data".to_owned(), serde_json::Value::Object(sub_map));
     map.insert("client".to_owned(), serde_json::Value::Object(client));
-    Ok((
-        fn_endpoint,
-        serde_json::to_string(&map).unwrap(),
-    ))
+    Ok((fn_endpoint, serde_json::to_string(&map).unwrap()))
 }
 
 fn init(easy: &mut Easy) -> Result<(), Error> {
@@ -80,7 +81,10 @@ pub fn api(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     let (client, fn_endpoint) = match &data.context.api_info {
-        Some(ApiInfo{client, fn_endpoint}) => (client.to_owned(), fn_endpoint.to_owned()),
+        Some(ApiInfo {
+            client,
+            fn_endpoint,
+        }) => (client.to_owned(), fn_endpoint.to_owned()),
         None => {
             return Err(ErrorInfo {
                 message: format!("fn call can not be make because fn_endpoint is not set"),
@@ -107,6 +111,6 @@ pub fn api(
     if let Some(value) = json.get("data") {
         json_to_literal(value, interval)
     } else {
-        Ok(PrimitiveNull::get_literal("null", interval))
+        Ok(PrimitiveNull::get_literal(interval))
     }
 }
