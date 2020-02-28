@@ -1,0 +1,23 @@
+start:
+	say "Welcome to Factobot !"
+
+	goto get_integer
+
+get_integer:
+	remember result = 1
+	remember index = 1
+	remember n = 4
+
+	goto factorial
+
+factorial:
+	if (index <= n) {
+		do result = result * index
+		do index = index + 1
+
+		goto factorial
+	}
+	
+	say "f({{n}}) = {{result}}"
+	goto end
+

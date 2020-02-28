@@ -71,68 +71,22 @@ pub const BREAK: &str = "break";
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
-pub const NULL_UPPERCASE: &str = "NULL";
-pub const NULL_LOWERCASE: &str = "null";
+pub const NULL: &str = "null";
 
 pub static RESERVED: &[&str] = &[
-    FOREACH,
-    IF,
-    ELSE,
-    IMPORT,
-    AS,
-    IN,
-    DO,
-    FROM,
-    EVENT,
-    FLOW,
-    FILE,
-    STEP,
-    SAY,
-    USE,
-    HOLD,
-    GOTO,
-    MATCH,
-    DEFAULT,
-    REMEMBER,
-    _METADATA,
-    TRUE,
-    FALSE,
-    NULL_UPPERCASE,
-    NULL_LOWERCASE,
-    BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
+    MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
 ];
 
 // TODO: at some point (when function doesnt have a key like find(in)) ut back in inside reserved
 pub static UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FROM, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, DEFAULT, REMEMBER, BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FROM, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO, MATCH,
+    DEFAULT, REMEMBER, BREAK,
 ];
 
 pub static ASSIGNATION_RESERVED: &[&str] = &[
-    FOREACH,
-    IF,
-    ELSE,
-    IMPORT,
-    AS,
-    DO,
-    FROM,
-    EVENT,
-    FLOW,
-    FILE,
-    STEP,
-    SAY,
-    USE,
-    HOLD,
-    GOTO,
-    MATCH,
-    DEFAULT,
-    REMEMBER,
-    _METADATA,
-    TRUE,
-    FALSE,
-    NULL_UPPERCASE,
-    NULL_LOWERCASE,
-    BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO, MATCH,
+    DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
 ];
 
 pub const TYPING: &str = "Typing";

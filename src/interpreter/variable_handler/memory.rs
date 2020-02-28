@@ -10,7 +10,7 @@ use std::sync::mpsc;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {
     match (
-        data.memory.current.get(&name.ident),
+        data.context.current.get(&name.ident),
         data.step_vars.get(&name.ident),
     ) {
         (_, Some(_)) => Ok("use".to_owned()),
@@ -26,8 +26,7 @@ pub fn search_var_memory<'a>(
     name: Identifier,
     data: &'a mut Data,
 ) -> Result<&'a mut Literal, ErrorInfo> {
-    match data.memory.current.get_mut(&name.ident)
-    {
+    match data.context.current.get_mut(&name.ident) {
         Some(lit) => {
             lit.interval = name.interval;
             Ok(lit)
@@ -57,7 +56,7 @@ pub fn save_literal_in_mem(
                 sender,
                 MSG::Memorie(Memories::new(name.clone(), lit.clone())),
             );
-            data.memory.current.insert(name, lit);
+            data.context.current.insert(name, lit);
         }
         MemoryType::Use if update => {
             data.step_vars.insert(name, lit);

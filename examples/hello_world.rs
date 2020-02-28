@@ -1,5 +1,5 @@
 use csmlinterpreter::{
-    data::{Client, ContextJson, Event, MessageData},
+    data::{ContextJson, Event, MessageData},
     interpret,
 };
 use serde_json::{json, map::Map, Value};
@@ -51,12 +51,7 @@ pub fn format_message(result: MessageData) -> Value {
 }
 
 fn interpret_flow(flow: &str, step_name: &str) {
-    // let event = None;
-    let event = Some(Event {
-        content_type: "payload".to_owned(),
-        content: "plop".to_owned(),
-        metadata: json!(null),
-    });
+    let event = Event::text("hello");
     let mut metadata = Map::new();
 
     metadata.insert("firstname".to_owned(), json!("Alexis"));
@@ -71,21 +66,17 @@ fn interpret_flow(flow: &str, step_name: &str) {
     let context = ContextJson {
         current: serde_json::json!({}),
         metadata: json!(metadata),
-        client: Client {
-            bot_id: "1".to_owned(),
-            channel_id: "2".to_owned(),
-            user_id: "3".to_owned(),
-        },
-        fn_endpoint: "toto".to_owned(),
+        api_info: None,
+        hold: None,
     };
 
     dbg!(format_message(interpret(
-        flow, step_name, context, &event, None, None, None,
+        flow, step_name, context, &event, None,
     )));
 }
 
 fn main() {
-    let flow = read_file("CSML/test.csml".to_owned()).unwrap();
+    let flow = read_file("CSML/examples/hello_world.csml".to_owned()).unwrap();
 
     interpret_flow(&flow, "start");
 }

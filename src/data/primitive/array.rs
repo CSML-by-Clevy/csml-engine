@@ -5,12 +5,11 @@ use crate::data::primitive::{
 use crate::data::{Interval, Literal, MemoryType, Message};
 use crate::error_format::ErrorInfo;
 use lazy_static::*;
+use rand::Rng;
 use serde_json::json;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::usize;
-use rand::Rng;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -263,7 +262,10 @@ fn one_of(
 ) -> Result<Literal, ErrorInfo> {
     check_usage(args, 0, "one_of()", interval)?;
 
-    if let Some(res) = array.value.get(rand::thread_rng().gen_range(0, array.value.len())) {
+    if let Some(res) = array
+        .value
+        .get(rand::thread_rng().gen_range(0, array.value.len()))
+    {
         return Ok(res.to_owned());
     }
 

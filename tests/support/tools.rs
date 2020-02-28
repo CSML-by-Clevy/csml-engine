@@ -1,4 +1,4 @@
-use csmlinterpreter::data::{Client, ContextJson, Event, MessageData};
+use csmlinterpreter::data::{ContextJson, Event, MessageData};
 use serde_json::{json, map::Map, Value};
 
 use std::fs::File;
@@ -12,19 +12,12 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 }
 
 #[allow(dead_code)]
-pub fn gen_context(
-    current: serde_json::Value,
-    metadata: serde_json::Value,
-) -> ContextJson {
+pub fn gen_context(current: serde_json::Value, metadata: serde_json::Value) -> ContextJson {
     ContextJson {
         current,
         metadata,
-        client: Client {
-            bot_id: "none".to_owned(),
-            channel_id: "none".to_owned(),
-            user_id: "none".to_owned(),
-        },
-        fn_endpoint: "none".to_owned(),
+        api_info: None,
+        hold: None
     }
 }
 

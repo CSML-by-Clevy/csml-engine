@@ -4,17 +4,14 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
 
-fn format_message(event: Option<Event>, file: &str, step: &str) -> MessageData {
-    let text = read_file(format!("CSML/built-in/{}.csml", file)).unwrap();
+fn format_message(event: Event, file: &str, step: &str) -> MessageData {
+    let text = read_file(format!("CSML/basic_test/built-in/{}.csml", file)).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-    );
+    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
-    interpret(&text, step, context, &event, None, None, None)
+    interpret(&text, step, context, &event, None)
 }
 
 #[test]
@@ -39,44 +36,13 @@ fn ok_button() {
         "next_step": "end"
     }"#;
 
-    let msg = format_message(None, "question", "simple_0");
+    let msg = format_message(gen_event(""), "question", "simple_0");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
 }
-
-// {
-//     "messages": Array([
-//             Object({
-//                 "content": Object({
-//                     "buttons": Array([
-//                         Object({
-//                             "accepts": Array([String("b1")]),
-//                             "content": Object({
-//                                 "payload": String("b1"),
-//                                 "title": String("b1")
-//                             }),
-//                             "content_type": String("button")
-//                         }),
-//                         Object({
-//                             "accepts": Array([String("b2")]),
-//                             "content": Object({
-//                                 "payload": String("b2"),
-//                                 "title": String("b2")
-//                             }),
-//                             "content_type": String("button")})
-//                     ]),
-//                     "title": String("title")
-//                 }),
-//                 "content_type": String("question")
-//             })
-//         ]),
-//     "next_flow": Null,
-//     "memories": Array([]),
-//     "next_step": String("end")
-// }
 
 #[test]
 fn ok_question() {
@@ -113,7 +79,7 @@ fn ok_question() {
     "memories":[],
     "next_step":"end"
     }"#;
-    let msg = format_message(None, "question", "start");
+    let msg = format_message(gen_event(""), "question", "start");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -156,7 +122,7 @@ fn ok_question_step1() {
     "memories":[],
     "next_step":"end"
     }"#;
-    let msg = format_message(None, "question", "question1");
+    let msg = format_message(gen_event(""), "question", "question1");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -198,7 +164,7 @@ fn ok_question_step2() {
     "memories":[],
     "next_step":"end"
     }"#;
-    let msg = format_message(None, "question", "question2");
+    let msg = format_message(gen_event(""), "question", "question2");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

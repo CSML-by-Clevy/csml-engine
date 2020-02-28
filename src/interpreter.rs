@@ -5,7 +5,7 @@ pub mod variable_handler;
 
 pub use json_to_rust::json_to_literal;
 
-use crate::data::{ast::*, send_msg, Data, Literal, MessageData, MSG};
+use crate::data::{ast::*, send_msg, Data, Literal, MessageData, MSG, Hold};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statments},
@@ -59,6 +59,12 @@ pub fn interpret_scope(
             }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
                 root.exit_condition = Some(ExitCondition::Hold);
+                root.hold = Some(
+                    Hold {
+                        index: instruction_info.index,
+                        step_vars: step_vars_to_json(data.step_vars.clone()),
+                    }
+                );
                 send_msg(
                     &sender,
                     MSG::Hold {

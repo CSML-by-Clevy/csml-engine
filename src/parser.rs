@@ -94,21 +94,6 @@ impl Parser {
     }
 }
 
-pub fn preceded2<I, O1, O2, E: ParseError<I>, F, G>(
-    first: F,
-    second: G,
-    name: String,
-) -> impl Fn(I) -> IResult<I, O2, E>
-where
-    F: Fn(I) -> IResult<I, O1, E>,
-    G: Fn(I, String) -> IResult<I, O2, E>,
-{
-    move |input: I| {
-        let (input, _) = first(input)?;
-        second(input, name.clone())
-    }
-}
-
 fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E> {
     let (s, ident) = preceded(comment, parse_idents_assignation_without_path)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
@@ -135,7 +120,6 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
 fn start_parsing<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
-    // add comment
     // TODO: handle FlowType::Recursive with Context
     let flow_type = FlowType::Normal;
 

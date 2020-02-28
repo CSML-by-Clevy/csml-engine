@@ -183,7 +183,7 @@ fn loop_path(
                 // TODO: change to args
                 // TODO: need to pass interval
                 // TODO: Warning msg element is unmutable ?
-                let args = Literal::get_value::<Vec<Literal>>(&args.primitive).unwrap();
+                let args = Literal::get_value::<Vec<Literal>>(&args.primitive)?;
                 let mut return_lit =
                     lit.primitive
                         .exec(name, args, *interval, mem_type, &mut tmp_update_var)?;
@@ -226,7 +226,7 @@ pub fn get_literal_form_metadata(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     let mut lit = match path.get(0) {
-        Some((inter, PathLiteral::MapIndex(name))) => match data.memory.metadata.get(name) {
+        Some((inter, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
             Some(lit) => lit.to_owned(),
             None => PrimitiveNull::get_literal("null", inter.to_owned()),
         },
@@ -265,7 +265,7 @@ pub fn get_var(
             }
             None => Ok(PrimitiveObject::get_literal(
                 "object",
-                &data.memory.metadata,
+                &data.context.metadata,
                 interval.to_owned(),
             )),
         },

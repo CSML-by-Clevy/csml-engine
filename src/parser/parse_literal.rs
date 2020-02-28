@@ -106,7 +106,7 @@ where
 {
     let (s, interval) = get_interval(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, _) = get_tag(name.to_ascii_uppercase(), NULL_UPPERCASE)(s)?;
+    let (s, _) = get_tag(name.to_ascii_lowercase(), NULL)(s)?;
 
     let expression = Expr::LitExpr(PrimitiveNull::get_literal("null", interval));
 

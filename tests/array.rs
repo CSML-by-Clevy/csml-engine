@@ -4,23 +4,20 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
 
-fn format_message(event: Option<Event>, step: &str) -> MessageData {
-    let text = read_file("CSML/stdlib/array.csml".to_owned()).unwrap();
+fn format_message(event: Event, step: &str) -> MessageData {
+    let text = read_file("CSML/basic_test/stdlib/array.csml".to_owned()).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-    );
+    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
-    interpret(&text, step, context, &event, None, None, None)
+    interpret(&text, step, context, &event, None)
 }
 
 #[test]
 fn array_step_0() {
     let data = r#"{"memories":[{"key":"vec", "value":[]}, {"key":"vec", "value": [42]}], "messages":[], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_0");
+    let msg = format_message(gen_event(""), "step_0");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -40,7 +37,7 @@ fn array_step_1() {
         "next_flow":null, "next_step":null
     }
     "#;
-    let msg = format_message(None, "step_1");
+    let msg = format_message(gen_event(""), "step_1");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -57,7 +54,7 @@ fn array_step_2() {
             "next_flow":null,
             "next_step":null
         }"#;
-    let msg = format_message(None, "step_2");
+    let msg = format_message(gen_event(""), "step_2");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -74,7 +71,7 @@ fn array_step_3() {
             "next_flow":null,
             "next_step":null
         }"#;
-    let msg = format_message(None, "step_3");
+    let msg = format_message(gen_event(""), "step_3");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -85,7 +82,7 @@ fn array_step_3() {
 #[test]
 fn array_step_4() {
     let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: index must be positive at line 40, column 12"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_4");
+    let msg = format_message(gen_event(""), "step_4");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -96,7 +93,7 @@ fn array_step_4() {
 #[test]
 fn array_step_5() {
     let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: index must be lower or equal than array.length() at line 45, column 12"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_5");
+    let msg = format_message(gen_event(""), "step_5");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -107,7 +104,7 @@ fn array_step_5() {
 #[test]
 fn array_step_6() {
     let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: index must be positive at line 50, column 12"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_6");
+    let msg = format_message(gen_event(""), "step_6");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -118,7 +115,7 @@ fn array_step_6() {
 #[test]
 fn array_step_7() {
     let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: index must be lower or equal than array.length() at line 55, column 12"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_7");
+    let msg = format_message(gen_event(""), "step_7");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -129,7 +126,7 @@ fn array_step_7() {
 #[test]
 fn array_step_8() {
     let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: join(Primitive<String>) at line 60, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_8");
+    let msg = format_message(gen_event(""), "step_8");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -140,7 +137,7 @@ fn array_step_8() {
 #[test]
 fn array_step_9() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":null}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_9");
+    let msg = format_message(gen_event(""), "step_9");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -151,7 +148,7 @@ fn array_step_9() {
 #[test]
 fn array_step_10() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_10");
+    let msg = format_message(gen_event(""), "step_10");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -162,7 +159,7 @@ fn array_step_10() {
 #[test]
 fn array_step_11() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"1,2"}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
-    let msg = format_message(None, "step_11");
+    let msg = format_message(gen_event(""), "step_11");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

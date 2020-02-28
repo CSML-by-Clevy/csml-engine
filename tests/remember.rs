@@ -18,7 +18,8 @@ fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
 
 #[test]
 fn remember_0() {
-    let result = match format_message("CSML/syntax/remember/remember_0.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/remember/remember_0.csml".to_owned())
+    {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -28,7 +29,8 @@ fn remember_0() {
 
 #[test]
 fn remember_1() {
-    let result = match format_message("CSML/syntax/remember/remember_1.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/remember/remember_1.csml".to_owned())
+    {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -38,7 +40,8 @@ fn remember_1() {
 
 #[test]
 fn remember_2() {
-    let result = match format_message("CSML/syntax/remember/remember_2.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/remember/remember_2.csml".to_owned())
+    {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -48,7 +51,8 @@ fn remember_2() {
 
 #[test]
 fn remember_3() {
-    let result = match format_message("CSML/syntax/remember/remember_3.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/remember/remember_3.csml".to_owned())
+    {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -62,7 +66,8 @@ fn remember_3() {
 
 #[test]
 fn remember_4() {
-    let result = match format_message("CSML/syntax/remember/remember_4.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/remember/remember_4.csml".to_owned())
+    {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -72,7 +77,8 @@ fn remember_4() {
 
 #[test]
 fn remember_5() {
-    let result = match format_message("CSML/syntax/remember/remember_5.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/remember/remember_5.csml".to_owned())
+    {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -82,7 +88,8 @@ fn remember_5() {
 
 #[test]
 fn remember_6() {
-    let result = match format_message("CSML/syntax/remember/remember_6.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/remember/remember_6.csml".to_owned())
+    {
         Ok(_) => false,
         Err(_) => true,
     };
