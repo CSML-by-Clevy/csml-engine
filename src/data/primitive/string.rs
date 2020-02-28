@@ -161,11 +161,7 @@ fn do_match(
     };
 
     for result in string.value.matches(pattern) {
-        vector.push(PrimitiveString::get_literal(
-            "string",
-            result,
-            interval,
-        ));
+        vector.push(PrimitiveString::get_literal("string", result, interval));
     }
 
     match vector.is_empty() {

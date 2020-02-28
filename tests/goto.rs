@@ -18,7 +18,7 @@ fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
 
 #[test]
 fn goto_0() {
-    let result = match format_message("CSML/syntax/goto/goto_0.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_0.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -28,7 +28,7 @@ fn goto_0() {
 
 #[test]
 fn goto_1() {
-    let result = match format_message("CSML/syntax/goto/goto_1.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_1.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -38,7 +38,7 @@ fn goto_1() {
 
 #[test]
 fn goto_2() {
-    let result = match format_message("CSML/syntax/goto/goto_2.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_2.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -52,7 +52,7 @@ fn goto_2() {
 
 #[test]
 fn goto_3() {
-    let result = match format_message("CSML/syntax/goto/goto_3.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_3.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -62,7 +62,7 @@ fn goto_3() {
 
 #[test]
 fn goto_4() {
-    let result = match format_message("CSML/syntax/goto/goto_4.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_4.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -72,7 +72,7 @@ fn goto_4() {
 
 #[test]
 fn goto_5() {
-    let result = match format_message("CSML/syntax/goto/goto_5.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_5.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -82,7 +82,7 @@ fn goto_5() {
 
 #[test]
 fn goto_6() {
-    let result = match format_message("CSML/syntax/goto/goto_6.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_6.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -92,7 +92,7 @@ fn goto_6() {
 
 #[test]
 fn goto_7() {
-    let result = match format_message("CSML/syntax/goto/goto_7.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_7.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -102,7 +102,7 @@ fn goto_7() {
 
 #[test]
 fn goto_8() {
-    let result = match format_message("CSML/syntax/goto/goto_8.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_8.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -112,7 +112,7 @@ fn goto_8() {
 
 #[test]
 fn goto_9() {
-    let result = match format_message("CSML/syntax/goto/goto_9.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_9.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -122,7 +122,7 @@ fn goto_9() {
 
 #[test]
 fn goto_10() {
-    let result = match format_message("CSML/syntax/goto/goto_10.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_10.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -132,7 +132,7 @@ fn goto_10() {
 
 #[test]
 fn goto_11() {
-    let result = match format_message("CSML/syntax/goto/goto_11.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_11.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -142,7 +142,7 @@ fn goto_11() {
 
 #[test]
 fn goto_12() {
-    let result = match format_message("CSML/syntax/goto/goto_12.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_12.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -152,7 +152,7 @@ fn goto_12() {
 
 #[test]
 fn goto_13() {
-    let result = match format_message("CSML/syntax/goto/goto_13.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_13.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -162,7 +162,7 @@ fn goto_13() {
 
 #[test]
 fn goto_14() {
-    let result = match format_message("CSML/syntax/goto/goto_14.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/goto/goto_14.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };

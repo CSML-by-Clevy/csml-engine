@@ -18,7 +18,7 @@ fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
 
 #[test]
 fn foreach_0() {
-    let result = match format_message("CSML/syntax/foreach/foreach_0.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_0.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -28,7 +28,7 @@ fn foreach_0() {
 
 #[test]
 fn foreach_1() {
-    let result = match format_message("CSML/syntax/foreach/foreach_1.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_1.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -38,7 +38,7 @@ fn foreach_1() {
 
 #[test]
 fn foreach_2() {
-    let result = match format_message("CSML/syntax/foreach/foreach_2.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_2.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -48,7 +48,7 @@ fn foreach_2() {
 
 #[test]
 fn foreach_3() {
-    let result = match format_message("CSML/syntax/foreach/foreach_3.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_3.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -58,7 +58,7 @@ fn foreach_3() {
 
 #[test]
 fn foreach_4() {
-    let result = match format_message("CSML/syntax/foreach/foreach_4.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_4.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -68,7 +68,7 @@ fn foreach_4() {
 
 #[test]
 fn foreach_5() {
-    let result = match format_message("CSML/syntax/foreach/foreach_5.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_5.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -82,7 +82,7 @@ fn foreach_5() {
 
 #[test]
 fn foreach_6() {
-    let result = match format_message("CSML/syntax/foreach/foreach_6.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_6.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -92,7 +92,7 @@ fn foreach_6() {
 
 #[test]
 fn foreach_7() {
-    let result = match format_message("CSML/syntax/foreach/foreach_7.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_7.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -102,7 +102,7 @@ fn foreach_7() {
 
 #[test]
 fn foreach_8() {
-    let result = match format_message("CSML/syntax/foreach/foreach_8.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_8.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -112,7 +112,7 @@ fn foreach_8() {
 
 #[test]
 fn foreach_9() {
-    let result = match format_message("CSML/syntax/foreach/foreach_9.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_9.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -122,7 +122,7 @@ fn foreach_9() {
 
 #[test]
 fn foreach_10() {
-    let result = match format_message("CSML/syntax/foreach/foreach_10.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_10.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -132,7 +132,7 @@ fn foreach_10() {
 
 #[test]
 fn foreach_11() {
-    let result = match format_message("CSML/syntax/foreach/foreach_11.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_11.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -142,7 +142,7 @@ fn foreach_11() {
 
 #[test]
 fn foreach_12() {
-    let result = match format_message("CSML/syntax/foreach/foreach_12.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/foreach/foreach_12.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };

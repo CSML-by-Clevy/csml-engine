@@ -98,7 +98,7 @@ pub fn match_actions(
                 MSG::Memorie(Memories::new(name.ident.to_owned(), lit.clone())),
             );
 
-            data.memory.current.insert(name.ident.to_owned(), lit);
+            data.context.current.insert(name.ident.to_owned(), lit);
             Ok(root)
         }
         ObjectType::Import {

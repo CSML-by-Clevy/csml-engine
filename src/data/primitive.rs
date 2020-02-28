@@ -104,7 +104,6 @@ impl dyn Primitive {
         *mem_update = false;
 
         let (res, right) = self.do_exec(name, args, interval, mem_type)?;
-
         if right == Right::Write {
             *mem_update = true;
         }

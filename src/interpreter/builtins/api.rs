@@ -1,5 +1,5 @@
 use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
-use crate::data::{ast::Interval, tokens::*, Data, Literal};
+use crate::data::{ast::Interval, tokens::*, Data, Literal, ApiInfo, Client};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{builtins::tools::*, json_to_literal};
 
@@ -9,7 +9,7 @@ use curl::{
 };
 use std::{collections::HashMap, env, io::Read};
 
-fn parse_api(args: &HashMap<String, Literal>, data: &Data) -> Result<(String, String), ErrorInfo> {
+fn parse_api(args: &HashMap<String, Literal>, client: Client, fn_endpoint: String) -> Result<(String, String), ErrorInfo> {
     let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 
     if let Some(literal) = args.get("fn_id") {
@@ -31,12 +31,12 @@ fn parse_api(args: &HashMap<String, Literal>, data: &Data) -> Result<(String, St
     }
 
     let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
-    let client = client_to_json(&data.memory.client);
+    let client = client_to_json(&client);
 
     map.insert("data".to_owned(), serde_json::Value::Object(sub_map));
     map.insert("client".to_owned(), serde_json::Value::Object(client));
     Ok((
-        data.memory.fn_endpoint.to_string(),
+        fn_endpoint,
         serde_json::to_string(&map).unwrap(),
     ))
 }
@@ -79,7 +79,17 @@ pub fn api(
     interval: Interval,
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
-    let (http_arg, map) = parse_api(&args, data)?;
+    let (client, fn_endpoint) = match &data.context.api_info {
+        Some(ApiInfo{client, fn_endpoint}) => (client.to_owned(), fn_endpoint.to_owned()),
+        None => {
+            return Err(ErrorInfo {
+                message: format!("fn call can not be make because fn_endpoint is not set"),
+                interval,
+            })
+        }
+    };
+
+    let (http_arg, map) = parse_api(&args, client, fn_endpoint)?;
     let data_bytes = map.as_bytes();
     let mut result = Vec::new();
 

@@ -32,7 +32,7 @@ fn parse_idents<'a, E>(
 where
     E: ParseError<Span<'a>>,
 {
-    if reserved.contains(&&(*var)) {
+    if reserved.contains(&&(*var.to_ascii_lowercase())) {
         return Err(Err::Error(E::add_context(
             s,
             "reserved keyword can't be used as identifier",

@@ -18,7 +18,7 @@ fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
 
 #[test]
 fn say_0() {
-    let result = match format_message("CSML/syntax/say/say_0.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/say/say_0.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -28,7 +28,7 @@ fn say_0() {
 
 #[test]
 fn say_1() {
-    let result = match format_message("CSML/syntax/say/say_1.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/say/say_1.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -38,7 +38,7 @@ fn say_1() {
 
 #[test]
 fn say_2() {
-    let result = match format_message("CSML/syntax/say/say_2.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/say/say_2.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -52,7 +52,7 @@ fn say_2() {
 
 #[test]
 fn say_3() {
-    let result = match format_message("CSML/syntax/say/say_3.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/say/say_3.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };

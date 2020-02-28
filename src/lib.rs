@@ -37,12 +37,7 @@ pub fn execute_step(
 ) -> Result<MessageData, ErrorInfo> {
     match search_for(flow, name) {
         Some(Expr::Scope { scope, .. }) => {
-            let mut msg_data = interpret_scope(scope, &mut data, instruction_index, sender)?;
-            // tmp
-            if !data.step_vars.is_empty() {
-                msg_data.step_vars = Some(data.step_vars);
-            }
-            Ok(msg_data)
+            interpret_scope(scope, &mut data, instruction_index, sender)
         }
         _ => Err(ErrorInfo {
             interval: Interval { line: 0, column: 0 },
@@ -51,14 +46,11 @@ pub fn execute_step(
     }
 }
 
-// HashMap<String, Literal>
 pub fn interpret(
     flow: &str,
     step_name: &str,
-    memory: ContextJson,
-    event: &Option<Event>,
-    step_vars: Option<serde_json::Value>,
-    instruction_index: Option<usize>,
+    context: ContextJson,
+    event: &Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let ast: Flow = match parse_file(flow) {
@@ -75,16 +67,22 @@ pub fn interpret(
     };
 
     let curl = Easy::new();
-    let mut memory = memory.to_literal();
+    let mut context = context.to_literal();
+    let step_vars = match &context.hold {
+        Some(hold) => get_hashmap(&hold.step_vars),
+        None => HashMap::new(),
+    };
+    let instruction_index = if let Some(hold) = &context.hold {
+        Some(hold.index)
+    } else {
+        None
+    };
     let data = Data {
         ast: &ast,
-        memory: &mut memory,
+        context: &mut context,
         event,
         curl,
-        step_vars: match step_vars {
-            Some(vars) => get_hashmap(&vars),
-            None => HashMap::new(),
-        },
+        step_vars
     };
 
     MessageData::error_to_message(

@@ -4,17 +4,14 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
 
-fn format_message(event: Option<Event>, step: &str) -> MessageData {
-    let text = read_file("CSML/object.csml".to_owned()).unwrap();
+fn format_message(event: Event, step: &str) -> MessageData {
+    let text = read_file("CSML/basic_test/object.csml".to_owned()).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-    );
+    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
-    interpret(&text, step, context, &event, None, None, None)
+    interpret(&text, step, context, &event, None)
 }
 
 fn check_error_component(vec: &MessageData) -> bool {
@@ -25,7 +22,7 @@ fn check_error_component(vec: &MessageData) -> bool {
 #[test]
 fn ok_object_step1() {
     let data = r#"{"messages":[ {"content":{"text":"1"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "step1");
+    let msg = format_message(gen_event(""), "step1");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -36,7 +33,7 @@ fn ok_object_step1() {
 #[test]
 fn ok_object_step2() {
     let data = r#"{"messages":[ {"content":{"text":"4"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "step2");
+    let msg = format_message(gen_event(""), "step2");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -47,7 +44,7 @@ fn ok_object_step2() {
 #[test]
 fn ok_object_step3() {
     let data = r#"{"messages":[ {"content":{"text":"true"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(None, "step3");
+    let msg = format_message(gen_event(""), "step3");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -57,7 +54,7 @@ fn ok_object_step3() {
 
 #[test]
 fn ok_object_step4() {
-    let msg = format_message(None, "step4");
+    let msg = format_message(gen_event(""), "step4");
     let res = check_error_component(&msg);
 
     assert_eq!(res, false)
@@ -65,7 +62,7 @@ fn ok_object_step4() {
 
 #[test]
 fn ok_object_step5() {
-    let msg = format_message(None, "step5");
+    let msg = format_message(gen_event(""), "step5");
     let v: Value = message_to_jsonvalue(msg);
 
     let int = v["messages"][0]["content"]["text"]

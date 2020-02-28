@@ -4,17 +4,14 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
 
-fn format_message(event: Option<Event>, step: &str) -> MessageData {
-    let text = read_file("CSML/stdlib/string.csml".to_owned()).unwrap();
+fn format_message(event: Event, step: &str) -> MessageData {
+    let text = read_file("CSML/basic_test/stdlib/string.csml".to_owned()).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-    );
+    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
-    interpret(&text, step, context, &event, None, None, None)
+    interpret(&text, step, context, &event, None)
 }
 
 #[test]
@@ -33,7 +30,7 @@ fn string_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(None, "step_0");
+    let msg = format_message(gen_event(""), "step_0");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -54,7 +51,7 @@ fn string_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(None, "step_1");
+    let msg = format_message(gen_event(""), "step_1");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -77,7 +74,7 @@ fn string_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(None, "step_2");
+    let msg = format_message(gen_event(""), "step_2");
 
     let v1: Value = message_to_jsonvalue(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

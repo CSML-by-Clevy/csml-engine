@@ -18,7 +18,7 @@ fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
 
 #[test]
 fn use_0() {
-    let result = match format_message("CSML/syntax/use/use_0.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_0.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -28,7 +28,7 @@ fn use_0() {
 
 #[test]
 fn use_1() {
-    let result = match format_message("CSML/syntax/use/use_1.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_1.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -38,7 +38,7 @@ fn use_1() {
 
 #[test]
 fn use_2() {
-    let result = match format_message("CSML/syntax/use/use_2.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_2.csml".to_owned()) {
         Ok(_) => true,
         Err(_) => false,
     };
@@ -52,7 +52,7 @@ fn use_2() {
 
 #[test]
 fn use_3() {
-    let result = match format_message("CSML/syntax/use/use_3.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_3.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -62,7 +62,7 @@ fn use_3() {
 
 #[test]
 fn use_4() {
-    let result = match format_message("CSML/syntax/use/use_4.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_4.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -72,7 +72,7 @@ fn use_4() {
 
 #[test]
 fn use_5() {
-    let result = match format_message("CSML/syntax/use/use_5.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_5.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -82,7 +82,7 @@ fn use_5() {
 
 #[test]
 fn use_6() {
-    let result = match format_message("CSML/syntax/use/use_6.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_6.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };
@@ -92,7 +92,7 @@ fn use_6() {
 
 #[test]
 fn use_7() {
-    let result = match format_message("CSML/syntax/use/use_7.csml".to_owned()) {
+    let result = match format_message("CSML/basic_test/syntax/use/use_7.csml".to_owned()) {
         Ok(_) => false,
         Err(_) => true,
     };

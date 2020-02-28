@@ -1,7 +1,7 @@
-use crate::data::primitive::{null::PrimitiveNull, string::PrimitiveString};
+use crate::data::primitive::{string::PrimitiveString};
 use crate::data::{
     ast::{Expr, Identifier, Interval, PathExpr},
-    Data, Event, Literal, MemoryType, MessageData, MSG,
+    Data, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
@@ -43,28 +43,19 @@ pub fn gen_literal_form_event(
     match path {
         Some(path) => {
             let path = resolve_path(path, data, root, sender)?;
-            match data.event {
-                Some(event) => {
-                    let mut lit = json_to_literal(&event.metadata, interval.to_owned())?;
-                    let (lit, _tmp_mem_update) = exec_path_actions(
-                        &mut lit,
-                        None,
-                        &Some(path),
-                        &MemoryType::Event(event.content_type.to_owned()),
-                    )?;
-                    Ok(lit)
-                }
-                //TODO: Add Warning for nonexisting key
-                None => Ok(PrimitiveNull::get_literal("null", interval.to_owned())),
-            }
+            let mut lit = json_to_literal(&data.event.metadata, interval.to_owned())?;
+            let (lit, _tmp_mem_update) = exec_path_actions(
+                &mut lit,
+                None,
+                &Some(path),
+                &MemoryType::Event(data.event.content_type.to_owned()),
+            )?;
+            Ok(lit)
         }
-        None => match data.event {
-            Some(Event { content, .. }) => Ok(PrimitiveString::get_literal(
-                "string",
-                content,
-                interval.to_owned(),
-            )),
-            None => Ok(PrimitiveNull::get_literal("null", interval.to_owned())),
-        },
+        None => Ok(PrimitiveString::get_literal(
+            "string",
+            &data.event.content,
+            interval.to_owned(),
+        )),
     }
 }

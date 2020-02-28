@@ -6,15 +6,12 @@ use serde_json::Value;
 
 use support::tools::{gen_context, message_to_jsonvalue, read_file};
 
-fn format_message(event: Option<Event>, step: &str) -> MessageData {
-    let text = read_file("CSML/event.csml".to_owned()).unwrap();
+fn format_message(event: Event, step: &str) -> MessageData {
+    let text = read_file("CSML/basic_test/event.csml".to_owned()).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-    );
+    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
-    interpret(&text, step, context, &event, None, None, None)
+    interpret(&text, step, context, &event, None)
 }
 
 #[test]
@@ -28,11 +25,11 @@ fn event_step_0() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(
-        Some(Event {
+        Event {
             content_type: "content_type".to_owned(),
             content: "content".to_owned(),
             metadata: serde_json::Value::Object(serde_json::Map::new()),
-        }),
+        },
         "step_0",
     );
 
@@ -64,11 +61,11 @@ fn event_step_1() {
     );
     map.insert("toto".to_owned(), serde_json::Value::Object(other_map));
     let msg = format_message(
-        Some(Event {
+        Event {
             content_type: "content_type".to_owned(),
             content: "content".to_owned(),
             metadata: serde_json::Value::Object(map),
-        }),
+        },
         "step_1",
     );
 
@@ -89,11 +86,11 @@ fn event_step_2() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(
-        Some(Event {
+        Event {
             content_type: "content_type".to_owned(),
             content: "content".to_owned(),
             metadata: serde_json::Value::Object(serde_json::Map::new()),
-        }),
+        },
         "step_2",
     );
 
@@ -114,11 +111,11 @@ fn event_step_3() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(
-        Some(Event {
+        Event {
             content_type: "content_type".to_owned(),
             content: "content".to_owned(),
             metadata: serde_json::Value::Object(serde_json::Map::new()),
-        }),
+        },
         "step_3",
     );
 

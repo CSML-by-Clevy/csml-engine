@@ -1,5 +1,5 @@
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
-use crate::data::{send_msg, Literal, Memories, Message, MSG};
+use crate::data::{send_msg, Literal, Memories, Message, MSG, Hold};
 use crate::error_format::ErrorInfo;
 use crate::parser::ExitCondition;
 
@@ -11,8 +11,7 @@ use std::sync::mpsc;
 pub struct MessageData {
     pub memories: Option<Vec<Memories>>,
     pub messages: Vec<Message>,
-    pub step_vars: Option<HashMap<String, Literal>>,
-    pub instruction_index: usize,
+    pub hold: Option<Hold>,
     pub next_flow: Option<String>,
     pub next_step: Option<String>,
     pub exit_condition: Option<ExitCondition>,
@@ -23,8 +22,7 @@ impl Default for MessageData {
         Self {
             memories: None,
             messages: Vec::new(),
-            step_vars: None,
-            instruction_index: 0,
+            hold: None,
             next_flow: None,
             next_step: None,
             exit_condition: None,
@@ -44,8 +42,7 @@ impl Add for MessageData {
                 _ => None,
             },
             messages: [&self.messages[..], &other.messages[..]].concat(),
-            // TODO: refactor
-            step_vars: self.step_vars.clone(),
+            hold: self.hold,
             next_flow: match (&self.next_flow, &other.next_flow) {
                 (Some(flow), None) => Some(flow.to_owned()),
                 (None, Some(flow)) => Some(flow.to_owned()),
@@ -58,7 +55,6 @@ impl Add for MessageData {
                 (Some(step), Some(_)) => Some(step.to_owned()),
                 _ => None,
             },
-            instruction_index: self.instruction_index,
             exit_condition: match (&self.exit_condition, &other.exit_condition) {
                 (Some(exit_condition), None) => Some(exit_condition.to_owned()),
                 (None, Some(exit_condition)) => Some(exit_condition.to_owned()),
@@ -135,10 +131,9 @@ impl MessageData {
                         content_type: "error".to_owned(),
                         content: literal.primitive.to_json(),
                     }],
-                    step_vars: None,
+                    hold: None,
                     next_flow: None,
                     next_step: None,
-                    instruction_index: 0,
                     exit_condition: None,
                 }
             }

@@ -4,22 +4,19 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, message_to_jsonvalue, read_file, gen_event};
 
-fn format_message(event: Option<Event>, step: &str) -> MessageData {
-    let text = read_file("CSML/built-in/random.csml".to_owned()).unwrap();
+fn format_message(event: Event, step: &str) -> MessageData {
+    let text = read_file("CSML/basic_test/built-in/random.csml".to_owned()).unwrap();
 
-    let context = gen_context(
-        serde_json::json!({}),
-        serde_json::json!({}),
-    );
+    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
-    interpret(&text, step, context, &event, None, None, None)
+    interpret(&text, step, context, &event, None)
 }
 
 #[test]
 fn ok_random() {
-    let msg = format_message(None, "start");
+    let msg = format_message(gen_event(""), "start");
 
     let v: Value = message_to_jsonvalue(msg);
 

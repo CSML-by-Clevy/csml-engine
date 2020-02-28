@@ -1,24 +1,44 @@
-use crate::data::primitive::{PrimitiveObject, PrimitiveType};
-use crate::data::Client;
-use crate::data::Interval;
-use crate::data::Literal;
+use crate::data::{
+    primitive::{PrimitiveObject, PrimitiveType},
+    Client, Hold, Interval, Literal,
+};
+
 use crate::interpreter::json_to_literal;
 
 use nom::lib::std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub struct ContextJson {
-    pub current: serde_json::Value,
-    pub metadata: serde_json::Value,
+pub struct ApiInfo{
     pub client: Client,
     pub fn_endpoint: String,
 }
+
+#[derive(Debug, Clone)]
+pub struct ContextJson {
+    pub current: serde_json::Value,
+    pub metadata: serde_json::Value,
+    pub api_info: Option<ApiInfo>,
+    pub hold: Option<Hold>,
+}
+
+impl ContextJson {
+    pub fn new() -> Self {
+        Self {
+            current: serde_json::json!({}),
+            metadata: serde_json::json!({}),
+            api_info: None,
+            hold: None
+        }
+    }
+}
+
+
 #[derive(Debug, Clone)]
 pub struct Context {
     pub current: HashMap<String, Literal>,
     pub metadata: HashMap<String, Literal>,
-    pub client: Client,
-    pub fn_endpoint: String,
+    pub api_info: Option<ApiInfo>,
+    pub hold: Option<Hold>,
 }
 
 pub fn get_hashmap(lit: &serde_json::Value) -> HashMap<String, Literal> {
@@ -41,8 +61,8 @@ impl ContextJson {
         Context {
             current,
             metadata,
-            client: self.client,
-            fn_endpoint: self.fn_endpoint,
+            api_info: self.api_info,
+            hold: self.hold,
         }
     }
 }

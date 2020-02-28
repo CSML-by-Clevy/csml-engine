@@ -1,0 +1,5 @@
+start:
+    say "Hello {{_metadata.firstname}}"
+    say "_metadata is all the information that we receive from channels like mesenger, slack, .."
+    say "{{_metadata}}"
+    goto end
