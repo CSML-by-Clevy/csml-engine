@@ -13,12 +13,12 @@ use parser::Parser;
 use curl::easy::Easy;
 use std::{collections::HashMap, sync::mpsc};
 
-fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
+pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
     flow.flow_instructions
         .get(&InstructionType::NormalStep(name.to_owned()))
 }
 
-fn execute_step(
+pub fn execute_step(
     flow: &Flow,
     name: &str,
     mut data: Data,
