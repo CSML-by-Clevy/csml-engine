@@ -66,7 +66,7 @@ where
                     |tuple_vec| {
                         tuple_vec
                             .into_iter()
-                            .map(|(k, v)| (String::from(k.fragment), v))
+                            .map(|(k, v)| (String::from(*k.fragment()), v))
                             .collect()
                     },
                 ),

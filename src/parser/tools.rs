@@ -36,7 +36,7 @@ where
     let (s, val) = take_till1(|c: char| c != UNDERSCORE && !c.is_alphanumeric())(s)?;
 
     // TODO: see if return String can be &str ?
-    Ok((s, val.fragment.to_owned()))
+    Ok((s, val.fragment().to_string()))
 }
 
 pub fn get_tag<I, E: ParseError<I>>(

@@ -201,7 +201,7 @@ pub struct Interval {
 impl Interval {
     pub fn new(span: Span) -> Self {
         Self {
-            line: span.line,
+            line: span.location_line(),
             column: span.get_column() as u32,
         }
     }

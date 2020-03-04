@@ -9,7 +9,7 @@ name = "csmlinterpreter"
 crate-type = ["rlib"]
 
 [dependencies]
-nom_locate = "1.0.0"
+nom_locate = "2.0.0"
 nom =  "5.1.1"
 rand = "0.7.3"
 serde = { version = "1.0", features = ["derive"] }
@@ -19,7 +19,7 @@ lazy_static = "1.4.0"
 regex = "1"
 
 [dependencies.curl]
-version = "0.4.25"
+version = "0.4.26"
 default-features = false
 features = ["mesalink"]
 

@@ -101,7 +101,7 @@ mod tests {
     pub fn test_import(s: Span) -> IResult<Span, (Expr, InstructionInfo)> {
         let var = parse_import(s);
         if let Ok((s, v)) = var {
-            if s.fragment.len() != 0 {
+            if s.fragment().len() != 0 {
                 Err(Err::Error((s, ErrorKind::Tag)))
             } else {
                 Ok((s, v))

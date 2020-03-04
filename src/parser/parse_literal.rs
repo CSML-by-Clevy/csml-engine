@@ -51,7 +51,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, interval) = get_interval(s)?;
-    let (s, float) = map_res(floating_point, |s: Span| s.fragment.parse::<f64>())(s)?;
+    let (s, float) = map_res(floating_point, |s: Span| s.fragment().parse::<f64>())(s)?;
 
     let expression = Expr::LitExpr(PrimitiveFloat::get_literal(float, interval));
 
@@ -121,7 +121,7 @@ pub fn get_int<'a, E>(s: Span<'a>) -> IResult<Span<'a>, i64, E>
 where
     E: ParseError<Span<'a>>,
 {
-    map_res(signed_digits, |s: Span| s.fragment.parse::<i64>())(s)
+    map_res(signed_digits, |s: Span| s.fragment().parse::<i64>())(s)
 }
 
 pub fn parse_literal_expr<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -144,7 +144,7 @@ mod tests {
     pub fn test_literal(s: Span) -> IResult<Span, Expr> {
         let var = parse_literal_expr(s);
         if let Ok((s, v)) = var {
-            if s.fragment.len() != 0 {
+            if s.fragment().len() != 0 {
                 Err(Err::Error((s, ErrorKind::Tag)))
             } else {
                 Ok((s, v))

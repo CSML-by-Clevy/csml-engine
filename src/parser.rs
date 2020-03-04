@@ -69,7 +69,7 @@ impl Parser {
                         ErrorInfo {
                             message: error,
                             interval: Interval {
-                                line: s.line,
+                                line: s.location_line(),
                                 column: s.get_column() as u32,
                             },
                         }
@@ -83,7 +83,7 @@ impl Parser {
                     Err(ErrorInfo {
                         message: err.error.to_owned(),
                         interval: Interval {
-                            line: err.input.line,
+                            line: err.input.location_line(),
                             column: err.input.get_column() as u32,
                         },
                     })
@@ -129,7 +129,7 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
     })(s)?;
 
     let (last, _) = comment(s)?;
-    if !last.fragment.is_empty() {
+    if !last.fragment().is_empty() {
         let res: IResult<Span<'a>, Span<'a>, E> =
             preceded(comment, alt((tag("ask"), tag("response"))))(last);
 
