@@ -7,7 +7,7 @@ use serde_json::Value;
 use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
 
 fn format_message(event: Event, step: &str) -> MessageData {
-    let text = read_file("CSML/stdlib/number.csml".to_owned()).unwrap();
+    let text = read_file("CSML/basic_test/stdlib/number.csml".to_owned()).unwrap();
 
     let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 
