@@ -1,8 +1,18 @@
 [package]
 name = "csmlinterpreter"
 version = "0.1.0"
-authors = ["amerelo <alexis.merelo@clevy.io>"]
+authors = [
+    "Alexis Merelo <alexis.merelo@clevy.io>",
+    "Jefferson Le Quellec <jefferson.le-quellec@clevy.io>",
+    "François Falala-Sechet <francois@clevy.io>",
+    "Bastien Botella <bastien@clevy.io>"
+]
+license = "Apache-2.0"
 edition = "2018"
+readme = "README.md"
+description = """
+The CSML (Conversational Standard Meta Language) is a Domain-Specific Language developed for creating conversational experiences easily.
+"""
 
 [lib]
 name = "csmlinterpreter"
