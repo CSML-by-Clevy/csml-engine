@@ -1,14 +1,15 @@
 stages:
-  - build
+  - test
 
-rust-latest:
-  stage: build
+test:
+  stage: test
   image: rust:latest
   script:
     - cargo build --verbose
     - cargo test --verbose
-  tags:
-    - rust
   only:
+    - web
     - dev
     - master
+  tags:
+    - docker:dind
