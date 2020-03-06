@@ -38,19 +38,8 @@ By using the CSML language, any developer can integrate arbitrarily complex conv
 
 ```rust
 
-use std::fs::File;
-use std::io::prelude::*;
-use csmlinterpreter::{
-    data::ContextJson,
-    interpret,
-};
-
-fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
-    let mut file = File::open(file_path)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    Ok(contents)
-}
+use std::fs;
+use csmlinterpreter::{data::ContextJson, interpret};
 
 fn interpret_flow(flow: &str, step_name: &str) {
     let event = Event::text("hello");
@@ -62,8 +51,8 @@ fn interpret_flow(flow: &str, step_name: &str) {
 }
 
 fn main() {
-    //add a valid path to a csml file
-    let flow = read_file("./hello_world.csml".to_owned()).unwrap();
+    // add a valid path to a csml file
+    let flow = fs::read_to_string("./hello_world.csml").unwrap();
 
     interpret_flow(&flow, "start");
 }
