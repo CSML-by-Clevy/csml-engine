@@ -4,6 +4,7 @@ start:
             say s
 	    break
     }
+    goto end
 
 break_test_0:
     use ["Hello", "World"] as array
@@ -13,6 +14,7 @@ break_test_0:
             break
         }
     }
+    goto end
 
 break_test_1:
     use ["Hello", "World"] as array
@@ -25,6 +27,7 @@ break_test_1:
             break
         }
     }
+    goto end
 
 break_test_2:
     use ["Hello", "World"] as array
@@ -36,13 +39,15 @@ break_test_2:
             }
         }
     }
+    goto end
 
 break_test_3:
     use ["Hello", "World"] as array
     foreach (s) in array {
         say s
-        goto foo
+        goto end
         foreach (s) in array {
             break
         }
     }
+    goto end

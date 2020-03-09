@@ -10,6 +10,8 @@ step_0:
 
     say obj.clear()
 
+    goto end
+
 step_1:
     remember obj = {}
 
@@ -19,6 +21,8 @@ step_1:
 
     say obj.contains("42")
 
+    goto end
+
 step_2:
     remember obj = {}
 
@@ -27,6 +31,8 @@ step_2:
     do obj.insert("Hello", 42)
 
     do obj.remove("Hello")
+
+    goto end
 
 step_3:
     remember obj = {}
@@ -44,12 +50,16 @@ step_3:
     say obj.is_empty()
     say obj.length()
 
+    goto end
+
 step_4:
     remember obj = {}
 
     do obj.insert("toto", "tutu")
 
     say obj.contains("toto")
+
+    goto end
 
 step_5:
     remember obj = {}
@@ -69,6 +79,8 @@ step_5:
         say v
     }
 
+    goto end
+
 step_6:
     do obj = {}
 
@@ -86,6 +98,8 @@ step_6:
     foreach (v) in obj.values() {
         say v
     }
+
+    goto end
 
 step_7:
     use {} as obj
@@ -105,6 +119,8 @@ step_7:
         say v
     }
 
+    goto end
+
 
 step_8:
     use {} as obj
@@ -117,3 +133,5 @@ step_8:
     foreach (value) in obj.values() {
         say value
     }
+
+    goto end

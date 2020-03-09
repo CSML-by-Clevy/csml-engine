@@ -1,0 +1,7 @@
+start:
+    say "Hello"
+    goto end
+
+start:
+    say "Hello"
+    goto end

@@ -49,7 +49,7 @@ pub enum ParserErrorType {
     DoubleBraceError = 130,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ErrorInfo {
     pub message: String,
     pub interval: Interval,

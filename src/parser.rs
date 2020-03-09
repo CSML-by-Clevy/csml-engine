@@ -1,4 +1,3 @@
-pub mod csml_rules;
 pub mod operator;
 pub mod parse_actions;
 pub mod parse_braces;
@@ -20,10 +19,11 @@ pub mod state_context;
 pub mod tools;
 
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExitCondition, State, StateContext};
+pub use state_context::{ExecutionState, ExitCondition, StateContext};
 
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{CustomError, ErrorInfo};
+use crate::linter::Linter;
 use parse_comments::comment;
 use parse_scope::parse_root;
 use tools::*;
@@ -32,65 +32,25 @@ use nom::error::{ErrorKind, ParseError};
 use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
-fn create_flow_from_instructions(
-    instructions: Vec<Instruction>,
-    flow_type: FlowType,
-) -> Result<Flow, String> {
-    let mut elem = instructions.iter();
-
-    // TODO: see if it can be checked in parsing
-    while let Some(val) = elem.next() {
-        let elem2 = elem.clone();
-        for val2 in elem2 {
-            if val.instruction_type == val2.instruction_type {
-                return Err("StepDuplicateError".to_owned());
-            }
-        }
-    }
-
-    Ok(Flow {
-        flow_instructions: instructions
-            .into_iter()
-            .map(|elem| (elem.instruction_type, elem.actions))
-            .collect::<HashMap<InstructionType, Expr>>(),
-        flow_type,
-    })
-}
-
-pub struct Parser;
-
-impl Parser {
-    pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
-        match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
-            Ok((s, (instructions, flow_type))) => {
-                match create_flow_from_instructions(instructions, flow_type) {
-                    Ok(val) => Ok(val),
-                    Err(error) => Err({
-                        ErrorInfo {
-                            message: error,
-                            interval: Interval {
-                                line: s.location_line(),
-                                column: s.get_column() as u32,
-                            },
-                        }
-                    }),
-                }
-            }
-            Err(e) => match e {
-                Err::Error(err) | Err::Failure(err) => {
-                    StateContext::clear_state();
-                    StateContext::clear_index();
-                    Err(ErrorInfo {
-                        message: err.error.to_owned(),
-                        interval: Interval {
-                            line: err.input.location_line(),
-                            column: err.input.get_column() as u32,
-                        },
-                    })
-                }
-                Err::Incomplete(_err) => unimplemented!(),
-            },
-        }
+pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
+    match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
+        Ok((_, (instructions, flow_type))) => Ok(Flow {
+            flow_instructions: instructions
+                .into_iter()
+                .map(|elem| (elem.instruction_type, elem.actions))
+                .collect::<HashMap<InstructionType, Expr>>(),
+            flow_type,
+        }),
+        Err(e) => match e {
+            Err::Error(err) | Err::Failure(err) => Err(ErrorInfo {
+                message: err.error.to_owned(),
+                interval: Interval {
+                    line: err.input.location_line(),
+                    column: err.input.get_column() as u32,
+                },
+            }),
+            Err::Incomplete(_err) => unimplemented!(),
+        },
     }
 }
 
@@ -98,7 +58,10 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
 
-    StateContext::clear_index();
+    let (s, interval) = get_interval(s)?;
+
+    Linter::set_step(&Linter::get_flow(), &ident.ident, interval);
+    StateContext::clear_rip();
 
     let (s, start) = get_interval(s)?;
     let (s, actions) = preceded(comment, parse_root)(s)?;

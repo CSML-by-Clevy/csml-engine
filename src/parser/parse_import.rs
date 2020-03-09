@@ -80,11 +80,11 @@ where
     let (s, name) = parse_import_opt(s)?;
 
     let instruction_info = InstructionInfo {
-        index: StateContext::get_index(),
+        index: StateContext::get_rip(),
         total: 0,
     };
 
-    StateContext::inc_index();
+    StateContext::inc_rip();
 
     Ok((s, (name, instruction_info)))
 }

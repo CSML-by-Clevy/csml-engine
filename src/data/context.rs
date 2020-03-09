@@ -21,8 +21,8 @@ pub struct ContextJson {
     pub hold: Option<Hold>,
 }
 
-impl ContextJson {
-    pub fn new() -> Self {
+impl Default for ContextJson {
+    fn default() -> Self {
         Self {
             current: serde_json::json!({}),
             metadata: serde_json::json!({}),
@@ -53,15 +53,15 @@ pub fn get_hashmap(lit: &serde_json::Value) -> HashMap<String, Literal> {
 }
 
 impl ContextJson {
-    pub fn to_literal(self) -> Context {
+    pub fn to_literal(&self) -> Context {
         let current = get_hashmap(&self.current);
         let metadata = get_hashmap(&self.metadata);
 
         Context {
             current,
             metadata,
-            api_info: self.api_info,
-            hold: self.hold,
+            api_info: self.api_info.to_owned(),
+            hold: self.hold.to_owned(),
         }
     }
 }

@@ -23,7 +23,7 @@ fn event_step_0() {
             {"content":{"text": "content"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(
         Event {
             content_type: "content_type".to_owned(),
@@ -50,7 +50,7 @@ fn event_step_1() {
 
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
 
     let mut map = serde_json::Map::new();
     let mut other_map = serde_json::Map::new();
@@ -84,7 +84,7 @@ fn event_step_2() {
             {"content":{"text": "content_type"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(
         Event {
             content_type: "content_type".to_owned(),
@@ -109,7 +109,7 @@ fn event_step_3() {
             {"content":{}, "content_type":"content_type"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(
         Event {
             content_type: "content_type".to_owned(),
@@ -134,7 +134,7 @@ fn event_step_4() {
             {"content":{"text":"true"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
 
     let mut map = serde_json::Map::new();
 

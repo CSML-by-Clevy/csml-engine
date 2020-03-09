@@ -3,16 +3,21 @@ start:
 
 step_0:
     say event
+    goto end
 
 step_1:
     say event.toto
     say event.toto.yolo
+    goto end
 
 step_2:
     say event.get_type()
+    goto end
 
 step_3:
     say event.get_metadata()
+    goto end
 
 step_4:
     say event.is_number()
+    goto end

@@ -1,8 +1,7 @@
-
 start:
-    goto init_obj
+    goto end
 
-init_obj:
+step1:
     use Object(
         value = "val",
         toto = Object( 
@@ -17,20 +16,42 @@ init_obj:
         vec = [Object(test = 1) , 2, 3, 4, 5, 6,],
     ) as var
 
-step1:
-    import step init_obj
-
     say var.vec[0].test
     goto end
 
 step2:
-    import step init_obj
+    use Object(
+        value = "val",
+        toto = Object( 
+            plop = 4,
+            action2 = Object(
+                toto = "toto",
+                tutu = "tutu",
+                empty = "",
+            ),
+        ),
+        test = Object(pui = 7),
+        vec = [Object(test = 1) , 2, 3, 4, 5, 6,],
+    ) as var
+
 
     say var.toto.plop
     goto end
 
 step3:
-    import step init_obj
+    use Object(
+        value = "val",
+        toto = Object( 
+            plop = 4,
+            action2 = Object(
+                toto = "toto",
+                tutu = "tutu",
+                empty = "",
+            ),
+        ),
+        test = Object(pui = 7),
+        vec = [Object(test = 1) , 2, 3, 4, 5, 6,],
+    ) as var
 
     use var.toto.plop as var1
     use var.vec[0].test as var2
@@ -39,7 +60,20 @@ step3:
     goto end
 
 step4:
-    import step init_obj
+    use Object(
+        value = "val",
+        toto = Object( 
+            plop = 4,
+            action2 = Object(
+                toto = "toto",
+                tutu = "tutu",
+                empty = "",
+            ),
+        ),
+        test = Object(pui = 7),
+        vec = [Object(test = 1) , 2, 3, 4, 5, 6,],
+    ) as var
+
 
     use OneOf(
         [
@@ -52,5 +86,9 @@ step4:
     ) as plop
     say plop
 
+    goto end
+
 step5:
     say "{{ OneOf(["1", "2", "{{ OneOf([4, 5])  }}"])  }}"
+
+    goto end

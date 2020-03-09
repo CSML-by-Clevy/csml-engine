@@ -29,7 +29,7 @@ fn string_step_0() {
             {"content":{"text": null}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_0");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -50,7 +50,7 @@ fn string_step_1() {
             {"content":{"text": "true"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -73,7 +73,7 @@ fn string_step_2() {
             {"content":{"text": "false"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_2");
 
     let v1: Value = message_to_jsonvalue(msg);
