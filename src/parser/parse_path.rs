@@ -20,7 +20,7 @@ use nom::{
 // ["string"]
 // [ number ]
 // [ number + number ]
-fn parse_index<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathExpr), E>
+fn parse_index<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathState), E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -31,12 +31,12 @@ where
         preceded(comment, tag(R_BRACKET)),
     )(s)?;
 
-    Ok((s, (interval, PathExpr::ExprIndex(path))))
+    Ok((s, (interval, PathState::ExprIndex(path))))
 }
 
 //.string
 //.func (expr, ..)
-fn parse_dot_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathExpr), E>
+fn parse_dot_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathState), E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -49,14 +49,14 @@ where
             s,
             (
                 interval,
-                PathExpr::Func(Function {
+                PathState::Func(Function {
                     name,
                     interval,
                     args: Box::new(args),
                 }),
             ),
         )),
-        _ => Ok((s, (interval, PathExpr::StringIndex(name)))),
+        _ => Ok((s, (interval, PathState::StringIndex(name)))),
     }
 }
 
@@ -64,9 +64,22 @@ where
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<(Interval, PathExpr)>, E>
+pub fn parse_path<'a, E>(s: Span<'a>, expr: Expr) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    many1(alt((parse_index, parse_dot_path)))(s)
+    let path: IResult<Span<'a>, Vec<(Interval, PathState)>, E> =
+        many1(alt((parse_index, parse_dot_path)))(s);
+
+    match path {
+        Ok((s, path)) => Ok((
+            s,
+            Expr::PathExpr {
+                literal: Box::new(expr),
+                path,
+            },
+        )),
+        Err(Err::Error(..)) | Err(Err::Failure(..)) => Ok((s, expr)),
+        Err(Err::Incomplete(e)) => Err(Err::Incomplete(e)),
+    }
 }

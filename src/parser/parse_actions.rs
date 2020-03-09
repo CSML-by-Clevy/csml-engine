@@ -1,13 +1,16 @@
 use crate::data::{ast::*, tokens::*};
-use crate::parser::operator::parse_operator;
-use crate::parser::parse_goto::parse_goto;
-use crate::parser::parse_idents::parse_idents_assignation_with_path;
-use crate::parser::parse_idents::parse_idents_assignation_without_path;
-use crate::parser::tools::get_string;
-use crate::parser::tools::get_tag;
 use crate::parser::{
-    parse_comments::comment, parse_foreach::parse_foreach, parse_if::parse_if,
-    parse_import::parse_import, tools::get_interval, State, StateContext,
+    operator::parse_operator,
+    parse_comments::comment,
+    parse_foreach::parse_foreach,
+    parse_goto::parse_goto,
+    parse_idents::parse_idents_assignation,
+    parse_if::parse_if,
+    parse_import::parse_import,
+    parse_path::parse_path,
+    tools::get_interval,
+    tools::{get_string, get_tag},
+    State, StateContext,
 };
 use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, *};
 
@@ -15,32 +18,48 @@ use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, *};
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+fn parse_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<Expr>), E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, name) = parse_idents_assignation_without_path(s)?;
+    let (s, name) = parse_idents_assignation(s)?;
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Assign(name, Box::new(expr))),
-    ))
+    Ok((s, (name, Box::new(expr))))
 }
 
 fn parse_assignation_with_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, name) = parse_idents_assignation_with_path(s)?;
+    let (s, name) = parse_idents_assignation(s)?;
+    let (s, ident) = parse_path(s, Expr::IdentExpr(name))?;
+
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 
     Ok((
         s,
-        Expr::ObjectExpr(ObjectType::Assign(name, Box::new(expr))),
+        Expr::ObjectExpr(ObjectType::Assign(Box::new(ident), Box::new(expr))),
     ))
+}
+
+fn parse_remember_as<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<Expr>), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, operator) = parse_operator(s)?;
+    match operator {
+        Expr::ObjectExpr(ObjectType::As(idents, expr)) => Ok((s, (idents, expr))),
+        _ => {
+            return Err(Err::Failure(E::add_context(
+                s,
+                "Remember must be assigning to a variable via '=' or 'as': remember key = value || remember value as key",
+                E::from_error_kind(s, ErrorKind::Tag),
+            )))
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,9 +79,7 @@ where
         Expr::ObjectExpr(ObjectType::As(ident, expr)) => {
             (s, DoType::Update(Box::new(Expr::IdentExpr(ident)), expr))
         }
-        Expr::ObjectExpr(ObjectType::Assign(ident, expr)) => {
-            (s, DoType::Update(Box::new(Expr::IdentExpr(ident)), expr))
-        }
+        Expr::ObjectExpr(ObjectType::Assign(ident, expr)) => (s, DoType::Update(ident, expr)),
         _ => (s, DoType::Exec(Box::new(expr))),
     };
 
@@ -86,26 +103,7 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, REMEMBER)(s)?;
 
-    let (s, expr) = preceded(
-        comment,
-        alt((parse_assignation_without_path, parse_operator)),
-    )(s)?;
-
-    let (expr, idents) = match expr {
-        Expr::ObjectExpr(ObjectType::Assign(idents, expr)) => {
-            (expr, idents)
-        }
-        Expr::ObjectExpr(ObjectType::As(idents, expr)) => {
-            (expr, idents)
-        }
-        _ => {
-            return Err(Err::Failure(E::add_context(
-                s,
-                "Remember must be assigning to a variable via '=' or 'as': remember key = value || remember value as key",
-                E::from_error_kind(s, ErrorKind::Tag),
-            )))
-        }
-    };
+    let (s, (idents, expr)) = preceded(comment, alt((parse_assignation, parse_remember_as)))(s)?;
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_index(),

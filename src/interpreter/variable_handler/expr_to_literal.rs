@@ -1,12 +1,31 @@
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
-use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
+use crate::data::{ast::*, tokens::*, Data, Literal, MemoryType, MessageData, MSG};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
     builtins::match_builtin,
-    variable_handler::{get_string_from_complexstring, get_var, interval::interval_from_expr},
+    variable_handler::{
+        exec_path_actions, get_string_from_complexstring, get_var, interval::interval_from_expr,
+        resolve_path,
+    },
 };
 use std::{collections::HashMap, sync::mpsc};
+
+fn exec_path_literal(
+    literal: &mut Literal,
+    path: Option<&[(Interval, PathState)]>,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    if let Some(path) = path {
+        let path = resolve_path(path, data, root, sender)?;
+        let (new_literal, ..) = exec_path_actions(literal, None, &Some(path), &MemoryType::Use)?;
+        Ok(new_literal)
+    } else {
+        Ok(literal.to_owned())
+    }
+}
 
 fn format_function_args(
     args: &Expr,
@@ -28,8 +47,19 @@ fn format_function_args(
     for elem in vec.iter() {
         match elem {
             Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
-                let value = expr_to_literal(var, data, root, sender)?;
-                obj.insert(var_name.ident.to_owned(), value);
+                let value = expr_to_literal(var, None, data, root, sender)?;
+
+                // TODO: Add tow Assign types in ObjectType ?
+                let ident = match **var_name {
+                    Expr::IdentExpr(ref ident) => ident.ident.to_owned(),
+                    _ => {
+                        return Err(ErrorInfo {
+                            message: "Bad Expresion type in Assign".to_owned(),
+                            interval: interval_from_expr(var),
+                        })
+                    }
+                };
+                obj.insert(ident, value);
             }
             Expr::ObjectExpr(ObjectType::Normal(Function {
                 name,
@@ -42,7 +72,7 @@ fn format_function_args(
                 obj.insert(DEFAULT.to_owned(), literal);
             }
             _ => {
-                let value = expr_to_literal(elem, data, root, sender)?;
+                let value = expr_to_literal(elem, None, data, root, sender)?;
                 obj.insert(DEFAULT.to_owned(), value);
             }
         }
@@ -76,15 +106,19 @@ fn normal_object_to_literal(
 
 pub fn expr_to_literal(
     expr: &Expr,
+    path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::ObjectExpr(ObjectType::As(name, var)) => {
-            let value = expr_to_literal(var, data, root, sender)?;
+            let value = expr_to_literal(var, None, data, root, sender)?;
             data.step_vars.insert(name.ident.to_owned(), value.clone());
             Ok(value)
+        }
+        Expr::PathExpr { literal, path } => {
+            expr_to_literal(literal, Some(path), data, root, sender)
         }
         Expr::ObjectExpr(ObjectType::Normal(Function {
             name,
@@ -94,33 +128,38 @@ pub fn expr_to_literal(
             let (_name, literal) =
                 normal_object_to_literal(&name, args, *interval, data, root, sender)?;
 
-            Ok(literal)
+            exec_path_literal(&mut literal.clone(), path, data, root, sender)
         }
         Expr::MapExpr(map, RangeInterval { start, .. }) => {
             let mut object = HashMap::new();
 
             for (key, value) in map.iter() {
-                object.insert(key.to_owned(), expr_to_literal(&value, data, root, sender)?);
+                object.insert(
+                    key.to_owned(),
+                    expr_to_literal(&value, None, data, root, sender)?,
+                );
             }
-            Ok(PrimitiveObject::get_literal(&object, start.to_owned()))
+            let mut literal = PrimitiveObject::get_literal(&object, start.to_owned());
+            exec_path_literal(&mut literal, path, data, root, sender)
         }
-        Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => Ok(
-            get_string_from_complexstring(vec, start.to_owned(), data, root, sender),
-        ),
+        Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => {
+            let mut string =
+                get_string_from_complexstring(vec, start.to_owned(), data, root, sender);
+            exec_path_literal(&mut string, path, data, root, sender)
+        }
         Expr::VecExpr(vec, range) => {
             let mut array = vec![];
             for value in vec.iter() {
-                array.push(expr_to_literal(value, data, root, sender)?)
+                array.push(expr_to_literal(value, None, data, root, sender)?)
             }
-
-            Ok(PrimitiveArray::get_literal(&array, range.start.to_owned()))
+            let mut literal = PrimitiveArray::get_literal(&array, range.start.to_owned());
+            exec_path_literal(&mut literal, path, data, root, sender)
         }
-        Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), data, root, sender)?),
-        Expr::LitExpr(literal) => Ok(literal.clone()),
-        // TODO: duplicate of get_var_from_ident in variable_handler
         Expr::InfixExpr(infix, exp_1, exp_2) => {
             evaluate_condition(infix, exp_1, exp_2, data, root, sender)
         }
+        Expr::LitExpr(literal) => exec_path_literal(&mut literal.clone(), path, data, root, sender),
+        Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), path, data, root, sender)?),
         e => Err(ErrorInfo {
             // expr
             message: "Expr can't be converted to Literal".to_owned(),

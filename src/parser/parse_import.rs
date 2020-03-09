@@ -29,7 +29,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = preceded(comment, parse_import_step)(s)?;
-    let (s, name) = parse_idents_assignation_without_path(s)?;
+    let (s, name) = parse_idents_assignation(s)?;
     Ok((s, name))
 }
 
@@ -38,7 +38,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(AS))(s)?;
-    let (s, name) = parse_idents_assignation_without_path(s)?;
+    let (s, name) = parse_idents_assignation(s)?;
     Ok((s, name))
 }
 
@@ -47,7 +47,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(FROM_FILE))(s)?;
-    let (s, name) = parse_idents_assignation_without_path(s)?;
+    let (s, name) = parse_idents_assignation(s)?;
     Ok((s, name))
 }
 

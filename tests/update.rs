@@ -24,7 +24,7 @@ fn ok_update_step1() {
                 },
                 {
                     "content":{"text":"4"},"content_type":"text"
-                } 
+                }
             ],
             "next_flow":null,
             "memories":[],

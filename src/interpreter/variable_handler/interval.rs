@@ -11,7 +11,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::VecExpr(_e, RangeInterval { start, .. }) => *start,
         Expr::ObjectExpr(fnexpr) => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
-        // Expr::BuilderExpr(builder_type, _) => builder_type.get_interval().to_owned(),
+        Expr::PathExpr { literal, .. } => interval_from_expr(literal),
         Expr::ForEachExpr(_, _, _, _, RangeInterval { start, .. }) => *start,
         Expr::IdentExpr(ident) => ident.interval.to_owned(),
         Expr::LitExpr(literal) => literal.interval.to_owned(),
@@ -34,7 +34,7 @@ pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval {
         ObjectType::Do(DoType::Exec(expr)) => interval_from_expr(expr),
         ObjectType::Say(expr) => interval_from_expr(expr),
         ObjectType::Remember(ident, ..) => ident.interval.to_owned(),
-        ObjectType::Assign(ident, ..) => ident.interval.to_owned(),
+        ObjectType::Assign(ident, ..) => interval_from_expr(ident),
         ObjectType::As(ident, ..) => ident.interval.to_owned(),
         ObjectType::Import { step_name, .. } => step_name.interval.to_owned(),
         ObjectType::Normal(Function { interval, .. }) => interval.to_owned(),

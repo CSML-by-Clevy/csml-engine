@@ -65,8 +65,11 @@ pub enum ObjectType {
     Use(Box<Expr>),
     Do(DoType),
     Say(Box<Expr>),
+
     Remember(Identifier, Box<Expr>),
-    Assign(Identifier, Box<Expr>),
+    // Assign{old: Box<Expr>, new: Box<Expr>},
+    Assign(Box<Expr>, Box<Expr>),
+
     As(Identifier, Box<Expr>),
     Import {
         step_name: Identifier,
@@ -144,23 +147,18 @@ pub enum Expr {
     ObjectExpr(ObjectType),                 // RangeInterval ?
     IfExpr(IfStatement),
 
-    // BuilderExpr(BuilderType, Vec<Expr>),
+    PathExpr {
+        literal: Box<Expr>,
+        path: Vec<(Interval, PathState)>,
+    },
     IdentExpr(Identifier),
 
     LitExpr(Literal),
 }
 
 impl Expr {
-    pub fn new_idents(
-        ident: String,
-        interval: Interval,
-        path: Option<Vec<(Interval, PathExpr)>>,
-    ) -> Identifier {
-        Identifier {
-            ident,
-            interval,
-            path,
-        }
+    pub fn new_idents(ident: String, interval: Interval) -> Identifier {
+        Identifier { ident, interval }
     }
 }
 
@@ -208,7 +206,7 @@ impl Interval {
 }
 
 #[derive(Debug, Clone)]
-pub enum PathExpr {
+pub enum PathState {
     ExprIndex(Expr),
     StringIndex(String),
     Func(Function),
@@ -230,7 +228,6 @@ pub enum PathLiteral {
 pub struct Identifier {
     pub ident: String,
     pub interval: Interval,
-    pub path: Option<Vec<(Interval, PathExpr)>>,
 }
 
 impl PartialEq for Identifier {

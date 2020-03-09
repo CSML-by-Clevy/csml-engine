@@ -11,18 +11,15 @@ use crate::data::primitive::{
     null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
 };
 use crate::data::{
-    ast::{Expr, Function, Identifier, Interval, PathExpr, PathLiteral},
+    ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState},
     tokens::{EVENT, _METADATA},
     Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
 use crate::error_format::ErrorInfo;
-use crate::interpreter::{
-    ast_interpreter::match_functions,
-    variable_handler::{
-        gen_literal::gen_literal_form_event,
-        memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
-    },
+use crate::interpreter::variable_handler::{
+    gen_literal::gen_literal_form_event,
+    memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
 };
 use std::collections::HashMap;
 use std::slice::Iter;
@@ -88,21 +85,21 @@ pub fn get_value_from_key<'a>(lit: &'a mut Literal, key: &str) -> Option<&'a mut
 }
 
 pub fn resolve_path(
-    mut path: Vec<(Interval, PathExpr)>,
+    path: &[(Interval, PathState)],
     data: &mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Vec<(Interval, PathLiteral)>, ErrorInfo> {
     let mut new_path = vec![];
 
-    for (inter, node) in path.drain(0..) {
+    for (inter, node) in path.iter() {
         match node {
-            PathExpr::ExprIndex(expr) => {
-                let lit = match_functions(&expr, data, root, sender)?;
+            PathState::ExprIndex(expr) => {
+                let lit = expr_to_literal(&expr, None, data, root, sender)?;
                 if let Ok(val) = Literal::get_value::<i64>(&lit.primitive) {
-                    new_path.push((inter, PathLiteral::VecIndex(*val as usize)))
+                    new_path.push((inter.to_owned(), PathLiteral::VecIndex(*val as usize)))
                 } else if let Ok(val) = Literal::get_value::<String>(&lit.primitive) {
-                    new_path.push((inter, PathLiteral::MapIndex(val.to_owned())))
+                    new_path.push((inter.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
                     return Err(ErrorInfo {
                         message:
@@ -112,19 +109,21 @@ pub fn resolve_path(
                     });
                 }
             }
-            PathExpr::Func(Function {
+            PathState::Func(Function {
                 name,
                 interval,
                 args,
             }) => new_path.push((
-                inter,
+                inter.to_owned(),
                 PathLiteral::Func {
-                    name,
-                    interval,
-                    args: match_functions(&args, data, root, sender)?,
+                    name: name.to_owned(),
+                    interval: interval.to_owned(),
+                    args: expr_to_literal(&args, None, data, root, sender)?,
                 },
             )),
-            PathExpr::StringIndex(key) => new_path.push((inter, PathLiteral::MapIndex(key))),
+            PathState::StringIndex(key) => {
+                new_path.push((inter.to_owned(), PathLiteral::MapIndex(key.to_owned())))
+            }
         }
     }
     Ok(new_path)
@@ -247,18 +246,17 @@ pub fn get_literal_form_metadata(
     Ok(lit)
 }
 
-//TODO: make error if try to change _metadata
 pub fn get_var(
     var: Identifier,
+    path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let interval = &var.interval;
     match var.ident {
-        // name if name == RETRIES =>
-        name if name == EVENT => gen_literal_form_event(*interval, var.path, data, root, sender),
-        name if name == _METADATA => match var.path {
+        name if name == EVENT => gen_literal_form_event(*interval, path, data, root, sender),
+        name if name == _METADATA => match path {
             Some(path) => {
                 let path = resolve_path(path, data, root, sender)?;
                 get_literal_form_metadata(&path, data)
@@ -268,7 +266,7 @@ pub fn get_var(
                 interval.to_owned(),
             )),
         },
-        _ => match get_var_from_mem(var.to_owned(), data, root, sender) {
+        _ => match get_var_from_mem(var.to_owned(), path, data, root, sender) {
             Ok((lit, name, mem_type, path)) => {
                 let (new_literal, update_mem) = exec_path_actions(lit, None, &path, &mem_type)?;
                 save_literal_in_mem(
@@ -289,6 +287,7 @@ pub fn get_var(
 
 pub fn get_var_from_mem<'a>(
     name: Identifier,
+    path: Option<&[(Interval, PathState)]>,
     data: &'a mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
@@ -301,7 +300,7 @@ pub fn get_var_from_mem<'a>(
     ),
     ErrorInfo,
 > {
-    let path = if let Some(p) = name.path.clone() {
+    let path = if let Some(p) = path {
         Some(resolve_path(p, data, root, sender)?)
     } else {
         None
@@ -330,7 +329,7 @@ pub fn get_string_from_complexstring(
 
     //TODO: log error with span
     for elem in exprs.iter() {
-        match match_functions(elem, data, root, sender) {
+        match expr_to_literal(elem, None, data, root, sender) {
             Ok(var) => new_string.push_str(&var.primitive.to_string()),
             Err(_) => {
                 let mut literal = PrimitiveNull::get_literal(interval.to_owned());
