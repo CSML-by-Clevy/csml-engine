@@ -5,7 +5,8 @@ use crate::data::{
 use crate::parser::operator::parse_operator;
 use crate::parser::parse_idents::parse_idents_assignation;
 use crate::parser::{
-    parse_comments::comment, parse_scope::parse_scope, tools::get_interval, State, StateContext,
+    parse_comments::comment, parse_scope::parse_scope, tools::get_interval, ExecutionState,
+    StateContext,
 };
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
@@ -42,17 +43,17 @@ where
     let (s, _) = preceded(comment, tag(IN))(s)?;
     let (s, expr) = parse_operator(s)?;
 
-    let index = StateContext::get_index();
+    let index = StateContext::get_rip();
 
-    StateContext::inc_index();
+    StateContext::inc_rip();
 
-    StateContext::set_state(State::Loop);
+    StateContext::set_state(ExecutionState::Loop);
     let (s, block) = parse_scope(s)?;
-    StateContext::set_state(State::Normal);
+    StateContext::set_state(ExecutionState::Normal);
 
     let (s, end) = get_interval(s)?;
 
-    let new_index = StateContext::get_index() - 1;
+    let new_index = StateContext::get_rip() - 1;
     let instruction_info = InstructionInfo {
         index,
         total: new_index - index,

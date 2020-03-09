@@ -2,14 +2,14 @@ mod support;
 
 use csmlinterpreter::data::ast::Flow;
 use csmlinterpreter::error_format::ErrorInfo;
-use csmlinterpreter::parse_file;
+use csmlinterpreter::parser::parse_flow;
 
 use support::tools::read_file;
 
 fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
     let text = read_file(filepath).unwrap();
 
-    parse_file(&text)
+    parse_flow(&text)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

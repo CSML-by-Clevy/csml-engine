@@ -1,14 +1,17 @@
 pub mod data;
 pub mod error_format;
 pub mod interpreter;
+pub mod linter;
 pub mod parser;
 
 use crate::data::context::get_hashmap;
+use crate::linter::linter::linter;
+use crate::linter::Linter;
 use data::{ast::*, ContextJson, Data, Event, MessageData, MSG};
 use error_format::ErrorInfo;
 use interpreter::interpret_scope;
-use parser::csml_rules::check_valid_flow;
-use parser::Parser;
+use parser::parse_flow;
+use parser::state_context::StateContext;
 
 use curl::easy::Easy;
 use std::{collections::HashMap, sync::mpsc};
@@ -37,10 +40,20 @@ pub fn execute_step(
 }
 
 pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
-    match Parser::parse_flow(file) {
+    // TODO: receive more than just the flow to be able to get real flow id
+    Linter::set_flow("default_flow");
+
+    match parse_flow(file) {
         Ok(flow) => {
-            check_valid_flow(&flow)?;
-            Ok(flow)
+            let mut error = Vec::new();
+
+            linter(&mut error);
+
+            // TODO: tmp check until error handling
+            match error.is_empty() {
+                true => Ok(flow),
+                false => Err(error.first().unwrap().to_owned()),
+            }
         }
         Err(e) => Err(e),
     }
@@ -56,6 +69,10 @@ pub fn interpret(
     let ast: Flow = match parse_file(flow) {
         Ok(flow) => flow,
         Err(e) => {
+            StateContext::clear_state();
+            StateContext::clear_rip();
+            Linter::clear();
+
             return MessageData::error_to_message(
                 Err(ErrorInfo {
                     message: format!("Error in parsing Flow: {:?}", e),

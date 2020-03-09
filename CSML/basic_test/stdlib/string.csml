@@ -14,12 +14,16 @@ step_0:
 
     say s.to_lowercase()
 
+    goto end
+
 step_1:
     remember s = "Hello"
 
     say s.contains("H")
     say s.contains("Hello")
     say s.contains_regex("(?i)He")
+
+    goto end
 
 step_2:
     remember s = "Hello"
@@ -29,6 +33,8 @@ step_2:
     say s.starts_with("el")
     say s.starts_with("O")
     say s.ends_with_regex("[l]")
+    goto end
 
 step_3:
     say "Hello".contains("H")
+    goto end

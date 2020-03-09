@@ -1,0 +1,23 @@
+start:
+    say "Hello"
+    goto lol
+
+foo:
+    if (42) {
+        say "Hello"
+        goto end
+    }
+
+    goto end
+
+joe:
+    if (42) {
+        goto end
+    }
+    else {
+        goto step end
+    }
+
+lol:
+    say "Hello"
+    goto foo

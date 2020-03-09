@@ -59,8 +59,6 @@ where
 
     parse_idents(s, position, UTILISATION_RESERVED, &var)?;
 
-    // let (s, path) = opt(parse_path)(s)?;
-
     Ok((s, form_idents(var, position)))
 }
 
@@ -75,32 +73,6 @@ where
 
     Ok((s, form_idents(var, position)))
 }
-
-// pub fn parse_idents_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
-// where
-//     E: ParseError<Span<'a>>,
-// {
-//     let (s, position) = get_interval(s)?;
-//     let (s, var) = preceded(comment, get_string)(s)?;
-
-//     parse_idents(s, position, ASSIGNATION_RESERVED, &var)?;
-
-//     Ok((s, form_idents(var, None, position)))
-// }
-
-// pub fn parse_idents_assignation_with_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
-// where
-//     E: ParseError<Span<'a>>,
-// {
-//     let (s, position) = get_interval(s)?;
-//     let (s, var) = preceded(comment, get_string)(s)?;
-
-//     parse_idents(s, position, ASSIGNATION_RESERVED, &var)?;
-
-//     // let (s, path) = opt(parse_path)(s)?;
-
-//     Ok((s, form_idents(var, path, position)))
-// }
 
 pub fn parse_idents_as<'a, E>(s: Span<'a>, expr: Expr) -> IResult<Span<'a>, Expr, E>
 where

@@ -87,7 +87,7 @@ pub fn api(
         }) => (client.to_owned(), fn_endpoint.to_owned()),
         None => {
             return Err(ErrorInfo {
-                message: format!("fn call can not be make because fn_endpoint is not set"),
+                message: "fn call can not be make because fn_endpoint is not set".to_owned(),
                 interval,
             })
         }

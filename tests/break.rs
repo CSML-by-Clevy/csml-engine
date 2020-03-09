@@ -16,7 +16,7 @@ fn format_message(event: Event, step: &str) -> MessageData {
 
 #[test]
 fn break_test_0() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "start");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -27,7 +27,7 @@ fn break_test_0() {
 
 #[test]
 fn break_test_1() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "break_test_0");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -38,7 +38,7 @@ fn break_test_1() {
 
 #[test]
 fn break_test_2() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}], "next_flow":null, "next_step":null}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "break_test_1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -49,7 +49,7 @@ fn break_test_2() {
 
 #[test]
 fn break_test_3() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}, {"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type": "text"}], "next_flow":null, "next_step":null}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}, {"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type": "text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "break_test_2");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -60,7 +60,7 @@ fn break_test_3() {
 
 #[test]
 fn break_test_4() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}], "next_flow":null, "next_step":"foo"}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "break_test_3");
 
     let v1: Value = message_to_jsonvalue(msg);

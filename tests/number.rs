@@ -24,7 +24,7 @@ fn int_step_0() {
             {"content":{"text": "int"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "int_0");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -43,7 +43,7 @@ fn int_step_1() {
             {"content":{"text": "float"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "int_1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -62,7 +62,7 @@ fn float_step_0() {
             {"content":{"text": "float"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "float_0");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -81,7 +81,7 @@ fn float_step_1() {
             {"content":{"text": "float"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "float_1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -100,7 +100,7 @@ fn string_step_0() {
             {"content":{"text": "string"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "string_0");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -119,7 +119,7 @@ fn string_step_1() {
             {"content":{"text": "string"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "string_1");
 
     let v1: Value = message_to_jsonvalue(msg);

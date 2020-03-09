@@ -9,6 +9,8 @@ int_0:
     say result
     say result.type_of()
 
+    goto end
+
 int_1:
     use 42 as int
 
@@ -16,6 +18,8 @@ int_1:
 
     say result
     say result.type_of()
+
+    goto end
 
 float_0:
     use 42.0 as float
@@ -25,6 +29,8 @@ float_0:
     say result
     say result.type_of()
 
+    goto end
+
 float_1:
     use 42.0 as float
 
@@ -32,6 +38,8 @@ float_1:
 
     say result
     say result.type_of()
+
+    goto end
 
 string_0:
     use "42" as string
@@ -41,6 +49,8 @@ string_0:
     say result
     say result.type_of()
 
+    goto end
+
 string_1:
     use "42.0" as string
 
@@ -48,3 +58,5 @@ string_1:
 
     say result
     say result.type_of()
+
+    goto end

@@ -6,11 +6,15 @@ step_0:
 
     do vec.push(42)
 
+    goto end
+
 step_1:
     remember vec = [42]
 
     say vec.pop()
     say vec
+
+    goto end
 
 step_2:
     remember vec = [42]
@@ -20,6 +24,8 @@ step_2:
     do vec.clear()
 
     say vec.is_empty()
+
+    goto end
 
 step_3:
     remember vec = [42]
@@ -34,42 +40,60 @@ step_3:
 
     say vec[0]
 
+    goto end
+
 step_4:
     remember vec = []
 
     do vec.insert_at(-1, 42)
+
+    goto end
 
 step_5:
     remember vec = []
 
     do vec.insert_at(1, 42)
 
+    goto end
+
 step_6:
     remember vec = []
 
     do vec.remove_at(-1)
+
+    goto end
 
 step_7:
     remember vec = []
 
     do vec.remove_at(1)
 
+    goto end
+
 step_8:
     remember vec = []
 
     say vec.join()
+
+    goto end
 
 step_9:
     do vec = []
 
     say vec.join(",")
 
+    goto end
+
 step_10:
     do vec = [1]
 
     say vec.join(",")
 
+    goto end
+
 step_11:
     do vec = [1, 2]
 
     say vec.join(",")
+
+    goto end

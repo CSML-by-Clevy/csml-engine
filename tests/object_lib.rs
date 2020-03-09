@@ -44,7 +44,7 @@ fn object_step_1() {
             {"content":{"text": "true"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_1");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -66,7 +66,7 @@ fn object_step_2() {
             {"content":{"text": null}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_2");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -92,7 +92,7 @@ fn object_step_3() {
             {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_3");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -112,7 +112,7 @@ fn object_step_4() {
             {"content":{"text": "true"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_4");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -141,7 +141,7 @@ fn object_step_5() {
             {"content":{"text":"toto"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_5");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -166,7 +166,7 @@ fn object_step_6() {
             {"content":{"text":"toto"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_6");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -191,7 +191,7 @@ fn object_step_7() {
             {"content":{"text":"toto"}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_7");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -210,7 +210,7 @@ fn object_step_8() {
             {"content":{"text":null}, "content_type":"text"}
         ],
         "next_flow":null,
-        "next_step":null}"#;
+        "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_8");
 
     let v1: Value = message_to_jsonvalue(msg);

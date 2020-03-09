@@ -82,13 +82,6 @@ where
                 vec.push(expression);
             }
             parse_brace(s, vec)
-            //  {
-            //     Ok((s, vec)) => Ok((s, vec)),
-            //     // Err(Err::Failure(e)) => Err(Err::Failure(e)),
-            //     Err(_) => Err(Err::Failure(
-            //         E::add_context(s, "DoubleQuoteError", E::from_error_kind(s, ErrorKind::Tag))
-            //     )),
-            // }
         }
         (_, Some(distance_double_quote)) => {
             let (s, val) = s.take_split(distance_double_quote);

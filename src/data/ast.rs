@@ -39,7 +39,6 @@ pub struct Instruction {
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum GotoType {
-    Hook,
     Step,
     Flow,
 }

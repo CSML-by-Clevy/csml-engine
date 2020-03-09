@@ -10,7 +10,7 @@ use crate::parser::{
     parse_path::parse_path,
     tools::get_interval,
     tools::{get_string, get_tag},
-    State, StateContext,
+    ExecutionState, StateContext,
 };
 use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, *};
 
@@ -84,11 +84,11 @@ where
     };
 
     let instruction_info = InstructionInfo {
-        index: StateContext::get_index(),
+        index: StateContext::get_rip(),
         total: 0,
     };
 
-    StateContext::inc_index();
+    StateContext::inc_rip();
 
     Ok((
         s,
@@ -106,11 +106,11 @@ where
     let (s, (idents, expr)) = preceded(comment, alt((parse_assignation, parse_remember_as)))(s)?;
 
     let instruction_info = InstructionInfo {
-        index: StateContext::get_index(),
+        index: StateContext::get_rip(),
         total: 0,
     };
 
-    StateContext::inc_index();
+    StateContext::inc_rip();
 
     Ok((
         s,
@@ -131,11 +131,11 @@ where
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 
     let instruction_info = InstructionInfo {
-        index: StateContext::get_index(),
+        index: StateContext::get_rip(),
         total: 0,
     };
 
-    StateContext::inc_index();
+    StateContext::inc_rip();
 
     Ok((
         s,
@@ -167,11 +167,11 @@ where
     }
 
     let instruction_info = InstructionInfo {
-        index: StateContext::get_index(),
+        index: StateContext::get_rip(),
         total: 0,
     };
 
-    StateContext::inc_index();
+    StateContext::inc_rip();
 
     Ok((
         s,
@@ -192,17 +192,17 @@ where
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
     match StateContext::get_state() {
-        State::Loop => Err(Err::Failure(E::add_context(
+        ExecutionState::Loop => Err(Err::Failure(E::add_context(
             s,
             "Hold cannot be used inside a foreach",
             E::from_error_kind(s, ErrorKind::Tag),
         ))),
-        State::Normal => {
+        ExecutionState::Normal => {
             let instruction_info = InstructionInfo {
-                index: StateContext::get_index(),
+                index: StateContext::get_rip(),
                 total: 0,
             };
-            StateContext::inc_index();
+            StateContext::inc_rip();
             Ok((
                 s,
                 (Expr::ObjectExpr(ObjectType::Hold(inter)), instruction_info),
@@ -221,18 +221,18 @@ where
     let (s, ..) = get_tag(name, BREAK)(s)?;
 
     match StateContext::get_state() {
-        State::Loop => {
+        ExecutionState::Loop => {
             let instruction_info = InstructionInfo {
-                index: StateContext::get_index(),
+                index: StateContext::get_rip(),
                 total: 0,
             };
-            StateContext::inc_index();
+            StateContext::inc_rip();
             Ok((
                 s,
                 (Expr::ObjectExpr(ObjectType::Break(inter)), instruction_info),
             ))
         }
-        State::Normal => Err(Err::Failure(E::add_context(
+        ExecutionState::Normal => Err(Err::Failure(E::add_context(
             s,
             "Break can only be used inside a foreach",
             E::from_error_kind(s, ErrorKind::Tag),
