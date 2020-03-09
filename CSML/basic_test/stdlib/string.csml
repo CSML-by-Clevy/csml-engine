@@ -29,3 +29,6 @@ step_2:
     say s.starts_with("el")
     say s.starts_with("O")
     say s.ends_with_regex("[l]")
+
+step_3:
+    say "Hello".contains("H")

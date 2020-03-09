@@ -19,7 +19,7 @@ pub mod parse_var_types;
 pub mod state_context;
 pub mod tools;
 
-use crate::parser::parse_idents::parse_idents_assignation_without_path;
+use crate::parser::parse_idents::parse_idents_assignation;
 pub use state_context::{ExitCondition, State, StateContext};
 
 use crate::data::{ast::*, tokens::*};
@@ -95,7 +95,7 @@ impl Parser {
 }
 
 fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E> {
-    let (s, ident) = preceded(comment, parse_idents_assignation_without_path)(s)?;
+    let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
 
     StateContext::clear_index();

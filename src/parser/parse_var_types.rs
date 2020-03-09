@@ -1,12 +1,15 @@
 use crate::data::{ast::*, tokens::*};
-use crate::parser::operator::parse_operator;
-use crate::parser::parse_actions::parse_assignation_without_path;
-use crate::parser::parse_idents::parse_idents_as;
-use crate::parser::parse_idents::parse_idents_utilisation;
-use crate::parser::parse_parenthesis::parse_r_parentheses;
 use crate::parser::{
-    parse_comments::comment, parse_functions::parse_functions, parse_literal::parse_literal_expr,
-    parse_object::parse_object, parse_string::parse_string, tools::*,
+    operator::parse_operator,
+    parse_comments::comment,
+    parse_functions::parse_functions,
+    parse_idents::{parse_idents_as, parse_idents_assignation, parse_idents_utilisation},
+    parse_literal::parse_literal_expr,
+    parse_object::parse_object,
+    parse_parenthesis::parse_r_parentheses,
+    parse_path::parse_path,
+    parse_string::parse_string,
+    tools::*,
 };
 
 use nom::{
@@ -16,7 +19,7 @@ use nom::{
     error::{context, ParseError},
     multi::separated_list,
     sequence::{delimited, preceded, terminated, tuple},
-    IResult, *,
+    Err, IResult,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +61,23 @@ where
 {
     let (s, idents) = parse_idents_utilisation(s)?;
     Ok((s, Expr::IdentExpr(idents)))
+}
+
+fn parse_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = parse_idents_assignation(s)?;
+    let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
+    let (s, expr) = preceded(comment, parse_operator)(s)?;
+
+    Ok((
+        s,
+        Expr::ObjectExpr(ObjectType::Assign(
+            Box::new(Expr::IdentExpr(name)),
+            Box::new(expr),
+        )),
+    ))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,6 +149,8 @@ where
             parse_idents_expr_utilisation,
         )),
     )(s)?;
+
+    let (s, expr) = parse_path(s, expr)?;
 
     parse_idents_as(s, expr)
 }

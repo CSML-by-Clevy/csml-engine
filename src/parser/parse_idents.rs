@@ -1,11 +1,10 @@
 use crate::data::{ast::*, tokens::*};
-use crate::parser::parse_path::parse_path;
+// use crate::parser::parse_path::parse_path;
 use crate::parser::tools::get_string;
 use crate::parser::tools::get_tag;
 use crate::parser::{parse_comments::comment, tools::get_interval};
 use nom::Err::Failure;
 use nom::{
-    combinator::opt,
     error::{ErrorKind, ParseError},
     sequence::preceded,
     *,
@@ -15,12 +14,8 @@ use nom::{
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn form_idents(
-    ident: String,
-    path: Option<Vec<(Interval, PathExpr)>>,
-    position: Interval,
-) -> Identifier {
-    Expr::new_idents(ident, position, path)
+fn form_idents(ident: String, position: Interval) -> Identifier {
+    Expr::new_idents(ident, position)
 }
 
 fn parse_idents<'a, E>(
@@ -48,7 +43,7 @@ where
         )));
     }
 
-    Ok((s, form_idents(var.to_owned(), None, interval)))
+    Ok((s, form_idents(var.to_owned(), interval)))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,12 +59,12 @@ where
 
     parse_idents(s, position, UTILISATION_RESERVED, &var)?;
 
-    let (s, path) = opt(parse_path)(s)?;
+    // let (s, path) = opt(parse_path)(s)?;
 
-    Ok((s, form_idents(var, path, position)))
+    Ok((s, form_idents(var, position)))
 }
 
-pub fn parse_idents_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+pub fn parse_idents_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -78,22 +73,34 @@ where
 
     parse_idents(s, position, ASSIGNATION_RESERVED, &var)?;
 
-    Ok((s, form_idents(var, None, position)))
+    Ok((s, form_idents(var, position)))
 }
 
-pub fn parse_idents_assignation_with_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    let (s, position) = get_interval(s)?;
-    let (s, var) = preceded(comment, get_string)(s)?;
+// pub fn parse_idents_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+// where
+//     E: ParseError<Span<'a>>,
+// {
+//     let (s, position) = get_interval(s)?;
+//     let (s, var) = preceded(comment, get_string)(s)?;
 
-    parse_idents(s, position, ASSIGNATION_RESERVED, &var)?;
+//     parse_idents(s, position, ASSIGNATION_RESERVED, &var)?;
 
-    let (s, path) = opt(parse_path)(s)?;
+//     Ok((s, form_idents(var, None, position)))
+// }
 
-    Ok((s, form_idents(var, path, position)))
-}
+// pub fn parse_idents_assignation_with_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+// where
+//     E: ParseError<Span<'a>>,
+// {
+//     let (s, position) = get_interval(s)?;
+//     let (s, var) = preceded(comment, get_string)(s)?;
+
+//     parse_idents(s, position, ASSIGNATION_RESERVED, &var)?;
+
+//     // let (s, path) = opt(parse_path)(s)?;
+
+//     Ok((s, form_idents(var, path, position)))
+// }
 
 pub fn parse_idents_as<'a, E>(s: Span<'a>, expr: Expr) -> IResult<Span<'a>, Expr, E>
 where
@@ -103,14 +110,12 @@ where
 
     match arg {
         Err(_) => Ok((s, expr)),
-        Ok((s2, tmp)) => {
-            match preceded(get_tag(tmp, AS), parse_idents_assignation_without_path)(s2) {
-                Ok((s, name)) => (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr)))))),
-                Err(err) => match err {
-                    Failure(err) => Err(Failure(err)),
-                    _ => Ok((s, expr)),
-                },
-            }
-        }
+        Ok((s2, tmp)) => match preceded(get_tag(tmp, AS), parse_idents_assignation)(s2) {
+            Ok((s, name)) => (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr)))))),
+            Err(err) => match err {
+                Failure(err) => Err(Failure(err)),
+                _ => Ok((s, expr)),
+            },
+        },
     }
 }

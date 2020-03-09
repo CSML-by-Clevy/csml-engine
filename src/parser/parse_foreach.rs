@@ -3,7 +3,7 @@ use crate::data::{
     tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
 };
 use crate::parser::operator::parse_operator;
-use crate::parser::parse_idents::parse_idents_assignation_without_path;
+use crate::parser::parse_idents::parse_idents_assignation;
 use crate::parser::{
     parse_comments::comment, parse_scope::parse_scope, tools::get_interval, State, StateContext,
 };
@@ -18,7 +18,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(COMMA))(s)?;
-    let (s, idents) = parse_idents_assignation_without_path(s)?;
+    let (s, idents) = parse_idents_assignation(s)?;
 
     Ok((s, idents))
 }
@@ -35,7 +35,7 @@ where
     let (s, start) = get_interval(s)?;
 
     let (s, _) = preceded(comment, tag(L_PAREN))(s)?;
-    let (s, idents) = parse_idents_assignation_without_path(s)?;
+    let (s, idents) = parse_idents_assignation(s)?;
     let (s, opt) = opt(pars_args)(s)?;
     let (s, _) = preceded(comment, tag(R_PAREN))(s)?;
 

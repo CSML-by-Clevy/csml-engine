@@ -5,11 +5,10 @@ use crate::data::{
 };
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::match_functions,
+    // ast_interpreter::match_functions,
     interpret_scope,
     variable_handler::{
-        gen_literal::gen_literal_form_expr, get_var, interval::interval_from_expr,
-        operations::evaluate,
+        expr_to_literal, get_var, interval::interval_from_expr, operations::evaluate,
     },
 };
 use std::sync::mpsc;
@@ -34,11 +33,13 @@ fn valid_condition(
 ) -> bool {
     match expr {
         Expr::LitExpr(literal) => valid_literal(Ok(literal.to_owned())),
-        Expr::IdentExpr(ident) => valid_literal(get_var(ident.to_owned(), data, root, sender)),
+        Expr::IdentExpr(ident) => {
+            valid_literal(get_var(ident.to_owned(), None, data, root, sender))
+        }
         Expr::InfixExpr(inf, exp_1, exp_2) => {
             valid_literal(evaluate_condition(inf, exp_1, exp_2, data, root, sender))
         }
-        value => valid_literal(match_functions(value, data, root, sender)),
+        value => valid_literal(expr_to_literal(value, None, data, root, sender)),
     }
 }
 
@@ -94,14 +95,14 @@ pub fn evaluate_condition(
 ) -> Result<Literal, ErrorInfo> {
     match (expr1, expr2) {
         (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => {
-            let value = !valid_literal(match_functions(exp_1, data, root, sender));
+            let value = !valid_literal(expr_to_literal(exp_1, None, data, root, sender));
             let interval = interval_from_expr(exp_1);
             Ok(PrimitiveBoolean::get_literal(value, interval))
         }
         (exp_1, exp_2) if check_if_ident(exp_1) && check_if_ident(exp_2) => evaluate(
             infix,
-            match_functions(exp_1, data, root, sender),
-            match_functions(exp_2, data, root, sender),
+            expr_to_literal(exp_1, None, data, root, sender),
+            expr_to_literal(exp_2, None, data, root, sender),
         ),
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate(
             infix,
@@ -111,11 +112,11 @@ pub fn evaluate_condition(
         (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data, root, sender),
-            gen_literal_form_expr(exp, data, root, sender),
+            expr_to_literal(exp, None, data, root, sender),
         ),
         (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
             infix,
-            gen_literal_form_expr(exp, data, root, sender),
+            expr_to_literal(exp, None, data, root, sender),
             evaluate_condition(i1, ex1, ex2, data, root, sender),
         ),
         (e1, _e2) => Err(ErrorInfo {

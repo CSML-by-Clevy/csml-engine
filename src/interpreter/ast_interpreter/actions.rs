@@ -4,9 +4,10 @@ use crate::data::{
 };
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::match_functions,
     interpret_scope,
-    variable_handler::{exec_path_actions, get_var_from_mem, interval::*, memory::*},
+    variable_handler::{
+        exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
+    },
 };
 use crate::parser::ExitCondition;
 
@@ -14,6 +15,7 @@ use std::sync::mpsc;
 
 fn get_var_info<'a>(
     expr: &'a Expr,
+    path: Option<&[(Interval, PathState)]>,
     data: &'a mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
@@ -27,12 +29,13 @@ fn get_var_info<'a>(
     ErrorInfo,
 > {
     match expr {
+        Expr::PathExpr { literal, path } => get_var_info(literal, Some(path), data, root, sender),
         Expr::IdentExpr(var) => match search_in_memory_type(var, data) {
-            Ok(_) => get_var_from_mem(var.to_owned(), data, root, sender),
+            Ok(_) => get_var_from_mem(var.to_owned(), path, data, root, sender),
             Err(_) => {
                 let lit = PrimitiveNull::get_literal(var.interval.to_owned());
                 data.step_vars.insert(var.ident.to_owned(), lit);
-                get_var_from_mem(var.to_owned(), data, root, sender)
+                get_var_from_mem(var.to_owned(), path, data, root, sender)
             }
         },
         e => Err(ErrorInfo {
@@ -51,17 +54,17 @@ pub fn match_actions(
 ) -> Result<MessageData, ErrorInfo> {
     match function {
         ObjectType::Say(arg) => {
-            let msg = Message::new(match_functions(arg, data, &mut root, sender)?);
+            let msg = Message::new(expr_to_literal(arg, None, data, &mut root, sender)?);
             send_msg(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(root, MessageType::Msg(msg)))
         }
         ObjectType::Use(arg) => {
-            match_functions(arg, data, &mut root, sender)?;
+            expr_to_literal(arg, None, data, &mut root, sender)?;
             Ok(root)
         }
         ObjectType::Do(DoType::Update(old, new)) => {
-            let new_value = match_functions(new, data, &mut root, sender)?;
-            let (lit, name, mem_type, path) = get_var_info(old, data, &mut root, sender)?;
+            let new_value = expr_to_literal(new, None, data, &mut root, sender)?;
+            let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut root, sender)?;
             exec_path_actions(lit, Some(new_value), &path, &mem_type)?;
             save_literal_in_mem(
                 lit.to_owned(),
@@ -76,7 +79,7 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Do(DoType::Exec(expr)) => {
-            match_functions(expr, data, &mut root, sender)?;
+            expr_to_literal(expr, None, data, &mut root, sender)?;
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
@@ -90,7 +93,7 @@ pub fn match_actions(
             Ok(root.add_next_flow(&flow_name.ident))
         }
         ObjectType::Remember(name, variable) => {
-            let lit = match_functions(variable, data, &mut root, sender)?;
+            let lit = expr_to_literal(variable, None, data, &mut root, sender)?;
             root.add_to_memory(&name.ident, lit.clone());
 
             send_msg(

@@ -1,5 +1,5 @@
 use crate::data::{ast::*, tokens::*};
-use crate::parser::parse_idents::parse_idents_assignation_without_path;
+use crate::parser::parse_idents::parse_idents_assignation;
 use crate::parser::tools::get_string;
 use crate::parser::tools::get_tag;
 use crate::parser::{parse_comments::comment, GotoType, StateContext};
@@ -49,7 +49,7 @@ where
 
     let (s, goto_type) = alt((get_step, get_flow, get_default))(s)?;
 
-    let (s, name) = match parse_idents_assignation_without_path(s) {
+    let (s, name) = match parse_idents_assignation(s) {
         Ok(vars) => vars,
         Err(Err::Error(err)) | Err(Err::Failure(err)) => {
             return Err(Err::Error(E::add_context(
