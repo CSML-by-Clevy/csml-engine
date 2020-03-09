@@ -61,14 +61,14 @@ lazy_static! {
             "to_lowercase",
             (
                 PrimitiveString::to_lowercase as PrimitiveMethod,
-                Right::Write,
+                Right::Read,
             ),
         );
         map.insert(
             "to_uppercase",
             (
                 PrimitiveString::to_uppercase as PrimitiveMethod,
-                Right::Write,
+                Right::Read,
             ),
         );
         map.insert(
@@ -296,9 +296,11 @@ impl PrimitiveString {
     ) -> Result<Literal, ErrorInfo> {
         check_usage(args, 0, "to_lowercase()", interval)?;
 
-        string.value.make_ascii_lowercase();
+        let mut s = string.value.to_owned();
 
-        Ok(PrimitiveNull::get_literal(interval))
+        s.make_ascii_lowercase();
+
+        Ok(PrimitiveString::get_literal(&s, interval))
     }
 
     fn to_uppercase(
@@ -308,9 +310,11 @@ impl PrimitiveString {
     ) -> Result<Literal, ErrorInfo> {
         check_usage(args, 0, "to_uppercase()", interval)?;
 
-        string.value.make_ascii_uppercase();
+        let mut s = string.value.to_owned();
 
-        Ok(PrimitiveNull::get_literal(interval))
+        s.make_ascii_uppercase();
+
+        Ok(PrimitiveString::get_literal(&s, interval))
     }
 
     fn contains(
