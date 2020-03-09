@@ -166,3 +166,69 @@ fn array_step_11() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn array_index_of_0() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"-1"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
+    let msg = format_message(gen_event(""), "array_index_of_0");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_index_of_1() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
+    let msg = format_message(gen_event(""), "array_index_of_1");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_index_of_2() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"2"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
+    let msg = format_message(gen_event(""), "array_index_of_2");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_find_0() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":null}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
+    let msg = format_message(gen_event(""), "array_find_0");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_find_1() {
+    let data = r#"{"memories":[], "messages":[{"content":[2, 2], "content_type":"array"}], "next_flow":null, "next_step":"end"}"#;
+    let msg = format_message(gen_event(""), "array_find_1");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_find_2() {
+    let data = r#"{"memories":[], "messages":[{"content":[{"obj":"42"}], "content_type":"array"}], "next_flow":null, "next_step":"end"}"#;
+    let msg = format_message(gen_event(""), "array_find_2");
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

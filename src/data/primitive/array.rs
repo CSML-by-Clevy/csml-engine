@@ -5,6 +5,7 @@ use crate::data::primitive::{
 use crate::data::{Interval, Literal, MemoryType, Message};
 use crate::error_format::ErrorInfo;
 use lazy_static::*;
+use rand::seq::SliceRandom;
 use rand::Rng;
 use serde_json::json;
 use std::cmp::Ordering;
@@ -72,6 +73,18 @@ lazy_static! {
         map.insert(
             "is_number",
             (PrimitiveArray::is_number as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "shuffle",
+            (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "index_of",
+            (PrimitiveArray::index_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "find",
+            (PrimitiveArray::find as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -337,6 +350,76 @@ impl PrimitiveArray {
         check_usage(args, 0, "is_number()", interval)?;
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
+    fn shuffle(
+        array: &mut PrimitiveArray,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "shuffle()", interval)?;
+
+        array.value.shuffle(&mut rand::thread_rng());
+
+        Ok(PrimitiveNull::get_literal(interval))
+    }
+
+    fn index_of(
+        array: &mut PrimitiveArray,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "index_of(Primitive<T>)", interval)?;
+
+        let args = match args.get(0) {
+            Some(res) => res,
+            None => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        for (index, literal) in array.value.iter().enumerate() {
+            if literal == args {
+                return Ok(PrimitiveInt::get_literal(index as i64, interval));
+            }
+        }
+
+        Ok(PrimitiveInt::get_literal(-1, interval))
+    }
+
+    fn find(
+        array: &mut PrimitiveArray,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "find(Primitive<T>)", interval)?;
+
+        let mut vector: Vec<Literal> = Vec::new();
+
+        let args = match args.get(0) {
+            Some(res) => res,
+            None => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        for literal in array.value.iter() {
+            if literal == args {
+                vector.push(literal.to_owned());
+            }
+        }
+
+        if vector.is_empty() {
+            return Ok(PrimitiveNull::get_literal(interval));
+        }
+
+        Ok(PrimitiveArray::get_literal(&vector, interval))
     }
 }
 
