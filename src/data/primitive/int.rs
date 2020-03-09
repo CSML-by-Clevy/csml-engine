@@ -116,9 +116,8 @@ impl PrimitiveInt {
 
         let result = int.value as f64;
         let result = result.cos();
-        let result = result as i64;
 
-        Ok(PrimitiveInt::get_literal(result, interval))
+        Ok(PrimitiveFloat::get_literal(result, interval))
     }
 
     fn pow(
@@ -211,9 +210,8 @@ impl PrimitiveInt {
 
         let result = int.value as f64;
         let result = result.sin();
-        let result = result as i64;
 
-        Ok(PrimitiveInt::get_literal(result, interval))
+        Ok(PrimitiveFloat::get_literal(result, interval))
     }
 
     fn sqrt(
@@ -225,9 +223,8 @@ impl PrimitiveInt {
 
         let result = int.value as f64;
         let result = result.sqrt();
-        let result = result as i64;
 
-        Ok(PrimitiveInt::get_literal(result, interval))
+        Ok(PrimitiveFloat::get_literal(result, interval))
     }
 
     fn tan(
@@ -239,9 +236,8 @@ impl PrimitiveInt {
 
         let result = int.value as f64;
         let result = result.tan();
-        let result = result as i64;
 
-        Ok(PrimitiveInt::get_literal(result, interval))
+        Ok(PrimitiveFloat::get_literal(result, interval))
     }
 
     fn is_number(

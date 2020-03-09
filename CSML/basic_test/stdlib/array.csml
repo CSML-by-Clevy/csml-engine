@@ -97,3 +97,45 @@ step_11:
     say vec.join(",")
 
     goto end
+
+array_index_of_0:
+    do vec = [1, 2]
+
+    say vec.index_of(3) // -1
+
+    goto end
+
+array_index_of_1:
+    do vec = [1, 2]
+
+    say vec.index_of(2) // 1
+
+    goto end
+
+array_index_of_2:
+    do vec = [1, 2, [1, 2]]
+
+    say vec.index_of([1, 2]) // 2
+
+    goto end
+
+array_find_0:
+    do vec = [1, 2]
+
+    say vec.find(3) // NULL
+
+    goto end
+
+array_find_1:
+    do vec = [1, 2, 3, 4, 5, 2]
+
+    say vec.find(2) // [2, 2]
+
+    goto end
+
+array_find_2:
+    do vec = [1, {"obj":"42"}, 2, [1, 2]]
+
+    say vec.find({"obj":"42"}) // [{"obj":"42"}]
+
+    goto end
