@@ -1,3 +1,8 @@
 start:
     say "Hello World"
+
+    use HTTP("https://clevy.io") as http
+
+    say http.to_string()
+
     goto end

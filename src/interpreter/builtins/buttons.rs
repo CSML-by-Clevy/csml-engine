@@ -4,11 +4,7 @@ use crate::error_format::ErrorInfo;
 use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
 
-pub fn button(
-    values: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn button(values: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut button: HashMap<String, Literal> = HashMap::new();
 
     let title = search_or_default(&values, "title", interval, None)?;

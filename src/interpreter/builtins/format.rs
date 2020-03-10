@@ -4,11 +4,7 @@ use crate::error_format::ErrorInfo;
 use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
 
-pub fn text(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn text(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
         Some(literal) => Ok(PrimitiveString::get_literal(
             &literal.primitive.to_string(),
@@ -26,11 +22,7 @@ pub fn object(object: HashMap<String, Literal>, interval: Interval) -> Result<Li
     Ok(PrimitiveObject::get_literal(&object, interval))
 }
 
-pub fn question(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn question(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut question: HashMap<String, Literal> = HashMap::new();
 
     let buttons = match args.get("buttons") {
@@ -59,11 +51,7 @@ pub fn question(
 }
 
 // TODO: check nbr elemts in built-ins
-pub fn typing(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn typing(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut typing: HashMap<String, Literal> = HashMap::new();
 
     match args.get(DEFAULT) {
@@ -87,11 +75,7 @@ pub fn typing(
     }
 }
 
-pub fn wait(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn wait(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut wait: HashMap<String, Literal> = HashMap::new();
 
     match args.get(DEFAULT) {
@@ -109,6 +93,31 @@ pub fn wait(
         _ => Err(ErrorInfo {
             message: "Builtin Wait expect one argument of type int or float | example: Wait(3)"
                 .to_owned(),
+            interval,
+        }),
+    }
+}
+
+pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let mut http: HashMap<String, Literal> = HashMap::new();
+
+    match args.get(DEFAULT) {
+        Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
+            let primitive_string = PrimitiveString::get_literal("get", interval);
+
+            http.insert("url".to_owned(), literal.to_owned());
+            http.insert("method".to_owned(), primitive_string);
+
+            let mut result = PrimitiveObject::get_literal(&http, interval);
+
+            result.set_content_type("http");
+
+            Ok(result)
+        }
+        _ => Err(ErrorInfo {
+            message:
+                "Builtin HTTP expect one url of type string | example: HTTP(\"https://clevy.io\")"
+                    .to_owned(),
             interval,
         }),
     }

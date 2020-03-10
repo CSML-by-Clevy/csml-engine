@@ -77,7 +77,7 @@ mod tests {
             PrimitiveString::get_literal(name, interval),
         );
 
-        match button(map, "button".to_owned(), interval) {
+        match button(map, interval) {
             Ok(lit) => lit,
             Err(..) => panic!("gen button error"),
         }
@@ -103,7 +103,7 @@ mod tests {
             ),
         );
 
-        match button(map, "button".to_owned(), interval) {
+        match button(map, interval) {
             Ok(lit) => lit,
             Err(..) => panic!("gen button error"),
         }

@@ -106,10 +106,11 @@ pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
 pub const OBJECT: &str = "Object";
 pub const FN: &str = "Fn";
+pub const HTTP: &str = "HTTP";
 
 pub static BUILT_IN: &[&str] = &[
     TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, VIDEO, AUDIO,
-    QUESTION, BUTTON, OBJECT, FN,
+    QUESTION, BUTTON, OBJECT, FN, HTTP,
 ];
 
 pub const MEMORY: &str = "memory";
