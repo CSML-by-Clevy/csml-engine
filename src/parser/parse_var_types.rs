@@ -1,4 +1,5 @@
 use crate::data::{ast::*, tokens::*};
+use crate::error_format::{gen_nom_failure, ERROR_RIGHT_BRACKET};
 use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,
@@ -16,7 +17,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{cut, opt},
-    error::{context, ParseError},
+    error::ParseError,
     multi::separated_list,
     sequence::{delimited, preceded, terminated, tuple},
     Err, IResult,
@@ -32,13 +33,8 @@ where
 {
     match tag(R_BRACKET)(s) {
         Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
-            let err = E::from_error_kind(input, err);
-            Err(Err::Failure(E::add_context(
-                input,
-                "RightBracketError",
-                err,
-            )))
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(gen_nom_failure(s, ERROR_RIGHT_BRACKET))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
@@ -89,21 +85,18 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, (vec, _)) = context(
-        "list",
-        preceded(
-            tag(L_PAREN),
-            cut(terminated(
-                tuple((
-                    separated_list(
-                        preceded(comment, tag(COMMA)),
-                        alt((parse_assignation_without_path, parse_operator)),
-                    ),
-                    opt(preceded(comment, tag(COMMA))),
-                )),
-                preceded(comment, parse_r_parentheses),
+    let (s, (vec, _)) = preceded(
+        tag(L_PAREN),
+        cut(terminated(
+            tuple((
+                separated_list(
+                    preceded(comment, tag(COMMA)),
+                    alt((parse_assignation_without_path, parse_operator)),
+                ),
+                opt(preceded(comment, tag(COMMA))),
             )),
-        ),
+            preceded(comment, parse_r_parentheses),
+        )),
     )(s)?;
     let (s, end) = get_interval(s)?;
 
@@ -115,18 +108,15 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, (vec, _)) = context(
-        "array",
-        preceded(
-            tag(L_BRACKET),
-            cut(terminated(
-                tuple((
-                    separated_list(preceded(comment, tag(COMMA)), parse_operator),
-                    opt(preceded(comment, tag(COMMA))),
-                )),
-                preceded(comment, parse_r_bracket),
+    let (s, (vec, _)) = preceded(
+        tag(L_BRACKET),
+        cut(terminated(
+            tuple((
+                separated_list(preceded(comment, tag(COMMA)), parse_operator),
+                opt(preceded(comment, tag(COMMA))),
             )),
-        ),
+            preceded(comment, parse_r_bracket),
+        )),
     )(s)?;
     let (s, end) = get_interval(s)?;
 

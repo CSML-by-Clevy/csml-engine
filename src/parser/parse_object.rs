@@ -1,6 +1,5 @@
 use crate::data::{ast::*, tokens::*};
 use crate::parser::operator::parse_operator::parse_operator;
-// ast::{Expr, RangeInterval},
 use crate::parser::{parse_comments::comment, tools::get_interval};
 
 use nom::{
@@ -29,7 +28,7 @@ where
     E: ParseError<Span<'a>>,
 {
     context(
-        "invalid string format",
+        "string must start with '\"' ",
         preceded(
             tag(DOUBLE_QUOTE),
             cut(terminated(parse_str, tag(DOUBLE_QUOTE))),

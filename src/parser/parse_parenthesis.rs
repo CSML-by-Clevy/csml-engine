@@ -1,5 +1,10 @@
 use crate::data::tokens::*;
-use nom::{bytes::complete::tag, error::ParseError, *};
+use crate::error_format::{gen_nom_failure, ERROR_PARENTHESES, ERROR_PARENTHESES_END};
+use nom::{
+    bytes::complete::tag,
+    error::ParseError,
+    *,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
@@ -11,13 +16,8 @@ where
 {
     match tag(L_PAREN)(s) {
         Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
-            let err = E::from_error_kind(input, err);
-            Err(Err::Failure(E::add_context(
-                input,
-                "list elem type ( ... ) not found",
-                err,
-            )))
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(gen_nom_failure(s, ERROR_PARENTHESES))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
@@ -29,13 +29,10 @@ where
 {
     match tag(R_PAREN)(s) {
         Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
-            let err = E::from_error_kind(input, err);
-            Err(Err::Failure(E::add_context(
-                input,
-                "Arguments inside parentheses bad format or ) missing",
-                err,
-            )))
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(
+                gen_nom_failure(s, ERROR_PARENTHESES_END)
+            )
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }

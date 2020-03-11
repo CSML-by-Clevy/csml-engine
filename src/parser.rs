@@ -22,14 +22,14 @@ use crate::parser::parse_idents::parse_idents_assignation;
 pub use state_context::{ExecutionState, ExitCondition, StateContext};
 
 use crate::data::{ast::*, tokens::*};
-use crate::error_format::{CustomError, ErrorInfo};
+use crate::error_format::{gen_nom_failure, CustomError, ErrorInfo, ERROR_PARSING};
 use crate::linter::Linter;
 use parse_comments::comment;
 use parse_scope::parse_root;
 use tools::*;
 
-use nom::error::{ErrorKind, ParseError};
-use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
+use nom::error::ParseError;
+use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
@@ -93,18 +93,7 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
 
     let (last, _) = comment(s)?;
     if !last.fragment().is_empty() {
-        let res: IResult<Span<'a>, Span<'a>, E> =
-            preceded(comment, alt((tag("ask"), tag("response"))))(last);
-
-        let error = match res {
-            Ok(_) => E::add_context(
-                last,
-                "use the new keyword hold to ask for user input https://docs.csml.dev/#hold",
-                E::from_error_kind(last, ErrorKind::Tag),
-            ),
-            _ => E::from_error_kind(last, ErrorKind::Tag),
-        };
-        Err(Err::Failure(error))
+        Err(gen_nom_failure(last, ERROR_PARSING))
     } else {
         Ok((s, (flow, flow_type)))
     }

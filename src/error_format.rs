@@ -1,61 +1,33 @@
 pub mod data;
 
-use crate::data::ast::Interval;
+use crate::data::{ast::Interval, tokens::Span};
+use nom::{
+    error::{ErrorKind, ParseError},
+    *,
+};
+
 pub use data::{CustomError, ErrorInfo};
 
-// pub fn get_error_message(error_code: ErrorKind, code_error: &[u8]) -> String {
-//     match error_code {
-//         ErrorKind::Custom(val) if val == ParserErrorType::StepDuplicateError as u32 => {
-//             "Step name already exists".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::AssignError as u32 => {
-//             "Missing as after remember statement".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::AsError as u32 => {
-//             "in as module (var as var_name)".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::NoAscii as u32 => {
-//             "non-ascii idents are not supported".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::GotoStepError as u32 => {
-//             "Missing label name after goto".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::AcceptError as u32 => {
-//             "Flow argument expect Accept identifier".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::LeftBraceError as u32 => {
-//             "Missing start of block { ".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::RightBraceError as u32 => {
-//             "Arguments inside brace bad format or brace missing".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::LeftParenthesesError as u32 => {
-//             "list elemt type ( ... ) not found".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::RightParenthesesError as u32 => {
-//             "Arguments inside parentheses bad format or ) missing".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::RightBracketError as u32 => {
-//             "Arguments inside parentheses bad format or ] missing".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::DoubleQuoteError as u32 => {
-//             "\" maybe missing".to_string()
-//         }
-//         ErrorKind::Custom(val) if val == ParserErrorType::DoubleBraceError as u32 => {
-//             "}} maybe missing".to_string()
-//         }
-//         ErrorKind::Eof => {
-//             let mut s: String = str::from_utf8(code_error)
-//                 .expect("error in from_utf8")
-//                 .to_owned();
-//             if let Some(val) = s.find('\n') {
-//                 s.truncate(val)
-//             };
-//             s.to_string()
-//         }
-//         e => e.description().to_owned(),
-//     }
-// }
+pub const ERROR_PARENTHESES: &'static str = "list elem type ( ... ) not found";
+pub const ERROR_PARENTHESES_END: &'static str = "invalid element expext ',' or ')'";
+pub const ERROR_NUMBER_AS_IDENT: &'static str = "int/float can't be used as identifier";
+pub const ERROR_RESERVED: &'static str = "reserved keyword can't be used as identifier";
+pub const ERROR_PARSING: &'static str =
+    "Bad keyword please use one of [say, do, if, ..] keywords to start an actoion";
+pub const ERROR_REMEMBER: &'static str = "Remember must be assigning to a variable via '=' or 'as': remember key = value || remember value as key";
+pub const ERROR_USE: &'static str =
+    "Use must be assigning to a variable via 'as': use value as key";
+pub const ERROR_BREAK: &'static str = "Break can only be used inside a foreach";
+pub const ERROR_HOLD: &'static str = "Hold cannot be used inside a foreach";
+pub const ERROR_LEFT_BRACE: &'static str = "expect '('";
+pub const ERROR_RIGHT_BRACE: &'static str = "expect ')'";
+// pub const ERROR_LEFT_BRACKET: &'static str = "expect '['";
+pub const ERROR_RIGHT_BRACKET: &'static str = "expect ']'";
+pub const ERROR_GOTO_STEP: &'static str = "missing step name after goto";
+pub const ERROR_IMPORT_STEP: &'static str = "missing step name after import";
+pub const ERROR_DOUBLE_QUOTE: &'static str = "expect '\"' to end string";
+
+// ]
 
 pub fn format_error<I>(
     interval: Interval,
@@ -66,4 +38,15 @@ pub fn format_error<I>(
     // ErrorInfo { interval, message }
     let message = error_code.error;
     ErrorInfo { interval, message }
+}
+
+pub fn gen_nom_failure<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>
+where
+    E: ParseError<Span<'a>>,
+{
+    Err::Failure(E::add_context(
+        span,
+        error,
+        E::from_error_kind(span, ErrorKind::Tag),
+    ))
 }
