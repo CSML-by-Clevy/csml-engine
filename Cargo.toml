@@ -15,11 +15,7 @@ documentation = "https://docs.rs/nom"
 description = """
 The CSML (Conversational Standard Meta Language) is a Domain-Specific Language developed for creating conversational experiences easily.
 """
-<<<<<<< HEAD
 keywords = ["chatbot", "interpreter", "language", "csml"]
-=======
-keywords = ["chatbot", "interpreter", "language"]
->>>>>>> dd5e11a863367497c19b973b2a71c3b76616cc79
 categories = ["text-processing"]
 edition = "2018"
 
