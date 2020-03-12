@@ -1,6 +1,6 @@
 use crate::data::{ast::*, tokens::*};
-use crate::linter::Linter;
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
+use crate::linter::Linter;
 use crate::parser::{
     parse_comments::comment, parse_idents::parse_idents_assignation, tools::get_interval,
     tools::get_string, tools::get_tag, GotoType, StateContext,

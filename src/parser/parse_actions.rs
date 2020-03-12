@@ -1,7 +1,5 @@
 use crate::data::{ast::*, tokens::*};
-use crate::error_format::{
-    gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE,
-};
+use crate::error_format::{gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
 use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,

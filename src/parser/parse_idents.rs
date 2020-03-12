@@ -5,12 +5,7 @@ use crate::parser::{
     tools::get_interval,
     tools::{get_string, get_tag},
 };
-use nom::{
-    error::{ParseError},
-    sequence::preceded,
-    Err::*,
-    *,
-};
+use nom::{error::ParseError, sequence::preceded, Err::*, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS

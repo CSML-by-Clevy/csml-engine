@@ -179,8 +179,7 @@ fn loop_path(
                 interval,
                 args,
             } => {
-                // TODO: change to args
-                // TODO: need to pass interval
+                // TODO: change args: Literal to args: Vec< Literal >
                 // TODO: Warning msg element is unmutable ?
                 let args = Literal::get_value::<Vec<Literal>>(&args.primitive)?;
                 let mut return_lit =
@@ -280,7 +279,18 @@ pub fn get_var(
                 );
                 Ok(new_literal)
             }
-            Err(_) => Ok(PrimitiveNull::get_literal(interval.to_owned())),
+            Err(_) => {
+                // if value does not exist in memory we create a null value and we apply all the path actions
+                let mut null = PrimitiveNull::get_literal(interval.to_owned());
+                let path = if let Some(p) = path {
+                    Some(resolve_path(p, data, root, sender)?)
+                } else {
+                    None
+                };
+                let (new_literal, ..) =
+                    exec_path_actions(&mut null, None, &path, &MemoryType::Use)?;
+                Ok(new_literal)
+            }
         },
     }
 }

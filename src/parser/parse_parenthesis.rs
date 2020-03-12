@@ -1,10 +1,6 @@
 use crate::data::tokens::*;
 use crate::error_format::{gen_nom_failure, ERROR_PARENTHESES, ERROR_PARENTHESES_END};
-use nom::{
-    bytes::complete::tag,
-    error::ParseError,
-    *,
-};
+use nom::{bytes::complete::tag, error::ParseError, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
@@ -30,9 +26,7 @@ where
     match tag(R_PAREN)(s) {
         Ok((rest, val)) => Ok((rest, val)),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
-            Err(
-                gen_nom_failure(s, ERROR_PARENTHESES_END)
-            )
+            Err(gen_nom_failure(s, ERROR_PARENTHESES_END))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }

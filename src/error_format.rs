@@ -9,12 +9,14 @@ use nom::{
 pub use data::{CustomError, ErrorInfo};
 
 pub const ERROR_PARENTHESES: &'static str = "list elem type ( ... ) not found";
-pub const ERROR_PARENTHESES_END: &'static str = "invalid argument expect one ',' between each argument or ')' to end the list";
+pub const ERROR_PARENTHESES_END: &'static str =
+    "invalid argument expect one ',' between each argument or ')' to end the list";
 pub const ERROR_NUMBER_AS_IDENT: &'static str = "int/float can't be used as identifier";
 pub const ERROR_RESERVED: &'static str = "reserved keyword can't be used as identifier";
 pub const ERROR_PARSING: &'static str =
     "invalid argument use one of [say, do, if, ..] keywords to start an action";
-pub const ERROR_REMEMBER: &'static str = "remember must be assigning to a variable via '=': remember key = value";
+pub const ERROR_REMEMBER: &'static str =
+    "remember must be assigning to a variable via '=': remember key = value";
 pub const ERROR_USE: &'static str =
     "use must be assigning to a variable via 'as': use value as key";
 pub const ERROR_BREAK: &'static str = "break can only be used inside a foreach";
