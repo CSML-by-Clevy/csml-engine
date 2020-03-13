@@ -60,6 +60,7 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
 
     let (s, interval) = get_interval(s)?;
 
+    // Linter and Context setup
     Linter::set_step(&Linter::get_flow(), &ident.ident, interval);
     StateContext::clear_rip();
 

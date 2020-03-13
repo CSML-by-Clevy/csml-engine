@@ -33,10 +33,19 @@ pub fn format_error<I>(
     error_code: CustomError<I>,
     _code_error: &[u8],
 ) -> ErrorInfo {
-    // let message = get_error_message(error_code, code_error);
-    // ErrorInfo { interval, message }
     let message = error_code.error;
     ErrorInfo { interval, message }
+}
+
+pub fn gen_nom_error<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>
+where
+    E: ParseError<Span<'a>>,
+{
+    Err::Error(E::add_context(
+        span,
+        error,
+        E::from_error_kind(span, ErrorKind::Tag),
+    ))
 }
 
 pub fn gen_nom_failure<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>

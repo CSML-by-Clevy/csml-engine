@@ -1,3 +1,8 @@
 start:
-    say "Hello World"
+    // say "Hello World"
+    // use 5 as plop
+    // do "toto" as val
+    remember val as test
+    // say test
+    // say Object(toto = 4)
     goto end
