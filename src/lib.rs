@@ -48,6 +48,7 @@ pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
             let mut error = Vec::new();
 
             linter(&mut error);
+            Linter::print_warnings();
 
             // TODO: tmp check until error handling
             match error.is_empty() {

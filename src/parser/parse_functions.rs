@@ -1,4 +1,5 @@
-use crate::data::{ast::*, tokens::*};
+use crate::data::{ast::*, tokens::*, warnings::WARNING_OBJECT};
+use crate::linter::Linter;
 use crate::parser::tools::get_string;
 use crate::parser::{parse_var_types::parse_expr_list, tools::get_interval};
 use nom::{error::*, IResult};
@@ -13,6 +14,10 @@ where
 {
     let (s, interval) = get_interval(s)?;
     let (s, name) = get_string(s)?;
+
+    if name == "Object" {
+        Linter::add_warning(WARNING_OBJECT);
+    }
 
     let (s, expr) = parse_expr_list(s)?;
 

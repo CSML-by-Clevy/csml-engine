@@ -1,5 +1,10 @@
-use crate::data::{ast::*, tokens::*};
+use crate::data::{
+    ast::*,
+    tokens::*,
+    warnings::{WARNING_REMEMBER_AS, WARNING_USE},
+};
 use crate::error_format::{gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
+use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,
@@ -50,6 +55,7 @@ fn parse_remember_as<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<E
 where
     E: ParseError<Span<'a>>,
 {
+    Linter::add_warning(WARNING_REMEMBER_AS);
     let (s, operator) = parse_operator(s)?;
     match operator {
         Expr::ObjectExpr(ObjectType::As(idents, expr)) => Ok((s, (idents, expr))),
@@ -141,10 +147,12 @@ where
     ))
 }
 
+//TODO: deprecat use
 fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
 {
+    Linter::add_warning(WARNING_USE);
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, USE)(s)?;
 

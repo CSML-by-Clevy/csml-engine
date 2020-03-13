@@ -1,5 +1,5 @@
 use crate::data::{ast::*, tokens::*};
-use crate::error_format::{gen_nom_failure, ERROR_NUMBER_AS_IDENT, ERROR_RESERVED};
+use crate::error_format::{gen_nom_error, ERROR_NUMBER_AS_IDENT, ERROR_RESERVED};
 use crate::parser::{
     parse_comments::comment,
     tools::get_interval,
@@ -25,11 +25,11 @@ where
     E: ParseError<Span<'a>>,
 {
     if reserved.contains(&&(*var.to_ascii_lowercase())) {
-        return Err(gen_nom_failure(s, ERROR_RESERVED));
+        return Err(gen_nom_error(s, ERROR_RESERVED));
     }
 
     if var.parse::<f64>().is_ok() {
-        return Err(gen_nom_failure(s, ERROR_NUMBER_AS_IDENT));
+        return Err(gen_nom_error(s, ERROR_NUMBER_AS_IDENT));
     }
 
     Ok((s, form_idents(var.to_owned(), interval)))
