@@ -15,6 +15,12 @@ pub struct Literal {
     pub interval: Interval,
 }
 
+pub enum ContentType {
+    Event(String),
+    Http,
+    Generics,
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +54,16 @@ impl Literal {
 
     pub fn set_content_type(&mut self, content_type: &str) {
         self.content_type = content_type.to_owned();
+    }
+}
+
+impl ContentType {
+    pub fn get(literal: &Literal) -> ContentType {
+        match literal.content_type.as_ref() {
+            "http" => ContentType::Http,
+            "event" => ContentType::Event(String::from("")),
+            _ => ContentType::Generics,
+        }
     }
 }
 

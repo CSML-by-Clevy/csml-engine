@@ -1,3 +1,4 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::float::PrimitiveFloat;
@@ -8,7 +9,7 @@ use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, memories::MemoryType, message::Message, Literal};
+use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::ErrorInfo;
 use lazy_static::*;
 use regex::Regex;
@@ -877,7 +878,7 @@ impl Primitive for PrimitiveString {
         name: &str,
         args: &[Literal],
         interval: Interval,
-        _mem_type: &MemoryType,
+        _content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
             let res = f(self, args, interval)?;

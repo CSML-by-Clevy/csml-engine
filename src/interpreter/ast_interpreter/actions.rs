@@ -10,7 +10,7 @@ use crate::interpreter::{
     },
 };
 use crate::parser::ExitCondition;
-
+use crate::data::literal::ContentType;
 use std::sync::mpsc;
 
 fn get_var_info<'a>(
@@ -65,7 +65,7 @@ pub fn match_actions(
         ObjectType::Do(DoType::Update(old, new)) => {
             let new_value = expr_to_literal(new, None, data, &mut root, sender)?;
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut root, sender)?;
-            exec_path_actions(lit, Some(new_value), &path, &mem_type)?;
+            exec_path_actions(lit, Some(new_value), &path, &ContentType::get(&lit))?;
             save_literal_in_mem(
                 lit.to_owned(),
                 name,
