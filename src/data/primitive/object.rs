@@ -358,12 +358,41 @@ impl PrimitiveObject {
     }
 
     fn patch(
-        _object: &mut PrimitiveObject,
-        _args: &[Literal],
-        _interval: Interval,
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        unimplemented!();
+        check_usage(args, 1, "patch(Primitive<Object>)", interval)?;
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "method".to_owned(),
+            PrimitiveString::get_literal("patch", interval),
+        );
+
+        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
+            Ok(header) => {
+                insert_to_object(header, &mut object, "body", literal);
+
+                Ok(PrimitiveObject::get_literal(&object.value, interval))
+            }
+            Err(_) => Err(ErrorInfo {
+                message: "usage: parameter of 'patch' must be a Primitive<Object>".to_owned(),
+                interval,
+            }),
+        }
     }
 
     fn send(
