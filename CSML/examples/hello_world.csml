@@ -1,3 +1,7 @@
 start:
-    say "Hello World"
+    // say "Hello World"
+    // goto end
+
+    do HTTP("https://jsonplaceholder.typicode.com/posts/1").send()
+
     goto end

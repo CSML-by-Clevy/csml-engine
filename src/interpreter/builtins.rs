@@ -2,6 +2,7 @@ pub mod api;
 pub mod buttons;
 pub mod format;
 pub mod functions;
+pub mod http;
 pub mod media;
 pub mod tools;
 

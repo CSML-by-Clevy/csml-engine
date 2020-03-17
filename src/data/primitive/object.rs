@@ -9,6 +9,11 @@ use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::ErrorInfo;
+use crate::interpreter::builtins::http::http_delete;
+use crate::interpreter::builtins::http::http_get;
+use crate::interpreter::builtins::http::http_patch;
+use crate::interpreter::builtins::http::http_post;
+use crate::interpreter::builtins::http::http_put;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -421,12 +426,34 @@ impl PrimitiveObject {
     }
 
     fn send(
-        _object: &mut PrimitiveObject,
-        _args: &[Literal],
-        _interval: Interval,
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        unimplemented!();
+        check_usage(args, 0, "send()", interval)?;
+
+        if let Some(literal) = object.value.get("method") {
+            if let Ok(method) = Literal::get_value::<String>(&literal.primitive) {
+                return match method.as_ref() {
+                    "get" => http_get(&object.value, interval),
+                    "delete" => http_delete(&object.value, interval),
+                    "put" => http_put(&object.value, interval),
+                    "patch" => http_patch(&object.value, interval),
+                    "post" => http_post(&object.value, interval),
+                    _ => {
+                        unreachable!();
+                    }
+                };
+            }
+        } else {
+            unreachable!();
+        }
+
+        Err(ErrorInfo {
+            message: "usage: parameter of 'patch' must be a Primitive<Object>".to_owned(),
+            interval,
+        })
     }
 }
 
