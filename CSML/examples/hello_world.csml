@@ -3,9 +3,8 @@
 //     goto end
 
 start:
-    remember http = HTTP("https://jsonplaceholder.typicode.com/posts/1")
+    use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
-    do http.set({
-        "hello":"world"}).set({"foo":"bar"}).get()
+    remember request = http.set({"hello":"world"}).post({"foo":"bar"})
 
     goto end
