@@ -5,6 +5,6 @@
 start:
     use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
-    remember request = http.set({"hello":"world"}).post({"foo":"bar"})
+    remember request = http.set({"hello":"world"}).put({"foo":"bar"})
 
     goto end
