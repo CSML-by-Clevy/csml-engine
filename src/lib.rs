@@ -34,7 +34,7 @@ pub fn execute_step(
         }
         _ => Err(ErrorInfo {
             interval: Interval { line: 0, column: 0 },
-            message: format!("Error: step {} not found", name),
+            message: format!("step {} not found", name),
         }),
     }
 }
@@ -76,8 +76,8 @@ pub fn interpret(
 
             return MessageData::error_to_message(
                 Err(ErrorInfo {
-                    message: format!("Error in parsing Flow: {:?}", e),
-                    interval: Interval { line: 0, column: 0 },
+                    message: format!("invalid Flow: {:?}", e.message),
+                    interval: e.interval,
                 }),
                 &sender,
             );

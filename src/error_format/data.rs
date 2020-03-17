@@ -25,9 +25,6 @@ impl<I> ParseError<I> for CustomError<I> {
         other.error = ctx.to_owned();
         other
     }
-
-    // trait ParseError
-    // https://docs.rs/nom/5.0.1/src/nom/error.rs.html#13-40
 }
 
 #[repr(u32)]
