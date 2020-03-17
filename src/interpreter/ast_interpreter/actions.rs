@@ -1,3 +1,4 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::null::PrimitiveNull;
 use crate::data::{
     ast::*, message::*, msg::send_msg, Data, Literal, Memories, MemoryType, MessageData, MSG,
@@ -10,7 +11,6 @@ use crate::interpreter::{
     },
 };
 use crate::parser::ExitCondition;
-use crate::data::literal::ContentType;
 use std::sync::mpsc;
 
 fn get_var_info<'a>(

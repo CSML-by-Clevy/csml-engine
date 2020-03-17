@@ -1,3 +1,4 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
 use crate::error_format::ErrorInfo;
@@ -10,7 +11,6 @@ use crate::interpreter::{
     },
 };
 use std::{collections::HashMap, sync::mpsc};
-use crate::data::literal::ContentType;
 
 fn exec_path_literal(
     literal: &mut Literal,
@@ -21,7 +21,8 @@ fn exec_path_literal(
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
         let path = resolve_path(path, data, root, sender)?;
-        let (new_literal, ..) = exec_path_actions(literal, None, &Some(path), &ContentType::get(&literal))?;
+        let (new_literal, ..) =
+            exec_path_actions(literal, None, &Some(path), &ContentType::get(&literal))?;
         Ok(new_literal)
     } else {
         Ok(literal.to_owned())

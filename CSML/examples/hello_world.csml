@@ -1,8 +1,11 @@
+// start:
+//     say "Hello World"
+//     goto end
+
 start:
-    say "Hello World"
+    remember http = HTTP("https://jsonplaceholder.typicode.com/posts/1")
 
-    use HTTP("https://clevy.io") as http
-
-    say http.to_string()
+    do http.set({
+        "hello":"world"}).set({"foo":"bar"}).get()
 
     goto end

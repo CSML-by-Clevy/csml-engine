@@ -100,13 +100,37 @@ pub fn wait(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
 
 pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut http: HashMap<String, Literal> = HashMap::new();
+    let mut header = HashMap::new();
 
     match args.get(DEFAULT) {
         Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
-            let primitive_string = PrimitiveString::get_literal("get", interval);
+            header.insert(
+                "content-type".to_owned(),
+                PrimitiveString::get_literal("application/json", interval),
+            );
+            header.insert(
+                "accept".to_owned(),
+                PrimitiveString::get_literal("application/json,text/*", interval),
+            );
 
             http.insert("url".to_owned(), literal.to_owned());
-            http.insert("method".to_owned(), primitive_string);
+            http.insert(
+                "method".to_owned(),
+                PrimitiveString::get_literal("get", interval),
+            );
+
+            http.insert(
+                "header".to_owned(),
+                PrimitiveObject::get_literal(&header, interval),
+            );
+            http.insert(
+                "query".to_owned(),
+                PrimitiveObject::get_literal(&HashMap::default(), interval),
+            );
+            http.insert(
+                "body".to_owned(),
+                PrimitiveObject::get_literal(&HashMap::default(), interval),
+            );
 
             let mut result = PrimitiveObject::get_literal(&http, interval);
 

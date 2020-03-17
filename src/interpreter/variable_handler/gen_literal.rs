@@ -1,3 +1,4 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{
     ast::{Expr, Identifier, Interval, PathState},
@@ -9,7 +10,6 @@ use crate::interpreter::{
     variable_handler::{exec_path_actions, resolve_path},
 };
 use std::sync::mpsc;
-use crate::data::literal::ContentType;
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {
     match expr {
@@ -42,12 +42,8 @@ pub fn gen_literal_form_event(
                 }
             };
 
-            let (lit, _tmp_mem_update) = exec_path_actions(
-                &mut lit,
-                None,
-                &Some(path),
-                &content_type,
-            )?;
+            let (lit, _tmp_mem_update) =
+                exec_path_actions(&mut lit, None, &Some(path), &content_type)?;
 
             Ok(lit)
         }

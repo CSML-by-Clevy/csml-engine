@@ -15,6 +15,7 @@ pub struct Literal {
     pub interval: Interval,
 }
 
+#[derive(Debug)]
 pub enum ContentType {
     Event(String),
     Http,

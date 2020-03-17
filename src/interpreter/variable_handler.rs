@@ -238,14 +238,10 @@ pub fn get_literal_form_metadata(
         }
         None => unreachable!(),
     };
-    
+
     let content_type = ContentType::get(&lit);
-    let (lit, _tmp_mem_update) = exec_path_actions(
-        &mut lit,
-        None,
-        &Some(path[1..].to_owned()),
-        &content_type,
-    )?;
+    let (lit, _tmp_mem_update) =
+        exec_path_actions(&mut lit, None, &Some(path[1..].to_owned()), &content_type)?;
     Ok(lit)
 }
 
@@ -271,7 +267,8 @@ pub fn get_var(
         },
         _ => match get_var_from_mem(var.to_owned(), path, data, root, sender) {
             Ok((lit, name, mem_type, path)) => {
-                let (new_literal, update_mem) = exec_path_actions(lit, None, &path, &ContentType::get(&lit))?;
+                let (new_literal, update_mem) =
+                    exec_path_actions(lit, None, &path, &ContentType::get(&lit))?;
                 save_literal_in_mem(
                     lit.to_owned(),
                     name,
