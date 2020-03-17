@@ -1,0 +1,56 @@
+start:
+	goto end
+
+http_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http
+
+get_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.get()
+
+	say http
+
+set_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.set({"hello":"world"})
+
+	say http
+
+query_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.query({"hello":"world"})
+
+	say http
+
+delete_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.delete()
+
+	say http
+
+put_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.put({"hello":"world"})
+
+	say http
+
+patch_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.patch({"hello":"world"})
+
+	say http
+
+post_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.post({"hello":"world"})
+
+	say http

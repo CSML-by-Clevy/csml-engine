@@ -200,7 +200,11 @@ impl PrimitiveObject {
             Ok(header) => {
                 insert_to_object(header, &mut object, "header", literal);
 
-                Ok(PrimitiveObject::get_literal(&object.value, interval))
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
             }
             Err(_) => Err(ErrorInfo {
                 message: "usage: parameter of 'set' must be a Primitive<Object>".to_owned(),
@@ -233,10 +237,11 @@ impl PrimitiveObject {
             Ok(header) => {
                 insert_to_object(header, &mut object, "query", literal);
 
-                Ok(PrimitiveObject::get_literal(
-                    &object.value.to_owned(),
-                    interval,
-                ))
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
             }
             Err(_) => Err(ErrorInfo {
                 message: "usage: parameter of 'query' must be a Primitive<Object>".to_owned(),
@@ -260,7 +265,11 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("get", interval),
         );
 
-        Ok(PrimitiveObject::get_literal(&object.value, interval))
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("http");
+
+        Ok(result)
     }
 
     fn post(
@@ -292,7 +301,11 @@ impl PrimitiveObject {
             Ok(header) => {
                 insert_to_object(header, &mut object, "body", literal);
 
-                Ok(PrimitiveObject::get_literal(&object.value, interval))
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
             }
             Err(_) => Err(ErrorInfo {
                 message: "usage: parameter of 'post' must be a Primitive<Object>".to_owned(),
@@ -330,7 +343,11 @@ impl PrimitiveObject {
             Ok(header) => {
                 insert_to_object(header, &mut object, "body", literal);
 
-                Ok(PrimitiveObject::get_literal(&object.value, interval))
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
             }
             Err(_) => Err(ErrorInfo {
                 message: "usage: parameter of 'put' must be a Primitive<Object>".to_owned(),
@@ -354,7 +371,11 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("delete", interval),
         );
 
-        Ok(PrimitiveObject::get_literal(&object.value, interval))
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("http");
+
+        Ok(result)
     }
 
     fn patch(
@@ -386,7 +407,11 @@ impl PrimitiveObject {
             Ok(header) => {
                 insert_to_object(header, &mut object, "body", literal);
 
-                Ok(PrimitiveObject::get_literal(&object.value, interval))
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
             }
             Err(_) => Err(ErrorInfo {
                 message: "usage: parameter of 'patch' must be a Primitive<Object>".to_owned(),

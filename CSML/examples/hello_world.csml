@@ -1,10 +1,3 @@
-// start:
-//     say "Hello World"
-//     goto end
-
 start:
-    use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
-
-    remember request = http.set({"hello":"world"}).patch({"foo":"bar"})
-
+    say "Hello World"
     goto end

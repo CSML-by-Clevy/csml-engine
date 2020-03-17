@@ -187,7 +187,8 @@ fn loop_path(
                 let mut return_lit =
                     lit.primitive
                         .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
-                let (lit_new, ..) = loop_path(&mut return_lit, None, path, content_type)?;
+                let content_type = ContentType::get(&return_lit);
+                let (lit_new, ..) = loop_path(&mut return_lit, None, path, &content_type)?;
                 return Ok((lit_new, tmp_update_var));
             }
         }
