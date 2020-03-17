@@ -10,7 +10,7 @@ use crate::error_format::ErrorInfo;
 use std::collections::HashMap;
 
 use api::api;
-use buttons::button;
+use buttons::*;
 use format::*;
 use functions::*;
 use media::*;
@@ -27,11 +27,12 @@ pub fn match_builtin(
         WAIT => wait(args, name.to_owned(), interval),
         URL => url(args, name.to_owned(), interval),
         IMAGE => img(args, name.to_owned(), interval),
-        QUESTION => question(args, name.to_owned(), interval),
         VIDEO => video(args, name.to_owned(), interval),
         AUDIO => audio(args, name.to_owned(), interval),
+        QUESTION => question(args, name.to_owned(), interval),
         BUTTON => button(args, name.to_owned(), interval),
-        OBJECT => object(args, interval),
+        CAROUSEL => carousel(args, name.to_owned(), interval),
+        CARD => card(args, name.to_owned(), interval),
 
         // DEFAULT
         FN => api(args, interval, data),
@@ -41,6 +42,10 @@ pub fn match_builtin(
         FIND => find(args, interval),
         RANDOM => random(interval),
         FLOOR => floor(args, interval),
+
+        //old builtin
+        OBJECT => object(args, interval),
+
         _ => text(args, name.to_owned(), interval),
     }
 }

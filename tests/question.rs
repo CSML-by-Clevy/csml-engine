@@ -20,10 +20,11 @@ fn ok_button() {
         "messages":[
             {
                 "content": {
-                    "accepts": ["hello"],
+                    "accepts": ["toto", "hello"],
                     "button_type": "quick_button",
                     "payload": "hello",
                     "title": "hello",
+                    "theme": "primary",
 
                     "content": {"payload": "hello", "title": "hello"},
                     "content_type": "button"
@@ -57,6 +58,7 @@ fn ok_question() {
                         "button_type": "quick_button",
                         "payload": "b1",
                         "title": "b1",
+                        "theme": "primary",
 
                         "content": {"payload": "b1", "title": "b1"},
                         "content_type": "button"
@@ -66,6 +68,7 @@ fn ok_question() {
                         "button_type": "quick_button",
                         "payload": "b2",
                         "title": "b2",
+                        "theme": "primary",
 
                         "content": {"payload": "b2", "title": "b2"},
                         "content_type": "button"
@@ -100,6 +103,7 @@ fn ok_question_step1() {
                         "button_type": "quick_button",
                         "payload": "b1",
                         "title": "b1",
+                        "theme": "primary",
 
                         "content": {"payload": "b1", "title": "b1"},
                         "content_type": "button"
@@ -109,6 +113,7 @@ fn ok_question_step1() {
                         "button_type": "quick_button",
                         "payload": "b2",
                         "title": "b2",
+                        "theme": "primary",
 
                         "content": {"payload": "b2", "title": "b2"},
                         "content_type": "button"
@@ -143,6 +148,7 @@ fn ok_question_step2() {
                         "button_type": "quick_button",
                         "payload": "b1",
                         "title": "b1",
+                        "theme": "primary",
 
                         "content": {"payload": "b1", "title": "b1"},
                         "content_type": "button"
@@ -152,6 +158,7 @@ fn ok_question_step2() {
                         "button_type": "quick_button",
                         "payload": "b2",
                         "title": "b2",
+                        "theme": "primary",
 
                         "content": {"payload": "b2", "title": "b2"},
                         "content_type": "button"

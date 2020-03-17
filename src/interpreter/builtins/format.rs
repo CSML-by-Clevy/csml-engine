@@ -22,42 +22,6 @@ pub fn text(
     }
 }
 
-pub fn object(object: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    Ok(PrimitiveObject::get_literal(&object, interval))
-}
-
-pub fn question(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    let mut question: HashMap<String, Literal> = HashMap::new();
-
-    let buttons = match args.get("buttons") {
-        Some(literal) => literal.to_owned(),
-        _ => {
-            return Err(ErrorInfo {
-            message: "argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]".to_owned(),
-            interval,
-            })
-        }
-    };
-
-    let accepts = accepts_from_buttons(&buttons);
-
-    if let Ok(title) = search_or_default(&args, "title", interval, None) {
-        question.insert("title".to_owned(), title);
-    }
-
-    question.insert("accepts".to_owned(), accepts);
-    question.insert("buttons".to_owned(), buttons);
-
-    let mut result = PrimitiveObject::get_literal(&question, interval);
-    result.set_content_type("question");
-
-    Ok(result)
-}
-
 // TODO: check nbr elemts in built-ins
 pub fn typing(
     args: HashMap<String, Literal>,
@@ -112,4 +76,70 @@ pub fn wait(
             interval,
         }),
     }
+}
+
+// TODO: old builtin need to rm this whene no one use itold built in need to rm this when no one use it
+pub fn object(object: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    Ok(PrimitiveObject::get_literal(&object, interval))
+}
+
+pub fn question(
+    args: HashMap<String, Literal>,
+    _name: String,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    let mut question: HashMap<String, Literal> = HashMap::new();
+
+    let buttons = match args.get("buttons") {
+        Some(literal) => literal.to_owned(),
+        _ => {
+            return Err(ErrorInfo {
+            message: "argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]".to_owned(),
+            interval,
+            })
+        }
+    };
+
+    let accepts = accepts_from_buttons(&buttons);
+
+    if let Ok(title) = search_or_default(&args, "title", interval, None) {
+        question.insert("title".to_owned(), title);
+    }
+
+    question.insert("accepts".to_owned(), accepts);
+    question.insert("buttons".to_owned(), buttons);
+
+    let mut result = PrimitiveObject::get_literal(&question, interval);
+    result.set_content_type("question");
+
+    Ok(result)
+}
+
+pub fn carousel(
+    args: HashMap<String, Literal>,
+    _name: String,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    let mut carousel: HashMap<String, Literal> = HashMap::new();
+
+    let cards = match args.get("cards") {
+        Some(literal) => literal.to_owned(),
+        _ => return Err(ErrorInfo {
+            message:
+                "argument buttons in Builtin Carousel need to be of type Array of Cards Component"
+                    .to_owned(),
+            interval,
+        }),
+    };
+
+    if let Some(literal) = args.get("metadata") {
+        carousel.insert("metadata".to_owned(), literal.to_owned());
+    }
+
+    carousel.insert("cards".to_owned(), cards);
+
+    let mut result = PrimitiveObject::get_literal(&carousel, interval);
+    result.set_content_type("carousel");
+
+    Ok(result)
 }

@@ -104,12 +104,15 @@ pub const AUDIO: &str = "Audio";
 
 pub const QUESTION: &str = "Question";
 pub const BUTTON: &str = "Button";
-pub const OBJECT: &str = "Object";
+pub const CAROUSEL: &str = "Carousel";
+pub const CARD: &str = "Card";
 pub const FN: &str = "Fn";
+
+pub const OBJECT: &str = "Object";
 
 pub static BUILT_IN: &[&str] = &[
     TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, VIDEO, AUDIO,
-    QUESTION, BUTTON, OBJECT, FN,
+    QUESTION, BUTTON, CAROUSEL, CARD, FN, OBJECT,
 ];
 
 pub const MEMORY: &str = "memory";

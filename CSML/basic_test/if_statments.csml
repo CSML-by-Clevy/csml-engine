@@ -36,7 +36,7 @@ step3:
     goto end
 
 step4:
-  use "hola quoi que tal ?" as plop
+  do plop = "hola quoi que tal ?"
   if ( Find("quoi", in = plop ) ) {
     say "quoi"
   }

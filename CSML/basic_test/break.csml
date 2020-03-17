@@ -1,5 +1,5 @@
 start:
-    use ["Hello", "World"] as array
+    do array = ["Hello", "World"]
     foreach (s, index) in array {
             say s
 	    break
@@ -7,7 +7,7 @@ start:
     goto end
 
 break_test_0:
-    use ["Hello", "World"] as array
+    do array = ["Hello", "World"]
     foreach (s) in array {
         say s
         foreach (s) in array {
@@ -17,7 +17,7 @@ break_test_0:
     goto end
 
 break_test_1:
-    use ["Hello", "World"] as array
+    do array = ["Hello", "World"]
     foreach (s, index) in array {
         say s
         foreach (s, index) in array {
@@ -30,7 +30,7 @@ break_test_1:
     goto end
 
 break_test_2:
-    use ["Hello", "World"] as array
+    do array = ["Hello", "World"]
     foreach (s, index) in array {
         foreach (s, index) in array {
             say s
@@ -42,7 +42,7 @@ break_test_2:
     goto end
 
 break_test_3:
-    use ["Hello", "World"] as array
+    do array = ["Hello", "World"]
     foreach (s) in array {
         say s
         goto end
