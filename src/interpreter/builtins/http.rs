@@ -1,5 +1,6 @@
 use crate::data::{ast::Interval, Literal};
 use crate::error_format::data::ErrorInfo;
+use crate::interpreter::json_to_rust::json_to_literal;
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,18 +25,55 @@ fn get_value<'lifetime, T: 'static>(
     }
 }
 
+fn get_url(object: &HashMap<String, Literal>, interval: Interval) -> Result<String, ErrorInfo> {
+    let url = &mut get_value::<String>("url", object, interval)?.to_owned();
+    let query = get_value::<HashMap<String, Literal>>("query", object, interval)?;
+
+    if !query.is_empty() {
+        let length = query.len();
+
+        url.push_str("?");
+
+        for (index, key) in query.keys().enumerate() {
+            let value = get_value::<String>(key, query, interval)?;
+
+            url.push_str(key);
+            url.push_str("=");
+            url.push_str(value);
+
+            if index + 1 < length {
+                url.push_str("&");
+            }
+        }
+    }
+
+    Ok(url.to_owned())
+}
+
+fn serialize(object: &HashMap<String, Literal>) -> serde_json::Value {
+    let mut json: serde_json::map::Map<String, serde_json::Value> = serde_json::map::Map::new();
+
+    for (key, literal) in object.iter() {
+        json.insert(key.to_owned(), literal.primitive.to_json());
+    }
+
+    serde_json::Value::Object(json)
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn http_get(
+pub fn http_request(
     object: &HashMap<String, Literal>,
+    function: fn(&str) -> ureq::Request,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
-    let url = get_value::<String>("url", object, interval)?;
+    let url = get_url(object, interval)?;
     let header = get_value::<HashMap<String, Literal>>("header", object, interval)?;
+    let body = get_value::<HashMap<String, Literal>>("body", object, interval)?;
 
-    let mut request = ureq::get(url);
+    let mut request = function(&url);
 
     for key in header.keys() {
         let value = get_value::<String>(key, header, interval)?;
@@ -43,38 +81,15 @@ pub fn http_get(
         request.set(key, value);
     }
 
-    let response = request.call();
+    let response = request.send_json(serialize(body));
+    let status = response.status();
+    let body = response.into_json();
 
-    println!("status: {:#?}", response.status());
-    println!("body: {:#?}", response.into_json().unwrap());
-
-    unimplemented!();
-}
-
-pub fn http_delete(
-    object: &HashMap<String, Literal>,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    unimplemented!();
-}
-
-pub fn http_put(
-    object: &HashMap<String, Literal>,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    unimplemented!();
-}
-
-pub fn http_patch(
-    object: &HashMap<String, Literal>,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    unimplemented!();
-}
-
-pub fn http_post(
-    object: &HashMap<String, Literal>,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
-    unimplemented!();
+    match body {
+        Ok(value) => json_to_literal(&value, interval),
+        Err(_) => Err(ErrorInfo {
+            message: format!("error {}: failed to read response as JSON", status),
+            interval,
+        }),
+    }
 }

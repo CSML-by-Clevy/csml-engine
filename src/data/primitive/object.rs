@@ -9,11 +9,7 @@ use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::ErrorInfo;
-use crate::interpreter::builtins::http::http_delete;
-use crate::interpreter::builtins::http::http_get;
-use crate::interpreter::builtins::http::http_patch;
-use crate::interpreter::builtins::http::http_post;
-use crate::interpreter::builtins::http::http_put;
+use crate::interpreter::builtins::http::http_request;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -434,20 +430,23 @@ impl PrimitiveObject {
         check_usage(args, 0, "send()", interval)?;
 
         if let Some(literal) = object.value.get("method") {
-            if let Ok(method) = Literal::get_value::<String>(&literal.primitive) {
-                return match method.as_ref() {
-                    "get" => http_get(&object.value, interval),
-                    "delete" => http_delete(&object.value, interval),
-                    "put" => http_put(&object.value, interval),
-                    "patch" => http_patch(&object.value, interval),
-                    "post" => http_post(&object.value, interval),
-                    _ => {
-                        unreachable!();
-                    }
-                };
-            }
-        } else {
-            unreachable!();
+            let method = Literal::get_value::<String>(&literal.primitive)?;
+
+            let function = match method.as_ref() {
+                "delete" => ureq::delete,
+                "put" => ureq::put,
+                "patch" => ureq::patch,
+                "post" => ureq::post,
+                "get" => ureq::get,
+                _ => {
+                    return Err(ErrorInfo {
+                        message: format!("error: unknow http request {}", method),
+                        interval,
+                    });
+                }
+            };
+
+            return http_request(&object.value, function, interval);
         }
 
         Err(ErrorInfo {
