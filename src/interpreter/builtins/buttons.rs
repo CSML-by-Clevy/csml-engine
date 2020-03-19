@@ -33,7 +33,7 @@ pub fn button(
         None => {
             button.insert(
                 "theme".to_owned(),
-                PrimitiveString::get_literal("primary", interval)
+                PrimitiveString::get_literal("primary", interval),
             );
         }
     };
@@ -42,7 +42,7 @@ pub fn button(
         button.insert("icon".to_owned(), icon.to_owned());
     }
 
-    if let Ok(payload) =  search_or_default(&args, "payload", interval, None) {
+    if let Ok(payload) = search_or_default(&args, "payload", interval, None) {
         button.insert("payload".to_owned(), payload.to_owned());
     }
 
@@ -63,7 +63,6 @@ pub fn card(
 
     card.insert("subtitle".to_owned(), subtitle.to_owned());
 
-    
     match args.get("buttons") {
         Some(buttons) => card.insert("buttons".to_owned(), buttons.to_owned()),
         _ => {
@@ -73,7 +72,7 @@ pub fn card(
             })
         }
     };
-    
+
     if let Some(image_url) = args.get("image_url") {
         card.insert("image_url".to_owned(), image_url.to_owned());
     }

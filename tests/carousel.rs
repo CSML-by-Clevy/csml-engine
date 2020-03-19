@@ -52,7 +52,7 @@ fn ok_card() {
 }
 
 #[test]
-fn ok_carousel_step1() {
+fn ok_carousel() {
     let data = r#"
     {"messages":
         [ {
@@ -89,7 +89,7 @@ fn ok_carousel_step1() {
     assert_eq!(v1, v2)
 }
 #[test]
-fn ok_carousel() {
+fn ok_carousel_step1() {
     let data = r#"
     {"messages":
         [ {
