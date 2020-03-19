@@ -1,8 +1,9 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::{
     tools::check_usage, Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
     PrimitiveType, Right,
 };
-use crate::data::{Interval, Literal, MemoryType, Message};
+use crate::data::{Interval, Literal, Message};
 use crate::error_format::ErrorInfo;
 use lazy_static::*;
 use rand::seq::SliceRandom;
@@ -451,7 +452,7 @@ impl Primitive for PrimitiveArray {
         name: &str,
         args: &[Literal],
         interval: Interval,
-        _mem_type: &MemoryType,
+        _content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
             let res = f(self, args, interval)?;

@@ -1,3 +1,4 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::int::PrimitiveInt;
 use crate::data::primitive::object::PrimitiveObject;
@@ -6,7 +7,7 @@ use crate::data::primitive::tools::check_division_by_zero_f64;
 use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, memories::MemoryType, message::Message, Literal};
+use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::ErrorInfo;
 use lazy_static::*;
 use std::cmp::Ordering;
@@ -290,7 +291,7 @@ impl Primitive for PrimitiveFloat {
         name: &str,
         args: &[Literal],
         interval: Interval,
-        _mem_type: &MemoryType,
+        _content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
             let res = f(self, args, interval)?;

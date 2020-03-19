@@ -5,6 +5,7 @@ pub mod match_literals;
 pub mod memory;
 pub mod operations;
 
+use crate::data::literal::ContentType;
 pub use expr_to_literal::expr_to_literal;
 
 use crate::data::primitive::{
@@ -133,7 +134,7 @@ fn loop_path(
     mut lit: &mut Literal,
     new: Option<Literal>,
     path: &mut Iter<(Interval, PathLiteral)>,
-    mem_type: &MemoryType,
+    content_type: &ContentType,
 ) -> Result<(Literal, bool), ErrorInfo> {
     let mut tmp_update_var = false;
     while let Some((interval, action)) = path.next() {
@@ -158,7 +159,7 @@ fn loop_path(
                         "insert",
                         &args,
                         interval.to_owned(),
-                        mem_type,
+                        content_type,
                         &mut false,
                     )?;
                     return Ok((lit.to_owned(), true));
@@ -185,8 +186,9 @@ fn loop_path(
                 let args = Literal::get_value::<Vec<Literal>>(&args.primitive)?;
                 let mut return_lit =
                     lit.primitive
-                        .exec(name, args, *interval, mem_type, &mut tmp_update_var)?;
-                let (lit_new, ..) = loop_path(&mut return_lit, None, path, mem_type)?;
+                        .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
+                let content_type = ContentType::get(&return_lit);
+                let (lit_new, ..) = loop_path(&mut return_lit, None, path, &content_type)?;
                 return Ok((lit_new, tmp_update_var));
             }
         }
@@ -203,11 +205,11 @@ pub fn exec_path_actions(
     lit: &mut Literal,
     new: Option<Literal>,
     path: &Option<Vec<(Interval, PathLiteral)>>,
-    mem_type: &MemoryType,
+    content_type: &ContentType,
 ) -> Result<(Literal, bool), ErrorInfo> {
     if let Some(vec) = path {
         let mut path = vec.iter();
-        let (return_lit, update) = loop_path(lit, new, &mut path, mem_type)?;
+        let (return_lit, update) = loop_path(lit, new, &mut path, content_type)?;
 
         Ok((return_lit, update))
     } else {
@@ -237,12 +239,10 @@ pub fn get_literal_form_metadata(
         }
         None => unreachable!(),
     };
-    let (lit, _tmp_mem_update) = exec_path_actions(
-        &mut lit,
-        None,
-        &Some(path[1..].to_owned()),
-        &MemoryType::Metadata,
-    )?;
+
+    let content_type = ContentType::get(&lit);
+    let (lit, _tmp_mem_update) =
+        exec_path_actions(&mut lit, None, &Some(path[1..].to_owned()), &content_type)?;
     Ok(lit)
 }
 
@@ -268,7 +268,8 @@ pub fn get_var(
         },
         _ => match get_var_from_mem(var.to_owned(), path, data, root, sender) {
             Ok((lit, name, mem_type, path)) => {
-                let (new_literal, update_mem) = exec_path_actions(lit, None, &path, &mem_type)?;
+                let (new_literal, update_mem) =
+                    exec_path_actions(lit, None, &path, &ContentType::get(&lit))?;
                 save_literal_in_mem(
                     lit.to_owned(),
                     name,

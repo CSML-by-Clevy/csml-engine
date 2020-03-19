@@ -4,11 +4,7 @@ use crate::error_format::ErrorInfo;
 use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
 
-pub fn url(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn url(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut url: HashMap<String, Literal> = HashMap::new();
 
     match &search_or_default(&args, "url", interval, None) {
@@ -35,11 +31,7 @@ pub fn url(
     }
 }
 
-pub fn img(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn img(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut img: HashMap<String, Literal> = HashMap::new();
 
     match &search_or_default(&args, "url", interval, None) {
@@ -59,11 +51,7 @@ pub fn img(
     }
 }
 
-pub fn video(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn video(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut video: HashMap<String, Literal> = HashMap::new();
 
     match &search_or_default(&args, "url", interval, None) {
@@ -89,11 +77,7 @@ pub fn video(
     }
 }
 
-pub fn audio(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn audio(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut audio: HashMap<String, Literal> = HashMap::new();
 
     match &search_or_default(&args, "url", interval, None) {

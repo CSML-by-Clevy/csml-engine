@@ -1,5 +1,6 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
-use crate::data::{ast::*, tokens::*, Data, Literal, MemoryType, MessageData, MSG};
+use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
@@ -20,7 +21,8 @@ fn exec_path_literal(
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
         let path = resolve_path(path, data, root, sender)?;
-        let (new_literal, ..) = exec_path_actions(literal, None, &Some(path), &MemoryType::Use)?;
+        let (new_literal, ..) =
+            exec_path_actions(literal, None, &Some(path), &ContentType::get(&literal))?;
         Ok(new_literal)
     } else {
         Ok(literal.to_owned())

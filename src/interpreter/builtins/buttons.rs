@@ -4,11 +4,7 @@ use crate::error_format::ErrorInfo;
 use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
 
-pub fn button(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn button(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut button: HashMap<String, Literal> = HashMap::new();
 
     let title = search_or_default(&args, "title", interval, None)?;
@@ -52,11 +48,7 @@ pub fn button(
     Ok(result)
 }
 
-pub fn card(
-    args: HashMap<String, Literal>,
-    _name: String,
-    interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+pub fn card(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut card: HashMap<String, Literal> = HashMap::new();
 
     let subtitle = search_or_default(&args, "subtitle", interval, None)?;

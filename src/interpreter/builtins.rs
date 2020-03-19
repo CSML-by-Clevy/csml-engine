@@ -2,6 +2,7 @@ pub mod api;
 pub mod buttons;
 pub mod format;
 pub mod functions;
+pub mod http;
 pub mod media;
 pub mod tools;
 
@@ -23,16 +24,17 @@ pub fn match_builtin(
 ) -> Result<Literal, ErrorInfo> {
     match name {
         // CUSTOM
-        TYPING => typing(args, name.to_owned(), interval),
-        WAIT => wait(args, name.to_owned(), interval),
-        URL => url(args, name.to_owned(), interval),
-        IMAGE => img(args, name.to_owned(), interval),
-        VIDEO => video(args, name.to_owned(), interval),
-        AUDIO => audio(args, name.to_owned(), interval),
-        QUESTION => question(args, name.to_owned(), interval),
-        BUTTON => button(args, name.to_owned(), interval),
-        CAROUSEL => carousel(args, name.to_owned(), interval),
-        CARD => card(args, name.to_owned(), interval),
+        TYPING => typing(args, interval),
+        WAIT => wait(args, interval),
+        URL => url(args, interval),
+        IMAGE => img(args, interval),
+        QUESTION => question(args, interval),
+        VIDEO => video(args, interval),
+        AUDIO => audio(args, interval),
+        BUTTON => button(args, interval),
+        CAROUSEL => carousel(args, interval),
+        CARD => card(args, interval),
+        HTTP => http(args, interval),
 
         // DEFAULT
         FN => api(args, interval, data),
@@ -46,6 +48,6 @@ pub fn match_builtin(
         //old builtin
         OBJECT => object(args, interval),
 
-        _ => text(args, name.to_owned(), interval),
+        _ => text(args, interval),
     }
 }
