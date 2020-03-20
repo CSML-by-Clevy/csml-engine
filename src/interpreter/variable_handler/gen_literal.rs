@@ -1,7 +1,8 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{
     ast::{Expr, Identifier, Interval, PathState},
-    Data, Literal, MemoryType, MessageData, MSG,
+    Data, Literal, MessageData, MSG,
 };
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
@@ -28,12 +29,22 @@ pub fn gen_literal_form_event(
         Some(path) => {
             let path = resolve_path(path, data, root, sender)?;
             let mut lit = json_to_literal(&data.event.metadata, interval.to_owned())?;
-            let (lit, _tmp_mem_update) = exec_path_actions(
-                &mut lit,
-                None,
-                &Some(path),
-                &MemoryType::Event(data.event.content_type.to_owned()),
-            )?;
+
+            lit.set_content_type("event");
+
+            let content_type = match ContentType::get(&lit) {
+                ContentType::Event(_) => ContentType::Event(data.event.content_type.to_owned()),
+                _ => {
+                    return Err(ErrorInfo {
+                        message: "error: event can only be of ContentType::Event".to_owned(),
+                        interval: interval.to_owned(),
+                    })
+                }
+            };
+
+            let (lit, _tmp_mem_update) =
+                exec_path_actions(&mut lit, None, &Some(path), &content_type)?;
+
             Ok(lit)
         }
         None => Ok(PrimitiveString::get_literal(

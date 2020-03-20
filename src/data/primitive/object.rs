@@ -1,3 +1,4 @@
+use crate::data::literal::ContentType;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::int::PrimitiveInt;
@@ -6,8 +7,9 @@ use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, memories::MemoryType, message::Message, Literal};
+use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::ErrorInfo;
+use crate::interpreter::builtins::http::http_request;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -16,12 +18,48 @@ use std::collections::HashMap;
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-type PrimitiveMethod = fn(
-    object: &mut PrimitiveObject,
-    args: &[Literal],
-    interval: Interval,
-    content_type: &str,
-) -> Result<Literal, ErrorInfo>;
+lazy_static! {
+    static ref FUNCTIONS_HTTP: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+
+        map.insert(
+            "set",
+            (PrimitiveObject::set as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "query",
+            (PrimitiveObject::query as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "get",
+            (PrimitiveObject::get as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "post",
+            (PrimitiveObject::post as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "put",
+            (PrimitiveObject::put as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "delete",
+            (PrimitiveObject::delete as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "patch",
+            (PrimitiveObject::patch as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "send",
+            (PrimitiveObject::send as PrimitiveMethod, Right::Read),
+        );
+
+        map
+    };
+}
 
 lazy_static! {
     static ref FUNCTIONS_EVENT: HashMap<&'static str, (PrimitiveMethod, Right)> = {
@@ -39,34 +77,6 @@ lazy_static! {
             ),
         );
         map.insert(
-            "type_of",
-            (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "contains",
-            (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_empty",
-            (PrimitiveObject::is_empty as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "length",
-            (PrimitiveObject::length as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "keys",
-            (PrimitiveObject::keys as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "values",
-            (PrimitiveObject::values as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
             "is_number",
             (
                 PrimitiveObject::is_number_event as PrimitiveMethod,
@@ -79,7 +89,7 @@ lazy_static! {
 }
 
 lazy_static! {
-    static ref FUNCTIONS_LIB: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+    static ref FUNCTIONS_READ: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
         map.insert(
@@ -91,27 +101,8 @@ lazy_static! {
             (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
         );
         map.insert(
-            "clear",
-            (PrimitiveObject::clear as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "clear_values",
-            (
-                PrimitiveObject::clear_values as PrimitiveMethod,
-                Right::Write,
-            ),
-        );
-        map.insert(
             "contains",
             (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "insert",
-            (PrimitiveObject::insert as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "remove",
-            (PrimitiveObject::remove as PrimitiveMethod, Right::Write),
         );
         map.insert(
             "is_empty",
@@ -132,7 +123,7 @@ lazy_static! {
         map.insert(
             "is_number",
             (
-                PrimitiveObject::is_number_object as PrimitiveMethod,
+                PrimitiveObject::is_number_generics as PrimitiveMethod,
                 Right::Read,
             ),
         );
@@ -141,28 +132,375 @@ lazy_static! {
     };
 }
 
+lazy_static! {
+    static ref FUNCTIONS_WRITE: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+
+        map.insert(
+            "clear",
+            (PrimitiveObject::clear as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "clear_values",
+            (
+                PrimitiveObject::clear_values as PrimitiveMethod,
+                Right::Write,
+            ),
+        );
+        map.insert(
+            "insert",
+            (PrimitiveObject::insert as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "remove",
+            (PrimitiveObject::remove as PrimitiveMethod, Right::Write),
+        );
+
+        map
+    };
+}
+
+type PrimitiveMethod = fn(
+    object: &mut PrimitiveObject,
+    args: &[Literal],
+    interval: Interval,
+    content_type: &str,
+) -> Result<Literal, ErrorInfo>;
+
 #[derive(PartialEq, Debug, Clone)]
 pub struct PrimitiveObject {
     pub value: HashMap<String, Literal>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// PRIVATE FUNCTION
+// METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn get_key(literal: &Literal, interval: Interval) -> Result<String, ErrorInfo> {
-    match literal.primitive.get_type() {
-        PrimitiveType::PrimitiveString => Ok(literal.primitive.to_string()),
-        _ => Err(ErrorInfo {
-            message: "usage: key must be of type string".to_owned(),
+impl PrimitiveObject {
+    fn set(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "set(Primitive<Object>)", interval)?;
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
+            Ok(header) => {
+                insert_to_object(header, &mut object, "header", literal);
+
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
+            }
+            Err(_) => Err(ErrorInfo {
+                message: "usage: parameter of 'set' must be a Primitive<Object>".to_owned(),
+                interval,
+            }),
+        }
+    }
+
+    fn query(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "query(Primitive<Object>)", interval)?;
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
+            Ok(header) => {
+                insert_to_object(header, &mut object, "query", literal);
+
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
+            }
+            Err(_) => Err(ErrorInfo {
+                message: "usage: parameter of 'query' must be a Primitive<Object>".to_owned(),
+                interval,
+            }),
+        }
+    }
+
+    fn get(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "get()", interval)?;
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "method".to_owned(),
+            PrimitiveString::get_literal("get", interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("http");
+
+        Ok(result)
+    }
+
+    fn post(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "post(Primitive<Object>)", interval)?;
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "method".to_owned(),
+            PrimitiveString::get_literal("post", interval),
+        );
+
+        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
+            Ok(header) => {
+                insert_to_object(header, &mut object, "body", literal);
+
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
+            }
+            Err(_) => Err(ErrorInfo {
+                message: "usage: parameter of 'post' must be a Primitive<Object>".to_owned(),
+                interval,
+            }),
+        }
+    }
+
+    fn put(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "put(Primitive<Object>)", interval)?;
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "method".to_owned(),
+            PrimitiveString::get_literal("put", interval),
+        );
+
+        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
+            Ok(header) => {
+                insert_to_object(header, &mut object, "body", literal);
+
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
+            }
+            Err(_) => Err(ErrorInfo {
+                message: "usage: parameter of 'put' must be a Primitive<Object>".to_owned(),
+                interval,
+            }),
+        }
+    }
+
+    fn delete(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "delete()", interval)?;
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "method".to_owned(),
+            PrimitiveString::get_literal("delete", interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("http");
+
+        Ok(result)
+    }
+
+    fn patch(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "patch(Primitive<Object>)", interval)?;
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "method".to_owned(),
+            PrimitiveString::get_literal("patch", interval),
+        );
+
+        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
+            Ok(header) => {
+                insert_to_object(header, &mut object, "body", literal);
+
+                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+                result.set_content_type("http");
+
+                Ok(result)
+            }
+            Err(_) => Err(ErrorInfo {
+                message: "usage: parameter of 'patch' must be a Primitive<Object>".to_owned(),
+                interval,
+            }),
+        }
+    }
+
+    fn send(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "send()", interval)?;
+
+        if let Some(literal) = object.value.get("method") {
+            let method = Literal::get_value::<String>(&literal.primitive)?;
+
+            let function = match method.as_ref() {
+                "delete" => ureq::delete,
+                "put" => ureq::put,
+                "patch" => ureq::patch,
+                "post" => ureq::post,
+                "get" => ureq::get,
+                _ => {
+                    return Err(ErrorInfo {
+                        message: format!("error: unknow http request {}", method),
+                        interval,
+                    });
+                }
+            };
+
+            return http_request(&object.value, function, interval);
+        }
+
+        Err(ErrorInfo {
+            message: "usage: parameter of 'patch' must be a Primitive<Object>".to_owned(),
             interval,
-        }),
+        })
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// METHOD FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
+impl PrimitiveObject {
+    fn get_type(
+        _object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "get_type()", interval)?;
+
+        Ok(PrimitiveString::get_literal(content_type, interval))
+    }
+
+    fn get_metadata(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "get_metadata()", interval)?;
+
+        Ok(Literal {
+            content_type: content_type.to_owned(),
+            primitive: Box::new(object.clone()),
+            interval,
+        })
+    }
+
+    fn is_number_event(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "is_number()", interval)?;
+
+        if let Some(res) = object.value.get("text") {
+            let result = res.primitive.to_string();
+            let result = result.parse::<f64>().is_ok();
+
+            return Ok(PrimitiveBoolean::get_literal(result, interval));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+}
 
 impl PrimitiveObject {
     fn type_of(
@@ -187,42 +525,6 @@ impl PrimitiveObject {
         Ok(PrimitiveString::get_literal(&object.to_string(), interval))
     }
 
-    fn clear(
-        object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "clear()", interval)?;
-
-        object.value.clear();
-
-        Ok(PrimitiveNull::get_literal(interval))
-    }
-
-    fn clear_values(
-        object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "clear_values()", interval)?;
-
-        let mut vector: Vec<String> = Vec::new();
-
-        for key in object.value.keys() {
-            vector.push(key.to_owned());
-        }
-
-        for key in vector.iter() {
-            object
-                .value
-                .insert(key.to_owned(), PrimitiveNull::get_literal(interval));
-        }
-
-        Ok(PrimitiveNull::get_literal(interval))
-    }
-
     fn contains(
         object: &mut PrimitiveObject,
         args: &[Literal],
@@ -245,57 +547,6 @@ impl PrimitiveObject {
         let result = object.value.contains_key(&key);
 
         Ok(PrimitiveBoolean::get_literal(result, interval))
-    }
-
-    fn insert(
-        object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 2, "insert(Primitive<String>, Primitive<T>)", interval)?;
-
-        let (literal, value) = match (args.get(0), args.get(1)) {
-            (Some(lhs), Some(rhs)) => (lhs, rhs),
-            _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have two parameters".to_owned(),
-                    interval,
-                });
-            }
-        };
-
-        let key = get_key(literal, interval)?;
-
-        match object.value.insert(key, value.to_owned()) {
-            _ => Ok(PrimitiveNull::get_literal(interval)),
-        }
-    }
-
-    fn remove(
-        object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "remove(Primitive<String>)", interval)?;
-
-        let literal = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
-            }
-        };
-
-        let key = get_key(literal, interval)?;
-
-        match object.value.remove(&key) {
-            Some(value) => Ok(value),
-            None => Ok(PrimitiveNull::get_literal(interval)),
-        }
     }
 
     fn is_empty(
@@ -358,60 +609,140 @@ impl PrimitiveObject {
         Ok(PrimitiveArray::get_literal(&result, interval))
     }
 
-    fn get_type(
+    fn is_number_generics(
         _object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "get_type()", interval)?;
-
-        Ok(PrimitiveString::get_literal(content_type, interval))
-    }
-
-    fn get_metadata(
-        object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "get_metadata()", interval)?;
-
-        Ok(Literal {
-            content_type: content_type.to_owned(),
-            primitive: Box::new(object.clone()),
-            interval,
-        })
-    }
-
-    fn is_number_event(
-        object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         check_usage(args, 0, "is_number()", interval)?;
 
-        if let Some(res) = object.value.get("text") {
-            let result = res.primitive.to_string();
-            let result = result.parse::<f64>().is_ok();
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+}
 
-            return Ok(PrimitiveBoolean::get_literal(result, interval));
+impl PrimitiveObject {
+    fn clear(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "clear()", interval)?;
+
+        object.value.clear();
+
+        Ok(PrimitiveNull::get_literal(interval))
+    }
+
+    fn clear_values(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "clear_values()", interval)?;
+
+        let mut vector: Vec<String> = Vec::new();
+
+        for key in object.value.keys() {
+            vector.push(key.to_owned());
         }
 
-        Ok(PrimitiveBoolean::get_literal(false, interval))
+        for key in vector.iter() {
+            object
+                .value
+                .insert(key.to_owned(), PrimitiveNull::get_literal(interval));
+        }
+
+        Ok(PrimitiveNull::get_literal(interval))
     }
 
-    fn is_number_object(
-        _object: &mut PrimitiveObject,
+    fn insert(
+        object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_number()", interval)?;
+        check_usage(args, 2, "insert(Primitive<String>, Primitive<T>)", interval)?;
 
-        Ok(PrimitiveBoolean::get_literal(false, interval))
+        let (literal, value) = match (args.get(0), args.get(1)) {
+            (Some(lhs), Some(rhs)) => (lhs, rhs),
+            _ => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have two parameters".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let key = get_key(literal, interval)?;
+
+        match object.value.insert(key, value.to_owned()) {
+            _ => Ok(PrimitiveNull::get_literal(interval)),
+        }
     }
+
+    fn remove(
+        object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 1, "remove(Primitive<String>)", interval)?;
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            None => {
+                return Err(ErrorInfo {
+                    message: "usage: need to have one parameter".to_owned(),
+                    interval,
+                });
+            }
+        };
+
+        let key = get_key(literal, interval)?;
+
+        match object.value.remove(&key) {
+            Some(value) => Ok(value),
+            None => Ok(PrimitiveNull::get_literal(interval)),
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+fn get_key(literal: &Literal, interval: Interval) -> Result<String, ErrorInfo> {
+    match literal.primitive.get_type() {
+        PrimitiveType::PrimitiveString => Ok(literal.primitive.to_string()),
+        _ => Err(ErrorInfo {
+            message: "usage: key must be of type string".to_owned(),
+            interval,
+        }),
+    }
+}
+
+fn insert_to_object(
+    src: &HashMap<String, Literal>,
+    dst: &mut PrimitiveObject,
+    key: &str,
+    literal: &Literal,
+) {
+    dst.value
+        .entry(key.to_owned())
+        .and_modify(|tmp: &mut Literal| {
+            if let Ok(tmp) = Literal::get_mut_value::<HashMap<String, Literal>>(&mut tmp.primitive)
+            {
+                for (key, value) in src.iter() {
+                    tmp.insert(key.to_owned(), value.to_owned());
+                }
+            } else {
+                unreachable!();
+            }
+        })
+        .or_insert(literal.to_owned());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -436,28 +767,37 @@ impl PrimitiveObject {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// TRAIT FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
 impl Primitive for PrimitiveObject {
     fn do_exec(
         &mut self,
         name: &str,
         args: &[Literal],
         interval: Interval,
-        mem_type: &MemoryType,
+        content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {
-        match mem_type {
-            MemoryType::Event(content_type) => {
-                if let Some((f, right)) = FUNCTIONS_EVENT.get(name) {
-                    let res = f(self, args, interval, content_type)?;
+        let event = vec![FUNCTIONS_EVENT.clone(), FUNCTIONS_READ.clone()];
+        let http = vec![
+            FUNCTIONS_HTTP.clone(),
+            FUNCTIONS_READ.clone(),
+            FUNCTIONS_WRITE.clone(),
+        ];
+        let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
 
-                    return Ok((res, *right));
-                }
-            }
-            _ => {
-                if let Some((f, right)) = FUNCTIONS_LIB.get(name) {
-                    let res = f(self, args, interval, "")?;
+        let (content_type, vector) = match content_type {
+            ContentType::Event(event_type) => (event_type.as_ref(), event),
+            ContentType::Http => ("", http),
+            ContentType::Generics => ("", generics),
+        };
 
-                    return Ok((res, *right));
-                }
+        for function in vector.iter() {
+            if let Some((f, right)) = function.get(name) {
+                let result = f(self, args, interval, &content_type)?;
+
+                return Ok((result, *right));
             }
         }
 

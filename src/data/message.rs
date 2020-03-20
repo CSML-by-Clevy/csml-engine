@@ -22,26 +22,36 @@ pub struct Message {
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn question_to_json(mut value: Value) -> Value {
+fn card_to_json<'a>(value: &'a mut Value) -> &'a Value {
     if let Value::Array(ref mut array) = value["buttons"] {
         for elem in array.iter_mut() {
-            if let Value::Object(ref mut map) = elem {
-                map.insert("content_type".to_owned(), json!("button"));
-                let title = map["title"].clone();
-                let payload = map["title"].clone();
-                map.insert(
-                    "content".to_owned(),
-                    json!({"title": title, "payload": payload}),
-                );
-            }
+            button_to_json(elem);
         }
     }
     value
 }
 
-fn button_to_json(name: Value, mut value: Value) -> Value {
+fn carousel_to_json<'a>(value: &'a mut Value) -> &'a Value {
+    if let Value::Array(ref mut array) = value["cards"] {
+        for elem in array.iter_mut() {
+            card_to_json(elem);
+        }
+    }
+    value
+}
+
+fn question_to_json<'a>(value: &'a mut Value) -> &'a Value {
+    if let Value::Array(ref mut array) = value["buttons"] {
+        for elem in array.iter_mut() {
+            button_to_json(elem);
+        }
+    }
+    value
+}
+
+fn button_to_json<'a>(value: &'a mut Value) -> &'a Value {
     if let Value::Object(ref mut map) = value {
-        map.insert("content_type".to_owned(), name);
+        map.insert("content_type".to_owned(), json!("button"));
         let title = map["title"].clone();
         let payload = map["title"].clone();
         map.insert(
@@ -68,7 +78,7 @@ impl Message {
         }
     }
 
-    pub fn message_to_json(self) -> Value {
+    pub fn message_to_json(&mut self) -> Value {
         let mut map: Map<String, Value> = Map::new();
 
         match &self.content_type {
@@ -76,16 +86,33 @@ impl Message {
                 map.insert("content_type".to_owned(), json!(name));
                 map.insert(
                     "content".to_owned(),
-                    button_to_json(json!(name), self.content),
+                    button_to_json(&mut self.content).to_owned(),
                 );
             }
             name if name == "question" => {
                 map.insert("content_type".to_owned(), json!(name));
-                map.insert("content".to_owned(), question_to_json(self.content));
+                map.insert(
+                    "content".to_owned(),
+                    question_to_json(&mut self.content).to_owned(),
+                );
+            }
+            name if name == "carousel" => {
+                map.insert("content_type".to_owned(), json!(name));
+                map.insert(
+                    "content".to_owned(),
+                    carousel_to_json(&mut self.content).to_owned(),
+                );
+            }
+            name if name == "card" => {
+                map.insert("content_type".to_owned(), json!(name));
+                map.insert(
+                    "content".to_owned(),
+                    card_to_json(&mut self.content).to_owned(),
+                );
             }
             name => {
                 map.insert("content_type".to_owned(), json!(name));
-                map.insert("content".to_owned(), self.content);
+                map.insert("content".to_owned(), self.content.to_owned());
             }
         }
         Value::Object(map)

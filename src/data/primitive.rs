@@ -7,6 +7,7 @@ pub mod object;
 pub mod string;
 pub mod tools;
 
+use crate::data::literal::ContentType;
 pub use array::PrimitiveArray;
 pub use boolean::PrimitiveBoolean;
 pub use float::PrimitiveFloat;
@@ -16,7 +17,7 @@ pub use object::PrimitiveObject;
 pub use string::PrimitiveString;
 
 use crate::data::primitive::tools::*;
-use crate::data::{Interval, Literal, MemoryType, Message};
+use crate::data::{Interval, Literal, Message};
 use crate::error_format::ErrorInfo;
 
 use std::cmp::Ordering;
@@ -70,7 +71,7 @@ pub trait Primitive {
         name: &str,
         args: &[Literal],
         interval: Interval,
-        mem_type: &MemoryType,
+        content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo>;
 }
 
@@ -98,12 +99,12 @@ impl dyn Primitive {
         name: &str,
         args: &[Literal],
         interval: Interval,
-        mem_type: &MemoryType,
+        content_type: &ContentType,
         mem_update: &mut bool,
     ) -> Result<Literal, ErrorInfo> {
         *mem_update = false;
 
-        let (res, right) = self.do_exec(name, args, interval, mem_type)?;
+        let (res, right) = self.do_exec(name, args, interval, content_type)?;
         if right == Right::Write {
             *mem_update = true;
         }

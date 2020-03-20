@@ -1,0 +1,25 @@
+start:
+    do button1 = Button("b1")
+    do card1 = Card("c1", buttons = [button1])
+
+    say Carousel(
+        cards = [card1]
+    )
+    goto end
+
+carousel1:
+    do button1 = Button("b1", theme = "primary", icon = "info" )
+    do card1 = Card("c1", buttons = [button1])
+
+    say Carousel(
+        cards = [card1]
+    )
+    goto end
+
+
+
+simple_0:
+    do button1 = Button("b1")
+    say Card("c1", image_url = "url", buttons = [button1])
+
+    goto end

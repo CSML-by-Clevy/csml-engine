@@ -1,6 +1,6 @@
 [package]
 name = "csmlinterpreter"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "Jefferson Le Quellec <jefferson.le-quellec@clevy.io>",
@@ -8,11 +8,16 @@ authors = [
     "Bastien Botella <bastien@clevy.io>"
 ]
 license = "Apache-2.0"
-edition = "2018"
 readme = "README.md"
+repository = "https://github.com/CSML-by-Clevy/csml-interpreter"
+homepage = "https://www.csml.dev/"
+documentation = "https://docs.rs/nom"
 description = """
 The CSML (Conversational Standard Meta Language) is a Domain-Specific Language developed for creating conversational experiences easily.
 """
+keywords = ["chatbot", "interpreter", "language", "csml"]
+categories = ["text-processing"]
+edition = "2018"
 
 [lib]
 name = "csmlinterpreter"
@@ -27,9 +32,10 @@ serde_json = "1.0"
 libc = "0.2.67"
 lazy_static = "1.4.0"
 regex = "1"
+ureq = { version = "0.12.0", features = ["json"] }
 
 [dependencies.curl]
-version = "0.4.26"
+version = "0.4.28"
 default-features = false
 features = ["mesalink"]
 
