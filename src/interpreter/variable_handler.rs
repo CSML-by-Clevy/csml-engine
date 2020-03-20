@@ -288,8 +288,9 @@ pub fn get_var(
                 } else {
                     None
                 };
+                let content_type = ContentType::get(&null);
                 let (new_literal, ..) =
-                    exec_path_actions(&mut null, None, &path, &MemoryType::Use)?;
+                    exec_path_actions(&mut null, None, &path, &content_type)?;
                 Ok(new_literal)
             }
         },
