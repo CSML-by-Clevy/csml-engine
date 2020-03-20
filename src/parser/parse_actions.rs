@@ -152,9 +152,10 @@ fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E
 where
     E: ParseError<Span<'a>>,
 {
-    Linter::add_warning(WARNING_USE);
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, USE)(s)?;
+
+    Linter::add_warning(WARNING_USE);
 
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 

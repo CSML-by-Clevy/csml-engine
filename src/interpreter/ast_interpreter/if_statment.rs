@@ -73,7 +73,8 @@ fn evaluate_if_condition(
 
 fn check_if_ident(expr: &Expr) -> bool {
     match expr {
-        Expr::LitExpr { .. }
+        Expr::PathExpr{ .. }
+        | Expr::LitExpr { .. }
         | Expr::IdentExpr(..)
         | Expr::ComplexLiteral(..)
         | Expr::ObjectExpr(..) => true,
