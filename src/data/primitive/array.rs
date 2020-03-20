@@ -53,28 +53,6 @@ pub struct PrimitiveArray {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// PRIVATE FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-fn check_index(index: i64, length: i64, interval: Interval) -> Result<u8, ErrorInfo> {
-    if index.is_negative() {
-        return Err(ErrorInfo {
-            message: "usage: index must be positive".to_owned(),
-            interval,
-        });
-    }
-
-    if index > length {
-        return Err(ErrorInfo {
-            message: "usage: index must be lower or equal than array.length()".to_owned(),
-            interval,
-        });
-    }
-
-    Ok(0)
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -123,9 +101,7 @@ impl PrimitiveArray {
 
         Ok(PrimitiveString::get_literal(&array.to_string(), interval))
     }
-}
 
-impl PrimitiveArray {
     fn clear(
         array: &mut PrimitiveArray,
         args: &[Literal],
@@ -412,6 +388,28 @@ impl PrimitiveArray {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+fn check_index(index: i64, length: i64, interval: Interval) -> Result<u8, ErrorInfo> {
+    if index.is_negative() {
+        return Err(ErrorInfo {
+            message: "usage: index must be positive".to_owned(),
+            interval,
+        });
+    }
+
+    if index > length {
+        return Err(ErrorInfo {
+            message: "usage: index must be lower or equal than array.length()".to_owned(),
+            interval,
+        });
+    }
+
+    Ok(0)
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -432,6 +430,10 @@ impl PrimitiveArray {
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// TRAIT FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 impl Primitive for PrimitiveArray {
     fn do_exec(

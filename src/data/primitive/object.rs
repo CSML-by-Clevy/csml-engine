@@ -92,14 +92,10 @@ lazy_static! {
     static ref FUNCTIONS_READ: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "type_of",
-            (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
-        );
+        map.insert("type_of", (PrimitiveObject::type_of as PrimitiveMethod, Right::Read));
+        map.insert("to_string", (PrimitiveObject::to_string as PrimitiveMethod, Right::Read));
+        map.insert("is_number", (PrimitiveObject::is_number_generics as PrimitiveMethod, Right::Read));
+
         map.insert(
             "contains",
             (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
@@ -119,13 +115,6 @@ lazy_static! {
         map.insert(
             "values",
             (PrimitiveObject::values as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_number",
-            (
-                PrimitiveObject::is_number_generics as PrimitiveMethod,
-                Right::Read,
-            ),
         );
 
         map
@@ -503,6 +492,16 @@ impl PrimitiveObject {
 }
 
 impl PrimitiveObject {
+    fn is_number_generics(
+        _object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        check_usage(args, 0, "is_number()", interval)?;
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
     fn type_of(
         _object: &mut PrimitiveObject,
         args: &[Literal],
@@ -607,17 +606,6 @@ impl PrimitiveObject {
         }
 
         Ok(PrimitiveArray::get_literal(&result, interval))
-    }
-
-    fn is_number_generics(
-        _object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_number()", interval)?;
-
-        Ok(PrimitiveBoolean::get_literal(false, interval))
     }
 }
 
