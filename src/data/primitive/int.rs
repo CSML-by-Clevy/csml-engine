@@ -185,34 +185,49 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         if args.len() != 1 {
             return Err(ErrorInfo {
-                message: "usage: pow(Primitive<Int || Float>)".to_owned(),
+                message: "usage: pow(Primitive<Int || Float || String>)".to_owned(),
                 interval,
             });
         }
 
         let float = int.value as f64;
 
-        match args.get(0) {
+        // TODO: Refacto this
+        let exponent = match args.get(0) {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let exponent = Literal::get_value::<i64>(&exponent.primitive)?;
-                let exponent = *exponent as f64;
-                let result = float.powf(exponent);
 
-                Ok(PrimitiveFloat::get_literal(result, interval))
+                *exponent as f64
             }
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveFloat => {
                 let exponent = Literal::get_value::<f64>(&exponent.primitive)?;
-                let result = float.powf(*exponent);
 
-                Ok(PrimitiveFloat::get_literal(result, interval))
+                *exponent
+            }
+            Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let exponent = Literal::get_value::<String>(&exponent.primitive)?;
+
+                match exponent.parse::<f64>() {
+                    Ok(res) => res,
+                    Err(_) => {
+                        return Err(ErrorInfo {
+                            message: "usage: pow(Primitive<Int || Float || String>)".to_owned(),
+                            interval,
+                        });
+                    }
+                }
             }
             _ => {
-                Err(ErrorInfo {
-                    message: "usage: pow(Primitive<Int || Float>)".to_owned(),
+                return Err(ErrorInfo {
+                    message: "usage: pow(Primitive<Int || Float || String>)".to_owned(),
                     interval,
-                })
+                });
             }
-        }
+        };
+
+        let result = float.powf(exponent);
+
+        Ok(PrimitiveFloat::get_literal(result, interval))
     }
 
     fn round(
