@@ -161,3 +161,23 @@ fn ok_if_func_in_condition_false() {
 
     assert_eq!(v1, v2)
 }
+
+
+#[test]
+fn ok_if_path_argument() {
+    let msg = format_message(gen_event(""), "step7");
+    let data = r#"{
+        "messages":[
+            {"content":{"text":"YES"},"content_type":"text"},
+            {"content":{"text":"YES"},"content_type":"text"}
+        ],
+        "next_flow":null,
+        "memories":[],
+        "next_step":"end"
+    }"#;
+
+    let v1: Value = message_to_jsonvalue(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

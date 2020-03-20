@@ -1,11 +1,3 @@
 start:
-    // do val = null
-
-    say "=> {{val.is_number()}}"
-    if (val.is_number() == false ) {
-        say "YES"
-    } else {
-        say "NOOOO"
-    }
-
+    say "Hello World"
     goto end
