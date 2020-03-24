@@ -1,9 +1,8 @@
-use crate::data::literal::ContentType;
-use crate::data::primitive::null::PrimitiveNull;
 use crate::data::{
-    ast::*, message::*, msg::send_msg, Data, Literal, Memories, MemoryType, MessageData, MSG,
+    ast::*, literal::ContentType, message::*, msg::send_msg, primitive::null::PrimitiveNull, Data,
+    Literal, Memories, MemoryType, MessageData, MSG,
 };
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::{
     interpret_scope,
     variable_handler::{
@@ -38,10 +37,10 @@ fn get_var_info<'a>(
                 get_var_from_mem(var.to_owned(), path, data, root, sender)
             }
         },
-        e => Err(ErrorInfo {
-            message: "expression need to be of type variable".to_owned(),
-            interval: interval_from_expr(e),
-        }),
+        e => Err(gen_error_info(
+            interval_from_expr(e),
+            ERROR_GET_VAR_INFO.to_owned(),
+        )),
     }
 }
 
@@ -113,23 +112,22 @@ pub fn match_actions(
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
             {
                 match interpret_scope(actions, data, instruction_index, sender) {
-                    //, &range.start
                     Ok(root2) => Ok(root + root2),
-                    Err(err) => Err(ErrorInfo {
-                        message: format!("invalid import function {:?}", err),
-                        interval: interval_from_reserved_fn(function),
-                    }),
+                    Err(err) => Err(gen_error_info(
+                        interval_from_reserved_fn(function),
+                        format!("{} {:?}", ERROR_IMPORT_FAIL, err),
+                    )),
                 }
             } else {
-                Err(ErrorInfo {
-                    message: format!("invalid step {} not found in flow", name.ident),
-                    interval: interval_from_reserved_fn(function),
-                })
+                Err(gen_error_info(
+                    interval_from_reserved_fn(function),
+                    format!("{} {}", name.ident, ERROR_IMPORT_STEP_FLOW),
+                ))
             }
         }
-        reserved => Err(ErrorInfo {
-            message: "invalid action".to_owned(),
-            interval: interval_from_reserved_fn(reserved),
-        }),
+        reserved => Err(gen_error_info(
+            interval_from_reserved_fn(reserved),
+            ERROR_START_INSTRUCTIONS.to_owned(),
+        )),
     }
 }

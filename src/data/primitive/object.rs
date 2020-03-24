@@ -8,7 +8,7 @@ use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::builtins::http::http_request;
 use lazy_static::*;
 use std::cmp::Ordering;
@@ -183,22 +183,15 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "set(Primitive<Object>)", interval)?;
-
         let literal = match args.get(0) {
             Some(res) => res,
-            _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
-            }
+            _ => return Err(gen_error_info(interval, ERROR_HTTP_SET.to_owned())),
         };
 
         let mut object = object.to_owned();
 
         match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Ok(header) => {
+            Some(header) => {
                 insert_to_object(header, &mut object, "header", literal);
 
                 let mut result = PrimitiveObject::get_literal(&object.value, interval);
@@ -207,10 +200,7 @@ impl PrimitiveObject {
 
                 Ok(result)
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: parameter of 'set' must be a Primitive<Object>".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_HTTP_SET.to_owned())),
         }
     }
 
@@ -220,22 +210,17 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "query(Primitive<Object>)", interval)?;
-
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_HTTP_QUERY.to_owned()));
             }
         };
 
         let mut object = object.to_owned();
 
         match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Ok(header) => {
+            Some(header) => {
                 insert_to_object(header, &mut object, "query", literal);
 
                 let mut result = PrimitiveObject::get_literal(&object.value, interval);
@@ -244,10 +229,7 @@ impl PrimitiveObject {
 
                 Ok(result)
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: parameter of 'query' must be a Primitive<Object>".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_HTTP_QUERY.to_owned())),
         }
     }
 
@@ -279,15 +261,10 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "post(Primitive<Object>)", interval)?;
-
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_HTTP_POST.to_owned()));
             }
         };
 
@@ -299,7 +276,7 @@ impl PrimitiveObject {
         );
 
         match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Ok(header) => {
+            Some(header) => {
                 insert_to_object(header, &mut object, "body", literal);
 
                 let mut result = PrimitiveObject::get_literal(&object.value, interval);
@@ -308,10 +285,7 @@ impl PrimitiveObject {
 
                 Ok(result)
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: parameter of 'post' must be a Primitive<Object>".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_HTTP_POST.to_owned())),
         }
     }
 
@@ -321,15 +295,10 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "put(Primitive<Object>)", interval)?;
-
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_HTTP_PUT.to_owned()));
             }
         };
 
@@ -341,7 +310,7 @@ impl PrimitiveObject {
         );
 
         match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Ok(header) => {
+            Some(header) => {
                 insert_to_object(header, &mut object, "body", literal);
 
                 let mut result = PrimitiveObject::get_literal(&object.value, interval);
@@ -350,10 +319,7 @@ impl PrimitiveObject {
 
                 Ok(result)
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: parameter of 'put' must be a Primitive<Object>".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_HTTP_PUT.to_owned())),
         }
     }
 
@@ -385,15 +351,10 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "patch(Primitive<Object>)", interval)?;
-
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_HTTP_PATCH.to_owned()));
             }
         };
 
@@ -405,7 +366,7 @@ impl PrimitiveObject {
         );
 
         match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Ok(header) => {
+            Some(header) => {
                 insert_to_object(header, &mut object, "body", literal);
 
                 let mut result = PrimitiveObject::get_literal(&object.value, interval);
@@ -414,10 +375,7 @@ impl PrimitiveObject {
 
                 Ok(result)
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: parameter of 'patch' must be a Primitive<Object>".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_HTTP_PATCH.to_owned())),
         }
     }
 
@@ -430,29 +388,24 @@ impl PrimitiveObject {
         check_usage(args, 0, "send()", interval)?;
 
         if let Some(literal) = object.value.get("method") {
-            let method = Literal::get_value::<String>(&literal.primitive)?;
-
-            let function = match method.as_ref() {
-                "delete" => ureq::delete,
-                "put" => ureq::put,
-                "patch" => ureq::patch,
-                "post" => ureq::post,
-                "get" => ureq::get,
+            let function = match Literal::get_value::<String>(&literal.primitive) {
+                Some(delete) if delete == "delete" => ureq::delete,
+                Some(put) if put == "put" => ureq::put,
+                Some(patch) if patch == "patch" => ureq::patch,
+                Some(post) if post == "post" => ureq::post,
+                Some(get) if get == "get" => ureq::get,
                 _ => {
-                    return Err(ErrorInfo {
-                        message: format!("error: unknow http request {}", method),
+                    return Err(gen_error_info(
                         interval,
-                    });
+                        format!("{}", ERROR_HTTP_UNKONWN_METHOD),
+                    ))
                 }
             };
 
             return http_request(&object.value, function, interval);
         }
 
-        Err(ErrorInfo {
-            message: "usage: parameter of 'patch' must be a Primitive<Object>".to_owned(),
-            interval,
-        })
+        Err(gen_error_info(interval, ERROR_HTTP_SEND.to_owned()))
     }
 }
 
@@ -535,12 +488,7 @@ impl PrimitiveObject {
 
         let literal = match args.get(0) {
             Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
-            }
+            None => return Err(gen_error_info(interval, ERROR_OBJECT_CONTAINS.to_owned())),
         };
 
         let key = get_key(literal, interval)?;
@@ -664,16 +612,9 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 2, "insert(Primitive<String>, Primitive<T>)", interval)?;
-
         let (literal, value) = match (args.get(0), args.get(1)) {
             (Some(lhs), Some(rhs)) => (lhs, rhs),
-            _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have two parameters".to_owned(),
-                    interval,
-                });
-            }
+            _ => return Err(gen_error_info(interval, ERROR_OBJECT_INSERT.to_owned())),
         };
 
         let key = get_key(literal, interval)?;
@@ -689,16 +630,9 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "remove(Primitive<String>)", interval)?;
-
         let literal = match args.get(0) {
             Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
-            }
+            None => return Err(gen_error_info(interval, ERROR_OBJECT_REMOVE.to_owned())),
         };
 
         let key = get_key(literal, interval)?;
@@ -717,10 +651,7 @@ impl PrimitiveObject {
 fn get_key(literal: &Literal, interval: Interval) -> Result<String, ErrorInfo> {
     match literal.primitive.get_type() {
         PrimitiveType::PrimitiveString => Ok(literal.primitive.to_string()),
-        _ => Err(ErrorInfo {
-            message: "usage: key must be of type string".to_owned(),
-            interval,
-        }),
+        _ => Err(gen_error_info(interval, ERROR_OBJECT_GET_KEY.to_owned())),
     }
 }
 
@@ -733,7 +664,8 @@ fn insert_to_object(
     dst.value
         .entry(key.to_owned())
         .and_modify(|tmp: &mut Literal| {
-            if let Ok(tmp) = Literal::get_mut_value::<HashMap<String, Literal>>(&mut tmp.primitive)
+            if let Some(tmp) =
+                Literal::get_mut_value::<HashMap<String, Literal>>(&mut tmp.primitive)
             {
                 for (key, value) in src.iter() {
                     tmp.insert(key.to_owned(), value.to_owned());
@@ -801,10 +733,10 @@ impl Primitive for PrimitiveObject {
             }
         }
 
-        Err(ErrorInfo {
-            message: format!("unknown method '{}' for type Object", name),
+        Err(gen_error_info(
             interval,
-        })
+            format!("[{}] {}", name, ERROR_OBJECT_UNKONWN_METHOD),
+        ))
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
@@ -820,52 +752,52 @@ impl Primitive for PrimitiveObject {
     }
 
     fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Add: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_ADD.to_owned(),
+        ))
     }
 
     fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Sub: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_SUB.to_owned(),
+        ))
     }
 
     fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Div: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_DIV.to_owned(),
+        ))
     }
 
     fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Mul: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_DIV.to_owned(),
+        ))
     }
 
     fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_REM.to_owned(),
+        ))
     }
 
     fn do_bitand(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITAND.to_owned(),
+        ))
     }
 
     fn do_bitor(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITOR.to_owned(),
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

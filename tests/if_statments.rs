@@ -162,7 +162,6 @@ fn ok_if_func_in_condition_false() {
     assert_eq!(v1, v2)
 }
 
-
 #[test]
 fn ok_if_path_argument() {
     let msg = format_message(gen_event(""), "step7");

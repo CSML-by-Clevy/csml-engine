@@ -8,7 +8,7 @@ use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -130,21 +130,16 @@ impl PrimitiveInt {
 
         let literal = match args.get(0) {
             Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
-            }
+            None => return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned())),
         };
 
-        if let Ok(exponent) = Literal::get_value::<f64>(&literal.primitive) {
+        if let Some(exponent) = Literal::get_value::<f64>(&literal.primitive) {
             let float = int.value as f64;
             let result = float.powf(*exponent);
 
             return Ok(PrimitiveFloat::get_literal(result, interval));
         }
-        if let Ok(exponent) = Literal::get_value::<i64>(&literal.primitive) {
+        if let Some(exponent) = Literal::get_value::<i64>(&literal.primitive) {
             let float = int.value as f64;
             let exponent = *exponent as f64;
 
@@ -154,10 +149,7 @@ impl PrimitiveInt {
             return Ok(PrimitiveInt::get_literal(result, interval));
         }
 
-        Err(ErrorInfo {
-            message: "usage: parameter must be of type float or int".to_owned(),
-            interval,
-        })
+        Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()))
     }
 
     fn floor(
@@ -306,10 +298,10 @@ impl Primitive for PrimitiveInt {
             return Ok((res, *right));
         }
 
-        Err(ErrorInfo {
-            message: format!("unknown method '{}' for type Int", name),
+        Err(gen_error_info(
             interval,
-        })
+            format!("[{}] {}", name, ERROR_INT_UNKONWN_METHOD),
+        ))
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
@@ -335,10 +327,10 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Add: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_ADD.to_owned(),
+        ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -348,10 +340,10 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Sub: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_SUB.to_owned(),
+        ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -369,10 +361,10 @@ impl Primitive for PrimitiveInt {
             }
         }
 
-        Err(ErrorInfo {
-            message: "[!] Div: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_DIV.to_owned(),
+        ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -382,10 +374,10 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Mul: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_MUL.to_owned(),
+        ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -395,10 +387,10 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_REM.to_owned(),
+        ))
     }
 
     fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -408,10 +400,10 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITAND.to_owned(),
+        ))
     }
 
     fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -421,10 +413,10 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITOR.to_owned(),
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

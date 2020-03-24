@@ -5,7 +5,7 @@ use crate::data::{
     tokens::MEMORY,
     Context, Data, Literal, Memories, MemoryType, MessageData, MSG,
 };
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use std::sync::mpsc;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {
@@ -15,10 +15,10 @@ pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, E
     ) {
         (_, Some(_)) => Ok("use".to_owned()),
         (Some(_), _) => Ok("remember".to_owned()),
-        (None, None) => Err(ErrorInfo {
-            message: format!("no variable named < {} > in memory", name.ident),
-            interval: name.interval.to_owned(),
-        }),
+        (None, None) => Err(gen_error_info(
+            name.interval.to_owned(),
+            format!("< {} > {}", name.ident, ERROR_FIND_MEMORY),
+        )),
     }
 }
 
@@ -31,10 +31,10 @@ pub fn search_var_memory<'a>(
             lit.interval = name.interval;
             Ok(lit)
         }
-        None => Err(ErrorInfo {
-            message: format!("no variable named < {} > in memory", name.ident),
-            interval: name.interval.to_owned(),
-        }),
+        None => Err(gen_error_info(
+            name.interval.to_owned(),
+            format!("< {} > {}", name.ident, ERROR_FIND_MEMORY),
+        )),
     }
 }
 

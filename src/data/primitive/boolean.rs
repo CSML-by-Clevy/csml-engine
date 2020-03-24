@@ -6,7 +6,7 @@ use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -117,10 +117,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok((res, *right));
         }
 
-        Err(ErrorInfo {
-            message: format!("unknown method '{}' for type Boolean", name),
+        Err(gen_error_info(
             interval,
-        })
+            format!("[{}] {}", name, ERROR_BOOLEAN_UNKONWN_METHOD),
+        ))
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
@@ -146,10 +146,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Add: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_ADD.to_owned(),
+        ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -159,10 +159,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Sub: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_SUB.to_owned(),
+        ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -172,10 +172,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Div: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_DIV.to_owned(),
+        ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -185,10 +185,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Mul: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_MUL.to_owned(),
+        ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -198,10 +198,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_REM.to_owned(),
+        ))
     }
 
     fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -211,10 +211,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITAND.to_owned(),
+        ))
     }
 
     fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -224,10 +224,10 @@ impl Primitive for PrimitiveBoolean {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITOR.to_owned(),
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

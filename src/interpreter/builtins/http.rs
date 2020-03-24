@@ -1,5 +1,5 @@
 use crate::data::{ast::Interval, Literal};
-use crate::error_format::data::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::json_to_rust::json_to_literal;
 use std::collections::HashMap;
 
@@ -11,23 +11,20 @@ fn get_value<'lifetime, T: 'static>(
     key: &str,
     object: &'lifetime HashMap<String, Literal>,
     interval: Interval,
+    error: &'static str,
 ) -> Result<&'lifetime T, ErrorInfo> {
-    match object.get(key) {
-        Some(literal) => {
-            let url = Literal::get_value::<T>(&literal.primitive)?;
-
-            Ok(url)
-        }
-        None => Err(ErrorInfo {
-            message: format!("csml: error on .get({})", key),
-            interval,
-        }),
+    if let Some(literal) = object.get(key) {
+        Literal::get_value::<T>(&literal.primitive)
+            .ok_or(gen_error_info(interval, format!("'{}' {}", key, error)))
+    } else {
+        Err(gen_error_info(interval, format!("'{}' {}", key, error)))
     }
 }
 
 fn get_url(object: &HashMap<String, Literal>, interval: Interval) -> Result<String, ErrorInfo> {
-    let url = &mut get_value::<String>("url", object, interval)?.to_owned();
-    let query = get_value::<HashMap<String, Literal>>("query", object, interval)?;
+    let url = &mut get_value::<String>("url", object, interval, ERROR_HTTP_GET_VALUE)?.to_owned();
+    let query =
+        get_value::<HashMap<String, Literal>>("query", object, interval, ERROR_HTTP_GET_VALUE)?;
 
     if !query.is_empty() {
         let length = query.len();
@@ -35,7 +32,7 @@ fn get_url(object: &HashMap<String, Literal>, interval: Interval) -> Result<Stri
         url.push_str("?");
 
         for (index, key) in query.keys().enumerate() {
-            let value = get_value::<String>(key, query, interval)?;
+            let value = get_value::<String>(key, query, interval, ERROR_HTTP_QUERY_VALUES)?;
 
             url.push_str(key);
             url.push_str("=");
@@ -70,13 +67,15 @@ pub fn http_request(
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     let url = get_url(object, interval)?;
-    let header = get_value::<HashMap<String, Literal>>("header", object, interval)?;
-    let body = get_value::<HashMap<String, Literal>>("body", object, interval)?;
+    let header =
+        get_value::<HashMap<String, Literal>>("header", object, interval, ERROR_HTTP_GET_VALUE)?;
+    let body =
+        get_value::<HashMap<String, Literal>>("body", object, interval, ERROR_HTTP_GET_VALUE)?;
 
     let mut request = function(&url);
 
     for key in header.keys() {
-        let value = get_value::<String>(key, header, interval)?;
+        let value = get_value::<String>(key, header, interval, ERROR_HTTP_GET_VALUE)?;
 
         request.set(key, value);
     }
@@ -87,9 +86,9 @@ pub fn http_request(
 
     match body {
         Ok(value) => json_to_literal(&value, interval),
-        Err(_) => Err(ErrorInfo {
-            message: format!("error {}: failed to read response as JSON", status),
+        Err(_) => Err(gen_error_info(
             interval,
-        }),
+            format!("{}: {}", status, ERROR_FAIL_RESPONSE_JOSN),
+        )),
     }
 }

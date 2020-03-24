@@ -3,9 +3,8 @@ use crate::data::{
     ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
     Data, Literal, MessageData, MSG,
 };
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::{
-    // ast_interpreter::match_functions,
     interpret_scope,
     variable_handler::{
         expr_to_literal, get_var, interval::interval_from_expr, operations::evaluate,
@@ -73,7 +72,7 @@ fn evaluate_if_condition(
 
 fn check_if_ident(expr: &Expr) -> bool {
     match expr {
-        Expr::PathExpr{ .. }
+        Expr::PathExpr { .. }
         | Expr::LitExpr { .. }
         | Expr::IdentExpr(..)
         | Expr::ComplexLiteral(..)
@@ -121,7 +120,7 @@ pub fn evaluate_condition(
             evaluate_condition(i1, ex1, ex2, data, root, sender),
         ),
         (e1, _e2) => Err(ErrorInfo {
-            message: "error in evaluate_condition function".to_owned(),
+            message: "in evaluate_condition function".to_owned(),
             interval: interval_from_expr(e1),
         }),
     }

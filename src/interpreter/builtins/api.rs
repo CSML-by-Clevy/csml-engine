@@ -1,6 +1,6 @@
 use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
 use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::{builtins::tools::*, json_to_literal};
 
 use curl::{
@@ -85,12 +85,7 @@ pub fn api(
             client,
             fn_endpoint,
         }) => (client.to_owned(), fn_endpoint.to_owned()),
-        None => {
-            return Err(ErrorInfo {
-                message: "fn call can not be make because fn_endpoint is not set".to_owned(),
-                interval,
-            })
-        }
+        None => return Err(gen_error_info(interval, ERROR_FN_ENDPOINT.to_owned())),
     };
 
     let (http_arg, map) = parse_api(&args, client, fn_endpoint)?;
@@ -99,12 +94,7 @@ pub fn api(
 
     match format_and_transfer(&mut data.curl, &mut result, &http_arg, data_bytes) {
         Ok(_) => (),
-        Err(err) => {
-            return Err(ErrorInfo {
-                message: format!("{}", err),
-                interval,
-            })
-        }
+        Err(err) => return Err(gen_error_info(interval, format!("{}", err))),
     };
 
     let json: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(&result)).unwrap();

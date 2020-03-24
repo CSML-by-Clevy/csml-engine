@@ -18,7 +18,7 @@ pub use string::PrimitiveString;
 
 use crate::data::primitive::tools::*;
 use crate::data::{Interval, Literal, Message};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 
 use std::cmp::Ordering;
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Sub};
@@ -376,10 +376,10 @@ impl Add for Box<dyn Primitive> {
                 }
             }
 
-            _ => Err(ErrorInfo {
-                message: "[!] Add: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                ERROR_ADD.to_owned(),
+            )),
         }
     }
 }
@@ -410,10 +410,10 @@ impl Sub for Box<dyn Primitive> {
 
                 lhs.do_sub(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: "[!] Sub: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                ERROR_SUB.to_owned(),
+            )),
         }
     }
 }
@@ -444,10 +444,10 @@ impl Div for Box<dyn Primitive> {
 
                 lhs.do_div(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: "[!] Div: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                ERROR_DIV.to_owned(),
+            )),
         }
     }
 }
@@ -478,10 +478,10 @@ impl Mul for Box<dyn Primitive> {
 
                 lhs.do_mul(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: "[!] Mul: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                ERROR_MUL.to_owned(),
+            )),
         }
     }
 }
@@ -512,10 +512,10 @@ impl Rem for Box<dyn Primitive> {
 
                 lhs.do_rem(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: "[!] Rem: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                ERROR_REM.to_owned(),
+            )),
         }
     }
 }
@@ -546,10 +546,10 @@ impl BitAnd for Box<dyn Primitive> {
 
                 lhs.do_bitand(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: "[!] BitAnd: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                ERROR_BITAND.to_owned(),
+            )),
         }
     }
 }
@@ -580,10 +580,10 @@ impl BitOr for Box<dyn Primitive> {
 
                 lhs.do_bitor(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: "[!] BitOr: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                ERROR_BITOR.to_owned(),
+            )),
         }
     }
 }

@@ -1,6 +1,6 @@
 use crate::data::primitive::int::PrimitiveInt;
 use crate::data::{ast::*, Data, Literal, MessageData, MSG};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::interpret_scope;
 use crate::interpreter::variable_handler::expr_to_literal::expr_to_literal;
 use crate::parser::ExitCondition;
@@ -24,13 +24,12 @@ pub fn for_loop(
     let literal = expr_to_literal(expr, None, data, &mut root, sender)?;
 
     let array = match Literal::get_value::<Vec<Literal>>(&literal.primitive) {
-        Ok(res) => res,
-        Err(_) => {
-            return Err(ErrorInfo {
-                message: "invalid Expression in foreach loop, Expression is not iterable"
-                    .to_owned(),
-                interval: range.start.to_owned(),
-            })
+        Some(res) => res,
+        None => {
+            return Err(gen_error_info(
+                range.start.to_owned(),
+                ERROR_FOREACH.to_owned(),
+            ))
         }
     };
 

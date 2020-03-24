@@ -8,7 +8,7 @@ use crate::data::context::get_hashmap;
 use crate::linter::linter::linter;
 use crate::linter::Linter;
 use data::{ast::*, ContextJson, Data, Event, MessageData, MSG};
-use error_format::ErrorInfo;
+use error_format::*;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 use parser::state_context::StateContext;
@@ -32,10 +32,10 @@ pub fn execute_step(
         Some(Expr::Scope { scope, .. }) => {
             interpret_scope(scope, &mut data, instruction_index, sender)
         }
-        _ => Err(ErrorInfo {
-            interval: Interval { line: 0, column: 0 },
-            message: format!("step {} not found", name),
-        }),
+        _ => Err(gen_error_info(
+            Interval { line: 0, column: 0 },
+            format!("{} {}", name, ERROR_STEP_EXIST),
+        )),
     }
 }
 
@@ -75,10 +75,10 @@ pub fn interpret(
             StateContext::clear_rip();
 
             return MessageData::error_to_message(
-                Err(ErrorInfo {
-                    message: format!("invalid Flow: {:?}", e.message),
-                    interval: e.interval,
-                }),
+                Err(gen_error_info(
+                    Interval { line: 0, column: 0 },
+                    format!("{} {}", ERROR_INVALID_FLOW, e.message),
+                )),
                 &sender,
             );
         }

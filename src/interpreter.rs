@@ -6,7 +6,7 @@ pub mod variable_handler;
 pub use json_to_rust::json_to_literal;
 
 use crate::data::{ast::*, send_msg, Data, Hold, Literal, MessageData, MSG};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statments},
     variable_handler::interval::interval_from_expr,
@@ -99,10 +99,11 @@ pub fn interpret_scope(
                 )?
             }
             e => {
-                return Err(ErrorInfo {
-                    message: "Block must start with a reserved keyword".to_owned(),
-                    interval: interval_from_expr(e),
-                })
+                // TODO: make Expr printable in order to be included in the error message
+                return Err(gen_error_info(
+                    interval_from_expr(e),
+                    ERROR_START_INSTRUCTIONS.to_owned(),
+                ));
             }
         };
     }

@@ -4,7 +4,7 @@ use crate::data::primitive::{
     PrimitiveType, Right,
 };
 use crate::data::{Interval, Literal, Message};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use lazy_static::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -103,17 +103,11 @@ pub struct PrimitiveArray {
 
 fn check_index(index: i64, length: i64, interval: Interval) -> Result<u8, ErrorInfo> {
     if index.is_negative() {
-        return Err(ErrorInfo {
-            message: "usage: index must be positive".to_owned(),
-            interval,
-        });
+        return Err(gen_error_info(interval, ERROR_ARRAY_NEGATIVE.to_owned()));
     }
 
     if index > length {
-        return Err(ErrorInfo {
-            message: "usage: index must be lower or equal than array.length()".to_owned(),
-            interval,
-        });
+        return Err(gen_error_info(interval, ERROR_ARRAY_INDEX.to_owned()));
     }
 
     Ok(0)
@@ -152,13 +146,10 @@ impl PrimitiveArray {
         check_usage(args, 1, "push(Primitive<T>)", interval)?;
 
         if array.value.len() + args.len() == usize::MAX {
-            return Err(ErrorInfo {
-                message: format!(
-                    "Cannot push inside array, since array length is equal to {}",
-                    usize::MAX
-                ),
+            return Err(gen_error_info(
                 interval,
-            });
+                format!("{} {}", ERROR_ARRAY_OVERFLOW, usize::MAX),
+            ));
         }
 
         for literal in args.iter() {
@@ -177,10 +168,7 @@ impl PrimitiveArray {
 
         match array.value.pop() {
             Some(literal) => Ok(literal),
-            None => Err(ErrorInfo {
-                message: "Cannot pop if array is empty".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_ARRAY_POP.to_owned())),
         }
     }
 
@@ -225,30 +213,25 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 2, "insert_at(Primitive<Int>, Primitive<T>)", interval)?;
-
         let (literal, value) = match (args.get(0), args.get(1)) {
             (Some(lhs), Some(rhs)) => (lhs, rhs),
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have two parameters".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_ARRAY_INSERT_AT.to_owned()));
             }
         };
 
         match Literal::get_value::<i64>(&literal.primitive) {
-            Ok(res) => {
+            Some(res) => {
                 check_index(*res, array.value.len() as i64, interval)?;
 
                 array.value.insert(*res as usize, value.clone());
 
                 Ok(PrimitiveNull::get_literal(interval))
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: first parameter must be of type int".to_owned(),
+            None => Err(gen_error_info(
                 interval,
-            }),
+                ERROR_ARRAY_INSERT_AT_INT.to_owned(),
+            )),
         }
     }
 
@@ -257,28 +240,20 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "remove_at(Primitive<Int>)", interval)?;
-
         let index = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned()));
             }
         };
 
         match Literal::get_value::<i64>(&index.primitive) {
-            Ok(res) => {
+            Some(res) => {
                 check_index(*res, array.value.len() as i64, interval)?;
 
                 Ok(array.value.remove(*res as usize))
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: parameter must be of type int".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned())),
         }
     }
 
@@ -304,22 +279,17 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "join(Primitive<String>)", interval)?;
-
         let mut result = String::new();
 
         let literal = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_ARRAY_JOIN.to_owned()));
             }
         };
 
         match Literal::get_value::<String>(&literal.primitive) {
-            Ok(separater) => {
+            Some(separater) => {
                 let length = array.value.len();
 
                 for (index, string) in array.value.iter().enumerate() {
@@ -336,10 +306,7 @@ impl PrimitiveArray {
 
                 Ok(PrimitiveString::get_literal(&result, interval))
             }
-            Err(_) => Err(ErrorInfo {
-                message: "usage: first parameter must be of type string".to_owned(),
-                interval,
-            }),
+            None => Err(gen_error_info(interval, ERROR_ARRAY_JOIN.to_owned())),
         }
     }
 
@@ -370,15 +337,10 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "index_of(Primitive<T>)", interval)?;
-
         let args = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_ARRAY_INDEX_OF.to_owned()));
             }
         };
 
@@ -396,17 +358,12 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "find(Primitive<T>)", interval)?;
-
         let mut vector: Vec<Literal> = Vec::new();
 
         let args = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "usage: need to have one parameter".to_owned(),
-                    interval,
-                });
+                return Err(gen_error_info(interval, ERROR_ARRAY_INDEX_OF.to_owned()));
             }
         };
 
@@ -460,10 +417,10 @@ impl Primitive for PrimitiveArray {
             return Ok((res, *right));
         }
 
-        Err(ErrorInfo {
-            message: format!("unknown method '{}' for type Array", name),
+        Err(gen_error_info(
             interval,
-        })
+            format!("[{}] {}", name, ERROR_ARRAY_UNKONWN_METHOD),
+        ))
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
@@ -483,52 +440,52 @@ impl Primitive for PrimitiveArray {
     }
 
     fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Add: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_ADD.to_owned(),
+        ))
     }
 
     fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Sub: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_SUB.to_owned(),
+        ))
     }
 
     fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Div: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_DIV.to_owned(),
+        ))
     }
 
     fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Mul: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_MUL.to_owned(),
+        ))
     }
 
     fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_REM.to_owned(),
+        ))
     }
 
     fn do_bitand(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITAND.to_owned(),
+        ))
     }
 
     fn do_bitor(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_BITOR.to_owned(),
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

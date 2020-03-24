@@ -1,6 +1,5 @@
 use crate::data::primitive::Primitive;
 use crate::data::Interval;
-use crate::error_format::ErrorInfo;
 
 use std::cmp::Ordering;
 
@@ -29,28 +28,14 @@ pub enum ContentType {
 impl Literal {
     pub fn get_value<'lifetime, T: 'static>(
         primitive: &'lifetime Box<dyn Primitive>,
-    ) -> Result<&'lifetime T, ErrorInfo> {
-        if let Some(value) = primitive.get_value().downcast_ref::<T>() {
-            Ok(value)
-        } else {
-            Err(ErrorInfo {
-                message: "error in  get_value".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            })
-        }
+    ) -> Option<&'lifetime T> {
+        primitive.get_value().downcast_ref::<T>()
     }
 
     pub fn get_mut_value<'lifetime, T: 'static>(
         primitive: &'lifetime mut Box<dyn Primitive>,
-    ) -> Result<&'lifetime mut T, ErrorInfo> {
-        if let Some(value) = primitive.get_mut_value().downcast_mut::<T>() {
-            Ok(value)
-        } else {
-            Err(ErrorInfo {
-                message: "error in get_mut_value".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            })
-        }
+    ) -> Option<&'lifetime mut T> {
+        primitive.get_mut_value().downcast_mut::<T>()
     }
 
     pub fn set_content_type(&mut self, content_type: &str) {

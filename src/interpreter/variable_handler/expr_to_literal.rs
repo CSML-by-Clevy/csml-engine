@@ -1,7 +1,7 @@
 use crate::data::literal::ContentType;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
     builtins::match_builtin,
@@ -39,10 +39,10 @@ fn format_function_args(
     let vec = match args {
         Expr::VecExpr(vec, ..) => vec,
         _e => {
-            return Err(ErrorInfo {
-                message: format!("Object attributes {:?} bad format", args),
-                interval: interval_from_expr(args),
-            })
+            return Err(gen_error_info(
+                interval_from_expr(args),
+                ERROR_FUNCTIONS_ARGS.to_owned(),
+            ))
         }
     };
 
@@ -55,10 +55,10 @@ fn format_function_args(
                 let ident = match **var_name {
                     Expr::IdentExpr(ref ident) => ident.ident.to_owned(),
                     _ => {
-                        return Err(ErrorInfo {
-                            message: "Bad Expresion type in Assign".to_owned(),
-                            interval: interval_from_expr(var),
-                        })
+                        return Err(gen_error_info(
+                            interval_from_expr(var),
+                            ERROR_ASSING_IDENT.to_owned(),
+                        ))
                     }
                 };
                 obj.insert(ident, value);
@@ -99,10 +99,10 @@ fn normal_object_to_literal(
             match_builtin(&name, obj, interval.to_owned(), data)?,
         ))
     } else {
-        Err(ErrorInfo {
-            message: format!("Unknown function {}", name),
-            interval: interval.to_owned(),
-        })
+        Err(gen_error_info(
+            interval.to_owned(),
+            format!("{} [{}]", name, ERROR_BUILTIN_UNKOWN),
+        ))
     }
 }
 
@@ -162,10 +162,9 @@ pub fn expr_to_literal(
         }
         Expr::LitExpr(literal) => exec_path_literal(&mut literal.clone(), path, data, root, sender),
         Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), path, data, root, sender)?),
-        e => Err(ErrorInfo {
-            // expr
-            message: "Expr can't be converted to Literal".to_owned(),
-            interval: interval_from_expr(e),
-        }),
+        e => Err(gen_error_info(
+            interval_from_expr(e),
+            ERROR_EXPR_TO_LITERAL.to_owned(),
+        )),
     }
 }

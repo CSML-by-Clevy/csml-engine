@@ -17,7 +17,7 @@ use crate::data::{
     Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     gen_literal::gen_literal_form_event,
     memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
@@ -72,17 +72,13 @@ fn get_var_from_stepvar<'a>(
 }
 
 pub fn get_at_index(lit: &mut Literal, index: usize) -> Option<&mut Literal> {
-    match Literal::get_mut_value::<Vec<Literal>>(&mut lit.primitive) {
-        Ok(vec) => vec.get_mut(index),
-        Err(_) => None,
-    }
+    let vec = Literal::get_mut_value::<Vec<Literal>>(&mut lit.primitive)?;
+    vec.get_mut(index)
 }
 
 pub fn get_value_from_key<'a>(lit: &'a mut Literal, key: &str) -> Option<&'a mut Literal> {
-    match Literal::get_mut_value::<HashMap<String, Literal>>(&mut lit.primitive) {
-        Ok(map) => map.get_mut(key),
-        Err(_) => None,
-    }
+    let map = Literal::get_mut_value::<HashMap<String, Literal>>(&mut lit.primitive)?;
+    map.get_mut(key)
 }
 
 pub fn resolve_path(
@@ -97,17 +93,15 @@ pub fn resolve_path(
         match node {
             PathState::ExprIndex(expr) => {
                 let lit = expr_to_literal(&expr, None, data, root, sender)?;
-                if let Ok(val) = Literal::get_value::<i64>(&lit.primitive) {
+                if let Some(val) = Literal::get_value::<i64>(&lit.primitive) {
                     new_path.push((inter.to_owned(), PathLiteral::VecIndex(*val as usize)))
-                } else if let Ok(val) = Literal::get_value::<String>(&lit.primitive) {
+                } else if let Some(val) = Literal::get_value::<String>(&lit.primitive) {
                     new_path.push((inter.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
-                    return Err(ErrorInfo {
-                        message:
-                            "index must be of type int or string  => var.[42] or var.[\"key\"]"
-                                .to_owned(),
-                        interval: inter.to_owned(),
-                    });
+                    return Err(gen_error_info(
+                        inter.to_owned(),
+                        ERROR_FIND_BY_INDEX.to_owned(),
+                    ));
                 }
             }
             PathState::Func(Function {
@@ -182,7 +176,11 @@ fn loop_path(
             } => {
                 // TODO: change args: Literal to args: Vec< Literal >
                 // TODO: Warning msg element is unmutable ?
-                let args = Literal::get_value::<Vec<Literal>>(&args.primitive)?;
+                let args = match Literal::get_value::<Vec<Literal>>(&args.primitive) {
+                    Some(args) => args,
+                    // this is unreachable because a function need to have arguments other wise it will be a parsing error
+                    None => unreachable!(),
+                };
                 let mut return_lit =
                     lit.primitive
                         .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
@@ -231,10 +229,10 @@ pub fn get_literal_form_metadata(
             None => PrimitiveNull::get_literal(inter.to_owned()),
         },
         Some((inter, _)) => {
-            return Err(ErrorInfo {
-                message: "_metadata expect key => _metadata.key or _metadata.[\"key\"]".to_owned(),
-                interval: inter.to_owned(),
-            })
+            return Err(gen_error_info(
+                inter.to_owned(),
+                ERROR_FIND_BY_INDEX.to_owned(),
+            ));
         }
         None => unreachable!(),
     };
@@ -289,8 +287,7 @@ pub fn get_var(
                     None
                 };
                 let content_type = ContentType::get(&null);
-                let (new_literal, ..) =
-                    exec_path_actions(&mut null, None, &path, &content_type)?;
+                let (new_literal, ..) = exec_path_actions(&mut null, None, &path, &content_type)?;
                 Ok(new_literal)
             }
         },
