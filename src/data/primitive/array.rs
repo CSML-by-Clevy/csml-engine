@@ -30,7 +30,6 @@ lazy_static! {
         map.insert("type_of", (PrimitiveArray::type_of as PrimitiveMethod, Right::Read));
         map.insert("to_string", (PrimitiveArray::to_string as PrimitiveMethod, Right::Read));
 
-        map.insert("clear", (PrimitiveArray::clear as PrimitiveMethod, Right::Write));
         map.insert("find", (PrimitiveArray::find as PrimitiveMethod, Right::Read));
         map.insert("is_empty", (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read));
         map.insert("insert_at", (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write));
@@ -62,11 +61,10 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_number() => boolean";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: is_number()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -77,11 +75,10 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "type_of() => string";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: type_of()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveString::get_literal("array", interval))
@@ -92,45 +89,32 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_string() => string";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: to_string()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveString::get_literal(&array.to_string(), interval))
     }
+}
 
-    fn clear(
-        array: &mut PrimitiveArray,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: clear()".to_owned(),
-                interval,
-            });
-        }
-
-        array.value.clear();
-
-        Ok(PrimitiveNull::get_literal(interval))
-    }
-
+impl PrimitiveArray {
     fn find(
         array: &mut PrimitiveArray,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "find(value: primitive) => array";
+
+        if args.len() != 1 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
+
         let value = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: find(Primitive<T>)".to_owned(),
-                    interval,
-                });
+                return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
             }
         };
 
@@ -154,11 +138,10 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_empty() => boolean";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: is_empty()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let result = array.value.is_empty();
@@ -171,27 +154,30 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "insert_at(index: int, value: primitive) => null";
+
+        if args.len() != 2 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
+
         let index = match args.get(0) {
-            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => res,
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                Literal::get_value::<i64>(&res.primitive)?
+            }
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: insert_at(Primitive<Int>, Primitive<T>)".to_owned(),
+                return Err(ErrorInfo::new(
+                    "error: index must be of type 'int'".to_owned(),
                     interval,
-                });
+                ));
             }
         };
 
         let value = match args.get(1) {
             Some(res) => res,
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: insert_at(Primitive<Int>, Primitive<T>)".to_owned(),
-                    interval,
-                });
+                return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
             }
         };
-
-        let index = Literal::get_value::<i64>(&index.primitive)?;
 
         check_index(*index, array.value.len() as i64, interval)?;
 
@@ -205,13 +191,16 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "index_of(value: primitive) => int";
+
+        if args.len() != 1 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
+
         let value = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "usage: index_of(Primitive<T>)".to_owned(),
-                    interval,
-                });
+                return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
             }
         };
 
@@ -229,26 +218,32 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        let separater = match args.get(0) {
-            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => res,
+        let usage = "join(separator: string) => string";
+
+        if args.len() != 1 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
+
+        let separator = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                Literal::get_value::<String>(&res.primitive)?
+            }
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: join(Primitive<String>)".to_owned(),
+                return Err(ErrorInfo::new(
+                    "error: separator must be of type 'string'".to_owned(),
                     interval,
-                });
+                ));
             }
         };
 
-        let separater = Literal::get_value::<String>(&separater.primitive)?;
         let length = array.value.len();
-
         let mut result = String::new();
 
         for (index, string) in array.value.iter().enumerate() {
             result.push_str(&string.primitive.to_string());
 
             if index + 1 != length {
-                result.push_str(separater);
+                result.push_str(separator);
             }
         }
 
@@ -260,11 +255,10 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "length() => int";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: length()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let result = array.value.len();
@@ -277,11 +271,10 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "one_of() => primitive";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: one_of()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         if let Some(res) = array
@@ -299,24 +292,27 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "push(value: primitive) => null";
+
+        if args.len() != 1 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
+
         let value = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "usage: push(Primitive<T>)".to_owned(),
-                    interval,
-                });
+                return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
             }
         };
 
         if array.value.len() + args.len() == usize::MAX {
-            return Err(ErrorInfo {
-                message: format!(
+            return Err(ErrorInfo::new(
+                format!(
                     "error: can't push inside array since array length is equal to size max: {}",
                     usize::MAX
                 ),
                 interval,
-            });
+            ));
         }
 
         array.value.push(value.to_owned());
@@ -329,19 +325,18 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "pop() => primitive";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: pop()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         match array.value.pop() {
             Some(literal) => Ok(literal),
-            None => Err(ErrorInfo {
-                message: "error: can't pop if array is empty".to_owned(),
+            None => Err(ErrorInfo::new(
+                "error: can't pop if array is empty".to_owned(),
                 interval,
-            }),
+            )),
         }
     }
 
@@ -350,17 +345,23 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "remove_at(index: int) => primitive";
+
+        if args.len() != 1 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
+
         let index = match args.get(0) {
-            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => res,
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                Literal::get_value::<i64>(&res.primitive)?
+            }
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: remove_at(Primitive<Int>)".to_owned(),
+                return Err(ErrorInfo::new(
+                    "error: index must be of type 'int'".to_owned(),
                     interval,
-                });
+                ));
             }
         };
-
-        let index = Literal::get_value::<i64>(&index.primitive)?;
 
         check_index(*index, array.value.len() as i64, interval)?;
 
@@ -372,11 +373,10 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "shuffle() => array";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: shuffle()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let mut vector = array.value.to_owned();

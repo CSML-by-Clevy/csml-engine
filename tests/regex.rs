@@ -49,7 +49,7 @@ fn ok_regex_2() {
 
 #[test]
 fn ok_regex_3() {
-    let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: parameter must be of type string at line 21, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"error":"error: value must be of type 'string' at line 21, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
     let msg = format_message(gen_event(""), "regex_3");
 
     let v1: Value = message_to_jsonvalue(msg);
@@ -60,7 +60,7 @@ fn ok_regex_3() {
 
 #[test]
 fn ok_regex_4() {
-    let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: match(Primitive<String>) at line 26, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: match(value: string>) => array at line 26, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
     let msg = format_message(gen_event(""), "regex_4");
 
     let v1: Value = message_to_jsonvalue(msg);

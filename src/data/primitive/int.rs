@@ -26,7 +26,7 @@ lazy_static! {
         map.insert("is_number", (PrimitiveInt::is_number as PrimitiveMethod, Right::Read));
         map.insert("type_of", (PrimitiveInt::type_of as PrimitiveMethod, Right::Read));
         map.insert("to_string", (PrimitiveInt::to_string as PrimitiveMethod, Right::Read));
-
+        
         map.insert("abs", (PrimitiveInt::abs as PrimitiveMethod, Right::Read));
         map.insert("cos", (PrimitiveInt::cos as PrimitiveMethod, Right::Read));
         map.insert("ceil", (PrimitiveInt::ceil as PrimitiveMethod, Right::Read));
@@ -58,11 +58,10 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_number() => boolean";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: is_number()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveBoolean::get_literal(true, interval))
@@ -73,11 +72,10 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "type_of() => string";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: type_of()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveString::get_literal("int", interval))
@@ -88,26 +86,26 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_string() => string";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: to_string()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveString::get_literal(&int.to_string(), interval))
     }
+}
 
+impl PrimitiveInt {
     fn abs(
         int: &mut PrimitiveInt,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "abs() => int";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: abs()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
@@ -123,31 +121,31 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "cos() => number";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: cos()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
 
         let result = float.cos();
 
-        Ok(PrimitiveFloat::get_literal(result, interval))
+        match result == (result as i64) as f64 {
+            true => Ok(PrimitiveInt::get_literal(result as i64, interval)),
+            false => Ok(PrimitiveFloat::get_literal(result, interval)),
+        }
     }
-
 
     fn ceil(
         int: &mut PrimitiveInt,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "ceil() => int";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: ceil()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
@@ -163,11 +161,10 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "floor() => int";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: floor()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
@@ -183,16 +180,14 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "pow(exponent: number) => number";
+
         if args.len() != 1 {
-            return Err(ErrorInfo {
-                message: "usage: pow(Primitive<Int || Float || String>)".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
 
-        // TODO: Refacto this
         let exponent = match args.get(0) {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let exponent = Literal::get_value::<i64>(&exponent.primitive)?;
@@ -210,24 +205,27 @@ impl PrimitiveInt {
                 match exponent.parse::<f64>() {
                     Ok(res) => res,
                     Err(_) => {
-                        return Err(ErrorInfo {
-                            message: "usage: pow(Primitive<Int || Float || String>)".to_owned(),
+                        return Err(ErrorInfo::new(
+                            "error: exponent must be a number".to_owned(),
                             interval,
-                        });
+                        ));
                     }
                 }
             }
             _ => {
-                return Err(ErrorInfo {
-                    message: "usage: pow(Primitive<Int || Float || String>)".to_owned(),
+                return Err(ErrorInfo::new(
+                    "error: exponent must be a number".to_owned(),
                     interval,
-                });
+                ));
             }
         };
 
         let result = float.powf(exponent);
 
-        Ok(PrimitiveFloat::get_literal(result, interval))
+        match result == (result as i64) as f64 {
+            true => Ok(PrimitiveInt::get_literal(result as i64, interval)),
+            false => Ok(PrimitiveFloat::get_literal(result, interval)),
+        }
     }
 
     fn round(
@@ -235,11 +233,10 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "round() => int";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: round()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
@@ -255,18 +252,20 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "sin() => number";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: sin()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
 
         let result = float.sin();
 
-        Ok(PrimitiveFloat::get_literal(result, interval))
+        match result == (result as i64) as f64 {
+            true => Ok(PrimitiveInt::get_literal(result as i64, interval)),
+            false => Ok(PrimitiveFloat::get_literal(result, interval)),
+        }
     }
 
     fn sqrt(
@@ -274,18 +273,20 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "round() => number";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: sqrt()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
 
         let result = float.sqrt();
 
-        Ok(PrimitiveFloat::get_literal(result, interval))
+        match result == (result as i64) as f64 {
+            true => Ok(PrimitiveInt::get_literal(result as i64, interval)),
+            false => Ok(PrimitiveFloat::get_literal(result, interval)),
+        }
     }
 
     fn tan(
@@ -293,18 +294,20 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "tan() => number";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: tan()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         let float = int.value as f64;
 
         let result = float.tan();
 
-        Ok(PrimitiveFloat::get_literal(result, interval))
+        match result == (result as i64) as f64 {
+            true => Ok(PrimitiveInt::get_literal(result as i64, interval)),
+            false => Ok(PrimitiveFloat::get_literal(result, interval)),
+        }
     }
 
     fn to_int(
@@ -312,11 +315,10 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_int() => int";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: to_int()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveInt::get_literal(int.value, interval))
@@ -327,11 +329,10 @@ impl PrimitiveInt {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_float() => float";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: to_float()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveFloat::get_literal(int.value as f64, interval))

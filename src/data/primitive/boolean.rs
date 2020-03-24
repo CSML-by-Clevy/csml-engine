@@ -47,11 +47,10 @@ impl PrimitiveBoolean {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_number() => boolean";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: is_number()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -62,11 +61,10 @@ impl PrimitiveBoolean {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "type_of() => string";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: type_of()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveString::get_literal("boolean", interval))
@@ -77,11 +75,10 @@ impl PrimitiveBoolean {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_string() => string";
+
         if args.len() != 0 {
-            return Err(ErrorInfo {
-                message: "usage: to_string()".to_owned(),
-                interval,
-            });
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
         }
 
         Ok(PrimitiveString::get_literal(&boolean.to_string(), interval))
