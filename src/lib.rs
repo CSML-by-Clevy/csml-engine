@@ -41,6 +41,7 @@ pub fn execute_step(
 
 pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
     // TODO: receive more than just the flow to be able to get real flow id
+    Linter::clear();
     Linter::set_flow("default_flow");
 
     match parse_flow(file) {
@@ -71,7 +72,6 @@ pub fn interpret(
         Err(e) => {
             StateContext::clear_state();
             StateContext::clear_rip();
-            Linter::clear();
 
             return MessageData::error_to_message(
                 Err(ErrorInfo {
