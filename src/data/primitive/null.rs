@@ -132,35 +132,62 @@ impl Primitive for PrimitiveNull {
     }
 
     fn is_cmp(&self, _other: &dyn Primitive) -> Option<Ordering> {
-        None
+        Some(Ordering::Equal)
     }
 
-    fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(ErrorInfo {
+            message: format!(
+                "error: illegal operation: {:?} + {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
-    fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(ErrorInfo {
+            message: format!(
+                "error: illegal operation: {:?} - {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
-    fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(ErrorInfo {
+            message: format!(
+                "error: illegal operation: {:?} / {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
-    fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(ErrorInfo {
+            message: format!(
+                "error: illegal operation: {:?} * {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
-    fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
-    }
-
-    fn do_bitand(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
-    }
-
-    fn do_bitor(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(ErrorInfo {
+            message: format!(
+                "error: illegal operation: {:?} % {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

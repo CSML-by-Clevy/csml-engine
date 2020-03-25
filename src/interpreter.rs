@@ -8,7 +8,7 @@ pub use json_to_rust::json_to_literal;
 use crate::data::{ast::*, send_msg, Data, Hold, Literal, MessageData, MSG};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::{
-    ast_interpreter::{for_loop, match_actions, solve_if_statments},
+    ast_interpreter::{for_loop, match_actions, solve_if_statement},
     variable_handler::interval::interval_from_expr,
 };
 use crate::parser::ExitCondition;
@@ -76,7 +76,7 @@ pub fn interpret_scope(
                 root = match_actions(fun, root, data, instruction_index, &sender)?
             }
             Expr::IfExpr(ref ifstatement) => {
-                root = solve_if_statments(
+                root = solve_if_statement(
                     ifstatement,
                     root,
                     data,

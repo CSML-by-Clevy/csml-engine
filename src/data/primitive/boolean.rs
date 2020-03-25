@@ -1,5 +1,4 @@
 use crate::data::literal::ContentType;
-use crate::data::primitive::int::PrimitiveInt;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_usage;
@@ -125,10 +124,10 @@ impl Primitive for PrimitiveBoolean {
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            self.value == other.value
-        } else {
-            false
+            return self.value == other.value;
         }
+
+        false
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {
@@ -140,92 +139,56 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 + other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
         Err(ErrorInfo {
-            message: "[!] Add: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} + {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 - other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
         Err(ErrorInfo {
-            message: "[!] Sub: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} - {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 / other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
         Err(ErrorInfo {
-            message: "[!] Div: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} / {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 * other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
         Err(ErrorInfo {
-            message: "[!] Mul: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} * {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 % other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
         Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 & other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 | other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} % {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }

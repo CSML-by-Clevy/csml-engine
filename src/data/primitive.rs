@@ -21,7 +21,7 @@ use crate::data::{Interval, Literal, Message};
 use crate::error_format::ErrorInfo;
 
 use std::cmp::Ordering;
-use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Sub};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -52,9 +52,6 @@ pub trait Primitive {
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
 
     fn as_debug(&self) -> &dyn std::fmt::Debug;
     fn as_any(&self) -> &dyn std::any::Any;
@@ -113,8 +110,21 @@ impl dyn Primitive {
     }
 }
 
-// TODO: Chained if lets inside match arms https://github.com/rust-lang/rust/issues/53667
-// TODO: do Primitive: PartialEq, PartialOrd ADD, SUB, MUL, DIV, REM, by macros ?
+////////////////////////////////////////////////////////////////////////////////
+// TRAIT FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+impl std::fmt::Debug for dyn Primitive {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{{\n\t{:?}\n}}", self.as_debug())
+    }
+}
+
+impl Clone for Box<dyn Primitive> {
+    fn clone(&self) -> Box<dyn Primitive> {
+        self.as_box_clone()
+    }
+}
 
 impl PartialEq for dyn Primitive {
     fn eq(&self, other: &Self) -> bool {
@@ -136,7 +146,6 @@ impl PartialEq for dyn Primitive {
 
                 lhs.value == rhs.value as f64
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
             {
@@ -149,7 +158,6 @@ impl PartialEq for dyn Primitive {
                     Err(_) => false,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveString
                     && rhs == PrimitiveType::PrimitiveFloat =>
@@ -163,7 +171,6 @@ impl PartialEq for dyn Primitive {
                     Err(_) => false,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
@@ -176,7 +183,6 @@ impl PartialEq for dyn Primitive {
                     Err(_) => false,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveFloat
                     && rhs == PrimitiveType::PrimitiveString =>
@@ -190,7 +196,6 @@ impl PartialEq for dyn Primitive {
                     Err(_) => false,
                 }
             }
-
             _ => false,
         }
     }
@@ -222,7 +227,6 @@ impl PartialOrd for dyn Primitive {
 
                 lhs.partial_cmp(&rhs)
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
             {
@@ -235,7 +239,6 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveString
                     && rhs == PrimitiveType::PrimitiveFloat =>
@@ -249,7 +252,6 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
@@ -262,7 +264,6 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveFloat
                     && rhs == PrimitiveType::PrimitiveString =>
@@ -276,21 +277,8 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             _ => None,
         }
-    }
-}
-
-impl std::fmt::Debug for dyn Primitive {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{{\n\t{:?}\n}}", self.as_debug())
-    }
-}
-
-impl Clone for Box<dyn Primitive> {
-    fn clone(&self) -> Box<dyn Primitive> {
-        self.as_box_clone()
     }
 }
 
@@ -347,7 +335,6 @@ impl Add for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
@@ -375,9 +362,12 @@ impl Add for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             _ => Err(ErrorInfo {
-                message: "[!] Add: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation between two different types: {:?} + {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -410,8 +400,66 @@ impl Sub for Box<dyn Primitive> {
 
                 lhs.do_sub(&rhs)
             }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveInt::new(int).do_sub(rhs),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(float).do_sub(&PrimitiveFloat::new(rhs.value as f64))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString
+                    && rhs == PrimitiveType::PrimitiveFloat =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_sub(rhs),
+                    Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_sub(rhs),
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_sub(&PrimitiveInt::new(int)),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(lhs.value as f64).do_sub(&PrimitiveFloat::new(float))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveFloat
+                    && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_sub(&PrimitiveFloat::new(int as f64)),
+                    Ok(Integer::Float(float)) => lhs.do_sub(&PrimitiveFloat::new(float)),
+                    Err(err) => Err(err),
+                }
+            }
             _ => Err(ErrorInfo {
-                message: "[!] Sub: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation between two different types: {:?} - {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -444,8 +492,66 @@ impl Div for Box<dyn Primitive> {
 
                 lhs.do_div(&rhs)
             }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveInt::new(int).do_div(rhs),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(float).do_div(&PrimitiveFloat::new(rhs.value as f64))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString
+                    && rhs == PrimitiveType::PrimitiveFloat =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_div(rhs),
+                    Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_div(rhs),
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_div(&PrimitiveInt::new(int)),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(lhs.value as f64).do_div(&PrimitiveFloat::new(float))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveFloat
+                    && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_div(&PrimitiveFloat::new(int as f64)),
+                    Ok(Integer::Float(float)) => lhs.do_div(&PrimitiveFloat::new(float)),
+                    Err(err) => Err(err),
+                }
+            }
             _ => Err(ErrorInfo {
-                message: "[!] Div: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation between two different types: {:?} - {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -478,8 +584,66 @@ impl Mul for Box<dyn Primitive> {
 
                 lhs.do_mul(&rhs)
             }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveInt::new(int).do_mul(rhs),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(float).do_mul(&PrimitiveFloat::new(rhs.value as f64))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString
+                    && rhs == PrimitiveType::PrimitiveFloat =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_mul(rhs),
+                    Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_mul(rhs),
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_mul(&PrimitiveInt::new(int)),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(lhs.value as f64).do_mul(&PrimitiveFloat::new(float))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveFloat
+                    && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_mul(&PrimitiveFloat::new(int as f64)),
+                    Ok(Integer::Float(float)) => lhs.do_mul(&PrimitiveFloat::new(float)),
+                    Err(err) => Err(err),
+                }
+            }
             _ => Err(ErrorInfo {
-                message: "[!] Mul: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation between two different types: {:?} - {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -512,76 +676,66 @@ impl Rem for Box<dyn Primitive> {
 
                 lhs.do_rem(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: "[!] Rem: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-}
-
-impl BitAnd for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
-
-    fn bitand(self, other: Self) -> Result<Self, ErrorInfo> {
-        match (self.get_type(), other.get_type()) {
-            (lhs, rhs) if lhs == rhs => self.do_bitand(&(*other)),
             (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveFloat =>
+                if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
             {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let lhs = PrimitiveFloat::new(lhs.value as f64);
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
 
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
-
-                lhs.do_bitand(rhs)
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveInt::new(int).do_rem(rhs),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(float).do_rem(&PrimitiveFloat::new(rhs.value as f64))
+                    }
+                    Err(err) => Err(err),
+                }
             }
             (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveFloat && rhs == PrimitiveType::PrimitiveInt =>
+                if lhs == PrimitiveType::PrimitiveString
+                    && rhs == PrimitiveType::PrimitiveFloat =>
             {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
 
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let rhs = PrimitiveFloat::new(rhs.value as f64);
-
-                lhs.do_bitand(&rhs)
-            }
-            _ => Err(ErrorInfo {
-                message: "[!] BitAnd: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-}
-
-impl BitOr for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
-
-    fn bitor(self, other: Self) -> Result<Self, ErrorInfo> {
-        match (self.get_type(), other.get_type()) {
-            (lhs, rhs) if lhs == rhs => self.do_bitor(&(*other)),
-            (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveFloat =>
-            {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let lhs = PrimitiveFloat::new(lhs.value as f64);
-
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
-
-                lhs.do_bitor(rhs)
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_rem(rhs),
+                    Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_rem(rhs),
+                    Err(err) => Err(err),
+                }
             }
             (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveFloat && rhs == PrimitiveType::PrimitiveInt =>
+                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let lhs = self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
 
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let rhs = PrimitiveFloat::new(rhs.value as f64);
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_rem(&PrimitiveInt::new(int)),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(lhs.value as f64).do_rem(&PrimitiveFloat::new(float))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveFloat
+                    && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
 
-                lhs.do_bitor(&rhs)
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_rem(&PrimitiveFloat::new(int as f64)),
+                    Ok(Integer::Float(float)) => lhs.do_rem(&PrimitiveFloat::new(float)),
+                    Err(err) => Err(err),
+                }
             }
             _ => Err(ErrorInfo {
-                message: "[!] BitOr: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation between two different types: {:?} - {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }

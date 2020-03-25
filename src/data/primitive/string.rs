@@ -893,35 +893,27 @@ impl Primitive for PrimitiveString {
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
-        let rhs = if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
-            rhs
-        } else {
-            return false;
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => lhs == rhs,
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => lhs == rhs,
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64) == rhs,
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs == (rhs as f64),
-            _ => self.value == rhs.value,
+        if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
+            return match (get_integer(&self.value), get_integer(&rhs.value)) {
+                (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64) == rhs,
+                (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs == (rhs as f64),
+                _ => self.value == rhs.value,
+            };
         }
+
+        false
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {
-        let rhs = if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
-            rhs
-        } else {
-            return None;
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&rhs),
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => lhs.partial_cmp(&rhs),
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64).partial_cmp(&rhs),
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&(rhs as f64)),
-            _ => self.value.partial_cmp(&rhs.value),
+        if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
+            return match (get_integer(&self.value), get_integer(&rhs.value)) {
+                (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64).partial_cmp(&rhs),
+                (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&(rhs as f64)),
+                _ => self.value.partial_cmp(&rhs.value),
+            };
         }
+
+        None
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -929,7 +921,7 @@ impl Primitive for PrimitiveString {
             Some(res) => res,
             None => {
                 return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
+                    message: "error: rhs need to be of type string".to_owned(),
                     interval: Interval { column: 0, line: 0 },
                 });
             }
@@ -949,7 +941,11 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Add: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} + {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -980,7 +976,11 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs - rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Sub: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} - {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -1019,7 +1019,11 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs / rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Div: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} / {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -1050,7 +1054,11 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Mul: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} * {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -1069,72 +1077,23 @@ impl Primitive for PrimitiveString {
 
         match (get_integer(&self.value), get_integer(&rhs.value)) {
             (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs * rhs)))
+                Ok(Box::new(PrimitiveInt::new(lhs % rhs)))
             }
             (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs * rhs)))
+                Ok(Box::new(PrimitiveFloat::new(lhs % rhs)))
             }
             (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs as f64 * rhs)))
+                Ok(Box::new(PrimitiveFloat::new(lhs as f64 % rhs)))
             }
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
+                Ok(Box::new(PrimitiveFloat::new(lhs % rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Rem: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
-            }
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs & rhs)))
-            }
-            _ => Err(ErrorInfo {
-                message: "[!] BitAnd: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        let lhs = match self.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
-            }
-        };
-        let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
-            }
-        };
-
-        match (get_integer(&lhs.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs | rhs)))
-            }
-            _ => Err(ErrorInfo {
-                message: "[!] BitOr: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} % {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }

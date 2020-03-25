@@ -6,7 +6,7 @@ use crate::interpreter::{
     ast_interpreter::evaluate_condition,
     builtins::match_builtin,
     variable_handler::{
-        exec_path_actions, get_string_from_complexstring, get_var, interval::interval_from_expr,
+        exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
         resolve_path,
     },
 };
@@ -56,7 +56,7 @@ fn format_function_args(
                     Expr::IdentExpr(ref ident) => ident.ident.to_owned(),
                     _ => {
                         return Err(ErrorInfo {
-                            message: "Bad Expresion type in Assign".to_owned(),
+                            message: "Bad Expression type in Assign".to_owned(),
                             interval: interval_from_expr(var),
                         })
                     }
@@ -146,7 +146,7 @@ pub fn expr_to_literal(
         }
         Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => {
             let mut string =
-                get_string_from_complexstring(vec, start.to_owned(), data, root, sender);
+                get_string_from_complex_string(vec, start.to_owned(), data, root, sender);
             exec_path_literal(&mut string, path, data, root, sender)
         }
         Expr::VecExpr(vec, range) => {
