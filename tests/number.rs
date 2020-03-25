@@ -65,7 +65,7 @@ fn int_step_2() {
         "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "int_2");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
