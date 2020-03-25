@@ -132,7 +132,7 @@ impl Primitive for PrimitiveNull {
     }
 
     fn is_cmp(&self, _other: &dyn Primitive) -> Option<Ordering> {
-        None
+        Some(Ordering::Equal)
     }
 
     fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
