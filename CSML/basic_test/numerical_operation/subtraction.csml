@@ -1,0 +1,181 @@
+start:
+    use 1 as var1
+    use 4 as var2
+
+    say var1 - var2
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// SUBTRACTION ARRAY
+////////////////////////////////////////////////////////////////////////////////
+
+subtraction_array_step_0:
+    say [] - []
+
+subtraction_array_step_1:
+    say [] - true
+
+subtraction_array_step_2:
+    say [] - 1.0
+
+subtraction_array_step_3:
+    say [] - 1
+
+subtraction_array_step_4:
+    say [] - null
+
+subtraction_array_step_5:
+    say [] - {}
+
+subtraction_array_step_6:
+    say [] - "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// SUBTRACTION BOOLEAN
+////////////////////////////////////////////////////////////////////////////////
+
+subtraction_boolean_step_0:
+    say true - []
+
+subtraction_boolean_step_1:
+    say true - true
+
+subtraction_boolean_step_2:
+    say true - 1.0
+
+subtraction_boolean_step_3:
+    say true - 1
+
+subtraction_boolean_step_4:
+    say true - null
+
+subtraction_boolean_step_5:
+    say true - {}
+
+subtraction_boolean_step_6:
+    say true - "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// SUBTRACTION FLOAT
+////////////////////////////////////////////////////////////////////////////////
+
+subtraction_float_step_0:
+    say 1.0 - []
+
+subtraction_float_step_1:
+    say 1.0 - true
+
+subtraction_float_step_2:
+    say 1.0 - 1.0
+
+subtraction_float_step_3:
+    say 1.0 - 1
+
+subtraction_float_step_4:
+    say 1.0 - null
+
+subtraction_float_step_5:
+    say 1.0 - {}
+
+subtraction_float_step_6:
+    say 1.0 - "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// SUBTRACTION INT
+////////////////////////////////////////////////////////////////////////////////
+
+subtraction_int_step_0:
+    say 1 - []
+
+subtraction_int_step_1:
+    say 1 - true
+
+subtraction_int_step_2:
+    say 1 - 1.0
+
+subtraction_int_step_3:
+    say 1 - 1
+
+subtraction_int_step_4:
+    say 1 - null
+
+subtraction_int_step_5:
+    say 1 - {}
+
+subtraction_int_step_6:
+    say 1 - "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// SUBTRACTION NULL
+////////////////////////////////////////////////////////////////////////////////
+
+subtraction_null_step_0:
+    say null - []
+
+subtraction_null_step_1:
+    say null - true
+
+subtraction_null_step_2:
+    say null - 1.0
+
+subtraction_null_step_3:
+    say null - 1
+
+subtraction_null_step_4:
+    say null - null
+
+subtraction_null_step_5:
+    say null - {}
+
+subtraction_null_step_6:
+    say null - "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// SUBTRACTION OBJECT
+////////////////////////////////////////////////////////////////////////////////
+
+subtraction_object_step_0:
+    say {} - []
+
+subtraction_object_step_1:
+    say {} - true
+
+subtraction_object_step_2:
+    say {} - 1.0
+
+subtraction_object_step_3:
+    say {} - 1
+
+subtraction_object_step_4:
+    say {} - null
+
+subtraction_object_step_5:
+    say {} - {}
+
+subtraction_object_step_6:
+    say {} - "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// SUBTRACTION STRING
+////////////////////////////////////////////////////////////////////////////////
+
+subtraction_string_step_0:
+    say "1" - []
+
+subtraction_string_step_1:
+    say "1" - true
+
+subtraction_string_step_2:
+    say "1" - 1.0
+
+subtraction_string_step_3:
+    say "1" - 1
+
+subtraction_string_step_4:
+    say "1" - null
+
+subtraction_string_step_5:
+    say "1" - {}
+
+subtraction_string_step_6:
+    say "1" - "1"

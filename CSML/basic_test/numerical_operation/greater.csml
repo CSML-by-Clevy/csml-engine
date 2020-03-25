@@ -1,0 +1,177 @@
+////////////////////////////////////////////////////////////////////////////////
+/// GREATER ARRAY
+////////////////////////////////////////////////////////////////////////////////
+
+start:
+    goto end
+
+greater_array_step_0:
+    say [] > []
+
+greater_array_step_1:
+    say [] > true
+
+greater_array_step_2:
+    say [] > 1.0
+
+greater_array_step_3:
+    say [] > 1
+
+greater_array_step_4:
+    say [] > null
+
+greater_array_step_5:
+    say [] > {}
+
+greater_array_step_6:
+    say [] > "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// GREATER BOOLEAN
+////////////////////////////////////////////////////////////////////////////////
+
+greater_boolean_step_0:
+    say true > []
+
+greater_boolean_step_1:
+    say true > true
+
+greater_boolean_step_2:
+    say true > 1.0
+
+greater_boolean_step_3:
+    say true > 1
+
+greater_boolean_step_4:
+    say true > null
+
+greater_boolean_step_5:
+    say true > {}
+
+greater_boolean_step_6:
+    say true > "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// GREATER FLOAT
+////////////////////////////////////////////////////////////////////////////////
+
+greater_float_step_0:
+    say 1.0 > []
+
+greater_float_step_1:
+    say 1.0 > true
+
+greater_float_step_2:
+    say 1.0 > 1.0
+
+greater_float_step_3:
+    say 1.0 > 1
+
+greater_float_step_4:
+    say 1.0 > null
+
+greater_float_step_5:
+    say 1.0 > {}
+
+greater_float_step_6:
+    say 1.0 > "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// GREATER INT
+////////////////////////////////////////////////////////////////////////////////
+
+greater_int_step_0:
+    say 1 > []
+
+greater_int_step_1:
+    say 1 > true
+
+greater_int_step_2:
+    say 1 > 1.0
+
+greater_int_step_3:
+    say 1 > 1
+
+greater_int_step_4:
+    say 1 > null
+
+greater_int_step_5:
+    say 1 > {}
+
+greater_int_step_6:
+    say 1 > "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// GREATER NULL
+////////////////////////////////////////////////////////////////////////////////
+
+greater_null_step_0:
+    say null > []
+
+greater_null_step_1:
+    say null > true
+
+greater_null_step_2:
+    say null > 1.0
+
+greater_null_step_3:
+    say null > 1
+
+greater_null_step_4:
+    say null > null
+
+greater_null_step_5:
+    say null > {}
+
+greater_null_step_6:
+    say null > "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// GREATER OBJECT
+////////////////////////////////////////////////////////////////////////////////
+
+greater_object_step_0:
+    say {} > []
+
+greater_object_step_1:
+    say {} > true
+
+greater_object_step_2:
+    say {} > 1.0
+
+greater_object_step_3:
+    say {} > 1
+
+greater_object_step_4:
+    say {} > null
+
+greater_object_step_5:
+    say {} > {}
+
+greater_object_step_6:
+    say {} > "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// GREATER STRING
+////////////////////////////////////////////////////////////////////////////////
+
+greater_string_step_0:
+    say "1" > []
+
+greater_string_step_1:
+    say "1" > true
+
+greater_string_step_2:
+    say "1" > 1.0
+
+greater_string_step_3:
+    say "1" > 1
+
+greater_string_step_4:
+    say "1" > null
+
+greater_string_step_5:
+    say "1" > {}
+
+greater_string_step_6:
+    say "1" > "1"

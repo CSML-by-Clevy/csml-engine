@@ -457,10 +457,10 @@ impl Primitive for PrimitiveArray {
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            self.value == other.value
-        } else {
-            false
+            return self.value == other.value;
         }
+
+        false
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {
@@ -471,51 +471,57 @@ impl Primitive for PrimitiveArray {
         None
     }
 
-    fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Add: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} + {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Sub: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} - {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Div: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} / {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Mul: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} * {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bitand(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bitor(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} % {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }

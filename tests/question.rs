@@ -4,7 +4,7 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
 
 fn format_message(event: Event, file: &str, step: &str) -> MessageData {
     let text = read_file(format!("CSML/basic_test/built-in/{}.csml", file)).unwrap();
@@ -39,7 +39,7 @@ fn ok_button() {
 
     let msg = format_message(gen_event(""), "question", "simple_0");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -84,7 +84,7 @@ fn ok_question() {
     }"#;
     let msg = format_message(gen_event(""), "question", "start");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -129,7 +129,7 @@ fn ok_question_step1() {
     }"#;
     let msg = format_message(gen_event(""), "question", "question1");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -173,7 +173,7 @@ fn ok_question_step2() {
     }"#;
     let msg = format_message(gen_event(""), "question", "question2");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)

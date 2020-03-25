@@ -4,7 +4,7 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, message_to_json_value, read_file};
 
 fn format_message(event: Event, step: &str) -> MessageData {
     let text = read_file("CSML/basic_test/event.csml".to_owned()).unwrap();
@@ -33,7 +33,7 @@ fn event_step_0() {
         "step_0",
     );
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -69,7 +69,7 @@ fn event_step_1() {
         "step_1",
     );
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -94,7 +94,7 @@ fn event_step_2() {
         "step_2",
     );
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -119,7 +119,7 @@ fn event_step_3() {
         "step_3",
     );
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -152,7 +152,7 @@ fn event_step_4() {
         "step_4",
     );
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
