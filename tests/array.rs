@@ -125,7 +125,7 @@ fn array_step_7() {
 
 #[test]
 fn array_step_8() {
-    let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: join(Primitive<String>) at line 76, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"error":"usage: join(separator: string) => string at line 76, column 13"}, "content_type":"error"}], "next_flow":null, "next_step":null}"#;
     let msg = format_message(gen_event(""), "step_8");
 
     let v1: Value = message_to_json_value(msg);
@@ -136,7 +136,7 @@ fn array_step_8() {
 
 #[test]
 fn array_step_9() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":null}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"text":""}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_9");
 
     let v1: Value = message_to_json_value(msg);

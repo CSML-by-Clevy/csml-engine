@@ -20,7 +20,7 @@ fn object_step_0() {
         "memories":[
         ],
         "messages":[
-            {"content":{"error": "usage: key must be of type string at line 9, column 12"}, "content_type":"error"}
+            {"content":{"error": "error: key must be of type 'string' at line 9, column 12"}, "content_type":"error"}
         ],
         "next_flow":null,
         "next_step":null}"#;

@@ -4,11 +4,11 @@ start:
 step_0:
     remember obj = {}
 
-    say obj.clear()
+    do obj = {}
 
     do obj.insert(42, "Hello")
 
-    say obj.clear()
+    do obj = {}
 
     goto end
 
@@ -45,7 +45,7 @@ step_3:
     say obj.is_empty()
     say obj.length()
 
-    do obj.clear()
+    do obj = {}
 
     say obj.is_empty()
     say obj.length()

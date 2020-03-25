@@ -21,6 +21,16 @@ int_1:
 
     goto end
 
+int_2:
+    use 42 as int
+
+    do result = int.pow("2.2")
+
+    say result
+    say result.type_of()
+
+    goto end
+
 float_0:
     use 42.0 as float
 

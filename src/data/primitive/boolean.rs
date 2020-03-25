@@ -1,7 +1,6 @@
 use crate::data::literal::ContentType;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
-use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
@@ -24,18 +23,9 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "type_of",
-            (PrimitiveBoolean::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveBoolean::to_string as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_number",
-            (PrimitiveBoolean::is_number as PrimitiveMethod, Right::Read),
-        );
+        map.insert("is_number", (PrimitiveBoolean::is_number as PrimitiveMethod, Right::Read));
+        map.insert("type_of", (PrimitiveBoolean::type_of as PrimitiveMethod, Right::Read));
+        map.insert("to_string", (PrimitiveBoolean::to_string as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -51,12 +41,30 @@ pub struct PrimitiveBoolean {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl PrimitiveBoolean {
+    fn is_number(
+        _boolean: &mut PrimitiveBoolean,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_number() => boolean";
+
+        if args.len() != 0 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
     fn type_of(
         _boolean: &mut PrimitiveBoolean,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "type_of()", interval)?;
+        let usage = "type_of() => string";
+
+        if args.len() != 0 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
 
         Ok(PrimitiveString::get_literal("boolean", interval))
     }
@@ -66,19 +74,13 @@ impl PrimitiveBoolean {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_string()", interval)?;
+        let usage = "to_string() => string";
+
+        if args.len() != 0 {
+            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+        }
 
         Ok(PrimitiveString::get_literal(&boolean.to_string(), interval))
-    }
-
-    fn is_number(
-        _boolean: &mut PrimitiveBoolean,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_number()", interval)?;
-
-        Ok(PrimitiveBoolean::get_literal(true, interval))
     }
 }
 
@@ -101,6 +103,10 @@ impl PrimitiveBoolean {
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// TRAIT FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 impl Primitive for PrimitiveBoolean {
     fn do_exec(

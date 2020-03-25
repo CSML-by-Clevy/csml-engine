@@ -21,7 +21,7 @@ step_2:
 
     say vec.is_empty()
 
-    do vec.clear()
+    do vec = []
 
     say vec.is_empty()
 
