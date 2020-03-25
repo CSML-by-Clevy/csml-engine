@@ -1,0 +1,177 @@
+////////////////////////////////////////////////////////////////////////////////
+/// AND ARRAY
+////////////////////////////////////////////////////////////////////////////////
+
+start:
+    goto end
+
+and_array_step_0:
+    say [] & []
+
+and_array_step_1:
+    say [] & true
+
+and_array_step_2:
+    say [] & 1.0
+
+and_array_step_3:
+    say [] & 1
+
+and_array_step_4:
+    say [] & null
+
+and_array_step_5:
+    say [] & {}
+
+and_array_step_6:
+    say [] & "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// AND BOOLEAN
+////////////////////////////////////////////////////////////////////////////////
+
+and_boolean_step_0:
+    say true & []
+
+and_boolean_step_1:
+    say true & true
+
+and_boolean_step_2:
+    say true & 1.0
+
+and_boolean_step_3:
+    say true & 1
+
+and_boolean_step_4:
+    say true & null
+
+and_boolean_step_5:
+    say true & {}
+
+and_boolean_step_6:
+    say true & "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// AND FLOAT
+////////////////////////////////////////////////////////////////////////////////
+
+and_float_step_0:
+    say 1.0 & []
+
+and_float_step_1:
+    say 1.0 & true
+
+and_float_step_2:
+    say 1.0 & 1.0
+
+and_float_step_3:
+    say 1.0 & 1
+
+and_float_step_4:
+    say 1.0 & null
+
+and_float_step_5:
+    say 1.0 & {}
+
+and_float_step_6:
+    say 1.0 & "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// AND INT
+////////////////////////////////////////////////////////////////////////////////
+
+and_int_step_0:
+    say 1 & []
+
+and_int_step_1:
+    say 1 & true
+
+and_int_step_2:
+    say 1 & 1.0
+
+and_int_step_3:
+    say 1 & 1
+
+and_int_step_4:
+    say 1 & null
+
+and_int_step_5:
+    say 1 & {}
+
+and_int_step_6:
+    say 1 & "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// AND NULL
+////////////////////////////////////////////////////////////////////////////////
+
+and_null_step_0:
+    say null & []
+
+and_null_step_1:
+    say null & true
+
+and_null_step_2:
+    say null & 1.0
+
+and_null_step_3:
+    say null & 1
+
+and_null_step_4:
+    say null & null
+
+and_null_step_5:
+    say null & {}
+
+and_null_step_6:
+    say null & "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// AND OBJECT
+////////////////////////////////////////////////////////////////////////////////
+
+and_object_step_0:
+    say {} & []
+
+and_object_step_1:
+    say {} & true
+
+and_object_step_2:
+    say {} & 1.0
+
+and_object_step_3:
+    say {} & 1
+
+and_object_step_4:
+    say {} & null
+
+and_object_step_5:
+    say {} & {}
+
+and_object_step_6:
+    say {} & "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// AND STRING
+////////////////////////////////////////////////////////////////////////////////
+
+and_string_step_0:
+    say "1" & []
+
+and_string_step_1:
+    say "1" & true
+
+and_string_step_2:
+    say "1" & 1.0
+
+and_string_step_3:
+    say "1" & 1
+
+and_string_step_4:
+    say "1" & null
+
+and_string_step_5:
+    say "1" & {}
+
+and_string_step_6:
+    say "1" & "1"

@@ -306,10 +306,10 @@ impl Primitive for PrimitiveInt {
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            self.value == other.value
-        } else {
-            false
+            return self.value == other.value;
         }
+
+        false
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {
@@ -390,32 +390,6 @@ impl Primitive for PrimitiveInt {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
             ERROR_REM.to_owned(),
-        ))
-    }
-
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value & other.value;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            ERROR_BITAND.to_owned(),
-        ))
-    }
-
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value | other.value;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            ERROR_BITOR.to_owned(),
         ))
     }
 

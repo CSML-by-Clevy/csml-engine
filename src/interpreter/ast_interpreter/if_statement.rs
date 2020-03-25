@@ -57,7 +57,7 @@ fn evaluate_if_condition(
         return Ok(root);
     }
     if let Some((then, _)) = then_branch {
-        solve_if_statments(
+        solve_if_statement(
             then,
             root,
             data,
@@ -126,15 +126,15 @@ pub fn evaluate_condition(
     }
 }
 
-pub fn solve_if_statments(
-    statment: &IfStatement,
+pub fn solve_if_statement(
+    statement: &IfStatement,
     mut root: MessageData,
     data: &mut Data,
     instruction_index: Option<usize>,
     instruction_info: &InstructionInfo,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-    match statment {
+    match statement {
         IfStatement::IfStmt {
             cond,
             consequence,
@@ -160,7 +160,7 @@ pub fn solve_if_statments(
                                 + interpret_scope(consequence, data, instruction_index, sender)?;
                             return Ok(root);
                         } else {
-                            return solve_if_statments(
+                            return solve_if_statement(
                                 &then_branch,
                                 root,
                                 data,

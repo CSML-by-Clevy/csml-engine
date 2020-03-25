@@ -327,7 +327,7 @@ pub fn get_var_from_mem<'a>(
     }
 }
 
-pub fn get_string_from_complexstring(
+pub fn get_string_from_complex_string(
     exprs: &[Expr],
     interval: Interval,
     data: &mut Data,

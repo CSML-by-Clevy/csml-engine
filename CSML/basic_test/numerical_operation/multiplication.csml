@@ -1,0 +1,181 @@
+start:
+    use 2 as var1
+    use 4 as var2
+
+    say var1 * var2
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// MULTIPLICATION ARRAY
+////////////////////////////////////////////////////////////////////////////////
+
+multiplication_array_step_0:
+    say [] * []
+
+multiplication_array_step_1:
+    say [] * true
+
+multiplication_array_step_2:
+    say [] * 1.0
+
+multiplication_array_step_3:
+    say [] * 1
+
+multiplication_array_step_4:
+    say [] * null
+
+multiplication_array_step_5:
+    say [] * {}
+
+multiplication_array_step_6:
+    say [] * "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// MULTIPLICATION BOOLEAN
+////////////////////////////////////////////////////////////////////////////////
+
+multiplication_boolean_step_0:
+    say true * []
+
+multiplication_boolean_step_1:
+    say true * true
+
+multiplication_boolean_step_2:
+    say true * 1.0
+
+multiplication_boolean_step_3:
+    say true * 1
+
+multiplication_boolean_step_4:
+    say true * null
+
+multiplication_boolean_step_5:
+    say true * {}
+
+multiplication_boolean_step_6:
+    say true * "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// MULTIPLICATION FLOAT
+////////////////////////////////////////////////////////////////////////////////
+
+multiplication_float_step_0:
+    say 1.0 * []
+
+multiplication_float_step_1:
+    say 1.0 * true
+
+multiplication_float_step_2:
+    say 1.0 * 1.0
+
+multiplication_float_step_3:
+    say 1.0 * 1
+
+multiplication_float_step_4:
+    say 1.0 * null
+
+multiplication_float_step_5:
+    say 1.0 * {}
+
+multiplication_float_step_6:
+    say 1.0 * "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// MULTIPLICATION INT
+////////////////////////////////////////////////////////////////////////////////
+
+multiplication_int_step_0:
+    say 1 * []
+
+multiplication_int_step_1:
+    say 1 * true
+
+multiplication_int_step_2:
+    say 1 * 1.0
+
+multiplication_int_step_3:
+    say 1 * 1
+
+multiplication_int_step_4:
+    say 1 * null
+
+multiplication_int_step_5:
+    say 1 * {}
+
+multiplication_int_step_6:
+    say 1 * "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// MULTIPLICATION NULL
+////////////////////////////////////////////////////////////////////////////////
+
+multiplication_null_step_0:
+    say null * []
+
+multiplication_null_step_1:
+    say null * true
+
+multiplication_null_step_2:
+    say null * 1.0
+
+multiplication_null_step_3:
+    say null * 1
+
+multiplication_null_step_4:
+    say null * null
+
+multiplication_null_step_5:
+    say null * {}
+
+multiplication_null_step_6:
+    say null * "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// MULTIPLICATION OBJECT
+////////////////////////////////////////////////////////////////////////////////
+
+multiplication_object_step_0:
+    say {} * []
+
+multiplication_object_step_1:
+    say {} * true
+
+multiplication_object_step_2:
+    say {} * 1.0
+
+multiplication_object_step_3:
+    say {} * 1
+
+multiplication_object_step_4:
+    say {} * null
+
+multiplication_object_step_5:
+    say {} * {}
+
+multiplication_object_step_6:
+    say {} * "1"
+
+////////////////////////////////////////////////////////////////////////////////
+/// MULTIPLICATION STRING
+////////////////////////////////////////////////////////////////////////////////
+
+multiplication_string_step_0:
+    say "1" * []
+
+multiplication_string_step_1:
+    say "1" * true
+
+multiplication_string_step_2:
+    say "1" * 1.0
+
+multiplication_string_step_3:
+    say "1" * 1
+
+multiplication_string_step_4:
+    say "1" * null
+
+multiplication_string_step_5:
+    say "1" * {}
+
+multiplication_string_step_6:
+    say "1" * "1"

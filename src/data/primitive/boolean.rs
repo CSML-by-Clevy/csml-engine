@@ -1,5 +1,4 @@
 use crate::data::literal::ContentType;
-use crate::data::primitive::int::PrimitiveInt;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_usage;
@@ -125,10 +124,10 @@ impl Primitive for PrimitiveBoolean {
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            self.value == other.value
-        } else {
-            false
+            return self.value == other.value;
         }
+
+        false
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {
@@ -140,93 +139,38 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 + other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            ERROR_ADD.to_owned(),
-        ))
-    }
-
-    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 - other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            ERROR_SUB.to_owned(),
-        ))
-    }
-
-    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 / other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
             ERROR_DIV.to_owned(),
         ))
     }
 
-    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 * other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_MUL.to_owned(),
+            ERROR_DIV.to_owned(),
+        ))
+    }
+
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_DIV.to_owned(),
+        ))
+    }
+    // {:?} * {:?}
+
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            ERROR_DIV.to_owned(),
         ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 % other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_REM.to_owned(),
-        ))
-    }
-
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 & other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            ERROR_BITAND.to_owned(),
-        ))
-    }
-
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 | other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            ERROR_BITOR.to_owned(),
+            ERROR_DIV.to_owned(),
         ))
     }
 

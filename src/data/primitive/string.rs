@@ -855,35 +855,27 @@ impl Primitive for PrimitiveString {
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
-        let rhs = if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
-            rhs
-        } else {
-            return false;
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => lhs == rhs,
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => lhs == rhs,
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64) == rhs,
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs == (rhs as f64),
-            _ => self.value == rhs.value,
+        if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
+            return match (get_integer(&self.value), get_integer(&rhs.value)) {
+                (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64) == rhs,
+                (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs == (rhs as f64),
+                _ => self.value == rhs.value,
+            };
         }
+
+        false
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {
-        let rhs = if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
-            rhs
-        } else {
-            return None;
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&rhs),
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => lhs.partial_cmp(&rhs),
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64).partial_cmp(&rhs),
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&(rhs as f64)),
-            _ => self.value.partial_cmp(&rhs.value),
+        if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
+            return match (get_integer(&self.value), get_integer(&rhs.value)) {
+                (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64).partial_cmp(&rhs),
+                (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&(rhs as f64)),
+                _ => self.value.partial_cmp(&rhs.value),
+            };
         }
+
+        None
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -1031,13 +1023,13 @@ impl Primitive for PrimitiveString {
 
         match (get_integer(&self.value), get_integer(&rhs.value)) {
             (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs * rhs)))
+                Ok(Box::new(PrimitiveInt::new(lhs % rhs)))
             }
             (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs * rhs)))
+                Ok(Box::new(PrimitiveFloat::new(lhs % rhs)))
             }
             (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs as f64 * rhs)))
+                Ok(Box::new(PrimitiveFloat::new(lhs as f64 % rhs)))
             }
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
@@ -1045,59 +1037,6 @@ impl Primitive for PrimitiveString {
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
                 ERROR_REM.to_owned(),
-            )),
-        }
-    }
-
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
-                    ERROR_STRING_RHS.to_owned(),
-                ));
-            }
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs & rhs)))
-            }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
-                ERROR_BITAND.to_owned(),
-            )),
-        }
-    }
-
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        let lhs = match self.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
-                    ERROR_STRING_RHS.to_owned(),
-                ));
-            }
-        };
-        let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
-                    ERROR_STRING_RHS.to_owned(),
-                ));
-            }
-        };
-
-        match (get_integer(&lhs.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs | rhs)))
-            }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
-                ERROR_BITOR.to_owned(),
             )),
         }
     }
