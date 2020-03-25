@@ -15,9 +15,9 @@ fn format_message(event: Event, name: &str, step: &str) -> MessageData {
 }
 
 #[test]
-fn ok_addition() {
-    let data = r#"{"messages":[ {"content":{"text":"5"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "start");
+fn ok_subtraction() {
+    let data = r#"{"messages":[ {"content":{"text":"-3"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let msg = format_message(gen_event(""), "subtraction.csml", "start");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -30,8 +30,12 @@ fn ok_addition() {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn addition_array_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_0");
+fn subtraction_array_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_array_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -51,8 +55,12 @@ fn addition_array_step_0() {
 }
 
 #[test]
-fn addition_array_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_1");
+fn subtraction_array_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_array_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -72,8 +80,12 @@ fn addition_array_step_1() {
 }
 
 #[test]
-fn addition_array_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_2");
+fn subtraction_array_step_2() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_array_step_2",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -93,8 +105,12 @@ fn addition_array_step_2() {
 }
 
 #[test]
-fn addition_array_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_3");
+fn subtraction_array_step_3() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_array_step_3",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -114,8 +130,12 @@ fn addition_array_step_3() {
 }
 
 #[test]
-fn addition_array_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_4");
+fn subtraction_array_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_array_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -135,8 +155,12 @@ fn addition_array_step_4() {
 }
 
 #[test]
-fn addition_array_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_5");
+fn subtraction_array_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_array_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -156,8 +180,12 @@ fn addition_array_step_5() {
 }
 
 #[test]
-fn addition_array_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_6");
+fn subtraction_array_step_6() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_array_step_6",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -181,8 +209,12 @@ fn addition_array_step_6() {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn addition_boolean_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_0");
+fn subtraction_boolean_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_boolean_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -202,8 +234,12 @@ fn addition_boolean_step_0() {
 }
 
 #[test]
-fn addition_boolean_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_1");
+fn subtraction_boolean_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_boolean_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -223,8 +259,12 @@ fn addition_boolean_step_1() {
 }
 
 #[test]
-fn addition_boolean_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_2");
+fn subtraction_boolean_step_2() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_boolean_step_2",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -244,8 +284,12 @@ fn addition_boolean_step_2() {
 }
 
 #[test]
-fn addition_boolean_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_3");
+fn subtraction_boolean_step_3() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_boolean_step_3",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -265,8 +309,12 @@ fn addition_boolean_step_3() {
 }
 
 #[test]
-fn addition_boolean_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_4");
+fn subtraction_boolean_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_boolean_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -286,8 +334,12 @@ fn addition_boolean_step_4() {
 }
 
 #[test]
-fn addition_boolean_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_5");
+fn subtraction_boolean_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_boolean_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -307,8 +359,12 @@ fn addition_boolean_step_5() {
 }
 
 #[test]
-fn addition_boolean_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_6");
+fn subtraction_boolean_step_6() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_boolean_step_6",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -332,8 +388,12 @@ fn addition_boolean_step_6() {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn addition_float_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_0");
+fn subtraction_float_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_float_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -353,8 +413,12 @@ fn addition_float_step_0() {
 }
 
 #[test]
-fn addition_float_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_1");
+fn subtraction_float_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_float_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -374,16 +438,20 @@ fn addition_float_step_1() {
 }
 
 #[test]
-fn addition_float_step_2() {
+fn subtraction_float_step_2() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_2");
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_float_step_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -392,16 +460,20 @@ fn addition_float_step_2() {
 }
 
 #[test]
-fn addition_float_step_3() {
+fn subtraction_float_step_3() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_3");
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_float_step_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -410,8 +482,12 @@ fn addition_float_step_3() {
 }
 
 #[test]
-fn addition_float_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_4");
+fn subtraction_float_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_float_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -431,8 +507,12 @@ fn addition_float_step_4() {
 }
 
 #[test]
-fn addition_float_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_5");
+fn subtraction_float_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_float_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -452,16 +532,20 @@ fn addition_float_step_5() {
 }
 
 #[test]
-fn addition_float_step_6() {
+fn subtraction_float_step_6() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_6");
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_float_step_6",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -474,8 +558,8 @@ fn addition_float_step_6() {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn addition_int_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_0");
+fn subtraction_int_step_0() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_0");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -495,8 +579,8 @@ fn addition_int_step_0() {
 }
 
 #[test]
-fn addition_int_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_1");
+fn subtraction_int_step_1() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_1");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -516,16 +600,16 @@ fn addition_int_step_1() {
 }
 
 #[test]
-fn addition_int_step_2() {
+fn subtraction_int_step_2() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_2");
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -534,16 +618,16 @@ fn addition_int_step_2() {
 }
 
 #[test]
-fn addition_int_step_3() {
+fn subtraction_int_step_3() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_3");
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -552,8 +636,8 @@ fn addition_int_step_3() {
 }
 
 #[test]
-fn addition_int_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_4");
+fn subtraction_int_step_4() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_4");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -573,8 +657,8 @@ fn addition_int_step_4() {
 }
 
 #[test]
-fn addition_int_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_5");
+fn subtraction_int_step_5() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_5");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -594,16 +678,16 @@ fn addition_int_step_5() {
 }
 
 #[test]
-fn addition_int_step_6() {
+fn subtraction_int_step_6() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_6");
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -616,8 +700,8 @@ fn addition_int_step_6() {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn addition_null_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_0");
+fn subtraction_null_step_0() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_0");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -637,8 +721,8 @@ fn addition_null_step_0() {
 }
 
 #[test]
-fn addition_null_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_1");
+fn subtraction_null_step_1() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_1");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -658,8 +742,8 @@ fn addition_null_step_1() {
 }
 
 #[test]
-fn addition_null_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_2");
+fn subtraction_null_step_2() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_2");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -679,8 +763,8 @@ fn addition_null_step_2() {
 }
 
 #[test]
-fn addition_null_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_3");
+fn subtraction_null_step_3() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_3");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -700,8 +784,8 @@ fn addition_null_step_3() {
 }
 
 #[test]
-fn addition_null_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_4");
+fn subtraction_null_step_4() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_4");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -721,8 +805,8 @@ fn addition_null_step_4() {
 }
 
 #[test]
-fn addition_null_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_5");
+fn subtraction_null_step_5() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_5");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -742,8 +826,8 @@ fn addition_null_step_5() {
 }
 
 #[test]
-fn addition_null_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_6");
+fn subtraction_null_step_6() {
+    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_6");
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -767,8 +851,12 @@ fn addition_null_step_6() {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn addition_object_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_0");
+fn subtraction_object_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_object_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -788,8 +876,12 @@ fn addition_object_step_0() {
 }
 
 #[test]
-fn addition_object_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_1");
+fn subtraction_object_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_object_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -809,8 +901,12 @@ fn addition_object_step_1() {
 }
 
 #[test]
-fn addition_object_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_2");
+fn subtraction_object_step_2() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_object_step_2",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -830,8 +926,12 @@ fn addition_object_step_2() {
 }
 
 #[test]
-fn addition_object_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_3");
+fn subtraction_object_step_3() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_object_step_3",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -851,8 +951,12 @@ fn addition_object_step_3() {
 }
 
 #[test]
-fn addition_object_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_4");
+fn subtraction_object_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_object_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -872,8 +976,12 @@ fn addition_object_step_4() {
 }
 
 #[test]
-fn addition_object_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_5");
+fn subtraction_object_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_object_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -893,8 +1001,12 @@ fn addition_object_step_5() {
 }
 
 #[test]
-fn addition_object_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_6");
+fn subtraction_object_step_6() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_object_step_6",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -918,8 +1030,12 @@ fn addition_object_step_6() {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn addition_string_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_0");
+fn subtraction_string_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_string_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -939,8 +1055,12 @@ fn addition_string_step_0() {
 }
 
 #[test]
-fn addition_string_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_1");
+fn subtraction_string_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_string_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -960,16 +1080,20 @@ fn addition_string_step_1() {
 }
 
 #[test]
-fn addition_string_step_2() {
+fn subtraction_string_step_2() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_2");
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_string_step_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -978,16 +1102,20 @@ fn addition_string_step_2() {
 }
 
 #[test]
-fn addition_string_step_3() {
+fn subtraction_string_step_3() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_3");
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_string_step_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -996,8 +1124,12 @@ fn addition_string_step_3() {
 }
 
 #[test]
-fn addition_string_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_4");
+fn subtraction_string_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_string_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -1017,8 +1149,12 @@ fn addition_string_step_4() {
 }
 
 #[test]
-fn addition_string_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_5");
+fn subtraction_string_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_string_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -1038,16 +1174,20 @@ fn addition_string_step_5() {
 }
 
 #[test]
-fn addition_string_step_6() {
+fn subtraction_string_step_6() {
     let data = r#"{
         "memories":[
         ],
         "messages":[
-            {"content":{"text": "2"}, "content_type":"text"}
+            {"content":{"text": "0"}, "content_type":"text"}
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_6");
+    let msg = format_message(
+        gen_event(""),
+        "subtraction.csml",
+        "subtraction_string_step_6",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

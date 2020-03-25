@@ -15,7 +15,7 @@ fn format_message(event: Event, name: &str, step: &str) -> MessageData {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GREATER ARRAY
+/// ARRAY
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -28,11 +28,7 @@ fn greater_array_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_array_step_0",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_array_step_0");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -50,11 +46,7 @@ fn greater_array_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_array_step_1",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_array_step_1");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -72,11 +64,7 @@ fn greater_array_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_array_step_2",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_array_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -94,11 +82,7 @@ fn greater_array_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_array_step_3",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_array_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -116,11 +100,7 @@ fn greater_array_step_4() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_array_step_4",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_array_step_4");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -138,11 +118,7 @@ fn greater_array_step_5() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_array_step_5",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_array_step_5");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -160,11 +136,7 @@ fn greater_array_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_array_step_6",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_array_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -173,7 +145,7 @@ fn greater_array_step_6() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GREATER ARRAY
+/// ARRAY
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -186,11 +158,7 @@ fn greater_boolean_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_boolean_step_0",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_boolean_step_0");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -208,11 +176,7 @@ fn greater_boolean_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_boolean_step_1",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_boolean_step_1");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -230,11 +194,7 @@ fn greater_boolean_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_boolean_step_2",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_boolean_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -252,11 +212,7 @@ fn greater_boolean_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_boolean_step_3",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_boolean_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -274,11 +230,7 @@ fn greater_boolean_step_4() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_boolean_step_4",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_boolean_step_4");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -296,11 +248,7 @@ fn greater_boolean_step_5() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_boolean_step_5",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_boolean_step_5");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -318,11 +266,7 @@ fn greater_boolean_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_boolean_step_6",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_boolean_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -331,7 +275,7 @@ fn greater_boolean_step_6() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GREATER FLOAT
+/// FLOAT
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -344,11 +288,7 @@ fn greater_float_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_float_step_0",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_float_step_0");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -366,11 +306,7 @@ fn greater_float_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_float_step_1",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_float_step_1");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -388,11 +324,7 @@ fn greater_float_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_float_step_2",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_float_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -410,11 +342,7 @@ fn greater_float_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_float_step_3",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_float_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -432,11 +360,7 @@ fn greater_float_step_4() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_float_step_4",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_float_step_4");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -454,11 +378,7 @@ fn greater_float_step_5() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_float_step_5",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_float_step_5");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -476,11 +396,7 @@ fn greater_float_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_float_step_6",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_float_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -489,7 +405,7 @@ fn greater_float_step_6() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GREATER INT
+/// INT
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -502,11 +418,7 @@ fn greater_int_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_0",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_0");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -524,11 +436,7 @@ fn greater_int_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_1",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_1");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -546,11 +454,7 @@ fn greater_int_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_2",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -568,11 +472,7 @@ fn greater_int_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_3",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -590,11 +490,7 @@ fn greater_int_step_4() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_4",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_4");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -612,11 +508,7 @@ fn greater_int_step_5() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_5",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_5");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -634,11 +526,7 @@ fn greater_int_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_6",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -647,7 +535,7 @@ fn greater_int_step_6() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GREATER NULL
+/// NULL
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -660,11 +548,7 @@ fn greater_null_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_null_step_0",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_null_step_0");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -682,11 +566,7 @@ fn greater_null_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_null_step_1",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_null_step_1");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -704,11 +584,7 @@ fn greater_null_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_null_step_2",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_null_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -726,11 +602,7 @@ fn greater_null_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_null_step_3",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_null_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -748,11 +620,7 @@ fn greater_null_step_4() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_null_step_4",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_null_step_4");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -770,11 +638,7 @@ fn greater_null_step_5() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_null_step_5",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_null_step_5");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -792,11 +656,7 @@ fn greater_null_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_null_step_6",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_null_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -805,7 +665,7 @@ fn greater_null_step_6() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GREATER OBJECT
+/// OBJECT
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -818,11 +678,7 @@ fn greater_object_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_object_step_0",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_object_step_0");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -840,11 +696,7 @@ fn greater_object_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_object_step_1",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_object_step_1");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -862,11 +714,7 @@ fn greater_object_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_object_step_2",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_object_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -884,11 +732,7 @@ fn greater_object_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_object_step_3",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_object_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -906,11 +750,7 @@ fn greater_object_step_4() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_object_step_4",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_object_step_4");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -928,11 +768,7 @@ fn greater_object_step_5() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_object_step_5",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_object_step_5");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -950,11 +786,7 @@ fn greater_object_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_object_step_6",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_object_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -963,7 +795,7 @@ fn greater_object_step_6() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// GREATER STRING
+/// STRING
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -976,11 +808,7 @@ fn greater_string_step_0() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_int_step_0",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_int_step_0");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -998,11 +826,7 @@ fn greater_string_step_1() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_string_step_1",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_string_step_1");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -1020,11 +844,7 @@ fn greater_string_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_string_step_2",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_string_step_2");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -1042,11 +862,7 @@ fn greater_string_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_string_step_3",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_string_step_3");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -1064,11 +880,7 @@ fn greater_string_step_4() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_string_step_4",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_string_step_4");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -1086,11 +898,7 @@ fn greater_string_step_5() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_string_step_5",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_string_step_5");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -1108,11 +916,7 @@ fn greater_string_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(
-        gen_event(""),
-        "greater.csml",
-        "greater_string_step_6",
-    );
+    let msg = format_message(gen_event(""), "greater.csml", "greater_string_step_6");
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

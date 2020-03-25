@@ -830,9 +830,13 @@ impl Primitive for PrimitiveObject {
         })
     }
 
-    fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Sub: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} - {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }

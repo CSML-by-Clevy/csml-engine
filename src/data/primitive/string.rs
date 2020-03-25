@@ -910,7 +910,7 @@ impl Primitive for PrimitiveString {
                 (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64).partial_cmp(&rhs),
                 (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&(rhs as f64)),
                 _ => self.value.partial_cmp(&rhs.value),
-            }
+            };
         }
 
         None
@@ -947,7 +947,7 @@ impl Primitive for PrimitiveString {
                     other.get_type()
                 ),
                 interval: Interval { column: 0, line: 0 },
-            })
+            }),
         }
     }
 
@@ -976,7 +976,11 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs - rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Sub: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} - {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }

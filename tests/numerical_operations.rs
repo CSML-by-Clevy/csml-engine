@@ -19,17 +19,6 @@
 // ////////////////////////////////////////////////////////////////////////////////
 
 // #[test]
-// fn ok_addition() {
-//     let data = r#"{"messages":[ {"content":{"text":"5"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-//     let msg = format_message(gen_event(""), "numerical_operation.csml", "start");
-
-//     let v1: Value = message_to_json_value(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
-
-//     assert_eq!(v1, v2)
-// }
-
-// #[test]
 // fn addition_array_step() {
 //     let vector = vec![
 //         format_message(gen_event(""), "numerical_operation.csml", "addition_array_step_0"),
@@ -635,17 +624,6 @@
 
 //     assert!(true)
 // }
-
-// // #[test]
-// // fn ok_subtraction() {
-// //     let data = r#"{"messages":[ {"content":{"text":"-3"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-// //     let msg = format_message(gen_event(""), "subtraction.csml", "start");
-
-// //     let v1: Value = message_to_json_value(msg);
-// //     let v2: Value = serde_json::from_str(data).unwrap();
-
-// //     assert_eq!(v1, v2)
-// // }
 
 // // #[test]
 // // fn ok_multiplication() {
