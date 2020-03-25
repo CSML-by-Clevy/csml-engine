@@ -4,7 +4,7 @@ use csmlinterpreter::data::{Event, MessageData};
 use csmlinterpreter::interpret;
 use serde_json::Value;
 
-use support::tools::{gen_context, gen_event, message_to_jsonvalue, read_file};
+use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
 
 fn format_message(event: Event, file: &str, step: &str) -> MessageData {
     let text = read_file(format!("CSML/basic_test/built-in/{}.csml", file)).unwrap();
@@ -19,7 +19,7 @@ fn ok_url() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "test", "title": "test"},"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(gen_event(""), "url", "start");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -30,7 +30,7 @@ fn ok_url_step1() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "test", "title": "test" },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(gen_event(""), "url", "url1");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -41,7 +41,7 @@ fn ok_url_step2() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "plop", "title": "test" },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(gen_event(""), "url", "url2");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
@@ -52,7 +52,7 @@ fn ok_url_step3() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "plop", "title": "rand" },"content_type":"url"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
     let msg = format_message(gen_event(""), "url", "url3");
 
-    let v1: Value = message_to_jsonvalue(msg);
+    let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)

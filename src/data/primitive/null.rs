@@ -136,31 +136,52 @@ impl Primitive for PrimitiveNull {
     }
 
     fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+        Err(ErrorInfo {
+            message: "[!] Add: Illegal operation".to_owned(),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
     fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+        Err(ErrorInfo {
+            message: "[!] Sub: Illegal operation".to_owned(),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
     fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+        Err(ErrorInfo {
+            message: "[!] Div: Illegal operation".to_owned(),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
     fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+        Err(ErrorInfo {
+            message: "[!] Mul: Illegal operation".to_owned(),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
     fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+        Err(ErrorInfo {
+            message: "[!] Rem: Illegal operation".to_owned(),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
-    fn do_bitand(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+    fn do_bit_and(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(ErrorInfo {
+            message: "[!] BitAnd: Illegal operation".to_owned(),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
-    fn do_bitor(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Ok(Box::new(PrimitiveNull::default()))
+    fn do_bit_or(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+        Err(ErrorInfo {
+            message: "[!] BitOr: Illegal operation".to_owned(),
+            interval: Interval { column: 0, line: 0 },
+        })
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

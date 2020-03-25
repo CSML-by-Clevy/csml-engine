@@ -31,7 +31,7 @@ pub fn gen_event(event: &str) -> Event {
 }
 
 #[allow(dead_code)]
-pub fn message_to_jsonvalue(result: MessageData) -> Value {
+pub fn message_to_json_value(result: MessageData) -> Value {
     let mut message: Map<String, Value> = Map::new();
     let mut vec = vec![];
     let mut memories = vec![];

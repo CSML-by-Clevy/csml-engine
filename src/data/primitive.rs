@@ -53,8 +53,8 @@ pub trait Primitive {
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
 
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
+    fn do_bit_and(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
+    fn do_bit_or(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
 
     fn as_debug(&self) -> &dyn std::fmt::Debug;
     fn as_any(&self) -> &dyn std::any::Any;
@@ -112,6 +112,10 @@ impl dyn Primitive {
         Ok(res)
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// TRAIT FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 // TODO: Chained if lets inside match arms https://github.com/rust-lang/rust/issues/53667
 // TODO: do Primitive: PartialEq, PartialOrd ADD, SUB, MUL, DIV, REM, by macros ?
@@ -444,8 +448,64 @@ impl Div for Box<dyn Primitive> {
 
                 lhs.do_div(&rhs)
             }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveInt::new(int).do_div(rhs),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(float).do_div(&PrimitiveFloat::new(rhs.value as f64))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString
+                    && rhs == PrimitiveType::PrimitiveFloat =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_div(rhs),
+                    Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_div(rhs),
+                    Err(err) => Err(err),
+                }
+            }
+
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_div(&PrimitiveInt::new(int)),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(lhs.value as f64).do_div(&PrimitiveFloat::new(float))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveFloat
+                    && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_div(&PrimitiveFloat::new(int as f64)),
+                    Ok(Integer::Float(float)) => lhs.do_div(&PrimitiveFloat::new(float)),
+                    Err(err) => Err(err),
+                }
+            }
+
             _ => Err(ErrorInfo {
-                message: "[!] Div: Illegal operation".to_owned(),
+                message: "[!] Add: Illegal operation".to_owned(),
                 interval: Interval { column: 0, line: 0 },
             }),
         }
@@ -525,7 +585,7 @@ impl BitAnd for Box<dyn Primitive> {
 
     fn bitand(self, other: Self) -> Result<Self, ErrorInfo> {
         match (self.get_type(), other.get_type()) {
-            (lhs, rhs) if lhs == rhs => self.do_bitand(&(*other)),
+            (lhs, rhs) if lhs == rhs => self.do_bit_and(&(*other)),
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveFloat =>
             {
@@ -534,7 +594,7 @@ impl BitAnd for Box<dyn Primitive> {
 
                 let rhs = &*other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
 
-                lhs.do_bitand(rhs)
+                lhs.do_bit_and(rhs)
             }
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveFloat && rhs == PrimitiveType::PrimitiveInt =>
@@ -544,7 +604,7 @@ impl BitAnd for Box<dyn Primitive> {
                 let rhs = &*other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
                 let rhs = PrimitiveFloat::new(rhs.value as f64);
 
-                lhs.do_bitand(&rhs)
+                lhs.do_bit_and(&rhs)
             }
             _ => Err(ErrorInfo {
                 message: "[!] BitAnd: Illegal operation".to_owned(),
@@ -559,7 +619,7 @@ impl BitOr for Box<dyn Primitive> {
 
     fn bitor(self, other: Self) -> Result<Self, ErrorInfo> {
         match (self.get_type(), other.get_type()) {
-            (lhs, rhs) if lhs == rhs => self.do_bitor(&(*other)),
+            (lhs, rhs) if lhs == rhs => self.do_bit_or(&(*other)),
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveFloat =>
             {
@@ -568,7 +628,7 @@ impl BitOr for Box<dyn Primitive> {
 
                 let rhs = &*other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
 
-                lhs.do_bitor(rhs)
+                lhs.do_bit_or(rhs)
             }
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveFloat && rhs == PrimitiveType::PrimitiveInt =>
@@ -578,7 +638,7 @@ impl BitOr for Box<dyn Primitive> {
                 let rhs = &*other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
                 let rhs = PrimitiveFloat::new(rhs.value as f64);
 
-                lhs.do_bitor(&rhs)
+                lhs.do_bit_or(&rhs)
             }
             _ => Err(ErrorInfo {
                 message: "[!] BitOr: Illegal operation".to_owned(),

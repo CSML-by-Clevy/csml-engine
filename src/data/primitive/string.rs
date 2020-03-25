@@ -1087,7 +1087,7 @@ impl Primitive for PrimitiveString {
         }
     }
 
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_and(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
@@ -1109,7 +1109,7 @@ impl Primitive for PrimitiveString {
         }
     }
 
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_or(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         let lhs = match self.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {

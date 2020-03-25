@@ -388,7 +388,7 @@ impl Primitive for PrimitiveFloat {
         })
     }
 
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_and(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value as i64 & other.value as i64;
 
@@ -401,7 +401,7 @@ impl Primitive for PrimitiveFloat {
         })
     }
 
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_or(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value as i64 | other.value as i64;
 

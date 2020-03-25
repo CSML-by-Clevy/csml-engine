@@ -139,72 +139,42 @@ impl Primitive for PrimitiveBoolean {
         None
     }
 
-    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 + other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
+    fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: "[!] Add: Illegal operation".to_owned(),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 - other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
+    fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: "[!] Sub: Illegal operation".to_owned(),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 / other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
+    fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: "[!] Div: Illegal operation".to_owned(),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 * other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
+    fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: "[!] Mul: Illegal operation".to_owned(),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 % other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
+    fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: "[!] Rem: Illegal operation".to_owned(),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_bitand(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_and(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value as i64 & other.value as i64;
 
@@ -217,7 +187,7 @@ impl Primitive for PrimitiveBoolean {
         })
     }
 
-    fn do_bitor(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_or(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value as i64 | other.value as i64;
 

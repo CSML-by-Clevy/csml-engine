@@ -854,14 +854,14 @@ impl Primitive for PrimitiveObject {
         })
     }
 
-    fn do_bitand(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_and(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: "[!] BitAnd: Illegal operation".to_owned(),
             interval: Interval { column: 0, line: 0 },
         })
     }
 
-    fn do_bitor(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_bit_or(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: "[!] BitOr: Illegal operation".to_owned(),
             interval: Interval { column: 0, line: 0 },
