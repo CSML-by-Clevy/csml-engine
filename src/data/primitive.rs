@@ -557,7 +557,7 @@ impl Div for Box<dyn Primitive> {
 
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between two different types: {:?} / {:?}",
+                    "error: illegal operation between two different types: {:?} - {:?}",
                     self.get_type(),
                     other.get_type()
                 ),

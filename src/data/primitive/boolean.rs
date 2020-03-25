@@ -161,9 +161,13 @@ impl Primitive for PrimitiveBoolean {
         })
     }
 
-    fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Div: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} / {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }

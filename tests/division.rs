@@ -63,86 +63,374 @@ fn ok_division_3() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DIVISION ARRAY
+/// ARRAY
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn division_array_step() {
-    let vector = vec![
-        format_message(gen_event(""), "division.csml", "division_array_step_0"),
-        format_message(gen_event(""), "division.csml", "division_array_step_1"),
-        format_message(gen_event(""), "division.csml", "division_array_step_2"),
-        format_message(gen_event(""), "division.csml", "division_array_step_3"),
-        format_message(gen_event(""), "division.csml", "division_array_step_4"),
-        format_message(gen_event(""), "division.csml", "division_array_step_5"),
-        format_message(gen_event(""), "division.csml", "division_array_step_6"),
-    ];
+fn division_array_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_array_step_0",
+    );
 
-    for msg in vector.iter() {
-        let value: Value = message_to_json_value(msg.to_owned());
+    let value: Value = message_to_json_value(msg.to_owned());
 
-        if let Some(value) = value.get("messages") {
-            if let Some(value) = value.get(0) {
-                if let Some(value) = value.get("content_type") {
-                    if value == "error" {
-                        continue;
-                    }
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
                 }
             }
         }
-
-        println!("{:#?}", value);
-
-        return assert!(false);
     }
 
-    assert!(true)
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_array_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_array_step_1",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_array_step_2() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_array_step_2",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_array_step_3() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_array_step_3",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_array_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_array_step_4",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_array_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_array_step_5",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_array_step_6() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_array_step_6",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DIVISION BOOLEAN
+/// BOOLEAN
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn division_boolean_step() {
-    let vector = vec![
-        format_message(gen_event(""), "division.csml", "division_boolean_step_0"),
-        format_message(gen_event(""), "division.csml", "division_boolean_step_1"),
-        format_message(gen_event(""), "division.csml", "division_boolean_step_2"),
-        format_message(gen_event(""), "division.csml", "division_boolean_step_3"),
-        format_message(gen_event(""), "division.csml", "division_boolean_step_4"),
-        format_message(gen_event(""), "division.csml", "division_boolean_step_5"),
-        format_message(gen_event(""), "division.csml", "division_boolean_step_6"),
-    ];
+fn division_boolean_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_boolean_step_0",
+    );
 
-    for msg in vector.iter() {
-        let value: Value = message_to_json_value(msg.to_owned());
+    let value: Value = message_to_json_value(msg.to_owned());
 
-        if let Some(value) = value.get("messages") {
-            if let Some(value) = value.get(0) {
-                if let Some(value) = value.get("content_type") {
-                    if value == "error" {
-                        continue;
-                    }
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
                 }
             }
         }
-
-        println!("{:#?}", value);
-
-        return assert!(false);
     }
 
-    assert!(true)
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_boolean_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_boolean_step_1",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_boolean_step_2() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_boolean_step_2",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_boolean_step_3() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_boolean_step_3",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_boolean_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_boolean_step_4",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_boolean_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_boolean_step_5",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_boolean_step_6() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_boolean_step_6",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DIVISION FLOAT
+/// FLOAT
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
 fn division_float_step_0() {
-    let msg = format_message(gen_event(""), "division.csml", "division_float_step_0");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_float_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -163,7 +451,11 @@ fn division_float_step_0() {
 
 #[test]
 fn division_float_step_1() {
-    let msg = format_message(gen_event(""), "division.csml", "division_float_step_1");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_float_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -192,7 +484,11 @@ fn division_float_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "division.csml", "division_float_step_2");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_float_step_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -210,7 +506,11 @@ fn division_float_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "division.csml", "division_float_step_3");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_float_step_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -220,7 +520,11 @@ fn division_float_step_3() {
 
 #[test]
 fn division_float_step_4() {
-    let msg = format_message(gen_event(""), "division.csml", "division_float_step_4");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_float_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -241,7 +545,11 @@ fn division_float_step_4() {
 
 #[test]
 fn division_float_step_5() {
-    let msg = format_message(gen_event(""), "division.csml", "division_float_step_5");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_float_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -270,7 +578,11 @@ fn division_float_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "division.csml", "division_float_step_6");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_float_step_6",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -278,8 +590,8 @@ fn division_float_step_6() {
     assert_eq!(v1, v2)
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// DIVISION INT
+/////////////////////////////////////////////////////////////////////////////////
+/// INT
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
@@ -421,86 +733,346 @@ fn division_int_step_6() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DIVISION NULL
+/// NULL
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn division_null_step() {
-    let vector = vec![
-        format_message(gen_event(""), "division.csml", "division_null_step_0"),
-        format_message(gen_event(""), "division.csml", "division_null_step_1"),
-        format_message(gen_event(""), "division.csml", "division_null_step_2"),
-        format_message(gen_event(""), "division.csml", "division_null_step_3"),
-        format_message(gen_event(""), "division.csml", "division_null_step_4"),
-        format_message(gen_event(""), "division.csml", "division_null_step_5"),
-        format_message(gen_event(""), "division.csml", "division_null_step_6"),
-    ];
+fn division_null_step_0() {
+    let msg = format_message(gen_event(""), "division.csml", "division_null_step_0");
 
-    for msg in vector.iter() {
-        let value: Value = message_to_json_value(msg.to_owned());
+    let value: Value = message_to_json_value(msg.to_owned());
 
-        if let Some(value) = value.get("messages") {
-            if let Some(value) = value.get(0) {
-                if let Some(value) = value.get("content_type") {
-                    if value == "error" {
-                        continue;
-                    }
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
                 }
             }
         }
-
-        println!("{:#?}", value);
-
-        return assert!(false);
     }
 
-    assert!(true)
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_null_step_1() {
+    let msg = format_message(gen_event(""), "division.csml", "division_null_step_1");
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_null_step_2() {
+    let msg = format_message(gen_event(""), "division.csml", "division_null_step_2");
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_null_step_3() {
+    let msg = format_message(gen_event(""), "division.csml", "division_null_step_3");
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_null_step_4() {
+    let msg = format_message(gen_event(""), "division.csml", "division_null_step_4");
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_null_step_5() {
+    let msg = format_message(gen_event(""), "division.csml", "division_null_step_5");
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_null_step_6() {
+    let msg = format_message(gen_event(""), "division.csml", "division_null_step_6");
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DIVISION OBJECT
+/// OBJECT
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
-fn division_object_step() {
-    let vector = vec![
-        format_message(gen_event(""), "division.csml", "division_object_step_0"),
-        format_message(gen_event(""), "division.csml", "division_object_step_1"),
-        format_message(gen_event(""), "division.csml", "division_object_step_2"),
-        format_message(gen_event(""), "division.csml", "division_object_step_3"),
-        format_message(gen_event(""), "division.csml", "division_object_step_4"),
-        format_message(gen_event(""), "division.csml", "division_object_step_5"),
-        format_message(gen_event(""), "division.csml", "division_object_step_6"),
-    ];
+fn division_object_step_0() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_object_step_0",
+    );
 
-    for msg in vector.iter() {
-        let value: Value = message_to_json_value(msg.to_owned());
+    let value: Value = message_to_json_value(msg.to_owned());
 
-        if let Some(value) = value.get("messages") {
-            if let Some(value) = value.get(0) {
-                if let Some(value) = value.get("content_type") {
-                    if value == "error" {
-                        continue;
-                    }
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
                 }
             }
         }
-
-        println!("{:#?}", value);
-
-        return assert!(false);
     }
 
-    assert!(true)
+    println!("{:#?}", value);
+
+    assert!(false)
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// DIVISION STRING
+#[test]
+fn division_object_step_1() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_object_step_1",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_object_step_2() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_object_step_2",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_object_step_3() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_object_step_3",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_object_step_4() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_object_step_4",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_object_step_5() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_object_step_5",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+#[test]
+fn division_object_step_6() {
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_object_step_6",
+    );
+
+    let value: Value = message_to_json_value(msg.to_owned());
+
+    if let Some(value) = value.get("messages") {
+        if let Some(value) = value.get(0) {
+            if let Some(value) = value.get("content_type") {
+                if value == "error" {
+                    return assert!(true);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", value);
+
+    assert!(false)
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// STRING
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
 fn division_string_step_0() {
-    let msg = format_message(gen_event(""), "division.csml", "division_string_step_0");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_string_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -521,7 +1093,11 @@ fn division_string_step_0() {
 
 #[test]
 fn division_string_step_1() {
-    let msg = format_message(gen_event(""), "division.csml", "division_string_step_1");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_string_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -550,7 +1126,11 @@ fn division_string_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "division.csml", "division_string_step_2");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_string_step_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -568,7 +1148,11 @@ fn division_string_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "division.csml", "division_string_step_3");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_string_step_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -578,7 +1162,11 @@ fn division_string_step_3() {
 
 #[test]
 fn division_string_step_4() {
-    let msg = format_message(gen_event(""), "division.csml", "division_string_step_4");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_string_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -599,7 +1187,11 @@ fn division_string_step_4() {
 
 #[test]
 fn division_string_step_5() {
-    let msg = format_message(gen_event(""), "division.csml", "division_string_step_5");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_string_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -628,7 +1220,11 @@ fn division_string_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "division.csml", "division_string_step_6");
+    let msg = format_message(
+        gen_event(""),
+        "division.csml",
+        "division_string_step_6",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

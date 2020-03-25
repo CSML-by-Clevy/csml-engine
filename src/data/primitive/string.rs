@@ -1019,9 +1019,13 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs / rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Div: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} / {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
-            }),
+            })
         }
     }
 
