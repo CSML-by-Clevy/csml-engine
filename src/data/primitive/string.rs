@@ -905,19 +905,15 @@ impl Primitive for PrimitiveString {
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {
-        let rhs = if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
-            rhs
-        } else {
-            return None;
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&rhs),
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => lhs.partial_cmp(&rhs),
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64).partial_cmp(&rhs),
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&(rhs as f64)),
-            _ => self.value.partial_cmp(&rhs.value),
+        if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
+            return match (get_integer(&self.value), get_integer(&rhs.value)) {
+                (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64).partial_cmp(&rhs),
+                (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs.partial_cmp(&(rhs as f64)),
+                _ => self.value.partial_cmp(&rhs.value),
+            }
         }
+
+        None
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {

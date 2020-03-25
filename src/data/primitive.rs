@@ -230,7 +230,6 @@ impl PartialOrd for dyn Primitive {
 
                 lhs.partial_cmp(&rhs)
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
             {
@@ -243,7 +242,6 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveString
                     && rhs == PrimitiveType::PrimitiveFloat =>
@@ -257,7 +255,6 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
@@ -270,7 +267,6 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveFloat
                     && rhs == PrimitiveType::PrimitiveString =>
@@ -284,7 +280,6 @@ impl PartialOrd for dyn Primitive {
                     Err(_) => None,
                 }
             }
-
             _ => None,
         }
     }
