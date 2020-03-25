@@ -1089,60 +1089,11 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
             _ => Err(ErrorInfo {
-                message: "[!] Rem: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-
-    fn do_bit_and(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
-            }
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs & rhs)))
-            }
-            _ => Err(ErrorInfo {
-                message: "[!] BitAnd: Illegal operation".to_owned(),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-
-    fn do_bit_or(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        let lhs = match self.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
-            }
-        };
-        let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
-            Some(res) => res,
-            None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
-            }
-        };
-
-        match (get_integer(&lhs.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs | rhs)))
-            }
-            _ => Err(ErrorInfo {
-                message: "[!] BitOr: Illegal operation".to_owned(),
+                message: format!(
+                    "error: illegal operation: {:?} % {:?}",
+                    self.get_type(),
+                    other.get_type()
+                ),
                 interval: Interval { column: 0, line: 0 },
             }),
         }

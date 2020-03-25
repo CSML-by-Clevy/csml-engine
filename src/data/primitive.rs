@@ -21,7 +21,7 @@ use crate::data::{Interval, Literal, Message};
 use crate::error_format::ErrorInfo;
 
 use std::cmp::Ordering;
-use std::ops::{Add, BitAnd, BitOr, Div, Mul, Rem, Sub};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -52,9 +52,6 @@ pub trait Primitive {
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-
-    fn do_bit_and(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-    fn do_bit_or(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
 
     fn as_debug(&self) -> &dyn std::fmt::Debug;
     fn as_any(&self) -> &dyn std::any::Any;
@@ -679,85 +676,63 @@ impl Rem for Box<dyn Primitive> {
 
                 lhs.do_rem(&rhs)
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation between two different types: {:?} % {:?}",
-                    self.get_type(),
-                    other.get_type()
-                ),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-}
-
-impl BitAnd for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
-
-    fn bitand(self, other: Self) -> Result<Self, ErrorInfo> {
-        match (self.get_type(), other.get_type()) {
-            (lhs, rhs) if lhs == rhs => self.do_bit_and(&(*other)),
             (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveFloat =>
+                if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
             {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let lhs = PrimitiveFloat::new(lhs.value as f64);
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
 
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
-
-                lhs.do_bit_and(rhs)
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveInt::new(int).do_rem(rhs),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(float).do_rem(&PrimitiveFloat::new(rhs.value as f64))
+                    }
+                    Err(err) => Err(err),
+                }
             }
             (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveFloat && rhs == PrimitiveType::PrimitiveInt =>
+                if lhs == PrimitiveType::PrimitiveString
+                    && rhs == PrimitiveType::PrimitiveFloat =>
             {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
 
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let rhs = PrimitiveFloat::new(rhs.value as f64);
-
-                lhs.do_bit_and(&rhs)
-            }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation between two different types: {:?} & {:?}",
-                    self.get_type(),
-                    other.get_type()
-                ),
-                interval: Interval { column: 0, line: 0 },
-            }),
-        }
-    }
-}
-
-impl BitOr for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
-
-    fn bitor(self, other: Self) -> Result<Self, ErrorInfo> {
-        match (self.get_type(), other.get_type()) {
-            (lhs, rhs) if lhs == rhs => self.do_bit_or(&(*other)),
-            (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveFloat =>
-            {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let lhs = PrimitiveFloat::new(lhs.value as f64);
-
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
-
-                lhs.do_bit_or(rhs)
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_rem(rhs),
+                    Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_rem(rhs),
+                    Err(err) => Err(err),
+                }
             }
             (lhs, rhs)
-                if lhs == PrimitiveType::PrimitiveFloat && rhs == PrimitiveType::PrimitiveInt =>
+                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
-                let lhs = &*self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let lhs = self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
 
-                let rhs = &*other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
-                let rhs = PrimitiveFloat::new(rhs.value as f64);
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_rem(&PrimitiveInt::new(int)),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(lhs.value as f64).do_rem(&PrimitiveFloat::new(float))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveFloat
+                    && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
 
-                lhs.do_bit_or(&rhs)
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_rem(&PrimitiveFloat::new(int as f64)),
+                    Ok(Integer::Float(float)) => lhs.do_rem(&PrimitiveFloat::new(float)),
+                    Err(err) => Err(err),
+                }
             }
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between two different types: {:?} | {:?}",
+                    "error: illegal operation between two different types: {:?} - {:?}",
                     self.get_type(),
                     other.get_type()
                 ),

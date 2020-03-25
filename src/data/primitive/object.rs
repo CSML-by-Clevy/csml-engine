@@ -863,23 +863,13 @@ impl Primitive for PrimitiveObject {
         })
     }
 
-    fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bit_and(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bit_or(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} % {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }

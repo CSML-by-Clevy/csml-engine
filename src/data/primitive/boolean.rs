@@ -1,5 +1,4 @@
 use crate::data::literal::ContentType;
-use crate::data::primitive::int::PrimitiveInt;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_usage;
@@ -183,35 +182,13 @@ impl Primitive for PrimitiveBoolean {
         })
     }
 
-    fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Rem: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bit_and(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 & other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(ErrorInfo {
-            message: "[!] BitAnd: Illegal operation".to_owned(),
-            interval: Interval { column: 0, line: 0 },
-        })
-    }
-
-    fn do_bit_or(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value as i64 | other.value as i64;
-
-            return Ok(Box::new(PrimitiveInt::new(result)));
-        }
-
-        Err(ErrorInfo {
-            message: "[!] BitOr: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} % {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }
