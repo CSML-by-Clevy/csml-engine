@@ -338,7 +338,6 @@ impl Add for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
@@ -366,7 +365,6 @@ impl Add for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             _ => Err(ErrorInfo {
                 message: format!(
                     "error: illegal operation between two different types: {:?} + {:?}",
@@ -432,7 +430,6 @@ impl Sub for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
@@ -460,7 +457,6 @@ impl Sub for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             _ => Err(ErrorInfo {
                 message: format!(
                     "error: illegal operation between two different types: {:?} - {:?}",
@@ -526,7 +522,6 @@ impl Div for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             (lhs, rhs)
                 if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
             {
@@ -554,7 +549,6 @@ impl Div for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-
             _ => Err(ErrorInfo {
                 message: format!(
                     "error: illegal operation between two different types: {:?} - {:?}",
@@ -593,9 +587,63 @@ impl Mul for Box<dyn Primitive> {
 
                 lhs.do_mul(&rhs)
             }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString && rhs == PrimitiveType::PrimitiveInt =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveInt::new(int).do_mul(rhs),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(float).do_mul(&PrimitiveFloat::new(rhs.value as f64))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveString
+                    && rhs == PrimitiveType::PrimitiveFloat =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveString>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+
+                match get_integer(&lhs.value) {
+                    Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_mul(rhs),
+                    Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_mul(rhs),
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveInt && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveInt>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_mul(&PrimitiveInt::new(int)),
+                    Ok(Integer::Float(float)) => {
+                        PrimitiveFloat::new(lhs.value as f64).do_mul(&PrimitiveFloat::new(float))
+                    }
+                    Err(err) => Err(err),
+                }
+            }
+            (lhs, rhs)
+                if lhs == PrimitiveType::PrimitiveFloat
+                    && rhs == PrimitiveType::PrimitiveString =>
+            {
+                let lhs = self.as_any().downcast_ref::<PrimitiveFloat>().unwrap();
+                let rhs = other.as_any().downcast_ref::<PrimitiveString>().unwrap();
+
+                match get_integer(&rhs.value) {
+                    Ok(Integer::Int(int)) => lhs.do_mul(&PrimitiveFloat::new(int as f64)),
+                    Ok(Integer::Float(float)) => lhs.do_mul(&PrimitiveFloat::new(float)),
+                    Err(err) => Err(err),
+                }
+            }
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between two different types: {:?} * {:?}",
+                    "error: illegal operation between two different types: {:?} - {:?}",
                     self.get_type(),
                     other.get_type()
                 ),

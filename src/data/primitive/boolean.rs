@@ -172,9 +172,13 @@ impl Primitive for PrimitiveBoolean {
         })
     }
 
-    fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
-            message: "[!] Mul: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} * {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }

@@ -626,17 +626,6 @@
 // }
 
 // // #[test]
-// // fn ok_multiplication() {
-// //     let data = r#"{"messages":[ {"content":{"text":"8"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-// //     let msg = format_message(gen_event(""), "multiplication.csml", "start");
-
-// //     let v1: Value = message_to_json_value(msg);
-// //     let v2: Value = serde_json::from_str(data).unwrap();
-
-// //     assert_eq!(v1, v2)
-// // }
-
-// // #[test]
 // // fn ok_remainder() {
 // //     let data = r#"{"messages":[ {"content":{"text":"2"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
 // //     let msg = format_message(gen_event(""), "remainder.csml", "start");
