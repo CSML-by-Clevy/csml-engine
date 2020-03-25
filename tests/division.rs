@@ -6,7 +6,7 @@ use serde_json::Value;
 use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
 
 fn format_message(event: Event, name: &str, step: &str) -> MessageData {
-    let file = format!("CSML/basic_test/numerical_operations/{}", name);
+    let file = format!("CSML/basic_test/numerical_operation/{}", name);
     let text = read_file(file).unwrap();
 
     let context = gen_context(serde_json::json!({}), serde_json::json!({}));
@@ -44,7 +44,7 @@ fn check_error_component(vec: &[Message]) -> bool {
 
 #[test]
 fn ok_division_3() {
-    let file = format!("CSML/basic_test/numerical_operations/{}", "division.csml");
+    let file = format!("CSML/basic_test/numerical_operation/{}", "division.csml");
     let text = read_file(file).unwrap();
 
     let context = gen_context(serde_json::json!({}), serde_json::json!({}));

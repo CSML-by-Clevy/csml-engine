@@ -1077,16 +1077,16 @@ impl Primitive for PrimitiveString {
 
         match (get_integer(&self.value), get_integer(&rhs.value)) {
             (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs * rhs)))
+                Ok(Box::new(PrimitiveInt::new(lhs % rhs)))
             }
             (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs * rhs)))
+                Ok(Box::new(PrimitiveFloat::new(lhs % rhs)))
             }
             (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs as f64 * rhs)))
+                Ok(Box::new(PrimitiveFloat::new(lhs as f64 % rhs)))
             }
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
+                Ok(Box::new(PrimitiveFloat::new(lhs % rhs as f64)))
             }
             _ => Err(ErrorInfo {
                 message: format!(
