@@ -893,19 +893,15 @@ impl Primitive for PrimitiveString {
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
-        let rhs = if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
-            rhs
-        } else {
-            return false;
-        };
-
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => lhs == rhs,
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => lhs == rhs,
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64) == rhs,
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs == (rhs as f64),
-            _ => self.value == rhs.value,
+        if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
+            return match (get_integer(&self.value), get_integer(&rhs.value)) {
+                (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => (lhs as f64) == rhs,
+                (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => lhs == (rhs as f64),
+                _ => self.value == rhs.value,
+            };
         }
+
+        false
     }
 
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering> {

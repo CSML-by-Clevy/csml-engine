@@ -194,7 +194,6 @@ fn division_float_step_2() {
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_float_step_2");
 
-
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
@@ -212,7 +211,6 @@ fn division_float_step_3() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_float_step_3");
-
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -273,7 +271,6 @@ fn division_float_step_6() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_float_step_6");
-
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -339,7 +336,6 @@ fn division_int_step_2() {
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_int_step_2");
 
-
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
@@ -357,7 +353,6 @@ fn division_int_step_3() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_int_step_3");
-
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -418,7 +413,6 @@ fn division_int_step_6() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_int_step_6");
-
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -558,7 +552,6 @@ fn division_string_step_2() {
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_string_step_2");
 
-
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
@@ -576,7 +569,6 @@ fn division_string_step_3() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_string_step_3");
-
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -637,7 +629,6 @@ fn division_string_step_6() {
         "next_flow":null,
         "next_step":null}"#;
     let msg = format_message(gen_event(""), "division.csml", "division_string_step_6");
-
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
