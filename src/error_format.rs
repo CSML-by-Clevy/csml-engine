@@ -119,6 +119,8 @@ pub const ERROR_NULL_UNKONWN_METHOD: &'static str = " is not a method of Null";
 // #### String
 pub const ERROR_STRING_DO_MATCH: &'static str =
     "[do_match] take one parameter of type String usage: string.do_match(\"tag\")";
+pub const ERROR_STRING_APPEND: &'static str =
+    "[append] take one parameter of type String usage: string.append(\"text to append\")";
 pub const ERROR_STRING_CONTAINS: &'static str =
     "[contains] take one parameter of type String usage: string.contains(\"word\")";
 pub const ERROR_STRING_CONTAINS_REGEX: &'static str =
@@ -177,6 +179,8 @@ pub const ERROR_HTTP_UNKONWN_METHOD: &'static str = " is not a method of HTTP";
 // #### OBJECT
 pub const ERROR_OBJECT_CONTAINS: &'static str =
     "[contains] take one parameter of type String usage: object.contains(\"key\")";
+pub const ERROR_OBJECT_GET_GENERICS: &'static str =
+    "[get_generics] take one parameter of type String usage: object.get_generics(\"key\")";
 pub const ERROR_OBJECT_INSERT: &'static str =
     "[insert] take tow parameters usage: object.insert(string, any_type)";
 pub const ERROR_OBJECT_REMOVE: &'static str =

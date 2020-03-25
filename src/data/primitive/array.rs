@@ -1,7 +1,6 @@
 use crate::data::literal::ContentType;
 use crate::data::primitive::{
-    tools::check_usage, Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
-    PrimitiveType, Right,
+    Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right,
 };
 use crate::data::{Interval, Literal, Message};
 use crate::error_format::*;
@@ -27,66 +26,21 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "type_of",
-            (PrimitiveArray::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveArray::to_string as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "push",
-            (PrimitiveArray::push as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "pop",
-            (PrimitiveArray::pop as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "clear",
-            (PrimitiveArray::clear as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "length",
-            (PrimitiveArray::length as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_empty",
-            (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "insert_at",
-            (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "remove_at",
-            (PrimitiveArray::remove_at as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "one_of",
-            (PrimitiveArray::one_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "join",
-            (PrimitiveArray::join as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_number",
-            (PrimitiveArray::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "shuffle",
-            (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "index_of",
-            (PrimitiveArray::index_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "find",
-            (PrimitiveArray::find as PrimitiveMethod, Right::Read),
-        );
+        map.insert("is_number", (PrimitiveArray::is_number as PrimitiveMethod, Right::Read));
+        map.insert("type_of", (PrimitiveArray::type_of as PrimitiveMethod, Right::Read));
+        map.insert("to_string", (PrimitiveArray::to_string as PrimitiveMethod, Right::Read));
+
+        map.insert("find", (PrimitiveArray::find as PrimitiveMethod, Right::Read));
+        map.insert("is_empty", (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read));
+        map.insert("insert_at", (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write));
+        map.insert("index_of", (PrimitiveArray::index_of as PrimitiveMethod, Right::Read));
+        map.insert("join", (PrimitiveArray::join as PrimitiveMethod, Right::Read));
+        map.insert("length", (PrimitiveArray::length as PrimitiveMethod, Right::Read));
+        map.insert("one_of", (PrimitiveArray::one_of as PrimitiveMethod, Right::Read));
+        map.insert("push", (PrimitiveArray::push as PrimitiveMethod, Right::Write));
+        map.insert("pop", (PrimitiveArray::pop as PrimitiveMethod, Right::Write));
+        map.insert("remove_at", (PrimitiveArray::remove_at as PrimitiveMethod, Right::Write));
+        map.insert("shuffle", (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write));
 
         map
     };
@@ -98,10 +52,10 @@ pub struct PrimitiveArray {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// PRIVATE FUNCTIONS
+// METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn check_index(index: i64, length: i64, interval: Interval) -> Result<u8, ErrorInfo> {
+fn check_index(index: i64, length: i64, interval: Interval) -> Result<(), ErrorInfo> {
     if index.is_negative() {
         return Err(gen_error_info(interval, ERROR_ARRAY_NEGATIVE.to_owned()));
     }
@@ -110,20 +64,34 @@ fn check_index(index: i64, length: i64, interval: Interval) -> Result<u8, ErrorI
         return Err(gen_error_info(interval, ERROR_ARRAY_INDEX.to_owned()));
     }
 
-    Ok(0)
+    Ok(())
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// METHOD FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
 impl PrimitiveArray {
+    fn is_number(
+        _array: &mut PrimitiveArray,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_number() => boolean";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
     fn type_of(
         _array: &mut PrimitiveArray,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "type_of()", interval)?;
+        let usage = "type_of() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+        }
 
         Ok(PrimitiveString::get_literal("array", interval))
     }
@@ -133,17 +101,23 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_string()", interval)?;
+        let usage = "to_string() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+        }
 
         Ok(PrimitiveString::get_literal(&array.to_string(), interval))
     }
+}
 
-    fn push(
+impl PrimitiveArray {
+    fn find(
         array: &mut PrimitiveArray,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "push(Primitive<T>)", interval)?;
+        let usage = "find(value: primitive) => array";
 
         if array.value.len() + args.len() == usize::MAX {
             return Err(gen_error_info(
@@ -152,48 +126,26 @@ impl PrimitiveArray {
             ));
         }
 
-        for literal in args.iter() {
-            array.value.push(literal.to_owned());
+        let value = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(gen_error_info(interval,format!("usage: {}", usage)));
+            }
+        };
+
+        let mut vector = Vec::new();
+
+        for literal in array.value.iter() {
+            if literal == value {
+                vector.push(literal.to_owned());
+            }
+        }
+
+        if !vector.is_empty() {
+            return Ok(PrimitiveArray::get_literal(&vector, interval));
         }
 
         Ok(PrimitiveNull::get_literal(interval))
-    }
-
-    fn pop(
-        array: &mut PrimitiveArray,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "pop()", interval)?;
-
-        match array.value.pop() {
-            Some(literal) => Ok(literal),
-            None => Err(gen_error_info(interval, ERROR_ARRAY_POP.to_owned())),
-        }
-    }
-
-    fn clear(
-        array: &mut PrimitiveArray,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "clear()", interval)?;
-
-        array.value.clear();
-
-        Ok(PrimitiveNull::get_literal(interval))
-    }
-
-    fn length(
-        array: &mut PrimitiveArray,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "length()", interval)?;
-
-        let result = array.value.len();
-
-        Ok(PrimitiveInt::get_literal(result as i64, interval))
     }
 
     fn is_empty(
@@ -201,7 +153,11 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_empty()", interval)?;
+        let usage = "is_empty() => boolean";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, ERROR_ARRAY_POP.to_owned()));
+        }
 
         let result = array.value.is_empty();
 
@@ -213,48 +169,128 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        let (literal, value) = match (args.get(0), args.get(1)) {
-            (Some(lhs), Some(rhs)) => (lhs, rhs),
+        let usage = "insert_at(index: int, value: primitive) => null";
+
+        if args.len() != 2 {
+            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+        }
+
+        let index = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                match Literal::get_value::<i64>(&res.primitive) {
+                    Some(index) => index,
+                    None => return Err(gen_error_info(
+                        interval,
+                        ERROR_ARRAY_INSERT_AT.to_owned(),
+                    ))
+                }
+            }
             _ => {
-                return Err(gen_error_info(interval, ERROR_ARRAY_INSERT_AT.to_owned()));
+                return Err(gen_error_info(
+                    interval,
+                    ERROR_ARRAY_INSERT_AT.to_owned(),
+                ));
             }
         };
 
-        match Literal::get_value::<i64>(&literal.primitive) {
-            Some(res) => {
-                check_index(*res, array.value.len() as i64, interval)?;
-
-                array.value.insert(*res as usize, value.clone());
-
-                Ok(PrimitiveNull::get_literal(interval))
+        let value = match args.get(1) {
+            Some(res) => res,
+            _ => {
+                return Err(gen_error_info(interval,format!("usage: {}", usage)));
             }
-            None => Err(gen_error_info(
-                interval,
-                ERROR_ARRAY_INSERT_AT_INT.to_owned(),
-            )),
-        }
+        };
+
+        check_index(*index, array.value.len() as i64, interval)?;
+
+        array.value.insert(*index as usize, value.clone());
+
+        Ok(PrimitiveNull::get_literal(interval))
     }
 
-    fn remove_at(
+    fn index_of(
         array: &mut PrimitiveArray,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        let index = match args.get(0) {
+        let usage = "index_of(value: primitive) => int";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+        }
+
+        let value = match args.get(0) {
             Some(res) => res,
-            _ => {
-                return Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned()));
+            None => {
+                return Err(gen_error_info(interval,format!("usage: {}", usage)));
             }
         };
 
-        match Literal::get_value::<i64>(&index.primitive) {
-            Some(res) => {
-                check_index(*res, array.value.len() as i64, interval)?;
-
-                Ok(array.value.remove(*res as usize))
+        for (index, literal) in array.value.iter().enumerate() {
+            if literal == value {
+                return Ok(PrimitiveInt::get_literal(index as i64, interval));
             }
-            None => Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned())),
         }
+
+        Ok(PrimitiveInt::get_literal(-1, interval))
+    }
+
+    fn join(
+        array: &mut PrimitiveArray,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "join(separater: string) => string";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+        }
+
+        let separator = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(sep) => sep,
+                    None => return Err(gen_error_info(
+                        interval,
+                        ERROR_ARRAY_JOIN.to_owned(),
+                    ))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(
+                    interval,
+                    ERROR_ARRAY_JOIN.to_owned(),
+                ));
+            }
+        };
+
+        let length = array.value.len();
+        let mut result = String::new();
+        
+        for (index, string) in array.value.iter().enumerate() {
+            result.push_str(&string.primitive.to_string());
+
+            if index + 1 != length {
+                result.push_str(separator);
+            }
+        }
+
+        Ok(PrimitiveString::get_literal(&result, interval))
+    }
+
+    fn length(
+        array: &mut PrimitiveArray,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "length() => int";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let result = array.value.len();
+
+        Ok(PrimitiveInt::get_literal(result as i64, interval))
     }
 
     fn one_of(
@@ -262,7 +298,11 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "one_of()", interval)?;
+        let usage = "one_of() => primitive";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         if let Some(res) = array
             .value
@@ -274,50 +314,82 @@ impl PrimitiveArray {
         Ok(PrimitiveNull::get_literal(interval))
     }
 
-    fn join(
+    fn push(
         array: &mut PrimitiveArray,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        let mut result = String::new();
+        let usage = "push(value: primitive) => null";
 
-        let literal = match args.get(0) {
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let value = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(interval, ERROR_ARRAY_JOIN.to_owned()));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
-        match Literal::get_value::<String>(&literal.primitive) {
-            Some(separater) => {
-                let length = array.value.len();
-
-                for (index, string) in array.value.iter().enumerate() {
-                    result.push_str(&string.primitive.to_string());
-
-                    if index + 1 != length {
-                        result.push_str(separater);
-                    }
-                }
-
-                if result.is_empty() {
-                    return Ok(PrimitiveNull::get_literal(interval));
-                }
-
-                Ok(PrimitiveString::get_literal(&result, interval))
-            }
-            None => Err(gen_error_info(interval, ERROR_ARRAY_JOIN.to_owned())),
+        if array.value.len() + args.len() == usize::MAX {
+            return Err(gen_error_info(
+                interval,
+                format!("{} {}",
+                    ERROR_ARRAY_OVERFLOW,
+                    usize::MAX,
+                ),
+            ));
         }
+
+        array.value.push(value.to_owned());
+
+        Ok(PrimitiveNull::get_literal(interval))
     }
 
-    fn is_number(
-        _array: &mut PrimitiveArray,
+    fn pop(
+        array: &mut PrimitiveArray,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_number()", interval)?;
+        let usage = "pop() => primitive";
 
-        Ok(PrimitiveBoolean::get_literal(false, interval))
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        match array.value.pop() {
+            Some(literal) => Ok(literal),
+            None => Err(gen_error_info(interval, ERROR_ARRAY_POP.to_owned()))
+        }
+    }
+
+    fn remove_at(
+        array: &mut PrimitiveArray,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "remove_at(index: int) => primitive";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let index = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                match Literal::get_value::<i64>(&res.primitive) {
+                    Some(index) => index,
+                    None => return Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned()));
+            }
+        };
+
+        check_index(*index, array.value.len() as i64, interval)?;
+
+        Ok(array.value.remove(*index as usize))
     }
 
     fn shuffle(
@@ -325,57 +397,15 @@ impl PrimitiveArray {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "shuffle()", interval)?;
+        let usage = "shuffle() => array";
 
-        array.value.shuffle(&mut rand::thread_rng());
-
-        Ok(PrimitiveNull::get_literal(interval))
-    }
-
-    fn index_of(
-        array: &mut PrimitiveArray,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_ARRAY_INDEX_OF.to_owned()));
-            }
-        };
-
-        for (index, literal) in array.value.iter().enumerate() {
-            if literal == args {
-                return Ok(PrimitiveInt::get_literal(index as i64, interval));
-            }
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
-        Ok(PrimitiveInt::get_literal(-1, interval))
-    }
+        let mut vector = array.value.to_owned();
 
-    fn find(
-        array: &mut PrimitiveArray,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        let mut vector: Vec<Literal> = Vec::new();
-
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_ARRAY_INDEX_OF.to_owned()));
-            }
-        };
-
-        for literal in array.value.iter() {
-            if literal == args {
-                vector.push(literal.to_owned());
-            }
-        }
-
-        if vector.is_empty() {
-            return Ok(PrimitiveNull::get_literal(interval));
-        }
+        vector.shuffle(&mut rand::thread_rng());
 
         Ok(PrimitiveArray::get_literal(&vector, interval))
     }
@@ -402,6 +432,10 @@ impl PrimitiveArray {
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// TRAIT FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 impl Primitive for PrimitiveArray {
     fn do_exec(

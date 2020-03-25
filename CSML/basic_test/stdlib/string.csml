@@ -4,7 +4,7 @@ start:
 step_0:
     remember s = "Hello "
 
-    do s.append("World")
+    do s = s.append("World")
 
     say s
 

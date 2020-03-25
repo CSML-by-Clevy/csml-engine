@@ -4,7 +4,7 @@ use crate::data::{
     message::Message,
     primitive::{
         array::PrimitiveArray, boolean::PrimitiveBoolean, int::PrimitiveInt, null::PrimitiveNull,
-        string::PrimitiveString, tools::check_usage, Primitive, PrimitiveType, Right,
+        string::PrimitiveString, Primitive, PrimitiveType, Right,
     },
     Literal,
 };
@@ -22,40 +22,14 @@ lazy_static! {
     static ref FUNCTIONS_HTTP: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "set",
-            (PrimitiveObject::set as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "query",
-            (PrimitiveObject::query as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "get",
-            (PrimitiveObject::get as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "post",
-            (PrimitiveObject::post as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "put",
-            (PrimitiveObject::put as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "delete",
-            (PrimitiveObject::delete as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "patch",
-            (PrimitiveObject::patch as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "send",
-            (PrimitiveObject::send as PrimitiveMethod, Right::Read),
-        );
+        map.insert("set", (PrimitiveObject::set as PrimitiveMethod, Right::Read));
+        map.insert("query", (PrimitiveObject::query as PrimitiveMethod, Right::Read));
+        map.insert("get", (PrimitiveObject::get_http as PrimitiveMethod, Right::Read));
+        map.insert("post", (PrimitiveObject::post as PrimitiveMethod, Right::Read));
+        map.insert("put", (PrimitiveObject::put as PrimitiveMethod, Right::Read));
+        map.insert("delete", (PrimitiveObject::delete as PrimitiveMethod, Right::Read));
+        map.insert("patch", (PrimitiveObject::patch as PrimitiveMethod, Right::Read));
+        map.insert("send", (PrimitiveObject::send as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -65,24 +39,9 @@ lazy_static! {
     static ref FUNCTIONS_EVENT: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "get_type",
-            (PrimitiveObject::get_type as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "get_metadata",
-            (
-                PrimitiveObject::get_metadata as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "is_number",
-            (
-                PrimitiveObject::is_number_event as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
+        map.insert("get_type", (PrimitiveObject::get_type as PrimitiveMethod, Right::Read));
+        map.insert("get_metadata", (PrimitiveObject::get_metadata as PrimitiveMethod, Right::Read));
+        map.insert("is_number", (PrimitiveObject::is_number_event as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -92,41 +51,16 @@ lazy_static! {
     static ref FUNCTIONS_READ: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "type_of",
-            (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "contains",
-            (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_empty",
-            (PrimitiveObject::is_empty as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "length",
-            (PrimitiveObject::length as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "keys",
-            (PrimitiveObject::keys as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "values",
-            (PrimitiveObject::values as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_number",
-            (
-                PrimitiveObject::is_number_generics as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
+        map.insert("type_of", (PrimitiveObject::type_of as PrimitiveMethod, Right::Read));
+        map.insert("to_string", (PrimitiveObject::to_string as PrimitiveMethod, Right::Read));
+        map.insert("is_number", (PrimitiveObject::is_number_generics as PrimitiveMethod, Right::Read));
+        
+        map.insert("contains", (PrimitiveObject::contains as PrimitiveMethod, Right::Read));
+        map.insert("is_empty", (PrimitiveObject::is_empty as PrimitiveMethod, Right::Read));
+        map.insert("length", (PrimitiveObject::length as PrimitiveMethod, Right::Read));
+        map.insert("keys", (PrimitiveObject::keys as PrimitiveMethod, Right::Read));
+        map.insert("values", (PrimitiveObject::values as PrimitiveMethod, Right::Read));
+        map.insert("get", (PrimitiveObject::get_generics as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -136,25 +70,9 @@ lazy_static! {
     static ref FUNCTIONS_WRITE: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "clear",
-            (PrimitiveObject::clear as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "clear_values",
-            (
-                PrimitiveObject::clear_values as PrimitiveMethod,
-                Right::Write,
-            ),
-        );
-        map.insert(
-            "insert",
-            (PrimitiveObject::insert as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "remove",
-            (PrimitiveObject::remove as PrimitiveMethod, Right::Write),
-        );
+        map.insert("clear_values", (PrimitiveObject::clear_values as PrimitiveMethod, Right::Write));
+        map.insert("insert", (PrimitiveObject::insert as PrimitiveMethod, Right::Write));
+        map.insert("remove", (PrimitiveObject::remove as PrimitiveMethod, Right::Write));
 
         map
     };
@@ -183,9 +101,17 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "set(header: object) => http object";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
         let literal = match args.get(0) {
             Some(res) => res,
-            _ => return Err(gen_error_info(interval, ERROR_HTTP_SET.to_owned())),
+            _ => {
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            }
         };
 
         let mut object = object.to_owned();
@@ -210,10 +136,16 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "query(parameters: object) => http object";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(interval, ERROR_HTTP_QUERY.to_owned()));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
@@ -233,13 +165,17 @@ impl PrimitiveObject {
         }
     }
 
-    fn get(
+    fn get_http(
         object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "get()", interval)?;
+        let usage = "get() => http object";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let mut object = object.to_owned();
 
@@ -261,10 +197,16 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "post(body: object) => http object";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(interval, ERROR_HTTP_POST.to_owned()));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
@@ -295,10 +237,16 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "put(body: object) => http object";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(interval, ERROR_HTTP_PUT.to_owned()));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
@@ -329,7 +277,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "delete()", interval)?;
+        let usage = "delete() => http object";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let mut object = object.to_owned();
 
@@ -351,10 +303,16 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
+        let usage = "patch(body: object) => http object";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(interval, ERROR_HTTP_PATCH.to_owned()));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
@@ -385,7 +343,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "send()", interval)?;
+        let usage = "send() => http object";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         if let Some(literal) = object.value.get("method") {
             let function = match Literal::get_value::<String>(&literal.primitive) {
@@ -416,7 +378,11 @@ impl PrimitiveObject {
         interval: Interval,
         content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "get_type()", interval)?;
+        let usage = "get_type() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         Ok(PrimitiveString::get_literal(content_type, interval))
     }
@@ -427,7 +393,11 @@ impl PrimitiveObject {
         interval: Interval,
         content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "get_metadata()", interval)?;
+        let usage = "get_metadata() => object";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         Ok(Literal {
             content_type: content_type.to_owned(),
@@ -442,7 +412,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_number()", interval)?;
+        let usage = "is_number() => boolean";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         if let Some(res) = object.value.get("text") {
             let result = res.primitive.to_string();
@@ -456,13 +430,31 @@ impl PrimitiveObject {
 }
 
 impl PrimitiveObject {
+    fn is_number_generics(
+        _object: &mut PrimitiveObject,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_number() => boolean";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
     fn type_of(
         _object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "type_of()", interval)?;
+        let usage = "type_of() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         Ok(PrimitiveString::get_literal("object", interval))
     }
@@ -473,7 +465,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_string()", interval)?;
+        let usage = "to_string() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         Ok(PrimitiveString::get_literal(&object.to_string(), interval))
     }
@@ -484,15 +480,25 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "contains(Primitive<String>)", interval)?;
+        let usage = "contains(key: string) => boolean";
 
-        let literal = match args.get(0) {
-            Some(res) => res,
-            None => return Err(gen_error_info(interval, ERROR_OBJECT_CONTAINS.to_owned())),
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let key = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(key) => key,
+                    None => return Err(gen_error_info(interval, ERROR_OBJECT_CONTAINS.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_OBJECT_CONTAINS.to_owned()));
+            }
         };
 
-        let key = get_key(literal, interval)?;
-        let result = object.value.contains_key(&key);
+        let result = object.value.contains_key(key);
 
         Ok(PrimitiveBoolean::get_literal(result, interval))
     }
@@ -503,7 +509,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_empty()", interval)?;
+        let usage = "is_empty() => boolean";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let result = object.value.is_empty();
 
@@ -516,7 +526,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "length()", interval)?;
+        let usage = "length() => int";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let result = object.value.len();
 
@@ -529,7 +543,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "keys()", interval)?;
+        let usage = "keys() => array";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let mut result = Vec::new();
 
@@ -546,7 +564,11 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "values()", interval)?;
+        let usage = "values() => array";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let mut result = Vec::new();
 
@@ -557,39 +579,55 @@ impl PrimitiveObject {
         Ok(PrimitiveArray::get_literal(&result, interval))
     }
 
-    fn is_number_generics(
-        _object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_number()", interval)?;
-
-        Ok(PrimitiveBoolean::get_literal(false, interval))
-    }
-}
-
-impl PrimitiveObject {
-    fn clear(
+    fn get_generics(
         object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "clear()", interval)?;
+        let usage = "get(key: string) => primitive";
 
-        object.value.clear();
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
-        Ok(PrimitiveNull::get_literal(interval))
+        let key = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(key) => key,
+                    None => return Err(gen_error_info(
+                        interval,
+                        ERROR_OBJECT_GET_GENERICS.to_owned(),
+                    ))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(
+                    interval,
+                    ERROR_OBJECT_GET_GENERICS.to_owned(),
+                ));
+            }
+        };
+
+        match object.value.get(key) {
+            Some(res) => Ok(res.to_owned()),
+            None => Ok(PrimitiveNull::get_literal(interval)),
+        }
     }
+}
 
+impl PrimitiveObject {
     fn clear_values(
         object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "clear_values()", interval)?;
+        let usage = "clear_values() => null";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let mut vector: Vec<String> = Vec::new();
 
@@ -612,16 +650,34 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let (literal, value) = match (args.get(0), args.get(1)) {
-            (Some(lhs), Some(rhs)) => (lhs, rhs),
-            _ => return Err(gen_error_info(interval, ERROR_OBJECT_INSERT.to_owned())),
+        let usage = "insert(key: string, value: primitive) => null";
+
+        if args.len() != 2 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let key = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(key) => key,
+                    None => return Err(gen_error_info(interval, ERROR_OBJECT_INSERT.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_OBJECT_INSERT.to_owned()));
+            }
         };
 
-        let key = get_key(literal, interval)?;
+        let value = match args.get(1) {
+            Some(res) => res,
+            _ => {
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            }
+        };
 
-        match object.value.insert(key, value.to_owned()) {
-            _ => Ok(PrimitiveNull::get_literal(interval)),
-        }
+        object.value.insert(key.to_owned(), value.to_owned());
+
+        Ok(PrimitiveNull::get_literal(interval))
     }
 
     fn remove(
@@ -630,14 +686,25 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let literal = match args.get(0) {
-            Some(res) => res,
-            None => return Err(gen_error_info(interval, ERROR_OBJECT_REMOVE.to_owned())),
+        let usage = "remove(key: string) => primitive";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let key = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(key) => key,
+                    None => return Err(gen_error_info(interval, ERROR_OBJECT_REMOVE.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_OBJECT_REMOVE.to_owned()));
+            }
         };
 
-        let key = get_key(literal, interval)?;
-
-        match object.value.remove(&key) {
+        match object.value.remove(key) {
             Some(value) => Ok(value),
             None => Ok(PrimitiveNull::get_literal(interval)),
         }
@@ -647,13 +714,6 @@ impl PrimitiveObject {
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
-
-fn get_key(literal: &Literal, interval: Interval) -> Result<String, ErrorInfo> {
-    match literal.primitive.get_type() {
-        PrimitiveType::PrimitiveString => Ok(literal.primitive.to_string()),
-        _ => Err(gen_error_info(interval, ERROR_OBJECT_GET_KEY.to_owned())),
-    }
-}
 
 fn insert_to_object(
     src: &HashMap<String, Literal>,

@@ -121,7 +121,7 @@ fn array_step_8() {
 
 #[test]
 fn array_step_9() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":null}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
+    let data = r#"{"memories":[], "messages":[{"content":{"text":""}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "step_9");
 
     let v1: Value = message_to_json_value(msg);

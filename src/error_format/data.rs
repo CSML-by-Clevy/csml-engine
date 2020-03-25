@@ -40,4 +40,8 @@ impl ErrorInfo {
             self.message, self.interval.line, self.interval.column
         )
     }
+
+    pub fn new(message: String, interval: Interval) -> Self {
+        Self { message, interval }
+    }
 }

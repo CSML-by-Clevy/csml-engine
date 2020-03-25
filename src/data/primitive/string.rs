@@ -5,7 +5,6 @@ use crate::data::primitive::float::PrimitiveFloat;
 use crate::data::primitive::int::PrimitiveInt;
 use crate::data::primitive::null::PrimitiveNull;
 use crate::data::primitive::object::PrimitiveObject;
-use crate::data::primitive::tools::check_usage;
 use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
@@ -30,141 +29,35 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert(
-            "type_of",
-            (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "append",
-            (PrimitiveString::append as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "match",
-            (PrimitiveString::do_match as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "clear",
-            (PrimitiveString::clear as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "length",
-            (PrimitiveString::length as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_empty",
-            (PrimitiveString::is_empty as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_lowercase",
-            (
-                PrimitiveString::to_lowercase as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "to_uppercase",
-            (
-                PrimitiveString::to_uppercase as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "contains",
-            (PrimitiveString::contains as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "starts_with",
-            (PrimitiveString::starts_with as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "ends_with",
-            (PrimitiveString::ends_with as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "contains_regex",
-            (
-                PrimitiveString::contains_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "starts_with_regex",
-            (
-                PrimitiveString::starts_with_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "ends_with_regex",
-            (
-                PrimitiveString::ends_with_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "match_regex",
-            (
-                PrimitiveString::do_match_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "is_number",
-            (PrimitiveString::is_number as PrimitiveMethod, Right::Read),
-        );
+        map.insert("is_number", (PrimitiveString::is_number as PrimitiveMethod, Right::Read));
+        map.insert("type_of", (PrimitiveString::type_of as PrimitiveMethod, Right::Read));
+        map.insert("to_string", (PrimitiveString::to_string as PrimitiveMethod, Right::Read));
 
-        map.insert(
-            "abs",
-            (PrimitiveString::abs as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "cos",
-            (PrimitiveString::cos as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "pow",
-            (PrimitiveString::pow as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "floor",
-            (PrimitiveString::floor as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "ceil",
-            (PrimitiveString::ceil as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "round",
-            (PrimitiveString::round as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "sin",
-            (PrimitiveString::sin as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "sqrt",
-            (PrimitiveString::sqrt as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "tan",
-            (PrimitiveString::tan as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_number",
-            (PrimitiveString::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_int",
-            (PrimitiveString::to_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_float",
-            (PrimitiveString::to_float as PrimitiveMethod, Right::Read),
-        );
+        map.insert("append", (PrimitiveString::append as PrimitiveMethod, Right::Read));
+        map.insert("contains", (PrimitiveString::contains as PrimitiveMethod, Right::Read));
+        map.insert("contains_regex", (PrimitiveString::contains_regex as PrimitiveMethod, Right::Read));
+        map.insert("ends_with", (PrimitiveString::ends_with as PrimitiveMethod, Right::Read));
+        map.insert("ends_with_regex", (PrimitiveString::ends_with_regex as PrimitiveMethod, Right::Read));
+        map.insert("is_empty", (PrimitiveString::is_empty as PrimitiveMethod, Right::Read));
+        map.insert("length", (PrimitiveString::length as PrimitiveMethod, Right::Read));
+        map.insert("match", (PrimitiveString::do_match as PrimitiveMethod, Right::Read));
+        map.insert("match_regex", (PrimitiveString::do_match_regex as PrimitiveMethod, Right::Read));
+        map.insert("starts_with", (PrimitiveString::starts_with as PrimitiveMethod, Right::Read));
+        map.insert("starts_with_regex", (PrimitiveString::starts_with_regex as PrimitiveMethod, Right::Read));
+        map.insert("to_lowercase", (PrimitiveString::to_lowercase as PrimitiveMethod, Right::Read));
+        map.insert("to_uppercase", (PrimitiveString::to_uppercase as PrimitiveMethod, Right::Read));
+
+        map.insert("abs", (PrimitiveString::abs as PrimitiveMethod, Right::Read));
+        map.insert("cos", (PrimitiveString::cos as PrimitiveMethod, Right::Read));
+        map.insert("ceil", (PrimitiveString::ceil as PrimitiveMethod, Right::Read));
+        map.insert("floor", (PrimitiveString::floor as PrimitiveMethod, Right::Read));
+        map.insert("pow", (PrimitiveString::pow as PrimitiveMethod, Right::Read));
+        map.insert("round", (PrimitiveString::round as PrimitiveMethod, Right::Read));
+        map.insert("sin", (PrimitiveString::sin as PrimitiveMethod, Right::Read));
+        map.insert("sqrt", (PrimitiveString::sqrt as PrimitiveMethod, Right::Read));
+        map.insert("tan", (PrimitiveString::tan as PrimitiveMethod, Right::Read));
+        map.insert("to_int", (PrimitiveString::to_int as PrimitiveMethod, Right::Read));
+        map.insert("to_float", (PrimitiveString::to_float as PrimitiveMethod, Right::Read));
 
         map
     };
@@ -180,12 +73,32 @@ pub struct PrimitiveString {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl PrimitiveString {
+    fn is_number(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_number() => boolean";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let result = string.value.parse::<f64>().is_ok();
+
+        Ok(PrimitiveBoolean::get_literal(result, interval))
+    }
+
     fn type_of(
         _string: &mut PrimitiveString,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "type_of()", interval)?;
+        let usage = "type_of() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         Ok(PrimitiveString::get_literal("string", interval))
     }
@@ -195,120 +108,51 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_string()", interval)?;
+        let usage = "to_string() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         Ok(PrimitiveString::get_literal(&string.to_string(), interval))
     }
+}
 
+impl PrimitiveString {
     fn append(
         string: &mut PrimitiveString,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "append(Primitive<String>)", interval)?;
+        let usage = "append(value: string) => string";
 
-        for literal in args.iter() {
-            string.value.push_str(&literal.primitive.to_string());
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
-        Ok(PrimitiveNull::get_literal(interval))
-    }
+        let mut result = string.value.to_owned();
 
-    fn do_match(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        // check_usage(args, 1, "match(Primitive<String>)", interval)?;
-        let mut vector: Vec<Literal> = Vec::new();
-
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(
+                        interval,
+                        ERROR_STRING_APPEND.to_owned(),
+                    ))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(
+                    interval,
+                    ERROR_STRING_APPEND.to_owned(),
+                ));
             }
         };
 
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
-            }
-        };
+        result.push_str(value);
 
-        for result in string.value.matches(pattern) {
-            vector.push(PrimitiveString::get_literal(result, interval));
-        }
-
-        if vector.is_empty() {
-            return Ok(PrimitiveNull::get_literal(interval));
-        }
-
-        Ok(PrimitiveArray::get_literal(&vector, interval))
-    }
-
-    fn clear(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "clear()", interval)?;
-
-        string.value.clear();
-
-        Ok(PrimitiveNull::get_literal(interval))
-    }
-
-    fn length(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "length()", interval)?;
-
-        let result = string.value.len();
-
-        Ok(PrimitiveInt::get_literal(result as i64, interval))
-    }
-
-    fn is_empty(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_empty()", interval)?;
-
-        let result = string.value.is_empty();
-
-        Ok(PrimitiveBoolean::get_literal(result, interval))
-    }
-
-    fn to_lowercase(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_lowercase()", interval)?;
-
-        let mut s = string.value.to_owned();
-
-        s.make_ascii_lowercase();
-
-        Ok(PrimitiveString::get_literal(&s, interval))
-    }
-
-    fn to_uppercase(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_uppercase()", interval)?;
-
-        let mut s = string.value.to_owned();
-
-        s.make_ascii_uppercase();
-
-        Ok(PrimitiveString::get_literal(&s, interval))
+        Ok(PrimitiveString::get_literal(&result, interval))
     }
 
     fn contains(
@@ -316,21 +160,25 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "contains(Primitive<String>)", interval)?;
+        let usage = "contains(value: string) => boolean";
 
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => return Err(gen_error_info(interval, ERROR_STRING_CONTAINS.to_owned())),
-        };
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_CONTAINS.to_owned()));
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
             }
         };
 
-        let result = string.value.contains(pattern);
+        let result = string.value.contains(value);
 
         Ok(PrimitiveBoolean::get_literal(result, interval))
     }
@@ -340,21 +188,20 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "contains_regex(Primitive<String>)", interval)?;
+        let usage = "contains_regex(value: string) => boolean";
 
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_STRING_CONTAINS_REGEX.to_owned(),
-                ))
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive){
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_CONTAINS_REGEX.to_owned()))
+                }
             }
-        };
-
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
+            _ => {
                 return Err(gen_error_info(
                     interval,
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
@@ -362,12 +209,12 @@ impl PrimitiveString {
             }
         };
 
-        let action = match Regex::new(pattern) {
+        let action = match Regex::new(value) {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
                     interval,
-                    ERROR_STRING_VALID_REGEX.to_owned(),
+                    ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
         };
@@ -377,100 +224,33 @@ impl PrimitiveString {
         Ok(PrimitiveBoolean::get_literal(result, interval))
     }
 
-    fn starts_with(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "starts_with(Primitive<String>)", interval)?;
-
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()));
-            }
-        };
-
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()));
-            }
-        };
-
-        let result = string.value.starts_with(pattern);
-
-        Ok(PrimitiveBoolean::get_literal(result, interval))
-    }
-
-    fn starts_with_regex(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "starts_with_regex(Primitive<String>)", interval)?;
-
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_STRING_START_WITH_REGEX.to_owned(),
-                ))
-            }
-        };
-
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_STRING_START_WITH_REGEX.to_owned(),
-                ));
-            }
-        };
-
-        let action = match Regex::new(pattern) {
-            Ok(res) => res,
-            Err(_) => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_STRING_VALID_REGEX.to_owned(),
-                ));
-            }
-        };
-
-        if let Some(res) = action.find(&string.value) {
-            if res.start() == 0 {
-                return Ok(PrimitiveBoolean::get_literal(true, interval));
-            }
-        }
-
-        Ok(PrimitiveBoolean::get_literal(false, interval))
-    }
-
     fn ends_with(
         string: &mut PrimitiveString,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "ends_with(Primitive<String>)", interval)?;
+        let usage = "ends_with(value: string) => boolean";
 
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_END_WITH.to_owned()));
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive)  {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_CONTAINS.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(
+                    interval,
+                    ERROR_STRING_END_WITH.to_owned(),
+                ));
             }
         };
 
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_END_WITH.to_owned()));
-            }
-        };
-
-        let result = string.value.ends_with(pattern);
+        let result = string.value.ends_with(value);
 
         Ok(PrimitiveBoolean::get_literal(result, interval))
     }
@@ -480,11 +260,20 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "ends_with_regex(Primitive<String>)", interval)?;
+        let usage = "ends_with_regex(value: string) => boolean";
 
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_END_WITH_REGEX.to_owned()))
+                }
+            }
+            _ => {
                 return Err(gen_error_info(
                     interval,
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
@@ -492,22 +281,12 @@ impl PrimitiveString {
             }
         };
 
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_STRING_END_WITH_REGEX.to_owned(),
-                ));
-            }
-        };
-
-        let action = match Regex::new(pattern) {
+        let action = match Regex::new(value) {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
                     interval,
-                    ERROR_STRING_VALID_REGEX.to_owned(),
+                    ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
         };
@@ -521,18 +300,96 @@ impl PrimitiveString {
         Ok(PrimitiveBoolean::get_literal(false, interval))
     }
 
+    fn is_empty(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_empty() => boolean";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let result = string.value.is_empty();
+
+        Ok(PrimitiveBoolean::get_literal(result, interval))
+    }
+
+    fn length(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "length() => int";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let result = string.value.len();
+
+        Ok(PrimitiveInt::get_literal(result as i64, interval))
+    }
+
+    fn do_match(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "match(value: string>) => array";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let mut vector: Vec<Literal> = Vec::new();
+
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
+            }
+        };
+
+        for result in string.value.matches(value) {
+            vector.push(PrimitiveString::get_literal(result, interval));
+        }
+
+        if vector.is_empty() {
+            return Ok(PrimitiveNull::get_literal(interval));
+        }
+
+        Ok(PrimitiveArray::get_literal(&vector, interval))
+    }
+
     fn do_match_regex(
         string: &mut PrimitiveString,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "match(Primitive<String>)", interval)?;
+        let usage = "match_regex(value: string>) => array";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
 
         let mut s: &str = &string.value;
         let mut vector: Vec<Literal> = Vec::new();
-        let args = match args.get(0) {
-            Some(res) => res,
-            None => {
+
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_MATCH_REGEX.to_owned()))
+                }
+            }
+            _ => {
                 return Err(gen_error_info(
                     interval,
                     ERROR_STRING_MATCH_REGEX.to_owned(),
@@ -540,17 +397,7 @@ impl PrimitiveString {
             }
         };
 
-        let pattern = match Literal::get_value::<String>(&args.primitive) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_STRING_MATCH_REGEX.to_owned(),
-                ));
-            }
-        };
-
-        let action = match Regex::new(pattern) {
+        let action = match Regex::new(value) {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
@@ -575,68 +422,146 @@ impl PrimitiveString {
         Ok(PrimitiveArray::get_literal(&vector, interval))
     }
 
-    fn is_number(
+    fn starts_with(
         string: &mut PrimitiveString,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "is_number()", interval)?;
+        let usage = "starts_with(value: string) => boolean";
 
-        let result = string.value.parse::<f64>().is_ok();
+        if args.len() != 1 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()));
+            }
+        };
+
+        let result = string.value.starts_with(value);
 
         Ok(PrimitiveBoolean::get_literal(result, interval))
     }
 
+    fn starts_with_regex(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "starts_with_regex(value: string) => boolean";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(
+                interval,
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let value = match args.get(0) {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                match Literal::get_value::<String>(&res.primitive) {
+                    Some(res) => res,
+                    None => return Err(gen_error_info(interval, ERROR_STRING_START_WITH_REGEX.to_owned()))
+                }
+            }
+            _ => {
+                return Err(gen_error_info(
+                    interval,
+                    ERROR_STRING_START_WITH_REGEX.to_owned(),
+                ));
+            }
+        };
+
+        let action = match Regex::new(value) {
+            Ok(res) => res,
+            Err(_) => {
+                return Err(gen_error_info(
+                    interval,
+                    ERROR_STRING_VALID_REGEX.to_owned(),
+                ));
+            }
+        };
+
+        if let Some(res) = action.find(&string.value) {
+            if res.start() == 0 {
+                return Ok(PrimitiveBoolean::get_literal(true, interval));
+            }
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
+    fn to_lowercase(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_lowercase() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let mut s = string.value.to_owned();
+
+        s.make_ascii_lowercase();
+
+        Ok(PrimitiveString::get_literal(&s, interval))
+    }
+
+    fn to_uppercase(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_uppercase() => string";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let mut s = string.value.to_owned();
+
+        s.make_ascii_uppercase();
+
+        Ok(PrimitiveString::get_literal(&s, interval))
+    }
+}
+
+impl PrimitiveString {
     fn abs(
         string: &mut PrimitiveString,
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "abs()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.abs();
+            let (literal, _right) =
+                primitive.do_exec("abs", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "abs", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
-    }
-
-    fn pow(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 1, "pow(Primitive<Int || Float>)", interval)?;
-
-        let literal = match args.get(0) {
-            Some(res) => res,
-            None => {
-                return Err(gen_error_info(interval, ERROR_STRING_POW.to_owned()));
-            }
-        };
-
         if let Ok(float) = string.value.parse::<f64>() {
-            if let Some(exponent) = Literal::get_value::<f64>(&literal.primitive) {
-                let result = float.powf(*exponent);
+            let mut primitive = PrimitiveFloat::new(float);
 
-                return Ok(PrimitiveString::get_literal(&result.to_string(), interval));
-            }
+            let (literal, _right) =
+                primitive.do_exec("abs", args, interval, &ContentType::Generics)?;
 
-            if let Some(exponent) = Literal::get_value::<i64>(&literal.primitive) {
-                let exponent = *exponent as f64;
-                let result = float.powf(exponent);
-
-                return Ok(PrimitiveString::get_literal(&result.to_string(), interval));
-            }
+            return Ok(literal);
         }
 
-        Err(gen_error_info(interval, ERROR_STRING_POW.to_owned()))
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "abs", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn cos(
@@ -644,39 +569,28 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "cos()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.cos();
+            let (literal, _right) =
+                primitive.do_exec("cos", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "cos", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
-    }
 
-    fn floor(
-        string: &mut PrimitiveString,
-        args: &[Literal],
-        interval: Interval,
-    ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "floor()", interval)?;
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.floor();
+            let (literal, _right) =
+                primitive.do_exec("cos", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "floor", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "cos", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn ceil(
@@ -684,19 +598,83 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "ceil()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.ceil();
+            let (literal, _right) =
+                primitive.do_exec("ceil", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "ceil", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("ceil", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "ceil", ERROR_STRING_NUMERIC),
+        ))
+    }
+
+    fn pow(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
+
+            let (literal, _right) =
+                primitive.do_exec("pow", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("pow", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "pow", ERROR_STRING_NUMERIC),
+        ))
+    }
+
+    fn floor(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
+
+            let (literal, _right) =
+                primitive.do_exec("floor", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("floor", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "floor", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn round(
@@ -704,19 +682,27 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "round()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.round();
+            let (literal, _right) =
+                primitive.do_exec("round", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "round", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("round", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "round", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn sin(
@@ -724,19 +710,27 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "sin()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.sin();
+            let (literal, _right) =
+                primitive.do_exec("sin", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "sin", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("sin", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "sin", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn sqrt(
@@ -744,19 +738,27 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "sqrt()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.sqrt();
+            let (literal, _right) =
+                primitive.do_exec("sqrt", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "sqrt", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("sqrt", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "sqrt", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn tan(
@@ -764,19 +766,27 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "tan()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => {
-                let result = res.tan();
+            let (literal, _right) =
+                primitive.do_exec("tan", args, interval, &ContentType::Generics)?;
 
-                Ok(PrimitiveString::get_literal(&result.to_string(), interval))
-            }
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "tan", ERROR_STRING_NUMERIC),
-            )),
+            return Ok(literal);
         }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("tan", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "tan", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn to_int(
@@ -784,15 +794,27 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_int()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => Ok(PrimitiveInt::get_literal(res as i64, interval)),
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "to_int", ERROR_STRING_NUMERIC),
-            )),
+            let (literal, _right) =
+                primitive.do_exec("to_int", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
         }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("to_int", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "to_int", ERROR_STRING_NUMERIC),
+        ))
     }
 
     fn to_float(
@@ -800,15 +822,27 @@ impl PrimitiveString {
         args: &[Literal],
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        check_usage(args, 0, "to_float()", interval)?;
+        if let Ok(int) = string.value.parse::<i64>() {
+            let mut primitive = PrimitiveInt::new(int);
 
-        match string.value.parse::<f64>() {
-            Ok(res) => Ok(PrimitiveFloat::get_literal(res, interval)),
-            Err(_) => Err(gen_error_info(
-                interval,
-                format!("[{}] {}", "to_float", ERROR_STRING_NUMERIC),
-            )),
+            let (literal, _right) =
+                primitive.do_exec("to_float", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
         }
+        if let Ok(float) = string.value.parse::<f64>() {
+            let mut primitive = PrimitiveFloat::new(float);
+
+            let (literal, _right) =
+                primitive.do_exec("to_float", args, interval, &ContentType::Generics)?;
+
+            return Ok(literal);
+        }
+
+        Err(gen_error_info(
+            interval,
+            format!("[{}] {}", "to_float", ERROR_STRING_NUMERIC),
+        ))
     }
 }
 

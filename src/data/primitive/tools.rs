@@ -1,4 +1,4 @@
-use crate::data::{ast::Interval, Literal};
+use crate::data::{ast::Interval};
 use crate::error_format::*;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,17 +45,4 @@ pub fn check_division_by_zero_f64(lhs: f64, rhs: f64) -> Result<f64, ErrorInfo> 
     }
 
     Ok(lhs)
-}
-
-pub fn check_usage(
-    args: &[Literal],
-    len: usize,
-    message: &str,
-    interval: Interval,
-) -> Result<u8, ErrorInfo> {
-    if args.len() == len {
-        return Ok(0);
-    }
-
-    Err(gen_error_info(interval, format!("usage: {}", message)))
 }
