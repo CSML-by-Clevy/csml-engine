@@ -1,13 +1,13 @@
-use crate::data::literal::ContentType;
-use crate::data::primitive::array::PrimitiveArray;
-use crate::data::primitive::boolean::PrimitiveBoolean;
-use crate::data::primitive::int::PrimitiveInt;
-use crate::data::primitive::null::PrimitiveNull;
-use crate::data::primitive::string::PrimitiveString;
-use crate::data::primitive::tools::check_usage;
-use crate::data::primitive::Right;
-use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Literal};
+use crate::data::{
+    ast::Interval,
+    literal::ContentType,
+    message::Message,
+    primitive::{
+        array::PrimitiveArray, boolean::PrimitiveBoolean, int::PrimitiveInt, null::PrimitiveNull,
+        string::PrimitiveString, tools::check_usage, Primitive, PrimitiveType, Right,
+    },
+    Literal,
+};
 use crate::error_format::*;
 use crate::interpreter::builtins::http::http_request;
 use lazy_static::*;

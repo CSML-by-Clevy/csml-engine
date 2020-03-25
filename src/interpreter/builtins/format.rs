@@ -1,5 +1,5 @@
 use crate::data::primitive::{object::PrimitiveObject, string::PrimitiveString, PrimitiveType};
-use crate::data::{ast::Interval, tokens::*, Literal};
+use crate::data::{ast::Interval, tokens::DEFAULT, Literal};
 use crate::error_format::*;
 use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
@@ -68,8 +68,11 @@ pub fn question(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 
     let accepts = accepts_from_buttons(&buttons);
 
-    if let Some(title) = search_or_default(&args, "title") {
-        question.insert("title".to_owned(), title);
+    match (args.get("title"), args.get(DEFAULT)) {
+        (Some(title), ..) | (.., Some(title)) => {
+            question.insert("title".to_owned(), title.to_owned());
+        }
+        _ => {}
     }
 
     question.insert("accepts".to_owned(), accepts);

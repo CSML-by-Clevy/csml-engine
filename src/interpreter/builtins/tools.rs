@@ -1,5 +1,5 @@
 use crate::data::primitive::array::PrimitiveArray;
-use crate::data::{tokens::DEFAULT, Client, Literal};
+use crate::data::{Client, Literal};
 use crate::error_format::*;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
@@ -65,15 +65,15 @@ pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
     }
 }
 
-pub fn search_or_default(values: &HashMap<String, Literal>, name: &str) -> Option<Literal> {
-    match values.get(name) {
-        Some(value) => Some(value.to_owned()),
-        None => match values.get(DEFAULT) {
-            Some(value) => Some(value.to_owned()),
-            None => None,
-        },
-    }
-}
+// pub fn search_or_default(values: &HashMap<String, Literal>, name: &str) -> Option<Literal> {
+//     match values.get(name) {
+//         Some(value) => Some(value.to_owned()),
+//         None => match values.get(DEFAULT) {
+//             Some(value) => Some(value.to_owned()),
+//             None => None,
+//         },
+//     }
+// }
 
 pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
     match values {
