@@ -485,7 +485,7 @@ impl Primitive for PrimitiveArray {
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(ErrorInfo {
             message: format!(
-                "error: illegal operation between {:?} + {:?}",
+                "error: illegal operation: {:?} + {:?}",
                 self.get_type(),
                 other.get_type()
             ),

@@ -329,7 +329,11 @@ impl Primitive for PrimitiveFloat {
         }
 
         Err(ErrorInfo {
-            message: "[!] Add: Illegal operation".to_owned(),
+            message: format!(
+                "error: illegal operation: {:?} + {:?}",
+                self.get_type(),
+                other.get_type()
+            ),
             interval: Interval { column: 0, line: 0 },
         })
     }

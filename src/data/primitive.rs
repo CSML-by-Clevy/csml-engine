@@ -369,7 +369,7 @@ impl Add for Box<dyn Primitive> {
 
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between {:?} + {:?}",
+                    "error: illegal operation between two different types: {:?} + {:?}",
                     self.get_type(),
                     other.get_type()
                 ),
@@ -407,7 +407,7 @@ impl Sub for Box<dyn Primitive> {
             }
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between {:?} - {:?}",
+                    "error: illegal operation between two different types: {:?} - {:?}",
                     self.get_type(),
                     other.get_type()
                 ),
@@ -501,7 +501,7 @@ impl Div for Box<dyn Primitive> {
 
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between {:?} / {:?}",
+                    "error: illegal operation between two different types: {:?} / {:?}",
                     self.get_type(),
                     other.get_type()
                 ),
@@ -539,7 +539,7 @@ impl Mul for Box<dyn Primitive> {
             }
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between {:?} * {:?}",
+                    "error: illegal operation between two different types: {:?} * {:?}",
                     self.get_type(),
                     other.get_type()
                 ),
@@ -577,7 +577,7 @@ impl Rem for Box<dyn Primitive> {
             }
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between {:?} % {:?}",
+                    "error: illegal operation between two different types: {:?} % {:?}",
                     self.get_type(),
                     other.get_type()
                 ),
@@ -615,7 +615,7 @@ impl BitAnd for Box<dyn Primitive> {
             }
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between {:?} & {:?}",
+                    "error: illegal operation between two different types: {:?} & {:?}",
                     self.get_type(),
                     other.get_type()
                 ),
@@ -653,7 +653,7 @@ impl BitOr for Box<dyn Primitive> {
             }
             _ => Err(ErrorInfo {
                 message: format!(
-                    "error: illegal operation between {:?} | {:?}",
+                    "error: illegal operation between two different types: {:?} | {:?}",
                     self.get_type(),
                     other.get_type()
                 ),
