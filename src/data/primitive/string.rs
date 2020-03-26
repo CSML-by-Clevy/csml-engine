@@ -1040,7 +1040,7 @@ impl Primitive for PrimitiveString {
                     self.get_type(),
                     other.get_type()
                 ),
-            ))
+            )),
         }
     }
 
@@ -1076,7 +1076,7 @@ impl Primitive for PrimitiveString {
                     self.get_type(),
                     other.get_type()
                 ),
-            ))
+            )),
         }
     }
 
@@ -1120,7 +1120,7 @@ impl Primitive for PrimitiveString {
                     self.get_type(),
                     other.get_type()
                 ),
-            ))
+            )),
         }
     }
 
@@ -1156,7 +1156,7 @@ impl Primitive for PrimitiveString {
                     self.get_type(),
                     other.get_type()
                 ),
-            ))
+            )),
         }
     }
 
@@ -1192,7 +1192,7 @@ impl Primitive for PrimitiveString {
                     self.get_type(),
                     other.get_type()
                 ),
-            ))
+            )),
         }
     }
 

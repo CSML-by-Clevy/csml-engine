@@ -103,16 +103,16 @@ pub fn evaluate_condition(
             expr_to_literal(exp, None, data, root, sender),
             evaluate_condition(i1, ex1, ex2, data, root, sender),
         ),
-        (exp_1, exp_2) =>{
+        (exp_1, exp_2) => {
             println!("--------------");
             let result = evaluate(
                 infix,
-            expr_to_literal(exp_1, None, data, root, sender),
-            expr_to_literal(exp_2, None, data, root, sender),
+                expr_to_literal(exp_1, None, data, root, sender),
+                expr_to_literal(exp_2, None, data, root, sender),
             );
             println!("res = {:?}", result);
             result
-        },
+        }
     }
 }
 
