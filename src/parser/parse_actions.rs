@@ -1,4 +1,10 @@
-use crate::data::{ast::*, tokens::*};
+use crate::data::{
+    ast::*,
+    tokens::*,
+    warnings::{WARNING_REMEMBER_AS, WARNING_USE},
+};
+use crate::error_format::{gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
+use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,
@@ -49,16 +55,11 @@ fn parse_remember_as<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<E
 where
     E: ParseError<Span<'a>>,
 {
+    Linter::add_warning(WARNING_REMEMBER_AS);
     let (s, operator) = parse_operator(s)?;
     match operator {
         Expr::ObjectExpr(ObjectType::As(idents, expr)) => Ok((s, (idents, expr))),
-        _ => {
-            return Err(Err::Failure(E::add_context(
-                s,
-                "Remember must be assigning to a variable via '=' or 'as': remember key = value || remember value as key",
-                E::from_error_kind(s, ErrorKind::Tag),
-            )))
-        }
+        _ => return Err(gen_nom_failure(s, ERROR_REMEMBER)),
     }
 }
 
@@ -146,6 +147,7 @@ where
     ))
 }
 
+//TODO: deprecat use
 fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
@@ -153,17 +155,13 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, USE)(s)?;
 
+    Linter::add_warning(WARNING_USE);
+
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 
     match expr {
         Expr::ObjectExpr(ObjectType::As(..)) => {}
-        _ => {
-            return Err(Err::Failure(E::add_context(
-                s,
-                "Use must be assigning to a variable via 'as': use value as key",
-                E::from_error_kind(s, ErrorKind::Tag),
-            )))
-        }
+        _ => return Err(gen_nom_failure(s, ERROR_USE)),
     }
 
     let instruction_info = InstructionInfo {
@@ -192,11 +190,7 @@ where
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
     match StateContext::get_state() {
-        ExecutionState::Loop => Err(Err::Failure(E::add_context(
-            s,
-            "Hold cannot be used inside a foreach",
-            E::from_error_kind(s, ErrorKind::Tag),
-        ))),
+        ExecutionState::Loop => Err(gen_nom_failure(s, ERROR_HOLD)),
         ExecutionState::Normal => {
             let instruction_info = InstructionInfo {
                 index: StateContext::get_rip(),
@@ -232,11 +226,7 @@ where
                 (Expr::ObjectExpr(ObjectType::Break(inter)), instruction_info),
             ))
         }
-        ExecutionState::Normal => Err(Err::Failure(E::add_context(
-            s,
-            "Break can only be used inside a foreach",
-            E::from_error_kind(s, ErrorKind::Tag),
-        ))),
+        ExecutionState::Normal => Err(gen_nom_failure(s, ERROR_BREAK)),
     }
 }
 

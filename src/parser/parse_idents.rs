@@ -1,14 +1,11 @@
 use crate::data::{ast::*, tokens::*};
-// use crate::parser::parse_path::parse_path;
-use crate::parser::tools::get_string;
-use crate::parser::tools::get_tag;
-use crate::parser::{parse_comments::comment, tools::get_interval};
-use nom::Err::Failure;
-use nom::{
-    error::{ErrorKind, ParseError},
-    sequence::preceded,
-    *,
+use crate::error_format::{gen_nom_error, ERROR_NUMBER_AS_IDENT, ERROR_RESERVED};
+use crate::parser::{
+    parse_comments::comment,
+    tools::get_interval,
+    tools::{get_string, get_tag},
 };
+use nom::{error::ParseError, sequence::preceded, Err::*, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -28,19 +25,11 @@ where
     E: ParseError<Span<'a>>,
 {
     if reserved.contains(&&(*var.to_ascii_lowercase())) {
-        return Err(Err::Error(E::add_context(
-            s,
-            "reserved keyword can't be used as identifier",
-            E::from_error_kind(s, ErrorKind::Tag),
-        )));
+        return Err(gen_nom_error(s, ERROR_RESERVED));
     }
 
     if var.parse::<f64>().is_ok() {
-        return Err(Err::Error(E::add_context(
-            s,
-            "int/float can't be used as identifier",
-            E::from_error_kind(s, ErrorKind::Tag),
-        )));
+        return Err(gen_nom_error(s, ERROR_NUMBER_AS_IDENT));
     }
 
     Ok((s, form_idents(var.to_owned(), interval)))

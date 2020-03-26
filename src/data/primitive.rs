@@ -18,7 +18,7 @@ pub use string::PrimitiveString;
 
 use crate::data::primitive::tools::*;
 use crate::data::{Interval, Literal, Message};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Rem, Sub};
@@ -362,14 +362,16 @@ impl Add for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation between two different types: {:?} + {:?}",
+
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} + {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 }
@@ -454,14 +456,15 @@ impl Sub for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation between two different types: {:?} - {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} - {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 }
@@ -546,14 +549,15 @@ impl Div for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation between two different types: {:?} - {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} / {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 }
@@ -638,14 +642,15 @@ impl Mul for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation between two different types: {:?} - {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} * {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 }
@@ -730,14 +735,15 @@ impl Rem for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation between two different types: {:?} - {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} * {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 }

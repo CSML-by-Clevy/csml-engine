@@ -1,6 +1,6 @@
 use crate::data::primitive::array::PrimitiveArray;
-use crate::data::{ast::Interval, tokens::DEFAULT, Client, Literal};
-use crate::error_format::ErrorInfo;
+use crate::data::{Client, Literal};
+use crate::error_format::*;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
@@ -40,9 +40,13 @@ pub fn client_to_json(client: &Client) -> Map<String, Value> {
 pub fn accept_to_array(literal: &HashMap<String, Literal>, mut vec: Vec<Literal>) -> Vec<Literal> {
     match literal.get("accepts") {
         Some(literal) => {
-            match Literal::get_value::<Vec<Literal>>(&literal.primitive) {
+            match Literal::get_value::<Vec<Literal>>(
+                &literal.primitive,
+                literal.interval,
+                ERROR_UNREACHABLE.to_owned(),
+            ) {
                 Ok(array) => vec.append(&mut array.to_owned()),
-                Err(..) => vec.push(literal.to_owned()),
+                Err(_) => vec.push(literal.to_owned()),
             }
             vec
         }
@@ -51,10 +55,18 @@ pub fn accept_to_array(literal: &HashMap<String, Literal>, mut vec: Vec<Literal>
 }
 
 pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
-    match Literal::get_value::<Vec<Literal>>(&buttons.primitive) {
+    match Literal::get_value::<Vec<Literal>>(
+        &buttons.primitive,
+        buttons.interval,
+        ERROR_UNREACHABLE.to_owned(),
+    ) {
         Ok(vec) => {
             let array = vec.iter().fold(vec![], |vec, elem| {
-                match Literal::get_value::<HashMap<String, Literal>>(&elem.primitive) {
+                match Literal::get_value::<HashMap<String, Literal>>(
+                    &elem.primitive,
+                    buttons.interval,
+                    ERROR_UNREACHABLE.to_owned(),
+                ) {
                     Ok(value) => accept_to_array(value, vec),
                     Err(..) => vec,
                 }
@@ -65,28 +77,13 @@ pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
     }
 }
 
-pub fn search_or_default(
-    values: &HashMap<String, Literal>,
-    name: &str,
-    interval: Interval,
-    default: Option<Literal>,
-) -> Result<Literal, ErrorInfo> {
-    match (values.get(name), default) {
-        (Some(value), ..) => Ok(value.to_owned()),
-        (None, Some(default)) => Ok(default),
-        (None, None) => match values.get(DEFAULT) {
-            Some(value) => Ok(value.to_owned()),
-            None => Err(ErrorInfo {
-                message: format!("No value '{}' or default value found", name),
-                interval,
-            }),
-        },
-    }
-}
-
 pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
     match values {
-        Some(literal) => match Literal::get_value::<Vec<Literal>>(&literal.primitive) {
+        Some(literal) => match Literal::get_value::<Vec<Literal>>(
+            &literal.primitive,
+            title.interval,
+            ERROR_UNREACHABLE.to_owned(),
+        ) {
             Ok(res) => {
                 let mut vector = res.clone();
 
@@ -94,7 +91,7 @@ pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
 
                 PrimitiveArray::get_literal(&vector, literal.interval)
             }
-            Err(_) => {
+            Err(..) => {
                 let mut vector = Vec::new();
 
                 vector.push(literal.to_owned());

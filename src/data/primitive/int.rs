@@ -7,7 +7,7 @@ use crate::data::primitive::tools::check_division_by_zero_i64;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -23,21 +23,42 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("is_number", (PrimitiveInt::is_number as PrimitiveMethod, Right::Read));
-        map.insert("type_of", (PrimitiveInt::type_of as PrimitiveMethod, Right::Read));
-        map.insert("to_string", (PrimitiveInt::to_string as PrimitiveMethod, Right::Read));
-        
+        map.insert(
+            "is_number",
+            (PrimitiveInt::is_number as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "type_of",
+            (PrimitiveInt::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveInt::to_string as PrimitiveMethod, Right::Read),
+        );
+
         map.insert("abs", (PrimitiveInt::abs as PrimitiveMethod, Right::Read));
         map.insert("cos", (PrimitiveInt::cos as PrimitiveMethod, Right::Read));
         map.insert("ceil", (PrimitiveInt::ceil as PrimitiveMethod, Right::Read));
-        map.insert("floor", (PrimitiveInt::floor as PrimitiveMethod, Right::Read));
+        map.insert(
+            "floor",
+            (PrimitiveInt::floor as PrimitiveMethod, Right::Read),
+        );
         map.insert("pow", (PrimitiveInt::pow as PrimitiveMethod, Right::Read));
-        map.insert("round", (PrimitiveInt::round as PrimitiveMethod, Right::Read));
+        map.insert(
+            "round",
+            (PrimitiveInt::round as PrimitiveMethod, Right::Read),
+        );
         map.insert("sin", (PrimitiveInt::sin as PrimitiveMethod, Right::Read));
         map.insert("sqrt", (PrimitiveInt::sqrt as PrimitiveMethod, Right::Read));
         map.insert("tan", (PrimitiveInt::tan as PrimitiveMethod, Right::Read));
-        map.insert("to_int", (PrimitiveInt::to_int as PrimitiveMethod, Right::Read));
-        map.insert("to_float", (PrimitiveInt::to_float as PrimitiveMethod, Right::Read));
+        map.insert(
+            "to_int",
+            (PrimitiveInt::to_int as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_float",
+            (PrimitiveInt::to_float as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -61,7 +82,7 @@ impl PrimitiveInt {
         let usage = "is_number() => boolean";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveBoolean::get_literal(true, interval))
@@ -75,7 +96,7 @@ impl PrimitiveInt {
         let usage = "type_of() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal("int", interval))
@@ -89,7 +110,7 @@ impl PrimitiveInt {
         let usage = "to_string() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal(&int.to_string(), interval))
@@ -105,7 +126,7 @@ impl PrimitiveInt {
         let usage = "abs() => int";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -124,7 +145,7 @@ impl PrimitiveInt {
         let usage = "cos() => number";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -145,7 +166,7 @@ impl PrimitiveInt {
         let usage = "ceil() => int";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -164,7 +185,7 @@ impl PrimitiveInt {
         let usage = "floor() => int";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -183,40 +204,42 @@ impl PrimitiveInt {
         let usage = "pow(exponent: number) => number";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
 
         let exponent = match args.get(0) {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveInt => {
-                let exponent = Literal::get_value::<i64>(&exponent.primitive)?;
-
-                *exponent as f64
+                *Literal::get_value::<i64>(
+                    &exponent.primitive,
+                    interval,
+                    ERROR_NUMBER_POW.to_owned(),
+                )? as f64
             }
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveFloat => {
-                let exponent = Literal::get_value::<f64>(&exponent.primitive)?;
-
-                *exponent
+                *Literal::get_value::<f64>(
+                    &exponent.primitive,
+                    interval,
+                    ERROR_NUMBER_POW.to_owned(),
+                )?
             }
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                let exponent = Literal::get_value::<String>(&exponent.primitive)?;
+                let exponent = Literal::get_value::<String>(
+                    &exponent.primitive,
+                    interval,
+                    ERROR_NUMBER_POW.to_owned(),
+                )?;
 
                 match exponent.parse::<f64>() {
                     Ok(res) => res,
                     Err(_) => {
-                        return Err(ErrorInfo::new(
-                            "error: exponent must be a number".to_owned(),
-                            interval,
-                        ));
+                        return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()));
                     }
                 }
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: exponent must be a number".to_owned(),
-                    interval,
-                ));
+                return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()));
             }
         };
 
@@ -236,7 +259,7 @@ impl PrimitiveInt {
         let usage = "round() => int";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -255,7 +278,7 @@ impl PrimitiveInt {
         let usage = "sin() => number";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -276,7 +299,7 @@ impl PrimitiveInt {
         let usage = "round() => number";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -297,7 +320,7 @@ impl PrimitiveInt {
         let usage = "tan() => number";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let float = int.value as f64;
@@ -318,7 +341,7 @@ impl PrimitiveInt {
         let usage = "to_int() => int";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveInt::get_literal(int.value, interval))
@@ -332,7 +355,7 @@ impl PrimitiveInt {
         let usage = "to_float() => float";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveFloat::get_literal(int.value as f64, interval))
@@ -377,10 +400,10 @@ impl Primitive for PrimitiveInt {
             return Ok((res, *right));
         }
 
-        Err(ErrorInfo {
-            message: format!("unknown method '{}' for type Int", name),
+        Err(gen_error_info(
             interval,
-        })
+            format!("[{}] {}", name, ERROR_INT_UNKONWN_METHOD),
+        ))
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
@@ -406,14 +429,15 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} + {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -423,14 +447,15 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} - {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -448,14 +473,15 @@ impl Primitive for PrimitiveInt {
             }
         }
 
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} / {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -465,14 +491,15 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} * {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
@@ -482,14 +509,15 @@ impl Primitive for PrimitiveInt {
             return Ok(Box::new(PrimitiveInt::new(result)));
         }
 
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} % {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} % {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

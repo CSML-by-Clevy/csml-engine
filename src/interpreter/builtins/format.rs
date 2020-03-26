@@ -1,6 +1,6 @@
 use crate::data::primitive::{object::PrimitiveObject, string::PrimitiveString, PrimitiveType};
-use crate::data::{ast::Interval, tokens::*, Literal};
-use crate::error_format::ErrorInfo;
+use crate::data::{ast::Interval, tokens::DEFAULT, Literal};
+use crate::error_format::*;
 use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
 
@@ -10,11 +10,7 @@ pub fn text(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
             &literal.primitive.to_string(),
             literal.interval,
         )),
-        _ => Err(ErrorInfo {
-            message: "Builtin Text expect one argument of type string | example: Text(\"hola\")"
-                .to_owned(),
-            interval,
-        }),
+        _ => Err(gen_error_info(interval, ERROR_TEXT.to_owned())),
     }
 }
 
@@ -34,12 +30,7 @@ pub fn typing(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
 
             Ok(result)
         }
-        _ => Err(ErrorInfo {
-            message:
-                "Builtin Typing expect one argument of type int or float | example: Typing(3, ..)"
-                    .to_owned(),
-            interval,
-        }),
+        _ => Err(gen_error_info(interval, ERROR_TYPING.to_owned())),
     }
 }
 
@@ -58,11 +49,7 @@ pub fn wait(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
 
             Ok(result)
         }
-        _ => Err(ErrorInfo {
-            message: "Builtin Wait expect one argument of type int or float | example: Wait(3)"
-                .to_owned(),
-            interval,
-        }),
+        _ => Err(gen_error_info(interval, ERROR_WAIT.to_owned())),
     }
 }
 
@@ -76,18 +63,16 @@ pub fn question(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 
     let buttons = match args.get("buttons") {
         Some(literal) => literal.to_owned(),
-        _ => {
-            return Err(ErrorInfo {
-            message: "argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]".to_owned(),
-            interval,
-            })
-        }
+        _ => return Err(gen_error_info(interval, ERROR_QUESTION.to_owned())),
     };
 
     let accepts = accepts_from_buttons(&buttons);
 
-    if let Ok(title) = search_or_default(&args, "title", interval, None) {
-        question.insert("title".to_owned(), title);
+    match (args.get("title"), args.get(DEFAULT)) {
+        (Some(title), ..) | (.., Some(title)) => {
+            question.insert("title".to_owned(), title.to_owned());
+        }
+        _ => {}
     }
 
     question.insert("accepts".to_owned(), accepts);
@@ -104,12 +89,7 @@ pub fn carousel(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 
     let cards = match args.get("cards") {
         Some(literal) => literal.to_owned(),
-        _ => return Err(ErrorInfo {
-            message:
-                "argument buttons in Builtin Carousel need to be of type Array of Cards Component"
-                    .to_owned(),
-            interval,
-        }),
+        _ => return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned())),
     };
 
     if let Some(literal) = args.get("metadata") {
@@ -164,11 +144,6 @@ pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
 
             Ok(result)
         }
-        _ => Err(ErrorInfo {
-            message:
-                "Builtin HTTP expect one url of type string | example: HTTP(\"https://clevy.io\")"
-                    .to_owned(),
-            interval,
-        }),
+        _ => Err(gen_error_info(interval, ERROR_HTTP.to_owned())),
     }
 }

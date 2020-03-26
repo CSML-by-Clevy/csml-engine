@@ -28,7 +28,7 @@ fn comment_delimited<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'
     let val: IResult<Span<'a>, Span<'a>, E> = take_until(END_COMMENT)(s);
     match val {
         Ok((s, _)) => tag(END_COMMENT)(s),
-        // Error in comment_delimited is if '*/' is not found so all the rest of the file is commented
+        // Error in comment_delimited is if '*/' is not found so the rest of the file is commented
         Err(Err::Error(_e)) | Err(Err::Failure(_e)) => Ok((Span::new(""), Span::new(""))),
         Err(Err::Incomplete(_)) => unimplemented!(),
     }
@@ -46,7 +46,6 @@ pub fn comment<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Sp
         Err(Err::Error((s, _val))) | Err(Err::Failure((s, _val))) => return Ok((s, s)),
         Err(Err::Incomplete(i)) => return Err(Err::Incomplete(i)),
     };
-    // Ok((s, s))
     sp(s)
 }
 

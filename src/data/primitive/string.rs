@@ -9,7 +9,7 @@ use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use lazy_static::*;
 use regex::Regex;
 use std::cmp::Ordering;
@@ -29,35 +29,134 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("is_number", (PrimitiveString::is_number as PrimitiveMethod, Right::Read));
-        map.insert("type_of", (PrimitiveString::type_of as PrimitiveMethod, Right::Read));
-        map.insert("to_string", (PrimitiveString::to_string as PrimitiveMethod, Right::Read));
+        map.insert(
+            "is_number",
+            (PrimitiveString::is_number as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "type_of",
+            (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
+        );
 
-        map.insert("append", (PrimitiveString::append as PrimitiveMethod, Right::Read));
-        map.insert("contains", (PrimitiveString::contains as PrimitiveMethod, Right::Read));
-        map.insert("contains_regex", (PrimitiveString::contains_regex as PrimitiveMethod, Right::Read));
-        map.insert("ends_with", (PrimitiveString::ends_with as PrimitiveMethod, Right::Read));
-        map.insert("ends_with_regex", (PrimitiveString::ends_with_regex as PrimitiveMethod, Right::Read));
-        map.insert("is_empty", (PrimitiveString::is_empty as PrimitiveMethod, Right::Read));
-        map.insert("length", (PrimitiveString::length as PrimitiveMethod, Right::Read));
-        map.insert("match", (PrimitiveString::do_match as PrimitiveMethod, Right::Read));
-        map.insert("match_regex", (PrimitiveString::do_match_regex as PrimitiveMethod, Right::Read));
-        map.insert("starts_with", (PrimitiveString::starts_with as PrimitiveMethod, Right::Read));
-        map.insert("starts_with_regex", (PrimitiveString::starts_with_regex as PrimitiveMethod, Right::Read));
-        map.insert("to_lowercase", (PrimitiveString::to_lowercase as PrimitiveMethod, Right::Read));
-        map.insert("to_uppercase", (PrimitiveString::to_uppercase as PrimitiveMethod, Right::Read));
+        map.insert(
+            "append",
+            (PrimitiveString::append as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "contains",
+            (PrimitiveString::contains as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "contains_regex",
+            (
+                PrimitiveString::contains_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "ends_with",
+            (PrimitiveString::ends_with as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "ends_with_regex",
+            (
+                PrimitiveString::ends_with_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "is_empty",
+            (PrimitiveString::is_empty as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "length",
+            (PrimitiveString::length as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "match",
+            (PrimitiveString::do_match as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "match_regex",
+            (
+                PrimitiveString::do_match_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "starts_with",
+            (PrimitiveString::starts_with as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "starts_with_regex",
+            (
+                PrimitiveString::starts_with_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "to_lowercase",
+            (
+                PrimitiveString::to_lowercase as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "to_uppercase",
+            (
+                PrimitiveString::to_uppercase as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
 
-        map.insert("abs", (PrimitiveString::abs as PrimitiveMethod, Right::Read));
-        map.insert("cos", (PrimitiveString::cos as PrimitiveMethod, Right::Read));
-        map.insert("ceil", (PrimitiveString::ceil as PrimitiveMethod, Right::Read));
-        map.insert("floor", (PrimitiveString::floor as PrimitiveMethod, Right::Read));
-        map.insert("pow", (PrimitiveString::pow as PrimitiveMethod, Right::Read));
-        map.insert("round", (PrimitiveString::round as PrimitiveMethod, Right::Read));
-        map.insert("sin", (PrimitiveString::sin as PrimitiveMethod, Right::Read));
-        map.insert("sqrt", (PrimitiveString::sqrt as PrimitiveMethod, Right::Read));
-        map.insert("tan", (PrimitiveString::tan as PrimitiveMethod, Right::Read));
-        map.insert("to_int", (PrimitiveString::to_int as PrimitiveMethod, Right::Read));
-        map.insert("to_float", (PrimitiveString::to_float as PrimitiveMethod, Right::Read));
+        map.insert(
+            "abs",
+            (PrimitiveString::abs as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "cos",
+            (PrimitiveString::cos as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "ceil",
+            (PrimitiveString::ceil as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "floor",
+            (PrimitiveString::floor as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "pow",
+            (PrimitiveString::pow as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "round",
+            (PrimitiveString::round as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "sin",
+            (PrimitiveString::sin as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "sqrt",
+            (PrimitiveString::sqrt as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "tan",
+            (PrimitiveString::tan as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_int",
+            (PrimitiveString::to_int as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_float",
+            (PrimitiveString::to_float as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -81,7 +180,7 @@ impl PrimitiveString {
         let usage = "is_number() => boolean";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = string.value.parse::<f64>().is_ok();
@@ -97,7 +196,7 @@ impl PrimitiveString {
         let usage = "type_of() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal("string", interval))
@@ -111,7 +210,7 @@ impl PrimitiveString {
         let usage = "to_string() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal(&string.to_string(), interval))
@@ -127,20 +226,21 @@ impl PrimitiveString {
         let usage = "append(value: string) => string";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let mut result = string.value.to_owned();
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_APPEND.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
-                    interval,
-                ));
+                return Err(gen_error_info(interval, ERROR_STRING_APPEND.to_owned()));
             }
         };
 
@@ -157,18 +257,19 @@ impl PrimitiveString {
         let usage = "contains(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_DO_MATCH.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
-                    interval,
-                ));
+                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
             }
         };
 
@@ -185,17 +286,21 @@ impl PrimitiveString {
         let usage = "contains_regex(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_CONTAINS_REGEX.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
         };
@@ -203,9 +308,9 @@ impl PrimitiveString {
         let action = match Regex::new(value) {
             Ok(res) => res,
             Err(_) => {
-                return Err(ErrorInfo::new(
-                    "error: value must be a valid regex expression".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
         };
@@ -223,18 +328,19 @@ impl PrimitiveString {
         let usage = "ends_with(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_CONTAINS.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
-                    interval,
-                ));
+                return Err(gen_error_info(interval, ERROR_STRING_END_WITH.to_owned()));
             }
         };
 
@@ -251,17 +357,21 @@ impl PrimitiveString {
         let usage = "ends_with_regex(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_END_WITH_REGEX.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
         };
@@ -269,9 +379,9 @@ impl PrimitiveString {
         let action = match Regex::new(value) {
             Ok(res) => res,
             Err(_) => {
-                return Err(ErrorInfo::new(
-                    "error: value must be a valid regex expression".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
         };
@@ -293,7 +403,7 @@ impl PrimitiveString {
         let usage = "is_empty() => boolean";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = string.value.is_empty();
@@ -309,7 +419,7 @@ impl PrimitiveString {
         let usage = "length() => int";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = string.value.len();
@@ -325,20 +435,21 @@ impl PrimitiveString {
         let usage = "match(value: string>) => array";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let mut vector: Vec<Literal> = Vec::new();
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_DO_MATCH.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
-                    interval,
-                ));
+                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
             }
         };
 
@@ -361,7 +472,7 @@ impl PrimitiveString {
         let usage = "match_regex(value: string>) => array";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let mut s: &str = &string.value;
@@ -369,12 +480,16 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_MATCH_REGEX.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_MATCH_REGEX.to_owned(),
                 ));
             }
         };
@@ -382,9 +497,9 @@ impl PrimitiveString {
         let action = match Regex::new(value) {
             Ok(res) => res,
             Err(_) => {
-                return Err(ErrorInfo::new(
-                    "error: value must be a valid regex expression".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
         };
@@ -412,18 +527,19 @@ impl PrimitiveString {
         let usage = "starts_with(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_START_WITH.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
-                    interval,
-                ));
+                return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()));
             }
         };
 
@@ -440,17 +556,21 @@ impl PrimitiveString {
         let usage = "starts_with_regex(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive)?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_START_WITH_REGEX.to_owned(),
+                )?
             }
             _ => {
-                return Err(ErrorInfo::new(
-                    "error: value must be of type 'string'".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_START_WITH_REGEX.to_owned(),
                 ));
             }
         };
@@ -458,9 +578,9 @@ impl PrimitiveString {
         let action = match Regex::new(value) {
             Ok(res) => res,
             Err(_) => {
-                return Err(ErrorInfo::new(
-                    "error: value must be a valid regex expression".to_owned(),
+                return Err(gen_error_info(
                     interval,
+                    ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
         };
@@ -482,7 +602,7 @@ impl PrimitiveString {
         let usage = "to_lowercase() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let mut s = string.value.to_owned();
@@ -500,7 +620,7 @@ impl PrimitiveString {
         let usage = "to_uppercase() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let mut s = string.value.to_owned();
@@ -534,9 +654,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "abs", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -553,6 +673,7 @@ impl PrimitiveString {
 
             return Ok(literal);
         }
+
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
@@ -562,9 +683,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "cos", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -590,9 +711,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "ceil", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -618,9 +739,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "pow", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -646,9 +767,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "floor", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -674,9 +795,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "round", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -702,9 +823,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "sin", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -730,9 +851,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "sqrt", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -758,9 +879,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "tan", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -786,9 +907,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "to_int", ERROR_STRING_NUMERIC),
         ))
     }
 
@@ -814,9 +935,9 @@ impl PrimitiveString {
             return Ok(literal);
         }
 
-        Err(ErrorInfo::new(
-            "error: lhs must be a number".to_owned(),
+        Err(gen_error_info(
             interval,
+            format!("[{}] {}", "to_float", ERROR_STRING_NUMERIC),
         ))
     }
 }
@@ -857,10 +978,10 @@ impl Primitive for PrimitiveString {
             return Ok((res, *right));
         }
 
-        Err(ErrorInfo {
-            message: format!("unknown method '{}' for type String", name),
+        Err(gen_error_info(
             interval,
-        })
+            format!("[{}] {}", name, ERROR_STRING_UNKONWN_METHOD),
+        ))
     }
 
     fn is_eq(&self, other: &dyn Primitive) -> bool {
@@ -891,10 +1012,10 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "error: rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
+                return Err(gen_error_info(
+                    Interval { line: 0, column: 0 },
+                    ERROR_STRING_RHS.to_owned(),
+                ));
             }
         };
 
@@ -911,14 +1032,15 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation: {:?} + {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} + {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 
@@ -926,10 +1048,10 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
+                return Err(gen_error_info(
+                    Interval { line: 0, column: 0 },
+                    ERROR_STRING_RHS.to_owned(),
+                ));
             }
         };
 
@@ -946,14 +1068,15 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs - rhs as f64)))
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation: {:?} - {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} - {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 
@@ -961,10 +1084,10 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
+                return Err(gen_error_info(
+                    Interval { line: 0, column: 0 },
+                    ERROR_STRING_RHS.to_owned(),
+                ));
             }
         };
 
@@ -989,14 +1112,15 @@ impl Primitive for PrimitiveString {
 
                 Ok(Box::new(PrimitiveFloat::new(lhs / rhs as f64)))
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation: {:?} / {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} / {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 
@@ -1004,10 +1128,10 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
+                return Err(gen_error_info(
+                    Interval { line: 0, column: 0 },
+                    ERROR_STRING_RHS.to_owned(),
+                ));
             }
         };
 
@@ -1024,14 +1148,15 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation: {:?} * {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} * {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 
@@ -1039,10 +1164,10 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(ErrorInfo {
-                    message: "rhs need to be of type string".to_owned(),
-                    interval: Interval { column: 0, line: 0 },
-                });
+                return Err(gen_error_info(
+                    Interval { line: 0, column: 0 },
+                    ERROR_STRING_RHS.to_owned(),
+                ));
             }
         };
 
@@ -1057,16 +1182,17 @@ impl Primitive for PrimitiveString {
                 Ok(Box::new(PrimitiveFloat::new(lhs as f64 % rhs)))
             }
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs % rhs as f64)))
+                Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
-            _ => Err(ErrorInfo {
-                message: format!(
-                    "error: illegal operation: {:?} % {:?}",
+            _ => Err(gen_error_info(
+                Interval { column: 0, line: 0 },
+                format!(
+                    "{} {:?} % {:?}",
+                    ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-                interval: Interval { column: 0, line: 0 },
-            }),
+            )),
         }
     }
 

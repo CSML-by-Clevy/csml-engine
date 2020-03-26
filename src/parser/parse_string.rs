@@ -1,10 +1,10 @@
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{ast::*, tokens::*};
-use crate::parser::operator::parse_operator;
-use crate::parser::{parse_comments::comment, tools::get_interval};
+use crate::error_format::{gen_nom_failure, ERROR_DOUBLE_QUOTE};
+use crate::parser::{operator::parse_operator, parse_comments::comment, tools::get_interval};
 use nom::{
     bytes::complete::tag,
-    error::{ErrorKind, ParseError},
+    error::ParseError,
     multi::many_till,
     sequence::{delimited, preceded},
     *,
@@ -106,11 +106,7 @@ where
                 ),
             ))
         }
-        (_, None) => Err(Err::Failure(E::add_context(
-            s,
-            "DoubleQuoteError",
-            E::from_error_kind(s, ErrorKind::Tag),
-        ))),
+        (_, None) => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
     }
 }
 

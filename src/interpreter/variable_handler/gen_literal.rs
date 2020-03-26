@@ -4,7 +4,7 @@ use crate::data::{
     ast::{Expr, Identifier, Interval, PathState},
     Data, Literal, MessageData, MSG,
 };
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::{
     json_to_rust::json_to_literal,
     variable_handler::{exec_path_actions, resolve_path},
@@ -35,10 +35,10 @@ pub fn gen_literal_form_event(
             let content_type = match ContentType::get(&lit) {
                 ContentType::Event(_) => ContentType::Event(data.event.content_type.to_owned()),
                 _ => {
-                    return Err(ErrorInfo {
-                        message: "error: event can only be of ContentType::Event".to_owned(),
-                        interval: interval.to_owned(),
-                    })
+                    return Err(gen_error_info(
+                        interval.to_owned(),
+                        ERROR_EVENT_CONTENT_TYPE.to_owned(),
+                    ))
                 }
             };
 

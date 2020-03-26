@@ -17,7 +17,7 @@ use crate::data::{
     Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     gen_literal::gen_literal_form_event,
     memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
@@ -38,23 +38,30 @@ pub fn get_literal(
             if literal_lhs.primitive.get_type() == PrimitiveType::PrimitiveArray
                 && literal_rhs.primitive.get_type() == PrimitiveType::PrimitiveInt =>
         {
-            let items =
-                Literal::get_mut_value::<&mut Vec<Literal>>(&mut literal_lhs.primitive).unwrap();
-            let value = Literal::get_value::<i64>(&literal_rhs.primitive).unwrap();
+            let items = Literal::get_mut_value::<&mut Vec<Literal>>(
+                &mut literal_lhs.primitive,
+                literal_lhs.interval,
+                ERROR_ARRAY_TYPE.to_owned(),
+            )?;
+            let value = Literal::get_value::<i64>(
+                &literal_rhs.primitive,
+                literal_rhs.interval,
+                ERROR_ARRAY_INDEX_TYPE.to_owned(),
+            )?;
 
             match items.get_mut(*value as usize) {
                 Some(lit) => Ok(lit),
-                None => Err(ErrorInfo {
-                    message: format!("Array don't have {} index", value),
-                    interval: interval.to_owned(),
-                }),
+                None => Err(gen_error_info(
+                    interval.to_owned(),
+                    format!("{} {}", value, ERROR_ARRAY_INDEX_EXIST.to_owned()),
+                )),
             }
         }
         (literal, None) => Ok(literal),
-        (_, Some(_)) => Err(ErrorInfo {
-            message: "value is not of type Array".to_owned(),
-            interval,
-        }),
+        (_, Some(_)) => Err(gen_error_info(
+            interval.to_owned(),
+            ERROR_ARRAY_TYPE.to_owned(),
+        )),
     }
 }
 
@@ -64,25 +71,31 @@ fn get_var_from_stepvar<'a>(
 ) -> Result<&'a mut Literal, ErrorInfo> {
     match data.step_vars.get_mut(&name.ident) {
         Some(var) => Ok(var),
-        None => Err(ErrorInfo {
-            message: format!("no variable named < {} > in memory", name.ident),
-            interval: name.interval.to_owned(),
-        }),
+        None => Err(gen_error_info(
+            name.interval.to_owned(),
+            format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
+        )),
     }
 }
 
 pub fn get_at_index(lit: &mut Literal, index: usize) -> Option<&mut Literal> {
-    match Literal::get_mut_value::<Vec<Literal>>(&mut lit.primitive) {
-        Ok(vec) => vec.get_mut(index),
-        Err(_) => None,
-    }
+    let vec = Literal::get_mut_value::<Vec<Literal>>(
+        &mut lit.primitive,
+        lit.interval,
+        ERROR_ARRAY_TYPE.to_owned(),
+    )
+    .ok()?;
+    vec.get_mut(index)
 }
 
 pub fn get_value_from_key<'a>(lit: &'a mut Literal, key: &str) -> Option<&'a mut Literal> {
-    match Literal::get_mut_value::<HashMap<String, Literal>>(&mut lit.primitive) {
-        Ok(map) => map.get_mut(key),
-        Err(_) => None,
-    }
+    let map = Literal::get_mut_value::<HashMap<String, Literal>>(
+        &mut lit.primitive,
+        lit.interval,
+        ERROR_OBJECT_TYPE.to_owned(),
+    )
+    .ok()?;
+    map.get_mut(key)
 }
 
 pub fn resolve_path(
@@ -97,17 +110,23 @@ pub fn resolve_path(
         match node {
             PathState::ExprIndex(expr) => {
                 let lit = expr_to_literal(&expr, None, data, root, sender)?;
-                if let Ok(val) = Literal::get_value::<i64>(&lit.primitive) {
+                if let Ok(val) = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    lit.interval,
+                    ERROR_UNREACHABLE.to_owned(),
+                ) {
                     new_path.push((inter.to_owned(), PathLiteral::VecIndex(*val as usize)))
-                } else if let Ok(val) = Literal::get_value::<String>(&lit.primitive) {
+                } else if let Ok(val) = Literal::get_value::<String>(
+                    &lit.primitive,
+                    lit.interval,
+                    ERROR_UNREACHABLE.to_owned(),
+                ) {
                     new_path.push((inter.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
-                    return Err(ErrorInfo {
-                        message:
-                            "index must be of type int or string  => var.[42] or var.[\"key\"]"
-                                .to_owned(),
-                        interval: inter.to_owned(),
-                    });
+                    return Err(gen_error_info(
+                        inter.to_owned(),
+                        ERROR_FIND_BY_INDEX.to_owned(),
+                    ));
                 }
             }
             PathState::Func(Function {
@@ -180,10 +199,19 @@ fn loop_path(
                 interval,
                 args,
             } => {
-                // TODO: change to args
-                // TODO: need to pass interval
+                // TODO: change args: Literal to args: Vec< Literal >
                 // TODO: Warning msg element is unmutable ?
-                let args = Literal::get_value::<Vec<Literal>>(&args.primitive)?;
+                let args = match Literal::get_value::<Vec<Literal>>(
+                    &args.primitive,
+                    *interval,
+                    ERROR_UNREACHABLE.to_owned(),
+                )
+                .ok()
+                {
+                    Some(args) => args,
+                    // this is unreachable because a function need to have arguments other wise it will be a parsing error
+                    None => unreachable!(),
+                };
                 let mut return_lit =
                     lit.primitive
                         .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
@@ -232,10 +260,10 @@ pub fn get_literal_form_metadata(
             None => PrimitiveNull::get_literal(inter.to_owned()),
         },
         Some((inter, _)) => {
-            return Err(ErrorInfo {
-                message: "_metadata expect key => _metadata.key or _metadata.[\"key\"]".to_owned(),
-                interval: inter.to_owned(),
-            })
+            return Err(gen_error_info(
+                inter.to_owned(),
+                ERROR_FIND_BY_INDEX.to_owned(),
+            ));
         }
         None => unreachable!(),
     };
@@ -281,7 +309,18 @@ pub fn get_var(
                 );
                 Ok(new_literal)
             }
-            Err(_) => Ok(PrimitiveNull::get_literal(interval.to_owned())),
+            Err(_) => {
+                // if value does not exist in memory we create a null value and we apply all the path actions
+                let mut null = PrimitiveNull::get_literal(interval.to_owned());
+                let path = if let Some(p) = path {
+                    Some(resolve_path(p, data, root, sender)?)
+                } else {
+                    None
+                };
+                let content_type = ContentType::get(&null);
+                let (new_literal, ..) = exec_path_actions(&mut null, None, &path, &content_type)?;
+                Ok(new_literal)
+            }
         },
     }
 }

@@ -1,4 +1,5 @@
 use crate::data::{ast::*, tokens::*};
+use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
 use crate::linter::Linter;
 use crate::parser::{
     parse_comments::comment, parse_idents::parse_idents_assignation, tools::get_interval,
@@ -65,12 +66,8 @@ where
             }
             (s, name)
         }
-        Err(Err::Error(err)) | Err(Err::Failure(err)) => {
-            return Err(Err::Error(E::add_context(
-                s,
-                "missing step name after goto",
-                err,
-            )))
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            return Err(gen_nom_failure(s, ERROR_GOTO_STEP))
         }
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };

@@ -1,6 +1,6 @@
 use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
 use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::*;
 use crate::interpreter::{builtins::tools::*, json_to_literal};
 
 use curl::{
@@ -11,28 +11,29 @@ use std::{collections::HashMap, env, io::Read};
 
 fn parse_api(
     args: &HashMap<String, Literal>,
+    interval: Interval,
     client: Client,
     fn_endpoint: String,
 ) -> Result<(String, String), ErrorInfo> {
     let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
 
-    if let Some(literal) = args.get("fn_id") {
-        if literal.primitive.get_type() == PrimitiveType::PrimitiveString {
-            let fn_id = Literal::get_value::<String>(&literal.primitive).unwrap();
+    match (args.get("fn_id"), args.get(DEFAULT)) {
+        (Some(literal), ..) | (.., Some(literal))
+            if literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
+        {
+            let fn_id = Literal::get_value::<String>(
+                &literal.primitive,
+                literal.interval,
+                ERROR_FN_ID.to_owned(),
+            )?;
+
             map.insert(
                 "function_id".to_owned(),
                 serde_json::Value::String(fn_id.to_owned()),
             );
         }
-    } else if let Some(literal) = args.get(DEFAULT) {
-        if literal.primitive.get_type() == PrimitiveType::PrimitiveString {
-            let fn_id = Literal::get_value::<String>(&literal.primitive).unwrap();
-            map.insert(
-                "function_id".to_owned(),
-                serde_json::Value::String(fn_id.to_owned()),
-            );
-        }
-    }
+        _ => return Err(gen_error_info(interval, ERROR_FN_ID.to_owned())),
+    };
 
     let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
     let client = client_to_json(&client);
@@ -85,26 +86,16 @@ pub fn api(
             client,
             fn_endpoint,
         }) => (client.to_owned(), fn_endpoint.to_owned()),
-        None => {
-            return Err(ErrorInfo {
-                message: "fn call can not be make because fn_endpoint is not set".to_owned(),
-                interval,
-            })
-        }
+        None => return Err(gen_error_info(interval, ERROR_FN_ENDPOINT.to_owned())),
     };
 
-    let (http_arg, map) = parse_api(&args, client, fn_endpoint)?;
+    let (http_arg, map) = parse_api(&args, interval, client, fn_endpoint)?;
     let data_bytes = map.as_bytes();
     let mut result = Vec::new();
 
     match format_and_transfer(&mut data.curl, &mut result, &http_arg, data_bytes) {
         Ok(_) => (),
-        Err(err) => {
-            return Err(ErrorInfo {
-                message: format!("{}", err),
-                interval,
-            })
-        }
+        Err(err) => return Err(gen_error_info(interval, format!("{}", err))),
     };
 
     let json: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(&result)).unwrap();

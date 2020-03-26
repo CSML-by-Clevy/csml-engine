@@ -1,4 +1,5 @@
 use crate::data::{ast::*, tokens::*};
+use crate::error_format::{gen_nom_failure, ERROR_IMPORT_STEP};
 use crate::parser::{parse_comments::comment, parse_idents::*, StateContext};
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
@@ -12,9 +13,8 @@ where
 {
     match tag(STEP)(s) {
         Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((input, err))) | Err(Err::Failure((input, err))) => {
-            let err = E::from_error_kind(input, err);
-            Err(Err::Failure(E::add_context(input, "ImportStepError", err)))
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(gen_nom_failure(s, ERROR_IMPORT_STEP))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }

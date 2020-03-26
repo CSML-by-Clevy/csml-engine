@@ -27,7 +27,7 @@ step2:
     goto end
 
 step3:
-    use 9 as var9
+    do var9 = 9
     if (var9 > var9) {
         say "error"
     } else {
@@ -58,3 +58,15 @@ step6:
     say "pas OK"
   }
   goto end
+
+step7:
+  do vector = [1, 2]
+
+  if (2 == vector.length()) {
+    say "YES"
+  }
+  if (vector.length() == 2) {
+    say "YES"
+  }
+
+goto end

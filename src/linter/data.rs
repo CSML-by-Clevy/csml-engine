@@ -16,6 +16,7 @@ lazy_static! {
 pub struct Position {
     flow: String,
     step: String,
+    // add line, column ???
 }
 
 #[derive(Debug, Clone)]
@@ -26,10 +27,17 @@ pub struct Goto {
 }
 
 #[derive(Debug, Clone)]
+pub struct Warning {
+    pub message: &'static str,
+    pub position: Position,
+}
+
+#[derive(Debug, Clone)]
 pub struct Linter {
     pub flow: HashMap<String, HashMap<String, Vec<Interval>>>,
     pub goto: Vec<Goto>,
     pub position: Position,
+    pub warnings: Vec<Warning>,
     // Todo: add function, var, unreachable_code inside linter
     // pub var: HashMap<String, Vec<Variable>>,
     // pub function: HashMap<String, Vec<Function>>,
@@ -55,6 +63,7 @@ impl Default for Linter {
             position: Position::default(),
             flow: HashMap::default(),
             goto: Vec::default(),
+            warnings: Vec::default(),
         }
     }
 }
@@ -157,6 +166,23 @@ impl Linter {
         }
     }
 
+    pub fn add_warning(message: &'static str) {
+        let thread_id = current().id();
+        let mut hashmap = HASHMAP.lock().unwrap();
+
+        hashmap
+            .entry(thread_id)
+            .or_insert_with(|| Linter::default());
+
+        if let Some(linter) = hashmap.get_mut(&thread_id) {
+            let warning = Warning {
+                position: linter.position.clone(),
+                message,
+            };
+            linter.warnings.push(warning);
+        }
+    }
+
     pub fn clear() {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
@@ -214,6 +240,22 @@ impl Linter {
 
         if let Some(linter) = hashmap.get(&thread_id) {
             (*linter).to_owned()
+        } else {
+            unreachable!();
+        }
+    }
+
+    // tmp
+    pub fn print_warnings() {
+        let thread_id = current().id();
+        let mut hashmap = HASHMAP.lock().unwrap();
+
+        hashmap
+            .entry(thread_id)
+            .or_insert_with(|| Linter::default());
+
+        if let Some(linter) = hashmap.get(&thread_id) {
+            println!("{:?}", linter.warnings);
         } else {
             unreachable!();
         }

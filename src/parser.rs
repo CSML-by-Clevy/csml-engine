@@ -22,14 +22,14 @@ use crate::parser::parse_idents::parse_idents_assignation;
 pub use state_context::{ExecutionState, ExitCondition, StateContext};
 
 use crate::data::{ast::*, tokens::*};
-use crate::error_format::{CustomError, ErrorInfo};
+use crate::error_format::*;
 use crate::linter::Linter;
 use parse_comments::comment;
 use parse_scope::parse_root;
 use tools::*;
 
-use nom::error::{ErrorKind, ParseError};
-use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
+use nom::error::ParseError;
+use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
@@ -42,13 +42,13 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
             flow_type,
         }),
         Err(e) => match e {
-            Err::Error(err) | Err::Failure(err) => Err(ErrorInfo {
-                message: err.error.to_owned(),
-                interval: Interval {
+            Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
+                Interval {
                     line: err.input.location_line(),
                     column: err.input.get_column() as u32,
                 },
-            }),
+                err.error.to_owned(),
+            )),
             Err::Incomplete(_err) => unimplemented!(),
         },
     }
@@ -60,6 +60,7 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
 
     let (s, interval) = get_interval(s)?;
 
+    // Linter and Context setup
     Linter::set_step(&Linter::get_flow(), &ident.ident, interval);
     StateContext::clear_rip();
 
@@ -93,18 +94,7 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
 
     let (last, _) = comment(s)?;
     if !last.fragment().is_empty() {
-        let res: IResult<Span<'a>, Span<'a>, E> =
-            preceded(comment, alt((tag("ask"), tag("response"))))(last);
-
-        let error = match res {
-            Ok(_) => E::add_context(
-                last,
-                "use the new keyword hold to ask for user input https://docs.csml.dev/#hold",
-                E::from_error_kind(last, ErrorKind::Tag),
-            ),
-            _ => E::from_error_kind(last, ErrorKind::Tag),
-        };
-        Err(Err::Failure(error))
+        Err(gen_nom_failure(last, ERROR_PARSING))
     } else {
         Ok((s, (flow, flow_type)))
     }

@@ -25,34 +25,12 @@ impl<I> ParseError<I> for CustomError<I> {
         other.error = ctx.to_owned();
         other
     }
-
-    // trait ParseError
-    // https://docs.rs/nom/5.0.1/src/nom/error.rs.html#13-40
-}
-
-#[repr(u32)]
-pub enum ParserErrorType {
-    StepDuplicateError = 0,
-    AssignError = 1,
-    AsError = 2,
-    GotoStepError = 10,
-    ImportError = 11,
-    ImportStepError = 12,
-    NoAscii = 13,
-    AcceptError = 100,
-    LeftBraceError = 110,
-    RightBraceError = 111,
-    LeftParenthesesError = 112,
-    RightParenthesesError = 113,
-    RightBracketError = 114,
-    DoubleQuoteError = 120,
-    DoubleBraceError = 130,
 }
 
 #[derive(Debug, Clone)]
 pub struct ErrorInfo {
-    pub message: String,
     pub interval: Interval,
+    pub message: String,
 }
 
 impl ErrorInfo {
