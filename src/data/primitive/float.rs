@@ -26,21 +26,48 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("is_number", (PrimitiveFloat::is_number as PrimitiveMethod, Right::Read));
-        map.insert("type_of", (PrimitiveFloat::type_of as PrimitiveMethod, Right::Read));
-        map.insert("to_string", (PrimitiveFloat::to_string as PrimitiveMethod, Right::Read));
-        
+        map.insert(
+            "is_number",
+            (PrimitiveFloat::is_number as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "type_of",
+            (PrimitiveFloat::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveFloat::to_string as PrimitiveMethod, Right::Read),
+        );
+
         map.insert("abs", (PrimitiveFloat::abs as PrimitiveMethod, Right::Read));
         map.insert("cos", (PrimitiveFloat::cos as PrimitiveMethod, Right::Read));
-        map.insert("ceil", (PrimitiveFloat::ceil as PrimitiveMethod, Right::Read));
-        map.insert("floor", (PrimitiveFloat::floor as PrimitiveMethod, Right::Read));
+        map.insert(
+            "ceil",
+            (PrimitiveFloat::ceil as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "floor",
+            (PrimitiveFloat::floor as PrimitiveMethod, Right::Read),
+        );
         map.insert("pow", (PrimitiveFloat::pow as PrimitiveMethod, Right::Read));
-        map.insert("round", (PrimitiveFloat::round as PrimitiveMethod, Right::Read));
+        map.insert(
+            "round",
+            (PrimitiveFloat::round as PrimitiveMethod, Right::Read),
+        );
         map.insert("sin", (PrimitiveFloat::sin as PrimitiveMethod, Right::Read));
-        map.insert("sqrt", (PrimitiveFloat::sqrt as PrimitiveMethod, Right::Read));
+        map.insert(
+            "sqrt",
+            (PrimitiveFloat::sqrt as PrimitiveMethod, Right::Read),
+        );
         map.insert("tan", (PrimitiveFloat::tan as PrimitiveMethod, Right::Read));
-        map.insert("to_int", (PrimitiveFloat::to_int as PrimitiveMethod, Right::Read));
-        map.insert("to_float", (PrimitiveFloat::to_float as PrimitiveMethod, Right::Read));
+        map.insert(
+            "to_int",
+            (PrimitiveFloat::to_int as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_float",
+            (PrimitiveFloat::to_float as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -177,28 +204,25 @@ impl PrimitiveFloat {
 
         let exponent = match args.get(0) {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveInt => {
-                match Literal::get_value::<i64>(&exponent.primitive) {
-                    Some(exponent) => *exponent as f64,
-                    None => {
-                        return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()));
-                    }
-                }
+                *Literal::get_value::<i64>(
+                    &exponent.primitive,
+                    interval,
+                    ERROR_NUMBER_POW.to_owned(),
+                )? as f64
             }
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveFloat => {
-                match Literal::get_value::<f64>(&exponent.primitive) {
-                    Some(exponent) => *exponent,
-                    None => {
-                        return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()));
-                    }
-                }
+                *Literal::get_value::<f64>(
+                    &exponent.primitive,
+                    interval,
+                    ERROR_NUMBER_POW.to_owned(),
+                )?
             }
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                let exponent = match Literal::get_value::<String>(&exponent.primitive) {
-                    Some(exponent) => exponent,
-                    None => {
-                        return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()));
-                    }
-                };
+                let exponent = Literal::get_value::<String>(
+                    &exponent.primitive,
+                    interval,
+                    ERROR_NUMBER_POW.to_owned(),
+                )?;
 
                 match exponent.parse::<f64>() {
                     Ok(res) => res,
@@ -379,7 +403,12 @@ impl Primitive for PrimitiveFloat {
 
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_ADD.to_owned(),
+            format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
@@ -392,7 +421,12 @@ impl Primitive for PrimitiveFloat {
 
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_SUB.to_owned(),
+            format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
@@ -407,7 +441,12 @@ impl Primitive for PrimitiveFloat {
 
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_DIV.to_owned(),
+            format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
@@ -420,7 +459,12 @@ impl Primitive for PrimitiveFloat {
 
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_MUL.to_owned(),
+            format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
@@ -433,7 +477,12 @@ impl Primitive for PrimitiveFloat {
 
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_REM.to_owned(),
+            format!(
+                "{} {:?} % {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 

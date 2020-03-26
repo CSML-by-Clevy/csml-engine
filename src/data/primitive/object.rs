@@ -22,14 +22,38 @@ lazy_static! {
     static ref FUNCTIONS_HTTP: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("set", (PrimitiveObject::set as PrimitiveMethod, Right::Read));
-        map.insert("query", (PrimitiveObject::query as PrimitiveMethod, Right::Read));
-        map.insert("get", (PrimitiveObject::get_http as PrimitiveMethod, Right::Read));
-        map.insert("post", (PrimitiveObject::post as PrimitiveMethod, Right::Read));
-        map.insert("put", (PrimitiveObject::put as PrimitiveMethod, Right::Read));
-        map.insert("delete", (PrimitiveObject::delete as PrimitiveMethod, Right::Read));
-        map.insert("patch", (PrimitiveObject::patch as PrimitiveMethod, Right::Read));
-        map.insert("send", (PrimitiveObject::send as PrimitiveMethod, Right::Read));
+        map.insert(
+            "set",
+            (PrimitiveObject::set as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "query",
+            (PrimitiveObject::query as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "get",
+            (PrimitiveObject::get_http as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "post",
+            (PrimitiveObject::post as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "put",
+            (PrimitiveObject::put as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "delete",
+            (PrimitiveObject::delete as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "patch",
+            (PrimitiveObject::patch as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "send",
+            (PrimitiveObject::send as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -39,9 +63,24 @@ lazy_static! {
     static ref FUNCTIONS_EVENT: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("get_type", (PrimitiveObject::get_type as PrimitiveMethod, Right::Read));
-        map.insert("get_metadata", (PrimitiveObject::get_metadata as PrimitiveMethod, Right::Read));
-        map.insert("is_number", (PrimitiveObject::is_number_event as PrimitiveMethod, Right::Read));
+        map.insert(
+            "get_type",
+            (PrimitiveObject::get_type as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "get_metadata",
+            (
+                PrimitiveObject::get_metadata as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "is_number",
+            (
+                PrimitiveObject::is_number_event as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
 
         map
     };
@@ -51,16 +90,49 @@ lazy_static! {
     static ref FUNCTIONS_READ: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("type_of", (PrimitiveObject::type_of as PrimitiveMethod, Right::Read));
-        map.insert("to_string", (PrimitiveObject::to_string as PrimitiveMethod, Right::Read));
-        map.insert("is_number", (PrimitiveObject::is_number_generics as PrimitiveMethod, Right::Read));
-        
-        map.insert("contains", (PrimitiveObject::contains as PrimitiveMethod, Right::Read));
-        map.insert("is_empty", (PrimitiveObject::is_empty as PrimitiveMethod, Right::Read));
-        map.insert("length", (PrimitiveObject::length as PrimitiveMethod, Right::Read));
-        map.insert("keys", (PrimitiveObject::keys as PrimitiveMethod, Right::Read));
-        map.insert("values", (PrimitiveObject::values as PrimitiveMethod, Right::Read));
-        map.insert("get", (PrimitiveObject::get_generics as PrimitiveMethod, Right::Read));
+        map.insert(
+            "type_of",
+            (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_number",
+            (
+                PrimitiveObject::is_number_generics as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+
+        map.insert(
+            "contains",
+            (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_empty",
+            (PrimitiveObject::is_empty as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "length",
+            (PrimitiveObject::length as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "keys",
+            (PrimitiveObject::keys as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "values",
+            (PrimitiveObject::values as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "get",
+            (
+                PrimitiveObject::get_generics as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
 
         map
     };
@@ -70,9 +142,21 @@ lazy_static! {
     static ref FUNCTIONS_WRITE: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("clear_values", (PrimitiveObject::clear_values as PrimitiveMethod, Right::Write));
-        map.insert("insert", (PrimitiveObject::insert as PrimitiveMethod, Right::Write));
-        map.insert("remove", (PrimitiveObject::remove as PrimitiveMethod, Right::Write));
+        map.insert(
+            "clear_values",
+            (
+                PrimitiveObject::clear_values as PrimitiveMethod,
+                Right::Write,
+            ),
+        );
+        map.insert(
+            "insert",
+            (PrimitiveObject::insert as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "remove",
+            (PrimitiveObject::remove as PrimitiveMethod, Right::Write),
+        );
 
         map
     };
@@ -116,18 +200,18 @@ impl PrimitiveObject {
 
         let mut object = object.to_owned();
 
-        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Some(header) => {
-                insert_to_object(header, &mut object, "header", literal);
+        let header = Literal::get_value::<HashMap<String, Literal>>(
+            &literal.primitive,
+            interval,
+            ERROR_HTTP_SET.to_owned(),
+        )?;
+        insert_to_object(header, &mut object, "header", literal);
 
-                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
-                result.set_content_type("http");
+        result.set_content_type("http");
 
-                Ok(result)
-            }
-            None => Err(gen_error_info(interval, ERROR_HTTP_SET.to_owned())),
-        }
+        Ok(result)
     }
 
     fn query(
@@ -151,18 +235,18 @@ impl PrimitiveObject {
 
         let mut object = object.to_owned();
 
-        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Some(header) => {
-                insert_to_object(header, &mut object, "query", literal);
+        let header = Literal::get_value::<HashMap<String, Literal>>(
+            &literal.primitive,
+            interval,
+            ERROR_HTTP_QUERY.to_owned(),
+        )?;
+        insert_to_object(header, &mut object, "query", literal);
 
-                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
-                result.set_content_type("http");
+        result.set_content_type("http");
 
-                Ok(result)
-            }
-            None => Err(gen_error_info(interval, ERROR_HTTP_QUERY.to_owned())),
-        }
+        Ok(result)
     }
 
     fn get_http(
@@ -217,18 +301,18 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("post", interval),
         );
 
-        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Some(header) => {
-                insert_to_object(header, &mut object, "body", literal);
+        let header = Literal::get_value::<HashMap<String, Literal>>(
+            &literal.primitive,
+            interval,
+            ERROR_HTTP_POST.to_owned(),
+        )?;
+        insert_to_object(header, &mut object, "body", literal);
 
-                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
-                result.set_content_type("http");
+        result.set_content_type("http");
 
-                Ok(result)
-            }
-            None => Err(gen_error_info(interval, ERROR_HTTP_POST.to_owned())),
-        }
+        Ok(result)
     }
 
     fn put(
@@ -257,18 +341,18 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("put", interval),
         );
 
-        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Some(header) => {
-                insert_to_object(header, &mut object, "body", literal);
+        let header = Literal::get_value::<HashMap<String, Literal>>(
+            &literal.primitive,
+            interval,
+            ERROR_HTTP_PUT.to_owned(),
+        )?;
+        insert_to_object(header, &mut object, "body", literal);
 
-                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
-                result.set_content_type("http");
+        result.set_content_type("http");
 
-                Ok(result)
-            }
-            None => Err(gen_error_info(interval, ERROR_HTTP_PUT.to_owned())),
-        }
+        Ok(result)
     }
 
     fn delete(
@@ -323,18 +407,18 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("patch", interval),
         );
 
-        match Literal::get_value::<HashMap<String, Literal>>(&literal.primitive) {
-            Some(header) => {
-                insert_to_object(header, &mut object, "body", literal);
+        let header = Literal::get_value::<HashMap<String, Literal>>(
+            &literal.primitive,
+            interval,
+            ERROR_HTTP_PATCH.to_owned(),
+        )?;
+        insert_to_object(header, &mut object, "body", literal);
 
-                let mut result = PrimitiveObject::get_literal(&object.value, interval);
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
-                result.set_content_type("http");
+        result.set_content_type("http");
 
-                Ok(result)
-            }
-            None => Err(gen_error_info(interval, ERROR_HTTP_PATCH.to_owned())),
-        }
+        Ok(result)
     }
 
     fn send(
@@ -350,12 +434,16 @@ impl PrimitiveObject {
         }
 
         if let Some(literal) = object.value.get("method") {
-            let function = match Literal::get_value::<String>(&literal.primitive) {
-                Some(delete) if delete == "delete" => ureq::delete,
-                Some(put) if put == "put" => ureq::put,
-                Some(patch) if patch == "patch" => ureq::patch,
-                Some(post) if post == "post" => ureq::post,
-                Some(get) if get == "get" => ureq::get,
+            let function = match Literal::get_value::<String>(
+                &literal.primitive,
+                interval,
+                format!("{}", ERROR_HTTP_UNKONWN_METHOD),
+            ) {
+                Ok(delete) if delete == "delete" => ureq::delete,
+                Ok(put) if put == "put" => ureq::put,
+                Ok(patch) if patch == "patch" => ureq::patch,
+                Ok(post) if post == "post" => ureq::post,
+                Ok(get) if get == "get" => ureq::get,
                 _ => {
                     return Err(gen_error_info(
                         interval,
@@ -488,10 +576,11 @@ impl PrimitiveObject {
 
         let key = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(key) => key,
-                    None => return Err(gen_error_info(interval, ERROR_OBJECT_CONTAINS.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_OBJECT_CONTAINS.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(interval, ERROR_OBJECT_CONTAINS.to_owned()));
@@ -593,13 +682,11 @@ impl PrimitiveObject {
 
         let key = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(key) => key,
-                    None => return Err(gen_error_info(
-                        interval,
-                        ERROR_OBJECT_GET_GENERICS.to_owned(),
-                    ))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_OBJECT_GET_GENERICS.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(
@@ -658,10 +745,11 @@ impl PrimitiveObject {
 
         let key = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(key) => key,
-                    None => return Err(gen_error_info(interval, ERROR_OBJECT_INSERT.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_OBJECT_INSERT.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(interval, ERROR_OBJECT_INSERT.to_owned()));
@@ -694,10 +782,11 @@ impl PrimitiveObject {
 
         let key = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(key) => key,
-                    None => return Err(gen_error_info(interval, ERROR_OBJECT_REMOVE.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_OBJECT_REMOVE.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(interval, ERROR_OBJECT_REMOVE.to_owned()));
@@ -724,9 +813,11 @@ fn insert_to_object(
     dst.value
         .entry(key.to_owned())
         .and_modify(|tmp: &mut Literal| {
-            if let Some(tmp) =
-                Literal::get_mut_value::<HashMap<String, Literal>>(&mut tmp.primitive)
-            {
+            if let Ok(tmp) = Literal::get_mut_value::<HashMap<String, Literal>>(
+                &mut tmp.primitive,
+                literal.interval,
+                ERROR_UNREACHABLE.to_owned(),
+            ) {
                 for (key, value) in src.iter() {
                     tmp.insert(key.to_owned(), value.to_owned());
                 }
@@ -811,38 +902,63 @@ impl Primitive for PrimitiveObject {
         None
     }
 
-    fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_ADD.to_owned(),
+            format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_SUB.to_owned(),
+            format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_DIV.to_owned(),
+            format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_DIV.to_owned(),
+            format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_REM.to_owned(),
+            format!(
+                "{} {:?} % {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 

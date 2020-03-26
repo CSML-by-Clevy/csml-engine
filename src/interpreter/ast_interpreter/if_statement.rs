@@ -70,17 +70,6 @@ fn evaluate_if_condition(
     }
 }
 
-fn check_if_ident(expr: &Expr) -> bool {
-    match expr {
-        Expr::PathExpr { .. }
-        | Expr::LitExpr { .. }
-        | Expr::IdentExpr(..)
-        | Expr::ComplexLiteral(..)
-        | Expr::ObjectExpr(..) => true,
-        _ => false,
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,16 +83,11 @@ pub fn evaluate_condition(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match (expr1, expr2) {
-        (exp_1, ..) if Infix::Not == *infix && check_if_ident(exp_1) => {
+        (exp_1, ..) if Infix::Not == *infix => {
             let value = !valid_literal(expr_to_literal(exp_1, None, data, root, sender));
             let interval = interval_from_expr(exp_1);
             Ok(PrimitiveBoolean::get_literal(value, interval))
         }
-        (exp_1, exp_2) if check_if_ident(exp_1) && check_if_ident(exp_2) => evaluate(
-            infix,
-            expr_to_literal(exp_1, None, data, root, sender),
-            expr_to_literal(exp_2, None, data, root, sender),
-        ),
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data, root, sender),
@@ -119,10 +103,16 @@ pub fn evaluate_condition(
             expr_to_literal(exp, None, data, root, sender),
             evaluate_condition(i1, ex1, ex2, data, root, sender),
         ),
-        (e1, _e2) => Err(ErrorInfo {
-            message: "in evaluate_condition function".to_owned(),
-            interval: interval_from_expr(e1),
-        }),
+        (exp_1, exp_2) =>{
+            println!("--------------");
+            let result = evaluate(
+                infix,
+            expr_to_literal(exp_1, None, data, root, sender),
+            expr_to_literal(exp_2, None, data, root, sender),
+            );
+            println!("res = {:?}", result);
+            result
+        },
     }
 }
 

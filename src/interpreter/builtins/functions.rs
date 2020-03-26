@@ -16,28 +16,33 @@ pub fn one_of(
     one_of_inter: Interval,
 ) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
-        Some(literal) => match Literal::get_value::<Vec<Literal>>(&literal.primitive) {
-            Some(res) => match res.get(rand::thread_rng().gen_range(0, res.len())) {
+        Some(literal) => {
+            let res = Literal::get_value::<Vec<Literal>>(
+                &literal.primitive,
+                literal.interval,
+                ERROR_ONE_OF.to_owned(),
+            )?;
+            match res.get(rand::thread_rng().gen_range(0, res.len())) {
                 Some(lit) => Ok(lit.to_owned()),
                 None => Err(gen_error_info(literal.interval, ERROR_ONE_OF.to_owned())),
-            },
-            None => Err(gen_error_info(literal.interval, ERROR_ONE_OF.to_owned())),
-        },
+            }
+        }
         None => Err(gen_error_info(one_of_inter, ERROR_ONE_OF.to_owned())),
     }
 }
 
 pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
-        Some(literal) => match Literal::get_value::<Vec<Literal>>(&literal.primitive) {
-            Some(res) => {
-                let mut vec = res.to_owned();
-                vec.shuffle(&mut rand::thread_rng());
-
-                Ok(PrimitiveArray::get_literal(&vec, literal.interval))
-            }
-            None => Err(gen_error_info(interval, ERROR_SHUFFLE.to_owned())),
-        },
+        Some(literal) => {
+            let res = Literal::get_value::<Vec<Literal>>(
+                &literal.primitive,
+                interval,
+                ERROR_SHUFFLE.to_owned(),
+            )?;
+            let mut vec = res.to_owned();
+            vec.shuffle(&mut rand::thread_rng());
+            Ok(PrimitiveArray::get_literal(&vec, literal.interval))
+        }
         None => Err(gen_error_info(interval, ERROR_SHUFFLE.to_owned())),
     }
 }
@@ -45,13 +50,19 @@ pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Lit
 pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
         Some(literal) => {
-            if let Some(res) = Literal::get_value::<Vec<Literal>>(&literal.primitive) {
+            if let Ok(res) = Literal::get_value::<Vec<Literal>>(
+                &literal.primitive,
+                interval,
+                ERROR_LENGTH.to_owned(),
+            ) {
                 return Ok(PrimitiveInt::get_literal(
                     res.len() as i64,
                     literal.interval,
                 ));
             }
-            if let Some(res) = Literal::get_value::<String>(&literal.primitive) {
+            if let Ok(res) =
+                Literal::get_value::<String>(&literal.primitive, interval, ERROR_LENGTH.to_owned())
+            {
                 return Ok(PrimitiveInt::get_literal(
                     res.len() as i64,
                     literal.interval,
@@ -69,7 +80,9 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
     let mut case = false;
 
     if let Some(literal) = args.get("in") {
-        if let Some(res) = Literal::get_value::<String>(&literal.primitive) {
+        if let Ok(res) =
+            Literal::get_value::<String>(&literal.primitive, interval, ERROR_FIND.to_owned())
+        {
             string = Some(res);
         }
     } else if string.is_none() {
@@ -77,28 +90,29 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
     }
 
     if let Some(literal) = args.get("in") {
-        if let Some(res) = Literal::get_value::<bool>(&literal.primitive) {
+        if let Ok(res) =
+            Literal::get_value::<bool>(&literal.primitive, interval, ERROR_FIND.to_owned())
+        {
             case = *res;
         }
     }
 
     match (args.get(DEFAULT), string) {
-        (Some(literal), Some(string)) => match Literal::get_value::<String>(&literal.primitive) {
-            Some(res) => {
-                if case {
-                    Ok(PrimitiveBoolean::get_literal(
-                        string.contains(res),
-                        interval,
-                    ))
-                } else {
-                    Ok(PrimitiveBoolean::get_literal(
-                        string.to_lowercase().contains(&res.to_lowercase()),
-                        interval,
-                    ))
-                }
+        (Some(literal), Some(string)) => {
+            let res =
+                Literal::get_value::<String>(&literal.primitive, interval, ERROR_FIND.to_owned())?;
+            if case {
+                Ok(PrimitiveBoolean::get_literal(
+                    string.contains(res),
+                    interval,
+                ))
+            } else {
+                Ok(PrimitiveBoolean::get_literal(
+                    string.to_lowercase().contains(&res.to_lowercase()),
+                    interval,
+                ))
             }
-            None => Err(gen_error_info(interval, ERROR_FIND.to_owned())),
-        },
+        }
         (_, _) => Err(gen_error_info(interval, ERROR_FIND.to_owned())),
     }
 }
@@ -113,10 +127,11 @@ pub fn random(interval: Interval) -> Result<Literal, ErrorInfo> {
 
 pub fn floor(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
-        Some(literal) => match Literal::get_value::<f64>(&literal.primitive) {
-            Some(res) => Ok(PrimitiveFloat::get_literal(res.floor(), literal.interval)),
-            None => Err(gen_error_info(interval, ERROR_FLOOR.to_owned())),
-        },
+        Some(literal) => {
+            let res =
+                Literal::get_value::<f64>(&literal.primitive, interval, ERROR_FLOOR.to_owned())?;
+            Ok(PrimitiveFloat::get_literal(res.floor(), literal.interval))
+        }
         _ => Err(gen_error_info(interval, ERROR_FLOOR.to_owned())),
     }
 }

@@ -1,9 +1,5 @@
-use crate::data::primitive::PrimitiveType;
 use crate::data::{
-    ast::{Expr, Identifier},
-    send_msg,
-    tokens::MEMORY,
-    Context, Data, Literal, Memories, MemoryType, MessageData, MSG,
+    ast::Identifier, send_msg, Data, Literal, Memories, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use std::sync::mpsc;
@@ -68,21 +64,21 @@ pub fn save_literal_in_mem(
     }
 }
 
-pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a Literal> {
-    match (name, expr) {
-        (Expr::IdentExpr(Identifier { ident, .. }), Expr::LitExpr(literal))
-            if ident == MEMORY
-                && literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
-        {
-            let value = Literal::get_value::<String>(&literal.primitive).unwrap();
-            memory.current.get(value)
-        }
-        (_, Expr::LitExpr(literal))
-            if literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
-        {
-            let value = Literal::get_value::<String>(&literal.primitive).unwrap();
-            memory.metadata.get(value)
-        }
-        _ => None,
-    }
-}
+// pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a Literal> {
+//     match (name, expr) {
+//         (Expr::IdentExpr(Identifier { ident, .. }), Expr::LitExpr(literal))
+//             if ident == MEMORY
+//                 && literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
+//         {
+//             let value = Literal::get_value::<String>(&literal.primitive)?;
+//             memory.current.get(value)
+//         }
+//         (_, Expr::LitExpr(literal))
+//             if literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
+//         {
+//             let value = Literal::get_value::<String>(&literal.primitive)?;
+//             memory.metadata.get(value)
+//         }
+//         _ => None,
+//     }
+// }

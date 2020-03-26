@@ -22,16 +22,11 @@ pub fn for_loop(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let literal = expr_to_literal(expr, None, data, &mut root, sender)?;
-
-    let array = match Literal::get_value::<Vec<Literal>>(&literal.primitive) {
-        Some(res) => res,
-        None => {
-            return Err(gen_error_info(
-                range.start.to_owned(),
-                ERROR_FOREACH.to_owned(),
-            ))
-        }
-    };
+    let array = Literal::get_value::<Vec<Literal>>(
+        &literal.primitive,
+        range.start.to_owned(),
+        ERROR_FOREACH.to_owned(),
+    )?;
 
     for (value, elem) in array.iter().enumerate() {
         data.step_vars

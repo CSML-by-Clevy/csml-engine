@@ -29,35 +29,134 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("is_number", (PrimitiveString::is_number as PrimitiveMethod, Right::Read));
-        map.insert("type_of", (PrimitiveString::type_of as PrimitiveMethod, Right::Read));
-        map.insert("to_string", (PrimitiveString::to_string as PrimitiveMethod, Right::Read));
+        map.insert(
+            "is_number",
+            (PrimitiveString::is_number as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "type_of",
+            (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
+        );
 
-        map.insert("append", (PrimitiveString::append as PrimitiveMethod, Right::Read));
-        map.insert("contains", (PrimitiveString::contains as PrimitiveMethod, Right::Read));
-        map.insert("contains_regex", (PrimitiveString::contains_regex as PrimitiveMethod, Right::Read));
-        map.insert("ends_with", (PrimitiveString::ends_with as PrimitiveMethod, Right::Read));
-        map.insert("ends_with_regex", (PrimitiveString::ends_with_regex as PrimitiveMethod, Right::Read));
-        map.insert("is_empty", (PrimitiveString::is_empty as PrimitiveMethod, Right::Read));
-        map.insert("length", (PrimitiveString::length as PrimitiveMethod, Right::Read));
-        map.insert("match", (PrimitiveString::do_match as PrimitiveMethod, Right::Read));
-        map.insert("match_regex", (PrimitiveString::do_match_regex as PrimitiveMethod, Right::Read));
-        map.insert("starts_with", (PrimitiveString::starts_with as PrimitiveMethod, Right::Read));
-        map.insert("starts_with_regex", (PrimitiveString::starts_with_regex as PrimitiveMethod, Right::Read));
-        map.insert("to_lowercase", (PrimitiveString::to_lowercase as PrimitiveMethod, Right::Read));
-        map.insert("to_uppercase", (PrimitiveString::to_uppercase as PrimitiveMethod, Right::Read));
+        map.insert(
+            "append",
+            (PrimitiveString::append as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "contains",
+            (PrimitiveString::contains as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "contains_regex",
+            (
+                PrimitiveString::contains_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "ends_with",
+            (PrimitiveString::ends_with as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "ends_with_regex",
+            (
+                PrimitiveString::ends_with_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "is_empty",
+            (PrimitiveString::is_empty as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "length",
+            (PrimitiveString::length as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "match",
+            (PrimitiveString::do_match as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "match_regex",
+            (
+                PrimitiveString::do_match_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "starts_with",
+            (PrimitiveString::starts_with as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "starts_with_regex",
+            (
+                PrimitiveString::starts_with_regex as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "to_lowercase",
+            (
+                PrimitiveString::to_lowercase as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "to_uppercase",
+            (
+                PrimitiveString::to_uppercase as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
 
-        map.insert("abs", (PrimitiveString::abs as PrimitiveMethod, Right::Read));
-        map.insert("cos", (PrimitiveString::cos as PrimitiveMethod, Right::Read));
-        map.insert("ceil", (PrimitiveString::ceil as PrimitiveMethod, Right::Read));
-        map.insert("floor", (PrimitiveString::floor as PrimitiveMethod, Right::Read));
-        map.insert("pow", (PrimitiveString::pow as PrimitiveMethod, Right::Read));
-        map.insert("round", (PrimitiveString::round as PrimitiveMethod, Right::Read));
-        map.insert("sin", (PrimitiveString::sin as PrimitiveMethod, Right::Read));
-        map.insert("sqrt", (PrimitiveString::sqrt as PrimitiveMethod, Right::Read));
-        map.insert("tan", (PrimitiveString::tan as PrimitiveMethod, Right::Read));
-        map.insert("to_int", (PrimitiveString::to_int as PrimitiveMethod, Right::Read));
-        map.insert("to_float", (PrimitiveString::to_float as PrimitiveMethod, Right::Read));
+        map.insert(
+            "abs",
+            (PrimitiveString::abs as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "cos",
+            (PrimitiveString::cos as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "ceil",
+            (PrimitiveString::ceil as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "floor",
+            (PrimitiveString::floor as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "pow",
+            (PrimitiveString::pow as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "round",
+            (PrimitiveString::round as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "sin",
+            (PrimitiveString::sin as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "sqrt",
+            (PrimitiveString::sqrt as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "tan",
+            (PrimitiveString::tan as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_int",
+            (PrimitiveString::to_int as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_float",
+            (PrimitiveString::to_float as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -134,19 +233,14 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(
-                        interval,
-                        ERROR_STRING_APPEND.to_owned(),
-                    ))
-                }
-            }
-            _ => {
-                return Err(gen_error_info(
+                Literal::get_value::<String>(
+                    &res.primitive,
                     interval,
                     ERROR_STRING_APPEND.to_owned(),
-                ));
+                )?
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_STRING_APPEND.to_owned()));
             }
         };
 
@@ -168,10 +262,11 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_DO_MATCH.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
@@ -196,10 +291,11 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive){
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_CONTAINS_REGEX.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_CONTAINS_REGEX.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(
@@ -237,16 +333,14 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive)  {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_CONTAINS.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_CONTAINS.to_owned(),
+                )?
             }
             _ => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_STRING_END_WITH.to_owned(),
-                ));
+                return Err(gen_error_info(interval, ERROR_STRING_END_WITH.to_owned()));
             }
         };
 
@@ -268,10 +362,11 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_END_WITH_REGEX.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_END_WITH_REGEX.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(
@@ -347,10 +442,11 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_DO_MATCH.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
@@ -384,10 +480,11 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_MATCH_REGEX.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_MATCH_REGEX.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(
@@ -435,10 +532,11 @@ impl PrimitiveString {
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_START_WITH.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()));
@@ -458,18 +556,16 @@ impl PrimitiveString {
         let usage = "starts_with_regex(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(
-                interval,
-                format!("usage: {}", usage),
-            ));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(res) => res,
-                    None => return Err(gen_error_info(interval, ERROR_STRING_START_WITH_REGEX.to_owned()))
-                }
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_START_WITH_REGEX.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(
@@ -938,8 +1034,13 @@ impl Primitive for PrimitiveString {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_ADD.to_owned(),
-            )),
+                format!(
+                    "{} {:?} + {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 
@@ -969,8 +1070,13 @@ impl Primitive for PrimitiveString {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_SUB.to_owned(),
-            )),
+                format!(
+                    "{} {:?} - {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 
@@ -1008,8 +1114,13 @@ impl Primitive for PrimitiveString {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_SUB.to_owned(),
-            )),
+                format!(
+                    "{} {:?} / {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 
@@ -1039,8 +1150,13 @@ impl Primitive for PrimitiveString {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_MUL.to_owned(),
-            )),
+                format!(
+                    "{} {:?} * {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 
@@ -1070,8 +1186,13 @@ impl Primitive for PrimitiveString {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_REM.to_owned(),
-            )),
+                format!(
+                    "{} {:?} % {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 

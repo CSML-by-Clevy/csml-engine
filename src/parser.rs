@@ -22,7 +22,7 @@ use crate::parser::parse_idents::parse_idents_assignation;
 pub use state_context::{ExecutionState, ExitCondition, StateContext};
 
 use crate::data::{ast::*, tokens::*};
-use crate::error_format::{gen_nom_failure, CustomError, ErrorInfo, ERROR_PARSING};
+use crate::error_format::*;
 use crate::linter::Linter;
 use parse_comments::comment;
 use parse_scope::parse_root;
@@ -42,13 +42,13 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
             flow_type,
         }),
         Err(e) => match e {
-            Err::Error(err) | Err::Failure(err) => Err(ErrorInfo {
-                message: err.error.to_owned(),
-                interval: Interval {
+            Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
+                Interval {
                     line: err.input.location_line(),
                     column: err.input.get_column() as u32,
                 },
-            }),
+                err.error.to_owned(),
+            )),
             Err::Incomplete(_err) => unimplemented!(),
         },
     }

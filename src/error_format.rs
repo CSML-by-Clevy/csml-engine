@@ -28,6 +28,7 @@ pub const ERROR_RIGHT_BRACKET: &'static str = "expect ']'";
 pub const ERROR_GOTO_STEP: &'static str = "missing step name after goto";
 pub const ERROR_IMPORT_STEP: &'static str = "missing step name after import";
 pub const ERROR_DOUBLE_QUOTE: &'static str = "expect '\"' to end string";
+pub const ERROR_UNREACHABLE: &'static str = "unreachable";
 
 // ##Interpreter Errors
 // ### Validation
@@ -46,7 +47,9 @@ pub const ERROR_EXPR_TO_LITERAL: &'static str = "Expr can't be converted to Lite
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &'static str = "event can only be of ContentType::Event";
 
-// ### HTTP API
+// Fn API
+pub const ERROR_FN_ID: &'static str =
+    "to find the function to call function_id beed to be of type string";
 pub const ERROR_FN_ENDPOINT: &'static str =
     "fn call can not be make because fn_endpoint is not set";
 pub const ERROR_FAIL_RESPONSE_JOSN: &'static str = "failed to read response as JSON";
@@ -60,6 +63,7 @@ pub const ERROR_GET_VAR_INFO: &'static str = "expression need to be a variable";
 pub const ERROR_JSON_TO_LITERAL: &'static str = "this number is to big to be an int 64 bit";
 
 // ### Memory
+pub const ERROR_STEP_MEMORY: &'static str = "variable dose not exist in step memory";
 pub const ERROR_FIND_MEMORY: &'static str = "is not in in memory";
 
 // ### Built-in
@@ -143,6 +147,9 @@ pub const ERROR_STRING_RHS: &'static str = "rhs need to be of type string";
 pub const ERROR_STRING_UNKONWN_METHOD: &'static str = " is not a method of String";
 
 // #### Array
+pub const ERROR_ARRAY_TYPE: &'static str = "value need to be of type array";
+pub const ERROR_ARRAY_INDEX_EXIST: &'static str = "index dose not exist";
+pub const ERROR_ARRAY_INDEX_TYPE: &'static str = "index must be of type int";
 pub const ERROR_ARRAY_NEGATIVE: &'static str = "index must be positive.  usage: array[1]";
 pub const ERROR_ARRAY_INDEX: &'static str = "index must be lower or equal than array.length()";
 pub const ERROR_ARRAY_OVERFLOW: &'static str =
@@ -177,6 +184,7 @@ pub const ERROR_HTTP_SEND: &'static str =
 pub const ERROR_HTTP_UNKONWN_METHOD: &'static str = " is not a method of HTTP";
 
 // #### OBJECT
+pub const ERROR_OBJECT_TYPE: &'static str = "value need to be of type object";
 pub const ERROR_OBJECT_CONTAINS: &'static str =
     "[contains] take one parameter of type String usage: object.contains(\"key\")";
 pub const ERROR_OBJECT_GET_GENERICS: &'static str =
@@ -192,13 +200,7 @@ pub const ERROR_OPS: &'static str = "[!] Ops: Illegal operation";
 pub const ERROR_OPS_DIV_INT: &'static str = "[!] Int: Division by zero";
 pub const ERROR_OPS_DIV_FLOAT: &'static str = "[!] Float: Division by zero";
 
-pub const ERROR_ADD: &'static str = "[!] Add: Illegal operation";
-pub const ERROR_SUB: &'static str = "[!] Sub: Illegal operation";
-pub const ERROR_DIV: &'static str = "[!] Div: Illegal operation";
-pub const ERROR_MUL: &'static str = "[!] Mul: Illegal operation";
-pub const ERROR_REM: &'static str = "[!] Rem: Illegal operation";
-pub const ERROR_BITAND: &'static str = "[!] BitAnd: Illegal operation";
-pub const ERROR_BITOR: &'static str = "[!] BitOR: Illegal operation";
+pub const ERROR_ILLEGAL_OPERATION: &'static str = "illegal operation:";
 
 pub fn gen_error_info(interval: Interval, message: String) -> ErrorInfo {
     ErrorInfo { interval, message }

@@ -14,8 +14,7 @@ fn get_value<'lifetime, T: 'static>(
     error: &'static str,
 ) -> Result<&'lifetime T, ErrorInfo> {
     if let Some(literal) = object.get(key) {
-        Literal::get_value::<T>(&literal.primitive)
-            .ok_or(gen_error_info(interval, format!("'{}' {}", key, error)))
+        Literal::get_value::<T>(&literal.primitive, interval, format!("'{}' {}", key, error))
     } else {
         Err(gen_error_info(interval, format!("'{}' {}", key, error)))
     }

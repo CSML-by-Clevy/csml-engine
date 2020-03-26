@@ -365,8 +365,13 @@ impl Add for Box<dyn Primitive> {
 
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_ADD.to_owned(),
-            )),
+                format!(
+                    "{} {:?} + {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 }
@@ -453,8 +458,13 @@ impl Sub for Box<dyn Primitive> {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_SUB.to_owned(),
-            )),
+                format!(
+                    "{} {:?} - {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 }
@@ -541,8 +551,13 @@ impl Div for Box<dyn Primitive> {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_DIV.to_owned(),
-            )),
+                format!(
+                    "{} {:?} / {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 }
@@ -629,8 +644,13 @@ impl Mul for Box<dyn Primitive> {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_MUL.to_owned(),
-            )),
+                format!(
+                    "{} {:?} * {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 }
@@ -717,8 +737,13 @@ impl Rem for Box<dyn Primitive> {
             }
             _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
-                ERROR_REM.to_owned(),
-            )),
+                format!(
+                    "{} {:?} * {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                ),
+            ))
         }
     }
 }

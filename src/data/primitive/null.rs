@@ -1,10 +1,8 @@
-use crate::data::literal::ContentType;
-use crate::data::primitive::boolean::PrimitiveBoolean;
-use crate::data::primitive::object::PrimitiveObject;
-use crate::data::primitive::string::PrimitiveString;
-use crate::data::primitive::Right;
-use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, tokens::NULL, Literal};
+use crate::data::primitive::{
+    boolean::PrimitiveBoolean, object::PrimitiveObject, string::PrimitiveString, Primitive,
+    PrimitiveType, Right,
+};
+use crate::data::{ast::Interval, literal::ContentType, message::Message, tokens::NULL, Literal};
 use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;
@@ -24,9 +22,18 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("is_number", (PrimitiveNull::is_number as PrimitiveMethod, Right::Read));
-        map.insert("type_of", (PrimitiveNull::type_of as PrimitiveMethod, Right::Read));
-        map.insert("to_string", (PrimitiveNull::to_string as PrimitiveMethod, Right::Read));
+        map.insert(
+            "is_number",
+            (PrimitiveNull::is_number as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "type_of",
+            (PrimitiveNull::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveNull::to_string as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -138,58 +145,63 @@ impl Primitive for PrimitiveNull {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} + {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} - {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} / {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} * {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo {
-            message: format!(
-                "error: illegal operation: {:?} % {:?}",
+        Err(gen_error_info(
+            Interval { column: 0, line: 0 },
+            format!(
+                "{} {:?} % {:?}",
+                ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
             ),
-            interval: Interval { column: 0, line: 0 },
-        })
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

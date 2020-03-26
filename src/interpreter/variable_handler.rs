@@ -38,23 +38,30 @@ pub fn get_literal(
             if literal_lhs.primitive.get_type() == PrimitiveType::PrimitiveArray
                 && literal_rhs.primitive.get_type() == PrimitiveType::PrimitiveInt =>
         {
-            let items =
-                Literal::get_mut_value::<&mut Vec<Literal>>(&mut literal_lhs.primitive).unwrap();
-            let value = Literal::get_value::<i64>(&literal_rhs.primitive).unwrap();
+            let items = Literal::get_mut_value::<&mut Vec<Literal>>(
+                &mut literal_lhs.primitive,
+                literal_lhs.interval,
+                ERROR_ARRAY_TYPE.to_owned(),
+            )?;
+            let value = Literal::get_value::<i64>(
+                &literal_rhs.primitive,
+                literal_rhs.interval,
+                ERROR_ARRAY_INDEX_TYPE.to_owned(),
+            )?;
 
             match items.get_mut(*value as usize) {
                 Some(lit) => Ok(lit),
-                None => Err(ErrorInfo {
-                    message: format!("Array don't have {} index", value),
-                    interval: interval.to_owned(),
-                }),
+                None => Err(gen_error_info(
+                    interval.to_owned(),
+                    format!("{} {}", value, ERROR_ARRAY_INDEX_EXIST.to_owned()),
+                )),
             }
         }
         (literal, None) => Ok(literal),
-        (_, Some(_)) => Err(ErrorInfo {
-            message: "value is not of type Array".to_owned(),
-            interval,
-        }),
+        (_, Some(_)) => Err(gen_error_info(
+            interval.to_owned(),
+            ERROR_ARRAY_TYPE.to_owned(),
+        )),
     }
 }
 
@@ -64,20 +71,30 @@ fn get_var_from_stepvar<'a>(
 ) -> Result<&'a mut Literal, ErrorInfo> {
     match data.step_vars.get_mut(&name.ident) {
         Some(var) => Ok(var),
-        None => Err(ErrorInfo {
-            message: format!("no variable named < {} > in memory", name.ident),
-            interval: name.interval.to_owned(),
-        }),
+        None => Err(gen_error_info(
+            name.interval.to_owned(),
+            format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
+        )),
     }
 }
 
 pub fn get_at_index(lit: &mut Literal, index: usize) -> Option<&mut Literal> {
-    let vec = Literal::get_mut_value::<Vec<Literal>>(&mut lit.primitive)?;
+    let vec = Literal::get_mut_value::<Vec<Literal>>(
+        &mut lit.primitive,
+        lit.interval,
+        ERROR_ARRAY_TYPE.to_owned(),
+    )
+    .ok()?;
     vec.get_mut(index)
 }
 
 pub fn get_value_from_key<'a>(lit: &'a mut Literal, key: &str) -> Option<&'a mut Literal> {
-    let map = Literal::get_mut_value::<HashMap<String, Literal>>(&mut lit.primitive)?;
+    let map = Literal::get_mut_value::<HashMap<String, Literal>>(
+        &mut lit.primitive,
+        lit.interval,
+        ERROR_OBJECT_TYPE.to_owned(),
+    )
+    .ok()?;
     map.get_mut(key)
 }
 
@@ -93,9 +110,17 @@ pub fn resolve_path(
         match node {
             PathState::ExprIndex(expr) => {
                 let lit = expr_to_literal(&expr, None, data, root, sender)?;
-                if let Some(val) = Literal::get_value::<i64>(&lit.primitive) {
+                if let Ok(val) = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    lit.interval,
+                    ERROR_UNREACHABLE.to_owned(),
+                ) {
                     new_path.push((inter.to_owned(), PathLiteral::VecIndex(*val as usize)))
-                } else if let Some(val) = Literal::get_value::<String>(&lit.primitive) {
+                } else if let Ok(val) = Literal::get_value::<String>(
+                    &lit.primitive,
+                    lit.interval,
+                    ERROR_UNREACHABLE.to_owned(),
+                ) {
                     new_path.push((inter.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
                     return Err(gen_error_info(
@@ -176,7 +201,13 @@ fn loop_path(
             } => {
                 // TODO: change args: Literal to args: Vec< Literal >
                 // TODO: Warning msg element is unmutable ?
-                let args = match Literal::get_value::<Vec<Literal>>(&args.primitive) {
+                let args = match Literal::get_value::<Vec<Literal>>(
+                    &args.primitive,
+                    *interval,
+                    ERROR_UNREACHABLE.to_owned(),
+                )
+                .ok()
+                {
                     Some(args) => args,
                     // this is unreachable because a function need to have arguments other wise it will be a parsing error
                     None => unreachable!(),

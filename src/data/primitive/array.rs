@@ -26,21 +26,63 @@ lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
-        map.insert("is_number", (PrimitiveArray::is_number as PrimitiveMethod, Right::Read));
-        map.insert("type_of", (PrimitiveArray::type_of as PrimitiveMethod, Right::Read));
-        map.insert("to_string", (PrimitiveArray::to_string as PrimitiveMethod, Right::Read));
+        map.insert(
+            "is_number",
+            (PrimitiveArray::is_number as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "type_of",
+            (PrimitiveArray::type_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "to_string",
+            (PrimitiveArray::to_string as PrimitiveMethod, Right::Read),
+        );
 
-        map.insert("find", (PrimitiveArray::find as PrimitiveMethod, Right::Read));
-        map.insert("is_empty", (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read));
-        map.insert("insert_at", (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write));
-        map.insert("index_of", (PrimitiveArray::index_of as PrimitiveMethod, Right::Read));
-        map.insert("join", (PrimitiveArray::join as PrimitiveMethod, Right::Read));
-        map.insert("length", (PrimitiveArray::length as PrimitiveMethod, Right::Read));
-        map.insert("one_of", (PrimitiveArray::one_of as PrimitiveMethod, Right::Read));
-        map.insert("push", (PrimitiveArray::push as PrimitiveMethod, Right::Write));
-        map.insert("pop", (PrimitiveArray::pop as PrimitiveMethod, Right::Write));
-        map.insert("remove_at", (PrimitiveArray::remove_at as PrimitiveMethod, Right::Write));
-        map.insert("shuffle", (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write));
+        map.insert(
+            "find",
+            (PrimitiveArray::find as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_empty",
+            (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "insert_at",
+            (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "index_of",
+            (PrimitiveArray::index_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "join",
+            (PrimitiveArray::join as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "length",
+            (PrimitiveArray::length as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "one_of",
+            (PrimitiveArray::one_of as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "push",
+            (PrimitiveArray::push as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "pop",
+            (PrimitiveArray::pop as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "remove_at",
+            (PrimitiveArray::remove_at as PrimitiveMethod, Right::Write),
+        );
+        map.insert(
+            "shuffle",
+            (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
+        );
 
         map
     };
@@ -90,7 +132,7 @@ impl PrimitiveArray {
         let usage = "type_of() => string";
 
         if args.len() != 0 {
-            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal("array", interval))
@@ -104,7 +146,7 @@ impl PrimitiveArray {
         let usage = "to_string() => string";
 
         if args.len() != 0 {
-            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal(&array.to_string(), interval))
@@ -129,7 +171,7 @@ impl PrimitiveArray {
         let value = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(interval,format!("usage: {}", usage)));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
@@ -156,7 +198,7 @@ impl PrimitiveArray {
         let usage = "is_empty() => boolean";
 
         if args.len() != 0 {
-            return Err(gen_error_info(interval, ERROR_ARRAY_POP.to_owned()));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = array.value.is_empty();
@@ -172,31 +214,26 @@ impl PrimitiveArray {
         let usage = "insert_at(index: int, value: primitive) => null";
 
         if args.len() != 2 {
-            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let index = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
-                match Literal::get_value::<i64>(&res.primitive) {
-                    Some(index) => index,
-                    None => return Err(gen_error_info(
-                        interval,
-                        ERROR_ARRAY_INSERT_AT.to_owned(),
-                    ))
-                }
-            }
-            _ => {
-                return Err(gen_error_info(
+                Literal::get_value::<i64>(
+                    &res.primitive,
                     interval,
                     ERROR_ARRAY_INSERT_AT.to_owned(),
-                ));
+                )?
+            }
+            _ => {
+                return Err(gen_error_info(interval, ERROR_ARRAY_INSERT_AT.to_owned()));
             }
         };
 
         let value = match args.get(1) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(interval,format!("usage: {}", usage)));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
@@ -215,13 +252,13 @@ impl PrimitiveArray {
         let usage = "index_of(value: primitive) => int";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(interval,format!("usage: {}", usage)));
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
             }
         };
 
@@ -242,30 +279,21 @@ impl PrimitiveArray {
         let usage = "join(separater: string) => string";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval,format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let separator = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                match Literal::get_value::<String>(&res.primitive) {
-                    Some(sep) => sep,
-                    None => return Err(gen_error_info(
-                        interval,
-                        ERROR_ARRAY_JOIN.to_owned(),
-                    ))
-                }
+                Literal::get_value::<String>(&res.primitive, interval, ERROR_ARRAY_JOIN.to_owned())?
             }
             _ => {
-                return Err(gen_error_info(
-                    interval,
-                    ERROR_ARRAY_JOIN.to_owned(),
-                ));
+                return Err(gen_error_info(interval, ERROR_ARRAY_JOIN.to_owned()));
             }
         };
 
         let length = array.value.len();
         let mut result = String::new();
-        
+
         for (index, string) in array.value.iter().enumerate() {
             result.push_str(&string.primitive.to_string());
 
@@ -335,10 +363,7 @@ impl PrimitiveArray {
         if array.value.len() + args.len() == usize::MAX {
             return Err(gen_error_info(
                 interval,
-                format!("{} {}",
-                    ERROR_ARRAY_OVERFLOW,
-                    usize::MAX,
-                ),
+                format!("{} {}", ERROR_ARRAY_OVERFLOW, usize::MAX,),
             ));
         }
 
@@ -360,7 +385,7 @@ impl PrimitiveArray {
 
         match array.value.pop() {
             Some(literal) => Ok(literal),
-            None => Err(gen_error_info(interval, ERROR_ARRAY_POP.to_owned()))
+            None => Err(gen_error_info(interval, ERROR_ARRAY_POP.to_owned())),
         }
     }
 
@@ -377,10 +402,11 @@ impl PrimitiveArray {
 
         let index = match args.get(0) {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
-                match Literal::get_value::<i64>(&res.primitive) {
-                    Some(index) => index,
-                    None => return Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned()))
-                }
+                Literal::get_value::<i64>(
+                    &res.primitive,
+                    interval,
+                    ERROR_ARRAY_REMOVE_AT.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(interval, ERROR_ARRAY_REMOVE_AT.to_owned()));
@@ -473,41 +499,65 @@ impl Primitive for PrimitiveArray {
         None
     }
 
-    fn do_add(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_ADD.to_owned(),
+            format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_sub(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_SUB.to_owned(),
+            format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_div(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_DIV.to_owned(),
+            format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_mul(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_MUL.to_owned(),
+            format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
 
-    fn do_rem(&self, _other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
         Err(gen_error_info(
             Interval { column: 0, line: 0 },
-            ERROR_REM.to_owned(),
+            format!(
+                "{} {:?} % {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            ),
         ))
     }
-
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {
         self
