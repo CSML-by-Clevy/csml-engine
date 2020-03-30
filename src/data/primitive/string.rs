@@ -980,7 +980,7 @@ impl Primitive for PrimitiveString {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_STRING_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
         ))
     }
 

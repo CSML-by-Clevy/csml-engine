@@ -374,7 +374,7 @@ impl Primitive for PrimitiveFloat {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_FLOAT_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_FLOAT_UNKNOWN_METHOD),
         ))
     }
 

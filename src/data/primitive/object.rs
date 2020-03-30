@@ -437,7 +437,7 @@ impl PrimitiveObject {
             let function = match Literal::get_value::<String>(
                 &literal.primitive,
                 interval,
-                format!("{}", ERROR_HTTP_UNKONWN_METHOD),
+                format!("{}", ERROR_HTTP_UNKNOWN_METHOD),
             ) {
                 Ok(delete) if delete == "delete" => ureq::delete,
                 Ok(put) if put == "put" => ureq::put,
@@ -447,7 +447,7 @@ impl PrimitiveObject {
                 _ => {
                     return Err(gen_error_info(
                         interval,
-                        format!("{}", ERROR_HTTP_UNKONWN_METHOD),
+                        format!("{}", ERROR_HTTP_UNKNOWN_METHOD),
                     ))
                 }
             };
@@ -886,7 +886,7 @@ impl Primitive for PrimitiveObject {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_OBJECT_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_OBJECT_UNKNOWN_METHOD),
         ))
     }
 
