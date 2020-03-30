@@ -35,14 +35,14 @@ query_0:
 delete_0:
 	remember http = HTTP("https://clevy.io")
 
-	say http.delete()
+	say http.delete({"hello":"world"})
 
 	say http
 
 delete_1:
 	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
-	say http.delete().send()
+	say http.delete({"hello":"world"}).send()
 
 put_0:
 	remember http = HTTP("https://clevy.io")

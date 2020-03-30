@@ -15,7 +15,7 @@ fn get_accept(lit: &Literal) -> Option<&Literal> {
 }
 
 // TODO: change when exec
-fn containst(lit1: &Literal, lit2: &Literal) -> Literal {
+fn contains(lit1: &Literal, lit2: &Literal) -> Literal {
     match lit1.primitive.as_any().downcast_ref::<PrimitiveArray>() {
         Some(array) => {
             PrimitiveBoolean::get_literal(array.value.contains(lit2), lit1.interval.to_owned())
@@ -45,8 +45,8 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
         (array1, array2) if array1 == "array" && array2 == "array" => {
             PrimitiveBoolean::get_literal(lit1 == lit2, lit1.interval.to_owned())
         }
-        (.., array) if array == "array" => containst(lit2, lit1),
-        (array, ..) if array == "array" => containst(lit1, lit2),
+        (.., array) if array == "array" => contains(lit2, lit1),
+        (array, ..) if array == "array" => contains(lit1, lit2),
 
         (..) => PrimitiveBoolean::get_literal(
             lit1.primitive == lit2.primitive.to_owned(),
@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn ok_match_barray_str() {
+    fn ok_match_array_str() {
         let bt1 = gen_button_multi_accept("hola");
         let bt2 = PrimitiveString::get_literal("hola", gen_inter());
 

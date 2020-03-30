@@ -402,7 +402,7 @@ impl Primitive for PrimitiveInt {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_INT_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_INT_UNKNOWN_METHOD),
         ))
     }
 

@@ -37,10 +37,10 @@ pub const ERROR_INVALID_FLOW: &'static str = "invalid Flow: ";
 pub const ERROR_START_INSTRUCTIONS: &'static str =
 "to start an action one of the following instruction is expected  : [say, do, if, foreach, goto]";
 pub const ERROR_FOREACH: &'static str =
-    "foreach only accepts array as iterable elements exaple: foreach(elem) in [1, 2, 3]";
+    "foreach only accepts array as iterable elements example: foreach(elem) in [1, 2, 3]";
 pub const ERROR_FIND_BY_INDEX: &'static str =
     "index must be of type int or string  => var.[42] or var.[\"key\"]";
-pub const ERROR_ASSING_IDENT: &'static str = "key must be of type identifier";
+pub const ERROR_ASSIGN_IDENT: &'static str = "key must be of type identifier";
 pub const ERROR_FUNCTIONS_ARGS: &'static str = "argument in of function must be in a vector";
 pub const ERROR_EXPR_TO_LITERAL: &'static str = "Expr can't be converted to Literal";
 
@@ -52,7 +52,7 @@ pub const ERROR_FN_ID: &'static str =
     "to find the function to call function_id beed to be of type string";
 pub const ERROR_FN_ENDPOINT: &'static str =
     "fn call can not be make because fn_endpoint is not set";
-pub const ERROR_FAIL_RESPONSE_JOSN: &'static str = "failed to read response as JSON";
+pub const ERROR_FAIL_RESPONSE_JSON: &'static str = "failed to read response as JSON";
 
 // ### Import
 pub const ERROR_IMPORT_FAIL: &'static str = "import fail at";
@@ -92,7 +92,7 @@ pub const ERROR_FLOOR: &'static str =
     "Builtin Floor expect one argument of type float| example: Floor(4.2)";
 pub const ERROR_IMAGE: &'static str =
     "Builtin Image expect one argument of type string | example: Image(\"hola\")";
-pub const ERROR_URL: &'static str = "Builtin Url expect one argument of type string and 2 optional string argmuments: text, title | example: Url(href = \"hola\", text = \"text\", title = \"title\")";
+pub const ERROR_URL: &'static str = "Builtin Url expect one argument of type string and 2 optional string arguments: text, title | example: Url(href = \"hola\", text = \"text\", title = \"title\")";
 pub const ERROR_VIDEO: &'static str = "Builtin Video expect one argument of type string and 1 optional 'service' argument of type string | example: Video(url = \"hola\", service = \"text\")";
 pub const ERROR_AUDIO: &'static str = "Builtin Audio expect one argument of type string and 1 optional 'service' argument of type string | example: Audio(url = \"hola\", service = \"text\")";
 pub const ERROR_HTTP: &'static str =
@@ -101,24 +101,24 @@ pub const ERROR_HTTP_GET_VALUE: &'static str =
 "not found in http object please use HTTP(..) to construct the correct object to make a http call";
 pub const ERROR_HTTP_QUERY_VALUES: &'static str =
     "must have a value of type String example: {key: \"value\"}";
-pub const ERROR_BUILTIN_UNKOWN: &'static str = "Unknown Built-in";
+pub const ERROR_BUILTIN_UNKNOWN: &'static str = "Unknown Built-in";
 
 // ### Primitives
 // #### Boolean
-pub const ERROR_BOOLEAN_UNKONWN_METHOD: &'static str = " is not a method of Bolean";
+pub const ERROR_BOOLEAN_UNKNOWN_METHOD: &'static str = " is not a method of Boolean";
 
 // #### NUMBER
 pub const ERROR_NUMBER_POW: &'static str =
     "[pow] take one parameter of type int or float usage: number.pow(42)";
 
 // #### Float
-pub const ERROR_FLOAT_UNKONWN_METHOD: &'static str = " is not a method of Float";
+pub const ERROR_FLOAT_UNKNOWN_METHOD: &'static str = " is not a method of Float";
 
 // #### Int
-pub const ERROR_INT_UNKONWN_METHOD: &'static str = " is not a method of Int";
+pub const ERROR_INT_UNKNOWN_METHOD: &'static str = " is not a method of Int";
 
 // #### Null
-pub const ERROR_NULL_UNKONWN_METHOD: &'static str = " is not a method of Null";
+pub const ERROR_NULL_UNKNOWN_METHOD: &'static str = " is not a method of Null";
 
 // #### String
 pub const ERROR_STRING_DO_MATCH: &'static str =
@@ -144,7 +144,7 @@ pub const ERROR_STRING_POW: &'static str =
 pub const ERROR_STRING_COS: &'static str = "[cos] the string must be of numeric type in order to use cos, you can use 'string.is_number() == true' ";
 pub const ERROR_STRING_NUMERIC: &'static str = " the string must be of numeric type in order to use this method, you can use 'string.is_number() == true' to check it";
 pub const ERROR_STRING_RHS: &'static str = "rhs need to be of type string";
-pub const ERROR_STRING_UNKONWN_METHOD: &'static str = " is not a method of String";
+pub const ERROR_STRING_UNKNOWN_METHOD: &'static str = " is not a method of String";
 
 // #### Array
 pub const ERROR_ARRAY_TYPE: &'static str = "value need to be of type array";
@@ -166,7 +166,7 @@ pub const ERROR_ARRAY_JOIN: &'static str =
 pub const ERROR_ARRAY_INDEX_OF: &'static str =
     "[index_of] take one parameter usage: array.index_of(elem)";
 pub const ERROR_ARRAY_FIND: &'static str = "[find] take one parameter usage: array.find(elem)";
-pub const ERROR_ARRAY_UNKONWN_METHOD: &'static str = " is not a method of Array";
+pub const ERROR_ARRAY_UNKNOWN_METHOD: &'static str = " is not a method of Array";
 
 // #### HTTP OBJECT
 pub const ERROR_HTTP_SET: &'static str =
@@ -180,8 +180,8 @@ pub const ERROR_HTTP_PUT: &'static str =
 pub const ERROR_HTTP_PATCH: &'static str =
     "[patch] take one parameter of type Object usage: http.patch( {\"key\": 42} )";
 pub const ERROR_HTTP_SEND: &'static str =
-    "[send] HTTP Object is bad formated read doc for correct usage";
-pub const ERROR_HTTP_UNKONWN_METHOD: &'static str = " is not a method of HTTP";
+    "[send] HTTP Object is bad formatted read doc for correct usage";
+pub const ERROR_HTTP_UNKNOWN_METHOD: &'static str = " is not a method of HTTP";
 
 // #### OBJECT
 pub const ERROR_OBJECT_TYPE: &'static str = "value need to be of type object";
@@ -194,7 +194,7 @@ pub const ERROR_OBJECT_INSERT: &'static str =
 pub const ERROR_OBJECT_REMOVE: &'static str =
     "[remove] take one parameter of type String usage: object.remove(\"key\")";
 pub const ERROR_OBJECT_GET_KEY: &'static str = "key must be of type string";
-pub const ERROR_OBJECT_UNKONWN_METHOD: &'static str = " is not a method of Object";
+pub const ERROR_OBJECT_UNKNOWN_METHOD: &'static str = " is not a method of Object";
 
 pub const ERROR_OPS: &'static str = "[!] Ops: Illegal operation";
 pub const ERROR_OPS_DIV_INT: &'static str = "[!] Int: Division by zero";

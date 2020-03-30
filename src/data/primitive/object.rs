@@ -361,11 +361,18 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "delete() => http object";
+        let usage = "delete(body: object) => http object";
 
-        if args.len() != 0 {
+        if args.len() != 1 {
             return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
+
+        let literal = match args.get(0) {
+            Some(res) => res,
+            _ => {
+                return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            }
+        };
 
         let mut object = object.to_owned();
 
@@ -373,6 +380,13 @@ impl PrimitiveObject {
             "method".to_owned(),
             PrimitiveString::get_literal("delete", interval),
         );
+
+        let header = Literal::get_value::<HashMap<String, Literal>>(
+            &literal.primitive,
+            interval,
+            ERROR_HTTP_PUT.to_owned(),
+        )?;
+        insert_to_object(header, &mut object, "body", literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -437,7 +451,7 @@ impl PrimitiveObject {
             let function = match Literal::get_value::<String>(
                 &literal.primitive,
                 interval,
-                format!("{}", ERROR_HTTP_UNKONWN_METHOD),
+                format!("{}", ERROR_HTTP_UNKNOWN_METHOD),
             ) {
                 Ok(delete) if delete == "delete" => ureq::delete,
                 Ok(put) if put == "put" => ureq::put,
@@ -447,7 +461,7 @@ impl PrimitiveObject {
                 _ => {
                     return Err(gen_error_info(
                         interval,
-                        format!("{}", ERROR_HTTP_UNKONWN_METHOD),
+                        format!("{}", ERROR_HTTP_UNKNOWN_METHOD),
                     ))
                 }
             };
@@ -886,7 +900,7 @@ impl Primitive for PrimitiveObject {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_OBJECT_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_OBJECT_UNKNOWN_METHOD),
         ))
     }
 

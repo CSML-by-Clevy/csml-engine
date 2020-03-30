@@ -269,7 +269,9 @@ fn http_delete_0() {
         "messages":[
             {
                 "content":{
-                    "body": {},
+                    "body": {
+                        "hello":"world"
+                    },
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json"
@@ -282,7 +284,7 @@ fn http_delete_0() {
             },
             {
                 "content":{
-                    "body": {},
+                    "body":{},
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json"

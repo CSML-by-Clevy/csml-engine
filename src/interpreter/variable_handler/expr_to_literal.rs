@@ -57,7 +57,7 @@ fn format_function_args(
                     _ => {
                         return Err(gen_error_info(
                             interval_from_expr(var),
-                            ERROR_ASSING_IDENT.to_owned(),
+                            ERROR_ASSIGN_IDENT.to_owned(),
                         ))
                     }
                 };
@@ -101,7 +101,7 @@ fn normal_object_to_literal(
     } else {
         Err(gen_error_info(
             interval.to_owned(),
-            format!("{} [{}]", name, ERROR_BUILTIN_UNKOWN),
+            format!("{} [{}]", name, ERROR_BUILTIN_UNKNOWN),
         ))
     }
 }

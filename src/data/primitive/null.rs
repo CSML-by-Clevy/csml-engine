@@ -128,7 +128,7 @@ impl Primitive for PrimitiveNull {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_NULL_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_NULL_UNKNOWN_METHOD),
         ))
     }
 

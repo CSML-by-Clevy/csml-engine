@@ -87,7 +87,7 @@ pub fn http_request(
         Ok(value) => json_to_literal(&value, interval),
         Err(_) => Err(gen_error_info(
             interval,
-            format!("{}: {}", status, ERROR_FAIL_RESPONSE_JOSN),
+            format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
         )),
     }
 }

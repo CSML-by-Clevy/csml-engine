@@ -97,7 +97,7 @@ pub fn match_actions(
 
             send_msg(
                 &sender,
-                MSG::Memorie(Memories::new(name.ident.to_owned(), lit.clone())),
+                MSG::Memory(Memories::new(name.ident.to_owned(), lit.clone())),
             );
 
             data.context.current.insert(name.ident.to_owned(), lit);

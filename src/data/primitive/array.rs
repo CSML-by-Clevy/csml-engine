@@ -479,7 +479,7 @@ impl Primitive for PrimitiveArray {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_ARRAY_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_ARRAY_UNKNOWN_METHOD),
         ))
     }
 

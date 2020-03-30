@@ -386,8 +386,8 @@ impl PrimitiveString {
             }
         };
 
-        if let Some(res) = action.find(&string.value) {
-            if res.end() == string.value.len() {
+        for key in action.find_iter(&string.value) {
+            if key.end() == string.value.len() {
                 return Ok(PrimitiveBoolean::get_literal(true, interval));
             }
         }
@@ -980,7 +980,7 @@ impl Primitive for PrimitiveString {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_STRING_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
         ))
     }
 

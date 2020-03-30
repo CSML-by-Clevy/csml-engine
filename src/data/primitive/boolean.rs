@@ -133,7 +133,7 @@ impl Primitive for PrimitiveBoolean {
 
         Err(gen_error_info(
             interval,
-            format!("[{}] {}", name, ERROR_BOOLEAN_UNKONWN_METHOD),
+            format!("[{}] {}", name, ERROR_BOOLEAN_UNKNOWN_METHOD),
         ))
     }
 

@@ -37,8 +37,8 @@ impl Add for MessageData {
         Self {
             memories: match (self.memories, other.memories) {
                 (Some(memory), None) => Some(memory),
-                (None, Some(newmemory)) => Some(newmemory),
-                (Some(memory), Some(newmemory)) => Some([&memory[..], &newmemory[..]].concat()),
+                (None, Some(new_memory)) => Some(new_memory),
+                (Some(memory), Some(new_memory)) => Some([&memory[..], &new_memory[..]].concat()),
                 _ => None,
             },
             messages: [&self.messages[..], &other.messages[..]].concat(),

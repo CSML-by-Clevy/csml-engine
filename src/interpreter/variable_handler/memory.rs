@@ -50,7 +50,7 @@ pub fn save_literal_in_mem(
             // add value in current mem
             send_msg(
                 sender,
-                MSG::Memorie(Memories::new(name.clone(), lit.clone())),
+                MSG::Memory(Memories::new(name.clone(), lit.clone())),
             );
             data.context.current.insert(name, lit);
         }
