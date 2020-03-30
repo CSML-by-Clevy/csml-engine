@@ -386,8 +386,8 @@ impl PrimitiveString {
             }
         };
 
-        if let Some(res) = action.find(&string.value) {
-            if res.end() == string.value.len() {
+        for key in action.find_iter(&string.value) {
+            if key.end() == string.value.len() {
                 return Ok(PrimitiveBoolean::get_literal(true, interval));
             }
         }

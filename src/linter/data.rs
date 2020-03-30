@@ -255,7 +255,7 @@ impl Linter {
             .or_insert_with(|| Linter::default());
 
         if let Some(linter) = hashmap.get(&thread_id) {
-            println!("{:?}", linter.warnings);
+            println!("warnings: {:?}", linter.warnings);
         } else {
             unreachable!();
         }
