@@ -5,7 +5,7 @@ use std::sync::mpsc;
 
 #[derive(Debug, Clone)]
 pub enum MSG {
-    Memorie(Memories),
+    Memory(Memories),
     Message(Message),
     Hold {
         instruction_index: usize,

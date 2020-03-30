@@ -65,7 +65,7 @@ pub fn get_literal(
     }
 }
 
-fn get_var_from_stepvar<'a>(
+fn get_var_from_step_var<'a>(
     name: &Identifier,
     data: &'a mut Data,
 ) -> Result<&'a mut Literal, ErrorInfo> {
@@ -348,7 +348,7 @@ pub fn get_var_from_mem<'a>(
 
     match search_in_memory_type(&name, data)? {
         var if var == "use" => {
-            let lit = get_var_from_stepvar(&name, data)?;
+            let lit = get_var_from_step_var(&name, data)?;
             Ok((lit, name.ident, MemoryType::Use, path))
         }
         _ => {
