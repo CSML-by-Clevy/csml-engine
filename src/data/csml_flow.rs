@@ -1,24 +1,26 @@
 ////////////////////////////////////////////////////////////////////////////////
-// DATA STRUCTURES
+// DATA STRUCTURE
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone)]
-pub struct Event {
-    pub content_type: String,
+#[derive(Debug)]
+pub struct CsmlFlow {
+    pub id: String,
+    pub name: String,
     pub content: String,
-    pub metadata: serde_json::Value,
+    pub commands: Vec<String>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// METHOD FUNCTION
+// METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl Event {
-    pub fn new(content: &str) -> Self {
+impl CsmlFlow {
+    pub fn new(id: &str, name: &str, content: &str, commands: Vec<String>) -> Self {
         Self {
-            content_type: "text".to_owned(),
+            id: id.to_owned(),
+            name: name.to_owned(),
             content: content.to_owned(),
-            metadata: serde_json::json!({}),
+            commands,
         }
     }
 }

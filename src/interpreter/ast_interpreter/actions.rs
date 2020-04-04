@@ -107,7 +107,7 @@ pub fn match_actions(
             step_name: name, ..
         } => {
             if let Some(Expr::Scope { scope: actions, .. }) = data
-                .ast
+                .flow
                 .flow_instructions
                 .get(&InstructionType::NormalStep(name.ident.to_owned()))
             {

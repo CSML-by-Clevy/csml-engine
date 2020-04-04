@@ -4,107 +4,95 @@ pub mod interpreter;
 pub mod linter;
 pub mod parser;
 
-use crate::data::context::get_hashmap;
-use crate::linter::linter::linter;
-use crate::linter::Linter;
-use data::{ast::*, ContextJson, Data, Event, MessageData, MSG};
 use error_format::*;
 use interpreter::interpret_scope;
 use parser::parse_flow;
-use parser::state_context::StateContext;
+
+use crate::data::context::get_hashmap;
+use crate::data::Data;
+use crate::data::ast::Flow;
+use crate::data::ast::InstructionType;
+use crate::data::ast::Expr;
+use crate::data::csml_bot::CsmlBot;
+use crate::data::ContextJson;
+use crate::data::event::Event;
+use crate::data::msg::MSG;
+use crate::data::execution_context::ExecutionContext;
+use crate::data::message_data::MessageData;
 
 use curl::easy::Easy;
-use std::{collections::HashMap, sync::mpsc};
+use std::collections::HashMap;
+use std::sync::mpsc;
 
-pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
-    flow.flow_instructions
-        .get(&InstructionType::NormalStep(name.to_owned()))
-}
+////////////////////////////////////////////////////////////////////////////////
+/// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
 
-pub fn execute_step(
-    flow: &Flow,
-    name: &str,
-    mut data: Data,
-    instruction_index: Option<usize>,
-    sender: &Option<mpsc::Sender<MSG>>,
-) -> Result<MessageData, ErrorInfo> {
-    match search_for(flow, name) {
-        Some(Expr::Scope { scope, .. }) => {
-            interpret_scope(scope, &mut data, instruction_index, sender)
-        }
-        _ => Err(gen_error_info(
-            Interval { line: 0, column: 0 },
-            format!("{} {}", name, ERROR_STEP_EXIST),
-        )),
-    }
-}
-
-pub fn parse_file(file: &str) -> Result<Flow, ErrorInfo> {
-    // TODO: receive more than just the flow to be able to get real flow id
-    Linter::clear();
-    Linter::set_flow("default_flow");
-
-    match parse_flow(file) {
-        Ok(flow) => {
-            let mut error = Vec::new();
-
-            linter(&mut error);
-            Linter::print_warnings();
-
-            // TODO: tmp check until error handling
-            match error.is_empty() {
-                true => Ok(flow),
-                false => Err(error.first().unwrap().to_owned()),
-            }
-        }
+pub fn parse_file(flow: &str) -> Result<Flow, ErrorInfo> {
+    match parse_flow(flow) {
+        Ok(flow) => Ok(flow),
         Err(e) => Err(e),
     }
 }
 
-pub fn interpret(
-    flow: &str,
-    step_name: &str,
-    context: ContextJson,
-    event: &Event,
-    sender: Option<mpsc::Sender<MSG>>,
-) -> MessageData {
-    let ast: Flow = match parse_file(flow) {
-        Ok(flow) => flow,
-        Err(e) => {
-            StateContext::clear_state();
-            StateContext::clear_rip();
+// TODO: Optimisation of ast
+/*
+    - Instead of parsing the entire flow for just execution one step either:
+        - parse only step by step
+        - parse all flows at once 
+*/
 
-            return MessageData::error_to_message(
-                Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
-                    format!("{} {}", ERROR_INVALID_FLOW, e.message),
-                )),
-                &sender,
-            );
+pub fn interpret(bot: CsmlBot, context: ContextJson, event: Event, sender: Option<mpsc::Sender<MSG>>) -> MessageData {
+    ExecutionContext::set_flow(&bot.default_flow);
+    ExecutionContext::set_step("start");
+
+    loop {
+        let flow = ExecutionContext::get_flow();
+        let step = ExecutionContext::get_step();
+
+        println!("[+] current flow to be executed: {}", flow);
+        println!("[+] current step to be executed: {}", step);
+
+        let content = match bot.get_flow(&flow) {
+            Ok(result) => result,
+            Err(_) => {
+                unimplemented!();
+            }
+        };
+
+        let flow: Flow = match parse_file(&content) {
+            Ok(result) => result,
+            Err(_) => {
+                unimplemented!();
+            }
+        };
+
+        let step_vars = match &context.hold {
+            Some(hold) => get_hashmap(&hold.step_vars),
+            None => HashMap::new(),
+        };
+
+        let mut data = Data {
+            flow: &flow,
+            context: &mut context.to_literal(),
+            event: &event,
+            curl: Easy::new(),
+            step_vars,
+        };
+
+        let rip = match &context.hold {
+            Some(result) => Some(result.index),
+            None => None,
+        };
+
+        match flow.flow_instructions.get(&InstructionType::NormalStep(step)) {
+            Some(Expr::Scope { scope, .. }) => {
+                println!("{:#?}", interpret_scope(scope, &mut data, rip, &sender));
+                unreachable!();
+            }
+            _ => {
+                unimplemented!();
+            }
         }
-    };
-
-    let curl = Easy::new();
-    let mut context = context.to_literal();
-    let step_vars = match &context.hold {
-        Some(hold) => get_hashmap(&hold.step_vars),
-        None => HashMap::new(),
-    };
-    let instruction_index = if let Some(hold) = &context.hold {
-        Some(hold.index)
-    } else {
-        None
-    };
-    let data = Data {
-        ast: &ast,
-        context: &mut context,
-        event,
-        curl,
-        step_vars,
-    };
-
-    MessageData::error_to_message(
-        execute_step(&ast, &step_name, data, instruction_index, &sender),
-        &sender,
-    )
+    }
 }
