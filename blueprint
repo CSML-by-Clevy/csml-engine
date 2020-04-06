@@ -25,3 +25,7 @@ If sender is none (which means the interpreter is used locally) maybe read on st
 // CONTEXT_JSON
 
 Add new value from click up to structures
+
+// QUESTION
+
+- ContextJson vs Context

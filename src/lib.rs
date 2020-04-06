@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// PUBLIC FUNCTION
+/// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn parse_file(flow: &str) -> Result<Flow, ErrorInfo> {
@@ -34,13 +34,6 @@ pub fn parse_file(flow: &str) -> Result<Flow, ErrorInfo> {
         Err(e) => Err(e),
     }
 }
-
-// TODO: Optimisation of ast
-/*
-    - Instead of parsing the entire flow for just execution one step either:
-        - parse only step by step
-        - parse all flows at once 
-*/
 
 pub fn interpret(bot: CsmlBot, context: ContextJson, event: Event, sender: Option<mpsc::Sender<MSG>>) -> MessageData {
     ExecutionContext::set_flow(&bot.default_flow);
@@ -87,11 +80,20 @@ pub fn interpret(bot: CsmlBot, context: ContextJson, event: Event, sender: Optio
 
         match flow.flow_instructions.get(&InstructionType::NormalStep(step)) {
             Some(Expr::Scope { scope, .. }) => {
-                println!("{:#?}", interpret_scope(scope, &mut data, rip, &sender));
+                if let Ok(result) = interpret_scope(scope, &mut data, rip, &sender) {
+                    println!("{:#?}", result);
+
+                    if let Some(result) = result.exit_condition {
+                        println!("[+] exit_condition: {:?} {}", result, ExecutionContext::get_step());
+                        break;
+                    }
+                }
             }
             _ => {
-                unimplemented!();
+                unreachable!();
             }
         }
     }
+
+    unimplemented!();
 }
