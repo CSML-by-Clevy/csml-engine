@@ -254,10 +254,10 @@ impl Linter {
             .entry(thread_id)
             .or_insert_with(|| Linter::default());
 
-        if let Some(linter) = hashmap.get(&thread_id) {
-            println!("warnings: {:?}", linter.warnings);
-        } else {
-            unreachable!();
-        }
+        // if let Some(linter) = hashmap.get(&thread_id) {
+        //     println!("warnings: {:?}", linter.warnings);
+        // } else {
+        //     unreachable!();
+        // }
     }
 }
