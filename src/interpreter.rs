@@ -55,24 +55,20 @@ pub fn interpret_scope(
         match action {
             Expr::ObjectExpr(ObjectType::Break(..)) => {
                 root.exit_condition = Some(ExitCondition::Break);
+
                 return Ok(root);
             }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
-                if sender.is_none() {
-                    
-                }
                 root.exit_condition = Some(ExitCondition::Hold);
-                root.hold = Some(Hold {
-                    index: instruction_info.index,
-                    step_vars: step_vars_to_json(data.step_vars.clone()),
-                });
-                send_msg(
-                    &sender,
-                    MSG::Hold {
-                        instruction_index: instruction_info.index,
-                        step_vars: step_vars_to_json(data.step_vars.clone()),
-                    },
-                );
+
+                let index = instruction_info.index;
+                let map = data.step_vars.to_owned();
+                let hold = Hold::new(index, step_vars_to_json(map));
+
+                root.hold = Some(hold);
+
+                MSG::send_msg(&sender, MSG::Hold(hold));
+                
                 return Ok(root);
             }
             Expr::ObjectExpr(fun) => {
