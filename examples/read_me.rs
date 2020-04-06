@@ -9,7 +9,7 @@ use csmlinterpreter::data::event::Event;
 ////////////////////////////////////////////////////////////////////////////////
 
 fn main() {
-    let content = std::fs::read_to_string("/Users/jle-quel/Documents/darwin/csml-interpreter/CSML/examples/hello_world.csml").unwrap();
+    let content = std::fs::read_to_string("/Users/jle-quel/Documents/csml/interpreter/CSML/examples/hello_world.csml").unwrap();
 
     let flow = vec![CsmlFlow::new("id", "default_flow", &content, Vec::default())];
     let bot = CsmlBot::new("id", "bot", None, flow, "default_flow");

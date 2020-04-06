@@ -87,6 +87,7 @@ pub fn interpret(bot: CsmlBot, context: ContextJson, event: Event, sender: Optio
 
         match flow.flow_instructions.get(&InstructionType::NormalStep(step)) {
             Some(Expr::Scope { scope, .. }) => {
+                
                 println!("{:#?}", interpret_scope(scope, &mut data, rip, &sender));
                 unreachable!();
             }

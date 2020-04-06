@@ -58,6 +58,9 @@ pub fn interpret_scope(
                 return Ok(root);
             }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
+                if sender.is_none() {
+                    
+                }
                 root.exit_condition = Some(ExitCondition::Hold);
                 root.hold = Some(Hold {
                     index: instruction_info.index,

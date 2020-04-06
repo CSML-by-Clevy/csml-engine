@@ -1,0 +1,23 @@
+// GOTO RECURSION
+
+If no goto is executed during a step the current_step and current_flow will be the same.
+Recursion is done by default
+
+Maybe just get a index of how much recursion has been done on this step ?
+
+// WARNINGS
+
+Need to add Warnings vector inside MessageData
+
+// MESSAGE_DATA
+
+Remove next_flow and next_step since this is done internally inside interpreter now.
+Just need to notify the manager at every action I'm doing so it will keep trace of what I am doing.
+
+// EXECUTE_STEP
+
+Remove duplicating arguments !
+
+// HOLD
+
+If sender is none (which means the interpreter is used locally) maybe read on stdin ?
