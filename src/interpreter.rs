@@ -68,15 +68,15 @@ pub fn interpret_scope(
                 root.hold = Some(hold);
 
                 MSG::send_msg(&sender, MSG::Hold(hold));
-                
+
                 return Ok(root);
             }
             Expr::ObjectExpr(fun) => {
                 root = match_actions(fun, root, data, instruction_index, &sender)?
             }
-            Expr::IfExpr(ref ifstatement) => {
+            Expr::IfExpr(ref if_statement) => {
                 root = solve_if_statement(
-                    ifstatement,
+                    if_statement,
                     root,
                     data,
                     instruction_index,
@@ -99,10 +99,10 @@ pub fn interpret_scope(
             }
             e => {
                 // TODO: make Expr printable in order to be included in the error message
-                return Err(gen_error_info(
-                    interval_from_expr(e),
-                    ERROR_START_INSTRUCTIONS.to_owned(),
-                ));
+                let interval = interval_from_expr(e);
+                let message = ERROR_START_INSTRUCTIONS.to_owned();
+
+                return Err(ErrorInfo::new(interval, message));
             }
         };
     }

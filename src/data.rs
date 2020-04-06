@@ -16,6 +16,7 @@ pub mod context_json;
 pub mod csml_bot;
 pub mod csml_flow;
 pub mod execution_context;
+pub mod error_info;
 
 pub use ast::Interval;
 pub use client::Client;

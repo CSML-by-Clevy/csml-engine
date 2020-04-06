@@ -1,4 +1,3 @@
-use crate::data::ast::Interval;
 use nom::error::{ErrorKind, ParseError};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -24,24 +23,5 @@ impl<I> ParseError<I> for CustomError<I> {
         other.input = input;
         other.error = ctx.to_owned();
         other
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ErrorInfo {
-    pub interval: Interval,
-    pub message: String,
-}
-
-impl ErrorInfo {
-    pub fn format_error(&self) -> String {
-        format!(
-            "{} at line {}, column {}",
-            self.message, self.interval.line, self.interval.column
-        )
-    }
-
-    pub fn new(message: String, interval: Interval) -> Self {
-        Self { message, interval }
     }
 }
