@@ -21,3 +21,7 @@ Remove duplicating arguments !
 // HOLD
 
 If sender is none (which means the interpreter is used locally) maybe read on stdin ?
+
+// CONTEXT_JSON
+
+Add new value from click up to structures

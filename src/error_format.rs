@@ -1,12 +1,13 @@
 pub mod data;
 
-use crate::data::{ast::Interval, tokens::Span};
+use crate::data::{tokens::Span};
 use nom::{
     error::{ErrorKind, ParseError},
     *,
 };
 
-pub use data::{CustomError, ErrorInfo};
+pub use crate::data::error_info::ErrorInfo;
+pub use data::CustomError;
 
 // Parsing Errors
 pub const ERROR_PARENTHESES: &'static str = "list elem type ( ... ) not found";
@@ -201,10 +202,6 @@ pub const ERROR_OPS_DIV_INT: &'static str = "[!] Int: Division by zero";
 pub const ERROR_OPS_DIV_FLOAT: &'static str = "[!] Float: Division by zero";
 
 pub const ERROR_ILLEGAL_OPERATION: &'static str = "illegal operation:";
-
-pub fn gen_error_info(interval: Interval, message: String) -> ErrorInfo {
-    ErrorInfo { interval, message }
-}
 
 pub fn gen_nom_error<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>
 where

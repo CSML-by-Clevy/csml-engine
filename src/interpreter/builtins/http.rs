@@ -1,4 +1,5 @@
 use crate::data::{ast::Interval, Literal};
+use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::json_to_rust::json_to_literal;
 use std::collections::HashMap;
@@ -16,7 +17,7 @@ fn get_value<'lifetime, T: 'static>(
     if let Some(literal) = object.get(key) {
         Literal::get_value::<T>(&literal.primitive, interval, format!("'{}' {}", key, error))
     } else {
-        Err(gen_error_info(interval, format!("'{}' {}", key, error)))
+        Err(ErrorInfo::new(interval, format!("'{}' {}", key, error)))
     }
 }
 
@@ -85,7 +86,7 @@ pub fn http_request(
 
     match body {
         Ok(value) => json_to_literal(&value, interval),
-        Err(_) => Err(gen_error_info(
+        Err(_) => Err(ErrorInfo::new(
             interval,
             format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
         )),

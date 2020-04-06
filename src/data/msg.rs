@@ -1,7 +1,7 @@
 use crate::data::message::Message;
 use crate::data::Memories;
 use crate::data::hold::Hold;
-use crate::error_format::ErrorInfo;
+use crate::data::error_info::ErrorInfo;
 
 use std::sync::mpsc;
 
@@ -24,7 +24,7 @@ pub enum MSG {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl MSG {
-    pub fn send_msg(sender: &Option<mpsc::Sender<MSG>>, msg: MSG) -> Result<(), ErrorInfo> {
+    pub fn send(sender: &Option<mpsc::Sender<MSG>>, msg: MSG) -> Result<(), ErrorInfo> {
         if let Some(sender) = sender {
             if let Err(_) = sender.send(msg) {
                 unimplemented!();

@@ -27,7 +27,7 @@ pub fn url(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal
 
             Ok(result)
         }
-        _ => Err(gen_error_info(interval, ERROR_URL.to_owned())),
+        _ => Err(ErrorInfo::new(interval, ERROR_URL.to_owned())),
     }
 }
 
@@ -45,7 +45,7 @@ pub fn img(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal
 
             Ok(result)
         }
-        _ => Err(gen_error_info(interval, ERROR_IMAGE.to_owned())),
+        _ => Err(ErrorInfo::new(interval, ERROR_IMAGE.to_owned())),
     }
 }
 
@@ -69,7 +69,7 @@ pub fn video(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
 
             Ok(result)
         }
-        _ => Err(gen_error_info(interval, ERROR_VIDEO.to_owned())),
+        _ => Err(ErrorInfo::new(interval, ERROR_VIDEO.to_owned())),
     }
 }
 
@@ -94,6 +94,6 @@ pub fn audio(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
 
             Ok(result)
         }
-        _ => Err(gen_error_info(interval, ERROR_AUDIO.to_owned())),
+        _ => Err(ErrorInfo::new(interval, ERROR_AUDIO.to_owned())),
     }
 }

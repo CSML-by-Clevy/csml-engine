@@ -1,16 +1,17 @@
 use crate::data::{
-    ast::*, literal::ContentType, message::*, msg::send_msg, primitive::null::PrimitiveNull, Data,
+    ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data,
     Literal, Memories, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::{
-    interpret_scope,
+    // interpret_scope,
     variable_handler::{
         exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
     },
 };
 use crate::parser::ExitCondition;
 use std::sync::mpsc;
+use crate::data::execution_context::ExecutionContext;
 
 fn get_var_info<'a>(
     expr: &'a Expr,
@@ -37,7 +38,7 @@ fn get_var_info<'a>(
                 get_var_from_mem(var.to_owned(), path, data, root, sender)
             }
         },
-        e => Err(gen_error_info(
+        e => Err(ErrorInfo::new(
             interval_from_expr(e),
             ERROR_GET_VAR_INFO.to_owned(),
         )),
@@ -54,7 +55,7 @@ pub fn match_actions(
     match function {
         ObjectType::Say(arg) => {
             let msg = Message::new(expr_to_literal(arg, None, data, &mut root, sender)?);
-            send_msg(&sender, MSG::Message(msg.clone()));
+            MSG::send(&sender, MSG::Message(msg.clone()))?;
             Ok(Message::add_to_message(root, MessageType::Msg(msg)))
         }
         ObjectType::Use(arg) => {
@@ -82,16 +83,20 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
-            send_msg(&sender, MSG::NextStep(step_name.ident.clone()));
+            MSG::send(&sender, MSG::NextStep(step_name.ident.clone()))?;
 
             if step_name.ident == "end" {
                 root.exit_condition = Some(ExitCondition::Goto);
             }
 
+            ExecutionContext::set_step(&step_name.ident);
+
             Ok(root)
         }
         ObjectType::Goto(GotoType::Flow, flow_name) => {
-            send_msg(&sender, MSG::NextFlow(flow_name.ident.clone()));
+            MSG::send(&sender, MSG::NextFlow(flow_name.ident.clone()))?;
+
+            ExecutionContext::set_step(&flow_name.ident);
 
             Ok(root)
         }
@@ -99,10 +104,10 @@ pub fn match_actions(
             let lit = expr_to_literal(variable, None, data, &mut root, sender)?;
             root.add_to_memory(&name.ident, lit.clone());
 
-            send_msg(
+            MSG::send(
                 &sender,
                 MSG::Memory(Memories::new(name.ident.to_owned(), lit.clone())),
-            );
+            )?;
 
             data.context.current.insert(name.ident.to_owned(), lit);
             Ok(root)
@@ -117,19 +122,19 @@ pub fn match_actions(
         //     {
         //         match interpret_scope(actions, data, instruction_index, sender) {
         //             Ok(root2) => Ok(root + root2),
-        //             Err(err) => Err(gen_error_info(
+        //             Err(err) => Err(ErrorInfo::new(
         //                 interval_from_reserved_fn(function),
         //                 format!("{} {:?}", ERROR_IMPORT_FAIL, err),
         //             )),
         //         }
         //     } else {
-        //         Err(gen_error_info(
+        //         Err(ErrorInfo::new(
         //             interval_from_reserved_fn(function),
         //             format!("{} {}", name.ident, ERROR_IMPORT_STEP_FLOW),
         //         ))
         //     }
         // }
-        reserved => Err(gen_error_info(
+        reserved => Err(ErrorInfo::new(
             interval_from_reserved_fn(reserved),
             ERROR_START_INSTRUCTIONS.to_owned(),
         )),

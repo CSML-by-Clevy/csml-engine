@@ -1,5 +1,5 @@
 use crate::data::ast::Interval;
-use crate::error_format::data::ErrorInfo;
+use crate::data::error_info::ErrorInfo;
 use crate::linter::Linter;
 use lazy_static::*;
 
@@ -79,7 +79,7 @@ fn check_valid_goto_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
             if !step.contains_key(&goto.step) && goto.step != "end" {
                 error.push(ErrorInfo {
                     interval: goto.interval,
-                    message: format!("ERROR: Step '{}' doens't exist", goto.step),
+                    message: format!("ERROR: Step '{}' doesn't exist", goto.step),
                 });
             }
         }

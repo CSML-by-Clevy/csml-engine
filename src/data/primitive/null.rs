@@ -3,6 +3,7 @@ use crate::data::primitive::{
     PrimitiveType, Right,
 };
 use crate::data::{ast::Interval, literal::ContentType, message::Message, tokens::NULL, Literal};
+use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;
@@ -55,7 +56,7 @@ impl PrimitiveNull {
         let usage = "is_number() => boolean";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -69,7 +70,7 @@ impl PrimitiveNull {
         let usage = "type_of() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal("Null", interval))
@@ -83,7 +84,7 @@ impl PrimitiveNull {
         let usage = "to_string() => string";
 
         if args.len() != 0 {
-            return Err(ErrorInfo::new(format!("usage: {}", usage), interval));
+            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal(&null.to_string(), interval))
@@ -126,7 +127,7 @@ impl Primitive for PrimitiveNull {
             return Ok((res, *right));
         }
 
-        Err(gen_error_info(
+        Err(ErrorInfo::new(
             interval,
             format!("[{}] {}", name, ERROR_NULL_UNKNOWN_METHOD),
         ))
@@ -145,7 +146,7 @@ impl Primitive for PrimitiveNull {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
+        Err(ErrorInfo::new(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} + {:?}",
@@ -157,7 +158,7 @@ impl Primitive for PrimitiveNull {
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
+        Err(ErrorInfo::new(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} - {:?}",
@@ -169,7 +170,7 @@ impl Primitive for PrimitiveNull {
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
+        Err(ErrorInfo::new(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} / {:?}",
@@ -181,7 +182,7 @@ impl Primitive for PrimitiveNull {
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
+        Err(ErrorInfo::new(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} * {:?}",
@@ -193,7 +194,7 @@ impl Primitive for PrimitiveNull {
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
+        Err(ErrorInfo::new(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} % {:?}",

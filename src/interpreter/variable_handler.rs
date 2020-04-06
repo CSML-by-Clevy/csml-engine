@@ -17,6 +17,7 @@ use crate::data::{
     Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
+use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     gen_literal::gen_literal_form_event,
@@ -51,14 +52,14 @@ pub fn get_literal(
 
             match items.get_mut(*value as usize) {
                 Some(lit) => Ok(lit),
-                None => Err(gen_error_info(
+                None => Err(ErrorInfo::new(
                     interval.to_owned(),
                     format!("{} {}", value, ERROR_ARRAY_INDEX_EXIST.to_owned()),
                 )),
             }
         }
         (literal, None) => Ok(literal),
-        (_, Some(_)) => Err(gen_error_info(
+        (_, Some(_)) => Err(ErrorInfo::new(
             interval.to_owned(),
             ERROR_ARRAY_TYPE.to_owned(),
         )),
@@ -71,7 +72,7 @@ fn get_var_from_step_var<'a>(
 ) -> Result<&'a mut Literal, ErrorInfo> {
     match data.step_vars.get_mut(&name.ident) {
         Some(var) => Ok(var),
-        None => Err(gen_error_info(
+        None => Err(ErrorInfo::new(
             name.interval.to_owned(),
             format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
         )),
@@ -123,7 +124,7 @@ pub fn resolve_path(
                 ) {
                     new_path.push((inter.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
-                    return Err(gen_error_info(
+                    return Err(ErrorInfo::new(
                         inter.to_owned(),
                         ERROR_FIND_BY_INDEX.to_owned(),
                     ));
@@ -260,7 +261,7 @@ pub fn get_literal_form_metadata(
             None => PrimitiveNull::get_literal(inter.to_owned()),
         },
         Some((inter, _)) => {
-            return Err(gen_error_info(
+            return Err(ErrorInfo::new(
                 inter.to_owned(),
                 ERROR_FIND_BY_INDEX.to_owned(),
             ));

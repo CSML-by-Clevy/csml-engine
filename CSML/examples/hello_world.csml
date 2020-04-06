@@ -1,7 +1,7 @@
 start:
     say "Hello World"
-    goto end
+    goto foo
 
 foo:
-    say "Foo"
+    say "Hello foo"
     goto end

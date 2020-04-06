@@ -1,6 +1,6 @@
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
-use crate::data::{send_msg, Hold, Literal, Memories, Message, MSG};
-use crate::error_format::ErrorInfo;
+use crate::data::{Hold, Literal, Memories, Message, MSG};
+use crate::data::error_info::ErrorInfo;
 use crate::parser::ExitCondition;
 
 use core::ops::Add;
@@ -81,16 +81,6 @@ impl MessageData {
         };
     }
 
-    // pub fn add_next_step(mut self, next_step: &str) -> Self {
-    //     self.next_step = Some(next_step.to_string());
-    //     self
-    // }
-
-    // pub fn add_next_flow(mut self, next_step: &str) -> Self {
-    //     self.next_flow = Some(next_step.to_string());
-    //     self
-    // }
-
     pub fn error_to_message(
         result: Result<Self, ErrorInfo>,
         sender: &Option<mpsc::Sender<MSG>>,
@@ -113,7 +103,7 @@ impl MessageData {
                 let mut literal = PrimitiveObject::get_literal(&hashmap, interval);
                 literal.set_content_type("error");
 
-                send_msg(
+                MSG::send(
                     sender,
                     MSG::Error(Message {
                         content_type: "error".to_owned(),

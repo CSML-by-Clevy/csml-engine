@@ -1,6 +1,7 @@
 use crate::data::literal::ContentType;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
+use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
@@ -39,7 +40,7 @@ fn format_function_args(
     let vec = match args {
         Expr::VecExpr(vec, ..) => vec,
         _e => {
-            return Err(gen_error_info(
+            return Err(ErrorInfo::new(
                 interval_from_expr(args),
                 ERROR_FUNCTIONS_ARGS.to_owned(),
             ))
@@ -55,7 +56,7 @@ fn format_function_args(
                 let ident = match **var_name {
                     Expr::IdentExpr(ref ident) => ident.ident.to_owned(),
                     _ => {
-                        return Err(gen_error_info(
+                        return Err(ErrorInfo::new(
                             interval_from_expr(var),
                             ERROR_ASSIGN_IDENT.to_owned(),
                         ))
@@ -99,7 +100,7 @@ fn normal_object_to_literal(
             match_builtin(&name, obj, interval.to_owned(), data)?,
         ))
     } else {
-        Err(gen_error_info(
+        Err(ErrorInfo::new(
             interval.to_owned(),
             format!("{} [{}]", name, ERROR_BUILTIN_UNKNOWN),
         ))
@@ -162,7 +163,7 @@ pub fn expr_to_literal(
         }
         Expr::LitExpr(literal) => exec_path_literal(&mut literal.clone(), path, data, root, sender),
         Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), path, data, root, sender)?),
-        e => Err(gen_error_info(
+        e => Err(ErrorInfo::new(
             interval_from_expr(e),
             ERROR_EXPR_TO_LITERAL.to_owned(),
         )),

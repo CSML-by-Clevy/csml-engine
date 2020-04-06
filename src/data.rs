@@ -29,4 +29,4 @@ pub use memories::{Memories, MemoryType};
 pub use message::Message;
 pub use message_data::MessageData;
 
-pub use msg::{send_msg, MSG};
+pub use msg::MSG;

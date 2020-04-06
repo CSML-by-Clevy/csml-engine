@@ -5,7 +5,8 @@ pub mod variable_handler;
 
 pub use json_to_rust::json_to_literal;
 
-use crate::data::{ast::*, send_msg, Data, Hold, Literal, MessageData, MSG};
+use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
+use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statement},
@@ -22,9 +23,11 @@ use std::sync::mpsc;
 
 fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
     let mut json_map = serde_json::Map::new();
+
     for (key, val) in map.iter() {
         json_map.insert(key.to_owned(), val.primitive.to_json());
     }
+    
     serde_json::json!(json_map)
 }
 
@@ -38,46 +41,47 @@ pub fn interpret_scope(
     instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-    let mut root = MessageData::default();
+    let mut message_data = MessageData::default();
 
     for (action, instruction_info) in actions.commands.iter() {
         let instruction_total = instruction_info.index + instruction_info.total;
+
         if let Some(instruction_index) = instruction_index {
             if instruction_index >= instruction_total {
                 continue;
             }
         }
 
-        if root.exit_condition.is_some() {
-            return Ok(root);
+        if message_data.exit_condition.is_some() {
+            return Ok(message_data);
         }
 
         match action {
             Expr::ObjectExpr(ObjectType::Break(..)) => {
-                root.exit_condition = Some(ExitCondition::Break);
+                message_data.exit_condition = Some(ExitCondition::Break);
 
-                return Ok(root);
+                return Ok(message_data);
             }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
-                root.exit_condition = Some(ExitCondition::Hold);
+                message_data.exit_condition = Some(ExitCondition::Hold);
 
                 let index = instruction_info.index;
                 let map = data.step_vars.to_owned();
                 let hold = Hold::new(index, step_vars_to_json(map));
 
-                root.hold = Some(hold);
+                message_data.hold = Some(hold.to_owned());
 
-                MSG::send_msg(&sender, MSG::Hold(hold));
+                MSG::send(&sender, MSG::Hold(hold))?;
 
-                return Ok(root);
+                return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                root = match_actions(fun, root, data, instruction_index, &sender)?
+                message_data = match_actions(fun, message_data, data, instruction_index, &sender)?
             }
             Expr::IfExpr(ref if_statement) => {
-                root = solve_if_statement(
+                message_data = solve_if_statement(
                     if_statement,
-                    root,
+                    message_data,
                     data,
                     instruction_index,
                     instruction_info,
@@ -85,13 +89,13 @@ pub fn interpret_scope(
                 )?;
             }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
-                root = for_loop(
+                message_data = for_loop(
                     ident,
                     i,
                     expr,
                     block,
                     range,
-                    root,
+                    message_data,
                     data,
                     instruction_index,
                     &sender,
@@ -107,5 +111,5 @@ pub fn interpret_scope(
         };
     }
 
-    Ok(root)
+    Ok(message_data)
 }

@@ -4,10 +4,10 @@ pub mod interpreter;
 pub mod linter;
 pub mod parser;
 
-use error_format::*;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
+use crate::data::error_info::ErrorInfo;
 use crate::data::context::get_hashmap;
 use crate::data::Data;
 use crate::data::ast::Flow;
@@ -87,9 +87,7 @@ pub fn interpret(bot: CsmlBot, context: ContextJson, event: Event, sender: Optio
 
         match flow.flow_instructions.get(&InstructionType::NormalStep(step)) {
             Some(Expr::Scope { scope, .. }) => {
-                
                 println!("{:#?}", interpret_scope(scope, &mut data, rip, &sender));
-                unreachable!();
             }
             _ => {
                 unimplemented!();
