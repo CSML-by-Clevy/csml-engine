@@ -83,17 +83,22 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
-            MSG::send(&sender, MSG::NextStep(step_name.ident.clone()))?;
-
-            ExecutionContext::set_step(&step_name.ident);
-
-            if step_name.ident == "end" {
-                root.exit_condition = Some(ExitCondition::Goto);
+            match step_name.ident == "end" {
+                true => {
+                    root.exit_condition = Some(ExitCondition::Goto);
+                }
+                false => {
+                    MSG::send(&sender, MSG::NextStep(step_name.ident.clone()))?;
+                    MSG::send(&sender, MSG::NextFlow(ExecutionContext::get_flow()))?;
+                    
+                    ExecutionContext::set_step(&step_name.ident);
+                }
             }
-
+                    
             Ok(root)
         }
         ObjectType::Goto(GotoType::Flow, flow_name) => {
+            MSG::send(&sender, MSG::NextStep("start".to_string()))?;
             MSG::send(&sender, MSG::NextFlow(flow_name.ident.clone()))?;
 
             ExecutionContext::set_flow(&flow_name.ident);
