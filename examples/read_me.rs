@@ -4,6 +4,11 @@ use csmlinterpreter::interpret;
 use csmlinterpreter::data::ContextJson;
 use csmlinterpreter::data::event::Event;
 
+const DEFAULT_ID_NAME: &str = "id";
+const DEFAULT_FLOW_NAME : &str = "flow";
+const DEFAULT_STEP_NAME : &str = "start";
+const DEFAULT_BOT_NAME : &str = "my_bot";
+
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
@@ -11,10 +16,18 @@ use csmlinterpreter::data::event::Event;
 fn main() {
     let content = std::fs::read_to_string("/Users/jle-quel/Documents/darwin/csml-interpreter/CSML/examples/hello_world.csml").unwrap();
 
-    let flow = vec![CsmlFlow::new("id", "default_flow", &content, Vec::default())];
-    let bot = CsmlBot::new("id", "bot", None, flow, "default_flow");
-    let event = Event::new("hello");
-    let context = ContextJson::default();
+    // Create a CsmlFlow
+    let flow = CsmlFlow::new(DEFAULT_ID_NAME, DEFAULT_FLOW_NAME, &content, Vec::default());
 
+    // Create a CsmlBot
+    let bot = CsmlBot::new(DEFAULT_ID_NAME, DEFAULT_BOT_NAME, None, vec![flow], DEFAULT_FLOW_NAME);
+
+    // Create an Event
+    let event = Event::default();
+
+    // Create context
+    let context = ContextJson::new(serde_json::json!({}), serde_json::json!({}), None, None, DEFAULT_STEP_NAME, DEFAULT_FLOW_NAME);
+
+    // Run interpreter
     interpret(bot, context, event, None);
 }

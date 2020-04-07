@@ -12,7 +12,6 @@ pub mod msg;
 pub mod primitive;
 pub mod tokens;
 pub mod warnings;
-pub mod context_json;
 pub mod csml_bot;
 pub mod csml_flow;
 pub mod execution_context;

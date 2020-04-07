@@ -36,8 +36,8 @@ pub fn parse_file(flow: &str) -> Result<Flow, ErrorInfo> {
 }
 
 pub fn interpret(bot: CsmlBot, context: ContextJson, event: Event, sender: Option<mpsc::Sender<MSG>>) -> MessageData {
-    ExecutionContext::set_flow(&bot.default_flow);
-    ExecutionContext::set_step("start");
+    ExecutionContext::set_flow(&context.flow);
+    ExecutionContext::set_step(&context.step);
 
     loop {
         let flow = ExecutionContext::get_flow();

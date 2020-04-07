@@ -29,3 +29,7 @@ Add new value from click up to structures
 // QUESTION
 
 - ContextJson vs Context
+
+// BENCHMARK
+
+- Look size of AST versus file content !
