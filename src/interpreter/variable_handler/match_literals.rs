@@ -1,7 +1,5 @@
 // use crate::error_format::ErrorInfo;
-use crate::data::primitive::{
-    PrimitiveArray, PrimitiveBoolean, PrimitiveObject, PrimitiveString,
-};
+use crate::data::primitive::{PrimitiveArray, PrimitiveBoolean, PrimitiveObject, PrimitiveString};
 use crate::data::Literal;
 
 fn get_accept(lit: &Literal) -> Option<&Literal> {
@@ -17,19 +15,29 @@ fn get_accept(lit: &Literal) -> Option<&Literal> {
 // TODO: change when exec
 fn contains(array_lit: &Literal, key: &Literal) -> Literal {
     let key_string = key.primitive.as_any().downcast_ref::<PrimitiveString>();
-    match (array_lit.primitive.as_any().downcast_ref::<PrimitiveArray>(), key_string) {
+    match (
+        array_lit
+            .primitive
+            .as_any()
+            .downcast_ref::<PrimitiveArray>(),
+        key_string,
+    ) {
         (Some(array), None) => {
             PrimitiveBoolean::get_literal(array.value.contains(key), array_lit.interval.to_owned())
-        },
+        }
         (Some(array), Some(string)) => {
             for elem in array.value.iter() {
                 match elem.primitive.as_any().downcast_ref::<PrimitiveString>() {
-                    Some(val) if val.value.to_ascii_lowercase() == string.value.to_ascii_lowercase() => return PrimitiveBoolean::get_literal(true, elem.interval.to_owned()),
-                    _ => continue
+                    Some(val)
+                        if val.value.to_ascii_lowercase() == string.value.to_ascii_lowercase() =>
+                    {
+                        return PrimitiveBoolean::get_literal(true, elem.interval.to_owned())
+                    }
+                    _ => continue,
                 }
             }
             PrimitiveBoolean::get_literal(false, array_lit.interval.to_owned())
-        },
+        }
         (None, ..) => PrimitiveBoolean::get_literal(false, array_lit.interval.to_owned()),
     }
 }
@@ -144,10 +152,8 @@ mod tests {
     #[test]
     fn ok_match_array_str() {
         let bt1 = PrimitiveArray::get_literal(
-            &[
-                PrimitiveString::get_literal("hola", gen_inter())
-            ],
-            gen_inter()
+            &[PrimitiveString::get_literal("hola", gen_inter())],
+            gen_inter(),
         );
         let bt2 = PrimitiveString::get_literal("hola", gen_inter());
 
@@ -163,7 +169,6 @@ mod tests {
         match_lit_ok(&bt1, &bt2);
         match_lit_ok(&bt2, &bt1);
     }
-
 
     #[test]
     fn ok_match_button_str2() {
@@ -182,7 +187,6 @@ mod tests {
         match_lit_ok(&bt1, &bt2);
         match_lit_ok(&bt2, &bt1);
     }
-
 
     #[test]
     fn err_match_button_button() {
