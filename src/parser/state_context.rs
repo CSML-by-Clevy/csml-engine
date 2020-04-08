@@ -13,7 +13,7 @@ lazy_static! {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExitCondition {
-    Goto,
+    End,
     Error,
     Break,
     Hold,

@@ -24,7 +24,7 @@ pub struct ContextJson {
     pub api_info: Option<ApiInfo>,
     pub hold: Option<Hold>,
     pub step: String,
-	pub flow: String,
+    pub flow: String,
 }
 
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ pub struct Context {
     pub api_info: Option<ApiInfo>,
     pub hold: Option<Hold>,
     pub step: String,
-	pub flow: String,
+    pub flow: String,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +42,14 @@ pub struct Context {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Context {
-    pub fn new(current: HashMap<String, Literal>, metadata: HashMap<String, Literal>, api_info: Option<ApiInfo>, hold: Option<Hold>, step: String, flow: String) -> Self {
+    pub fn new(
+        current: HashMap<String, Literal>,
+        metadata: HashMap<String, Literal>,
+        api_info: Option<ApiInfo>,
+        hold: Option<Hold>,
+        step: String,
+        flow: String,
+    ) -> Self {
         Self {
             current,
             metadata,
@@ -55,7 +62,14 @@ impl Context {
 }
 
 impl ContextJson {
-    pub fn new(current: serde_json::Value, metadata: serde_json::Value, api_info: Option<ApiInfo>, hold: Option<Hold>, step: &str, flow: &str) -> Self {
+    pub fn new(
+        current: serde_json::Value,
+        metadata: serde_json::Value,
+        api_info: Option<ApiInfo>,
+        hold: Option<Hold>,
+        step: &str,
+        flow: &str,
+    ) -> Self {
         Self {
             current,
             metadata,
@@ -76,7 +90,14 @@ impl ContextJson {
         let current = get_hashmap(&self.current);
         let metadata = get_hashmap(&self.metadata);
 
-        Context::new(current, metadata, self.api_info.to_owned(), self.hold.to_owned(), self.step.to_owned(), self.flow.to_owned())
+        Context::new(
+            current,
+            metadata,
+            self.api_info.to_owned(),
+            self.hold.to_owned(),
+            self.step.to_owned(),
+            self.flow.to_owned(),
+        )
     }
 }
 

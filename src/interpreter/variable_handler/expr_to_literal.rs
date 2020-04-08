@@ -1,7 +1,7 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
-use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,

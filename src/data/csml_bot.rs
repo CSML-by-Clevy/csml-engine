@@ -18,7 +18,13 @@ pub struct CsmlBot {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl CsmlBot {
-    pub fn new(id: &str, name: &str, fn_endpoint: Option<String>, flows: Vec<CsmlFlow>, default_flow: &str) -> Self {
+    pub fn new(
+        id: &str,
+        name: &str,
+        fn_endpoint: Option<String>,
+        flows: Vec<CsmlFlow>,
+        default_flow: &str,
+    ) -> Self {
         Self {
             id: id.to_owned(),
             name: name.to_owned(),

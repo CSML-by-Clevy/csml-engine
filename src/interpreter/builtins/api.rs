@@ -1,6 +1,6 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
 use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
-use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::{builtins::tools::*, json_to_literal};
 

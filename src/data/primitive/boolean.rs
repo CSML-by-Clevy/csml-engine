@@ -1,10 +1,10 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
-use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;

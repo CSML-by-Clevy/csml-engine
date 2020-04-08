@@ -12,10 +12,6 @@ fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
     parse_flow(&text)
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// FOREACH VALID SYNTAX
-////////////////////////////////////////////////////////////////////////////////
-
 #[test]
 fn foreach_0() {
     let result = match format_message("CSML/basic_test/syntax/foreach/foreach_0.csml".to_owned()) {

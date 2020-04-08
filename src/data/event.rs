@@ -27,12 +27,14 @@ impl Default for Event {
 // METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+// By default new event content_type is text
+
 impl Event {
-    pub fn new(content: &str) -> Self {
+    pub fn new(content_type: &str, content: &str, metadata: serde_json::Value) -> Self {
         Self {
-            content_type: "text".to_owned(),
+            content_type: content_type.to_owned(),
             content: content.to_owned(),
-            metadata: serde_json::json!({}),
+            metadata: metadata.to_owned(),
         }
     }
 }

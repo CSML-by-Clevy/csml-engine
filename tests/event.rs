@@ -1,18 +1,11 @@
 mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::event::Event;
+
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
+
 use serde_json::Value;
-
-use support::tools::{gen_context, message_to_json_value, read_file};
-
-fn format_message(event: Event, step: &str) -> MessageData {
-    let text = read_file("CSML/basic_test/event.csml".to_owned()).unwrap();
-
-    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
-
-    interpret(&text, step, context, &event, None)
-}
 
 #[test]
 fn event_step_0() {
@@ -21,15 +14,14 @@ fn event_step_0() {
         ],
         "messages":[
             {"content":{"text": "content"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":"end"}"#;
+        ]}"#;
     let msg = format_message(
-        Event {
-            content_type: "content_type".to_owned(),
-            content: "content".to_owned(),
-            metadata: serde_json::Value::Object(serde_json::Map::new()),
-        },
+        Event::new(
+            "content_type",
+            "content",
+            serde_json::Value::Object(serde_json::Map::new()),
+        ),
+        "CSML/basic_test/event.csml",
         "step_0",
     );
 
@@ -48,9 +40,7 @@ fn event_step_1() {
             {"content":{"yolo": "my name is yolo"}, "content_type":"object"},
             {"content":{"text": "my name is yolo"}, "content_type":"text"}
 
-        ],
-        "next_flow":null,
-        "next_step":"end"}"#;
+        ]}"#;
 
     let mut map = serde_json::Map::new();
     let mut other_map = serde_json::Map::new();
@@ -60,12 +50,10 @@ fn event_step_1() {
         serde_json::Value::String("my name is yolo".to_owned()),
     );
     map.insert("toto".to_owned(), serde_json::Value::Object(other_map));
+
     let msg = format_message(
-        Event {
-            content_type: "content_type".to_owned(),
-            content: "content".to_owned(),
-            metadata: serde_json::Value::Object(map),
-        },
+        Event::new("content_type", "content", serde_json::Value::Object(map)),
+        "CSML/basic_test/event.csml",
         "step_1",
     );
 
@@ -82,15 +70,14 @@ fn event_step_2() {
         ],
         "messages":[
             {"content":{"text": "content_type"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":"end"}"#;
+        ]}"#;
     let msg = format_message(
-        Event {
-            content_type: "content_type".to_owned(),
-            content: "content".to_owned(),
-            metadata: serde_json::Value::Object(serde_json::Map::new()),
-        },
+        Event::new(
+            "content_type",
+            "content",
+            serde_json::Value::Object(serde_json::Map::new()),
+        ),
+        "CSML/basic_test/event.csml",
         "step_2",
     );
 
@@ -107,15 +94,14 @@ fn event_step_3() {
         ],
         "messages":[
             {"content":{}, "content_type":"content_type"}
-        ],
-        "next_flow":null,
-        "next_step":"end"}"#;
+        ]c}"#;
     let msg = format_message(
-        Event {
-            content_type: "content_type".to_owned(),
-            content: "content".to_owned(),
-            metadata: serde_json::Value::Object(serde_json::Map::new()),
-        },
+        Event::new(
+            "content_type",
+            "content",
+            serde_json::Value::Object(serde_json::Map::new()),
+        ),
+        "CSML/basic_test/event.csml",
         "step_3",
     );
 
@@ -132,9 +118,7 @@ fn event_step_4() {
         ],
         "messages":[
             {"content":{"text":"true"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":"end"}"#;
+        ]}"#;
 
     let mut map = serde_json::Map::new();
 
@@ -144,11 +128,8 @@ fn event_step_4() {
     );
 
     let msg = format_message(
-        Event {
-            content_type: "content_type".to_owned(),
-            content: "content".to_owned(),
-            metadata: serde_json::Value::Object(map),
-        },
+        Event::new("content_type", "content", serde_json::Value::Object(map)),
+        "CSML/basic_test/event.csml",
         "step_4",
     );
 

@@ -1,3 +1,4 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::primitive::{
     Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right,
@@ -11,7 +12,6 @@ use serde_json::json;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::usize;
-use crate::data::error_info::ErrorInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES

@@ -1,3 +1,4 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
@@ -9,7 +10,6 @@ use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
-use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use lazy_static::*;
 use regex::Regex;

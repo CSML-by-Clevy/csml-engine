@@ -26,7 +26,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, pos) = position(s)?;
-    Ok((s, Interval::new(pos)))
+    Ok((s, Interval::new_as_span(pos)))
 }
 
 pub fn get_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>

@@ -71,8 +71,7 @@ impl ExecutionContext {
 
         if let Some(execution_context) = hashmap.get_mut(&thread_id) {
             return execution_context.flow.to_owned();
-        }
-        else {
+        } else {
             unreachable!();
         }
     }
@@ -87,8 +86,7 @@ impl ExecutionContext {
 
         if let Some(execution_context) = hashmap.get_mut(&thread_id) {
             return execution_context.step.to_owned();
-        }
-        else {
+        } else {
             unreachable!();
         }
     }

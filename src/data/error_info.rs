@@ -16,10 +16,7 @@ pub struct ErrorInfo {
 
 impl ErrorInfo {
     pub fn new(interval: Interval, message: String) -> Self {
-        Self {
-            interval,
-            message,
-        }
+        Self { interval, message }
     }
 }
 

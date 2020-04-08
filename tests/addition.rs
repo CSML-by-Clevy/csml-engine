@@ -1,23 +1,20 @@
-pub mod support;
+mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::event::Event;
+
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
+
 use serde_json::Value;
-use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
-
-fn format_message(event: Event, name: &str, step: &str) -> MessageData {
-    let file = format!("CSML/basic_test/numerical_operation/{}", name);
-    let text = read_file(file).unwrap();
-
-    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
-
-    interpret(&text, step, context, &event, None)
-}
 
 #[test]
 fn ok_addition() {
-    let data = r#"{"messages":[ {"content":{"text":"5"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "start");
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"5"},"content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "./CSML/basic_test/numerical_operation/addition.csml",
+        "start",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -31,7 +28,11 @@ fn ok_addition() {
 
 #[test]
 fn addition_array_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_array_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -52,7 +53,11 @@ fn addition_array_step_0() {
 
 #[test]
 fn addition_array_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_array_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -73,7 +78,11 @@ fn addition_array_step_1() {
 
 #[test]
 fn addition_array_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_array_step_2",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -94,7 +103,11 @@ fn addition_array_step_2() {
 
 #[test]
 fn addition_array_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_array_step_3",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -115,7 +128,11 @@ fn addition_array_step_3() {
 
 #[test]
 fn addition_array_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_array_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -136,7 +153,11 @@ fn addition_array_step_4() {
 
 #[test]
 fn addition_array_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_array_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -157,7 +178,11 @@ fn addition_array_step_5() {
 
 #[test]
 fn addition_array_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_array_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_array_step_6",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -182,7 +207,11 @@ fn addition_array_step_6() {
 
 #[test]
 fn addition_boolean_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_boolean_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -203,7 +232,11 @@ fn addition_boolean_step_0() {
 
 #[test]
 fn addition_boolean_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_boolean_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -224,7 +257,11 @@ fn addition_boolean_step_1() {
 
 #[test]
 fn addition_boolean_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_boolean_step_2",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -245,7 +282,11 @@ fn addition_boolean_step_2() {
 
 #[test]
 fn addition_boolean_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_boolean_step_3",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -266,7 +307,11 @@ fn addition_boolean_step_3() {
 
 #[test]
 fn addition_boolean_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_boolean_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -287,7 +332,11 @@ fn addition_boolean_step_4() {
 
 #[test]
 fn addition_boolean_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_boolean_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -308,7 +357,11 @@ fn addition_boolean_step_5() {
 
 #[test]
 fn addition_boolean_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_boolean_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_boolean_step_6",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -333,7 +386,11 @@ fn addition_boolean_step_6() {
 
 #[test]
 fn addition_float_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_float_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -354,7 +411,11 @@ fn addition_float_step_0() {
 
 #[test]
 fn addition_float_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_float_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -383,7 +444,11 @@ fn addition_float_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_float_step_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -401,7 +466,11 @@ fn addition_float_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_float_step_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -411,7 +480,11 @@ fn addition_float_step_3() {
 
 #[test]
 fn addition_float_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_float_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -432,7 +505,11 @@ fn addition_float_step_4() {
 
 #[test]
 fn addition_float_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_float_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -461,7 +538,11 @@ fn addition_float_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_float_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_float_step_6",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -475,7 +556,11 @@ fn addition_float_step_6() {
 
 #[test]
 fn addition_int_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_int_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -496,7 +581,11 @@ fn addition_int_step_0() {
 
 #[test]
 fn addition_int_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_int_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -525,7 +614,11 @@ fn addition_int_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_int_step_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -543,7 +636,11 @@ fn addition_int_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_int_step_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -553,7 +650,11 @@ fn addition_int_step_3() {
 
 #[test]
 fn addition_int_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_int_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -574,7 +675,11 @@ fn addition_int_step_4() {
 
 #[test]
 fn addition_int_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_int_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -603,7 +708,11 @@ fn addition_int_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_int_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_int_step_6",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -617,7 +726,11 @@ fn addition_int_step_6() {
 
 #[test]
 fn addition_null_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_null_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -638,7 +751,11 @@ fn addition_null_step_0() {
 
 #[test]
 fn addition_null_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_null_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -659,7 +776,11 @@ fn addition_null_step_1() {
 
 #[test]
 fn addition_null_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_null_step_2",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -680,7 +801,11 @@ fn addition_null_step_2() {
 
 #[test]
 fn addition_null_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_null_step_3",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -701,7 +826,11 @@ fn addition_null_step_3() {
 
 #[test]
 fn addition_null_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_null_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -722,7 +851,11 @@ fn addition_null_step_4() {
 
 #[test]
 fn addition_null_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_null_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -743,7 +876,11 @@ fn addition_null_step_5() {
 
 #[test]
 fn addition_null_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_null_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_null_step_6",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -768,7 +905,11 @@ fn addition_null_step_6() {
 
 #[test]
 fn addition_object_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_object_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -789,7 +930,11 @@ fn addition_object_step_0() {
 
 #[test]
 fn addition_object_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_object_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -810,7 +955,11 @@ fn addition_object_step_1() {
 
 #[test]
 fn addition_object_step_2() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_object_step_2",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -831,7 +980,11 @@ fn addition_object_step_2() {
 
 #[test]
 fn addition_object_step_3() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_object_step_3",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -852,7 +1005,11 @@ fn addition_object_step_3() {
 
 #[test]
 fn addition_object_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_object_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -873,7 +1030,11 @@ fn addition_object_step_4() {
 
 #[test]
 fn addition_object_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_object_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -894,7 +1055,11 @@ fn addition_object_step_5() {
 
 #[test]
 fn addition_object_step_6() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_object_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_object_step_6",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -919,7 +1084,11 @@ fn addition_object_step_6() {
 
 #[test]
 fn addition_string_step_0() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_string_step_0",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -940,7 +1109,11 @@ fn addition_string_step_0() {
 
 #[test]
 fn addition_string_step_1() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_string_step_1",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -969,7 +1142,11 @@ fn addition_string_step_2() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_string_step_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -987,7 +1164,11 @@ fn addition_string_step_3() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_string_step_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -997,7 +1178,11 @@ fn addition_string_step_3() {
 
 #[test]
 fn addition_string_step_4() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_string_step_4",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -1018,7 +1203,11 @@ fn addition_string_step_4() {
 
 #[test]
 fn addition_string_step_5() {
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_string_step_5",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -1047,7 +1236,11 @@ fn addition_string_step_6() {
         ],
         "next_flow":null,
         "next_step":null}"#;
-    let msg = format_message(gen_event(""), "addition.csml", "addition_string_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/numerical_operation/addition.csml",
+        "addition_string_step_6",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

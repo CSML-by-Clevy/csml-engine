@@ -1,5 +1,5 @@
-use crate::data::{ast::Interval, Literal};
 use crate::data::error_info::ErrorInfo;
+use crate::data::{ast::Interval, Literal};
 use crate::error_format::*;
 use crate::interpreter::json_to_rust::json_to_literal;
 use std::collections::HashMap;

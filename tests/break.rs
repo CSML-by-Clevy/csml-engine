@@ -1,23 +1,21 @@
 mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::event::Event;
+
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
+
 use serde_json::Value;
-
-use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
-
-fn format_message(event: Event, step: &str) -> MessageData {
-    let text = read_file("CSML/basic_test/break.csml".to_owned()).unwrap();
-
-    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
-
-    interpret(&text, step, context, &event, None)
-}
 
 #[test]
 fn break_test_0() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "start");
+    let data =
+        r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/break.csml",
+        "start",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -27,8 +25,12 @@ fn break_test_0() {
 
 #[test]
 fn break_test_1() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "break_test_0");
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/break.csml",
+        "break_test_0",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -38,8 +40,12 @@ fn break_test_1() {
 
 #[test]
 fn break_test_2() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "break_test_1");
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/break.csml",
+        "break_test_1",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -49,8 +55,12 @@ fn break_test_2() {
 
 #[test]
 fn break_test_3() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}, {"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type": "text"}], "next_flow":null, "next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "break_test_2");
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type":"text"}, {"content":{"text":"Hello"}, "content_type":"text"}, {"content":{"text":"World"}, "content_type": "text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/break.csml",
+        "break_test_2",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -60,8 +70,13 @@ fn break_test_3() {
 
 #[test]
 fn break_test_4() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "break_test_3");
+    let data =
+        r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        "CSML/basic_test/break.csml",
+        "break_test_3",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

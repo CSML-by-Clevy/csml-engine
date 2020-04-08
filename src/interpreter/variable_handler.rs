@@ -8,6 +8,7 @@ pub mod operations;
 use crate::data::literal::ContentType;
 pub use expr_to_literal::expr_to_literal;
 
+use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{
     null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
 };
@@ -17,7 +18,6 @@ use crate::data::{
     Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
-use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     gen_literal::gen_literal_form_event,

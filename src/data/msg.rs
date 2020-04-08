@@ -1,7 +1,7 @@
+use crate::data::error_info::ErrorInfo;
+use crate::data::hold::Hold;
 use crate::data::message::Message;
 use crate::data::Memories;
-use crate::data::hold::Hold;
-use crate::data::error_info::ErrorInfo;
 
 use std::sync::mpsc;
 

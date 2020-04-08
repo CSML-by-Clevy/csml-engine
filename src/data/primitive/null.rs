@@ -1,9 +1,9 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{
     boolean::PrimitiveBoolean, object::PrimitiveObject, string::PrimitiveString, Primitive,
     PrimitiveType, Right,
 };
 use crate::data::{ast::Interval, literal::ContentType, message::Message, tokens::NULL, Literal};
-use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;

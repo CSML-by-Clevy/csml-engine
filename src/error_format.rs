@@ -1,6 +1,6 @@
 pub mod data;
 
-use crate::data::{tokens::Span};
+use crate::data::tokens::Span;
 use nom::{
     error::{ErrorKind, ParseError},
     *,

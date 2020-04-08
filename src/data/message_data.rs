@@ -1,6 +1,6 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use crate::data::{Hold, Literal, Memories, Message, MSG};
-use crate::data::error_info::ErrorInfo;
 use crate::parser::ExitCondition;
 
 use core::ops::Add;
@@ -58,29 +58,10 @@ impl Add for MessageData {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// METHOD FUNCTIONS
+// STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
 impl MessageData {
-    pub fn add_message(mut self, message: Message) -> Self {
-        self.messages.push(message);
-        self
-    }
-
-    pub fn add_to_memory(&mut self, key: &str, value: Literal) {
-        if let Some(ref mut vec) = self.memories {
-            vec.push(Memories {
-                key: key.to_owned(),
-                value: value.primitive.to_json(),
-            });
-        } else {
-            self.memories = Some(vec![Memories {
-                key: key.to_owned(),
-                value: value.primitive.to_json(),
-            }])
-        };
-    }
-
     pub fn error_to_message(
         result: Result<Self, ErrorInfo>,
         sender: &Option<mpsc::Sender<MSG>>,
@@ -101,6 +82,7 @@ impl MessageData {
                 hashmap.insert("error".to_owned(), msg);
 
                 let mut literal = PrimitiveObject::get_literal(&hashmap, interval);
+
                 literal.set_content_type("error");
 
                 MSG::send(
@@ -122,5 +104,30 @@ impl MessageData {
                 }
             }
         }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// METHOD FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+impl MessageData {
+    pub fn add_message(mut self, message: Message) -> Self {
+        self.messages.push(message);
+        self
+    }
+
+    pub fn add_to_memory(&mut self, key: &str, value: Literal) {
+        if let Some(ref mut vec) = self.memories {
+            vec.push(Memories {
+                key: key.to_owned(),
+                value: value.primitive.to_json(),
+            });
+        } else {
+            self.memories = Some(vec![Memories {
+                key: key.to_owned(),
+                value: value.primitive.to_json(),
+            }])
+        };
     }
 }

@@ -1,8 +1,12 @@
 pub mod ast;
 pub mod client;
 pub mod context;
+pub mod csml_bot;
+pub mod csml_flow;
 pub mod data;
+pub mod error_info;
 pub mod event;
+pub mod execution_context;
 pub mod hold;
 pub mod literal;
 pub mod memories;
@@ -12,10 +16,6 @@ pub mod msg;
 pub mod primitive;
 pub mod tokens;
 pub mod warnings;
-pub mod csml_bot;
-pub mod csml_flow;
-pub mod execution_context;
-pub mod error_info;
 
 pub use ast::Interval;
 pub use client::Client;

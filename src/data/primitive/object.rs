@@ -1,3 +1,4 @@
+use crate::data::error_info::ErrorInfo;
 use crate::data::{
     ast::Interval,
     literal::ContentType,
@@ -8,7 +9,6 @@ use crate::data::{
     },
     Literal,
 };
-use crate::data::error_info::ErrorInfo;
 use crate::error_format::*;
 use crate::interpreter::builtins::http::http_request;
 use lazy_static::*;

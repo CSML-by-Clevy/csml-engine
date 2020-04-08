@@ -5,8 +5,8 @@ pub mod variable_handler;
 
 pub use json_to_rust::json_to_literal;
 
-use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
 use crate::data::error_info::ErrorInfo;
+use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statement},
@@ -27,7 +27,7 @@ fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
     for (key, val) in map.iter() {
         json_map.insert(key.to_owned(), val.primitive.to_json());
     }
-    
+
     serde_json::json!(json_map)
 }
 

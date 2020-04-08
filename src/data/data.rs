@@ -10,10 +10,10 @@ use std::collections::HashMap;
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug)]
-pub struct Data<'a> {
-    pub flow: &'a Flow,
-    pub context: &'a mut Context,
-    pub event: &'a Event,
+pub struct Data {
+    pub flow: Flow,
+    pub context: Context,
+    pub event: Event,
     pub curl: easy::Easy,
     pub step_vars: HashMap<String, Literal>,
 }
@@ -22,14 +22,20 @@ pub struct Data<'a> {
 // STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-// impl Data {
-//     pub fn new(flow: &'static Flow, context: &'static mut Context, event: &'static Event, curl: easy::Easy, step_vars: HashMap<String, Literal>) -> Self {
-//         Self {
-//             flow,
-//             context,
-//             event,
-//             curl,
-//             step_vars
-//         }
-//     }
-// }
+impl Data {
+    pub fn new(
+        flow: &Flow,
+        context: &mut Context,
+        event: &Event,
+        curl: easy::Easy,
+        step_vars: HashMap<String, Literal>,
+    ) -> Self {
+        Self {
+            flow: flow.to_owned(),
+            context: context.to_owned(),
+            event: event.to_owned(),
+            curl,
+            step_vars,
+        }
+    }
+}

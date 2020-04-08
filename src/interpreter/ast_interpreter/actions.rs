@@ -1,17 +1,14 @@
+use crate::data::execution_context::ExecutionContext;
 use crate::data::{
-    ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data,
-    Literal, Memories, MemoryType, MessageData, MSG,
+    ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data, Literal,
+    Memories, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
-use crate::interpreter::{
-    // interpret_scope,
-    variable_handler::{
-        exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
-    },
+use crate::interpreter::variable_handler::{
+    exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
 };
 use crate::parser::ExitCondition;
 use std::sync::mpsc;
-use crate::data::execution_context::ExecutionContext;
 
 fn get_var_info<'a>(
     expr: &'a Expr,
@@ -83,18 +80,15 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
-            match step_name.ident == "end" {
-                true => {
-                    root.exit_condition = Some(ExitCondition::Goto);
-                }
-                false => {
-                    MSG::send(&sender, MSG::NextStep(step_name.ident.clone()))?;
-                    MSG::send(&sender, MSG::NextFlow(ExecutionContext::get_flow()))?;
-                    
-                    ExecutionContext::set_step(&step_name.ident);
-                }
+            MSG::send(&sender, MSG::NextStep(step_name.ident.clone()))?;
+            MSG::send(&sender, MSG::NextFlow(ExecutionContext::get_flow()))?;
+
+            ExecutionContext::set_step(&step_name.ident);
+
+            if step_name.ident == "end" {
+                root.exit_condition = Some(ExitCondition::End);
             }
-                    
+
             Ok(root)
         }
         ObjectType::Goto(GotoType::Flow, flow_name) => {
