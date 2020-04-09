@@ -22,19 +22,11 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
     Ok(contents)
 }
 
-pub fn format_message(event: Event, filepath: &str, step: &str) -> MessageData {
+pub fn format_message(event: Event, context: ContextJson, filepath: &str) -> MessageData {
     let content = read_file(filepath.to_string()).unwrap();
 
     let flow = CsmlFlow::new("id", "flow", &content, Vec::default());
     let bot = CsmlBot::new("id", "bot", None, vec![flow], "flow");
-    let context = ContextJson::new(
-        serde_json::json!({}),
-        serde_json::json!({}),
-        None,
-        None,
-        step,
-        "flow",
-    );
 
     interpret(bot, context, event, None)
 }

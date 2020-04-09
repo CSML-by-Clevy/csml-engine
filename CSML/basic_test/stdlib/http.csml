@@ -5,6 +5,7 @@ http_0:
 	remember http = HTTP("https://clevy.io")
 
 	say http
+	goto end
 
 get_0:
 	remember http = HTTP("https://clevy.io")
@@ -12,11 +13,13 @@ get_0:
 	say http.get()
 
 	say http
+	goto end
 
 get_1:
 	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
 	say http.get().send()
+	goto end
 
 set_0:
 	remember http = HTTP("https://clevy.io")
@@ -24,6 +27,7 @@ set_0:
 	say http.set({"hello":"world"})
 
 	say http
+	goto end
 
 query_0:
 	remember http = HTTP("https://clevy.io")
@@ -31,6 +35,7 @@ query_0:
 	say http.query({"hello":"world"})
 
 	say http
+	goto end
 
 delete_0:
 	remember http = HTTP("https://clevy.io")
@@ -38,11 +43,13 @@ delete_0:
 	say http.delete({"hello":"world"})
 
 	say http
+	goto end
 
 delete_1:
 	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
 	say http.delete({"hello":"world"}).send()
+	goto end
 
 put_0:
 	remember http = HTTP("https://clevy.io")
@@ -50,6 +57,7 @@ put_0:
 	say http.put({"hello":"world"})
 
 	say http
+	goto end
 
 put_1:
 	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
@@ -60,6 +68,7 @@ put_1:
 		"body":"bar",
 		"userId":"1",
 	}).send()
+	goto end
 
 patch_0:
 	remember http = HTTP("https://clevy.io")
@@ -67,6 +76,7 @@ patch_0:
 	say http.patch({"hello":"world"})
 
 	say http
+	goto end
 
 patch_1:
 	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
@@ -74,6 +84,7 @@ patch_1:
 	say http.patch({
 		"title":"foo",
 	}).send()
+	goto end
 
 post_0:
 	remember http = HTTP("https://clevy.io")
@@ -81,6 +92,7 @@ post_0:
 	say http.post({"hello":"world"})
 
 	say http
+	goto end
 
 post_1:
 	use HTTP("https://jsonplaceholder.typicode.com/posts") as http
@@ -90,3 +102,5 @@ post_1:
 		"body":"bar",
 		"userId":"1",
 	}).send()
+	goto end
+	

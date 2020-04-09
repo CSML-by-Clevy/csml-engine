@@ -1,94 +1,142 @@
-// mod support;
+mod support;
 
-// use csmlinterpreter::data::event::Event;
+use csmlinterpreter::data::event::Event;
+use csmlinterpreter::data::ContextJson;
+use csmlinterpreter::data::hold::Hold;
 
-// use crate::support::tools::format_message;
-// use crate::support::tools::message_to_json_value;
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
 
-// use serde_json::Value;
+use serde_json::Value;
 
-// use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
+#[test]
+fn hold_test_none() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}, {"content":{"text":"2"}, "content_type":"text"}, {"content":{"text":"4"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
 
-// // fn format_message(event: Event, step: &str, instruction_index: Option<usize>) -> MessageData {
-// //     let text = read_file("CSML/basic_test/hold.csml".to_owned()).unwrap();
-// //     // instruction_index
-// //     let mut context = gen_context(serde_json::json!({}), serde_json::json!({}));
-// //     if let Some(index) = instruction_index {
-// //         context.hold = Some(Hold {
-// //             index,
-// //             step_vars: serde_json::json!({}),
-// //         });
-// //     };
-// //     interpret(&text, step, context, &event, None)
-// // }
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-// #[test]
-// fn hold_test_none() {
-//     let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}, {"content":{"text":"2"}, "content_type":"text"}, {"content":{"text":"4"}, "content_type":"text"}]}"#;
-//     let msg = format_message(gen_event(""), "start", None);
-//     let msg = format_message(
-//         Event::new("payload", "", serde_json::json!({})),
-//         "CSML/basic_test/hold.csml",
-//         "start",
-//     );
+    assert_eq!(v1, v2)
+}
 
-//     let v1: Value = message_to_json_value(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+#[test]
+fn hold_test_some_0() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}, {"content":{"text":"2"}, "content_type":"text"}, {"content":{"text":"4"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            Some(Hold::new(0, serde_json::json!({}))),
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
 
-//     assert_eq!(v1, v2)
-// }
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-// #[test]
-// fn hold_test_some_0() {
-//     let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}, {"content":{"text":"2"}, "content_type":"text"}, {"content":{"text":"4"}, "content_type":"text"}]}"#;
-//     let msg = format_message(gen_event(""), "start", Some(0));
+    assert_eq!(v1, v2)
+}
 
-//     let v1: Value = message_to_json_value(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+#[test]
+fn hold_test_some_5() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"4"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            Some(Hold::new(5, serde_json::json!({}))),
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
 
-//     assert_eq!(v1, v2)
-// }
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-// #[test]
-// fn hold_test_some_5() {
-//     let data = r#"{"memories":[], "messages":[{"content":{"text":"4"}, "content_type":"text"}]}"#;
-//     let msg = format_message(gen_event(""), "start", Some(5));
+    assert_eq!(v1, v2)
+}
 
-//     let v1: Value = message_to_json_value(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+#[test]
+fn hold_test_some_12() {
+    let data = r#"{"memories":[], "messages":[]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            Some(Hold::new(12, serde_json::json!({}))),
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
 
-//     assert_eq!(v1, v2)
-// }
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-// #[test]
-// fn hold_test_some_12() {
-//     let data = r#"{"memories":[], "messages":[]}"#;
-//     let msg = format_message(gen_event(""), "start", Some(12));
+    assert_eq!(v1, v2)
+}
 
-//     let v1: Value = message_to_json_value(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+#[test]
+fn hold_test_some_14() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"3"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            Some(Hold::new(14, serde_json::json!({}))),
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
 
-//     assert_eq!(v1, v2)
-// }
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-// #[test]
-// fn hold_test_some_14() {
-//     let data = r#"{"memories":[], "messages":[{"content":{"text":"3"}, "content_type":"text"}]}"#;
-//     let msg = format_message(gen_event(""), "start", Some(14));
+    assert_eq!(v1, v2)
+}
 
-//     let v1: Value = message_to_json_value(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
+#[test]
+fn hold_test_some_17() {
+    let data = r#"{"memories":[], "messages":[], "next_flow":null, "next_step":null}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            Some(Hold::new(17, serde_json::json!({}))),
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
 
-//     assert_eq!(v1, v2)
-// }
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
 
-// #[test]
-// fn hold_test_some_17() {
-//     let data = r#"{"memories":[], "messages":[], "next_flow":null, "next_step":null}"#;
-//     let msg = format_message(gen_event(""), "start", Some(17));
-
-//     let v1: Value = message_to_json_value(msg);
-//     let v2: Value = serde_json::from_str(data).unwrap();
-
-//     assert_eq!(v1, v2)
-// }
+    assert_eq!(v1, v2)
+}

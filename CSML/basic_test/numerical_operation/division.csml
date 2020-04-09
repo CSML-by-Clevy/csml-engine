@@ -13,7 +13,6 @@ div2:
 
 div3:
     say 4 / 0 + (2 * 10)
-
     goto end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,24 +21,31 @@ div3:
 
 division_array_step_0:
     say [] / []
+    goto end
 
 division_array_step_1:
     say [] / true
+    goto end
 
 division_array_step_2:
     say [] / 1.0
+    goto end
 
 division_array_step_3:
     say [] / 1
+    goto end
 
 division_array_step_4:
     say [] / null
+    goto end
 
 division_array_step_5:
     say [] / {}
+    goto end
 
 division_array_step_6:
     say [] / "1"
+    goto end
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DIVISION BOOLEAN
@@ -47,24 +53,31 @@ division_array_step_6:
 
 division_boolean_step_0:
     say true / []
+    goto end
 
 division_boolean_step_1:
     say true / true
+    goto end
 
 division_boolean_step_2:
     say true / 1.0
+    goto end
 
 division_boolean_step_3:
     say true / 1
+    goto end
 
 division_boolean_step_4:
     say true / null
+    goto end
 
 division_boolean_step_5:
     say true / {}
+    goto end
 
 division_boolean_step_6:
     say true / "1"
+    goto end
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DIVISION FLOAT
@@ -72,24 +85,31 @@ division_boolean_step_6:
 
 division_float_step_0:
     say 1.0 / []
+    goto end
 
 division_float_step_1:
     say 1.0 / true
+    goto end
 
 division_float_step_2:
     say 1.0 / 1.0
+    goto end
 
 division_float_step_3:
     say 1.0 / 1
+    goto end
 
 division_float_step_4:
     say 1.0 / null
+    goto end
 
 division_float_step_5:
     say 1.0 / {}
+    goto end
 
 division_float_step_6:
     say 1.0 / "1"
+    goto end
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DIVISION INT
@@ -97,24 +117,31 @@ division_float_step_6:
 
 division_int_step_0:
     say 1 / []
+    goto end
 
 division_int_step_1:
     say 1 / true
+    goto end
 
 division_int_step_2:
     say 1 / 1.0
+    goto end
 
 division_int_step_3:
     say 1 / 1
+    goto end
 
 division_int_step_4:
     say 1 / null
+    goto end
 
 division_int_step_5:
     say 1 / {}
+    goto end
 
 division_int_step_6:
     say 1 / "1"
+    goto end
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DIVISION NULL
@@ -122,24 +149,31 @@ division_int_step_6:
 
 division_null_step_0:
     say null / []
+    goto end
 
 division_null_step_1:
     say null / true
+    goto end
 
 division_null_step_2:
     say null / 1.0
+    goto end
 
 division_null_step_3:
     say null / 1
+    goto end
 
 division_null_step_4:
     say null / null
+    goto end
 
 division_null_step_5:
     say null / {}
+    goto end
 
 division_null_step_6:
     say null / "1"
+    goto end
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DIVISION OBJECT
@@ -147,24 +181,31 @@ division_null_step_6:
 
 division_object_step_0:
     say {} / []
+    goto end
 
 division_object_step_1:
     say {} / true
+    goto end
 
 division_object_step_2:
     say {} / 1.0
+    goto end
 
 division_object_step_3:
     say {} / 1
+    goto end
 
 division_object_step_4:
     say {} / null
+    goto end
 
 division_object_step_5:
     say {} / {}
+    goto end
 
 division_object_step_6:
     say {} / "1"
+    goto end
 
 ////////////////////////////////////////////////////////////////////////////////
 /// DIVISION STRING
@@ -172,21 +213,28 @@ division_object_step_6:
 
 division_string_step_0:
     say "1" / []
+    goto end
 
 division_string_step_1:
     say "1" / true
+    goto end
 
 division_string_step_2:
     say "1" / 1.0
+    goto end
 
 division_string_step_3:
     say "1" / 1
+    goto end
 
 division_string_step_4:
     say "1" / null
+    goto end
 
 division_string_step_5:
     say "1" / {}
+    goto end
 
 division_string_step_6:
     say "1" / "1"
+    goto end
