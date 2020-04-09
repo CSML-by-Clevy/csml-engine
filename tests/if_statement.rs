@@ -1,13 +1,11 @@
-mod support;
+// mod support;
 
-use csmlinterpreter::data::event::Event;
-use csmlinterpreter::data::ContextJson;
-use csmlinterpreter::data::hold::Hold;
+// use csmlinterpreter::data::event::Event;
 
-use crate::support::tools::format_message;
-use crate::support::tools::message_to_json_value;
+// use crate::support::tools::format_message;
+// use crate::support::tools::message_to_json_value;
 
-use serde_json::Value;
+// use serde_json::Value;
 
 // fn format_message(event: Event, step: &str) -> MessageData {
 //     let text = read_file("CSML/basic_test/if_statement.csml".to_owned()).unwrap();
@@ -22,35 +20,22 @@ use serde_json::Value;
 //     interpret(&text, step, context, &event, None)
 // }
 
+// #[test]
+// fn ok_equal_20() {
+//     let data = r#"{"messages":[{"content":{"text":"event == 20"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
+//     let msg = format_message(gen_event("20"), "start");
 
-#[test]
-fn ok_equal_20() {
-    let data = r#"{"messages":[{"content":{"text":"event == 20"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    // let msg = format_message(gen_event("20"), "start");
+//     let msg = format_message(
+//         Event::new("payload", "20", serde_json::json!({})),
+//         "CSML/basic_test/if_statement.csml",
+//         "start",
+//     );
 
-    // let msg = format_message(
-    //     Event::new("payload", "20", serde_json::json!({})),
-    //     "CSML/basic_test/if_statement.csml",
-    //     "start",
-    // );
-    let msg = format_message(
-        Event::new("payload", "20", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
-        "CSML/basic_test/if_statement.csml",
-    );
+//     let v1: Value = message_to_json_value(msg);
+//     let v2: Value = serde_json::from_str(data).unwrap();
 
-    let v1: Value = message_to_json_value(msg);
-    let v2: Value = serde_json::from_str(data).unwrap();
-
-    assert_eq!(v1, v2)
-}
+//     assert_eq!(v1, v2)
+// }
 
 // #[test]
 // fn ok_greater_20() {

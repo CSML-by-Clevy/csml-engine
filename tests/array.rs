@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -13,8 +14,15 @@ fn array_step_0() {
         r#"{"memories":[{"key":"vec", "value":[]}, {"key":"vec", "value": [42]}], "messages":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_0",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -37,8 +45,15 @@ fn array_step_1() {
     "#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_1",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_1",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -58,8 +73,15 @@ fn array_step_2() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_2",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_2",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -79,8 +101,15 @@ fn array_step_3() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_3",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_3",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -93,8 +122,15 @@ fn array_step_3() {
 fn array_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_4",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_4",
     );
 
     assert_eq!(msg.messages[0].content_type, "error")
@@ -104,8 +140,15 @@ fn array_step_4() {
 fn array_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_5",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_5",
     );
 
     assert_eq!(msg.messages[0].content_type, "error")
@@ -115,8 +158,15 @@ fn array_step_5() {
 fn array_step_6() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_6",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_6",
     );
 
     assert_eq!(msg.messages[0].content_type, "error")
@@ -126,8 +176,15 @@ fn array_step_6() {
 fn array_step_7() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_7",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_7",
     );
 
     assert_eq!(msg.messages[0].content_type, "error")
@@ -137,8 +194,15 @@ fn array_step_7() {
 fn array_step_8() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_8",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_8",
     );
 
     assert_eq!(msg.messages[0].content_type, "error")
@@ -149,8 +213,15 @@ fn array_step_9() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":""}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_9",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_9",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -164,8 +235,15 @@ fn array_step_10() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_10",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_10",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -179,8 +257,15 @@ fn array_step_11() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"1,2"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_11",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "step_11",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -194,8 +279,15 @@ fn array_index_of_0() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"-1"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "array_index_of_0",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "array_index_of_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -209,8 +301,15 @@ fn array_index_of_1() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "array_index_of_1",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "array_index_of_1",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -224,8 +323,15 @@ fn array_index_of_2() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"2"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "array_index_of_2",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "array_index_of_2",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -239,8 +345,15 @@ fn array_find_0() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":null}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "array_find_0",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "array_find_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -254,8 +367,15 @@ fn array_find_1() {
     let data = r#"{"memories":[], "messages":[{"content":[2, 2], "content_type":"array"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "array_find_1",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "array_find_1",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -270,8 +390,15 @@ fn array_find_2() {
         r#"{"memories":[], "messages":[{"content":[{"obj":"42"}], "content_type":"array"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "array_find_2",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/array.csml",
-        "array_find_2",
     );
 
     let v1: Value = message_to_json_value(msg);

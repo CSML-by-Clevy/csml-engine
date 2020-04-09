@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -21,8 +22,15 @@ fn event_step_0() {
             "content",
             serde_json::Value::Object(serde_json::Map::new()),
         ),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_0",
+            "flow",
+        ),
         "CSML/basic_test/event.csml",
-        "step_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -53,8 +61,15 @@ fn event_step_1() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_1",
+            "flow",
+        ),
         "CSML/basic_test/event.csml",
-        "step_1",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -77,8 +92,15 @@ fn event_step_2() {
             "content",
             serde_json::Value::Object(serde_json::Map::new()),
         ),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_2",
+            "flow",
+        ),
         "CSML/basic_test/event.csml",
-        "step_2",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -101,8 +123,15 @@ fn event_step_3() {
             "content",
             serde_json::Value::Object(serde_json::Map::new()),
         ),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_3",
+            "flow",
+        ),
         "CSML/basic_test/event.csml",
-        "step_3",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -129,8 +158,15 @@ fn event_step_4() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_4",
+            "flow",
+        ),
         "CSML/basic_test/event.csml",
-        "step_4",
     );
 
     let v1: Value = message_to_json_value(msg);

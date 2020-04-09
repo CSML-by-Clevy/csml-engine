@@ -1,23 +1,29 @@
 mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::context::ContextJson;
+use csmlinterpreter::data::event::Event;
+
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
+
 use serde_json::Value;
-
-use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
-
-fn format_message(event: Event, file: &str, step: &str) -> MessageData {
-    let text = read_file(format!("CSML/basic_test/built-in/{}.csml", file)).unwrap();
-
-    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
-
-    interpret(&text, step, context, &event, None)
-}
 
 #[test]
 fn ok_text() {
-    let data = r#"{"messages":[ {"content":{"text": "Hola"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "text", "start");
+    let data =
+        r#"{"messages":[ {"content":{"text": "Hola"},"content_type":"text"} ],"memories":[]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/text.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -27,8 +33,20 @@ fn ok_text() {
 
 #[test]
 fn ok_text_step1() {
-    let data = r#"{"messages":[ {"content":{"text": "Hola"},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "text", "text1");
+    let data =
+        r#"{"messages":[ {"content":{"text": "Hola"},"content_type":"text"} ],"memories":[]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "text1",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/text.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -38,8 +56,19 @@ fn ok_text_step1() {
 
 #[test]
 fn ok_text_step2() {
-    let data = r#"{"messages":[ {"content":{"text": ""},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "text", "text2");
+    let data = r#"{"messages":[ {"content":{"text": ""},"content_type":"text"} ],"memories":[]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "text2",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/text.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -49,8 +78,19 @@ fn ok_text_step2() {
 
 #[test]
 fn ok_text_step3() {
-    let data = r#"{"messages":[ {"content":{"text": null},"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "text", "text3");
+    let data = r#"{"messages":[ {"content":{"text": null},"content_type":"text"} ],"memories":[]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "text3",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/text.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
 

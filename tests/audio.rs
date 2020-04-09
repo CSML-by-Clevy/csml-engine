@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -13,8 +14,15 @@ fn ok_audio() {
         r#"{"messages":[ {"content":{ "url": "test" },"content_type":"audio"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
         "CSML/basic_test/built-in/audio.csml",
-        "start",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -28,8 +36,15 @@ fn ok_audio_step2() {
     let data = r#"{"messages":[ {"content":{"url": "test", "service": "youtube" },"content_type":"audio"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "audio1",
+            "flow",
+        ),
         "CSML/basic_test/built-in/audio.csml",
-        "audio1",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -43,8 +58,15 @@ fn ok_audio_step3() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "service": "youtube" },"content_type":"audio"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "audio2",
+            "flow",
+        ),
         "CSML/basic_test/built-in/audio.csml",
-        "audio2",
     );
 
     let v1: Value = message_to_json_value(msg);

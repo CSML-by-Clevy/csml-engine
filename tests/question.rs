@@ -1,18 +1,12 @@
 mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::context::ContextJson;
+use csmlinterpreter::data::event::Event;
+
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
+
 use serde_json::Value;
-
-use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
-
-fn format_message(event: Event, file: &str, step: &str) -> MessageData {
-    let text = read_file(format!("CSML/basic_test/built-in/{}.csml", file)).unwrap();
-
-    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
-
-    interpret(&text, step, context, &event, None)
-}
 
 #[test]
 fn ok_button() {
@@ -32,12 +26,20 @@ fn ok_button() {
                 "content_type": "button"
             }
         ],
-        "next_flow": null,
-        "memories": [],
-        "next_step": "end"
+        "memories": []
     }"#;
-
-    let msg = format_message(gen_event(""), "question", "simple_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/question.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -78,11 +80,20 @@ fn ok_question() {
             },
             "content_type":"question"
         } ],
-    "next_flow":null,
-    "memories":[],
-    "next_step":"end"
+    "memories":[]
     }"#;
-    let msg = format_message(gen_event(""), "question", "start");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/question.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -123,11 +134,20 @@ fn ok_question_step1() {
             },
             "content_type":"question"
         } ],
-    "next_flow":null,
-    "memories":[],
-    "next_step":"end"
+    "memories":[]
     }"#;
-    let msg = format_message(gen_event(""), "question", "question1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "question1",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/question.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -167,11 +187,20 @@ fn ok_question_step2() {
             },
             "content_type":"question"
         } ],
-    "next_flow":null,
-    "memories":[],
-    "next_step":"end"
+    "memories":[]
     }"#;
-    let msg = format_message(gen_event(""), "question", "question2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "question2",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/question.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

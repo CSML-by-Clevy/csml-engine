@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -35,8 +36,15 @@ fn ok_card() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/built-in/carousel.csml",
-        "simple_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -75,8 +83,15 @@ fn ok_carousel() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
         "CSML/basic_test/built-in/carousel.csml",
-        "start",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -115,8 +130,15 @@ fn ok_carousel_step1() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "carousel1",
+            "flow",
+        ),
         "CSML/basic_test/built-in/carousel.csml",
-        "carousel1",
     );
 
     let v1: Value = message_to_json_value(msg);

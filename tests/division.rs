@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -12,8 +13,15 @@ fn ok_division() {
     let data = r#"{"messages":[ {"content":{"text":"2"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "start",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -27,8 +35,15 @@ fn ok_division_2() {
     let data = r#"{"messages":[ {"content":{"text":"21.333333333333332"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "div2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "div2",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -51,6 +66,14 @@ fn ok_division_2() {
 // let context = gen_context(serde_json::json!({}), serde_json::json!({}));
 //     let msg = format_message(
 //         Event::new("payload", "", serde_json::json!({})),
+// ContextJson::new(
+//             serde_json::json!({}),
+//             serde_json::json!({}),
+//             None,
+//             None,
+//             "simple_0",
+//             "flow",
+//         ),
 //         "CSML/basic_test/numerical_operation/division.csml",
 //         "div3"
 //     );
@@ -76,8 +99,15 @@ fn ok_division_2() {
 fn division_array_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_array_step_0",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -101,8 +131,15 @@ fn division_array_step_0() {
 fn division_array_step_1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_array_step_1",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_array_step_1",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -126,8 +163,15 @@ fn division_array_step_1() {
 fn division_array_step_2() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_array_step_2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_array_step_2",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -151,8 +195,15 @@ fn division_array_step_2() {
 fn division_array_step_3() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_array_step_3",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_array_step_3",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -176,8 +227,15 @@ fn division_array_step_3() {
 fn division_array_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_array_step_4",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_array_step_4",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -201,8 +259,15 @@ fn division_array_step_4() {
 fn division_array_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_array_step_5",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_array_step_5",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -226,8 +291,15 @@ fn division_array_step_5() {
 fn division_array_step_6() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_array_step_6",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_array_step_6",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -255,8 +327,15 @@ fn division_array_step_6() {
 fn division_boolean_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_boolean_step_0",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -280,8 +359,15 @@ fn division_boolean_step_0() {
 fn division_boolean_step_1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_boolean_step_1",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_boolean_step_1",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -305,8 +391,15 @@ fn division_boolean_step_1() {
 fn division_boolean_step_2() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_boolean_step_2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_boolean_step_2",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -330,8 +423,15 @@ fn division_boolean_step_2() {
 fn division_boolean_step_3() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_boolean_step_3",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_boolean_step_3",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -355,8 +455,15 @@ fn division_boolean_step_3() {
 fn division_boolean_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_boolean_step_4",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_boolean_step_4",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -380,8 +487,15 @@ fn division_boolean_step_4() {
 fn division_boolean_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_boolean_step_5",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_boolean_step_5",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -405,8 +519,15 @@ fn division_boolean_step_5() {
 fn division_boolean_step_6() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_boolean_step_6",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_boolean_step_6",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -434,8 +555,15 @@ fn division_boolean_step_6() {
 fn division_float_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_float_step_0",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -459,8 +587,15 @@ fn division_float_step_0() {
 fn division_float_step_1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_float_step_1",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_float_step_1",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -490,8 +625,15 @@ fn division_float_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_float_step_2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_float_step_2",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -510,8 +652,15 @@ fn division_float_step_3() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_float_step_3",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_float_step_3",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -524,8 +673,15 @@ fn division_float_step_3() {
 fn division_float_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_float_step_4",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_float_step_4",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -549,8 +705,15 @@ fn division_float_step_4() {
 fn division_float_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_float_step_5",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_float_step_5",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -580,8 +743,15 @@ fn division_float_step_6() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_float_step_6",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_float_step_6",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -598,8 +768,15 @@ fn division_float_step_6() {
 fn division_int_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_int_step_0",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -623,8 +800,15 @@ fn division_int_step_0() {
 fn division_int_step_1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_int_step_1",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_int_step_1",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -654,8 +838,15 @@ fn division_int_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_int_step_2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_int_step_2",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -674,8 +865,15 @@ fn division_int_step_3() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_int_step_3",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_int_step_3",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -688,8 +886,15 @@ fn division_int_step_3() {
 fn division_int_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_int_step_4",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_int_step_4",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -713,8 +918,15 @@ fn division_int_step_4() {
 fn division_int_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_int_step_5",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_int_step_5",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -744,8 +956,15 @@ fn division_int_step_6() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_int_step_6",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_int_step_6",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -762,8 +981,15 @@ fn division_int_step_6() {
 fn division_null_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_null_step_0",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -787,8 +1013,15 @@ fn division_null_step_0() {
 fn division_null_step_1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_null_step_1",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_null_step_1",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -812,8 +1045,15 @@ fn division_null_step_1() {
 fn division_null_step_2() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_null_step_2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_null_step_2",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -837,8 +1077,15 @@ fn division_null_step_2() {
 fn division_null_step_3() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_null_step_3",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_null_step_3",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -862,8 +1109,15 @@ fn division_null_step_3() {
 fn division_null_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_null_step_4",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_null_step_4",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -887,8 +1141,15 @@ fn division_null_step_4() {
 fn division_null_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_null_step_5",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_null_step_5",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -912,8 +1173,15 @@ fn division_null_step_5() {
 fn division_null_step_6() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_null_step_6",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_null_step_6",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -941,8 +1209,15 @@ fn division_null_step_6() {
 fn division_object_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_object_step_0",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -966,8 +1241,15 @@ fn division_object_step_0() {
 fn division_object_step_1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_object_step_1",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_object_step_1",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -991,8 +1273,15 @@ fn division_object_step_1() {
 fn division_object_step_2() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_object_step_2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_object_step_2",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1016,8 +1305,15 @@ fn division_object_step_2() {
 fn division_object_step_3() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_object_step_3",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_object_step_3",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1041,8 +1337,15 @@ fn division_object_step_3() {
 fn division_object_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_object_step_4",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_object_step_4",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1066,8 +1369,15 @@ fn division_object_step_4() {
 fn division_object_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_object_step_5",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_object_step_5",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1091,8 +1401,15 @@ fn division_object_step_5() {
 fn division_object_step_6() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_object_step_6",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_object_step_6",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1120,8 +1437,15 @@ fn division_object_step_6() {
 fn division_string_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "simple_0",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_string_step_0",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1145,8 +1469,15 @@ fn division_string_step_0() {
 fn division_string_step_1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_string_step_1",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_string_step_1",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1176,8 +1507,15 @@ fn division_string_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_string_step_2",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_string_step_2",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -1196,8 +1534,15 @@ fn division_string_step_3() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_string_step_3",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_string_step_3",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -1210,8 +1555,15 @@ fn division_string_step_3() {
 fn division_string_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_string_step_4",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_string_step_4",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1235,8 +1587,15 @@ fn division_string_step_4() {
 fn division_string_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_string_step_5",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_string_step_5",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1266,8 +1625,15 @@ fn division_string_step_6() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "division_string_step_6",
+            "flow",
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
-        "division_string_step_6",
     );
 
     let v1: Value = message_to_json_value(msg);

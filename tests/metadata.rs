@@ -1,17 +1,12 @@
 mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::context::ContextJson;
+use csmlinterpreter::data::event::Event;
+
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
+
 use serde_json::Value;
-
-use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
-
-fn format_message(event: Event, step: &str) -> MessageData {
-    let text = read_file("CSML/basic_test/metadata.csml".to_owned()).unwrap();
-    let context = gen_context(serde_json::json!({}), serde_json::json!({"var": 42}));
-
-    interpret(&text, step, context, &event, None)
-}
 
 #[test]
 fn metadata() {
@@ -19,11 +14,20 @@ fn metadata() {
         "memories":[],
         "messages":[
             {"content":{"var": 42}, "content_type":"object"}
-        ],
-        "next_flow":null,
-        "next_step":"end"
+        ]
     }"#;
-    let msg = format_message(gen_event(""), "start");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({"var": 42}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/metadata.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -36,11 +40,20 @@ fn metadata_step1() {
         "memories":[],
         "messages":[
             {"content": {"text": "42" }, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":"end"
+        ]
     }"#;
-    let msg = format_message(gen_event(""), "step1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({"var": 42}),
+            None,
+            None,
+            "step1",
+            "flow",
+        ),
+        "CSML/basic_test/metadata.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -54,11 +67,20 @@ fn metadata_step2() {
         "memories":[],
         "messages":[
             {"content": {"text": "42" }, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":"end"
+        ]
     }"#;
-    let msg = format_message(gen_event(""), "step2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({"var": 42}),
+            None,
+            None,
+            "step2",
+            "flow",
+        ),
+        "CSML/basic_test/metadata.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();

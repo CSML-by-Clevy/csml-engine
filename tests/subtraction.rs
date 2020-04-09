@@ -1,23 +1,28 @@
-pub mod support;
+mod support;
 
-use csmlinterpreter::data::{Event, MessageData};
-use csmlinterpreter::interpret;
+use csmlinterpreter::data::context::ContextJson;
+use csmlinterpreter::data::event::Event;
+
+use crate::support::tools::format_message;
+use crate::support::tools::message_to_json_value;
+
 use serde_json::Value;
-use support::tools::{gen_context, gen_event, message_to_json_value, read_file};
-
-fn format_message(event: Event, name: &str, step: &str) -> MessageData {
-    let file = format!("CSML/basic_test/numerical_operation/{}", name);
-    let text = read_file(file).unwrap();
-
-    let context = gen_context(serde_json::json!({}), serde_json::json!({}));
-
-    interpret(&text, step, context, &event, None)
-}
 
 #[test]
 fn ok_subtraction() {
-    let data = r#"{"messages":[ {"content":{"text":"-3"},"content_type":"text"}],"next_flow":null,"memories":[],"next_step":"end"}"#;
-    let msg = format_message(gen_event(""), "subtraction.csml", "start");
+    let data = r#"{"messages":[ {"content":{"text":"-3"},"content_type":"text"}],"memories":[]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -32,9 +37,16 @@ fn ok_subtraction() {
 #[test]
 fn subtraction_array_step_0() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_array_step_0",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_array_step_0",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -57,9 +69,16 @@ fn subtraction_array_step_0() {
 #[test]
 fn subtraction_array_step_1() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_array_step_1",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_array_step_1",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -82,9 +101,16 @@ fn subtraction_array_step_1() {
 #[test]
 fn subtraction_array_step_2() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_array_step_2",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_array_step_2",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -107,9 +133,16 @@ fn subtraction_array_step_2() {
 #[test]
 fn subtraction_array_step_3() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_array_step_3",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_array_step_3",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -132,9 +165,16 @@ fn subtraction_array_step_3() {
 #[test]
 fn subtraction_array_step_4() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_array_step_4",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_array_step_4",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -157,9 +197,16 @@ fn subtraction_array_step_4() {
 #[test]
 fn subtraction_array_step_5() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_array_step_5",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_array_step_5",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -182,9 +229,16 @@ fn subtraction_array_step_5() {
 #[test]
 fn subtraction_array_step_6() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_array_step_6",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_array_step_6",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -211,9 +265,16 @@ fn subtraction_array_step_6() {
 #[test]
 fn subtraction_boolean_step_0() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_boolean_step_0",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_boolean_step_0",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -236,9 +297,16 @@ fn subtraction_boolean_step_0() {
 #[test]
 fn subtraction_boolean_step_1() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_boolean_step_1",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_boolean_step_1",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -261,9 +329,16 @@ fn subtraction_boolean_step_1() {
 #[test]
 fn subtraction_boolean_step_2() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_boolean_step_2",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_boolean_step_2",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -286,9 +361,16 @@ fn subtraction_boolean_step_2() {
 #[test]
 fn subtraction_boolean_step_3() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_boolean_step_3",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_boolean_step_3",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -311,9 +393,16 @@ fn subtraction_boolean_step_3() {
 #[test]
 fn subtraction_boolean_step_4() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_boolean_step_4",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_boolean_step_4",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -336,9 +425,16 @@ fn subtraction_boolean_step_4() {
 #[test]
 fn subtraction_boolean_step_5() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_boolean_step_5",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_boolean_step_5",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -361,9 +457,16 @@ fn subtraction_boolean_step_5() {
 #[test]
 fn subtraction_boolean_step_6() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_boolean_step_6",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_boolean_step_6",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -390,9 +493,16 @@ fn subtraction_boolean_step_6() {
 #[test]
 fn subtraction_float_step_0() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_float_step_0",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_float_step_0",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -415,9 +525,16 @@ fn subtraction_float_step_0() {
 #[test]
 fn subtraction_float_step_1() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_float_step_1",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_float_step_1",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -444,13 +561,18 @@ fn subtraction_float_step_2() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_float_step_2",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_float_step_2",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -466,13 +588,18 @@ fn subtraction_float_step_3() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_float_step_3",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_float_step_3",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -484,9 +611,16 @@ fn subtraction_float_step_3() {
 #[test]
 fn subtraction_float_step_4() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_float_step_4",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_float_step_4",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -509,9 +643,16 @@ fn subtraction_float_step_4() {
 #[test]
 fn subtraction_float_step_5() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_float_step_5",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_float_step_5",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -538,13 +679,18 @@ fn subtraction_float_step_6() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_float_step_6",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_float_step_6",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -559,7 +705,18 @@ fn subtraction_float_step_6() {
 
 #[test]
 fn subtraction_int_step_0() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_int_step_0",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -580,7 +737,18 @@ fn subtraction_int_step_0() {
 
 #[test]
 fn subtraction_int_step_1() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_int_step_1",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -606,10 +774,19 @@ fn subtraction_int_step_2() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_2");
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_int_step_2",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -624,10 +801,19 @@ fn subtraction_int_step_3() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_3");
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_int_step_3",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -637,7 +823,18 @@ fn subtraction_int_step_3() {
 
 #[test]
 fn subtraction_int_step_4() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_int_step_4",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -658,7 +855,18 @@ fn subtraction_int_step_4() {
 
 #[test]
 fn subtraction_int_step_5() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_int_step_5",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -684,10 +892,19 @@ fn subtraction_int_step_6() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_int_step_6");
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_int_step_6",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -701,7 +918,18 @@ fn subtraction_int_step_6() {
 
 #[test]
 fn subtraction_null_step_0() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_0");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_null_step_0",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -722,7 +950,18 @@ fn subtraction_null_step_0() {
 
 #[test]
 fn subtraction_null_step_1() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_1");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_null_step_1",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -743,7 +982,18 @@ fn subtraction_null_step_1() {
 
 #[test]
 fn subtraction_null_step_2() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_2");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_null_step_2",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -764,7 +1014,18 @@ fn subtraction_null_step_2() {
 
 #[test]
 fn subtraction_null_step_3() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_3");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_null_step_3",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -785,7 +1046,18 @@ fn subtraction_null_step_3() {
 
 #[test]
 fn subtraction_null_step_4() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_4");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_null_step_4",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -806,7 +1078,18 @@ fn subtraction_null_step_4() {
 
 #[test]
 fn subtraction_null_step_5() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_5");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_null_step_5",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -827,7 +1110,18 @@ fn subtraction_null_step_5() {
 
 #[test]
 fn subtraction_null_step_6() {
-    let msg = format_message(gen_event(""), "subtraction.csml", "subtraction_null_step_6");
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_null_step_6",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
+    );
 
     let value: Value = message_to_json_value(msg.to_owned());
 
@@ -853,9 +1147,16 @@ fn subtraction_null_step_6() {
 #[test]
 fn subtraction_object_step_0() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_object_step_0",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_object_step_0",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -878,9 +1179,16 @@ fn subtraction_object_step_0() {
 #[test]
 fn subtraction_object_step_1() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_object_step_1",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_object_step_1",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -903,9 +1211,16 @@ fn subtraction_object_step_1() {
 #[test]
 fn subtraction_object_step_2() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_object_step_2",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_object_step_2",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -928,9 +1243,16 @@ fn subtraction_object_step_2() {
 #[test]
 fn subtraction_object_step_3() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_object_step_3",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_object_step_3",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -953,9 +1275,16 @@ fn subtraction_object_step_3() {
 #[test]
 fn subtraction_object_step_4() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_object_step_4",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_object_step_4",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -978,9 +1307,16 @@ fn subtraction_object_step_4() {
 #[test]
 fn subtraction_object_step_5() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_object_step_5",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_object_step_5",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1003,9 +1339,16 @@ fn subtraction_object_step_5() {
 #[test]
 fn subtraction_object_step_6() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_object_step_6",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_object_step_6",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1032,9 +1375,16 @@ fn subtraction_object_step_6() {
 #[test]
 fn subtraction_string_step_0() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_string_step_0",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_string_step_0",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1057,9 +1407,16 @@ fn subtraction_string_step_0() {
 #[test]
 fn subtraction_string_step_1() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_string_step_1",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_string_step_1",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1086,13 +1443,18 @@ fn subtraction_string_step_2() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_string_step_2",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_string_step_2",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -1108,13 +1470,18 @@ fn subtraction_string_step_3() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_string_step_3",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_string_step_3",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -1126,9 +1493,16 @@ fn subtraction_string_step_3() {
 #[test]
 fn subtraction_string_step_4() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_string_step_4",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_string_step_4",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1151,9 +1525,16 @@ fn subtraction_string_step_4() {
 #[test]
 fn subtraction_string_step_5() {
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_string_step_5",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_string_step_5",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let value: Value = message_to_json_value(msg.to_owned());
@@ -1180,13 +1561,18 @@ fn subtraction_string_step_6() {
         ],
         "messages":[
             {"content":{"text": "0"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
-        gen_event(""),
-        "subtraction.csml",
-        "subtraction_string_step_6",
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "subtraction_string_step_6",
+            "flow",
+        ),
+        "CSML/basic_test/numerical_operation/subtraction.csml",
     );
 
     let v1: Value = message_to_json_value(msg);

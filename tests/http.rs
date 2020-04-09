@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -41,8 +42,15 @@ fn http_http_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "http_0",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/http.csml",
-        "http_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -98,8 +106,15 @@ fn http_get_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "get_0",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/http.csml",
-        "get_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -154,11 +169,18 @@ fn http_set_0() {
                 "content_type":"http"
             }
         ]}"#;
-        let msg = format_message(
-            Event::new("payload", "", serde_json::json!({})),
-            "CSML/basic_test/stdlib/http.csml",
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
             "set_0",
-        );
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/http.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -213,11 +235,18 @@ fn http_query_0() {
                 "content_type":"http"
             }
         ]}"#;
-        let msg = format_message(
-            Event::new("payload", "", serde_json::json!({})),
-            "CSML/basic_test/stdlib/http.csml",
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
             "query_0",
-        );
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/http.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -272,11 +301,18 @@ fn http_delete_0() {
                 "content_type":"http"
             }
         ]}"#;
-        let msg = format_message(
-            Event::new("payload", "", serde_json::json!({})),
-            "CSML/basic_test/stdlib/http.csml",
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
             "delete_0",
-        );
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/http.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -331,11 +367,18 @@ fn http_put_0() {
                 "content_type":"http"
             }
         ]}"#;
-        let msg = format_message(
-            Event::new("payload", "", serde_json::json!({})),
-            "CSML/basic_test/stdlib/http.csml",
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
             "put_0",
-        );
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/http.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -390,11 +433,18 @@ fn http_patch_0() {
                 "content_type":"http"
             }
         ]}"#;
-        let msg = format_message(
-            Event::new("payload", "", serde_json::json!({})),
-            "CSML/basic_test/stdlib/http.csml",
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
             "patch_0",
-        );
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/http.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
@@ -449,15 +499,21 @@ fn http_post_0() {
                 "content_type":"http"
             }
         ]}"#;
-        let msg = format_message(
-            Event::new("payload", "", serde_json::json!({})),
-            "CSML/basic_test/stdlib/http.csml",
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
             "post_0",
-        );
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/http.csml",
+    );
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
 
     assert_eq!(v1, v2)
 }
-

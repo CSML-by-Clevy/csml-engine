@@ -75,8 +75,8 @@
 //     )));
 // }
 
-// fn main() {
-//     let flow = read_file("CSML/examples/hello_world.csml".to_owned()).unwrap();
+fn main() {
+    //     let flow = read_file("CSML/examples/hello_world.csml".to_owned()).unwrap();
 
-//     interpret_flow(&flow, "start");
-// }
+    //     interpret_flow(&flow, "start");
+}

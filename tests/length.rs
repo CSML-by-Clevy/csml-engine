@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -9,11 +10,19 @@ use serde_json::Value;
 
 #[test]
 fn ok_length() {
-    let data = r#"{"messages":[ {"content":{ "text": "5"  },"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data =
+        r#"{"messages":[ {"content":{ "text": "5"  },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
         "CSML/basic_test/built-in/length.csml",
-        "start",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -24,11 +33,19 @@ fn ok_length() {
 
 #[test]
 fn ok_length_1() {
-    let data = r#"{"messages":[ {"content":{ "text": "2"  },"content_type":"text"} ],"next_flow":null,"memories":[],"next_step":"end"}"#;
+    let data =
+        r#"{"messages":[ {"content":{ "text": "2"  },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_0",
+            "flow",
+        ),
         "CSML/basic_test/built-in/length.csml",
-        "step_0",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -41,8 +58,15 @@ fn ok_length_1() {
 fn ok_length_2() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_1",
+            "flow",
+        ),
         "CSML/basic_test/built-in/length.csml",
-        "step_1",
     );
 
     assert_eq!(msg.messages[0].content_type, "error")

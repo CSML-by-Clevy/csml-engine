@@ -1,5 +1,6 @@
 mod support;
 
+use csmlinterpreter::data::context::ContextJson;
 use csmlinterpreter::data::event::Event;
 
 use crate::support::tools::format_message;
@@ -13,8 +14,15 @@ fn ok_find() {
         r#"{"messages":[ {"content":{ "text": "true"  },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "start",
+            "flow",
+        ),
         "CSML/basic_test/built-in/find.csml",
-        "start",
     );
 
     let v1: Value = message_to_json_value(msg);
@@ -29,8 +37,15 @@ fn ok_find_step1() {
         r#"{"messages":[ {"content":{ "text": "false" },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "find1",
+            "flow",
+        ),
         "CSML/basic_test/built-in/find.csml",
-        "find1",
     );
 
     let v1: Value = message_to_json_value(msg);
