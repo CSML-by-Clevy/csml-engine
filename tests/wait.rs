@@ -10,7 +10,7 @@ use serde_json::Value;
 
 #[test]
 fn wait_0() {
-    let data = r#"{"messages":[ {"content":{"error": "Builtin Wait expect one argument of type int or float | example: Wait(3) at line 5, column 6"},"content_type":"error"} ],"next_flow":null,"memories":[],"next_step":null}"#;
+    let data = r#"{"messages":[ {"content":{"error": "Builtin Wait expect one argument of type int or float | example: Wait(3) at line 5, column 6"},"content_type":"error"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(

@@ -21,6 +21,7 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
+use crate::parser::ExitCondition;
 
 use curl::easy::Easy;
 use std::collections::HashMap;
@@ -38,10 +39,7 @@ fn execute_step(
 ) -> MessageData {
     let flow = data.flow.to_owned();
 
-    let message_data = match flow
-        .flow_instructions
-        .get(&InstructionType::NormalStep(step.to_owned()))
-    {
+    let message_data = match flow.flow_instructions.get(&InstructionType::NormalStep(step.to_owned())) {
         Some(Expr::Scope { scope, .. }) => interpret_scope(scope, &mut data, rip, &sender),
         _ => Err(ErrorInfo::new(
             Interval::new_as_u32(0, 0),

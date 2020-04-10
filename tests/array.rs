@@ -39,8 +39,7 @@ fn array_step_1() {
         "messages":[
             {"content":{"text": "42"}, "content_type":"text"},
             {"content":[], "content_type":"array"}
-        ],
-        "next_flow":null, "next_step":"end"
+        ]
     }
     "#;
     let msg = format_message(
@@ -67,9 +66,7 @@ fn array_step_2() {
     let data = r#"
         {
             "memories":[{"key":"vec", "value": [42]}, {"key":"vec", "value": []}],
-            "messages":[{"content":{"text": "false"},"content_type":"text"}, {"content":{"text": "true"}, "content_type":"text"}],
-            "next_flow":null,
-            "next_step":"end"
+            "messages":[{"content":{"text": "false"},"content_type":"text"}, {"content":{"text": "true"}, "content_type":"text"}]
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
@@ -95,9 +92,7 @@ fn array_step_3() {
     let data = r#"
         {
             "memories":[{"key":"vec", "value": [42]}, {"key":"vec", "value": [24, 42]}, {"key":"vec", "value": [42]}],
-            "messages":[{"content":{"text": "2"}, "content_type":"text"}, {"content":{"text": "24"}, "content_type":"text"}, {"content":{"text": "42"}, "content_type":"text"}],
-            "next_flow":null,
-            "next_step":"end"
+            "messages":[{"content":{"text": "2"}, "content_type":"text"}, {"content":{"text": "24"}, "content_type":"text"}, {"content":{"text": "42"}, "content_type":"text"}]
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),

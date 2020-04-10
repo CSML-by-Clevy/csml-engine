@@ -100,7 +100,7 @@ impl MessageData {
                         content: literal.primitive.to_json(),
                     }],
                     hold: None,
-                    exit_condition: None,
+                    exit_condition: Some(ExitCondition::Error),
                 }
             }
         }

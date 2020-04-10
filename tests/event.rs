@@ -116,7 +116,7 @@ fn event_step_3() {
         ],
         "messages":[
             {"content":{}, "content_type":"content_type"}
-        ]c}"#;
+        ]}"#;
     let msg = format_message(
         Event::new(
             "content_type",

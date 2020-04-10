@@ -19,7 +19,7 @@ equal_array_step_2:
 
 equal_array_step_3:
     say [] == 1
-    goto ends
+    goto end
 
 equal_array_step_4:
     say [] == null

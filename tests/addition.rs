@@ -561,9 +561,7 @@ fn addition_float_step_2() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -590,9 +588,7 @@ fn addition_float_step_3() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -683,9 +679,7 @@ fn addition_float_step_6() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -780,9 +774,7 @@ fn addition_int_step_2() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -809,9 +801,7 @@ fn addition_int_step_3() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -902,9 +892,7 @@ fn addition_int_step_6() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -1455,9 +1443,7 @@ fn addition_string_step_2() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -1484,9 +1470,7 @@ fn addition_string_step_3() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -1577,9 +1561,7 @@ fn addition_string_step_6() {
         ],
         "messages":[
             {"content":{"text": "2"}, "content_type":"text"}
-        ],
-        "next_flow":null,
-        "next_step":null}"#;
+        ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
