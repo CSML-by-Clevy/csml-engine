@@ -1,3 +1,4 @@
+use crate::data::execution_context::ExecutionContext;
 use crate::data::hold::Hold;
 use crate::data::message::Message;
 use crate::data::Memories;
@@ -8,13 +9,12 @@ use std::sync::mpsc;
 // DATA STRUCTURE
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum MSG {
     Memory(Memories),
     Message(Message),
     Hold(Hold),
-    NextFlow(String),
-    NextStep(String),
+    Next(ExecutionContext),
     Error(Message),
 }
 

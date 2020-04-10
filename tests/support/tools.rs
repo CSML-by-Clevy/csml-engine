@@ -22,6 +22,7 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
     Ok(contents)
 }
 
+#[allow(dead_code)]
 pub fn format_message(event: Event, context: ContextJson, filepath: &str) -> MessageData {
     let content = read_file(filepath.to_string()).unwrap();
 
@@ -31,6 +32,7 @@ pub fn format_message(event: Event, context: ContextJson, filepath: &str) -> Mes
     interpret(bot, context, event, None)
 }
 
+#[allow(dead_code)]
 pub fn message_to_json_value(result: MessageData) -> Value {
     let mut message: Map<String, Value> = Map::new();
     let mut vec = vec![];
