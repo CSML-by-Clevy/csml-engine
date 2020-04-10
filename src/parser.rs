@@ -47,7 +47,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                     line: err.input.location_line(),
                     column: err.input.get_column() as u32,
                 },
-                err.error.to_owned(),
+                err.error,
             )),
             Err::Incomplete(_err) => unimplemented!(),
         },

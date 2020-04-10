@@ -58,7 +58,7 @@ impl PrimitiveBoolean {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -72,7 +72,7 @@ impl PrimitiveBoolean {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -86,7 +86,7 @@ impl PrimitiveBoolean {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 

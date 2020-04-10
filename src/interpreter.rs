@@ -71,7 +71,7 @@ pub fn interpret_scope(
 
                 message_data.hold = Some(hold.to_owned());
 
-                MSG::send(&sender, MSG::Hold(hold))?;
+                MSG::send(&sender, MSG::Hold(hold));
 
                 return Ok(message_data);
             }

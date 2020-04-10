@@ -70,7 +70,7 @@ impl ExecutionContext {
             .or_insert_with(|| ExecutionContext::default());
 
         if let Some(execution_context) = hashmap.get_mut(&thread_id) {
-            return execution_context.flow.to_owned();
+            execution_context.flow.to_owned()
         } else {
             unreachable!();
         }
@@ -85,7 +85,7 @@ impl ExecutionContext {
             .or_insert_with(|| ExecutionContext::default());
 
         if let Some(execution_context) = hashmap.get_mut(&thread_id) {
-            return execution_context.step.to_owned();
+            execution_context.step.to_owned()
         } else {
             unreachable!();
         }

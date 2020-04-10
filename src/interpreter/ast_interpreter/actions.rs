@@ -52,7 +52,7 @@ pub fn match_actions(
     match function {
         ObjectType::Say(arg) => {
             let msg = Message::new(expr_to_literal(arg, None, data, &mut root, sender)?);
-            MSG::send(&sender, MSG::Message(msg.clone()))?;
+            MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(root, MessageType::Msg(msg)))
         }
         ObjectType::Use(arg) => {
@@ -80,8 +80,8 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step, step_name) => {
-            MSG::send(&sender, MSG::NextStep(step_name.ident.clone()))?;
-            MSG::send(&sender, MSG::NextFlow(ExecutionContext::get_flow()))?;
+            MSG::send(&sender, MSG::NextStep(step_name.ident.clone()));
+            MSG::send(&sender, MSG::NextFlow(ExecutionContext::get_flow()));
 
             ExecutionContext::set_step(&step_name.ident);
 
@@ -92,8 +92,8 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::Flow, flow_name) => {
-            MSG::send(&sender, MSG::NextStep("start".to_string()))?;
-            MSG::send(&sender, MSG::NextFlow(flow_name.ident.clone()))?;
+            MSG::send(&sender, MSG::NextStep("start".to_string()));
+            MSG::send(&sender, MSG::NextFlow(flow_name.ident.clone()));
 
             ExecutionContext::set_flow(&flow_name.ident);
             ExecutionContext::set_step("start");
@@ -107,7 +107,7 @@ pub fn match_actions(
             MSG::send(
                 &sender,
                 MSG::Memory(Memories::new(name.ident.to_owned(), lit.clone())),
-            )?;
+            );
 
             data.context.current.insert(name.ident.to_owned(), lit);
             Ok(root)

@@ -118,7 +118,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -132,7 +132,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -146,7 +146,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -198,7 +198,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_empty() => boolean";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -313,7 +313,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "length() => int";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -329,7 +329,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "one_of() => primitive";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -380,7 +380,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "pop() => primitive";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -426,7 +426,7 @@ impl PrimitiveArray {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "shuffle() => array";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 

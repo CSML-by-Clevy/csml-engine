@@ -21,7 +21,6 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
-use crate::parser::ExitCondition;
 
 use curl::easy::Easy;
 use std::collections::HashMap;

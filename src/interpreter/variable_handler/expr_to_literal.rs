@@ -128,10 +128,10 @@ pub fn expr_to_literal(
             args,
             interval,
         })) => {
-            let (_name, literal) =
+            let (_name, mut literal) =
                 normal_object_to_literal(&name, args, *interval, data, root, sender)?;
 
-            exec_path_literal(&mut literal.clone(), path, data, root, sender)
+            exec_path_literal(&mut literal, path, data, root, sender)
         }
         Expr::MapExpr(map, RangeInterval { start, .. }) => {
             let mut object = HashMap::new();

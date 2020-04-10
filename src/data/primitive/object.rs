@@ -258,7 +258,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "get() => http object";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -444,7 +444,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "send() => http object";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -452,7 +452,7 @@ impl PrimitiveObject {
             let function = match Literal::get_value::<String>(
                 &literal.primitive,
                 interval,
-                format!("{}", ERROR_HTTP_UNKNOWN_METHOD),
+                ERROR_HTTP_UNKNOWN_METHOD.to_string(),
             ) {
                 Ok(delete) if delete == "delete" => ureq::delete,
                 Ok(put) if put == "put" => ureq::put,
@@ -462,7 +462,7 @@ impl PrimitiveObject {
                 _ => {
                     return Err(ErrorInfo::new(
                         interval,
-                        format!("{}", ERROR_HTTP_UNKNOWN_METHOD),
+                        ERROR_HTTP_UNKNOWN_METHOD.to_string(),
                     ))
                 }
             };
@@ -483,7 +483,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "get_type() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -498,7 +498,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "get_metadata() => object";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -517,7 +517,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -541,7 +541,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -555,7 +555,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -570,7 +570,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -615,7 +615,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_empty() => boolean";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -632,7 +632,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "length() => int";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -649,7 +649,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "keys() => array";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -670,7 +670,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "values() => array";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -727,7 +727,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "clear_values() => null";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 

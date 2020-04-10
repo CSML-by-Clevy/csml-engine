@@ -82,7 +82,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -96,7 +96,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -110,7 +110,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -126,7 +126,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "abs() => int";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -145,7 +145,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "cos() => number";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -166,7 +166,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ceil() => int";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -185,7 +185,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "floor() => int";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -259,7 +259,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "round() => int";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -278,7 +278,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "sin() => number";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -299,7 +299,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "round() => number";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -320,7 +320,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "tan() => number";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -341,7 +341,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_int() => int";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
@@ -355,7 +355,7 @@ impl PrimitiveInt {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_float() => float";
 
-        if args.len() != 0 {
+        if !args.is_empty() {
             return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
         }
 
