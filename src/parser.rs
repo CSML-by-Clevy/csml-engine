@@ -42,7 +42,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
             flow_type,
         }),
         Err(e) => match e {
-            Err::Error(err) | Err::Failure(err) => Err(ErrorInfo::new(
+            Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
                 Interval {
                     line: err.input.location_line(),
                     column: err.input.get_column() as u32,

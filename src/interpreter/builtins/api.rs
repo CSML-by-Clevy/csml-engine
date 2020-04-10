@@ -33,7 +33,7 @@ fn parse_api(
                 serde_json::Value::String(fn_id.to_owned()),
             );
         }
-        _ => return Err(ErrorInfo::new(interval, ERROR_FN_ID.to_owned())),
+        _ => return Err(gen_error_info(interval, ERROR_FN_ID.to_owned())),
     };
 
     let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
@@ -87,7 +87,7 @@ pub fn api(
             client,
             fn_endpoint,
         }) => (client.to_owned(), fn_endpoint.to_owned()),
-        None => return Err(ErrorInfo::new(interval, ERROR_FN_ENDPOINT.to_owned())),
+        None => return Err(gen_error_info(interval, ERROR_FN_ENDPOINT.to_owned())),
     };
 
     let (http_arg, map) = parse_api(&args, interval, client, fn_endpoint)?;
@@ -96,7 +96,7 @@ pub fn api(
 
     match format_and_transfer(&mut data.curl, &mut result, &http_arg, data_bytes) {
         Ok(_) => (),
-        Err(err) => return Err(ErrorInfo::new(interval, format!("{}", err))),
+        Err(err) => return Err(gen_error_info(interval, format!("{}", err))),
     };
 
     let json: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(&result)).unwrap();

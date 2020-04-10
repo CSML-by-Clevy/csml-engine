@@ -106,7 +106,7 @@ pub fn interpret_scope(
                 let interval = interval_from_expr(e);
                 let message = ERROR_START_INSTRUCTIONS.to_owned();
 
-                return Err(ErrorInfo::new(interval, message));
+                return Err(gen_error_info(interval, message));
             }
         };
     }

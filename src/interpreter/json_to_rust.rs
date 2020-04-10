@@ -21,7 +21,7 @@ pub fn json_to_literal(
             } else if let (true, Some(int)) = (val.is_i64(), val.as_i64()) {
                 Ok(PrimitiveInt::get_literal(int, interval))
             } else {
-                Err(ErrorInfo::new(interval, ERROR_JSON_TO_LITERAL.to_owned()))
+                Err(gen_error_info(interval, ERROR_JSON_TO_LITERAL.to_owned()))
             }
         }
         serde_json::Value::Array(val) => {

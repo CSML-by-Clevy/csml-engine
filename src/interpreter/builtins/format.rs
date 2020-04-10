@@ -10,7 +10,7 @@ pub fn text(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
             &literal.primitive.to_string(),
             literal.interval,
         )),
-        _ => Err(ErrorInfo::new(interval, ERROR_TEXT.to_owned())),
+        _ => Err(gen_error_info(interval, ERROR_TEXT.to_owned())),
     }
 }
 
@@ -30,7 +30,7 @@ pub fn typing(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
 
             Ok(result)
         }
-        _ => Err(ErrorInfo::new(interval, ERROR_TYPING.to_owned())),
+        _ => Err(gen_error_info(interval, ERROR_TYPING.to_owned())),
     }
 }
 
@@ -49,7 +49,7 @@ pub fn wait(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
 
             Ok(result)
         }
-        _ => Err(ErrorInfo::new(interval, ERROR_WAIT.to_owned())),
+        _ => Err(gen_error_info(interval, ERROR_WAIT.to_owned())),
     }
 }
 
@@ -63,7 +63,7 @@ pub fn question(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 
     let buttons = match args.get("buttons") {
         Some(literal) => literal.to_owned(),
-        _ => return Err(ErrorInfo::new(interval, ERROR_QUESTION.to_owned())),
+        _ => return Err(gen_error_info(interval, ERROR_QUESTION.to_owned())),
     };
 
     let accepts = accepts_from_buttons(&buttons);
@@ -89,7 +89,7 @@ pub fn carousel(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 
     let cards = match args.get("cards") {
         Some(literal) => literal.to_owned(),
-        _ => return Err(ErrorInfo::new(interval, ERROR_CAROUSEL.to_owned())),
+        _ => return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned())),
     };
 
     if let Some(literal) = args.get("metadata") {
@@ -144,6 +144,6 @@ pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
 
             Ok(result)
         }
-        _ => Err(ErrorInfo::new(interval, ERROR_HTTP.to_owned())),
+        _ => Err(gen_error_info(interval, ERROR_HTTP.to_owned())),
     }
 }

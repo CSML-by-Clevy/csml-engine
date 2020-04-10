@@ -59,7 +59,7 @@ impl PrimitiveBoolean {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -73,7 +73,7 @@ impl PrimitiveBoolean {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal("boolean", interval))
@@ -87,7 +87,7 @@ impl PrimitiveBoolean {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal(&boolean.to_string(), interval))
@@ -132,7 +132,7 @@ impl Primitive for PrimitiveBoolean {
             return Ok((res, *right));
         }
 
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             interval,
             format!("[{}] {}", name, ERROR_BOOLEAN_UNKNOWN_METHOD),
         ))
@@ -155,7 +155,7 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} + {:?}",
@@ -167,7 +167,7 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} - {:?}",
@@ -179,7 +179,7 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} / {:?}",
@@ -191,7 +191,7 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} * {:?}",
@@ -203,7 +203,7 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} / {:?}",

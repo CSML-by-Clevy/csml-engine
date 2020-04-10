@@ -1,6 +1,7 @@
 pub mod data;
 
 use crate::data::tokens::Span;
+use crate::Interval;
 use nom::{
     error::{ErrorKind, ParseError},
     *,
@@ -202,6 +203,10 @@ pub const ERROR_OPS_DIV_INT: &'static str = "[!] Int: Division by zero";
 pub const ERROR_OPS_DIV_FLOAT: &'static str = "[!] Float: Division by zero";
 
 pub const ERROR_ILLEGAL_OPERATION: &'static str = "illegal operation:";
+
+pub fn gen_error_info(interval: Interval, message: String) -> ErrorInfo {
+    ErrorInfo::new(interval, message)
+}
 
 pub fn gen_nom_error<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>
 where

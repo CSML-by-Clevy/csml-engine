@@ -17,7 +17,7 @@ fn get_value<'lifetime, T: 'static>(
     if let Some(literal) = object.get(key) {
         Literal::get_value::<T>(&literal.primitive, interval, format!("'{}' {}", key, error))
     } else {
-        Err(ErrorInfo::new(interval, format!("'{}' {}", key, error)))
+        Err(gen_error_info(interval, format!("'{}' {}", key, error)))
     }
 }
 
@@ -86,7 +86,7 @@ pub fn http_request(
 
     match body {
         Ok(value) => json_to_literal(&value, interval),
-        Err(_) => Err(ErrorInfo::new(
+        Err(_) => Err(gen_error_info(
             interval,
             format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
         )),

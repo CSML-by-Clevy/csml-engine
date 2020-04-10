@@ -9,7 +9,7 @@ pub fn button(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
 
     let title = match (args.get("title"), args.get(DEFAULT)) {
         (Some(title), ..) | (.., Some(title)) => title.to_owned(),
-        _ => return Err(ErrorInfo::new(interval, ERROR_BUTTON.to_owned())),
+        _ => return Err(gen_error_info(interval, ERROR_BUTTON.to_owned())),
     };
 
     let button_type = match args.get("button_type") {
@@ -61,12 +61,12 @@ pub fn card(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
         (Some(subtitle), ..) | (.., Some(subtitle)) => {
             card.insert("subtitle".to_owned(), subtitle.to_owned())
         }
-        _ => return Err(ErrorInfo::new(interval, ERROR_CARD_SUBTITLE.to_owned())),
+        _ => return Err(gen_error_info(interval, ERROR_CARD_SUBTITLE.to_owned())),
     };
 
     match args.get("buttons") {
         Some(buttons) => card.insert("buttons".to_owned(), buttons.to_owned()),
-        _ => return Err(ErrorInfo::new(interval, ERROR_CARD_BUTTON.to_owned())),
+        _ => return Err(gen_error_info(interval, ERROR_CARD_BUTTON.to_owned())),
     };
 
     if let Some(image_url) = args.get("image_url") {

@@ -35,7 +35,7 @@ pub fn gen_literal_form_event(
             let content_type = match ContentType::get(&lit) {
                 ContentType::Event(_) => ContentType::Event(data.event.content_type.to_owned()),
                 _ => {
-                    return Err(ErrorInfo::new(
+                    return Err(gen_error_info(
                         interval.to_owned(),
                         ERROR_EVENT_CONTENT_TYPE.to_owned(),
                     ))

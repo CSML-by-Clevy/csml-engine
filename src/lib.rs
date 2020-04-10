@@ -43,7 +43,7 @@ fn execute_step(
         .get(&InstructionType::NormalStep(step.to_owned()))
     {
         Some(Expr::Scope { scope, .. }) => interpret_scope(scope, &mut data, rip, &sender),
-        _ => Err(ErrorInfo::new(
+        _ => Err(gen_error_info(
             Interval::new_as_u32(0, 0),
             format!("{} {}", step, ERROR_STEP_EXIST),
         )),

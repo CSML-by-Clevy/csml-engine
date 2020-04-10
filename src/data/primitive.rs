@@ -363,7 +363,7 @@ impl Add for Box<dyn Primitive> {
                 }
             }
 
-            _ => Err(ErrorInfo::new(
+            _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
                 format!(
                     "{} {:?} + {:?}",
@@ -456,7 +456,7 @@ impl Sub for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo::new(
+            _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
                 format!(
                     "{} {:?} - {:?}",
@@ -549,7 +549,7 @@ impl Div for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo::new(
+            _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
                 format!(
                     "{} {:?} / {:?}",
@@ -642,7 +642,7 @@ impl Mul for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo::new(
+            _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
                 format!(
                     "{} {:?} * {:?}",
@@ -735,7 +735,7 @@ impl Rem for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(ErrorInfo::new(
+            _ => Err(gen_error_info(
                 Interval { column: 0, line: 0 },
                 format!(
                     "{} {:?} * {:?}",

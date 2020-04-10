@@ -52,14 +52,14 @@ pub fn get_literal(
 
             match items.get_mut(*value as usize) {
                 Some(lit) => Ok(lit),
-                None => Err(ErrorInfo::new(
+                None => Err(gen_error_info(
                     interval.to_owned(),
                     format!("{} {}", value, ERROR_ARRAY_INDEX_EXIST.to_owned()),
                 )),
             }
         }
         (literal, None) => Ok(literal),
-        (_, Some(_)) => Err(ErrorInfo::new(
+        (_, Some(_)) => Err(gen_error_info(
             interval.to_owned(),
             ERROR_ARRAY_TYPE.to_owned(),
         )),
@@ -72,7 +72,7 @@ fn get_var_from_step_var<'a>(
 ) -> Result<&'a mut Literal, ErrorInfo> {
     match data.step_vars.get_mut(&name.ident) {
         Some(var) => Ok(var),
-        None => Err(ErrorInfo::new(
+        None => Err(gen_error_info(
             name.interval.to_owned(),
             format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
         )),
@@ -124,7 +124,7 @@ pub fn resolve_path(
                 ) {
                     new_path.push((inter.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
-                    return Err(ErrorInfo::new(
+                    return Err(gen_error_info(
                         inter.to_owned(),
                         ERROR_FIND_BY_INDEX.to_owned(),
                     ));
@@ -261,7 +261,7 @@ pub fn get_literal_form_metadata(
             None => PrimitiveNull::get_literal(inter.to_owned()),
         },
         Some((inter, _)) => {
-            return Err(ErrorInfo::new(
+            return Err(gen_error_info(
                 inter.to_owned(),
                 ERROR_FIND_BY_INDEX.to_owned(),
             ));

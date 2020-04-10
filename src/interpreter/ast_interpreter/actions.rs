@@ -35,7 +35,7 @@ fn get_var_info<'a>(
                 get_var_from_mem(var.to_owned(), path, data, root, sender)
             }
         },
-        e => Err(ErrorInfo::new(
+        e => Err(gen_error_info(
             interval_from_expr(e),
             ERROR_GET_VAR_INFO.to_owned(),
         )),
@@ -132,19 +132,19 @@ pub fn match_actions(
         //     {
         //         match interpret_scope(actions, data, instruction_index, sender) {
         //             Ok(root2) => Ok(root + root2),
-        //             Err(err) => Err(ErrorInfo::new(
+        //             Err(err) => Err(gen_error_info(
         //                 interval_from_reserved_fn(function),
         //                 format!("{} {:?}", ERROR_IMPORT_FAIL, err),
         //             )),
         //         }
         //     } else {
-        //         Err(ErrorInfo::new(
+        //         Err(gen_error_info(
         //             interval_from_reserved_fn(function),
         //             format!("{} {}", name.ident, ERROR_IMPORT_STEP_FLOW),
         //         ))
         //     }
         // }
-        reserved => Err(ErrorInfo::new(
+        reserved => Err(gen_error_info(
             interval_from_reserved_fn(reserved),
             ERROR_START_INSTRUCTIONS.to_owned(),
         )),

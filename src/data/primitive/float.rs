@@ -92,7 +92,7 @@ impl PrimitiveFloat {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveBoolean::get_literal(true, interval))
@@ -106,7 +106,7 @@ impl PrimitiveFloat {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal("float", interval))
@@ -120,7 +120,7 @@ impl PrimitiveFloat {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal(&float.to_string(), interval))
@@ -136,7 +136,7 @@ impl PrimitiveFloat {
         let usage = "abs() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.abs();
@@ -152,7 +152,7 @@ impl PrimitiveFloat {
         let usage = "cos() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.cos();
@@ -168,7 +168,7 @@ impl PrimitiveFloat {
         let usage = "ceil() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.ceil();
@@ -184,7 +184,7 @@ impl PrimitiveFloat {
         let usage = "floor() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.floor();
@@ -200,7 +200,7 @@ impl PrimitiveFloat {
         let usage = "pow(exponent: number) => float";
 
         if args.len() != 1 {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let exponent = match args.get(0) {
@@ -228,12 +228,12 @@ impl PrimitiveFloat {
                 match exponent.parse::<f64>() {
                     Ok(res) => res,
                     Err(_) => {
-                        return Err(ErrorInfo::new(interval, ERROR_NUMBER_POW.to_owned()));
+                        return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()));
                     }
                 }
             }
             _ => {
-                return Err(ErrorInfo::new(interval, ERROR_NUMBER_POW.to_owned()));
+                return Err(gen_error_info(interval, ERROR_NUMBER_POW.to_owned()));
             }
         };
 
@@ -250,7 +250,7 @@ impl PrimitiveFloat {
         let usage = "round() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.round();
@@ -266,7 +266,7 @@ impl PrimitiveFloat {
         let usage = "sin() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.sin();
@@ -282,7 +282,7 @@ impl PrimitiveFloat {
         let usage = "sqrt() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.sqrt();
@@ -298,7 +298,7 @@ impl PrimitiveFloat {
         let usage = "tan() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         let result = float.value.tan();
@@ -314,7 +314,7 @@ impl PrimitiveFloat {
         let usage = "to_int() => int";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveInt::get_literal(float.value as i64, interval))
@@ -328,7 +328,7 @@ impl PrimitiveFloat {
         let usage = "to_float() => float";
 
         if !args.is_empty() {
-            return Err(ErrorInfo::new(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveFloat::get_literal(float.value, interval))
@@ -373,7 +373,7 @@ impl Primitive for PrimitiveFloat {
             return Ok((res, *right));
         }
 
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             interval,
             format!("[{}] {}", name, ERROR_FLOAT_UNKNOWN_METHOD),
         ))
@@ -402,7 +402,7 @@ impl Primitive for PrimitiveFloat {
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} + {:?}",
@@ -420,7 +420,7 @@ impl Primitive for PrimitiveFloat {
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} - {:?}",
@@ -440,7 +440,7 @@ impl Primitive for PrimitiveFloat {
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} / {:?}",
@@ -458,7 +458,7 @@ impl Primitive for PrimitiveFloat {
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} * {:?}",
@@ -476,7 +476,7 @@ impl Primitive for PrimitiveFloat {
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(ErrorInfo::new(
+        Err(gen_error_info(
             Interval { column: 0, line: 0 },
             format!(
                 "{} {:?} % {:?}",
