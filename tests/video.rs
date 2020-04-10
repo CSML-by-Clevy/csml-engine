@@ -10,7 +10,8 @@ use serde_json::Value;
 
 #[test]
 fn ok_video() {
-    let data = r#"{"messages":[ {"content":{ "url": "test" },"content_type":"video"} ],"memories":[]}"#;
+    let data =
+        r#"{"messages":[ {"content":{ "url": "test" },"content_type":"video"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(

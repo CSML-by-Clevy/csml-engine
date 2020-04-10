@@ -1,7 +1,4 @@
 start:
-    say "Hello World".to_uppercase().lol()
-    goto foo
-
-foo:
-    say "Hello foo"
+    say "Hello World"
     goto end
+    

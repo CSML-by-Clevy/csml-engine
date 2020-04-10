@@ -60,7 +60,8 @@ fn ok_object_step2() {
 
 #[test]
 fn ok_object_step3() {
-    let data = r#"{"messages":[ {"content":{"text":"true"},"content_type":"text"} ],"memories":[]}"#;
+    let data =
+        r#"{"messages":[ {"content":{"text":"true"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
