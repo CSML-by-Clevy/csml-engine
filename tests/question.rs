@@ -24,10 +24,7 @@ fn ok_button() {
                     "button_type": "quick_button",
                     "payload": "hello",
                     "title": "hello",
-                    "theme": "primary",
-
-                    "content": {"payload": "hello", "title": "hello"},
-                    "content_type": "button"
+                    "theme": "primary"
                 },
                 "content_type": "button"
             }
@@ -60,7 +57,6 @@ fn ok_question() {
                         "title": "b1",
                         "theme": "primary",
 
-                        "content": {"payload": "b1", "title": "b1"},
                         "content_type": "button"
                     },
                     {
@@ -70,7 +66,6 @@ fn ok_question() {
                         "title": "b2",
                         "theme": "primary",
 
-                        "content": {"payload": "b2", "title": "b2"},
                         "content_type": "button"
                     }
                 ],
@@ -105,7 +100,6 @@ fn ok_question_step1() {
                         "title": "b1",
                         "theme": "primary",
 
-                        "content": {"payload": "b1", "title": "b1"},
                         "content_type": "button"
                     },
                     {
@@ -115,7 +109,6 @@ fn ok_question_step1() {
                         "title": "b2",
                         "theme": "primary",
 
-                        "content": {"payload": "b2", "title": "b2"},
                         "content_type": "button"
                     }
                 ],
@@ -150,7 +143,6 @@ fn ok_question_step2() {
                         "title": "b1",
                         "theme": "primary",
 
-                        "content": {"payload": "b1", "title": "b1"},
                         "content_type": "button"
                     },
                     {
@@ -160,7 +152,6 @@ fn ok_question_step2() {
                         "title": "b2",
                         "theme": "primary",
 
-                        "content": {"payload": "b2", "title": "b2"},
                         "content_type": "button"
                     }
                 ]

@@ -68,6 +68,7 @@ pub fn http_request(
     let url = get_url(object, interval)?;
     let header =
         get_value::<HashMap<String, Literal>>("header", object, interval, ERROR_HTTP_GET_VALUE)?;
+
     let body =
         get_value::<HashMap<String, Literal>>("body", object, interval, ERROR_HTTP_GET_VALUE)?;
 

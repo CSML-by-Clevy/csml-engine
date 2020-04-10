@@ -76,11 +76,11 @@ pub const ERROR_WAIT: &'static str =
 pub const ERROR_BUTTON: &'static str =
     "Builtin Button expect at least one argument of type string | example: Button(\"hola\")";
 pub const ERROR_CARD_BUTTON: &'static str = "argument buttons in Builtin Cards need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]";
-pub const ERROR_CARD_SUBTITLE: &'static str =
-    "argument subtitle in Builtin Cards need to be of type String";
+pub const ERROR_CARD_TITLE: &'static str =
+    "argument title in Builtin Cards need to be of type String";
 pub const ERROR_QUESTION: &'static str = "argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]";
 pub const ERROR_CAROUSEL: &'static str =
-    "argument buttons in Builtin Carousel need to be of type Array of Cards Component";
+    "argument cards in Builtin Carousel need to be of type Array of Cards Component";
 pub const ERROR_ONE_OF: &'static str =
     "Builtin OneOf expect one value of type Array | example: OneOf( [1, 2, 3] )";
 pub const ERROR_SHUFFLE: &'static str =

@@ -421,12 +421,12 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("patch", interval),
         );
 
-        let header = Literal::get_value::<HashMap<String, Literal>>(
+        let body = Literal::get_value::<HashMap<String, Literal>>(
             &literal.primitive,
             interval,
             ERROR_HTTP_PATCH.to_owned(),
         )?;
-        insert_to_object(header, &mut object, "body", literal);
+        insert_to_object(body, &mut object, "body", literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -821,11 +821,11 @@ impl PrimitiveObject {
 fn insert_to_object(
     src: &HashMap<String, Literal>,
     dst: &mut PrimitiveObject,
-    key: &str,
+    key_name: &str,
     literal: &Literal,
 ) {
     dst.value
-        .entry(key.to_owned())
+        .entry(key_name.to_owned())
         .and_modify(|tmp: &mut Literal| {
             if let Ok(tmp) = Literal::get_mut_value::<HashMap<String, Literal>>(
                 &mut tmp.primitive,
@@ -997,7 +997,14 @@ impl Primitive for PrimitiveObject {
             serde_json::map::Map::new();
 
         for (key, literal) in self.value.iter() {
-            object.insert(key.to_owned(), literal.primitive.to_json());
+            let mut value = literal.primitive.to_json();
+
+            // insert content type info in sub-objects
+            if let serde_json::Value::Object(ref mut object) = value {
+                object.insert("content_type".to_owned(), serde_json::json!(literal.content_type));
+            };
+
+            object.insert(key.to_owned(), value);
         }
 
         serde_json::Value::Object(object)

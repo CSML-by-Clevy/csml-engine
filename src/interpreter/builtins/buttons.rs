@@ -57,12 +57,16 @@ pub fn button(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
 pub fn card(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut card: HashMap<String, Literal> = HashMap::new();
 
-    match (args.get("subtitle"), args.get(DEFAULT)) {
-        (Some(subtitle), ..) | (.., Some(subtitle)) => {
-            card.insert("subtitle".to_owned(), subtitle.to_owned())
+    match (args.get("title"), args.get(DEFAULT)) {
+        (Some(title), ..) | (.., Some(title)) => {
+            card.insert("title".to_owned(), title.to_owned())
         }
-        _ => return Err(gen_error_info(interval, ERROR_CARD_SUBTITLE.to_owned())),
+        _ => return Err(gen_error_info(interval, ERROR_CARD_TITLE.to_owned())),
     };
+
+    if let Some(subtitle) = args.get("subtitle") {
+        card.insert("subtitle".to_owned(), subtitle.to_owned());
+    }
 
     match args.get("buttons") {
         Some(buttons) => card.insert("buttons".to_owned(), buttons.to_owned()),
