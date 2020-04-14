@@ -20,17 +20,15 @@ fn ok_card() {
         "messages":[
             {
                 "content": {
-                    "subtitle": "c1",
+                    "title": "c1",
                     "image_url": "url",
                     "buttons": [
                         {
                                 "accepts": ["b1"],
-                                "button_type": "quick_button",
                                 "payload": "b1",
                                 "title": "b1",
                                 "theme": "primary",
-                            
-                                "content": {"payload": "b1", "title": "b1"},
+                                "icon": "info",
                                 "content_type": "button"
                         }
                     ]
@@ -59,16 +57,13 @@ fn ok_carousel() {
             "content": {
                 "cards": [
                     {
-                        "subtitle": "c1",
+                        "title": "c1",
+                        "content_type": "card",
                         "buttons": [
                             {
                                     "accepts": ["b1"],
-                                    "button_type": "quick_button",
                                     "payload": "b1",
                                     "title": "b1",
-                                    "theme": "primary",
-                                
-                                    "content": {"payload": "b1", "title": "b1"},
                                     "content_type": "button"
                             }
                         ]
@@ -96,18 +91,16 @@ fn ok_carousel_step1() {
             "content": {
                 "cards": [
                     {
-                        "subtitle": "c1",
+                        "title": "c1",
+                        "content_type": "card",
                         "buttons": [
                             {
-                                    "accepts": ["b1"],
-                                    "button_type": "quick_button",
-                                    "payload": "b1",
-                                    "title": "b1",
-                                    "theme": "primary",
-                                    "icon": "info",
-
-                                    "content": {"payload": "b1", "title": "b1"},
-                                    "content_type": "button"
+                                "accepts": ["b1"],
+                                "payload": "b1",
+                                "title": "b1",
+                                "theme": "primary",
+                                "icon": "info",
+                                "content_type": "button"
                             }
                         ]
                     }

@@ -4,9 +4,9 @@ use crate::error_format::*;
 use std::collections::HashMap;
 
 pub fn url(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut url: HashMap<String, Literal> = HashMap::new();
+    let mut url: HashMap<String, Literal> = args.clone();
 
-    match (args.get("url"), args.get(DEFAULT)) {
+    match (url.remove("url"), url.remove(DEFAULT)) {
         (Some(href), ..) | (.., Some(href))
             if href.primitive.get_type() == PrimitiveType::PrimitiveString =>
         {
@@ -32,9 +32,9 @@ pub fn url(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal
 }
 
 pub fn img(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut img: HashMap<String, Literal> = HashMap::new();
+    let mut img: HashMap<String, Literal> = args.clone();
 
-    match (args.get("url"), args.get(DEFAULT)) {
+    match (img.remove("url"), img.remove(DEFAULT)) {
         (Some(href), ..) | (.., Some(href))
             if href.primitive.get_type() == PrimitiveType::PrimitiveString =>
         {
@@ -50,9 +50,9 @@ pub fn img(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal
 }
 
 pub fn video(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut video: HashMap<String, Literal> = HashMap::new();
+    let mut video: HashMap<String, Literal> = args.clone();
 
-    match (args.get("url"), args.get(DEFAULT)) {
+    match (video.remove("url"), video.remove(DEFAULT)) {
         (Some(href), ..) | (.., Some(href))
             if href.primitive.get_type() == PrimitiveType::PrimitiveString =>
         {
@@ -74,9 +74,9 @@ pub fn video(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
 }
 
 pub fn audio(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut audio: HashMap<String, Literal> = HashMap::new();
+    let mut audio: HashMap<String, Literal> = args.clone();
 
-    match (args.get("url"), args.get(DEFAULT)) {
+    match (audio.remove("url"), audio.remove(DEFAULT)) {
         (Some(href), ..) | (.., Some(href))
             if href.primitive.get_type() == PrimitiveType::PrimitiveString =>
         {

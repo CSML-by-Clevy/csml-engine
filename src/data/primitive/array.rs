@@ -579,7 +579,14 @@ impl Primitive for PrimitiveArray {
         let mut vector: Vec<serde_json::Value> = Vec::new();
 
         for literal in self.value.iter() {
-            vector.push(literal.primitive.to_json());
+            let mut value = literal.primitive.to_json();
+
+            // insert content type info in sub-objects
+            if let serde_json::Value::Object(ref mut object) = value {
+                object.insert("content_type".to_owned(), serde_json::json!(literal.content_type));
+            };
+
+            vector.push(value);
         }
 
         serde_json::Value::Array(vector)
