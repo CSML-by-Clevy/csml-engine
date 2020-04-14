@@ -25,10 +25,10 @@ fn ok_card() {
                     "buttons": [
                         {
                                 "accepts": ["b1"],
-                                "button_type": "quick_button",
                                 "payload": "b1",
                                 "title": "b1",
                                 "theme": "primary",
+                                "icon": "info",
                                 "content_type": "button"
                         }
                     ]
@@ -62,10 +62,8 @@ fn ok_carousel() {
                         "buttons": [
                             {
                                     "accepts": ["b1"],
-                                    "button_type": "quick_button",
                                     "payload": "b1",
                                     "title": "b1",
-                                    "theme": "primary",
                                     "content_type": "button"
                             }
                         ]
@@ -97,13 +95,12 @@ fn ok_carousel_step1() {
                         "content_type": "card",
                         "buttons": [
                             {
-                                    "accepts": ["b1"],
-                                    "button_type": "quick_button",
-                                    "payload": "b1",
-                                    "title": "b1",
-                                    "theme": "primary",
-                                    "icon": "info",
-                                    "content_type": "button"
+                                "accepts": ["b1"],
+                                "payload": "b1",
+                                "title": "b1",
+                                "theme": "primary",
+                                "icon": "info",
+                                "content_type": "button"
                             }
                         ]
                     }

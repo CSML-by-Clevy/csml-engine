@@ -23,8 +23,7 @@ fn ok_button() {
                     "accepts": ["toto", "hello"],
                     "button_type": "quick_button",
                     "payload": "hello",
-                    "title": "hello",
-                    "theme": "primary"
+                    "title": "hello"
                 },
                 "content_type": "button"
             }
@@ -52,19 +51,15 @@ fn ok_question() {
                 "buttons": [
                     {
                         "accepts": ["b1"],
-                        "button_type": "quick_button",
                         "payload": "b1",
                         "title": "b1",
-                        "theme": "primary",
 
                         "content_type": "button"
                     },
                     {
                         "accepts": ["b2"],
-                        "button_type": "quick_button",
                         "payload": "b2",
                         "title": "b2",
-                        "theme": "primary",
 
                         "content_type": "button"
                     }
@@ -95,19 +90,15 @@ fn ok_question_step1() {
                 "buttons": [
                     {
                         "accepts": ["b1"],
-                        "button_type": "quick_button",
                         "payload": "b1",
                         "title": "b1",
-                        "theme": "primary",
 
                         "content_type": "button"
                     },
                     {
                         "accepts": ["b2"],
-                        "button_type": "quick_button",
                         "payload": "b2",
                         "title": "b2",
-                        "theme": "primary",
 
                         "content_type": "button"
                     }
@@ -138,19 +129,15 @@ fn ok_question_step2() {
                 "buttons": [
                     {
                         "accepts": ["b1"],
-                        "button_type": "quick_button",
                         "payload": "b1",
                         "title": "b1",
-                        "theme": "primary",
 
                         "content_type": "button"
                     },
                     {
                         "accepts": ["b2"],
-                        "button_type": "quick_button",
                         "payload": "b2",
                         "title": "b2",
-                        "theme": "primary",
 
                         "content_type": "button"
                     }
