@@ -1,6 +1,6 @@
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::{ast::Infix, Literal};
-use crate::error_format::ErrorInfo;
+use crate::error_format::{ErrorInfo, gen_error_info};
 use crate::interpreter::variable_handler::match_literals::match_obj;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,47 +39,89 @@ pub fn evaluate(
         )),
 
         (Infix::Addition, Ok(lhs), Ok(rhs)) => {
-            let primitive = (lhs.primitive + rhs.primitive)?;
-            Ok(Literal {
-                content_type: primitive.get_type().to_string(),
-                primitive,
-                interval: lhs.interval,
-            })
+            let primitive = lhs.primitive + rhs.primitive;
+            match primitive {
+                Ok(primitive) => {
+                    Ok(Literal {
+                        content_type: primitive.get_type().to_string(),
+                        primitive,
+                        interval: lhs.interval,
+                    })
+                }
+                Err(err) => {
+                    Err(
+                        gen_error_info(
+                            lhs.interval,
+                            err
+                        )
+                    )
+                }
+            }
         }
         (Infix::Subtraction, Ok(lhs), Ok(rhs)) => {
-            let primitive = (lhs.primitive - rhs.primitive)?;
+            let primitive = lhs.primitive - rhs.primitive;
 
-            Ok(Literal {
-                content_type: primitive.get_type().to_string(),
-                primitive,
-                interval: lhs.interval,
-            })
+            match primitive {
+                Ok(primitive) => {
+                    Ok(Literal {
+                        content_type: primitive.get_type().to_string(),
+                        primitive,
+                        interval: lhs.interval,
+                    })
+                }
+                Err(err) => Err(
+                    gen_error_info(lhs.interval, err)
+                )
+            }
         }
         (Infix::Divide, Ok(lhs), Ok(rhs)) => {
-            let primitive = (lhs.primitive / rhs.primitive)?;
+            let primitive = lhs.primitive / rhs.primitive;
 
-            Ok(Literal {
-                content_type: primitive.get_type().to_string(),
-                primitive,
-                interval: lhs.interval,
-            })
+            match primitive {
+                Ok(primitive) => {
+                    Ok(Literal {
+                        content_type: primitive.get_type().to_string(),
+                        primitive,
+                        interval: lhs.interval,
+                    })
+                }
+                Err(err) => Err(
+                    gen_error_info(lhs.interval, err)
+                )
+            }
         }
 
         (Infix::Multiply, Ok(lhs), Ok(rhs)) => {
-            let primitive = (lhs.primitive * rhs.primitive)?;
-            Ok(Literal {
-                content_type: primitive.get_type().to_string(),
-                primitive,
-                interval: lhs.interval,
-            })
+            let primitive = lhs.primitive * rhs.primitive;
+
+            match primitive {
+                Ok(primitive) => {
+                    Ok(Literal {
+                        content_type: primitive.get_type().to_string(),
+                        primitive,
+                        interval: lhs.interval,
+                    })
+                }
+                Err(err) => Err(
+                    gen_error_info(lhs.interval, err)
+                )
+            }
         }
         (Infix::Remainder, Ok(lhs), Ok(rhs)) => {
-            let primitive = (lhs.primitive % rhs.primitive)?;
-            Ok(Literal {
-                content_type: primitive.get_type().to_string(),
-                primitive,
-                interval: lhs.interval,
-            })
+            let primitive = lhs.primitive % rhs.primitive;
+            
+            match primitive {
+                Ok(primitive) => {
+                    Ok(Literal {
+                        content_type: primitive.get_type().to_string(),
+                        primitive,
+                        interval: lhs.interval,
+                    })
+                }
+                Err(err) => Err(
+                    gen_error_info(lhs.interval, err)
+                )
+            }
         }
 
         (Infix::Or, Ok(lhs), Ok(rhs)) => Ok(PrimitiveBoolean::get_literal(

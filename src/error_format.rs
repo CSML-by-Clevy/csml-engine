@@ -32,7 +32,7 @@ pub const ERROR_UNREACHABLE: &'static str = "unreachable";
 
 // ##Interpreter Errors
 // ### Validation
-pub const ERROR_STEP_EXIST: &'static str = " step dose not exist";
+pub const ERROR_STEP_EXIST: &'static str = " step does not exist";
 pub const ERROR_INVALID_FLOW: &'static str = "invalid Flow: ";
 pub const ERROR_START_INSTRUCTIONS: &'static str =
 "to start an action one of the following instruction is expected  : [say, do, if, foreach, goto]";
@@ -63,7 +63,7 @@ pub const ERROR_GET_VAR_INFO: &'static str = "expression need to be a variable";
 pub const ERROR_JSON_TO_LITERAL: &'static str = "this number is to big to be an int 64 bit";
 
 // ### Memory
-pub const ERROR_STEP_MEMORY: &'static str = "variable dose not exist in step memory";
+pub const ERROR_STEP_MEMORY: &'static str = "variable does not exist in step memory";
 pub const ERROR_FIND_MEMORY: &'static str = "is not in in memory";
 
 // ### Built-in
@@ -148,7 +148,7 @@ pub const ERROR_STRING_UNKNOWN_METHOD: &'static str = " is not a method of Strin
 
 // #### Array
 pub const ERROR_ARRAY_TYPE: &'static str = "value need to be of type array";
-pub const ERROR_ARRAY_INDEX_EXIST: &'static str = "index dose not exist";
+pub const ERROR_ARRAY_INDEX_EXIST: &'static str = "index does not exist";
 pub const ERROR_ARRAY_INDEX_TYPE: &'static str = "index must be of type int";
 pub const ERROR_ARRAY_NEGATIVE: &'static str = "index must be positive.  usage: array[1]";
 pub const ERROR_ARRAY_INDEX: &'static str = "index must be lower or equal than array.length()";

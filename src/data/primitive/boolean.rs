@@ -153,64 +153,59 @@ impl Primitive for PrimitiveBoolean {
         None
     }
 
-    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(
             format!(
                 "{} {:?} + {:?}",
                 ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
-            ),
-        ))
+            )
+        )
     }
 
-    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(
             format!(
                 "{} {:?} - {:?}",
                 ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
-            ),
-        ))
+            )
+        )
     }
 
-    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(
             format!(
                 "{} {:?} / {:?}",
                 ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
-            ),
-        ))
+            )
+        )
     }
 
-    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(
             format!(
                 "{} {:?} * {:?}",
                 ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
-            ),
-        ))
+            )
+        )
     }
 
-    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(
             format!(
                 "{} {:?} / {:?}",
                 ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
-            ),
-        ))
+            )
+        )
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

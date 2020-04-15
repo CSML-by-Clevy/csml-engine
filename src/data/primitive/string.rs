@@ -1008,14 +1008,13 @@ impl Primitive for PrimitiveString {
         None
     }
 
-    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
+                return Err(
                     ERROR_STRING_RHS.to_owned(),
-                ));
+                );
             }
         };
 
@@ -1032,26 +1031,24 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
+            _ => Err(
                 format!(
                     "{} {:?} + {:?}",
                     ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
-                ),
-            )),
+                )
+            )
         }
     }
 
-    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
+                return Err(
                     ERROR_STRING_RHS.to_owned(),
-                ));
+                );
             }
         };
 
@@ -1068,26 +1065,24 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs - rhs as f64)))
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
+            _ => Err(
                 format!(
                     "{} {:?} - {:?}",
                     ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
-                ),
-            )),
+                )
+            )
         }
     }
 
-    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
+                return Err(
                     ERROR_STRING_RHS.to_owned(),
-                ));
+                );
             }
         };
 
@@ -1112,26 +1107,24 @@ impl Primitive for PrimitiveString {
 
                 Ok(Box::new(PrimitiveFloat::new(lhs / rhs as f64)))
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
+            _ => Err(
                 format!(
                     "{} {:?} / {:?}",
                     ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
                 ),
-            )),
+            )
         }
     }
 
-    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
+                return Err(
                     ERROR_STRING_RHS.to_owned(),
-                ));
+                );
             }
         };
 
@@ -1148,26 +1141,24 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
+            _ => Err(
                 format!(
                     "{} {:?} * {:?}",
                     ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
-                ),
-            )),
+                )
+            )
         }
     }
 
-    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(
-                    Interval { line: 0, column: 0 },
-                    ERROR_STRING_RHS.to_owned(),
-                ));
+                return Err(
+                    ERROR_STRING_RHS.to_owned()
+                );
             }
         };
 
@@ -1184,15 +1175,14 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
+            _ => Err(
                 format!(
                     "{} {:?} % {:?}",
                     ERROR_ILLEGAL_OPERATION,
                     self.get_type(),
                     other.get_type()
-                ),
-            )),
+                )
+            )
         }
     }
 
