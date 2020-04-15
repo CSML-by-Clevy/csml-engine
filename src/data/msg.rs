@@ -1,4 +1,3 @@
-use crate::data::execution_context::ExecutionContext;
 use crate::data::hold::Hold;
 use crate::data::message::Message;
 use crate::data::Memories;
@@ -14,7 +13,10 @@ pub enum MSG {
     Memory(Memories),
     Message(Message),
     Hold(Hold),
-    Next(ExecutionContext),
+    Next{
+        flow: Option<String>,
+        step: Option<String>,
+    },
     Error(Message),
 }
 

@@ -82,10 +82,7 @@ pub fn match_actions(
         ObjectType::Goto(GotoType::Step, step_name) => {
             MSG::send(
                 &sender,
-                MSG::Next(ExecutionContext::new(
-                    ExecutionContext::get_flow(),
-                    step_name.ident.clone(),
-                )),
+                MSG::Next{flow: None, step: Some(step_name.ident.clone())},
             );
 
             ExecutionContext::set_step(&step_name.ident);
@@ -99,10 +96,7 @@ pub fn match_actions(
         ObjectType::Goto(GotoType::Flow, flow_name) => {
             MSG::send(
                 &sender,
-                MSG::Next(ExecutionContext::new(
-                    flow_name.ident.clone(),
-                    "start".to_string(),
-                )),
+                MSG::Next{flow: Some(flow_name.ident.clone()), step: None},
             );
 
             ExecutionContext::set_flow(&flow_name.ident);
