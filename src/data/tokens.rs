@@ -78,7 +78,7 @@ pub static RESERVED: &[&str] = &[
     MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
 ];
 
-// TODO: at some point (when function doesnt have a key like find(in)) ut back in inside reserved
+// TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
 pub static UTILISATION_RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
 ];

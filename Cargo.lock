@@ -103,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "csmlinterpreter"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "curl 0.4.28 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
