@@ -13,7 +13,7 @@ pub enum MSG {
     Memory(Memories),
     Message(Message),
     Hold(Hold),
-    Next{
+    Next {
         flow: Option<String>,
         step: Option<String>,
     },

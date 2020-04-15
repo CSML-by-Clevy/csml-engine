@@ -15,7 +15,6 @@ use crate::data::context::get_hashmap;
 use crate::data::csml_bot::CsmlBot;
 use crate::data::error_info::ErrorInfo;
 use crate::data::event::Event;
-use crate::data::execution_context::ExecutionContext;
 use crate::data::message_data::MessageData;
 use crate::data::msg::MSG;
 use crate::data::ContextJson;
@@ -32,7 +31,7 @@ use std::sync::mpsc;
 
 fn execute_step(
     step: &str,
-    mut data: Data,
+    mut data: &mut Data,
     rip: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
@@ -71,13 +70,10 @@ pub fn interpret(
 ) -> MessageData {
     let mut message_data = MessageData::default();
 
-    ExecutionContext::set_flow(&context.flow);
-    ExecutionContext::set_step(&context.step);
+    let mut flow = context.flow.to_owned();
+    let mut step = context.step.to_owned();
 
     while message_data.exit_condition.is_none() {
-        let flow = ExecutionContext::get_flow();
-        let step = ExecutionContext::get_step();
-
         println!("[+] current flow to be executed: {}", flow);
         println!("[+] current step to be executed: {}\n", step);
 
@@ -88,7 +84,7 @@ pub fn interpret(
             }
         };
 
-        let flow: Flow = match parse_file(&content) {
+        let ast = match parse_file(&content) {
             Ok(result) => result,
             Err(_) => {
                 unimplemented!();
@@ -100,8 +96,8 @@ pub fn interpret(
             None => HashMap::new(),
         };
 
-        let data = Data::new(
-            &flow,
+        let mut data = Data::new(
+            &ast,
             &mut context.to_literal(),
             &event,
             Easy::new(),
@@ -113,7 +109,10 @@ pub fn interpret(
             None => None,
         };
 
-        message_data = message_data + execute_step(&step, data, rip, &sender);
+        message_data = message_data + execute_step(&step, &mut data, rip, &sender);
+
+        flow = data.context.flow;
+        step = data.context.step;
     }
 
     dbg!(&message_data);

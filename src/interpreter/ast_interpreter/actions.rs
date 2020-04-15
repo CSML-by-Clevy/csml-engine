@@ -1,4 +1,3 @@
-use crate::data::execution_context::ExecutionContext;
 use crate::data::{
     ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data, Literal,
     Memories, MemoryType, MessageData, MSG,
@@ -82,10 +81,13 @@ pub fn match_actions(
         ObjectType::Goto(GotoType::Step, step_name) => {
             MSG::send(
                 &sender,
-                MSG::Next{flow: None, step: Some(step_name.ident.clone())},
+                MSG::Next {
+                    flow: None,
+                    step: Some(step_name.ident.clone()),
+                },
             );
 
-            ExecutionContext::set_step(&step_name.ident);
+            data.context.step = step_name.ident.to_owned();
 
             if step_name.ident == "end" {
                 root.exit_condition = Some(ExitCondition::End);
@@ -96,11 +98,14 @@ pub fn match_actions(
         ObjectType::Goto(GotoType::Flow, flow_name) => {
             MSG::send(
                 &sender,
-                MSG::Next{flow: Some(flow_name.ident.clone()), step: None},
+                MSG::Next {
+                    flow: Some(flow_name.ident.clone()),
+                    step: None,
+                },
             );
 
-            ExecutionContext::set_flow(&flow_name.ident);
-            ExecutionContext::set_step("start");
+            data.context.step = "start".to_string();
+            data.context.flow = flow_name.ident.to_owned();
 
             Ok(root)
         }
