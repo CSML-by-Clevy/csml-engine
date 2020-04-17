@@ -1,112 +1,157 @@
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{ast::*, tokens::*};
-use crate::error_format::{gen_nom_failure, ERROR_DOUBLE_QUOTE};
-use crate::parser::{operator::parse_operator, parse_comments::comment, tools::get_interval};
-use nom::{
-    bytes::complete::tag,
-    error::ParseError,
-    multi::many_till,
-    sequence::{delimited, preceded},
-    *,
-};
-use std::str;
+use crate::error_format::{gen_nom_failure, *};
+use crate::parser::tools::get_interval;
+
+use nom::{bytes::complete::tag, error::ParseError, sequence::delimited, *};
+
+// TODO:
+// GOOD ERROR MESSAGE
+// GOOD INTERVAL
+// WRITE TESTS
+// UNCOMMENT OBJECT TEST
+
+////////////////////////////////////////////////////////////////////////////////
+// TOOL FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn condition_brace(s: &Span, key: char, c: char, escape: bool, index: usize) -> bool {
+    if c == key && escape == false {
+        if let Some(c) = s.fragment().chars().nth(index + 1) {
+            if c == key {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+fn condition_quote(_s: &Span, key: char, c: char, escape: bool, _index: usize) -> bool {
+    if c == key && escape == false {
+        return true;
+    }
+
+    false
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn parse_2brace<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    let (s, _) = tag(L2_BRACE)(s)?;
-    let (s, (vec, _)) = many_till(parse_operator, preceded(comment, tag(R2_BRACE)))(s)?;
+fn get_distance(
+    s: &Span,
+    key: char,
+    f: fn(&Span, char, char, bool, usize) -> bool,
+) -> Option<usize> {
+    let mut result: usize = 0;
+    let mut escape = false;
 
-    Ok((s, vec))
+    for (index, c) in s.as_bytes().iter().enumerate() {
+        if f(s, key, *c as char, escape, index) == true {
+            return Some(result);
+        }
+
+        if *c as char == '\\' {
+            escape = match escape {
+                true => false,
+                false => true,
+            }
+        } else {
+            escape = false;
+        }
+
+        result += 1;
+    }
+
+    None
 }
 
-fn parse_brace<'a, E>(input: Span<'a>, mut vec: Vec<Expr>) -> IResult<Span<'a>, Expr, E>
+fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    match parse_2brace(input) {
-        Ok((s, mut exprs)) => {
-            vec.append(&mut exprs);
+    let mut vector = vec![];
 
-            match parse_complex_string(s) {
-                Ok((s2, Expr::ComplexLiteral(mut vec2, range))) => {
-                    vec.append(&mut vec2);
-                    // TODO: BAD RANGE this is only for test
-                    Ok((s2, Expr::ComplexLiteral(vec, range)))
-                }
-                Ok((s2, expr)) => {
-                    if vec.is_empty() {
-                        Ok((s2, expr))
-                    } else {
-                        vec.push(expr);
-                        let (s2, p) = get_interval(s2)?;
-                        Ok((
-                            s2,
-                            Expr::ComplexLiteral(vec, RangeInterval { start: p, end: p }),
-                        ))
+    let distance = match get_distance(&s, '}', condition_brace) {
+        Some(result) => result,
+        None => unreachable!(),
+    };
+
+    let (rest, string) = s.take_split(distance);
+
+    let array = string.fragment().to_owned().split_ascii_whitespace();
+
+    for (index, string) in array.into_iter().enumerate() {
+        match index > 0 {
+            true => {
+                return Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE));
+            }
+            false => {
+                let expr = Expr::IdentExpr(Identifier::new(string, Interval::new_as_u32(0, 0)));
+
+                vector.push(expr);
+            }
+        }
+    }
+
+    Ok((rest, vector))
+}
+
+fn parse_simple_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let mut vector = vec![];
+
+    match get_distance(&s, '\"', condition_quote) {
+        Some(distance) => {
+            let (rest, string) = s.take_split(distance);
+
+            let mut string = string.to_owned();
+
+            while !string.fragment().is_empty() {
+                match (
+                    get_distance(&string, '{', condition_brace),
+                    get_distance(&string, '}', condition_brace),
+                ) {
+                    (Some(lhs_distance), Some(_)) => {
+                        let (rest, value) = string.take_split(lhs_distance);
+
+                        vector.push(Expr::LitExpr(PrimitiveString::get_literal(
+                            value.fragment(),
+                            Interval::new_as_u32(0, 0),
+                        )));
+
+                        let (rest, expression) =
+                            delimited(tag(L2_BRACE), parse_complex_string, tag(R2_BRACE))(rest)?;
+
+                        vector = [&vector[..], &expression[..]].concat();
+
+                        string = rest;
+                    }
+                    (_, _) => {
+                        let (rest, value) = string.take_split(string.fragment().len());
+
+                        vector.push(Expr::LitExpr(PrimitiveString::get_literal(
+                            value.fragment(),
+                            Interval::new_as_u32(0, 0),
+                        )));
+
+                        string = rest;
                     }
                 }
-                Err(e) => Err(e),
-            }
-        }
-        Err(e) => Err(e),
-    }
-}
-
-fn get_distance(input: &Span, key_char: &str) -> (Option<usize>, Option<usize>) {
-    let distance_to_key = input.find_substring(key_char);
-    let distance_double_quote = input.find_substring(DOUBLE_QUOTE);
-    (distance_to_key, distance_double_quote)
-}
-
-fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    match get_distance(&s, L2_BRACE) {
-        (Some(distance_to_l2brace), Some(distance_double_quote))
-            if distance_to_l2brace < distance_double_quote =>
-        {
-            let (s, val) = s.take_split(distance_to_l2brace);
-            let (val, interval) = get_interval(val)?;
-            let mut vec = vec![];
-
-            if val.input_len() > 0 {
-                let expression =
-                    Expr::LitExpr(PrimitiveString::get_literal(val.fragment(), interval));
-                vec.push(expression);
-            }
-            parse_brace(s, vec)
-        }
-        (_, Some(distance_double_quote)) => {
-            let (s, val) = s.take_split(distance_double_quote);
-            let (val, interval_start) = get_interval(val)?;
-
-            if val.input_len() > 0 {
-                let expression =
-                    Expr::LitExpr(PrimitiveString::get_literal(val.fragment(), interval_start));
-
-                return Ok((s, expression));
             }
 
-            let (_, interval_end) = get_interval(val)?;
             Ok((
-                s,
+                rest,
                 Expr::ComplexLiteral(
-                    vec![],
-                    RangeInterval {
-                        start: interval_start,
-                        end: interval_end,
-                    },
+                    vector,
+                    RangeInterval::new(Interval::new_as_u32(0, 0), Interval::new_as_u32(0, 0)),
                 ),
             ))
         }
-        (_, None) => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
+        None => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
     }
 }
 
@@ -118,7 +163,7 @@ pub fn parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    delimited(tag(DOUBLE_QUOTE), parse_complex_string, tag(DOUBLE_QUOTE))(s)
+    delimited(tag(DOUBLE_QUOTE), parse_simple_string, tag(DOUBLE_QUOTE))(s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +173,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parser::parse_comments::comment;
+    use nom::sequence::preceded;
 
     pub fn test_string(s: Span) -> IResult<Span, Expr> {
         preceded(comment, parse_string)(s)
@@ -171,7 +218,7 @@ mod tests {
 
     #[test]
     fn ok_complex_string() {
-        let string = Span::new("  \"complex string {{ \"test\" }}\"  ");
+        let string = Span::new("  \"complex string {{ test }}\"  ");
         match test_string(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
@@ -184,15 +231,6 @@ mod tests {
         match test_string(string) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
-        }
-    }
-
-    #[test]
-    fn err_complex_string_no_right_bracket() {
-        let string = Span::new("  \"complex string {{ \"  ");
-        match test_string(string) {
-            Ok(..) => panic!("need to fail"),
-            Err(..) => {}
         }
     }
 

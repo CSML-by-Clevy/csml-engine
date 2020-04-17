@@ -1,7 +1,14 @@
 start:
-    say "Hello World"
-    goto foo
+    // say "foo \n {{ {{ }} hello }} {{ \"world\" }} bar"
+    // do firstname = "John"
+    // do lastname = "Doe"
 
-foo:
-    say "Hello Foo"
+    // say "Hello {{ firstname }} {{ lastname }}"
+    // say "Hello\""
+    // say "{{}}"
+    // say "\\{{ hello }}"
+    // say "\{{{"
+    // say "hello \\{{ }} }} hello"
+    // say "{{ \}} }}"
+    say "Hello World"
     goto end

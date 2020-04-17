@@ -15,7 +15,7 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 
 fn main() {
     let content = std::fs::read_to_string(
-        "/Users/jle-quel/Documents/darwin/csml/CSML/examples/hello_world.csml",
+        "/Users/jle-quel/Documents/csml/interpreter/CSML/examples/hello_world.csml",
     )
     .unwrap();
 
