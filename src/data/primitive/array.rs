@@ -1,6 +1,10 @@
-use crate::data::literal::ContentType;
-use crate::data::primitive::{
-    Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right,
+
+use crate::data::{
+    tokens::TYPES,
+    literal::ContentType,
+    primitive::{
+        Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right,
+    }
 };
 use crate::data::{Interval, Literal, Message};
 use crate::error_format::*;
@@ -574,14 +578,20 @@ impl Primitive for PrimitiveArray {
         let mut vector: Vec<serde_json::Value> = Vec::new();
 
         for literal in self.value.iter() {
-            let mut value = literal.primitive.to_json();
+            let value = literal.primitive.to_json();
 
-            // insert content type info in sub-objects
-            if let serde_json::Value::Object(ref mut object) = value {
-                object.insert("content_type".to_owned(), serde_json::json!(literal.content_type));
-            };
+            if !TYPES.contains(&&(*literal.content_type)) {
+                let mut map = serde_json::Map::new();
+                map.insert(
+                    "content_type".to_owned(), 
+                    serde_json::json!(literal.content_type)
+                );
+                map.insert("content".to_owned(), value);
 
-            vector.push(value);
+                vector.push( serde_json::json!(map));
+            } else {
+                vector.push(value);
+            }
         }
 
         serde_json::Value::Array(vector)

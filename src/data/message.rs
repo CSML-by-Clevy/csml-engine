@@ -39,40 +39,6 @@ impl Message {
 
         map.insert("content_type".to_owned(), json!(self.content_type));
         map.insert("content".to_owned(), self.content.to_owned());
-        // match &self.content_type {
-            // name if name == "button" => {
-            //     map.insert("content_type".to_owned(), json!(name));
-            //     map.insert(
-            //         "content".to_owned(),
-            //         button_to_json(&mut self.content).to_owned(),
-            //     );
-            // }
-            // name if name == "question" => {
-            //     map.insert("content_type".to_owned(), json!(name));
-            //     map.insert(
-            //         "content".to_owned(),
-            //         question_to_json(&mut self.content).to_owned(),
-            //     );
-            // }
-            // name if name == "carousel" => {
-            //     map.insert("content_type".to_owned(), json!(name));
-            //     map.insert(
-            //         "content".to_owned(),
-            //         carousel_to_json(&mut self.content).to_owned(),
-            //     );
-            // }
-            // name if name == "card" => {
-            //     map.insert("content_type".to_owned(), json!(name));
-            //     map.insert(
-            //         "content".to_owned(),
-            //         card_to_json(&mut self.content).to_owned(),
-            //     );
-            // }
-            // name => {
-            //     map.insert("content_type".to_owned(), json!(name));
-            //     map.insert("content".to_owned(), self.content.to_owned());
-            // }
-        // }
         Value::Object(map)
     }
 }

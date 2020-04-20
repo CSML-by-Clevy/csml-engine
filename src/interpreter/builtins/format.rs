@@ -104,10 +104,6 @@ pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
     match args.get(DEFAULT) {
         Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
             header.insert(
-                "content_type".to_owned(),
-                PrimitiveString::get_literal("header", interval),
-            );
-            header.insert(
                 "content-type".to_owned(),
                 PrimitiveString::get_literal("application/json", interval),
             );
@@ -122,20 +118,17 @@ pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
                 PrimitiveString::get_literal("get", interval),
             );
 
-            let mut lit_header = PrimitiveObject::get_literal(&header, interval);
-            lit_header.set_content_type("header");
+            let lit_header = PrimitiveObject::get_literal(&header, interval);
             http.insert(
                 "header".to_owned(),
                 lit_header,
             );
-            let mut lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
-            lit_query.set_content_type("query");
+            let lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
             http.insert(
                 "query".to_owned(),
                 lit_query,
             );
-            let mut lit_body = PrimitiveObject::get_literal(&HashMap::default(), interval);
-            lit_body.set_content_type("body");
+            let lit_body = PrimitiveObject::get_literal(&HashMap::default(), interval);
             http.insert(
                 "body".to_owned(),
                 lit_body,

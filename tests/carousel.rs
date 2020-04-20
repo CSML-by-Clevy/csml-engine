@@ -24,12 +24,14 @@ fn ok_card() {
                     "image_url": "url",
                     "buttons": [
                         {
+                            "content": {
                                 "accepts": ["b1"],
                                 "payload": "b1",
                                 "title": "b1",
                                 "theme": "primary",
-                                "icon": "info",
-                                "content_type": "button"
+                                "icon": "info"
+                            },
+                            "content_type": "button"
                         }
                     ]
                 },
@@ -57,16 +59,20 @@ fn ok_carousel() {
             "content": {
                 "cards": [
                     {
-                        "title": "c1",
-                        "content_type": "card",
-                        "buttons": [
-                            {
-                                    "accepts": ["b1"],
-                                    "payload": "b1",
-                                    "title": "b1",
+                        "content": {
+                            "title": "c1",
+                            "buttons": [
+                                {
+                                    "content": {
+                                        "accepts": ["b1"],
+                                        "payload": "b1",
+                                        "title": "b1"
+                                    },
                                     "content_type": "button"
-                            }
-                        ]
+                                }
+                            ]
+                        },
+                        "content_type": "card"
                     }
                 ]
             },
@@ -91,18 +97,22 @@ fn ok_carousel_step1() {
             "content": {
                 "cards": [
                     {
-                        "title": "c1",
-                        "content_type": "card",
-                        "buttons": [
-                            {
-                                "accepts": ["b1"],
-                                "payload": "b1",
-                                "title": "b1",
-                                "theme": "primary",
-                                "icon": "info",
-                                "content_type": "button"
-                            }
-                        ]
+                        "content": {
+                            "title": "c1",
+                            "buttons": [
+                                {
+                                    "content": {
+                                        "accepts": ["b1"],
+                                        "payload": "b1",
+                                        "title": "b1",
+                                        "theme": "primary",
+                                        "icon": "info"
+                                    },
+                                    "content_type": "button"
+                                }
+                            ]
+                        },
+                        "content_type": "card"
                     }
                 ]
             },

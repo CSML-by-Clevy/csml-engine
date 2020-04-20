@@ -1,4 +1,5 @@
 use crate::data::{
+    tokens::TYPES,
     ast::Interval,
     literal::ContentType,
     message::Message,
@@ -992,14 +993,19 @@ impl Primitive for PrimitiveObject {
             serde_json::map::Map::new();
 
         for (key, literal) in self.value.iter() {
-            let mut value = literal.primitive.to_json();
 
-            // insert content type info in sub-objects
-            if let serde_json::Value::Object(ref mut object) = value {
-                object.insert("content_type".to_owned(), serde_json::json!(literal.content_type));
-            };
+            if !TYPES.contains(&&(*literal.content_type)) {
+                let mut map = serde_json::Map::new();
+                map.insert(
+                    "content_type".to_owned(), 
+                    serde_json::json!(literal.content_type)
+                );
+                map.insert("content".to_owned(), literal.primitive.to_json());
 
-            object.insert(key.to_owned(), value);
+                object.insert(key.to_owned(), serde_json::json!(map) );
+            } else {
+                object.insert(key.to_owned(), literal.primitive.to_json());
+            }
         }
 
         serde_json::Value::Object(object)
