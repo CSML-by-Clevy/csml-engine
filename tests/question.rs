@@ -50,17 +50,19 @@ fn ok_question() {
                 "accepts": ["b1", "b2"],
                 "buttons": [
                     {
-                        "accepts": ["b1"],
-                        "payload": "b1",
-                        "title": "b1",
-
+                        "content": {
+                            "accepts": ["b1"],
+                            "payload": "b1",
+                            "title": "b1"
+                        },
                         "content_type": "button"
                     },
                     {
-                        "accepts": ["b2"],
-                        "payload": "b2",
-                        "title": "b2",
-
+                        "content": {
+                            "accepts": ["b2"],
+                            "payload": "b2",
+                            "title": "b2"
+                        },
                         "content_type": "button"
                     }
                 ],
@@ -89,16 +91,20 @@ fn ok_question_step1() {
                 "accepts": ["b1", "b2"],
                 "buttons": [
                     {
-                        "accepts": ["b1"],
-                        "payload": "b1",
-                        "title": "b1",
+                        "content": {
+                            "accepts": ["b1"],
+                            "payload": "b1",
+                            "title": "b1"
+                        },
 
                         "content_type": "button"
                     },
                     {
-                        "accepts": ["b2"],
-                        "payload": "b2",
-                        "title": "b2",
+                        "content": {
+                            "accepts": ["b2"],
+                            "payload": "b2",
+                            "title": "b2"
+                        },
 
                         "content_type": "button"
                     }
@@ -128,16 +134,20 @@ fn ok_question_step2() {
                 "accepts": ["b1", "b2"],
                 "buttons": [
                     {
-                        "accepts": ["b1"],
-                        "payload": "b1",
-                        "title": "b1",
+                        "content": {
+                            "accepts": ["b1"],
+                            "payload": "b1",
+                            "title": "b1"
+                        },
 
                         "content_type": "button"
                     },
                     {
-                        "accepts": ["b2"],
-                        "payload": "b2",
-                        "title": "b2",
+                        "content": {
+                            "accepts": ["b2"],
+                            "payload": "b2",
+                            "title": "b2"
+                        },
 
                         "content_type": "button"
                     }

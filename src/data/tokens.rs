@@ -73,6 +73,16 @@ pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
 pub const NULL: &str = "null";
 
+pub const OBJECT_TYPE: &str = "object";
+pub const ARRAY: &str = "array";
+pub const TEXT_TYPE: &str = "text";
+pub const STRING: &str = "string";
+pub const INT: &str = "int";
+pub const FLOAT: &str = "float";
+pub const BOOLEAN: &str = "boolean";
+
+pub static TYPES: &[&str] = &[OBJECT_TYPE, ARRAY, TEXT_TYPE, STRING, INT, FLOAT, BOOLEAN];
+
 pub static RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
     MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
