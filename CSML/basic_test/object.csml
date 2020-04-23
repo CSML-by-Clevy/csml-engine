@@ -89,6 +89,6 @@ step4:
     goto end
 
 step5:
-    say "{{ OneOf(["1", "2", "{{ OneOf([4, 5])  }}"])  }}"
+    say "{{ OneOf([\"1\", \"2\"])  }}"
 
     goto end

@@ -13,6 +13,9 @@ use crate::parser::{
     tools::*,
 };
 
+use crate::parser::parse_expand_string::parse_expand_string;
+use crate::parser::state_context::StateContext;
+use crate::parser::state_context::StringState;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -56,6 +59,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, idents) = parse_idents_utilisation(s)?;
+
     Ok((s, Expr::IdentExpr(idents)))
 }
 
@@ -84,6 +88,8 @@ pub fn parse_expr_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
+    println!("s: {}", s.fragment());
+
     let (s, start) = preceded(comment, get_interval)(s)?;
     let (s, (vec, _)) = preceded(
         tag(L_PAREN),
@@ -108,11 +114,12 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, start) = preceded(comment, get_interval)(s)?;
+
     let (s, (vec, _)) = preceded(
         tag(L_BRACKET),
         cut(terminated(
             tuple((
-                separated_list(preceded(comment, tag(COMMA)), parse_operator),
+                separated_list(preceded(comment, tag(COMMA)), parse_basic_expr),
                 opt(preceded(comment, tag(COMMA))),
             )),
             preceded(comment, parse_r_bracket),
@@ -127,18 +134,32 @@ pub fn parse_basic_expr<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, expr) = preceded(
-        comment,
-        alt((
-            parse_condition_group,
-            parse_object,
-            parse_expr_array,
-            parse_literal_expr,
-            parse_functions,
-            parse_string,
-            parse_idents_expr_utilisation,
-        )),
-    )(s)?;
+    let (s, expr) = match StateContext::get_string() {
+        StringState::Normal => preceded(
+            comment,
+            alt((
+                parse_condition_group,
+                parse_object,
+                parse_expr_array,
+                parse_literal_expr,
+                parse_functions,
+                parse_string,
+                parse_idents_expr_utilisation,
+            )),
+        )(s)?,
+        StringState::Expand => preceded(
+            comment,
+            alt((
+                parse_condition_group,
+                parse_object,
+                parse_expr_array,
+                parse_literal_expr,
+                parse_functions,
+                parse_expand_string,
+                parse_idents_expr_utilisation,
+            )),
+        )(s)?,
+    };
 
     let (s, expr) = parse_path(s, expr)?;
 

@@ -2,6 +2,7 @@ pub mod operator;
 pub mod parse_actions;
 pub mod parse_braces;
 pub mod parse_comments;
+pub mod parse_expand_string;
 pub mod parse_foreach;
 pub mod parse_functions;
 pub mod parse_goto;

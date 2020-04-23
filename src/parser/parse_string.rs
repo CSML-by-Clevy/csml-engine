@@ -1,31 +1,32 @@
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, *};
+use crate::parser::operator::parse_operator;
+use crate::parser::parse_comments::comment;
+use crate::parser::state_context::StateContext;
+use crate::parser::state_context::StringState;
 use crate::parser::tools::get_interval;
+use nom::bytes::complete::take_while;
+use nom::{
+    bytes::complete::tag,
+    error::ParseError,
+    sequence::{delimited, preceded},
+    *,
+};
+use crate::parser::tools::get_distance_brace;
 
-use nom::{bytes::complete::tag, error::ParseError, sequence::delimited, *};
-
-// TODO:
-// GOOD ERROR MESSAGE
-// GOOD INTERVAL
-// WRITE TESTS
-// UNCOMMENT OBJECT TEST
+// !BUG:    MULTIPLE BACKSLASH
+// ?WIP:    GOOD ERROR MESSAGE
+// ?WIP:    GOOD INTERVAL
+// ?WIP:    WRITE TESTS
+// *DONE:   UNCOMMENT OBJECT TEST
+// *DONE:   APPLY ARITHMETIC AND FUNCTION
+// *DONE:    EMPTY PRIMITIVE
+// *DONE:    MULTIPLE ARGUMENTS INSIDE EXPAND
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
-
-fn condition_brace(s: &Span, key: char, c: char, escape: bool, index: usize) -> bool {
-    if c == key && escape == false {
-        if let Some(c) = s.fragment().chars().nth(index + 1) {
-            if c == key {
-                return true;
-            }
-        }
-    }
-
-    false
-}
 
 fn condition_quote(_s: &Span, key: char, c: char, escape: bool, _index: usize) -> bool {
     if c == key && escape == false {
@@ -33,6 +34,34 @@ fn condition_quote(_s: &Span, key: char, c: char, escape: bool, _index: usize) -
     }
 
     false
+}
+
+fn add_to_vector<'a, E>(s: Span<'a>, length: usize, vector: &mut Vec<Expr>) -> IResult<Span<'a>, Span<'a>, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (rest, value) = s.take_split(length);
+    let (value, interval) = get_interval(value)?;
+
+    vector.push(Expr::LitExpr(PrimitiveString::get_literal(
+        value.fragment(),
+        interval,
+    )));
+
+    Ok((rest, value))
+}
+
+fn parse_close_bracket<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    match preceded(comment, tag("}}"))(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(gen_nom_failure(s, ERROR_MULTIPLE_ARGUMENTS_EXPANDABLE_STRING))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,76 +96,63 @@ fn get_distance(
     None
 }
 
-fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
+fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let mut vector = vec![];
+    StateContext::set_string(StringState::Expand);
 
-    let distance = match get_distance(&s, '}', condition_brace) {
-        Some(result) => result,
-        None => unreachable!(),
+    println!("[+] s: {}", s.fragment());
+
+    let (rest, expr) = match parse_operator(s) {
+        Ok((rest, val)) => (rest, val),
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err)))=> {
+            let (_, interval) = get_interval(s)?;
+            let expr = Expr::LitExpr(PrimitiveString::get_literal("", interval));
+
+            (s, expr)
+        }
+        Err(Err::Incomplete(needed)) => {
+            return Err(Err::Incomplete(needed));
+        }
     };
 
-    let (rest, string) = s.take_split(distance);
+    println!("[+] rest: {}", rest.fragment());
 
-    let array = string.fragment().to_owned().split_ascii_whitespace();
+    StateContext::set_string(StringState::Normal);
 
-    for (index, string) in array.into_iter().enumerate() {
-        match index > 0 {
-            true => {
-                return Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE));
-            }
-            false => {
-                let expr = Expr::IdentExpr(Identifier::new(string, Interval::new_as_u32(0, 0)));
-
-                vector.push(expr);
-            }
-        }
-    }
-
-    Ok((rest, vector))
+    Ok((rest, expr))
 }
 
-fn parse_simple_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+fn do_parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let mut vector = vec![];
-
     match get_distance(&s, '\"', condition_quote) {
         Some(distance) => {
             let (rest, string) = s.take_split(distance);
 
+            let mut vector = vec![];
             let mut string = string.to_owned();
 
             while !string.fragment().is_empty() {
-                match (
-                    get_distance(&string, '{', condition_brace),
-                    get_distance(&string, '}', condition_brace),
-                ) {
-                    (Some(lhs_distance), Some(_)) => {
-                        let (rest, value) = string.take_split(lhs_distance);
+                match (get_distance_brace(&string, '{'), get_distance_brace(&string, '}')) {
+                    (Some(lhs_distance), Some(rhs_distance)) if lhs_distance < rhs_distance => {
+                        let (rest, _) = add_to_vector(string, lhs_distance, &mut vector)?;
+                        let (rest, expression) = delimited(tag("{{"), parse_complex_string, parse_close_bracket)(rest)?;
 
-                        vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-                            value.fragment(),
-                            Interval::new_as_u32(0, 0),
-                        )));
-
-                        let (rest, expression) =
-                            delimited(tag(L2_BRACE), parse_complex_string, tag(R2_BRACE))(rest)?;
-
-                        vector = [&vector[..], &expression[..]].concat();
+                        vector.push(expression);
 
                         string = rest;
                     }
+                    (Some(_), None) => {
+                        return Err(gen_nom_failure(s, ERROR_DOUBLE_CLOSE_BRACE));
+                    }
+                    (None, Some(_)) => {
+                        return Err(gen_nom_failure(s, ERROR_DOUBLE_OPEN_BRACE));
+                    }
                     (_, _) => {
-                        let (rest, value) = string.take_split(string.fragment().len());
-
-                        vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-                            value.fragment(),
-                            Interval::new_as_u32(0, 0),
-                        )));
+                        let (rest, _) = add_to_vector(string, string.fragment().len(), &mut vector)?;
 
                         string = rest;
                     }
@@ -145,10 +161,7 @@ where
 
             Ok((
                 rest,
-                Expr::ComplexLiteral(
-                    vector,
-                    RangeInterval::new(Interval::new_as_u32(0, 0), Interval::new_as_u32(0, 0)),
-                ),
+                Expr::ComplexLiteral(vector, RangeInterval::new(Interval::new_as_u32(0, 0), Interval::new_as_u32(0, 0)))
             ))
         }
         None => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
@@ -163,7 +176,7 @@ pub fn parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    delimited(tag(DOUBLE_QUOTE), parse_simple_string, tag(DOUBLE_QUOTE))(s)
+    delimited(tag(DOUBLE_QUOTE), do_parse_string, tag(DOUBLE_QUOTE))(s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,66 +193,308 @@ mod tests {
         preceded(comment, parse_string)(s)
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    /// SIMPLE STRINGS
+    ////////////////////////////////////////////////////////////////////////////
+
     #[test]
-    fn ok_normal_string() {
-        let string = Span::new("\"normal string\"");
-        match test_string(string) {
+    fn ok_simple() {
+        let string = "\"Hello\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
         }
     }
 
     #[test]
-    fn ok_normal_comment_string() {
-        let string = Span::new("    \"normal string\"    /* test */");
-        match test_string(string) {
+    fn ok_simple_reverse() {
+        let string = "\"}} {{\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
             Ok(..) => {}
             Err(e) => panic!("{:?}", e),
         }
     }
 
     #[test]
-    fn err_normal_string_no_right_quote() {
-        let string = Span::new(" \"normal string ");
-        match test_string(string) {
+    fn ok_simple_escape() {
+        let string = "\"\\\"Hello\\\"\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_simple_multiple_arguments() {
+        let string = "\"Hello World\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_simple_escape_multiple_arguments() {
+        let string = "\"Hello \\\"World\\\"\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_simple_escape_quotes() {
+        let string = "\"\\\"\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_simple_escape_open_brace() {
+        let string = "\"\\{{\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_simple_escape_close_brace() {
+        let string = "\"\\}}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn err_simple() {
+        let string = "\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
             Ok(..) => panic!("need to fail"),
-            Err(..) => {}
+            Err(_) => {},
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    /// EXPAND STRINGS
+    //////////////////////////////////////////////////////////////////////////
+    
+    #[test]
+    fn ok_expand_empty_0() {
+        let string = "\"{{ }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
         }
     }
 
     #[test]
-    fn err_normal_string_no_left_quote() {
-        let string = Span::new(" normal string\" ");
-        match test_string(string) {
+    fn ok_expand_empty_1() {
+        let string = "\"{{}}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_integer() {
+        let string = "\"{{ 42 }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_escape_string() {
+        let string = "\"{{ \\\"Hello\\\" }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_escape_empty_string() {
+        let string = "\"{{ \\\"\\\" }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_ident() {
+        let string = "\"{{ Hello }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_array() {
+        let string = "\"{{ [\\\"Hello\\\"] }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_empty_array() {
+        let string = "\"{{ [] }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_object() {
+        let string = "\"{{ {\\\"Foo\\\":\\\"Bar\\\"} }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_empty_object() {
+        let string = "\"{{ {} }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_function_0() {
+        let string = "\"{{ f() }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_function_1() {
+        let string = "\"{{ f(\\\"hello\\\") }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_function_2() {
+        let string = "\"{{ f(\\\"hello\\\", f(hello)) }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_as() {
+        let string = "\"{{ [\\\"{{ Hello }}\\\"] as array }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn ok_expand_expand() {
+        let string = "\"{{ \\\"{{ Hello }}\\\" }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => {}
+            Err(e) => panic!("{:?}", e),
+        }
+    }
+
+    #[test]
+    fn err_expand_open() {
+        let string = "\"{{ Hello\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
             Ok(..) => panic!("need to fail"),
-            Err(..) => {}
+            Err(_) => {}
         }
     }
 
     #[test]
-    fn ok_complex_string() {
-        let string = Span::new("  \"complex string {{ test }}\"  ");
-        match test_string(string) {
-            Ok(..) => {}
-            Err(e) => panic!("{:?}", e),
+    fn err_expand_close() {
+        let string = "\"Hello }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => panic!("need to fail"),
+            Err(_) => {}
         }
     }
 
     #[test]
-    fn ok_complex_complex_string() {
-        let string = Span::new("  \"complex string {{ \"var {{ \"test\" }}\" }}\"  ");
-        match test_string(string) {
-            Ok(..) => {}
-            Err(e) => panic!("{:?}", e),
-        }
-    }
+    fn err_expand_multiple_arguments() {
+        let string = "\"{{ Hello World }}\"";
+        let span = Span::new(string);
 
-    #[test]
-    fn err_complex_string_no_left_bracket() {
-        let string = Span::new("  \"complex string  }}\"  ");
-        match test_string(string) {
-            Ok(..) => {}
-            Err(e) => panic!("{:?}", e),
+        match test_string(span) {
+            Ok(..) => panic!("need to fail"),
+            Err(_) => {}
         }
     }
 }
