@@ -5,7 +5,6 @@ use crate::parser::{
     tools::get_interval,
     tools::{get_string, get_tag},
 };
-use nom::bytes::complete::take_till;
 use nom::{error::ParseError, sequence::preceded, Err::*, *};
 
 ////////////////////////////////////////////////////////////////////////////////

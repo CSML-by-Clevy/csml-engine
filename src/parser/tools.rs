@@ -1,10 +1,9 @@
 use crate::data::{ast::*, tokens::*};
 use nom::{
-    bytes::complete::take_till1,
     error::{ErrorKind, ParseError},
+    bytes::complete::take_while1,
     *,
 };
-use nom::bytes::complete::take_while1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTION

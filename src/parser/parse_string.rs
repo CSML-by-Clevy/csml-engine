@@ -7,7 +7,6 @@ use crate::parser::state_context::StateContext;
 use crate::parser::state_context::StringState;
 use crate::parser::tools::get_interval;
 use crate::parser::tools::get_range_interval;
-use nom::bytes::complete::take_while;
 use nom::{
     bytes::complete::tag,
     error::ParseError,
@@ -16,27 +15,18 @@ use nom::{
 };
 use crate::parser::tools::get_distance_brace;
 
-// ?WIP:    GOOD ERROR MESSAGE
-// ?WIP:    GOOD INTERVAL
-// ?WIP:    WRITE TESTS
-
-// *DONE:    MULTIPLE BACKSLASH
+// *DONE:   GOOD ERROR MESSAGE
+// *DONE:   GOOD INTERVAL
+// *DONE:   WRITE TESTS
+// *DONE:   MULTIPLE BACKSLASH
 // *DONE:   UNCOMMENT OBJECT TEST
 // *DONE:   APPLY ARITHMETIC AND FUNCTION
-// *DONE:    EMPTY PRIMITIVE
-// *DONE:    MULTIPLE ARGUMENTS INSIDE EXPAND
+// *DONE:   EMPTY PRIMITIVE
+// *DONE:   MULTIPLE ARGUMENTS INSIDE EXPAND
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
-
-fn condition_quote(_s: &Span, key: char, c: char, escape: bool, _index: usize) -> bool {
-    if c == key && escape == false {
-        return true;
-    }
-
-    false
-}
 
 fn add_to_vector<'a, E>(s: Span<'a>, length: usize, expr_vector: &mut Vec<Expr>, interval_vector: &mut Vec<Interval>) -> IResult<Span<'a>, Span<'a>, E>
 where
@@ -68,20 +58,12 @@ where
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// PRIVATE FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-fn get_distance(
-    s: &Span,
-    key: char,
-    f: fn(&Span, char, char, bool, usize) -> bool,
-) -> Option<usize> {
+fn get_distance_quote(s: &Span) -> Option<usize> {
     let mut result: usize = 0;
     let mut escape = false;
 
-    for (index, c) in s.as_bytes().iter().enumerate() {
-        if f(s, key, *c as char, escape, index) == true {
+    for c in s.as_bytes().iter() {
+        if *c as char == '"' && escape == false {
             return Some(result);
         }
 
@@ -100,13 +82,15 @@ fn get_distance(
     None
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
 fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
     StateContext::set_string(StringState::Expand);
-
-    println!("[+] s: {}", s.fragment());
 
     let (rest, expr) = match parse_operator(s) {
         Ok((rest, val)) => (rest, val),
@@ -121,8 +105,6 @@ where
         }
     };
 
-    println!("[+] rest: {}", rest.fragment());
-
     StateContext::set_string(StringState::Normal);
 
     Ok((rest, expr))
@@ -132,7 +114,7 @@ fn do_parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    match get_distance(&s, '"', condition_quote) {
+    match get_distance_quote(&s) {
         Some(distance) => {
             let (rest, string) = s.take_split(distance);
 
@@ -163,8 +145,6 @@ where
                     }
                 }
             }
-
-            println!("{:#?}", vector.to_owned());
 
             let (start, end) = get_range_interval(&interval);
 

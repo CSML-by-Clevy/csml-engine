@@ -1,5 +1,4 @@
 use crate::data::{ast::*, tokens::*};
-use crate::parser::operator::parse_operator::parse_operator;
 use crate::parser::{parse_comments::comment, tools::get_interval};
 
 use nom::{
@@ -33,27 +32,18 @@ fn string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    match StateContext::get_string() {
-        StringState::Normal => {
-            context(
-                "string must start with '\"' ",
-                preceded(
-                    tag("\""),
-                    cut(terminated(parse_str, tag("\""))),
-                ),
-            )(s)
-        }
-        StringState::Expand => {
-            context(
-                "string must start with '\\\"' ",
-                preceded(
-                    tag("\\\""),
-                    cut(terminated(parse_str, tag("\\\""))),
-                ),
-            )(s)
-        }
-    }
+    let token = match StateContext::get_string() {
+        StringState::Normal => "\"",
+        StringState::Expand => "\\\"",
+    };
 
+    context(
+        "string must start with '\"' ",
+        preceded(
+            tag(token),
+            cut(terminated(parse_str, tag(token))),
+        ),
+    )(s)
 }
 
 fn key_value<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Span<'a>, Expr), E>
