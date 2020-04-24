@@ -1,4 +1,4 @@
-use crate::data::{ast::Interval, tokens::*};
+use crate::data::{ast::*, tokens::*};
 use nom::{
     bytes::complete::take_till1,
     error::{ErrorKind, ParseError},
@@ -84,6 +84,21 @@ where
 {
     let (s, pos) = position(s)?;
     Ok((s, Interval::new_as_span(pos)))
+}
+
+pub fn get_range_interval(vector_interval: &[Interval]) -> (Interval, Interval) {
+    let mut start = Interval::new_as_u32(0, 0);
+    let mut end = Interval::new_as_u32(0, 0);
+
+    for (index, interval ) in vector_interval.iter().enumerate() {
+        if index == 0 {
+            start = *interval;
+        }
+
+        end = *interval;
+    }
+
+    (start, end)
 }
 
 pub fn get_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>

@@ -1,4 +1,9 @@
 start:
-    say " {{ \\\\ident }}"
-
+    // say "Hello"
+    // say "{{Hello}}"
+    // say "{{1 + 1}}"
+    // say "{{[]}}"
+    // say "{{{}}}"
+    // say "{{f()}}"
+    say "{{\\\"Hello\"}}"
     goto end
