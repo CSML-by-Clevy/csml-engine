@@ -35,12 +35,14 @@ where
     let (rest, value) = s.take_split(length);
     let (value, interval) = get_interval(value)?;
 
-    expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-        value.fragment(),
-        interval,
-    )));
+    if !value.fragment().is_empty() {
+        expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
+            value.fragment(),
+            interval,
+        )));
 
-    interval_vector.push(interval);
+        interval_vector.push(interval);
+    }
 
     Ok((rest, value))
 }
