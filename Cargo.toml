@@ -1,6 +1,6 @@
 [package]
 name = "csmlinterpreter"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "Jefferson Le Quellec <jefferson.le-quellec@clevy.io>",

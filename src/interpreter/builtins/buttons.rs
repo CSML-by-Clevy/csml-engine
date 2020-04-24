@@ -14,33 +14,19 @@ pub fn button(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
         _ => return Err(gen_error_info(interval, ERROR_BUTTON.to_owned())),
     };
 
-    button.insert("payload".to_owned(), title.clone());
     button.insert("title".to_owned(), title.to_owned());
+
+    match button.get("payload") {
+        Some(_) => {},
+        None => {
+            button.insert("payload".to_owned(), title.clone());
+        }
+    }
 
     button.insert(
         "accepts".to_owned(),
         format_accept(button.get("accepts"), title),
     );
-
-    // let button_type = match args.get("button_type") {
-    //     Some(button_type) => button_type.to_owned(),
-    //     None => PrimitiveString::get_literal("quick_button", interval.to_owned()),
-    // };
-    // button.insert("button_type".to_owned(), button_type);
-    // match args.get("theme") {
-    //     Some(theme) => {
-    //         button.insert("theme".to_owned(), theme.to_owned());
-    //     }
-    //     None => {
-    //         button.insert(
-    //             "theme".to_owned(),
-    //             PrimitiveString::get_literal("primary", interval),
-    //         );
-    //     }
-    // };
-    // if let Some(icon) = args.get("icon") {
-    //     button.insert("icon".to_owned(), icon.to_owned());
-    // }
 
     let mut result = PrimitiveObject::get_literal(&button, interval);
     result.set_content_type("button");
@@ -63,12 +49,6 @@ pub fn card(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
         _ => return Err(gen_error_info(interval, ERROR_CARD_BUTTON.to_owned())),
     };
 
-    // if let Some(subtitle) = args.get("subtitle") {
-    //     card.insert("subtitle".to_owned(), subtitle.to_owned());
-    // }
-    // if let Some(image_url) = card.get("image_url") {
-    //     card.insert("image_url".to_owned(), image_url.to_owned());
-    // }
     let mut result = PrimitiveObject::get_literal(&card, interval);
     result.set_content_type("card");
 
