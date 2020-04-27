@@ -15,6 +15,7 @@ use lazy_static::*;
 use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::HashMap;
+// use serde_json::{Result, Value};
 
 ////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -68,6 +69,10 @@ lazy_static! {
                 PrimitiveString::ends_with_regex as PrimitiveMethod,
                 Right::Read,
             ),
+        );
+        map.insert(
+            "from_json",
+            (PrimitiveString::from_json as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "is_empty",
@@ -394,6 +399,26 @@ impl PrimitiveString {
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
+    fn from_json(
+        string: &mut PrimitiveString,
+        args: &[Literal],
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "from_json() => object";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+        }
+
+        let string = "{\"foo\":\"bar\"}";
+
+        println!("[+] string: {:#?}", string);
+        let object: serde_json::Value = serde_json::from_str(string).unwrap();
+        println!("[+] object: {:#?}", object);
+
+        unimplemented!();
     }
 
     fn is_empty(

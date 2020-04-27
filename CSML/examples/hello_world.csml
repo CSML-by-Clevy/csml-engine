@@ -1,3 +1,4 @@
 start:
-    say "Hello World"
+    do obj = "{\"foo\":\"bar\"}".from_json()
+
     goto end
