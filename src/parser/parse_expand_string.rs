@@ -1,12 +1,7 @@
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, *};
-use nom::{
-    bytes::complete::tag,
-    error::ParseError,
-    sequence::{delimited},
-    *,
-};
+use nom::{bytes::complete::tag, error::ParseError, sequence::delimited, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PRIVATE FUNCTIONS

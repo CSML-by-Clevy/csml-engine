@@ -87,7 +87,7 @@ pub fn interpret(
         let ast = match parse_file(&content) {
             Ok(result) => result,
             Err(error) => {
-                dbg!(error.to_owned());
+                dbg!(error);
                 unimplemented!();
             }
         };

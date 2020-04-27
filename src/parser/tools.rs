@@ -1,7 +1,7 @@
 use crate::data::{ast::*, tokens::*};
 use nom::{
-    error::{ErrorKind, ParseError},
     bytes::complete::take_while1,
+    error::{ErrorKind, ParseError},
     *,
 };
 
@@ -34,9 +34,9 @@ fn set_escape(s: &str, index: usize, escape: &mut bool) {
     }
 }
 
-fn set_substring(s: &str, index: usize, escape: &bool, expand: &bool, substring: &mut bool) {
+fn set_substring(s: &str, index: usize, escape: bool, expand: bool, substring: &mut bool) {
     if let Some(c) = s.chars().nth(index) {
-        if c == '"' && *escape == true && *expand == true {
+        if c == '"' && escape && expand {
             match substring {
                 true => {
                     *substring = false;
@@ -49,11 +49,11 @@ fn set_substring(s: &str, index: usize, escape: &bool, expand: &bool, substring:
     }
 }
 
-fn set_open_expand(s: &str, index: usize, escape: &bool, substring: &bool, expand: &mut bool) {
+fn set_open_expand(s: &str, index: usize, escape: bool, substring: bool, expand: &mut bool) {
     if let Some(c) = s.chars().nth(index) {
-        if c == '{' && *escape == false && *substring == false {
+        if c == '{' && !escape && !substring {
             if let Some(c) = s.chars().nth(index + 1) {
-                if c == '{' && *escape == false {
+                if c == '{' && !escape {
                     *expand = true;
                 }
             }
@@ -61,11 +61,11 @@ fn set_open_expand(s: &str, index: usize, escape: &bool, substring: &bool, expan
     }
 }
 
-fn set_close_expand(s: &str, index: usize, escape: &bool, substring: &bool, expand: &mut bool) {
+fn set_close_expand(s: &str, index: usize, escape: bool, substring: bool, expand: &mut bool) {
     if let Some(c) = s.chars().nth(index) {
-        if c == '}' && *escape == false && *substring == false {
+        if c == '}' && !escape && !substring {
             if let Some(c) = s.chars().nth(index + 1) {
-                if c == '}' && *escape == false {
+                if c == '}' && !escape {
                     *expand = false;
                 }
             }
@@ -89,7 +89,7 @@ pub fn get_range_interval(vector_interval: &[Interval]) -> (Interval, Interval) 
     let mut start = Interval::new_as_u32(0, 0);
     let mut end = Interval::new_as_u32(0, 0);
 
-    for (index, interval ) in vector_interval.iter().enumerate() {
+    for (index, interval) in vector_interval.iter().enumerate() {
         if index == 0 {
             start = *interval;
         }
@@ -130,7 +130,7 @@ pub fn get_distance_brace(s: &Span, key: char) -> Option<usize> {
     let mut substring: bool = false;
 
     for (i, c) in s.fragment().as_bytes().iter().enumerate() {
-        if *c as char == key && escape == false && substring == false {
+        if *c as char == key && !escape && !substring {
             if let Some(c) = s.fragment().chars().nth(i + 1) {
                 if c == key {
                     return Some(i);
@@ -138,9 +138,9 @@ pub fn get_distance_brace(s: &Span, key: char) -> Option<usize> {
             }
         }
 
-        set_open_expand(s.fragment(), i, &escape, &substring, &mut expand);
-        set_close_expand(s.fragment(), i, &escape, &substring, &mut expand);
-        set_substring(s.fragment(), i, &escape, &expand, &mut substring);
+        set_open_expand(s.fragment(), i, escape, substring, &mut expand);
+        set_close_expand(s.fragment(), i, escape, substring, &mut expand);
+        set_substring(s.fragment(), i, escape, expand, &mut substring);
         set_escape(s.fragment(), i, &mut escape);
     }
 

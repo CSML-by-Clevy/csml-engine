@@ -5,6 +5,7 @@ use crate::parser::operator::parse_operator;
 use crate::parser::parse_comments::comment;
 use crate::parser::state_context::StateContext;
 use crate::parser::state_context::StringState;
+use crate::parser::tools::get_distance_brace;
 use crate::parser::tools::get_interval;
 use crate::parser::tools::get_range_interval;
 use nom::{
@@ -13,7 +14,6 @@ use nom::{
     sequence::{delimited, preceded},
     *,
 };
-use crate::parser::tools::get_distance_brace;
 
 // *DONE:   GOOD ERROR MESSAGE
 // *DONE:   GOOD INTERVAL
@@ -28,7 +28,12 @@ use crate::parser::tools::get_distance_brace;
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn add_to_vector<'a, E>(s: Span<'a>, length: usize, expr_vector: &mut Vec<Expr>, interval_vector: &mut Vec<Interval>) -> IResult<Span<'a>, Span<'a>, E>
+fn add_to_vector<'a, E>(
+    s: Span<'a>,
+    length: usize,
+    expr_vector: &mut Vec<Expr>,
+    interval_vector: &mut Vec<Interval>,
+) -> IResult<Span<'a>, Span<'a>, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -53,19 +58,19 @@ where
 {
     match preceded(comment, tag("}}"))(s) {
         Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
-            Err(gen_nom_failure(s, ERROR_MULTIPLE_ARGUMENTS_EXPANDABLE_STRING))
-        }
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => Err(gen_nom_failure(
+            s,
+            ERROR_MULTIPLE_ARGUMENTS_EXPANDABLE_STRING,
+        )),
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
 }
 
 fn get_distance_quote(s: &Span) -> Option<usize> {
-    let mut result: usize = 0;
     let mut escape = false;
 
-    for c in s.as_bytes().iter() {
-        if *c as char == '"' && escape == false {
+    for (result, c) in s.as_bytes().iter().enumerate() {
+        if *c as char == '"' && !escape {
             return Some(result);
         }
 
@@ -77,8 +82,6 @@ fn get_distance_quote(s: &Span) -> Option<usize> {
         } else {
             escape = false;
         }
-
-        result += 1;
     }
 
     None
@@ -96,7 +99,7 @@ where
 
     let (rest, expr) = match parse_operator(s) {
         Ok((rest, val)) => (rest, val),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err)))=> {
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
             let (_, interval) = get_interval(s)?;
             let expr = Expr::LitExpr(PrimitiveString::get_literal("", interval));
 
@@ -125,10 +128,15 @@ where
             let mut string = string.to_owned();
 
             while !string.fragment().is_empty() {
-                match (get_distance_brace(&string, '{'), get_distance_brace(&string, '}')) {
+                match (
+                    get_distance_brace(&string, '{'),
+                    get_distance_brace(&string, '}'),
+                ) {
                     (Some(lhs_distance), Some(rhs_distance)) if lhs_distance < rhs_distance => {
-                        let (rest, _) = add_to_vector(string, lhs_distance, &mut vector, &mut interval)?;
-                        let (rest, expression) = delimited(tag("{{"), parse_complex_string, parse_close_bracket)(rest)?;
+                        let (rest, _) =
+                            add_to_vector(string, lhs_distance, &mut vector, &mut interval)?;
+                        let (rest, expression) =
+                            delimited(tag("{{"), parse_complex_string, parse_close_bracket)(rest)?;
 
                         vector.push(expression);
 
@@ -141,7 +149,12 @@ where
                         return Err(gen_nom_failure(s, ERROR_DOUBLE_OPEN_BRACE));
                     }
                     (_, _) => {
-                        let (rest, _) = add_to_vector(string, string.fragment().len(), &mut vector, &mut interval)?;
+                        let (rest, _) = add_to_vector(
+                            string,
+                            string.fragment().len(),
+                            &mut vector,
+                            &mut interval,
+                        )?;
 
                         string = rest;
                     }
@@ -150,7 +163,10 @@ where
 
             let (start, end) = get_range_interval(&interval);
 
-            Ok((rest, Expr::ComplexLiteral(vector, RangeInterval::new(start, end))))
+            Ok((
+                rest,
+                Expr::ComplexLiteral(vector, RangeInterval::new(start, end)),
+            ))
         }
         None => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
     }
@@ -280,14 +296,14 @@ mod tests {
 
         match test_string(span) {
             Ok(..) => panic!("need to fail"),
-            Err(_) => {},
+            Err(_) => {}
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
     /// EXPAND STRINGS
     //////////////////////////////////////////////////////////////////////////
-    
+
     #[test]
     fn ok_expand_empty_0() {
         let string = "\"{{ }}\"";

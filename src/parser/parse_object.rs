@@ -1,6 +1,9 @@
 use crate::data::{ast::*, tokens::*};
 use crate::parser::{parse_comments::comment, tools::get_interval};
 
+use crate::parser::parse_var_types::parse_basic_expr;
+use crate::parser::state_context::StateContext;
+use crate::parser::state_context::StringState;
 use nom::{
     bytes::complete::tag,
     bytes::complete::take_till1,
@@ -10,9 +13,6 @@ use nom::{
     sequence::{preceded, separated_pair, terminated, tuple},
     IResult,
 };
-use crate::parser::parse_var_types::parse_basic_expr;
-use crate::parser::state_context::StateContext;
-use crate::parser::state_context::StringState;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -39,10 +39,7 @@ where
 
     context(
         "string must start with '\"' ",
-        preceded(
-            tag(token),
-            cut(terminated(parse_str, tag(token))),
-        ),
+        preceded(tag(token), cut(terminated(parse_str, tag(token)))),
     )(s)
 }
 
