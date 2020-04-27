@@ -15,15 +15,6 @@ use nom::{
     *,
 };
 
-// *DONE:   GOOD ERROR MESSAGE
-// *DONE:   GOOD INTERVAL
-// *DONE:   WRITE TESTS
-// *DONE:   MULTIPLE BACKSLASH
-// *DONE:   UNCOMMENT OBJECT TEST
-// *DONE:   APPLY ARITHMETIC AND FUNCTION
-// *DONE:   EMPTY PRIMITIVE
-// *DONE:   MULTIPLE ARGUMENTS INSIDE EXPAND
-
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,9 +31,17 @@ where
     let (rest, value) = s.take_split(length);
     let (value, interval) = get_interval(value)?;
 
+    let mut string = String::new();
+
+    for c in value.as_bytes().iter() {
+            if *c != 92 {
+                    string.push(*c as char);
+            }
+    }
+
     if !value.fragment().is_empty() {
         expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-            value.fragment(),
+            &string,
             interval,
         )));
 
@@ -137,7 +136,6 @@ where
                             add_to_vector(string, lhs_distance, &mut vector, &mut interval)?;
                         let (rest, expression) =
                             delimited(tag("{{"), parse_complex_string, parse_close_bracket)(rest)?;
-
                         vector.push(expression);
 
                         string = rest;

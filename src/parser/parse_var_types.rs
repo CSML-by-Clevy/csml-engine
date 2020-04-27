@@ -88,8 +88,6 @@ pub fn parse_expr_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    println!("s: {}", s.fragment());
-
     let (s, start) = preceded(comment, get_interval)(s)?;
     let (s, (vec, _)) = preceded(
         tag(L_PAREN),

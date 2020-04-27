@@ -74,8 +74,6 @@ pub fn interpret(
     let mut step = context.step.to_owned();
 
     while message_data.exit_condition.is_none() {
-        println!("[+] current flow to be executed: {}", flow);
-        println!("[+] current step to be executed: {}\n", step);
 
         let content = match bot.get_flow(&flow) {
             Ok(result) => result,
