@@ -2,7 +2,7 @@
 // DATA STRUCTURE
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CsmlFlow {
     pub id: String,
     pub name: String,
