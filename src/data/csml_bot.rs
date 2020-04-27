@@ -4,7 +4,7 @@ use crate::data::csml_flow::CsmlFlow;
 // DATA STRUCTURE
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CsmlBot {
     pub id: String,
     pub name: String,
