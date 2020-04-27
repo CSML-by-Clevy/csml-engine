@@ -16,6 +16,7 @@ use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 // use serde_json::{Result, Value};
+use crate::interpreter::json_to_literal;
 
 ////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -412,13 +413,14 @@ impl PrimitiveString {
             return Err(gen_error_info(interval, format!("usage: {}", usage)));
         }
 
-        let string = "{\"foo\":\"bar\"}";
+        let object = match serde_json::from_str(&string.value) {
+            Ok(result) => result,
+            Err(_) => {
+                return Err(gen_error_info(interval, ERROR_STRING_FROM_JSON.to_owned()));
+            }
+        };
 
-        println!("[+] string: {:#?}", string);
-        let object: serde_json::Value = serde_json::from_str(string).unwrap();
-        println!("[+] object: {:#?}", object);
-
-        unimplemented!();
+        json_to_literal(&object, interval)
     }
 
     fn is_empty(

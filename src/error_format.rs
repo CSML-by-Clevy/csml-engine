@@ -143,6 +143,8 @@ pub const ERROR_STRING_END_WITH: &'static str =
     "[end_with] take one parameter of type String usage: string.end_with(\"tag\")";
 pub const ERROR_STRING_END_WITH_REGEX: &'static str =
     "[end_with_regex] take one parameter of type String usage: string.end_with_regex(\"regex\")";
+pub const ERROR_STRING_FROM_JSON: &'static str =
+    "[from_json] [!] string to object failed]";
 pub const ERROR_STRING_MATCH_REGEX: &'static str =
     "[end_match_regex] take one parameter of type String usage: string.match_regex(\"regex\")";
 pub const ERROR_STRING_POW: &'static str =
