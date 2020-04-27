@@ -27,7 +27,6 @@ pub enum MSG {
 impl MSG {
     pub fn send(sender: &Option<mpsc::Sender<MSG>>, msg: MSG) {
         if let Some(sender) = sender {
-            println!("[+] sending {:?}", msg);
             sender.send(msg).unwrap();
         }
     }
