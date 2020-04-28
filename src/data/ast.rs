@@ -197,10 +197,7 @@ pub struct Interval {
 
 impl Default for Interval {
     fn default() -> Self {
-        Self {
-            line: 0,
-            column: 0,
-        }
+        Self { line: 0, column: 0 }
     }
 }
 

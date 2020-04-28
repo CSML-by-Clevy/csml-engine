@@ -20,6 +20,7 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
+use crate::linter::Linter;
 
 use curl::easy::Easy;
 use std::collections::HashMap;
@@ -109,13 +110,12 @@ pub fn interpret(
             None => None,
         };
 
+        message_data = message_data + Linter::get_warnings();
         message_data = message_data + execute_step(&step, &mut data, rip, &sender);
 
         flow = data.context.flow;
         step = data.context.step;
     }
-
-    dbg!(&message_data);
 
     return message_data;
 }

@@ -1,9 +1,9 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use crate::data::{Hold, Literal, Memories, Message, MSG};
-use crate::parser::ExitCondition;
-use crate::linter::data::Warning;
 use crate::linter::data::Linter;
+use crate::linter::data::Warning;
+use crate::parser::ExitCondition;
 
 use core::ops::Add;
 use nom::lib::std::collections::HashMap;
@@ -38,7 +38,7 @@ impl Default for MessageData {
     }
 }
 
-impl Add for MessageData {
+impl Add<MessageData> for MessageData {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -60,10 +60,27 @@ impl Add for MessageData {
             warnings: match (&self.warnings, &other.warnings) {
                 (Some(warnings), None) => Some(warnings.to_owned()),
                 (None, Some(warnings)) => Some(warnings.to_owned()),
-                (Some(warnings), Some(_)) => Some(warnings.to_owned()),
+                (Some(warnings), Some(new_warnings)) => {
+                    Some([&warnings[..], &new_warnings[..]].concat())
+                }
                 _ => None,
-            }
+            },
         }
+    }
+}
+
+impl Add<Vec<Warning>> for MessageData {
+    type Output = Self;
+
+    fn add(mut self, warnings: Vec<Warning>) -> Self {
+        let warnings = match warnings.is_empty() {
+            true => None,
+            false => Some(warnings),
+        };
+
+        self.warnings = warnings;
+
+        self
     }
 }
 
@@ -103,12 +120,6 @@ impl MessageData {
                     }),
                 );
 
-                let warnings = Linter::get_warnings();
-                let warnings = match warnings.is_empty() {
-                    true => None,
-                    false => Some(warnings),
-                };
-
                 Self {
                     memories: None,
                     messages: vec![Message {
@@ -117,7 +128,7 @@ impl MessageData {
                     }],
                     hold: None,
                     exit_condition: Some(ExitCondition::Error),
-                    warnings,
+                    warnings: None,
                 }
             }
         }

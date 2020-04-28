@@ -12,7 +12,7 @@ lazy_static! {
     static ref HASHMAP: Mutex<HashMap<ThreadId, Linter>> = Mutex::new(HashMap::default());
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Position {
     flow: String,
     step: String,
@@ -38,10 +38,6 @@ pub struct Linter {
     pub goto: Vec<Goto>,
     pub position: Position,
     pub warnings: Vec<Warning>,
-    // Todo: add function, var, unreachable_code inside linter
-    // pub var: HashMap<String, Vec<Variable>>,
-    // pub function: HashMap<String, Vec<Function>>,
-    // pub unreachable_code: Vec<Code>
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,10 +81,7 @@ impl Goto {
 
 impl Warning {
     fn new(position: Position, message: &'static str) -> Self {
-        Self {
-            position,
-            message,
-        }
+        Self { position, message }
     }
 }
 
@@ -185,8 +178,17 @@ impl Linter {
             .or_insert_with(|| Linter::default());
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter.position.interval = interval;
-            linter.warnings.push(Warning::new(linter.position.to_owned(), message));
+            let mut position = linter.position.to_owned();
+
+            position.interval = interval;
+
+            for warning in linter.warnings.iter() {
+                if warning.message == message && warning.position == position.to_owned() {
+                    return;
+                }
+            }
+
+            linter.warnings.push(Warning::new(position, message));
         }
     }
 

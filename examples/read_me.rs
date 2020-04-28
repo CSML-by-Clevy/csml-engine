@@ -14,10 +14,7 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 ////////////////////////////////////////////////////////////////////////////////
 
 fn main() {
-    let content = std::fs::read_to_string(
-        "CSML/examples/hello_world.csml",
-    )
-    .unwrap();
+    let content = std::fs::read_to_string("CSML/examples/hello_world.csml").unwrap();
 
     // Create a CsmlFlow
     let flow = CsmlFlow::new(DEFAULT_ID_NAME, DEFAULT_FLOW_NAME, &content, Vec::default());
@@ -45,5 +42,5 @@ fn main() {
     );
 
     // Run interpreter
-    interpret(bot, context, event, None);
+    dbg!(interpret(bot, context, event, None));
 }
