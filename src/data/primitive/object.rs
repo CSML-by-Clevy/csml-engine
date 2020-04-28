@@ -75,13 +75,6 @@ lazy_static! {
                 Right::Read,
             ),
         );
-        map.insert(
-            "is_number",
-            (
-                PrimitiveObject::is_number_event as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
 
         map
     };
@@ -102,7 +95,7 @@ lazy_static! {
         map.insert(
             "is_number",
             (
-                PrimitiveObject::is_number_generics as PrimitiveMethod,
+                PrimitiveObject::is_number as PrimitiveMethod,
                 Right::Read,
             ),
         );
@@ -508,32 +501,10 @@ impl PrimitiveObject {
             interval,
         })
     }
-
-    fn is_number_event(
-        object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        let usage = "is_number() => boolean";
-
-        if args.len() != 0 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
-        }
-
-        if let Some(res) = object.value.get("text") {
-            let result = res.primitive.to_string();
-            let result = result.parse::<f64>().is_ok();
-
-            return Ok(PrimitiveBoolean::get_literal(result, interval));
-        }
-
-        Ok(PrimitiveBoolean::get_literal(false, interval))
-    }
 }
 
 impl PrimitiveObject {
-    fn is_number_generics(
+    fn is_number(
         _object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
@@ -877,7 +848,7 @@ impl Primitive for PrimitiveObject {
         interval: Interval,
         content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {
-        let event = vec![FUNCTIONS_EVENT.clone(), FUNCTIONS_READ.clone()];
+        let event = vec![FUNCTIONS_EVENT.clone()];
         let http = vec![
             FUNCTIONS_HTTP.clone(),
             FUNCTIONS_READ.clone(),
@@ -885,8 +856,14 @@ impl Primitive for PrimitiveObject {
         ];
         let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
 
+        let mut is_event = false;
+
         let (content_type, vector) = match content_type {
-            ContentType::Event(event_type) => (event_type.as_ref(), event),
+            ContentType::Event(event_type) => {
+                is_event = true;
+
+                (event_type.as_ref(), event)
+            }
             ContentType::Http => ("", http),
             ContentType::Generics => ("", generics),
         };
@@ -896,6 +873,12 @@ impl Primitive for PrimitiveObject {
                 let result = f(self, args, interval, &content_type)?;
 
                 return Ok((result, *right));
+            }
+        }
+
+        if is_event == true {
+            if let Some(res) = self.value.get_mut("text") {
+                return res.primitive.do_exec(name, args, interval, &ContentType::Event(String::default()));
             }
         }
 
