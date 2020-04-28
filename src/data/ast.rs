@@ -195,6 +195,15 @@ pub struct Interval {
     pub column: u32,
 }
 
+impl Default for Interval {
+    fn default() -> Self {
+        Self {
+            line: 0,
+            column: 0,
+        }
+    }
+}
+
 impl Interval {
     pub fn new_as_u32(line: u32, column: u32) -> Self {
         Self { line, column }

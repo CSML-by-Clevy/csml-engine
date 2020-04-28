@@ -16,7 +16,7 @@ lazy_static! {
 pub struct Position {
     flow: String,
     step: String,
-    // add line, column ???
+    interval: Interval,
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +53,7 @@ impl Default for Position {
         Self {
             flow: String::default(),
             step: String::default(),
+            interval: Interval::default(),
         }
     }
 }
@@ -78,6 +79,15 @@ impl Goto {
             flow: flow.to_owned(),
             step: step.to_owned(),
             interval,
+        }
+    }
+}
+
+impl Warning {
+    fn new(position: Position, message: &'static str) -> Self {
+        Self {
+            position,
+            message,
         }
     }
 }
@@ -166,7 +176,7 @@ impl Linter {
         }
     }
 
-    pub fn add_warning(message: &'static str) {
+    pub fn add_warning(message: &'static str, interval: Interval) {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
@@ -175,11 +185,8 @@ impl Linter {
             .or_insert_with(|| Linter::default());
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
-            let warning = Warning {
-                position: linter.position.clone(),
-                message,
-            };
-            linter.warnings.push(warning);
+            linter.position.interval = interval;
+            linter.warnings.push(Warning::new(linter.position.to_owned(), message));
         }
     }
 
@@ -230,7 +237,7 @@ impl Linter {
         }
     }
 
-    pub fn get() -> Linter {
+    pub fn get_linter() -> Linter {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
@@ -245,8 +252,7 @@ impl Linter {
         }
     }
 
-    // tmp
-    pub fn print_warnings() {
+    pub fn get_warnings() -> Vec<Warning> {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
@@ -255,7 +261,7 @@ impl Linter {
             .or_insert_with(|| Linter::default());
 
         if let Some(linter) = hashmap.get(&thread_id) {
-            println!("warnings: {:?}", linter.warnings);
+            linter.warnings.to_owned()
         } else {
             unreachable!();
         }

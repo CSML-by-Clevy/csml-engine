@@ -4,4 +4,9 @@ start:
 
 foo:
     say "Hello Foo"
+    goto other
+
+other:
+    use 42 as var
+    say 42.to_lowe()
     goto end

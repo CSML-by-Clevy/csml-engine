@@ -2,6 +2,8 @@ use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use crate::data::{Hold, Literal, Memories, Message, MSG};
 use crate::parser::ExitCondition;
+use crate::linter::data::Warning;
+use crate::linter::data::Linter;
 
 use core::ops::Add;
 use nom::lib::std::collections::HashMap;
@@ -17,6 +19,7 @@ pub struct MessageData {
     pub messages: Vec<Message>,
     pub hold: Option<Hold>,
     pub exit_condition: Option<ExitCondition>,
+    pub warnings: Option<Vec<Warning>>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,6 +33,7 @@ impl Default for MessageData {
             messages: Vec::new(),
             hold: None,
             exit_condition: None,
+            warnings: None,
         }
     }
 }
@@ -53,6 +57,12 @@ impl Add for MessageData {
                 (Some(exit_condition), Some(_)) => Some(exit_condition.to_owned()),
                 _ => None,
             },
+            warnings: match (&self.warnings, &other.warnings) {
+                (Some(warnings), None) => Some(warnings.to_owned()),
+                (None, Some(warnings)) => Some(warnings.to_owned()),
+                (Some(warnings), Some(_)) => Some(warnings.to_owned()),
+                _ => None,
+            }
         }
     }
 }
@@ -93,6 +103,12 @@ impl MessageData {
                     }),
                 );
 
+                let warnings = Linter::get_warnings();
+                let warnings = match warnings.is_empty() {
+                    true => None,
+                    false => Some(warnings),
+                };
+
                 Self {
                     memories: None,
                     messages: vec![Message {
@@ -101,6 +117,7 @@ impl MessageData {
                     }],
                     hold: None,
                     exit_condition: Some(ExitCondition::Error),
+                    warnings,
                 }
             }
         }

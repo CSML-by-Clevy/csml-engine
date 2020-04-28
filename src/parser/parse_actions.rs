@@ -55,8 +55,10 @@ fn parse_remember_as<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<E
 where
     E: ParseError<Span<'a>>,
 {
-    Linter::add_warning(WARNING_REMEMBER_AS);
+    let (s, interval) = get_interval(s)?;
+    Linter::add_warning(WARNING_REMEMBER_AS, interval);
     let (s, operator) = parse_operator(s)?;
+
     match operator {
         Expr::ObjectExpr(ObjectType::As(idents, expr)) => Ok((s, (idents, expr))),
         _ => return Err(gen_nom_failure(s, ERROR_REMEMBER)),
@@ -154,8 +156,9 @@ where
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, USE)(s)?;
+    let (s, interval) = get_interval(s)?;
 
-    Linter::add_warning(WARNING_USE);
+    Linter::add_warning(WARNING_USE, interval);
 
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 

@@ -16,7 +16,7 @@ where
     let (s, name) = get_string(s)?;
 
     if name == "Object" {
-        Linter::add_warning(WARNING_OBJECT);
+        Linter::add_warning(WARNING_OBJECT, interval);
     }
 
     let (s, expr) = parse_expr_list(s)?;
