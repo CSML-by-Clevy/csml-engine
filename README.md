@@ -56,7 +56,12 @@ fn main() {
     let content = std::fs::read_to_string("./hello_world.csml").unwrap();
 
     // Create a CsmlFlow
-    let flow = CsmlFlow::new(DEFAULT_ID_NAME, DEFAULT_FLOW_NAME, &content, Vec::default());
+    let flow = CsmlFlow::new(
+        DEFAULT_ID_NAME,
+        DEFAULT_FLOW_NAME,
+        &content,
+        Vec::default()
+    );
 
     // Create a CsmlBot
     let bot = CsmlBot::new(
@@ -70,7 +75,7 @@ fn main() {
     // Create an Event
     let event = Event::default();
 
-    // Create context
+    // Create a Context
     let context = ContextJson::new(
         serde_json::json!({}),
         serde_json::json!({}),
