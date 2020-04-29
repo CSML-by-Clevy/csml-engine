@@ -1,6 +1,6 @@
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::{ast::Infix, Literal};
-use crate::error_format::{ErrorInfo, gen_error_info};
+use crate::error_format::{gen_error_info, ErrorInfo};
 use crate::interpreter::variable_handler::match_literals::match_obj;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,53 +41,36 @@ pub fn evaluate(
         (Infix::Addition, Ok(lhs), Ok(rhs)) => {
             let primitive = lhs.primitive + rhs.primitive;
             match primitive {
-                Ok(primitive) => {
-                    Ok(Literal {
-                        content_type: primitive.get_type().to_string(),
-                        primitive,
-                        interval: lhs.interval,
-                    })
-                }
-                Err(err) => {
-                    Err(
-                        gen_error_info(
-                            lhs.interval,
-                            err
-                        )
-                    )
-                }
+                Ok(primitive) => Ok(Literal {
+                    content_type: primitive.get_type().to_string(),
+                    primitive,
+                    interval: lhs.interval,
+                }),
+                Err(err) => Err(gen_error_info(lhs.interval, err)),
             }
         }
         (Infix::Subtraction, Ok(lhs), Ok(rhs)) => {
             let primitive = lhs.primitive - rhs.primitive;
 
             match primitive {
-                Ok(primitive) => {
-                    Ok(Literal {
-                        content_type: primitive.get_type().to_string(),
-                        primitive,
-                        interval: lhs.interval,
-                    })
-                }
-                Err(err) => Err(
-                    gen_error_info(lhs.interval, err)
-                )
+                Ok(primitive) => Ok(Literal {
+                    content_type: primitive.get_type().to_string(),
+                    primitive,
+                    interval: lhs.interval,
+                }),
+                Err(err) => Err(gen_error_info(lhs.interval, err)),
             }
         }
         (Infix::Divide, Ok(lhs), Ok(rhs)) => {
             let primitive = lhs.primitive / rhs.primitive;
 
             match primitive {
-                Ok(primitive) => {
-                    Ok(Literal {
-                        content_type: primitive.get_type().to_string(),
-                        primitive,
-                        interval: lhs.interval,
-                    })
-                }
-                Err(err) => Err(
-                    gen_error_info(lhs.interval, err)
-                )
+                Ok(primitive) => Ok(Literal {
+                    content_type: primitive.get_type().to_string(),
+                    primitive,
+                    interval: lhs.interval,
+                }),
+                Err(err) => Err(gen_error_info(lhs.interval, err)),
             }
         }
 
@@ -95,32 +78,24 @@ pub fn evaluate(
             let primitive = lhs.primitive * rhs.primitive;
 
             match primitive {
-                Ok(primitive) => {
-                    Ok(Literal {
-                        content_type: primitive.get_type().to_string(),
-                        primitive,
-                        interval: lhs.interval,
-                    })
-                }
-                Err(err) => Err(
-                    gen_error_info(lhs.interval, err)
-                )
+                Ok(primitive) => Ok(Literal {
+                    content_type: primitive.get_type().to_string(),
+                    primitive,
+                    interval: lhs.interval,
+                }),
+                Err(err) => Err(gen_error_info(lhs.interval, err)),
             }
         }
         (Infix::Remainder, Ok(lhs), Ok(rhs)) => {
             let primitive = lhs.primitive % rhs.primitive;
-            
+
             match primitive {
-                Ok(primitive) => {
-                    Ok(Literal {
-                        content_type: primitive.get_type().to_string(),
-                        primitive,
-                        interval: lhs.interval,
-                    })
-                }
-                Err(err) => Err(
-                    gen_error_info(lhs.interval, err)
-                )
+                Ok(primitive) => Ok(Literal {
+                    content_type: primitive.get_type().to_string(),
+                    primitive,
+                    interval: lhs.interval,
+                }),
+                Err(err) => Err(gen_error_info(lhs.interval, err)),
             }
         }
 

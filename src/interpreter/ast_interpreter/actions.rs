@@ -53,7 +53,7 @@ pub fn match_actions(
 ) -> Result<MessageData, ErrorInfo> {
     match function {
         ObjectType::Say(arg) => {
-            let msg = Message::new(expr_to_literal(arg, None, data, &mut root, sender)?);
+            let msg = Message::new(expr_to_literal(arg, None, data, &mut root, sender)?)?;
             send_msg(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(root, MessageType::Msg(msg)))
         }

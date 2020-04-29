@@ -363,14 +363,12 @@ impl Add for Box<dyn Primitive> {
                 }
             }
 
-            _ => Err(
-                format!(
-                    "{} {:?} + {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 }
@@ -455,14 +453,12 @@ impl Sub for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(
-                format!(
-                    "{} {:?} - {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 }
@@ -547,14 +543,12 @@ impl Div for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(
-                format!(
-                    "{} {:?} / {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 }
@@ -639,14 +633,12 @@ impl Mul for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(
-                format!(
-                    "{} {:?} * {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 }
@@ -731,14 +723,12 @@ impl Rem for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(
-                format!(
-                    "{} {:?} * {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 }
