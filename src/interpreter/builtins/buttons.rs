@@ -1,4 +1,4 @@
-use crate::data::primitive::{object::PrimitiveObject};
+use crate::data::primitive::object::PrimitiveObject;
 use crate::data::{ast::Interval, tokens::DEFAULT, Literal};
 use crate::error_format::*;
 use crate::interpreter::builtins::tools::*;
@@ -8,16 +8,14 @@ pub fn button(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
     let mut button: HashMap<String, Literal> = args.clone();
 
     let title = match (button.remove("title"), button.remove(DEFAULT)) {
-        (Some(title), ..) | (.., Some(title)) => {
-            title
-        },
+        (Some(title), ..) | (.., Some(title)) => title,
         _ => return Err(gen_error_info(interval, ERROR_BUTTON.to_owned())),
     };
 
     button.insert("title".to_owned(), title.to_owned());
 
     match button.get("payload") {
-        Some(_) => {},
+        Some(_) => {}
         None => {
             button.insert("payload".to_owned(), title.clone());
         }
@@ -40,12 +38,12 @@ pub fn card(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
     match (card.remove("title"), card.remove(DEFAULT)) {
         (Some(title), ..) | (.., Some(title)) => {
             card.insert("title".to_owned(), title.to_owned());
-        },
+        }
         _ => return Err(gen_error_info(interval, ERROR_CARD_TITLE.to_owned())),
     };
 
     match card.get("buttons") {
-        Some(..) => {},
+        Some(..) => {}
         _ => return Err(gen_error_info(interval, ERROR_CARD_BUTTON.to_owned())),
     };
 

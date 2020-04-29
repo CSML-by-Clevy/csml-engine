@@ -1,5 +1,4 @@
 use crate::data::{
-    tokens::TYPES,
     ast::Interval,
     literal::ContentType,
     message::Message,
@@ -7,6 +6,7 @@ use crate::data::{
         array::PrimitiveArray, boolean::PrimitiveBoolean, int::PrimitiveInt, null::PrimitiveNull,
         string::PrimitiveString, Primitive, PrimitiveType, Right,
     },
+    tokens::TYPES,
     Literal,
 };
 use crate::error_format::*;
@@ -918,58 +918,48 @@ impl Primitive for PrimitiveObject {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} + {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} + {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} - {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} - {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} / {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} / {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} * {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} * {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} % {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} % {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {
@@ -993,16 +983,15 @@ impl Primitive for PrimitiveObject {
             serde_json::map::Map::new();
 
         for (key, literal) in self.value.iter() {
-
             if !TYPES.contains(&&(*literal.content_type)) {
                 let mut map = serde_json::Map::new();
                 map.insert(
-                    "content_type".to_owned(), 
-                    serde_json::json!(literal.content_type)
+                    "content_type".to_owned(),
+                    serde_json::json!(literal.content_type),
                 );
                 map.insert("content".to_owned(), literal.primitive.to_json());
 
-                object.insert(key.to_owned(), serde_json::json!(map) );
+                object.insert(key.to_owned(), serde_json::json!(map));
             } else {
                 object.insert(key.to_owned(), literal.primitive.to_json());
             }

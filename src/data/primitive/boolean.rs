@@ -154,58 +154,48 @@ impl Primitive for PrimitiveBoolean {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} + {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} + {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} - {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} - {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} / {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} / {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} * {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} * {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        Err(
-            format!(
-                "{} {:?} / {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )
-        )
+        Err(format!(
+            "{} {:?} / {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
+        ))
     }
 
     fn as_debug(&self) -> &dyn std::fmt::Debug {

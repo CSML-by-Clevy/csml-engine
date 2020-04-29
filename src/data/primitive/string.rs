@@ -1012,9 +1012,7 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(
-                    ERROR_STRING_RHS.to_owned(),
-                );
+                return Err(ERROR_STRING_RHS.to_owned());
             }
         };
 
@@ -1031,14 +1029,12 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
             }
-            _ => Err(
-                format!(
-                    "{} {:?} + {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 
@@ -1046,9 +1042,7 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(
-                    ERROR_STRING_RHS.to_owned(),
-                );
+                return Err(ERROR_STRING_RHS.to_owned());
             }
         };
 
@@ -1065,14 +1059,12 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs - rhs as f64)))
             }
-            _ => Err(
-                format!(
-                    "{} {:?} - {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 
@@ -1080,9 +1072,7 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(
-                    ERROR_STRING_RHS.to_owned(),
-                );
+                return Err(ERROR_STRING_RHS.to_owned());
             }
         };
 
@@ -1107,14 +1097,12 @@ impl Primitive for PrimitiveString {
 
                 Ok(Box::new(PrimitiveFloat::new(lhs / rhs as f64)))
             }
-            _ => Err(
-                format!(
-                    "{} {:?} / {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                ),
-            )
+            _ => Err(format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 
@@ -1122,9 +1110,7 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(
-                    ERROR_STRING_RHS.to_owned(),
-                );
+                return Err(ERROR_STRING_RHS.to_owned());
             }
         };
 
@@ -1141,14 +1127,12 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
-            _ => Err(
-                format!(
-                    "{} {:?} * {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 
@@ -1156,9 +1140,7 @@ impl Primitive for PrimitiveString {
         let rhs = match other.as_any().downcast_ref::<PrimitiveString>() {
             Some(res) => res,
             None => {
-                return Err(
-                    ERROR_STRING_RHS.to_owned()
-                );
+                return Err(ERROR_STRING_RHS.to_owned());
             }
         };
 
@@ -1175,14 +1157,12 @@ impl Primitive for PrimitiveString {
             (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
                 Ok(Box::new(PrimitiveFloat::new(lhs * rhs as f64)))
             }
-            _ => Err(
-                format!(
-                    "{} {:?} % {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                )
-            )
+            _ => Err(format!(
+                "{} {:?} % {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
+            )),
         }
     }
 

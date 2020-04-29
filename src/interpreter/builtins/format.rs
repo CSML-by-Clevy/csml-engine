@@ -19,8 +19,7 @@ pub fn typing(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
     let mut typing: HashMap<String, Literal> = args.clone();
 
     match (typing.remove("duration"), typing.remove(DEFAULT)) {
-        (Some(literal), ..)
-        | (..,  Some(literal))
+        (Some(literal), ..) | (.., Some(literal))
             if literal.primitive.get_type() == PrimitiveType::PrimitiveInt
                 || literal.primitive.get_type() == PrimitiveType::PrimitiveFloat =>
         {
@@ -39,8 +38,7 @@ pub fn wait(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
     let mut wait: HashMap<String, Literal> = args.clone();
 
     match (wait.remove("duration"), wait.remove(DEFAULT)) {
-        (Some(literal), ..)
-        | (.. , Some(literal))
+        (Some(literal), ..) | (.., Some(literal))
             if literal.primitive.get_type() == PrimitiveType::PrimitiveInt
                 || literal.primitive.get_type() == PrimitiveType::PrimitiveFloat =>
         {
@@ -88,7 +86,7 @@ pub fn carousel(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
     let carousel: HashMap<String, Literal> = args.clone();
 
     if !carousel.contains_key("cards") {
-        return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned()))
+        return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned()));
     }
 
     let mut result = PrimitiveObject::get_literal(&carousel, interval);
@@ -119,20 +117,11 @@ pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
             );
 
             let lit_header = PrimitiveObject::get_literal(&header, interval);
-            http.insert(
-                "header".to_owned(),
-                lit_header,
-            );
+            http.insert("header".to_owned(), lit_header);
             let lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
-            http.insert(
-                "query".to_owned(),
-                lit_query,
-            );
+            http.insert("query".to_owned(), lit_query);
             let lit_body = PrimitiveObject::get_literal(&HashMap::default(), interval);
-            http.insert(
-                "body".to_owned(),
-                lit_body,
-            );
+            http.insert("body".to_owned(), lit_body);
 
             let mut result = PrimitiveObject::get_literal(&http, interval);
 
