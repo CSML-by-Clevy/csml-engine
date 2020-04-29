@@ -52,6 +52,36 @@ fn execute_step(
     MessageData::error_to_message(message_data, sender)
 }
 
+pub fn get_ast(bot: &CsmlBot, flow: &str, hashmap: &mut HashMap<String, Flow>) -> Result<Flow, ErrorInfo> {
+    Linter::set_flow(flow);
+
+    let content = match bot.get_flow(&flow) {
+        Ok(result) => result,
+        Err(_) => {
+            unimplemented!();
+        }
+    };
+
+    return match hashmap.get(flow) {
+        Some(ast) => Ok(ast.to_owned()),
+        None => {
+            return match parse_file(&content) {
+                Ok(result) => {
+                    let ast = result.to_owned();
+
+                    hashmap.insert(flow.to_owned(), result);
+
+                    Ok(ast)
+                }
+                Err(error) => {
+                    dbg!(error);
+                    unimplemented!();
+                }
+            }
+        }
+    };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,18 +104,13 @@ pub fn interpret(
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();
 
+    let mut hashmap: HashMap<String, Flow> = HashMap::default();
+
     while message_data.exit_condition.is_none() {
         println!("[+] current flow to be executed: {}", flow);
         println!("[+] current step to be executed: {}\n", step);
 
-        let content = match bot.get_flow(&flow) {
-            Ok(result) => result,
-            Err(_) => {
-                unimplemented!();
-            }
-        };
-
-        let ast = match parse_file(&content) {
+        let ast = match get_ast(&bot, &flow, &mut hashmap) {
             Ok(result) => result,
             Err(_) => {
                 unimplemented!();

@@ -1,3 +1,8 @@
 start:
     say "Hello World"
-    end
+    goto other
+
+other:
+    use 42 as var
+    say "Hello Other"
+    goto end

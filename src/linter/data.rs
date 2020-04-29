@@ -182,12 +182,6 @@ impl Linter {
 
             position.interval = interval;
 
-            for warning in linter.warnings.iter() {
-                if warning.message == message && warning.position == position.to_owned() {
-                    return;
-                }
-            }
-
             linter.warnings.push(Warning::new(position, message));
         }
     }

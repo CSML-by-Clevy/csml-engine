@@ -56,3 +56,6 @@ name = "factorial"
 
 [[example]]
 name = "read_me"
+
+[[example]]
+name = "bot"

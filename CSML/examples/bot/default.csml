@@ -1,0 +1,3 @@
+start:
+    say "Hello from Default flow"
+    goto flow other

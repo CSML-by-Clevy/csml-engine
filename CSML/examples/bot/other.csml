@@ -1,0 +1,4 @@
+start:
+    say "Hello from Flow other"
+    use 42 as var
+    goto end
