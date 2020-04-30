@@ -142,6 +142,8 @@ pub fn interpret(
         message_data = message_data + Linter::get_warnings();
         message_data = message_data + execute_step(&step, &mut data, rip, &sender);
 
+        context.hold = None;
+
         flow = data.context.flow;
         step = data.context.step;
     }
