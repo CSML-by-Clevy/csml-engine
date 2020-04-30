@@ -50,9 +50,6 @@ pub fn interpret_scope(
             if instruction_index >= instruction_total {
                 continue;
             }
-            else {
-                instruction_index = None;
-            }
         }
 
         if message_data.exit_condition.is_some() {

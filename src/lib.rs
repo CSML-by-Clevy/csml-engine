@@ -99,7 +99,7 @@ pub fn parse_file(flow: &str) -> Result<Flow, ErrorInfo> {
 
 pub fn interpret(
     bot: CsmlBot,
-    context: ContextJson,
+    mut context: ContextJson,
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
