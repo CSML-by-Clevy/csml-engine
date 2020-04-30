@@ -87,6 +87,8 @@ pub fn match_actions(
                 },
             );
 
+            root.hold = None;
+
             data.context.step = step_name.ident.to_owned();
 
             if step_name.ident == "end" {
@@ -103,6 +105,8 @@ pub fn match_actions(
                     step: None,
                 },
             );
+
+            root.hold = None;
 
             data.context.step = "start".to_string();
             data.context.flow = flow_name.ident.to_owned();
