@@ -52,7 +52,11 @@ fn execute_step(
     MessageData::error_to_message(message_data, sender)
 }
 
-pub fn get_ast(bot: &CsmlBot, flow: &str, hashmap: &mut HashMap<String, Flow>) -> Result<Flow, ErrorInfo> {
+pub fn get_ast(
+    bot: &CsmlBot,
+    flow: &str,
+    hashmap: &mut HashMap<String, Flow>,
+) -> Result<Flow, ErrorInfo> {
     Linter::set_flow(flow);
 
     let content = match bot.get_flow(&flow) {
