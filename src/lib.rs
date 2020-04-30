@@ -134,8 +134,11 @@ pub fn interpret(
             step_vars,
         );
 
-        let rip = match &context.hold {
-            Some(result) => Some(result.index),
+        let rip = match context.hold {
+            Some(result) => {
+                context.hold = None;
+                Some(result.index)
+            }
             None => None,
         };
 
