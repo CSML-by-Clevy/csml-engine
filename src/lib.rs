@@ -117,6 +117,9 @@ pub fn interpret(
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
     while message_data.exit_condition.is_none() {
+        println!("[*] flow: {}", flow);
+        println!("[*] step: {}\n", step);
+
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
             Ok(result) => result,
             Err(error) => {

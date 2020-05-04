@@ -18,10 +18,8 @@ normal_event:
 
 nlp_event:
     say "nlp"
-    goto upload_file
+    goto end
 
 file_upload_event:
     say "please upload your file"
-
-    // say  event.file info
     goto end

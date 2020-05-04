@@ -53,6 +53,10 @@ pub fn interpret_scope(
         }
 
         if message_data.exit_condition.is_some() {
+            if let Some(ExitCondition::Goto) = message_data.exit_condition {
+                message_data.exit_condition = None;
+            }
+
             return Ok(message_data);
         }
 
