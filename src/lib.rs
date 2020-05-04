@@ -7,6 +7,7 @@ pub mod parser;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
+use crate::parser::ExitCondition;
 use crate::data::ast::Expr;
 use crate::data::ast::Flow;
 use crate::data::ast::InstructionType;
@@ -117,9 +118,6 @@ pub fn interpret(
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
     while message_data.exit_condition.is_none() {
-        println!("[*] flow: {}", flow);
-        println!("[*] step: {}\n", step);
-
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
             Ok(result) => result,
             Err(error) => {
@@ -156,6 +154,10 @@ pub fn interpret(
 
         message_data = message_data + Linter::get_warnings();
         message_data = message_data + execute_step(&step, &mut data, rip, &sender);
+
+        if let Some(ExitCondition::Goto) = message_data.exit_condition {
+            message_data.exit_condition = None;
+        }
 
         context.hold = None;
 
