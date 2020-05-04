@@ -364,18 +364,15 @@ pub fn get_string_from_complex_string(
     data: &mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
-) -> Literal {
+) -> Result<Literal, ErrorInfo> {
     let mut new_string = String::new();
 
     //TODO: log error with span
     for elem in exprs.iter() {
         match expr_to_literal(elem, None, data, root, sender) {
             Ok(var) => new_string.push_str(&var.primitive.to_string()),
-            Err(_) => {
-                let mut literal = PrimitiveNull::get_literal(interval.to_owned());
-                literal.set_content_type("text");
-
-                new_string.push_str(&literal.primitive.to_string());
+            Err(err) => {
+                return Err(err);
             }
         }
     }
@@ -383,5 +380,5 @@ pub fn get_string_from_complex_string(
     let mut result = PrimitiveString::get_literal(&new_string, interval);
     result.set_content_type("text");
 
-    result
+    Ok(result)
 }
