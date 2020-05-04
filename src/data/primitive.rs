@@ -47,11 +47,11 @@ pub enum PrimitiveType {
 pub trait Primitive {
     fn is_eq(&self, other: &dyn Primitive) -> bool;
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering>;
-    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
-    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo>;
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String>;
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String>;
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String>;
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String>;
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String>;
 
     fn as_debug(&self) -> &dyn std::fmt::Debug;
     fn as_any(&self) -> &dyn std::any::Any;
@@ -283,9 +283,9 @@ impl PartialOrd for dyn Primitive {
 }
 
 impl Add for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
+    type Output = Result<Self, String>;
 
-    fn add(self, other: Self) -> Result<Self, ErrorInfo> {
+    fn add(self, other: Self) -> Result<Self, String> {
         match (self.get_type(), other.get_type()) {
             (lhs, rhs) if lhs == rhs => self.do_add(&(*other)),
             (lhs, rhs)
@@ -363,23 +363,20 @@ impl Add for Box<dyn Primitive> {
                 }
             }
 
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
-                format!(
-                    "{} {:?} + {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                ),
+            _ => Err(format!(
+                "{} {:?} + {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
             )),
         }
     }
 }
 
 impl Sub for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
+    type Output = Result<Self, String>;
 
-    fn sub(self, other: Self) -> Result<Self, ErrorInfo> {
+    fn sub(self, other: Self) -> Result<Self, String> {
         match (self.get_type(), other.get_type()) {
             (lhs, rhs) if lhs == rhs => self.do_sub(&(*other)),
             (lhs, rhs)
@@ -456,23 +453,20 @@ impl Sub for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
-                format!(
-                    "{} {:?} - {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                ),
+            _ => Err(format!(
+                "{} {:?} - {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
             )),
         }
     }
 }
 
 impl Div for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
+    type Output = Result<Self, String>;
 
-    fn div(self, other: Self) -> Result<Self, ErrorInfo> {
+    fn div(self, other: Self) -> Result<Self, String> {
         match (self.get_type(), other.get_type()) {
             (lhs, rhs) if lhs == rhs => self.do_div(&(*other)),
             (lhs, rhs)
@@ -549,23 +543,20 @@ impl Div for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
-                format!(
-                    "{} {:?} / {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                ),
+            _ => Err(format!(
+                "{} {:?} / {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
             )),
         }
     }
 }
 
 impl Mul for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
+    type Output = Result<Self, String>;
 
-    fn mul(self, other: Self) -> Result<Self, ErrorInfo> {
+    fn mul(self, other: Self) -> Result<Self, String> {
         match (self.get_type(), other.get_type()) {
             (lhs, rhs) if lhs == rhs => self.do_mul(&(*other)),
             (lhs, rhs)
@@ -642,23 +633,20 @@ impl Mul for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
-                format!(
-                    "{} {:?} * {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                ),
+            _ => Err(format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
             )),
         }
     }
 }
 
 impl Rem for Box<dyn Primitive> {
-    type Output = Result<Self, ErrorInfo>;
+    type Output = Result<Self, String>;
 
-    fn rem(self, other: Self) -> Result<Self, ErrorInfo> {
+    fn rem(self, other: Self) -> Result<Self, String> {
         match (self.get_type(), other.get_type()) {
             (lhs, rhs) if lhs == rhs => self.do_rem(&(*other)),
             (lhs, rhs)
@@ -735,14 +723,11 @@ impl Rem for Box<dyn Primitive> {
                     Err(err) => Err(err),
                 }
             }
-            _ => Err(gen_error_info(
-                Interval { column: 0, line: 0 },
-                format!(
-                    "{} {:?} * {:?}",
-                    ERROR_ILLEGAL_OPERATION,
-                    self.get_type(),
-                    other.get_type()
-                ),
+            _ => Err(format!(
+                "{} {:?} * {:?}",
+                ERROR_ILLEGAL_OPERATION,
+                self.get_type(),
+                other.get_type()
             )),
         }
     }

@@ -7,6 +7,7 @@ use crate::data::{
         array::PrimitiveArray, boolean::PrimitiveBoolean, int::PrimitiveInt, null::PrimitiveNull,
         string::PrimitiveString, Primitive, PrimitiveType, Right,
     },
+    tokens::TYPES,
     Literal,
 };
 use crate::error_format::*;
@@ -75,13 +76,6 @@ lazy_static! {
                 Right::Read,
             ),
         );
-        map.insert(
-            "is_number",
-            (
-                PrimitiveObject::is_number_event as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
 
         map
     };
@@ -101,10 +95,7 @@ lazy_static! {
         );
         map.insert(
             "is_number",
-            (
-                PrimitiveObject::is_number_generics as PrimitiveMethod,
-                Right::Read,
-            ),
+            (PrimitiveObject::is_number as PrimitiveMethod, Right::Read),
         );
 
         map.insert(
@@ -422,12 +413,12 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("patch", interval),
         );
 
-        let header = Literal::get_value::<HashMap<String, Literal>>(
+        let body = Literal::get_value::<HashMap<String, Literal>>(
             &literal.primitive,
             interval,
             ERROR_HTTP_PATCH.to_owned(),
         )?;
-        insert_to_object(header, &mut object, "body", literal);
+        insert_to_object(body, &mut object, "body", literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -508,32 +499,10 @@ impl PrimitiveObject {
             interval,
         })
     }
-
-    fn is_number_event(
-        object: &mut PrimitiveObject,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        let usage = "is_number() => boolean";
-
-        if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
-        }
-
-        if let Some(res) = object.value.get("text") {
-            let result = res.primitive.to_string();
-            let result = result.parse::<f64>().is_ok();
-
-            return Ok(PrimitiveBoolean::get_literal(result, interval));
-        }
-
-        Ok(PrimitiveBoolean::get_literal(false, interval))
-    }
 }
 
 impl PrimitiveObject {
-    fn is_number_generics(
+    fn is_number(
         _object: &mut PrimitiveObject,
         args: &[Literal],
         interval: Interval,
@@ -822,11 +791,11 @@ impl PrimitiveObject {
 fn insert_to_object(
     src: &HashMap<String, Literal>,
     dst: &mut PrimitiveObject,
-    key: &str,
+    key_name: &str,
     literal: &Literal,
 ) {
     dst.value
-        .entry(key.to_owned())
+        .entry(key_name.to_owned())
         .and_modify(|tmp: &mut Literal| {
             if let Ok(tmp) = Literal::get_mut_value::<HashMap<String, Literal>>(
                 &mut tmp.primitive,
@@ -877,7 +846,7 @@ impl Primitive for PrimitiveObject {
         interval: Interval,
         content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {
-        let event = vec![FUNCTIONS_EVENT.clone(), FUNCTIONS_READ.clone()];
+        let event = vec![FUNCTIONS_EVENT.clone()];
         let http = vec![
             FUNCTIONS_HTTP.clone(),
             FUNCTIONS_READ.clone(),
@@ -885,8 +854,14 @@ impl Primitive for PrimitiveObject {
         ];
         let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
 
+        let mut is_event = false;
+
         let (content_type, vector) = match content_type {
-            ContentType::Event(event_type) => (event_type.as_ref(), event),
+            ContentType::Event(event_type) => {
+                is_event = true;
+
+                (event_type.as_ref(), event)
+            }
             ContentType::Http => ("", http),
             ContentType::Generics => ("", generics),
         };
@@ -896,6 +871,17 @@ impl Primitive for PrimitiveObject {
                 let result = f(self, args, interval, &content_type)?;
 
                 return Ok((result, *right));
+            }
+        }
+
+        if is_event == true {
+            if let Some(res) = self.value.get_mut("text") {
+                return res.primitive.do_exec(
+                    name,
+                    args,
+                    interval,
+                    &ContentType::Event(String::default()),
+                );
             }
         }
 
@@ -917,63 +903,48 @@ impl Primitive for PrimitiveObject {
         None
     }
 
-    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} + {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(format!(
+            "{} {:?} + {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} - {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(format!(
+            "{} {:?} - {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} / {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(format!(
+            "{} {:?} / {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} * {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(format!(
+            "{} {:?} * {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} % {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        Err(format!(
+            "{} {:?} % {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
@@ -998,7 +969,18 @@ impl Primitive for PrimitiveObject {
             serde_json::map::Map::new();
 
         for (key, literal) in self.value.iter() {
-            object.insert(key.to_owned(), literal.primitive.to_json());
+            if !TYPES.contains(&&(*literal.content_type)) {
+                let mut map = serde_json::Map::new();
+                map.insert(
+                    "content_type".to_owned(),
+                    serde_json::json!(literal.content_type),
+                );
+                map.insert("content".to_owned(), literal.primitive.to_json());
+
+                object.insert(key.to_owned(), serde_json::json!(map));
+            } else {
+                object.insert(key.to_owned(), literal.primitive.to_json());
+            }
         }
 
         serde_json::Value::Object(object)

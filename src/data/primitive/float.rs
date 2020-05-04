@@ -395,43 +395,37 @@ impl Primitive for PrimitiveFloat {
         None
     }
 
-    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value + other.value;
 
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} + {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+        Err(format!(
+            "{} {:?} + {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value - other.value;
 
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} - {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+        Err(format!(
+            "{} {:?} - {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             check_division_by_zero_f64(self.value, other.value)?;
 
@@ -440,50 +434,41 @@ impl Primitive for PrimitiveFloat {
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} / {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+        Err(format!(
+            "{} {:?} / {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value * other.value;
 
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} * {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+        Err(format!(
+            "{} {:?} * {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 
-    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, ErrorInfo> {
+    fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             let result = self.value % other.value;
 
             return Ok(Box::new(PrimitiveFloat::new(result)));
         }
 
-        Err(gen_error_info(
-            Interval { column: 0, line: 0 },
-            format!(
-                "{} {:?} % {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            ),
+        Err(format!(
+            "{} {:?} % {:?}",
+            ERROR_ILLEGAL_OPERATION,
+            self.get_type(),
+            other.get_type()
         ))
     }
 

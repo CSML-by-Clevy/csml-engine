@@ -49,6 +49,8 @@ pub const ERROR_FIND_BY_INDEX: &'static str =
 pub const ERROR_ASSIGN_IDENT: &'static str = "key must be of type identifier";
 pub const ERROR_FUNCTIONS_ARGS: &'static str = "argument in of function must be in a vector";
 pub const ERROR_EXPR_TO_LITERAL: &'static str = "Expr can't be converted to Literal";
+pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &'static str =
+    "payload exceed the payload_max_size (16kb)";
 
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &'static str = "event can only be of ContentType::Event";
@@ -69,7 +71,7 @@ pub const ERROR_GET_VAR_INFO: &'static str = "expression need to be a variable";
 pub const ERROR_JSON_TO_LITERAL: &'static str = "this number is to big to be an int 64 bit";
 
 // ### Memory
-pub const ERROR_STEP_MEMORY: &'static str = "variable dose not exist in step memory";
+pub const ERROR_STEP_MEMORY: &'static str = "variable does not exist in step memory";
 pub const ERROR_FIND_MEMORY: &'static str = "is not in in memory";
 
 // ### Built-in
@@ -82,11 +84,11 @@ pub const ERROR_WAIT: &'static str =
 pub const ERROR_BUTTON: &'static str =
     "Builtin Button expect at least one argument of type string | example: Button(\"hola\")";
 pub const ERROR_CARD_BUTTON: &'static str = "argument buttons in Builtin Cards need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]";
-pub const ERROR_CARD_SUBTITLE: &'static str =
-    "argument subtitle in Builtin Cards need to be of type String";
+pub const ERROR_CARD_TITLE: &'static str =
+    "argument title in Builtin Cards need to be of type String";
 pub const ERROR_QUESTION: &'static str = "argument buttons in Builtin Question need to be of type Array of Button Component example: [ Button(\"b1\"), Button(\"b2\") ]";
 pub const ERROR_CAROUSEL: &'static str =
-    "argument buttons in Builtin Carousel need to be of type Array of Cards Component";
+    "argument cards in Builtin Carousel need to be of type Array of Cards Component";
 pub const ERROR_ONE_OF: &'static str =
     "Builtin OneOf expect one value of type Array | example: OneOf( [1, 2, 3] )";
 pub const ERROR_SHUFFLE: &'static str =
@@ -143,8 +145,7 @@ pub const ERROR_STRING_END_WITH: &'static str =
     "[end_with] take one parameter of type String usage: string.end_with(\"tag\")";
 pub const ERROR_STRING_END_WITH_REGEX: &'static str =
     "[end_with_regex] take one parameter of type String usage: string.end_with_regex(\"regex\")";
-pub const ERROR_STRING_FROM_JSON: &'static str =
-    "[from_json] [!] string to object failed]";
+pub const ERROR_STRING_FROM_JSON: &'static str = "[from_json] [!] string to object failed]";
 pub const ERROR_STRING_MATCH_REGEX: &'static str =
     "[end_match_regex] take one parameter of type String usage: string.match_regex(\"regex\")";
 pub const ERROR_STRING_POW: &'static str =
@@ -156,7 +157,7 @@ pub const ERROR_STRING_UNKNOWN_METHOD: &'static str = " is not a method of Strin
 
 // #### Array
 pub const ERROR_ARRAY_TYPE: &'static str = "value need to be of type array";
-pub const ERROR_ARRAY_INDEX_EXIST: &'static str = "index dose not exist";
+pub const ERROR_ARRAY_INDEX_EXIST: &'static str = "index does not exist";
 pub const ERROR_ARRAY_INDEX_TYPE: &'static str = "index must be of type int";
 pub const ERROR_ARRAY_NEGATIVE: &'static str = "index must be positive.  usage: array[1]";
 pub const ERROR_ARRAY_INDEX: &'static str = "index must be lower or equal than array.length()";

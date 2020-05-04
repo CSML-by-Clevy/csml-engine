@@ -73,12 +73,31 @@ pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
 pub const NULL: &str = "null";
 
+pub const OBJECT_TYPE: &str = "object";
+pub const ARRAY: &str = "array";
+pub const TEXT_TYPE: &str = "text";
+pub const STRING: &str = "string";
+pub const INT: &str = "int";
+pub const FLOAT: &str = "float";
+pub const BOOLEAN: &str = "boolean";
+
+pub static TYPES: &[&str] = &[
+    OBJECT_TYPE,
+    ARRAY,
+    TEXT_TYPE,
+    STRING,
+    INT,
+    FLOAT,
+    BOOLEAN,
+    NULL,
+];
+
 pub static RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
     MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
 ];
 
-// TODO: at some point (when function doesnt have a key like find(in)) ut back in inside reserved
+// TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
 pub static UTILISATION_RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
 ];

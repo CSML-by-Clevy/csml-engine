@@ -34,15 +34,14 @@ where
     let mut string = String::new();
 
     for c in value.as_bytes().iter() {
-            if *c != 92 {
-                    string.push(*c as char);
-            }
+        if *c != 92 {
+            string.push(*c as char);
+        }
     }
 
     if !value.fragment().is_empty() {
         expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-            &string,
-            interval,
+            &string, interval,
         )));
 
         interval_vector.push(interval);

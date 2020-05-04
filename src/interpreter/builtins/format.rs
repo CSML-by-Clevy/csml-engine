@@ -16,10 +16,10 @@ pub fn text(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
 
 // TODO: check nbr elemts in built-ins
 pub fn typing(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut typing: HashMap<String, Literal> = HashMap::new();
+    let mut typing: HashMap<String, Literal> = args.clone();
 
-    match args.get(DEFAULT) {
-        Some(literal)
+    match (typing.remove("duration"), typing.remove(DEFAULT)) {
+        (Some(literal), ..) | (.., Some(literal))
             if literal.primitive.get_type() == PrimitiveType::PrimitiveInt
                 || literal.primitive.get_type() == PrimitiveType::PrimitiveFloat =>
         {
@@ -35,10 +35,10 @@ pub fn typing(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
 }
 
 pub fn wait(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut wait: HashMap<String, Literal> = HashMap::new();
+    let mut wait: HashMap<String, Literal> = args.clone();
 
-    match args.get(DEFAULT) {
-        Some(literal)
+    match (wait.remove("duration"), wait.remove(DEFAULT)) {
+        (Some(literal), ..) | (.., Some(literal))
             if literal.primitive.get_type() == PrimitiveType::PrimitiveInt
                 || literal.primitive.get_type() == PrimitiveType::PrimitiveFloat =>
         {
@@ -59,24 +59,22 @@ pub fn object(object: HashMap<String, Literal>, interval: Interval) -> Result<Li
 }
 
 pub fn question(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut question: HashMap<String, Literal> = HashMap::new();
+    let mut question: HashMap<String, Literal> = args.clone();
 
-    let buttons = match args.get("buttons") {
-        Some(literal) => literal.to_owned(),
-        _ => return Err(gen_error_info(interval, ERROR_QUESTION.to_owned())),
-    };
-
-    let accepts = accepts_from_buttons(&buttons);
-
-    match (args.get("title"), args.get(DEFAULT)) {
+    match (question.remove("title"), question.remove(DEFAULT)) {
         (Some(title), ..) | (.., Some(title)) => {
             question.insert("title".to_owned(), title.to_owned());
         }
         _ => {}
     }
 
+    let buttons = match question.get("buttons") {
+        Some(literal) => literal.to_owned(),
+        _ => return Err(gen_error_info(interval, ERROR_QUESTION.to_owned())),
+    };
+
+    let accepts = accepts_from_buttons(&buttons);
     question.insert("accepts".to_owned(), accepts);
-    question.insert("buttons".to_owned(), buttons);
 
     let mut result = PrimitiveObject::get_literal(&question, interval);
     result.set_content_type("question");
@@ -85,23 +83,18 @@ pub fn question(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 }
 
 pub fn carousel(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut carousel: HashMap<String, Literal> = HashMap::new();
+    let mut carousel: HashMap<String, Literal> = args.clone();
 
-    let cards = match args.get("cards") {
-        Some(literal) => literal.to_owned(),
+    match (carousel.remove("cards"), carousel.remove(DEFAULT)) {
+        (Some(cards), ..) | (.., Some(cards)) => {
+            carousel.insert("cards".to_owned(), cards.to_owned());
+            let mut result = PrimitiveObject::get_literal(&carousel, interval);
+            result.set_content_type("carousel");
+
+            Ok(result)
+        }
         _ => return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned())),
-    };
-
-    if let Some(literal) = args.get("metadata") {
-        carousel.insert("metadata".to_owned(), literal.to_owned());
     }
-
-    carousel.insert("cards".to_owned(), cards);
-
-    let mut result = PrimitiveObject::get_literal(&carousel, interval);
-    result.set_content_type("carousel");
-
-    Ok(result)
 }
 
 pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
@@ -125,18 +118,12 @@ pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
                 PrimitiveString::get_literal("get", interval),
             );
 
-            http.insert(
-                "header".to_owned(),
-                PrimitiveObject::get_literal(&header, interval),
-            );
-            http.insert(
-                "query".to_owned(),
-                PrimitiveObject::get_literal(&HashMap::default(), interval),
-            );
-            http.insert(
-                "body".to_owned(),
-                PrimitiveObject::get_literal(&HashMap::default(), interval),
-            );
+            let lit_header = PrimitiveObject::get_literal(&header, interval);
+            http.insert("header".to_owned(), lit_header);
+            let lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
+            http.insert("query".to_owned(), lit_query);
+            let lit_body = PrimitiveObject::get_literal(&HashMap::default(), interval);
+            http.insert("body".to_owned(), lit_body);
 
             let mut result = PrimitiveObject::get_literal(&http, interval);
 

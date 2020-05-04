@@ -14,18 +14,18 @@ fn ok_card() {
         "messages":[
             {
                 "content": {
-                    "subtitle": "c1",
+                    "title": "c1",
                     "image_url": "url",
                     "buttons": [
                         {
+                            "content": {
                                 "accepts": ["b1"],
-                                "button_type": "quick_button",
                                 "payload": "b1",
                                 "title": "b1",
                                 "theme": "primary",
-                            
-                                "content": {"payload": "b1", "title": "b1"},
-                                "content_type": "button"
+                                "icon": "info"
+                            },
+                            "content_type": "button"
                         }
                     ]
                 },
@@ -61,19 +61,20 @@ fn ok_carousel() {
             "content": {
                 "cards": [
                     {
-                        "subtitle": "c1",
-                        "buttons": [
-                            {
-                                    "accepts": ["b1"],
-                                    "button_type": "quick_button",
-                                    "payload": "b1",
-                                    "title": "b1",
-                                    "theme": "primary",
-                                
-                                    "content": {"payload": "b1", "title": "b1"},
+                        "content": {
+                            "title": "c1",
+                            "buttons": [
+                                {
+                                    "content": {
+                                        "accepts": ["b1"],
+                                        "payload": "b1",
+                                        "title": "b1"
+                                    },
                                     "content_type": "button"
-                            }
-                        ]
+                                }
+                            ]
+                        },
+                        "content_type": "card"
                     }
                 ]
             },
@@ -107,20 +108,22 @@ fn ok_carousel_step1() {
             "content": {
                 "cards": [
                     {
-                        "subtitle": "c1",
-                        "buttons": [
-                            {
-                                    "accepts": ["b1"],
-                                    "button_type": "quick_button",
-                                    "payload": "b1",
-                                    "title": "b1",
-                                    "theme": "primary",
-                                    "icon": "info",
-
-                                    "content": {"payload": "b1", "title": "b1"},
+                        "content": {
+                            "title": "c1",
+                            "buttons": [
+                                {
+                                    "content": {
+                                        "accepts": ["b1"],
+                                        "payload": "b1",
+                                        "title": "b1",
+                                        "theme": "primary",
+                                        "icon": "info"
+                                    },
                                     "content_type": "button"
-                            }
-                        ]
+                                }
+                            ]
+                        },
+                        "content_type": "card"
                     }
                 ]
             },

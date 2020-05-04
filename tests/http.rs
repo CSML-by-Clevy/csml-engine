@@ -13,7 +13,8 @@ fn http_http_0() {
     let data = r#"{
         "memories":[
             {
-                "key":"http", "value":{
+                "key":"http", 
+                "value":{
                     "body":{},
                     "header":{
                         "accept":"application/json,text/*",
@@ -193,7 +194,8 @@ fn http_query_0() {
     let data = r#"{
         "memories":[
             {
-                "key":"http", "value":{
+                "key":"http",
+                "value":{
                     "body":{},
                     "header":{
                         "accept":"application/json,text/*",
@@ -259,7 +261,8 @@ fn http_delete_0() {
     let data = r#"{
         "memories":[
             {
-                "key":"http", "value":{
+                "key":"http",
+                "value":{
                     "body":{},
                     "header":{
                         "accept":"application/json,text/*",
@@ -391,7 +394,8 @@ fn http_patch_0() {
     let data = r#"{
         "memories":[
             {
-                "key":"http", "value":{
+                "key":"http",
+                "value":{
                     "body":{},
                     "header":{
                         "accept":"application/json,text/*",
@@ -473,7 +477,7 @@ fn http_post_0() {
             {
                 "content":{
                     "body": {
-                        "hello":"world"
+                            "hello":"world"
                     },
                     "header":{
                         "accept":"application/json,text/*",

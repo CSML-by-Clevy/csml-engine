@@ -147,7 +147,7 @@ pub fn expr_to_literal(
         }
         Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => {
             let mut string =
-                get_string_from_complex_string(vec, start.to_owned(), data, root, sender);
+                get_string_from_complex_string(vec, start.to_owned(), data, root, sender)?;
             exec_path_literal(&mut string, path, data, root, sender)
         }
         Expr::VecExpr(vec, range) => {
