@@ -22,6 +22,7 @@ use crate::data::Data;
 use crate::error_format::*;
 use crate::linter::{lint_flow, Linter};
 use crate::parser::ExitCondition;
+use crate::parser::state_context::StateContext;
 
 use curl::easy::Easy;
 use std::collections::HashMap;
@@ -118,6 +119,9 @@ pub fn interpret(
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
             Ok(result) => result,
             Err(error) => {
+                StateContext::clear_state();
+                StateContext::clear_rip();
+
                 return MessageData::error_to_message(
                     Err(gen_error_info(
                         error.interval,

@@ -33,8 +33,8 @@ pub const ERROR_DOUBLE_QUOTE: &'static str = "expect '\"' to end string";
 pub const ERROR_DOUBLE_OPEN_BRACE: &'static str = "expect '{{' to begin expandable string";
 pub const ERROR_DOUBLE_CLOSE_BRACE: &'static str = "expect '}}' to end expandable string";
 pub const ERROR_UNREACHABLE: &'static str = "unreachable";
-pub const ERROR_MULTIPLE_ARGUMENTS_EXPANDABLE_STRING: &'static str =
-    "expand string can only have one parameter";
+pub const ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING: &'static str =
+    "wrong argument(s) given to expandable string";
 
 // ##Interpreter Errors
 // ### Validation

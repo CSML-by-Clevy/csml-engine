@@ -58,7 +58,7 @@ where
         Ok((rest, val)) => Ok((rest, val)),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => Err(gen_nom_failure(
             s,
-            ERROR_MULTIPLE_ARGUMENTS_EXPANDABLE_STRING,
+            ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING,
         )),
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
