@@ -103,10 +103,7 @@ pub fn interpret_scope(
             }
             e => {
                 // TODO: make Expr printable in order to be included in the error message
-                let interval = interval_from_expr(e);
-                let message = ERROR_START_INSTRUCTIONS.to_owned();
-
-                return Err(gen_error_info(interval, message));
+                return Err(gen_error_info(interval_from_expr(e), ERROR_START_INSTRUCTIONS.to_owned()));
             }
         };
     }
