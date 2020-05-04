@@ -94,10 +94,7 @@ lazy_static! {
         );
         map.insert(
             "is_number",
-            (
-                PrimitiveObject::is_number as PrimitiveMethod,
-                Right::Read,
-            ),
+            (PrimitiveObject::is_number as PrimitiveMethod, Right::Read),
         );
 
         map.insert(
@@ -878,7 +875,12 @@ impl Primitive for PrimitiveObject {
 
         if is_event == true {
             if let Some(res) = self.value.get_mut("text") {
-                return res.primitive.do_exec(name, args, interval, &ContentType::Event(String::default()));
+                return res.primitive.do_exec(
+                    name,
+                    args,
+                    interval,
+                    &ContentType::Event(String::default()),
+                );
             }
         }
 
@@ -988,10 +990,13 @@ impl Primitive for PrimitiveObject {
             serde_json::map::Map::new();
 
         match (content_type, first) {
-            (content_type, false) if content_type == "object" => { 
+            (content_type, false) if content_type == "object" => {
                 for (key, literal) in self.value.iter() {
                     let content_type = &literal.content_type;
-                    object.insert(key.to_owned(), literal.primitive.format_mem(content_type, false));
+                    object.insert(
+                        key.to_owned(),
+                        literal.primitive.format_mem(content_type, false),
+                    );
                 }
 
                 serde_json::Value::Object(object)
@@ -1002,9 +1007,12 @@ impl Primitive for PrimitiveObject {
 
                 for (key, literal) in self.value.iter() {
                     let content_type = &literal.content_type;
-                    object.insert(key.to_owned(), literal.primitive.format_mem(content_type, false));
+                    object.insert(
+                        key.to_owned(),
+                        literal.primitive.format_mem(content_type, false),
+                    );
                 }
-                map.insert("_content".to_owned(),  serde_json::Value::Object(object));
+                map.insert("_content".to_owned(), serde_json::Value::Object(object));
 
                 serde_json::Value::Object(map)
             }

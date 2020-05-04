@@ -81,7 +81,16 @@ pub const INT: &str = "int";
 pub const FLOAT: &str = "float";
 pub const BOOLEAN: &str = "boolean";
 
-pub static TYPES: &[&str] = &[OBJECT_TYPE, ARRAY, TEXT_TYPE, STRING, INT, FLOAT, BOOLEAN, NULL];
+pub static TYPES: &[&str] = &[
+    OBJECT_TYPE,
+    ARRAY,
+    TEXT_TYPE,
+    STRING,
+    INT,
+    FLOAT,
+    BOOLEAN,
+    NULL,
+];
 
 pub static RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,

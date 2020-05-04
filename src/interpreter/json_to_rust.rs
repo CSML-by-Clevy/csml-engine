@@ -76,7 +76,7 @@ pub fn memory_to_literal(
 
             match (val.get("_content"), val.get("_content_type")) {
                 (Some(content), Some(serde_json::Value::String(conent_type))) => {
-                    let mut literal =  memory_to_literal(content, interval)?;
+                    let mut literal = memory_to_literal(content, interval)?;
                     literal.set_content_type(&conent_type);
                     Ok(literal)
                 }

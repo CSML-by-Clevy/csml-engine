@@ -24,7 +24,7 @@ fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
     let mut json_map = serde_json::Map::new();
     for (key, val) in map.iter() {
         let content_type = &val.content_type;
-        json_map.insert(key.to_owned(), val.primitive.format_mem(content_type ,true));
+        json_map.insert(key.to_owned(), val.primitive.format_mem(content_type, true));
     }
     serde_json::json!(json_map)
 }

@@ -19,10 +19,6 @@ impl Memories {
         let content_type = &value.content_type;
         let value = value.primitive.format_mem(content_type, true);
 
-        Self {
-            key,
-            value,
-        }
+        Self { key, value }
     }
 }
-
