@@ -7,7 +7,6 @@ pub mod parser;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use crate::parser::ExitCondition;
 use crate::data::ast::Expr;
 use crate::data::ast::Flow;
 use crate::data::ast::InstructionType;
@@ -21,10 +20,8 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
-use crate::linter::{
-    Linter,
-    lint_flow,
-};
+use crate::linter::{lint_flow, Linter};
+use crate::parser::ExitCondition;
 
 use curl::easy::Easy;
 use std::collections::HashMap;

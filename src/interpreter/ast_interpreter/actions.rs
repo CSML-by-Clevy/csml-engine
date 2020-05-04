@@ -7,6 +7,7 @@ use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
 };
 use crate::parser::ExitCondition;
+use crate::interpreter::interpret_scope;
 use std::sync::mpsc;
 
 fn get_var_info<'a>(
@@ -45,7 +46,7 @@ pub fn match_actions(
     function: &ObjectType,
     mut root: MessageData,
     data: &mut Data,
-    instruction_index: Option<usize>,
+    _instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match function {

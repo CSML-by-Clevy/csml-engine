@@ -1,7 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use crate::data::{Hold, Literal, Memories, Message, MSG};
-use crate::linter::data::Linter;
 use crate::linter::data::Warning;
 use crate::parser::ExitCondition;
 
