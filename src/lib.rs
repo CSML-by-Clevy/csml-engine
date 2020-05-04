@@ -120,7 +120,7 @@ pub fn interpret(
             Err(error) => {
                 return MessageData::error_to_message(
                     Err(gen_error_info(
-                        Interval::new_as_u32(0, 0),
+                        error.interval,
                         format!("{} {}", ERROR_INVALID_FLOW, error.message),
                     )),
                     &sender,
