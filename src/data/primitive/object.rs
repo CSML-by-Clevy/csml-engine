@@ -983,6 +983,34 @@ impl Primitive for PrimitiveObject {
         serde_json::Value::Object(object)
     }
 
+    fn format_mem(&self, content_type: &str, first: bool) -> serde_json::Value {
+        let mut object: serde_json::map::Map<String, serde_json::Value> =
+            serde_json::map::Map::new();
+
+        match (content_type, first) {
+            (content_type, false) if content_type == "object" => { 
+                for (key, literal) in self.value.iter() {
+                    let content_type = &literal.content_type;
+                    object.insert(key.to_owned(), literal.primitive.format_mem(content_type, false));
+                }
+
+                serde_json::Value::Object(object)
+            }
+            (content_type, _) => {
+                let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+                map.insert("_content_type".to_owned(), serde_json::json!(content_type));
+
+                for (key, literal) in self.value.iter() {
+                    let content_type = &literal.content_type;
+                    object.insert(key.to_owned(), literal.primitive.format_mem(content_type, false));
+                }
+                map.insert("_content".to_owned(),  serde_json::Value::Object(object));
+
+                serde_json::Value::Object(map)
+            }
+        }
+    }
+
     fn to_string(&self) -> String {
         self.to_json().to_string()
     }

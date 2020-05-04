@@ -3,7 +3,7 @@ use crate::data::{
     Client, Hold, Interval, Literal,
 };
 
-use crate::interpreter::json_to_literal;
+use crate::interpreter::{json_to_literal, memory_to_literal};
 
 use nom::lib::std::collections::HashMap;
 
@@ -40,7 +40,19 @@ pub struct Context {
     pub hold: Option<Hold>,
 }
 
-pub fn get_hashmap(lit: &serde_json::Value) -> HashMap<String, Literal> {
+pub fn get_hashmap_from_mem(lit: &serde_json::Value) -> HashMap<String, Literal> {
+    match memory_to_literal(lit, Interval { line: 0, column: 0 }) {
+        Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
+            match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
+                Some(map) => map.value.clone(),
+                None => HashMap::new(),
+            }
+        }
+        _ => HashMap::new(),
+    }
+}
+
+pub fn get_hashmap_from_json(lit: &serde_json::Value) -> HashMap<String, Literal> {
     match json_to_literal(lit, Interval { line: 0, column: 0 }) {
         Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
             match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
@@ -54,8 +66,8 @@ pub fn get_hashmap(lit: &serde_json::Value) -> HashMap<String, Literal> {
 
 impl ContextJson {
     pub fn to_literal(&self) -> Context {
-        let current = get_hashmap(&self.current);
-        let metadata = get_hashmap(&self.metadata);
+        let current = get_hashmap_from_mem(&self.current);
+        let metadata = get_hashmap_from_json(&self.metadata);
 
         Context {
             current,

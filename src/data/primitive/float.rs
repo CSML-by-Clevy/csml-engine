@@ -491,6 +491,10 @@ impl Primitive for PrimitiveFloat {
         serde_json::json!(self.value)
     }
 
+    fn format_mem(&self, _content_type: &str, _first: bool) -> serde_json::Value {
+        serde_json::json!(self.value)
+    }
+
     fn to_string(&self) -> String {
         self.value.to_string()
     }

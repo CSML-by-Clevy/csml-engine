@@ -3,7 +3,7 @@ pub mod builtins;
 pub mod json_to_rust;
 pub mod variable_handler;
 
-pub use json_to_rust::json_to_literal;
+pub use json_to_rust::{json_to_literal, memory_to_literal};
 
 use crate::data::{ast::*, send_msg, Data, Hold, Literal, MessageData, MSG};
 use crate::error_format::*;
@@ -23,7 +23,8 @@ use std::sync::mpsc;
 fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
     let mut json_map = serde_json::Map::new();
     for (key, val) in map.iter() {
-        json_map.insert(key.to_owned(), val.primitive.to_json());
+        let content_type = &val.content_type;
+        json_map.insert(key.to_owned(), val.primitive.format_mem(content_type ,true));
     }
     serde_json::json!(json_map)
 }
