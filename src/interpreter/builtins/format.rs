@@ -83,16 +83,18 @@ pub fn question(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 }
 
 pub fn carousel(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    let carousel: HashMap<String, Literal> = args.clone();
+    let mut carousel: HashMap<String, Literal> = args.clone();
 
-    if !carousel.contains_key("cards") {
-        return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned()));
+    match (carousel.remove("cards"), carousel.remove(DEFAULT)) {
+        (Some(cards), ..) | (.., Some(cards)) => {
+            carousel.insert("cards".to_owned(), cards.to_owned());
+            let mut result = PrimitiveObject::get_literal(&carousel, interval);
+            result.set_content_type("carousel");
+
+            Ok(result)
+        }
+        _ => return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned()))
     }
-
-    let mut result = PrimitiveObject::get_literal(&carousel, interval);
-    result.set_content_type("carousel");
-
-    Ok(result)
 }
 
 pub fn http(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
