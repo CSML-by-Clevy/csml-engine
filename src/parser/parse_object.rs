@@ -1,7 +1,9 @@
 use crate::data::{ast::*, tokens::*};
-use crate::parser::operator::parse_operator::parse_operator;
 use crate::parser::{parse_comments::comment, tools::get_interval};
 
+use crate::parser::parse_var_types::parse_basic_expr;
+use crate::parser::state_context::StateContext;
+use crate::parser::state_context::StringState;
 use nom::{
     bytes::complete::tag,
     bytes::complete::take_till1,
@@ -20,19 +22,24 @@ fn parse_str<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    take_till1(|c: char| "\"".contains(c))(s)
+    match StateContext::get_string() {
+        StringState::Normal => take_till1(|c: char| "\"".contains(c))(s),
+        StringState::Expand => take_till1(|c: char| "\\\"".contains(c))(s),
+    }
 }
 
 fn string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
     E: ParseError<Span<'a>>,
 {
+    let token = match StateContext::get_string() {
+        StringState::Normal => "\"",
+        StringState::Expand => "\\\"",
+    };
+
     context(
         "string must start with '\"' ",
-        preceded(
-            tag(DOUBLE_QUOTE),
-            cut(terminated(parse_str, tag(DOUBLE_QUOTE))),
-        ),
+        preceded(tag(token), cut(terminated(parse_str, tag(token)))),
     )(s)
 }
 
@@ -43,7 +50,7 @@ where
     separated_pair(
         preceded(comment, string),
         cut(preceded(comment, tag(COLON))),
-        parse_operator,
+        parse_basic_expr,
     )(s)
 }
 

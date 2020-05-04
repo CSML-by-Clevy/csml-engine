@@ -26,9 +26,16 @@ pub enum ExecutionState {
     Loop,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum StringState {
+    Normal,
+    Expand,
+}
+
 #[derive(Debug)]
 pub struct StateContext {
     state: Vec<ExecutionState>,
+    string_state: StringState,
     rip: usize,
 }
 
@@ -40,6 +47,7 @@ impl Default for StateContext {
     fn default() -> Self {
         Self {
             state: Vec::default(),
+            string_state: StringState::Normal,
             rip: 0,
         }
     }
@@ -137,5 +145,35 @@ impl StateContext {
         }
 
         ExecutionState::Loop
+    }
+}
+
+impl StateContext {
+    pub fn set_string(state: StringState) {
+        let thread_id = current().id();
+        let mut hashmap = CONTEXT.lock().unwrap();
+
+        hashmap
+            .entry(thread_id)
+            .or_insert_with(|| StateContext::default());
+
+        if let Some(state_context) = hashmap.get_mut(&thread_id) {
+            state_context.string_state = state;
+        }
+    }
+
+    pub fn get_string() -> StringState {
+        let thread_id = current().id();
+        let mut hashmap = CONTEXT.lock().unwrap();
+
+        hashmap
+            .entry(thread_id)
+            .or_insert_with(|| StateContext::default());
+
+        if let Some(state_context) = hashmap.get(&thread_id) {
+            return state_context.string_state;
+        }
+
+        unreachable!();
     }
 }

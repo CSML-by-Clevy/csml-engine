@@ -7,7 +7,7 @@ use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
 };
 use crate::parser::ExitCondition;
-use crate::interpreter::interpret_scope;
+// use crate::interpreter::interpret_scope;
 use std::sync::mpsc;
 
 fn get_var_info<'a>(

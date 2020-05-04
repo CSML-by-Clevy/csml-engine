@@ -189,6 +189,12 @@ pub struct RangeInterval {
     pub end: Interval,
 }
 
+impl RangeInterval {
+    pub fn new(start: Interval, end: Interval) -> Self {
+        Self { start, end }
+    }
+}
+
 #[derive(PartialEq, Debug, Clone, Eq, Hash, Copy)]
 pub struct Interval {
     pub line: u32,
@@ -237,6 +243,15 @@ pub enum PathLiteral {
 pub struct Identifier {
     pub ident: String,
     pub interval: Interval,
+}
+
+impl Identifier {
+    pub fn new(ident: &str, interval: Interval) -> Self {
+        Self {
+            ident: ident.to_string(),
+            interval,
+        }
+    }
 }
 
 impl PartialEq for Identifier {

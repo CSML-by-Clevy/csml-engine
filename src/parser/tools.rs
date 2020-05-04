@@ -1,6 +1,6 @@
-use crate::data::{ast::Interval, tokens::*};
+use crate::data::{ast::*, tokens::*};
 use nom::{
-    bytes::complete::take_till1,
+    bytes::complete::take_while1,
     error::{ErrorKind, ParseError},
     *,
 };
@@ -17,6 +17,62 @@ where
     nom::bytes::complete::take(0usize)(s)
 }
 
+fn set_escape(s: &str, index: usize, escape: &mut bool) {
+    if let Some(c) = s.chars().nth(index) {
+        if c == '\\' {
+            return match escape {
+                true => {
+                    *escape = false;
+                }
+                false => {
+                    *escape = true;
+                }
+            };
+        }
+
+        *escape = false;
+    }
+}
+
+fn set_substring(s: &str, index: usize, escape: bool, expand: bool, substring: &mut bool) {
+    if let Some(c) = s.chars().nth(index) {
+        if c == '"' && escape && expand {
+            match substring {
+                true => {
+                    *substring = false;
+                }
+                false => {
+                    *substring = true;
+                }
+            }
+        }
+    }
+}
+
+fn set_open_expand(s: &str, index: usize, escape: bool, substring: bool, expand: &mut bool) {
+    if let Some(c) = s.chars().nth(index) {
+        if c == '{' && !escape && !substring {
+            if let Some(c) = s.chars().nth(index + 1) {
+                if c == '{' && !escape {
+                    *expand = true;
+                }
+            }
+        }
+    }
+}
+
+fn set_close_expand(s: &str, index: usize, escape: bool, substring: bool, expand: &mut bool) {
+    if let Some(c) = s.chars().nth(index) {
+        if c == '}' && !escape && !substring {
+            if let Some(c) = s.chars().nth(index + 1) {
+                if c == '}' && !escape {
+                    *expand = false;
+                }
+            }
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,14 +85,30 @@ where
     Ok((s, Interval::new_as_span(pos)))
 }
 
+pub fn get_range_interval(vector_interval: &[Interval]) -> (Interval, Interval) {
+    let mut start = Interval::new_as_u32(0, 0);
+    let mut end = Interval::new_as_u32(0, 0);
+
+    for (index, interval) in vector_interval.iter().enumerate() {
+        if index == 0 {
+            start = *interval;
+        }
+
+        end = *interval;
+    }
+
+    (start, end)
+}
+
 pub fn get_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, val) = take_till1(|c: char| c != UNDERSCORE && !c.is_alphanumeric())(s)?;
+    let (rest, string) = take_while1(|c: char| c == '_' || c == '\\' || c.is_alphanumeric())(s)?;
+    // let (rest, string) = take_till1(|c: char| c != UNDERSCORE && !c.is_alphanumeric())(s)?;
 
     // TODO: see if return String can be &str ?
-    Ok((s, (*val.fragment()).to_string()))
+    Ok((rest, (*string.fragment()).to_string()))
 }
 
 pub fn get_tag<I, E: ParseError<I>>(
@@ -50,4 +122,27 @@ pub fn get_tag<I, E: ParseError<I>>(
             Err(Err::Error(E::from_error_kind(input, ErrorKind::Tag)))
         }
     }
+}
+
+pub fn get_distance_brace(s: &Span, key: char) -> Option<usize> {
+    let mut escape: bool = false;
+    let mut expand: bool = false;
+    let mut substring: bool = false;
+
+    for (i, c) in s.fragment().as_bytes().iter().enumerate() {
+        if *c as char == key && !escape && !substring {
+            if let Some(c) = s.fragment().chars().nth(i + 1) {
+                if c == key {
+                    return Some(i);
+                }
+            }
+        }
+
+        set_open_expand(s.fragment(), i, escape, substring, &mut expand);
+        set_close_expand(s.fragment(), i, escape, substring, &mut expand);
+        set_substring(s.fragment(), i, escape, expand, &mut substring);
+        set_escape(s.fragment(), i, &mut escape);
+    }
+
+    None
 }

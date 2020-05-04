@@ -30,7 +30,11 @@ pub const ERROR_RIGHT_BRACKET: &'static str = "expect ']'";
 pub const ERROR_GOTO_STEP: &'static str = "missing step name after goto";
 pub const ERROR_IMPORT_STEP: &'static str = "missing step name after import";
 pub const ERROR_DOUBLE_QUOTE: &'static str = "expect '\"' to end string";
+pub const ERROR_DOUBLE_OPEN_BRACE: &'static str = "expect '{{' to begin expandable string";
+pub const ERROR_DOUBLE_CLOSE_BRACE: &'static str = "expect '}}' to end expandable string";
 pub const ERROR_UNREACHABLE: &'static str = "unreachable";
+pub const ERROR_MULTIPLE_ARGUMENTS_EXPANDABLE_STRING: &'static str =
+    "expand string can only have one parameter";
 
 // ##Interpreter Errors
 // ### Validation
@@ -139,6 +143,8 @@ pub const ERROR_STRING_END_WITH: &'static str =
     "[end_with] take one parameter of type String usage: string.end_with(\"tag\")";
 pub const ERROR_STRING_END_WITH_REGEX: &'static str =
     "[end_with_regex] take one parameter of type String usage: string.end_with_regex(\"regex\")";
+pub const ERROR_STRING_FROM_JSON: &'static str =
+    "[from_json] [!] string to object failed]";
 pub const ERROR_STRING_MATCH_REGEX: &'static str =
     "[end_match_regex] take one parameter of type String usage: string.match_regex(\"regex\")";
 pub const ERROR_STRING_POW: &'static str =
