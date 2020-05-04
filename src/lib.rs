@@ -20,7 +20,10 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
-use crate::linter::Linter;
+use crate::linter::{
+    Linter,
+    lint_flow,
+};
 
 use curl::easy::Easy;
 use std::collections::HashMap;
@@ -57,19 +60,12 @@ pub fn get_ast(
     flow: &str,
     hashmap: &mut HashMap<String, Flow>,
 ) -> Result<Flow, ErrorInfo> {
-    Linter::set_flow(flow);
-
-    let content = match bot.get_flow(&flow) {
-        Ok(result) => result,
-        Err(_) => {
-            unimplemented!();
-        }
-    };
+    let content = bot.get_flow(&flow)?;
 
     return match hashmap.get(flow) {
         Some(ast) => Ok(ast.to_owned()),
         None => {
-            return match parse_file(&content) {
+            return match parse_file(&flow, &content) {
                 Ok(result) => {
                     let ast = result.to_owned();
 
@@ -77,10 +73,7 @@ pub fn get_ast(
 
                     Ok(ast)
                 }
-                Err(error) => {
-                    dbg!(error);
-                    unimplemented!();
-                }
+                Err(error) => Err(error),
             }
         }
     };
@@ -90,9 +83,22 @@ pub fn get_ast(
 /// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_file(flow: &str) -> Result<Flow, ErrorInfo> {
-    match parse_flow(flow) {
-        Ok(flow) => Ok(flow),
+pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, ErrorInfo> {
+    Linter::clear();
+    Linter::set_flow(flow_name);
+
+    match parse_flow(flow_content) {
+        Ok(flow) => {
+            let mut error = Vec::new();
+
+            lint_flow(&mut error);
+
+            // TODO: tmp check until error handling
+            match error.is_empty() {
+                true => Ok(flow),
+                false => Err(error.first().unwrap().to_owned()),
+            }
+        }
         Err(e) => Err(e),
     }
 }
@@ -111,13 +117,16 @@ pub fn interpret(
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
     while message_data.exit_condition.is_none() {
-        println!("[+] current flow to be executed: {}", flow);
-        println!("[+] current step to be executed: {}\n", step);
-
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
             Ok(result) => result,
-            Err(_) => {
-                unimplemented!();
+            Err(error) => {
+                return MessageData::error_to_message(
+                    Err(gen_error_info(
+                        Interval::new_as_u32(0, 0),
+                        format!("{} {}", ERROR_INVALID_FLOW, error.message),
+                    )),
+                    &sender,
+                );
             }
         };
 

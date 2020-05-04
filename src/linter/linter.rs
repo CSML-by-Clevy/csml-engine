@@ -90,7 +90,7 @@ fn check_valid_goto_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn linter(mut error: &mut Vec<ErrorInfo>) {
+pub fn lint_flow(mut error: &mut Vec<ErrorInfo>) {
     let linter = Linter::get_linter();
 
     for f in FUNCTIONS.iter() {
