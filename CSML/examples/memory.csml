@@ -9,7 +9,7 @@ local_variable:
 	say "Local variable can be express as 'do my_value as my_var'"
 	say "the variable 'identifier will be accesible only inside the current step'"
 
-	use 42 as my_var
+	do my_var = 42
 
 	say "This is the value of my_var: {{ my_var }}"
 
@@ -23,7 +23,7 @@ local_variable:
 	do true as my_boolean
 	do NULL as my_null
 
-	use {} as my_var
+	do my_var = {}
 
 	do my_var.insert("my_obj", my_obj)
 	do my_var.insert("my_vec", my_vec)
@@ -34,7 +34,7 @@ local_variable:
 	do my_var.insert("my_null", my_null)
 
 	foreach (key) in my_var.keys() {
-		use "{{key}}: {{ my_var[key]}}" as result
+		do result = "{{key}}: {{ my_var[key]}}"
 
 		say result
 	}
