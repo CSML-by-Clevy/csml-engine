@@ -71,7 +71,7 @@ fn ok_type_of_null() {
 
 #[test]
 fn ok_type_of_object() {
-    let data = r#"{"memories":[{"key":"var", "value":{}}], "messages":[{"content":{"text":"object"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
+    let data = r#"{"memories":[{"key":"var", "value":{"_content":{}, "_content_type": "object"} }], "messages":[{"content":{"text":"object"}, "content_type":"text"}], "next_flow":null, "next_step":"end"}"#;
     let msg = format_message(gen_event(""), "object");
 
     let v1: Value = message_to_json_value(msg);
