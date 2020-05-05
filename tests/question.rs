@@ -20,9 +20,9 @@ fn ok_button() {
         "messages":[
             {
                 "content": {
-                    "accepts": ["toto", "hello"],
+                    "accepts": ["toto", "hello", "test"],
                     "button_type": "quick_button",
-                    "payload": "hello",
+                    "payload": "test",
                     "title": "hello"
                 },
                 "content_type": "button"
