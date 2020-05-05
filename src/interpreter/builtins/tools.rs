@@ -1,5 +1,5 @@
 use crate::data::primitive::array::PrimitiveArray;
-use crate::data::{Client, Literal};
+use crate::data::{Client, Interval, Literal};
 use crate::error_format::*;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
@@ -77,17 +77,21 @@ pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
     }
 }
 
-pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
+pub fn format_accept(
+    values: Option<&Literal>,
+    mut title: Vec<Literal>,
+    interval: Interval,
+) -> Literal {
     match values {
         Some(literal) => match Literal::get_value::<Vec<Literal>>(
             &literal.primitive,
-            title.interval,
+            literal.interval,
             ERROR_UNREACHABLE.to_owned(),
         ) {
             Ok(res) => {
                 let mut vector = res.clone();
 
-                vector.push(title);
+                vector.append(&mut title);
 
                 PrimitiveArray::get_literal(&vector, literal.interval)
             }
@@ -95,17 +99,11 @@ pub fn format_accept(values: Option<&Literal>, title: Literal) -> Literal {
                 let mut vector = Vec::new();
 
                 vector.push(literal.to_owned());
-                vector.push(title);
+                vector.append(&mut title);
 
                 PrimitiveArray::get_literal(&vector, literal.interval)
             }
         },
-        None => {
-            let mut items = Vec::new();
-
-            items.push(title.to_owned());
-
-            PrimitiveArray::get_literal(&items, title.interval)
-        }
+        None => PrimitiveArray::get_literal(&title, interval),
     }
 }
