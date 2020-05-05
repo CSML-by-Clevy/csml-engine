@@ -209,6 +209,10 @@ impl Primitive for PrimitiveNull {
         serde_json::Value::Null
     }
 
+    fn format_mem(&self, _content_type: &str, _first: bool) -> serde_json::Value {
+        serde_json::Value::Null
+    }
+
     fn to_string(&self) -> String {
         "Null".to_owned()
     }

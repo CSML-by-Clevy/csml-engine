@@ -72,15 +72,17 @@ impl MessageData {
     }
 
     pub fn add_to_memory(&mut self, key: &str, value: Literal) {
+        let content_type = &value.content_type;
+
         if let Some(ref mut vec) = self.memories {
             vec.push(Memories {
                 key: key.to_owned(),
-                value: value.primitive.to_json(),
+                value: value.primitive.format_mem(content_type, true),
             });
         } else {
             self.memories = Some(vec![Memories {
                 key: key.to_owned(),
-                value: value.primitive.to_json(),
+                value: value.primitive.format_mem(content_type, true),
             }])
         };
     }

@@ -93,7 +93,7 @@ pub fn carousel(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 
             Ok(result)
         }
-        _ => return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned()))
+        _ => return Err(gen_error_info(interval, ERROR_CAROUSEL.to_owned())),
     }
 }
 

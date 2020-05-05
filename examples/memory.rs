@@ -53,12 +53,31 @@ pub fn format_message(result: &MessageData) -> Value {
 fn interpret_flow(flow: &str) {
     let event = Event::text("hello");
     let mut metadata = Map::new();
+    let mut memories = Map::new();
 
     metadata.insert("firstname".to_owned(), json!("Toto"));
     metadata.insert("email".to_owned(), json!("toto@clevy.com"));
 
+    memories.insert(
+        "tmp".to_owned(), 
+        serde_json::json!({
+            "_content": {
+                "cards":[
+                    {
+                        "_content":{
+                            "buttons":[{"_content":{"accepts":["b1"],"icon":"info","payload":"b1","theme":"primary","title":"b1","toto":{"test":"plop"}},"_content_type":"button"}],
+                            "title":"c1"
+                        },
+                        "_content_type":"card"
+                    }
+                ]
+            },
+            "_content_type":"carousel"
+        })
+    );
+
     let mut context = ContextJson {
-        current: serde_json::json!({}),
+        current: serde_json::json!(memories),
         metadata: json!(metadata),
         api_info: None,
         hold: None,
@@ -90,3 +109,21 @@ fn main() {
 
     interpret_flow(&flow);
 }
+
+// memoriers.insert(
+//     "tmp".to_owned(),
+//     serde_json::json!({
+//         "_content": {
+//             "cards":[
+//                 {
+//                     "_content":{
+//                         "buttons":[{"_content":{"accepts":["b1"],"icon":"info","payload":"b1","theme":"primary","title":"b1","toto":{"test":"plop"}},"_content_type":"button"}],
+//                         "title":"c1"
+//                     },
+//                     "_content_type":"card"
+//                 }
+//             ]
+//         },
+//         "_content_type":"carousel"
+//     })
+// );

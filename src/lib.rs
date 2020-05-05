@@ -4,7 +4,7 @@ pub mod interpreter;
 pub mod linter;
 pub mod parser;
 
-use crate::data::context::get_hashmap;
+use crate::data::context::get_hashmap_from_mem;
 use crate::linter::linter::linter;
 use crate::linter::Linter;
 use data::{ast::*, ContextJson, Data, Event, MessageData, MSG};
@@ -87,7 +87,7 @@ pub fn interpret(
     let curl = Easy::new();
     let mut context = context.to_literal();
     let step_vars = match &context.hold {
-        Some(hold) => get_hashmap(&hold.step_vars),
+        Some(hold) => get_hashmap_from_mem(&hold.step_vars),
         None => HashMap::new(),
     };
     let instruction_index = if let Some(hold) = &context.hold {
