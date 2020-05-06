@@ -58,7 +58,7 @@ pub fn get_ast(
     bot: &CsmlBot,
     flow: &str,
     hashmap: &mut HashMap<String, Flow>,
-) -> Result<Flow, ErrorInfo> {
+) -> Result<Flow, Vec<ErrorInfo>> {
     let content = bot.get_flow(&flow)?;
 
     return match hashmap.get(flow) {
@@ -66,11 +66,9 @@ pub fn get_ast(
         None => {
             return match parse_file(&flow, &content) {
                 Ok(result) => {
-                    let ast = result.to_owned();
+                    hashmap.insert(flow.to_owned(), result.to_owned());
 
-                    hashmap.insert(flow.to_owned(), result);
-
-                    Ok(ast)
+                    Ok(result)
                 }
                 Err(error) => Err(error),
             }
@@ -109,23 +107,22 @@ pub fn validate_bot(bot: CsmlBot) -> MessageData {
     return message_data;
 }
 
-pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, ErrorInfo> {
+pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, Vec<ErrorInfo>> {
     Linter::clear();
     Linter::set_flow(flow_name);
 
     match parse_flow(flow_content) {
-        Ok(flow) => {
+        Ok(result) => {
             let mut vector = Vec::new();
 
             lint_flow(&mut vector);
 
-            // TODO: tmp check until error handling
             match vector.is_empty() {
-                true => Ok(flow),
-                false => Err(vector.first().unwrap().to_owned()),
+                true => Ok(result),
+                false => Err(vector),
             }
         }
-        Err(e) => Err(e),
+        Err(error) => Err(vec![error]),
     }
 }
 
@@ -149,13 +146,13 @@ pub fn interpret(
                 StateContext::clear_state();
                 StateContext::clear_rip();
 
-                return MessageData::error_to_message(
-                    Err(gen_error_info(
-                        error.interval,
-                        format!("{} {}", ERROR_INVALID_FLOW, error.message),
-                    )),
-                    &sender,
-                );
+                let mut message_data = MessageData::default();
+
+                for err in error {
+                    message_data = message_data + MessageData::error_to_message(Err(err), &None);
+                }
+
+                return message_data;
             }
         };
 

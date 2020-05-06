@@ -1,13 +1,13 @@
 use csmlinterpreter::data::csml_bot::CsmlBot;
 use csmlinterpreter::data::csml_flow::CsmlFlow;
-// use csmlinterpreter::data::event::Event;
-// use csmlinterpreter::data::ContextJson;
-// use csmlinterpreter::interpret;
+use csmlinterpreter::data::event::Event;
+use csmlinterpreter::data::ContextJson;
+use csmlinterpreter::interpret;
 use csmlinterpreter::validate_bot;
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "default";
-// const DEFAULT_STEP_NAME: &str = "start";
+const DEFAULT_STEP_NAME: &str = "start";
 const DEFAULT_BOT_NAME: &str = "my_bot";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,17 +31,17 @@ fn main() {
     );
 
     // Create an Event
-    // let event = Event::default();
+    let event = Event::default();
 
     // Create context
-    // let context = ContextJson::new(
-    //     serde_json::json!({}),
-    //     serde_json::json!({}),
-    //     None,
-    //     None,
-    //     DEFAULT_STEP_NAME,
-    //     DEFAULT_FLOW_NAME,
-    // );
+    let context = ContextJson::new(
+        serde_json::json!({}),
+        serde_json::json!({}),
+        None,
+        None,
+        DEFAULT_STEP_NAME,
+        DEFAULT_FLOW_NAME,
+    );
 
     // Run interpreter
     // dbg!(interpret(bot, context, event, None));

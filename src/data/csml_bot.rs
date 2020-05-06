@@ -42,16 +42,16 @@ impl CsmlBot {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl CsmlBot {
-    pub fn get_flow(&self, name: &str) -> Result<String, ErrorInfo> {
+    pub fn get_flow(&self, name: &str) -> Result<String, Vec<ErrorInfo>> {
         for flow in self.flows.iter() {
             if flow.name == name {
                 return Ok(flow.content.to_owned());
             }
         }
 
-        return Err(gen_error_info(
+        return Err(vec![gen_error_info(
             Interval::new_as_u32(0, 0),
             format!("{} {}", ERROR_INVALID_FLOW, name),
-        ));
+        )]);
     }
 }
