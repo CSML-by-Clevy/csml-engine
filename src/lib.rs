@@ -82,20 +82,47 @@ pub fn get_ast(
 /// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+// [+] Error from parsing can be chained inside vector, but only the first error of a file will be visible.
+// [+] There is a complexity in continuing parsing when an error has been encountered;
+// [+] Also if an error of syntax is before an error of `linting` it will not show up since the context has not been created. neither the ast
+
+pub fn validate_bot(bot: CsmlBot) -> MessageData {
+    let mut vector = Vec::new();
+    let mut message_data = MessageData::default();
+
+    Linter::clear();
+
+    for flow in bot.flows {
+        Linter::set_flow(&flow.name);
+
+        if let Err(error) = parse_flow(&flow.content) {
+            vector.push(error);
+        }
+    }
+
+    lint_flow(&mut vector);
+
+    for error in vector {
+        message_data = message_data + MessageData::error_to_message(Err(error), &None);
+    }
+
+    return message_data;
+}
+
 pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, ErrorInfo> {
     Linter::clear();
     Linter::set_flow(flow_name);
 
     match parse_flow(flow_content) {
         Ok(flow) => {
-            let mut error = Vec::new();
+            let mut vector = Vec::new();
 
-            lint_flow(&mut error);
+            lint_flow(&mut vector);
 
             // TODO: tmp check until error handling
-            match error.is_empty() {
+            match vector.is_empty() {
                 true => Ok(flow),
-                false => Err(error.first().unwrap().to_owned()),
+                false => Err(vector.first().unwrap().to_owned()),
             }
         }
         Err(e) => Err(e),
@@ -159,8 +186,6 @@ pub fn interpret(
         if let Some(ExitCondition::Goto) = message_data.exit_condition {
             message_data.exit_condition = None;
         }
-
-        context.hold = None;
 
         flow = data.context.flow;
         step = data.context.step;

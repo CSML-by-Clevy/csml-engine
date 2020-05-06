@@ -30,7 +30,7 @@ fn check_missing_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
     if linter.flow.is_empty() {
         error.push(ErrorInfo {
             interval: Interval { line: 0, column: 0 },
-            message: "ERROR: Need to have at least one Flow".to_owned(),
+            message: "LINTER: Need to have at least one Flow".to_owned(),
         });
     }
 }
@@ -49,7 +49,7 @@ fn check_valid_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
             if !result {
                 error.push(ErrorInfo {
                     interval: Interval { line: 0, column: 0 },
-                    message: format!("ERROR: Flow '{}' need to have a 'start' step", flow),
+                    message: format!("LINTER: Flow '{}' need to have a 'start' step", flow),
                 });
             }
         }
@@ -64,7 +64,7 @@ fn check_duplicate_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
                     if vector_step.len() > 1 {
                         error.push(ErrorInfo {
                             interval: *vector_step.last().unwrap(),
-                            message: format!("ERROR: Duplicate step '{}' in flow '{}'", step, flow),
+                            message: format!("LINTER: Duplicate step '{}' in flow '{}'", step, flow),
                         });
                     }
                 }
@@ -79,7 +79,7 @@ fn check_valid_goto_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
             if !step.contains_key(&goto.step) && goto.step != "end" {
                 error.push(ErrorInfo {
                     interval: goto.interval,
-                    message: format!("ERROR: Step '{}' doesn't exist", goto.step),
+                    message: format!("LINTER: Step '{}' doesn't exist", goto.step),
                 });
             }
         }

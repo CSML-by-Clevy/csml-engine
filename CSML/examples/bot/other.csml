@@ -1,4 +1,6 @@
 start:
     say "Hello from Other flow"
     use 42 as var
+    goto lol
+    use 42 as event
     goto end
