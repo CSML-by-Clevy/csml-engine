@@ -48,5 +48,4 @@ fn main() {
 
     // Run valide_bot
     dbg!(validate_bot(bot));
-
 }

@@ -23,6 +23,7 @@ use crate::error_format::*;
 use crate::linter::{lint_flow, Linter};
 use crate::parser::ExitCondition;
 use crate::parser::state_context::StateContext;
+use crate::linter::data::Warning;
 
 use curl::easy::Easy;
 use std::collections::HashMap;
@@ -84,27 +85,66 @@ pub fn get_ast(
 // [+] There is a complexity in continuing parsing when an error has been encountered;
 // [+] Also if an error of syntax is before an error of `linting` it will not show up since the context has not been created. neither the ast
 
-pub fn validate_bot(bot: CsmlBot) -> MessageData {
-    let mut vector = Vec::new();
-    let mut message_data = MessageData::default();
+// [+] TODO: add rules goto flow
+// [+] TODO: write test for all rules
+
+// Maybe validate_bot should return -> Result<Hashmap<String, Flow>, Vec<ErrorInfo>> ?
+
+
+#[derive(Debug)]
+pub struct CsmlResult {
+    flows: Option<HashMap<String, Flow>>,
+    warnings: Option<Vec<Warning>>,
+    errors: Option<Vec<ErrorInfo>>,
+}
+
+impl CsmlResult {
+    fn new(flows: HashMap<String, Flow>, warnings: Vec<Warning>, errors: Vec<ErrorInfo>) -> Self {
+        let flows = match flows.is_empty() {
+            false => Some(flows),
+            true => None,
+        };
+
+        let warnings = match warnings.is_empty() {
+            false => Some(warnings),
+            true => None,
+        };
+
+        let errors = match errors.is_empty() {
+            false => Some(errors),
+            true => None,
+        };
+
+        Self {
+            flows,
+            warnings,
+            errors,
+        }
+    }
+}
+
+pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
+    let mut flows = HashMap::default();
+    let mut errors = Vec::new();
 
     Linter::clear();
 
     for flow in bot.flows {
         Linter::set_flow(&flow.name);
 
-        if let Err(error) = parse_flow(&flow.content) {
-            vector.push(error);
+        match parse_flow(&flow.content) {
+            Ok(result) => {
+                flows.insert(flow.name, result);
+            }
+            Err(error) => {
+                errors.push(error);
+            }
         }
     }
 
-    lint_flow(&mut vector);
+    lint_flow(&mut errors);
 
-    for error in vector {
-        message_data = message_data + MessageData::error_to_message(Err(error), &None);
-    }
-
-    return message_data;
+    CsmlResult::new(flows, Linter::get_warnings(), errors)
 }
 
 pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, Vec<ErrorInfo>> {
