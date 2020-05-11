@@ -12,6 +12,7 @@ use crate::interpreter::{
     },
 };
 use std::{collections::HashMap, sync::mpsc};
+use crate::data::position::Position;
 
 fn exec_path_literal(
     literal: &mut Literal,
@@ -41,7 +42,7 @@ fn format_function_args(
         Expr::VecExpr(vec, ..) => vec,
         _e => {
             return Err(gen_error_info(
-                interval_from_expr(args),
+                Position::new(interval_from_expr(args)),
                 ERROR_FUNCTIONS_ARGS.to_owned(),
             ))
         }
@@ -57,7 +58,7 @@ fn format_function_args(
                     Expr::IdentExpr(ref ident) => ident.ident.to_owned(),
                     _ => {
                         return Err(gen_error_info(
-                            interval_from_expr(var),
+                            Position::new(interval_from_expr(var)),
                             ERROR_ASSIGN_IDENT.to_owned(),
                         ))
                     }
@@ -101,7 +102,7 @@ fn normal_object_to_literal(
         ))
     } else {
         Err(gen_error_info(
-            interval.to_owned(),
+            Position::new(interval),
             format!("{} [{}]", name, ERROR_BUILTIN_UNKNOWN),
         ))
     }
@@ -164,7 +165,7 @@ pub fn expr_to_literal(
         Expr::LitExpr(literal) => exec_path_literal(&mut literal.clone(), path, data, root, sender),
         Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), path, data, root, sender)?),
         e => Err(gen_error_info(
-            interval_from_expr(e),
+            Position::new(interval_from_expr(e)),
             ERROR_EXPR_TO_LITERAL.to_owned(),
         )),
     }

@@ -4,7 +4,7 @@ use crate::data::{
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
 use crate::error_format::{gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
-use crate::linter::Linter;
+// use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,
@@ -56,7 +56,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, interval) = get_interval(s)?;
-    Linter::add_warning(WARNING_REMEMBER_AS, interval);
+    // Linter::add_warning(WARNING_REMEMBER_AS, interval);
     let (s, operator) = parse_operator(s)?;
 
     match operator {
@@ -158,7 +158,7 @@ where
     let (s, ..) = get_tag(name, USE)(s)?;
     let (s, interval) = get_interval(s)?;
 
-    Linter::add_warning(WARNING_USE, interval);
+    // Linter::add_warning(WARNING_USE, interval);
 
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 

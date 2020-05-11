@@ -2,6 +2,7 @@ use crate::data::error_info::ErrorInfo;
 use crate::data::{ast::Identifier, Data, Literal, Memories, MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use std::sync::mpsc;
+use crate::data::position::Position;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {
     match (
@@ -11,7 +12,7 @@ pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, E
         (_, Some(_)) => Ok("use".to_owned()),
         (Some(_), _) => Ok("remember".to_owned()),
         (None, None) => Err(gen_error_info(
-            name.interval.to_owned(),
+            Position::new(name.interval),
             format!("< {} > {}", name.ident, ERROR_FIND_MEMORY),
         )),
     }
@@ -24,7 +25,7 @@ pub fn search_var_memory(name: Identifier, data: &mut Data) -> Result<&mut Liter
             Ok(lit)
         }
         None => Err(gen_error_info(
-            name.interval.to_owned(),
+            Position::new(name.interval),
             format!("< {} > {}", name.ident, ERROR_FIND_MEMORY),
         )),
     }

@@ -24,10 +24,11 @@ pub use state_context::{ExecutionState, ExitCondition, StateContext};
 
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
-use crate::linter::Linter;
+// use crate::linter::Linter;
 use parse_comments::comment;
 use parse_scope::parse_root;
 use tools::*;
+use crate::data::position::Position;
 
 use nom::error::ParseError;
 use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
@@ -44,10 +45,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
         }),
         Err(e) => match e {
             Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
-                Interval {
-                    line: err.input.location_line(),
-                    column: err.input.get_column() as u32,
-                },
+                Position::new(Interval::new_as_u32(err.input.location_line(), err.input.get_column() as u32)),
                 err.error,
             )),
             Err::Incomplete(_err) => unimplemented!(),
@@ -61,8 +59,12 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
 
     let (s, interval) = get_interval(s)?;
 
+    Position::set_step(&ident.ident); // set context of position for new ErrorInfo
+
+    println!("[+] step: {}", Position::get_step());
+
     // Linter and Context setup
-    Linter::set_step(&Linter::get_flow(), &ident.ident, interval);
+    // Linter::set_step(&Linter::get_flow(), &ident.ident, interval);
     StateContext::clear_rip();
 
     let (s, start) = get_interval(s)?;

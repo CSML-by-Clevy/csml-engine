@@ -13,6 +13,7 @@ use crate::interpreter::{
     variable_handler::interval::interval_from_expr,
 };
 use crate::parser::ExitCondition;
+use crate::data::position::Position;
 
 use nom::lib::std::collections::HashMap;
 use std::sync::mpsc;
@@ -103,7 +104,7 @@ pub fn interpret_scope(
             }
             e => {
                 // TODO: make Expr printable in order to be included in the error message
-                return Err(gen_error_info(interval_from_expr(e), ERROR_START_INSTRUCTIONS.to_owned()));
+                return Err(gen_error_info(Position::new(interval_from_expr(e)), ERROR_START_INSTRUCTIONS.to_owned()));
             }
         };
     }

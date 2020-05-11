@@ -1,6 +1,7 @@
 use crate::data::csml_flow::CsmlFlow;
 use crate::error_format::*;
 use crate::Interval;
+use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -50,7 +51,7 @@ impl CsmlBot {
         }
 
         return Err(gen_error_info(
-            Interval::new_as_u32(0, 0),
+            Position::new(Interval::new_as_u32(0, 0)),
             format!("{} {}", ERROR_INVALID_FLOW, name),
         ));
     }

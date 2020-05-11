@@ -1,4 +1,4 @@
-use crate::data::ast::Interval;
+use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -6,7 +6,7 @@ use crate::data::ast::Interval;
 
 #[derive(Debug, Clone)]
 pub struct ErrorInfo {
-    pub interval: Interval,
+    pub position: Position,
     pub message: String,
 }
 
@@ -15,8 +15,11 @@ pub struct ErrorInfo {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl ErrorInfo {
-    pub fn new(interval: Interval, message: String) -> Self {
-        Self { interval, message }
+    pub fn new(position: Position, message: String) -> Self {
+        Self {
+            position,
+            message
+        }
     }
 }
 
@@ -27,8 +30,12 @@ impl ErrorInfo {
 impl ErrorInfo {
     pub fn format_error(&self) -> String {
         format!(
-            "{} at line {}, column {}",
-            self.message, self.interval.line, self.interval.column
+            "{} at line {}, column {} in step [{}] from flow [{}]",
+            self.message,
+            self.position.interval.line,
+            self.position.interval.column,
+            self.position.step,
+            self.position.flow,
         )
     }
 }

@@ -1,4 +1,5 @@
 start:
     say "Hello from Other flow"
     use 42 as var
+    say "".insert()
     goto end

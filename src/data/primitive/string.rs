@@ -17,6 +17,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 // use serde_json::{Result, Value};
 use crate::interpreter::json_to_literal;
+use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -187,7 +188,7 @@ impl PrimitiveString {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let result = string.value.parse::<f64>().is_ok();
@@ -203,7 +204,7 @@ impl PrimitiveString {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal("string", interval))
@@ -217,7 +218,7 @@ impl PrimitiveString {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         Ok(PrimitiveString::get_literal(&string.to_string(), interval))
@@ -233,7 +234,7 @@ impl PrimitiveString {
         let usage = "append(value: string) => string";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let mut result = string.value.to_owned();
@@ -247,7 +248,7 @@ impl PrimitiveString {
                 )?
             }
             _ => {
-                return Err(gen_error_info(interval, ERROR_STRING_APPEND.to_owned()));
+                return Err(gen_error_info(Position::new(interval), ERROR_STRING_APPEND.to_owned()));
             }
         };
 
@@ -264,7 +265,7 @@ impl PrimitiveString {
         let usage = "contains(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
@@ -276,7 +277,7 @@ impl PrimitiveString {
                 )?
             }
             _ => {
-                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
+                return Err(gen_error_info(Position::new(interval), ERROR_STRING_DO_MATCH.to_owned()));
             }
         };
 
@@ -293,7 +294,7 @@ impl PrimitiveString {
         let usage = "contains_regex(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
@@ -306,7 +307,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
@@ -316,7 +317,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
@@ -335,7 +336,7 @@ impl PrimitiveString {
         let usage = "ends_with(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
@@ -347,7 +348,7 @@ impl PrimitiveString {
                 )?
             }
             _ => {
-                return Err(gen_error_info(interval, ERROR_STRING_END_WITH.to_owned()));
+                return Err(gen_error_info(Position::new(interval), ERROR_STRING_END_WITH.to_owned()));
             }
         };
 
@@ -364,7 +365,7 @@ impl PrimitiveString {
         let usage = "ends_with_regex(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
@@ -377,7 +378,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
@@ -387,7 +388,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
@@ -410,13 +411,13 @@ impl PrimitiveString {
         let usage = "from_json() => object";
 
         if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let object = match serde_json::from_str(&string.value) {
             Ok(result) => result,
             Err(_) => {
-                return Err(gen_error_info(interval, ERROR_STRING_FROM_JSON.to_owned()));
+                return Err(gen_error_info(Position::new(interval), ERROR_STRING_FROM_JSON.to_owned()));
             }
         };
 
@@ -431,7 +432,7 @@ impl PrimitiveString {
         let usage = "is_empty() => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let result = string.value.is_empty();
@@ -447,7 +448,7 @@ impl PrimitiveString {
         let usage = "length() => int";
 
         if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let result = string.value.len();
@@ -463,7 +464,7 @@ impl PrimitiveString {
         let usage = "match(value: string>) => array";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let mut vector: Vec<Literal> = Vec::new();
@@ -477,7 +478,7 @@ impl PrimitiveString {
                 )?
             }
             _ => {
-                return Err(gen_error_info(interval, ERROR_STRING_DO_MATCH.to_owned()));
+                return Err(gen_error_info(Position::new(interval), ERROR_STRING_DO_MATCH.to_owned()));
             }
         };
 
@@ -500,7 +501,7 @@ impl PrimitiveString {
         let usage = "match_regex(value: string>) => array";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let mut s: &str = &string.value;
@@ -516,7 +517,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_MATCH_REGEX.to_owned(),
                 ));
             }
@@ -526,7 +527,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
@@ -555,7 +556,7 @@ impl PrimitiveString {
         let usage = "starts_with(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
@@ -567,7 +568,7 @@ impl PrimitiveString {
                 )?
             }
             _ => {
-                return Err(gen_error_info(interval, ERROR_STRING_START_WITH.to_owned()));
+                return Err(gen_error_info(Position::new(interval), ERROR_STRING_START_WITH.to_owned()));
             }
         };
 
@@ -584,7 +585,7 @@ impl PrimitiveString {
         let usage = "starts_with_regex(value: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let value = match args.get(0) {
@@ -597,7 +598,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_START_WITH_REGEX.to_owned(),
                 ));
             }
@@ -607,7 +608,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    interval,
+                    Position::new(interval),
                     ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
@@ -630,7 +631,7 @@ impl PrimitiveString {
         let usage = "to_lowercase() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let mut s = string.value.to_owned();
@@ -648,7 +649,7 @@ impl PrimitiveString {
         let usage = "to_uppercase() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(interval, format!("usage: {}", usage)));
+            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
         }
 
         let mut s = string.value.to_owned();
@@ -683,7 +684,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "abs", ERROR_STRING_NUMERIC),
         ))
     }
@@ -712,7 +713,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "cos", ERROR_STRING_NUMERIC),
         ))
     }
@@ -740,7 +741,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "ceil", ERROR_STRING_NUMERIC),
         ))
     }
@@ -768,7 +769,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "pow", ERROR_STRING_NUMERIC),
         ))
     }
@@ -796,7 +797,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "floor", ERROR_STRING_NUMERIC),
         ))
     }
@@ -824,7 +825,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "round", ERROR_STRING_NUMERIC),
         ))
     }
@@ -852,7 +853,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "sin", ERROR_STRING_NUMERIC),
         ))
     }
@@ -880,7 +881,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "sqrt", ERROR_STRING_NUMERIC),
         ))
     }
@@ -908,7 +909,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "tan", ERROR_STRING_NUMERIC),
         ))
     }
@@ -936,7 +937,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "to_int", ERROR_STRING_NUMERIC),
         ))
     }
@@ -964,7 +965,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", "to_float", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1007,7 +1008,7 @@ impl Primitive for PrimitiveString {
         }
 
         Err(gen_error_info(
-            interval,
+            Position::new(interval),
             format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
         ))
     }

@@ -26,6 +26,7 @@ use crate::interpreter::variable_handler::{
 use std::collections::HashMap;
 use std::slice::Iter;
 use std::sync::mpsc;
+use crate::data::position::Position;
 
 //TODO: return Warning or Error Component
 pub fn get_literal(
@@ -53,14 +54,14 @@ pub fn get_literal(
             match items.get_mut(*value as usize) {
                 Some(lit) => Ok(lit),
                 None => Err(gen_error_info(
-                    interval.to_owned(),
+                    Position::new(interval),
                     format!("{} {}", value, ERROR_ARRAY_INDEX_EXIST.to_owned()),
                 )),
             }
         }
         (literal, None) => Ok(literal),
         (_, Some(_)) => Err(gen_error_info(
-            interval.to_owned(),
+            Position::new(interval),
             ERROR_ARRAY_TYPE.to_owned(),
         )),
     }
@@ -73,7 +74,7 @@ fn get_var_from_step_var<'a>(
     match data.step_vars.get_mut(&name.ident) {
         Some(var) => Ok(var),
         None => Err(gen_error_info(
-            name.interval.to_owned(),
+            Position::new(name.interval),
             format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
         )),
     }
@@ -107,7 +108,7 @@ pub fn resolve_path(
 ) -> Result<Vec<(Interval, PathLiteral)>, ErrorInfo> {
     let mut new_path = vec![];
 
-    for (inter, node) in path.iter() {
+    for (interval, node) in path.iter() {
         match node {
             PathState::ExprIndex(expr) => {
                 let lit = expr_to_literal(&expr, None, data, root, sender)?;
@@ -116,16 +117,16 @@ pub fn resolve_path(
                     lit.interval,
                     ERROR_UNREACHABLE.to_owned(),
                 ) {
-                    new_path.push((inter.to_owned(), PathLiteral::VecIndex(*val as usize)))
+                    new_path.push((interval.to_owned(), PathLiteral::VecIndex(*val as usize)))
                 } else if let Ok(val) = Literal::get_value::<String>(
                     &lit.primitive,
                     lit.interval,
                     ERROR_UNREACHABLE.to_owned(),
                 ) {
-                    new_path.push((inter.to_owned(), PathLiteral::MapIndex(val.to_owned())))
+                    new_path.push((interval.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
                     return Err(gen_error_info(
-                        inter.to_owned(),
+                        Position::new(*interval),
                         ERROR_FIND_BY_INDEX.to_owned(),
                     ));
                 }
@@ -135,7 +136,7 @@ pub fn resolve_path(
                 interval,
                 args,
             }) => new_path.push((
-                inter.to_owned(),
+                interval.to_owned(),
                 PathLiteral::Func {
                     name: name.to_owned(),
                     interval: interval.to_owned(),
@@ -143,7 +144,7 @@ pub fn resolve_path(
                 },
             )),
             PathState::StringIndex(key) => {
-                new_path.push((inter.to_owned(), PathLiteral::MapIndex(key.to_owned())))
+                new_path.push((interval.to_owned(), PathLiteral::MapIndex(key.to_owned())))
             }
         }
     }
@@ -256,13 +257,13 @@ pub fn get_literal_form_metadata(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     let mut lit = match path.get(0) {
-        Some((inter, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
+        Some((interval, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
             Some(lit) => lit.to_owned(),
-            None => PrimitiveNull::get_literal(inter.to_owned()),
+            None => PrimitiveNull::get_literal(interval.to_owned()),
         },
-        Some((inter, _)) => {
+        Some((interval, _)) => {
             return Err(gen_error_info(
-                inter.to_owned(),
+                Position::new(*interval),
                 ERROR_FIND_BY_INDEX.to_owned(),
             ));
         }
