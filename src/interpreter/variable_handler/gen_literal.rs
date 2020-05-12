@@ -10,6 +10,7 @@ use crate::interpreter::{
     variable_handler::{exec_path_actions, resolve_path},
 };
 use std::sync::mpsc;
+use crate::data::position::Position;
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {
     match expr {
@@ -36,7 +37,7 @@ pub fn gen_literal_form_event(
                 ContentType::Event(_) => ContentType::Event(data.event.content_type.to_owned()),
                 _ => {
                     return Err(gen_error_info(
-                        interval.to_owned(),
+                        Position::new(interval),
                         ERROR_EVENT_CONTENT_TYPE.to_owned(),
                     ))
                 }

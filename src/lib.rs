@@ -1,7 +1,6 @@
 pub mod data;
 pub mod error_format;
 pub mod interpreter;
-pub mod linter;
 pub mod parser;
 
 use interpreter::interpret_scope;
@@ -20,17 +19,18 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
-use crate::linter::{lint_flow, Linter};
+use crate::data::warnings::Warnings;
 use crate::parser::ExitCondition;
 use crate::parser::state_context::StateContext;
-use crate::linter::data::Warning;
+use crate::data::position::Position;
+use crate::parser::linter::linter;
 
 use curl::easy::Easy;
 use std::collections::HashMap;
 use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// PRIVATE FUNCTIONS
+// PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
 fn execute_step(
@@ -45,17 +45,21 @@ fn execute_step(
         .flow_instructions
         .get(&InstructionType::NormalStep(step.to_owned()))
     {
-        Some(Expr::Scope { scope, .. }) => interpret_scope(scope, &mut data, rip, &sender),
+        Some(Expr::Scope { scope, .. }) => {
+            Position::set_step(&step);
+
+            interpret_scope(scope, &mut data, rip, &sender)
+        }
         _ => Err(gen_error_info(
-            Interval::new_as_u32(0, 0),
-            format!("{} {}", step, ERROR_STEP_EXIST),
+            Position::new(Interval::new_as_u32(0, 0)),
+            format!("[{}] {}", step, ERROR_STEP_EXIST),
         )),
     };
 
     MessageData::error_to_message(message_data, sender)
 }
 
-pub fn get_ast(
+fn get_ast(
     bot: &CsmlBot,
     flow: &str,
     hashmap: &mut HashMap<String, Flow>,
@@ -78,7 +82,7 @@ pub fn get_ast(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// PUBLIC FUNCTIONS
+// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
 // [+] Error from parsing can be chained inside vector, but only the first error of a file will be visible.
@@ -90,16 +94,15 @@ pub fn get_ast(
 
 // Maybe validate_bot should return -> Result<Hashmap<String, Flow>, Vec<ErrorInfo>> ?
 
-
 #[derive(Debug)]
 pub struct CsmlResult {
     flows: Option<HashMap<String, Flow>>,
-    warnings: Option<Vec<Warning>>,
+    warnings: Option<Vec<Warnings>>,
     errors: Option<Vec<ErrorInfo>>,
 }
 
 impl CsmlResult {
-    fn new(flows: HashMap<String, Flow>, warnings: Vec<Warning>, errors: Vec<ErrorInfo>) -> Self {
+    fn new(flows: HashMap<String, Flow>, warnings: Vec<Warnings>, errors: Vec<ErrorInfo>) -> Self {
         let flows = match flows.is_empty() {
             false => Some(flows),
             true => None,
@@ -127,14 +130,15 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();
     let mut errors = Vec::new();
 
-    Linter::clear();
+    Warnings::clear();
 
-    for flow in bot.flows {
-        Linter::set_flow(&flow.name);
+    for flow in &bot.flows {
+        Position::set_flow(&flow.name);
 
         match parse_flow(&flow.content) {
             Ok(result) => {
-                flows.insert(flow.name, result);
+                errors.append(&mut linter(&flow.name, &result, &bot));
+                flows.insert(flow.name.to_owned(), result);
             }
             Err(error) => {
                 errors.push(error);
@@ -142,26 +146,15 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
         }
     }
 
-    lint_flow(&mut errors);
-
-    CsmlResult::new(flows, Linter::get_warnings(), errors)
+    CsmlResult::new(flows, Warnings::get(), errors)
 }
 
 pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, Vec<ErrorInfo>> {
-    Linter::clear();
-    Linter::set_flow(flow_name);
+    Position::set_flow(flow_name);
+    Warnings::clear();
 
     match parse_flow(flow_content) {
-        Ok(result) => {
-            let mut vector = Vec::new();
-
-            lint_flow(&mut vector);
-
-            match vector.is_empty() {
-                true => Ok(result),
-                false => Err(vector),
-            }
-        }
+        Ok(result) => Ok(result),
         Err(error) => Err(vec![error]),
     }
 }
@@ -180,6 +173,8 @@ pub fn interpret(
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
     while message_data.exit_condition.is_none() {
+        Position::set_flow(&flow);
+
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
             Ok(result) => result,
             Err(error) => {
@@ -217,7 +212,7 @@ pub fn interpret(
             None => None,
         };
 
-        message_data = message_data + Linter::get_warnings();
+        message_data = message_data + Warnings::get();
         message_data = message_data + execute_step(&step, &mut data, rip, &sender);
 
         if let Some(ExitCondition::Goto) = message_data.exit_condition {

@@ -1,6 +1,7 @@
 use crate::data::message_data::MessageData;
 use crate::data::Literal;
 use crate::error_format::*;
+use crate::data::position::Position;
 
 use serde_json::{json, map::Map, Value};
 
@@ -29,7 +30,7 @@ impl Message {
     pub fn new(literal: Literal) -> Result<Self, ErrorInfo> {
         if literal.primitive.to_string().len() >= MAX_PAYLOAD_SIZE {
             return Err(gen_error_info(
-                literal.interval,
+                Position::new(literal.interval),
                 ERROR_PAYLOAD_EXCEED_MAX_SIZE.to_owned(),
             ));
         }

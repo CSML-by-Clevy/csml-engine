@@ -10,7 +10,7 @@ use serde_json::Value;
 
 #[test]
 fn typing_0() {
-    let data = r#"{"messages":[ {"content":{"error": "Builtin Typing expect one argument of type int or float | example: Typing(3, ..) at line 5, column 6"},"content_type":"error"} ],"memories":[]}"#;
+    let data = r#"{"messages":[ {"content":{"error": "Builtin Typing expect one argument of type int or float | example: Typing(3, ..) at line 5, column 6 in step [typing_0] from flow [flow]"},"content_type":"error"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(

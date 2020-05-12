@@ -1,6 +1,7 @@
 use crate::data::primitive::Primitive;
 use crate::data::Interval;
 use crate::error_format::*;
+use crate::data::position::Position;
 
 use std::cmp::Ordering;
 
@@ -34,7 +35,7 @@ impl Literal {
     ) -> Result<&'lifetime T, ErrorInfo> {
         match primitive.get_value().downcast_ref::<T>() {
             Some(sep) => Ok(sep),
-            None => Err(gen_error_info(interval, error_message)),
+            None => Err(gen_error_info(Position::new(interval), error_message)),
         }
     }
 
@@ -45,7 +46,7 @@ impl Literal {
     ) -> Result<&'lifetime mut T, ErrorInfo> {
         match primitive.get_mut_value().downcast_mut::<T>() {
             Some(sep) => Ok(sep),
-            None => Err(gen_error_info(interval, error_message)),
+            None => Err(gen_error_info(Position::new(interval), error_message)),
         }
     }
 

@@ -9,6 +9,7 @@ use crate::interpreter::variable_handler::{
 use crate::parser::ExitCondition;
 // use crate::interpreter::interpret_scope;
 use std::sync::mpsc;
+use crate::data::position::Position;
 
 fn get_var_info<'a>(
     expr: &'a Expr,
@@ -36,7 +37,7 @@ fn get_var_info<'a>(
             }
         },
         e => Err(gen_error_info(
-            interval_from_expr(e),
+            Position::new(interval_from_expr(e)),
             ERROR_GET_VAR_INFO.to_owned(),
         )),
     }
@@ -147,7 +148,7 @@ pub fn match_actions(
         //     }
         // }
         reserved => Err(gen_error_info(
-            interval_from_reserved_fn(reserved),
+            Position::new(interval_from_reserved_fn(reserved)),
             ERROR_START_INSTRUCTIONS.to_owned(),
         )),
     }

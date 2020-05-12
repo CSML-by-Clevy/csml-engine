@@ -6,6 +6,7 @@ use crate::error_format::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::collections::HashMap;
+use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
@@ -13,7 +14,7 @@ use std::collections::HashMap;
 
 pub fn one_of(
     args: HashMap<String, Literal>,
-    one_of_inter: Interval,
+    interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     match args.get(DEFAULT) {
         Some(literal) => {
@@ -24,10 +25,10 @@ pub fn one_of(
             )?;
             match res.get(rand::thread_rng().gen_range(0, res.len())) {
                 Some(lit) => Ok(lit.to_owned()),
-                None => Err(gen_error_info(literal.interval, ERROR_ONE_OF.to_owned())),
+                None => Err(gen_error_info(Position::new(literal.interval), ERROR_ONE_OF.to_owned())),
             }
         }
-        None => Err(gen_error_info(one_of_inter, ERROR_ONE_OF.to_owned())),
+        None => Err(gen_error_info(Position::new(interval), ERROR_ONE_OF.to_owned())),
     }
 }
 
@@ -43,7 +44,7 @@ pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Lit
             vec.shuffle(&mut rand::thread_rng());
             Ok(PrimitiveArray::get_literal(&vec, literal.interval))
         }
-        None => Err(gen_error_info(interval, ERROR_SHUFFLE.to_owned())),
+        None => Err(gen_error_info(Position::new(interval), ERROR_SHUFFLE.to_owned())),
     }
 }
 
@@ -69,9 +70,9 @@ pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
                 ));
             }
 
-            Err(gen_error_info(interval, ERROR_LENGTH.to_owned()))
+            Err(gen_error_info(Position::new(interval), ERROR_LENGTH.to_owned()))
         }
-        None => Err(gen_error_info(interval, ERROR_LENGTH.to_owned())),
+        None => Err(gen_error_info(Position::new(interval), ERROR_LENGTH.to_owned())),
     }
 }
 
@@ -86,7 +87,7 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
             string = Some(res);
         }
     } else if string.is_none() {
-        return Err(gen_error_info(interval, ERROR_FIND.to_owned()));
+        return Err(gen_error_info(Position::new(interval), ERROR_FIND.to_owned()));
     }
 
     if let Some(literal) = args.get("in") {
@@ -113,7 +114,7 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
                 ))
             }
         }
-        (_, _) => Err(gen_error_info(interval, ERROR_FIND.to_owned())),
+        (_, _) => Err(gen_error_info(Position::new(interval), ERROR_FIND.to_owned())),
     }
 }
 
@@ -132,6 +133,6 @@ pub fn floor(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
                 Literal::get_value::<f64>(&literal.primitive, interval, ERROR_FLOOR.to_owned())?;
             Ok(PrimitiveFloat::get_literal(res.floor(), literal.interval))
         }
-        _ => Err(gen_error_info(interval, ERROR_FLOOR.to_owned())),
+        _ => Err(gen_error_info(Position::new(interval), ERROR_FLOOR.to_owned())),
     }
 }

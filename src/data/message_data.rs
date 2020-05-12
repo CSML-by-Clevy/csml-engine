@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use crate::data::{Hold, Literal, Memories, Message, MSG};
-use crate::linter::data::Warning;
+use crate::data::warnings::Warnings;
 use crate::parser::ExitCondition;
 
 use core::ops::Add;
@@ -18,7 +18,7 @@ pub struct MessageData {
     pub messages: Vec<Message>,
     pub hold: Option<Hold>,
     pub exit_condition: Option<ExitCondition>,
-    pub warnings: Option<Vec<Warning>>,
+    pub warnings: Option<Vec<Warnings>>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,10 +68,10 @@ impl Add<MessageData> for MessageData {
     }
 }
 
-impl Add<Vec<Warning>> for MessageData {
+impl Add<Vec<Warnings>> for MessageData {
     type Output = Self;
 
-    fn add(mut self, warnings: Vec<Warning>) -> Self {
+    fn add(mut self, warnings: Vec<Warnings>) -> Self {
         let warnings = match warnings.is_empty() {
             true => None,
             false => Some(warnings),
@@ -93,21 +93,16 @@ impl MessageData {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Self {
         match result {
-            Ok(v) => v,
-            Err(ErrorInfo { message, interval }) => {
-                let msg = PrimitiveString::get_literal(
-                    &format!(
-                        "{} at line {}, column {}",
-                        message, interval.line, interval.column
-                    ),
-                    interval,
-                );
+            Ok(res) => res,
+            Err(err) => {
+                // CHECK IF VALID
+                let msg = PrimitiveString::get_literal(&err.format_error(), err.position.interval);
 
                 let mut hashmap = HashMap::new();
 
                 hashmap.insert("error".to_owned(), msg);
 
-                let mut literal = PrimitiveObject::get_literal(&hashmap, interval);
+                let mut literal = PrimitiveObject::get_literal(&hashmap, err.position.interval);
 
                 literal.set_content_type("error");
 

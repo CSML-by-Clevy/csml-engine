@@ -15,6 +15,7 @@ pub mod msg;
 pub mod primitive;
 pub mod tokens;
 pub mod warnings;
+pub mod position;
 
 pub use ast::Interval;
 pub use client::Client;
