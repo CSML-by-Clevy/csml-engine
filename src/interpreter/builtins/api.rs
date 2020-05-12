@@ -9,7 +9,7 @@ fn format_body(
     args: &HashMap<String, Literal>,
     interval: Interval,
     client: Client,
-) -> Result<HashMap<String, Literal>, ErrorInfo> {
+) -> Result<Literal, ErrorInfo> {
     let mut map: HashMap<String, Literal> = HashMap::new();
 
     match (args.get("fn_id"), args.get(DEFAULT)) {
@@ -36,9 +36,7 @@ fn format_body(
     map.insert("data".to_owned(), PrimitiveObject::get_literal(&sub_map, interval));
     map.insert("client".to_owned(), PrimitiveObject::get_literal(&client, interval));
 
-    let mut body: HashMap<String, Literal> = HashMap::new();
-    body.insert("body".to_owned(), PrimitiveObject::get_literal(&map, interval));
-    Ok(body)
+    Ok(PrimitiveObject::get_literal(&map, interval))
 }
 
 fn format_headers(interval: Interval) -> HashMap<String, Literal> {
@@ -89,8 +87,7 @@ pub fn api(
     http.insert("header".to_owned(), lit_header);
     let lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
     http.insert("query".to_owned(), lit_query);
-    let lit_body = PrimitiveObject::get_literal(&body, interval);
-    http.insert("body".to_owned(), lit_body);
+    http.insert("body".to_owned(), body);
 
     http_request(&http, ureq::post, interval)
 }
