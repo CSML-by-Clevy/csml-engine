@@ -24,7 +24,6 @@ pub use state_context::{ExecutionState, ExitCondition, StateContext};
 
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
-// use crate::linter::Linter;
 use parse_comments::comment;
 use parse_scope::parse_root;
 use tools::*;
@@ -57,14 +56,10 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
 
-    let (s, interval) = get_interval(s)?;
-
     Position::set_step(&ident.ident); // set context of position for new ErrorInfo
 
     println!("[+] step: {}", Position::get_step());
 
-    // Linter and Context setup
-    // Linter::set_step(&Linter::get_flow(), &ident.ident, interval);
     StateContext::clear_rip();
 
     let (s, start) = get_interval(s)?;

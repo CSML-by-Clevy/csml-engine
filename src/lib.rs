@@ -20,7 +20,9 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
-// use crate::linter::{lint_flow, Linter};
+// use crate::linter::data::Linter;
+// use crate::linter::linter::lint_flow;
+use crate::data::warnings::Warnings;
 use crate::parser::ExitCondition;
 use crate::parser::state_context::StateContext;
 use crate::data::position::Position;
@@ -167,7 +169,7 @@ pub fn interpret(
             None => None,
         };
 
-        // message_data = message_data + Linter::get_warnings();
+        message_data = message_data + Warnings::get();
         message_data = message_data + execute_step(&step, &mut data, rip, &sender);
 
         if let Some(ExitCondition::Goto) = message_data.exit_condition {
