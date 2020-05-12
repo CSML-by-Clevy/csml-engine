@@ -38,7 +38,7 @@ pub const ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING: &'static str =
 
 // ##Interpreter Errors
 // ### Validation
-pub const ERROR_STEP_EXIST: &'static str = " step does not exist";
+pub const ERROR_STEP_EXIST: &'static str = "step does not exist";
 pub const ERROR_INVALID_FLOW: &'static str = "invalid Flow: ";
 pub const ERROR_START_INSTRUCTIONS: &'static str =
 "to start an action one of the following instruction is expected  : [say, do, if, foreach, goto]";

@@ -1,7 +1,6 @@
 pub mod data;
 pub mod error_format;
 pub mod interpreter;
-pub mod linter;
 pub mod parser;
 
 use interpreter::interpret_scope;
@@ -20,8 +19,6 @@ use crate::data::msg::MSG;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
-// use crate::linter::data::Linter;
-// use crate::linter::linter::lint_flow;
 use crate::data::warnings::Warnings;
 use crate::parser::ExitCondition;
 use crate::parser::state_context::StateContext;
@@ -47,17 +44,21 @@ fn execute_step(
         .flow_instructions
         .get(&InstructionType::NormalStep(step.to_owned()))
     {
-        Some(Expr::Scope { scope, .. }) => interpret_scope(scope, &mut data, rip, &sender),
+        Some(Expr::Scope { scope, .. }) => {
+            Position::set_step(&step);
+
+            interpret_scope(scope, &mut data, rip, &sender)
+        }
         _ => Err(gen_error_info(
             Position::new(Interval::new_as_u32(0, 0)),
-            format!("{} {}", step, ERROR_STEP_EXIST),
+            format!("[{}] {}", step, ERROR_STEP_EXIST),
         )),
     };
 
     MessageData::error_to_message(message_data, sender)
 }
 
-pub fn get_ast(
+fn get_ast(
     bot: &CsmlBot,
     flow: &str,
     hashmap: &mut HashMap<String, Flow>,
@@ -67,8 +68,6 @@ pub fn get_ast(
     return match hashmap.get(flow) {
         Some(ast) => Ok(ast.to_owned()),
         None => {
-            println!("[*] PARSING");
-
             return match parse_file(&flow, &content) {
                 Ok(result) => {
                     let ast = result.to_owned();
@@ -88,23 +87,11 @@ pub fn get_ast(
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, ErrorInfo> {
-    // Linter::clear();
-    // Linter::set_flow(flow_name);
+    Warnings::clear();
+    Position::set_flow(flow_name);
 
     match parse_flow(flow_content) {
-        Ok(flow) => {
-            // let mut error = Vec::new();
-
-            // lint_flow(&mut error);
-
-            Ok(flow)
-
-            // TODO: tmp check until error handling
-            // match error.is_empty() {
-            //     true => Ok(flow),
-            //     false => Err(error.first().unwrap().to_owned()),
-            // }
-        }
+        Ok(flow) => Ok(flow),
         Err(e) => Err(e),
     }
 }
@@ -123,9 +110,7 @@ pub fn interpret(
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
     while message_data.exit_condition.is_none() {
-        Position::set_flow(&flow); // set context of position for new ErrorInfo
-
-        println!("[+] flow: {}\n", Position::get_flow());
+        Position::set_flow(&flow);
 
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
             Ok(result) => result,
@@ -142,11 +127,6 @@ pub fn interpret(
                 );
             }
         };
-
-        Position::set_step(&step); // set context of position for new ErrorInfo
-
-        println!("\n[*] INTERPRETING");
-        println!("[+] step: {}\n", Position::get_step());
 
         let step_vars = match &context.hold {
             Some(hold) => get_hashmap(&hold.step_vars),
