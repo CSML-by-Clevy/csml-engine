@@ -13,7 +13,6 @@ use interpreter::interpret_scope;
 use parser::parse_flow;
 use parser::state_context::StateContext;
 
-use curl::easy::Easy;
 use std::{collections::HashMap, sync::mpsc};
 
 pub fn search_for<'a>(flow: &'a Flow, name: &str) -> Option<&'a Expr> {
@@ -84,7 +83,6 @@ pub fn interpret(
         }
     };
 
-    let curl = Easy::new();
     let mut context = context.to_literal();
     let step_vars = match &context.hold {
         Some(hold) => get_hashmap_from_mem(&hold.step_vars),
@@ -99,7 +97,6 @@ pub fn interpret(
         ast: &ast,
         context: &mut context,
         event,
-        curl,
         step_vars,
     };
 

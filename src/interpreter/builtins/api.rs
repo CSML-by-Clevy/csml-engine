@@ -1,21 +1,16 @@
-use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
+use crate::data::{primitive::{PrimitiveType, PrimitiveString, PrimitiveObject}};
 use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
+use crate::interpreter::{builtins::{http::http_request, tools::*}};
 use crate::error_format::*;
-use crate::interpreter::{builtins::tools::*, json_to_literal};
 
-use curl::{
-    easy::{Easy, List},
-    Error,
-};
-use std::{collections::HashMap, env, io::Read};
+use std::{collections::HashMap, env};
 
-fn parse_api(
+fn format_body(
     args: &HashMap<String, Literal>,
     interval: Interval,
     client: Client,
-    fn_endpoint: String,
-) -> Result<(String, String), ErrorInfo> {
-    let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+) -> Result<Literal, ErrorInfo> {
+    let mut map: HashMap<String, Literal> = HashMap::new();
 
     match (args.get("fn_id"), args.get(DEFAULT)) {
         (Some(literal), ..) | (.., Some(literal))
@@ -29,51 +24,44 @@ fn parse_api(
 
             map.insert(
                 "function_id".to_owned(),
-                serde_json::Value::String(fn_id.to_owned()),
+                PrimitiveString::get_literal(&fn_id, interval),
             );
         }
         _ => return Err(gen_error_info(interval, ERROR_FN_ID.to_owned())),
     };
 
     let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
-    let client = client_to_json(&client);
+    let client = client_to_json(&client, interval);
 
-    map.insert("data".to_owned(), serde_json::Value::Object(sub_map));
-    map.insert("client".to_owned(), serde_json::Value::Object(client));
-    Ok((fn_endpoint, serde_json::to_string(&map).unwrap()))
+    map.insert("data".to_owned(), PrimitiveObject::get_literal(&sub_map, interval));
+    map.insert("client".to_owned(), PrimitiveObject::get_literal(&client, interval));
+
+    Ok(PrimitiveObject::get_literal(&map, interval))
 }
 
-fn init(easy: &mut Easy) -> Result<(), Error> {
-    let mut list = List::new();
-    list.append("Accept: application/json")?;
-    list.append("Content-Type: application/json")?;
+fn format_headers(interval: Interval) -> HashMap<String, Literal> {
+    let mut header = HashMap::new();
+    header.insert(
+        "content-type".to_owned(),
+        PrimitiveString::get_literal("application/json", interval),
+    );
+    header.insert(
+        "accept".to_owned(),
+        PrimitiveString::get_literal("application/json,text/*", interval),
+    );
+    
     match env::var("FN_X_API_KEY") {
-        Ok(key) => list.append(&format!("X-Api-Key: {}", key))?,
-        Err(_e) => list.append("X-Api-Key: PoePoe")?,
+        Ok(value) => header.insert(
+            "X-Api-Key".to_owned(),
+            PrimitiveString::get_literal(&value, interval)
+        ),
+        Err(_e) => header.insert(
+            "X-Api-Key".to_owned(),
+            PrimitiveString::get_literal("PoePoe", interval)
+        )
     };
 
-    easy.http_headers(list)
-}
-
-fn format_and_transfer(
-    easy: &mut Easy,
-    result: &mut Vec<u8>,
-    http_arg: &str,
-    mut data: &[u8],
-) -> Result<(), Error> {
-    easy.url(http_arg)?;
-    easy.post(true)?;
-    easy.post_field_size(data.len() as u64)?;
-    init(easy)?;
-    let mut transfer = easy.transfer();
-
-    transfer.read_function(|buf| Ok(data.read(buf).unwrap_or(0)))?;
-    transfer.write_function(|new_data| {
-        result.extend_from_slice(new_data);
-        Ok(new_data.len())
-    })?;
-
-    transfer.perform()
+    header
 }
 
 pub fn api(
@@ -81,7 +69,7 @@ pub fn api(
     interval: Interval,
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
-    let (client, fn_endpoint) = match &data.context.api_info {
+    let (client, url) = match &data.context.api_info {
         Some(ApiInfo {
             client,
             fn_endpoint,
@@ -89,19 +77,17 @@ pub fn api(
         None => return Err(gen_error_info(interval, ERROR_FN_ENDPOINT.to_owned())),
     };
 
-    let (http_arg, map) = parse_api(&args, interval, client, fn_endpoint)?;
-    let data_bytes = map.as_bytes();
-    let mut result = Vec::new();
+    let mut http: HashMap<String, Literal> = HashMap::new();
+    let header = format_headers(interval);
+    let body = format_body(&args, interval, client)?;
 
-    match format_and_transfer(&mut data.curl, &mut result, &http_arg, data_bytes) {
-        Ok(_) => (),
-        Err(err) => return Err(gen_error_info(interval, format!("{}", err))),
-    };
+    http.insert("url".to_owned(),  PrimitiveString::get_literal(&url, interval));
 
-    let json: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(&result)).unwrap();
-    if let Some(value) = json.get("data") {
-        json_to_literal(value, interval)
-    } else {
-        Ok(PrimitiveNull::get_literal(interval))
-    }
+    let lit_header = PrimitiveObject::get_literal(&header, interval);
+    http.insert("header".to_owned(), lit_header);
+    let lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
+    http.insert("query".to_owned(), lit_query);
+    http.insert("body".to_owned(), body);
+
+    http_request(&http, ureq::post, interval)
 }
