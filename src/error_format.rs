@@ -41,6 +41,7 @@ pub const ERROR_FOREACH: &'static str =
 pub const ERROR_FIND_BY_INDEX: &'static str =
     "index must be of type int or string  => var.[42] or var.[\"key\"]";
 pub const ERROR_ASSIGN_IDENT: &'static str = "key must be of type identifier";
+pub const ERROR_SIZE_IDENT: &'static str = "key can't be longer than 255 character";
 pub const ERROR_FUNCTIONS_ARGS: &'static str = "argument in of function must be in a vector";
 pub const ERROR_EXPR_TO_LITERAL: &'static str = "Expr can't be converted to Literal";
 pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &'static str =
