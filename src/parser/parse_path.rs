@@ -40,7 +40,7 @@ fn parse_dot_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathState)
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, _) = tag(DOT)(s)?;
+    let (s, _) = preceded(comment, tag(DOT))(s)?;
     let (s, interval) = get_interval(s)?;
     let (s, name) = get_string(s)?;
     let tmp: IResult<Span<'a>, Expr, E> = parse_expr_list(s);
