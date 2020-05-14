@@ -2,6 +2,7 @@ pub mod data;
 pub mod error_format;
 pub mod interpreter;
 pub mod parser;
+pub mod linter;
 
 use interpreter::interpret_scope;
 use parser::parse_flow;
@@ -23,7 +24,9 @@ use crate::data::warnings::Warnings;
 use crate::parser::ExitCondition;
 use crate::parser::state_context::StateContext;
 use crate::data::position::Position;
-use crate::parser::linter::linter;
+use crate::data::csml_result::CsmlResult;
+use crate::linter::data::Linter;
+use crate::linter::linter::lint_flow;
 
 use curl::easy::Easy;
 use std::collections::HashMap;
@@ -85,60 +88,21 @@ fn get_ast(
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-// [+] Error from parsing can be chained inside vector, but only the first error of a file will be visible.
-// [+] There is a complexity in continuing parsing when an error has been encountered;
-// [+] Also if an error of syntax is before an error of `linting` it will not show up since the context has not been created. neither the ast
-
-// [+] TODO: add rules goto flow
-// [+] TODO: write test for all rules
-
-// Maybe validate_bot should return -> Result<Hashmap<String, Flow>, Vec<ErrorInfo>> ?
-
-#[derive(Debug)]
-pub struct CsmlResult {
-    flows: Option<HashMap<String, Flow>>,
-    warnings: Option<Vec<Warnings>>,
-    errors: Option<Vec<ErrorInfo>>,
-}
-
-impl CsmlResult {
-    fn new(flows: HashMap<String, Flow>, warnings: Vec<Warnings>, errors: Vec<ErrorInfo>) -> Self {
-        let flows = match flows.is_empty() {
-            false => Some(flows),
-            true => None,
-        };
-
-        let warnings = match warnings.is_empty() {
-            false => Some(warnings),
-            true => None,
-        };
-
-        let errors = match errors.is_empty() {
-            false => Some(errors),
-            true => None,
-        };
-
-        Self {
-            flows,
-            warnings,
-            errors,
-        }
-    }
-}
-
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();
     let mut errors = Vec::new();
 
     Warnings::clear();
+    Linter::clear();
 
     for flow in &bot.flows {
         Position::set_flow(&flow.name);
+        Linter::add_flow(&flow.name);
 
         match parse_flow(&flow.content) {
             Ok(result) => {
-                errors.append(&mut linter(&flow.name, &result, &bot));
                 flows.insert(flow.name.to_owned(), result);
+                lint_flow(&mut errors);
             }
             Err(error) => {
                 errors.push(error);

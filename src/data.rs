@@ -16,6 +16,7 @@ pub mod primitive;
 pub mod tokens;
 pub mod warnings;
 pub mod position;
+pub mod csml_result;
 
 pub use ast::Interval;
 pub use client::Client;

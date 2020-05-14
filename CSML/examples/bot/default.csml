@@ -1,17 +1,23 @@
+// start:
+//     say "Hello from Default flow"
+
+//     if (true == true) {
+//         goto step_0
+//     }
+
+//     goto end
+
+// step_0:
+//     do array = [1, 2, 3]
+
+//     foreach (key) in array {
+//         goto flow other
+//     }
+
+//     goto end
+
 start:
-    say "Hello from Default flow"
-
-    if (true == true) {
-        goto step_0
+    if (42) {
+        goto end
     }
-
-    goto end
-
-step_0:
-    do array = [1, 2, 3]
-
-    foreach (key) in array {
-        goto flow other
-    }
-
-    goto end
+    // goto flow default

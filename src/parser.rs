@@ -18,10 +18,10 @@ pub mod parse_string;
 pub mod parse_var_types;
 pub mod state_context;
 pub mod tools;
-pub mod linter;
 
 use crate::parser::parse_idents::parse_idents_assignation;
 pub use state_context::{ExecutionState, ExitCondition, StateContext};
+use crate::linter::data::Linter;
 
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
@@ -57,7 +57,10 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, _) = preceded(comment, tag(COLON))(s)?;
 
+    let (s, interval) = get_interval(s)?;
+
     Position::set_step(&ident.ident);
+    Linter::add_step(&Position::get_flow(), &ident.ident, interval);
     StateContext::clear_rip();
 
     let (s, start) = get_interval(s)?;

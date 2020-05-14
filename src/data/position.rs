@@ -102,9 +102,4 @@ impl Position {
             unreachable!();
         }
     }
-
-    // pub fn clear(&mut self) {
-    //     self.flow.clear();
-    //     self.step.clear();
-    // }
 }

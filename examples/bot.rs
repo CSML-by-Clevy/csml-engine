@@ -47,5 +47,13 @@ fn main() {
     // dbg!(interpret(bot, context, event, None));
 
     // Run valide_bot
-    dbg!(validate_bot(bot));
+    let result = validate_bot(bot);
+
+    if let Some(errors) = result.errors {
+        dbg!(errors);
+    }
+
+    if let Some(warnings) = result.warnings {
+        dbg!(warnings);
+    }
 }

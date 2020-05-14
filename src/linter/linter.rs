@@ -1,6 +1,9 @@
 use crate::data::ast::Interval;
-use crate::data::error_info::ErrorInfo;
-use crate::linter::Linter;
+use crate::linter::data::Linter;
+use crate::error_format::ErrorInfo;
+use crate::data::position::Position;
+use crate::error_format::gen_error_info;
+
 use lazy_static::*;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,10 +31,10 @@ lazy_static! {
 
 fn check_missing_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
     if linter.flow.is_empty() {
-        error.push(ErrorInfo {
-            interval: Interval { line: 0, column: 0 },
-            message: "LINTER: Need to have at least one Flow".to_owned(),
-        });
+        error.push(gen_error_info(
+            Position::new(Interval::new_as_u32(0, 0)),
+            "LINTER: Need to have at least one Flow".to_owned(),
+        ));
     }
 }
 
@@ -47,10 +50,10 @@ fn check_valid_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
             }
 
             if !result {
-                error.push(ErrorInfo {
-                    interval: Interval { line: 0, column: 0 },
-                    message: format!("LINTER: Flow '{}' need to have a 'start' step", flow),
-                });
+                error.push(gen_error_info(
+                    Position::new(Interval::new_as_u32(0, 0)),
+                    format!("LINTER: Flow '{}' need to have a 'start' step", flow),
+                ));
             }
         }
     }
@@ -62,10 +65,10 @@ fn check_duplicate_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
             for step in hashmap_step.keys() {
                 if let Some(vector_step) = hashmap_step.get(step) {
                     if vector_step.len() > 1 {
-                        error.push(ErrorInfo {
-                            interval: *vector_step.last().unwrap(),
-                            message: format!("LINTER: Duplicate step '{}' in flow '{}'", step, flow),
-                        });
+                        error.push(gen_error_info(
+                            Position::new(*vector_step.last().unwrap()),
+                            format!("LINTER: Duplicate step '{}' in flow '{}'", step, flow),
+                        ));
                     }
                 }
             }
@@ -77,10 +80,10 @@ fn check_valid_goto_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
     for goto in linter.goto.iter() {
         if let Some(step) = linter.flow.get(&goto.flow) {
             if !step.contains_key(&goto.step) && goto.step != "end" {
-                error.push(ErrorInfo {
-                    interval: goto.interval,
-                    message: format!("LINTER: Step '{}' doesn't exist", goto.step),
-                });
+                error.push(gen_error_info(
+                    Position::new(goto.interval),
+                    format!("LINTER: Step '{}' doesn't exist", goto.step),
+                ));
             }
         }
     }

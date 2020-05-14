@@ -36,6 +36,9 @@ pub const ERROR_UNREACHABLE: &'static str = "unreachable";
 pub const ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING: &'static str =
     "wrong argument(s) given to expandable string";
 
+// Linter Errors
+pub const ERROR_NO_FLOW: &'static str = "Need to have at least one flow";
+
 // ##Interpreter Errors
 // ### Validation
 pub const ERROR_STEP_EXIST: &'static str = "step does not exist";
