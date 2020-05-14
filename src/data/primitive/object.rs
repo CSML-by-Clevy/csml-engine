@@ -10,7 +10,7 @@ use crate::data::{
     Literal,
 };
 use crate::error_format::*;
-use crate::interpreter::builtins::http::http_request;
+use crate::interpreter::{builtins::http::http_request, json_to_rust::json_to_literal};
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -457,7 +457,8 @@ impl PrimitiveObject {
                 }
             };
 
-            return http_request(&object.value, function, interval);
+            let value = http_request(&object.value, function, interval)?;
+            return json_to_literal(&value, interval);
         }
 
         Err(gen_error_info(interval, ERROR_HTTP_SEND.to_owned()))
