@@ -35,6 +35,7 @@ pub fn match_builtin(
         CAROUSEL => carousel(args, interval),
         CARD => card(args, interval),
         HTTP => http(args, interval),
+        FILE => file(args, interval),
 
         // DEFAULT
         FN => api(args, interval, data),
