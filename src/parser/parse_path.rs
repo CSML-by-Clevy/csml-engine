@@ -44,7 +44,7 @@ where
     let (s, found) = take_while(|c| "\n".contains(c))(s)?;
 
     let (s, _) = match found.fragment().is_empty() {
-        true => (s, s),
+        true => (s, Span::new("")),
         false => take_while(|c| WHITE_SPACE.contains(c))(s)?,
     };
 
