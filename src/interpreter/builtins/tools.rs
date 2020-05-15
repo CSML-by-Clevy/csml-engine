@@ -23,7 +23,10 @@ pub fn create_submap<S: BuildHasher>(
 pub fn client_to_json(client: &Client, interval: Interval) -> HashMap<String, Literal> {
     let mut map = HashMap::new();
 
-    map.insert("bot_id".to_owned(), PrimitiveString::get_literal(&client.bot_id, interval));
+    map.insert(
+        "bot_id".to_owned(),
+        PrimitiveString::get_literal(&client.bot_id, interval),
+    );
     map.insert(
         "channel_id".to_owned(),
         PrimitiveString::get_literal(&client.channel_id, interval),
