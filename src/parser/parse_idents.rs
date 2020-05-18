@@ -1,5 +1,5 @@
 use crate::data::{ast::*, tokens::*};
-use crate::error_format::{gen_nom_error, ERROR_NUMBER_AS_IDENT, ERROR_RESERVED};
+use crate::error_format::{gen_nom_error, ERROR_NUMBER_AS_IDENT, ERROR_RESERVED, ERROR_SIZE_IDENT};
 use crate::parser::{
     parse_comments::comment,
     tools::get_interval,
@@ -26,6 +26,10 @@ where
 {
     if reserved.contains(&&(*var.to_ascii_lowercase())) {
         return Err(gen_nom_error(s, ERROR_RESERVED));
+    }
+
+    if var.len() > std::u8::MAX as usize {
+        return Err(gen_nom_error(s, ERROR_SIZE_IDENT));
     }
 
     if var.parse::<f64>().is_ok() {
