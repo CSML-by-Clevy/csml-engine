@@ -95,8 +95,9 @@ pub const ERROR_FLOOR: &'static str =
 pub const ERROR_IMAGE: &'static str =
     "Builtin Image expect one argument of type string | example: Image(\"hola\")";
 pub const ERROR_URL: &'static str = "Builtin Url expect one argument of type string and 2 optional string arguments: text, title | example: Url(href = \"hola\", text = \"text\", title = \"title\")";
-pub const ERROR_VIDEO: &'static str = "Builtin Video expect one argument of type string and 1 optional 'service' argument of type string | example: Video(url = \"hola\", service = \"text\")";
-pub const ERROR_AUDIO: &'static str = "Builtin Audio expect one argument of type string and 1 optional 'service' argument of type string | example: Audio(url = \"hola\", service = \"text\")";
+pub const ERROR_VIDEO: &'static str = "Builtin Video expect one argument of type string | example: Video(url = \"hola\")";
+pub const ERROR_AUDIO: &'static str = "Builtin Audio expect one argument of type string | example: Audio(url = \"hola\")";
+pub const ERROR_FILE: &'static str = "Builtin File expect one argument of type string | example: File(url = \"hola\")";
 pub const ERROR_HTTP: &'static str =
     "Builtin HTTP expect one url of type string | example: HTTP(\"https://clevy.io\")";
 pub const ERROR_HTTP_GET_VALUE: &'static str =
