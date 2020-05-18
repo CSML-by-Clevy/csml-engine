@@ -1,8 +1,8 @@
 use crate::data::error_info::ErrorInfo;
+use crate::data::position::Position;
 use crate::data::{ast::Identifier, Data, Literal, Memories, MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use std::sync::mpsc;
-use crate::data::position::Position;
 
 pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, ErrorInfo> {
     match (

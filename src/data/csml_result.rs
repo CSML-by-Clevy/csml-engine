@@ -4,7 +4,6 @@ use crate::data::warnings::Warnings;
 
 use std::collections::HashMap;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,7 +20,11 @@ pub struct CsmlResult {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl CsmlResult {
-    pub fn new(flows: HashMap<String, Flow>, warnings: Vec<Warnings>, errors: Vec<ErrorInfo>) -> Self {
+    pub fn new(
+        flows: HashMap<String, Flow>,
+        warnings: Vec<Warnings>,
+        errors: Vec<ErrorInfo>,
+    ) -> Self {
         let flows = match flows.is_empty() {
             false => Some(flows),
             true => None,

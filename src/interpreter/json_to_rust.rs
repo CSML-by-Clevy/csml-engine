@@ -2,11 +2,11 @@ use crate::data::{ast::Interval, Literal};
 use crate::error_format::*;
 use std::collections::HashMap;
 
+use crate::data::position::Position;
 use crate::data::primitive::{
     array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
     null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString,
 };
-use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
@@ -26,7 +26,10 @@ pub fn json_to_literal(
             } else if let (true, Some(int)) = (val.is_i64(), val.as_i64()) {
                 Ok(PrimitiveInt::get_literal(int, interval))
             } else {
-                Err(gen_error_info(Position::new(interval), ERROR_JSON_TO_LITERAL.to_owned()))
+                Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JSON_TO_LITERAL.to_owned(),
+                ))
             }
         }
         serde_json::Value::Array(val) => {

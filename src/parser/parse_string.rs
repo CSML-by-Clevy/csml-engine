@@ -56,10 +56,9 @@ where
 {
     match preceded(comment, tag("}}"))(s) {
         Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => Err(gen_nom_failure(
-            s,
-            ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING,
-        )),
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(gen_nom_failure(s, ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING))
+        }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
 }

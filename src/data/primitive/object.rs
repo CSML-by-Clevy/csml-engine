@@ -1,4 +1,5 @@
 use crate::data::error_info::ErrorInfo;
+use crate::data::position::Position;
 use crate::data::{
     ast::Interval,
     literal::ContentType,
@@ -15,7 +16,6 @@ use crate::interpreter::builtins::http::http_request;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -181,13 +181,19 @@ impl PrimitiveObject {
         let usage = "set(header: object) => http object";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -216,13 +222,19 @@ impl PrimitiveObject {
         let usage = "query(parameters: object) => http object";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -251,7 +263,10 @@ impl PrimitiveObject {
         let usage = "get() => http object";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let mut object = object.to_owned();
@@ -277,13 +292,19 @@ impl PrimitiveObject {
         let usage = "post(body: object) => http object";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -317,13 +338,19 @@ impl PrimitiveObject {
         let usage = "put(body: object) => http object";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -357,13 +384,19 @@ impl PrimitiveObject {
         let usage = "delete(body: object) => http object";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -397,13 +430,19 @@ impl PrimitiveObject {
         let usage = "patch(body: object) => http object";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let literal = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -437,7 +476,10 @@ impl PrimitiveObject {
         let usage = "send() => http object";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         if let Some(literal) = object.value.get("method") {
@@ -462,7 +504,10 @@ impl PrimitiveObject {
             return http_request(&object.value, function, interval);
         }
 
-        Err(gen_error_info(Position::new(interval), ERROR_HTTP_SEND.to_owned()))
+        Err(gen_error_info(
+            Position::new(interval),
+            ERROR_HTTP_SEND.to_owned(),
+        ))
     }
 }
 
@@ -476,7 +521,10 @@ impl PrimitiveObject {
         let usage = "get_type() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal(content_type, interval))
@@ -491,7 +539,10 @@ impl PrimitiveObject {
         let usage = "get_metadata() => object";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(Literal {
@@ -512,7 +563,10 @@ impl PrimitiveObject {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -526,7 +580,10 @@ impl PrimitiveObject {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal("object", interval))
@@ -541,7 +598,10 @@ impl PrimitiveObject {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal(&object.to_string(), interval))
@@ -556,7 +616,10 @@ impl PrimitiveObject {
         let usage = "contains(key: string) => boolean";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let key = match args.get(0) {
@@ -568,7 +631,10 @@ impl PrimitiveObject {
                 )?
             }
             _ => {
-                return Err(gen_error_info(Position::new(interval), ERROR_OBJECT_CONTAINS.to_owned()));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_OBJECT_CONTAINS.to_owned(),
+                ));
             }
         };
 
@@ -586,7 +652,10 @@ impl PrimitiveObject {
         let usage = "is_empty() => boolean";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let result = object.value.is_empty();
@@ -603,7 +672,10 @@ impl PrimitiveObject {
         let usage = "length() => int";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let result = object.value.len();
@@ -620,7 +692,10 @@ impl PrimitiveObject {
         let usage = "keys() => array";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let mut result = Vec::new();
@@ -641,7 +716,10 @@ impl PrimitiveObject {
         let usage = "values() => array";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let mut result = Vec::new();
@@ -662,7 +740,10 @@ impl PrimitiveObject {
         let usage = "get(key: string) => primitive";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let key = match args.get(0) {
@@ -698,7 +779,10 @@ impl PrimitiveObject {
         let usage = "clear_values() => null";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let mut vector: Vec<String> = Vec::new();
@@ -725,7 +809,10 @@ impl PrimitiveObject {
         let usage = "insert(key: string, value: primitive) => null";
 
         if args.len() != 2 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let key = match args.get(0) {
@@ -737,14 +824,20 @@ impl PrimitiveObject {
                 )?
             }
             _ => {
-                return Err(gen_error_info(Position::new(interval), ERROR_OBJECT_INSERT.to_owned()));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_OBJECT_INSERT.to_owned(),
+                ));
             }
         };
 
         let value = match args.get(1) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -762,7 +855,10 @@ impl PrimitiveObject {
         let usage = "remove(key: string) => primitive";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let key = match args.get(0) {
@@ -774,7 +870,10 @@ impl PrimitiveObject {
                 )?
             }
             _ => {
-                return Err(gen_error_info(Position::new(interval), ERROR_OBJECT_REMOVE.to_owned()));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_OBJECT_REMOVE.to_owned(),
+                ));
             }
         };
 

@@ -1,8 +1,8 @@
 pub mod data;
 pub mod error_format;
 pub mod interpreter;
-pub mod parser;
 pub mod linter;
+pub mod parser;
 
 use interpreter::interpret_scope;
 use parser::parse_flow;
@@ -13,20 +13,20 @@ use crate::data::ast::InstructionType;
 use crate::data::ast::Interval;
 use crate::data::context::get_hashmap;
 use crate::data::csml_bot::CsmlBot;
+use crate::data::csml_result::CsmlResult;
 use crate::data::error_info::ErrorInfo;
 use crate::data::event::Event;
 use crate::data::message_data::MessageData;
 use crate::data::msg::MSG;
+use crate::data::position::Position;
+use crate::data::warnings::Warnings;
 use crate::data::ContextJson;
 use crate::data::Data;
 use crate::error_format::*;
-use crate::data::warnings::Warnings;
-use crate::parser::ExitCondition;
-use crate::parser::state_context::StateContext;
-use crate::data::position::Position;
-use crate::data::csml_result::CsmlResult;
 use crate::linter::data::Linter;
 use crate::linter::linter::lint_flow;
+use crate::parser::state_context::StateContext;
+use crate::parser::ExitCondition;
 
 use curl::easy::Easy;
 use std::collections::HashMap;
@@ -64,21 +64,24 @@ fn execute_step(
 
 fn get_ast(
     bot: &CsmlBot,
-    flow: &str,
+    flow_name: &str,
     hashmap: &mut HashMap<String, Flow>,
 ) -> Result<Flow, Vec<ErrorInfo>> {
-    let content = bot.get_flow(&flow)?;
+    let content = bot.get_flow(&flow_name)?;
 
-    return match hashmap.get(flow) {
+    return match hashmap.get(flow_name) {
         Some(ast) => Ok(ast.to_owned()),
         None => {
-            return match parse_file(&flow, &content) {
+            Position::set_flow(&flow_name);
+            Warnings::clear();
+
+            match parse_flow(&content) {
                 Ok(result) => {
-                    hashmap.insert(flow.to_owned(), result.to_owned());
+                    hashmap.insert(flow_name.to_owned(), result.to_owned());
 
                     Ok(result)
                 }
-                Err(error) => Err(error),
+                Err(error) => Err(vec![error]),
             }
         }
     };
@@ -102,7 +105,6 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
         match parse_flow(&flow.content) {
             Ok(result) => {
                 flows.insert(flow.name.to_owned(), result);
-                lint_flow(&mut errors);
             }
             Err(error) => {
                 errors.push(error);
@@ -110,17 +112,9 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
         }
     }
 
+    lint_flow(&bot, &mut errors);
+
     CsmlResult::new(flows, Warnings::get(), errors)
-}
-
-pub fn parse_file(flow_name: &str, flow_content: &str) -> Result<Flow, Vec<ErrorInfo>> {
-    Position::set_flow(flow_name);
-    Warnings::clear();
-
-    match parse_flow(flow_content) {
-        Ok(result) => Ok(result),
-        Err(error) => Err(vec![error]),
-    }
 }
 
 pub fn interpret(
@@ -133,8 +127,10 @@ pub fn interpret(
 
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();
-
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
+
+    Warnings::clear();
+    Linter::clear();
 
     while message_data.exit_condition.is_none() {
         Position::set_flow(&flow);
@@ -176,7 +172,6 @@ pub fn interpret(
             None => None,
         };
 
-        message_data = message_data + Warnings::get();
         message_data = message_data + execute_step(&step, &mut data, rip, &sender);
 
         if let Some(ExitCondition::Goto) = message_data.exit_condition {

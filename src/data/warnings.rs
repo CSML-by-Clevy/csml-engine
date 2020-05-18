@@ -1,9 +1,9 @@
 use crate::data::ast::Interval;
+use crate::data::position::Position;
 use lazy_static::*;
 use std::collections::*;
 use std::sync::*;
 use std::thread::*;
-use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -12,7 +12,6 @@ use crate::data::position::Position;
 pub const WARNING_USE: &'static str = "use will be soon a deprecated keyword please use 'do' instead. https://docs.csml.dev/memory/temporary-and-long-term-variables";
 pub const WARNING_REMEMBER_AS: &'static str = "'remember value as key' will be soon a deprecated keyword please use 'remember key = value' instead. https://docs.csml.dev/memory/temporary-and-long-term-variables";
 pub const WARNING_OBJECT: &'static str = "'Object(key = value)' will be soon a deprecated Macro please use '{key: value}' instead; https://docs.csml.dev/automatic-type-inference/literals-objects-arrays";
-
 
 lazy_static! {
     static ref HASHMAP: Mutex<HashMap<ThreadId, Vec<Warnings>>> = Mutex::new(HashMap::default());
@@ -32,7 +31,7 @@ impl Warnings {
     fn new(interval: Interval, message: &'static str) -> Self {
         Self {
             message,
-            position: Position::new(interval)
+            position: Position::new(interval),
         }
     }
 }
@@ -46,9 +45,7 @@ impl Warnings {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(|| Vec::default());
+        hashmap.entry(thread_id).or_insert_with(|| Vec::default());
 
         if let Some(vector) = hashmap.get_mut(&thread_id) {
             vector.push(Warnings::new(interval, message));
@@ -59,9 +56,7 @@ impl Warnings {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(|| Vec::default());
+        hashmap.entry(thread_id).or_insert_with(|| Vec::default());
 
         if let Some(vector) = hashmap.get_mut(&thread_id) {
             vector.clear();
@@ -72,9 +67,7 @@ impl Warnings {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(|| Vec::default());
+        hashmap.entry(thread_id).or_insert_with(|| Vec::default());
 
         if let Some(vector) = hashmap.get(&thread_id) {
             vector.to_owned()

@@ -1,11 +1,11 @@
+use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
+use crate::linter::data::Linter;
 use crate::parser::{
-    parse_comments::comment, parse_idents::parse_idents_assignation, get_interval,
+    get_interval, parse_comments::comment, parse_idents::parse_idents_assignation,
     tools::get_string, tools::get_tag, GotoType, StateContext,
 };
-use crate::linter::data::Linter;
-use crate::data::position::Position;
 
 use nom::{branch::alt, error::*, sequence::preceded, *};
 
@@ -59,10 +59,22 @@ where
         Ok((s, name)) => {
             match goto_type {
                 GotoType::Flow => {
-                    Linter::add_goto(&name.ident, "start", interval);
+                    Linter::add_goto(
+                        &Position::get_flow(),
+                        &Position::get_step(),
+                        &name.ident,
+                        "start",
+                        interval,
+                    );
                 }
                 GotoType::Step => {
-                    Linter::add_goto(&Position::get_flow(), &name.ident, interval);
+                    Linter::add_goto(
+                        &Position::get_flow(),
+                        &Position::get_step(),
+                        &Position::get_flow(),
+                        &name.ident,
+                        interval,
+                    );
                 }
             }
             (s, name)

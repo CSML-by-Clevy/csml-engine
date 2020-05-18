@@ -1,16 +1,21 @@
+use crate::data::position::Position;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::{ast::Interval, tokens::DEFAULT, Literal};
 use crate::error_format::*;
 use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
-use crate::data::position::Position;
 
 pub fn button(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut button: HashMap<String, Literal> = args.clone();
 
     let title = match (button.remove("title"), button.remove(DEFAULT)) {
         (Some(title), ..) | (.., Some(title)) => title,
-        _ => return Err(gen_error_info(Position::new(interval), ERROR_BUTTON.to_owned())),
+        _ => {
+            return Err(gen_error_info(
+                Position::new(interval),
+                ERROR_BUTTON.to_owned(),
+            ))
+        }
     };
 
     button.insert("title".to_owned(), title.to_owned());
@@ -40,12 +45,22 @@ pub fn card(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
         (Some(title), ..) | (.., Some(title)) => {
             card.insert("title".to_owned(), title.to_owned());
         }
-        _ => return Err(gen_error_info(Position::new(interval), ERROR_CARD_TITLE.to_owned())),
+        _ => {
+            return Err(gen_error_info(
+                Position::new(interval),
+                ERROR_CARD_TITLE.to_owned(),
+            ))
+        }
     };
 
     match card.get("buttons") {
         Some(..) => {}
-        _ => return Err(gen_error_info(Position::new(interval), ERROR_CARD_BUTTON.to_owned())),
+        _ => {
+            return Err(gen_error_info(
+                Position::new(interval),
+                ERROR_CARD_BUTTON.to_owned(),
+            ))
+        }
     };
 
     let mut result = PrimitiveObject::get_literal(&card, interval);

@@ -1,4 +1,5 @@
 use crate::data::error_info::ErrorInfo;
+use crate::data::position::Position;
 use crate::data::primitive::{
     boolean::PrimitiveBoolean, object::PrimitiveObject, string::PrimitiveString, Primitive,
     PrimitiveType, Right,
@@ -8,7 +9,6 @@ use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -57,7 +57,10 @@ impl PrimitiveNull {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -71,7 +74,10 @@ impl PrimitiveNull {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal("Null", interval))
@@ -85,7 +91,10 @@ impl PrimitiveNull {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal(&null.to_string(), interval))

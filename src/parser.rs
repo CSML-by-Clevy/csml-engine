@@ -19,16 +19,16 @@ pub mod parse_var_types;
 pub mod state_context;
 pub mod tools;
 
+use crate::linter::data::Linter;
 use crate::parser::parse_idents::parse_idents_assignation;
 pub use state_context::{ExecutionState, ExitCondition, StateContext};
-use crate::linter::data::Linter;
 
+use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
 use parse_scope::parse_root;
 use tools::*;
-use crate::data::position::Position;
 
 use nom::error::ParseError;
 use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
@@ -45,7 +45,10 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
         }),
         Err(e) => match e {
             Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
-                Position::new(Interval::new_as_u32(err.input.location_line(), err.input.get_column() as u32)),
+                Position::new(Interval::new_as_u32(
+                    err.input.location_line(),
+                    err.input.get_column() as u32,
+                )),
                 err.error,
             )),
             Err::Incomplete(_err) => unimplemented!(),

@@ -1,8 +1,9 @@
 use crate::data::ast::Interval;
-use crate::linter::data::Linter;
-use crate::error_format::ErrorInfo;
+use crate::data::csml_bot::CsmlBot;
 use crate::data::position::Position;
 use crate::error_format::gen_error_info;
+use crate::error_format::ErrorInfo;
+use crate::linter::data::Linter;
 
 use lazy_static::*;
 
@@ -10,7 +11,7 @@ use lazy_static::*;
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-type CsmlRules = fn(linter: &Linter, error: &mut Vec<ErrorInfo>);
+type CsmlRules = fn(bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>);
 
 lazy_static! {
     static ref FUNCTIONS: Vec<CsmlRules> = {
@@ -19,7 +20,7 @@ lazy_static! {
         vector.push(check_missing_flow);
         vector.push(check_valid_flow);
         vector.push(check_duplicate_step);
-        vector.push(check_valid_goto_step);
+        vector.push(check_valid_goto);
 
         vector
     };
@@ -29,7 +30,7 @@ lazy_static! {
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn check_missing_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
+fn check_missing_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>) {
     if linter.flow.is_empty() {
         error.push(gen_error_info(
             Position::new(Interval::new_as_u32(0, 0)),
@@ -38,7 +39,7 @@ fn check_missing_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
     }
 }
 
-fn check_valid_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
+fn check_valid_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>) {
     for flow in linter.flow.keys() {
         let mut result = false;
 
@@ -59,7 +60,7 @@ fn check_valid_flow(linter: &Linter, error: &mut Vec<ErrorInfo>) {
     }
 }
 
-fn check_duplicate_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
+fn check_duplicate_step(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>) {
     for flow in linter.flow.keys() {
         if let Some(hashmap_step) = linter.flow.get(flow) {
             for step in hashmap_step.keys() {
@@ -76,13 +77,24 @@ fn check_duplicate_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
     }
 }
 
-fn check_valid_goto_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
+fn check_valid_goto(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>) {
     for goto in linter.goto.iter() {
-        if let Some(step) = linter.flow.get(&goto.flow) {
-            if !step.contains_key(&goto.step) && goto.step != "end" {
+        Position::set_flow(&goto.src_flow);
+        Position::set_step(&goto.src_step);
+
+        match linter.flow.get(&goto.dst_flow) {
+            Some(step) => {
+                if !step.contains_key(&goto.dst_step) && goto.dst_step != "end" {
+                    error.push(gen_error_info(
+                        Position::new(goto.interval),
+                        format!("LINTER: Step '{}' doesn't exist", goto.dst_step),
+                    ));
+                }
+            }
+            None => {
                 error.push(gen_error_info(
                     Position::new(goto.interval),
-                    format!("LINTER: Step '{}' doesn't exist", goto.step),
+                    format!("LINTER: Flow '{}' doesn't exist", goto.dst_flow),
                 ));
             }
         }
@@ -93,10 +105,10 @@ fn check_valid_goto_step(linter: &Linter, error: &mut Vec<ErrorInfo>) {
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn lint_flow(mut error: &mut Vec<ErrorInfo>) {
+pub fn lint_flow(bot: &CsmlBot, mut error: &mut Vec<ErrorInfo>) {
     let linter = Linter::get_linter();
 
     for f in FUNCTIONS.iter() {
-        f(&linter, &mut error);
+        f(bot, &linter, &mut error);
     }
 }

@@ -1,4 +1,5 @@
 use crate::data::literal::ContentType;
+use crate::data::position::Position;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{
     ast::{Expr, Identifier, Interval, PathState},
@@ -10,7 +11,6 @@ use crate::interpreter::{
     variable_handler::{exec_path_actions, resolve_path},
 };
 use std::sync::mpsc;
-use crate::data::position::Position;
 
 pub fn search_str(name: &str, expr: &Expr) -> bool {
     match expr {

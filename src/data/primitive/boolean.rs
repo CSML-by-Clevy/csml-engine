@@ -1,12 +1,12 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
+use crate::data::position::Position;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::*;
-use crate::data::position::Position;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -60,7 +60,10 @@ impl PrimitiveBoolean {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -74,7 +77,10 @@ impl PrimitiveBoolean {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal("boolean", interval))
@@ -88,7 +94,10 @@ impl PrimitiveBoolean {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal(&boolean.to_string(), interval))

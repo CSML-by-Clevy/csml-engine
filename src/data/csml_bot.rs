@@ -1,7 +1,7 @@
 use crate::data::csml_flow::CsmlFlow;
+use crate::data::position::Position;
 use crate::error_format::*;
 use crate::Interval;
-use crate::data::position::Position;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE

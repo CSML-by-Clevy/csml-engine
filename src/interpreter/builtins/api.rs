@@ -1,9 +1,9 @@
 use crate::data::error_info::ErrorInfo;
+use crate::data::position::Position;
 use crate::data::primitive::{null::PrimitiveNull, PrimitiveType};
 use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
 use crate::error_format::*;
 use crate::interpreter::{builtins::tools::*, json_to_literal};
-use crate::data::position::Position;
 
 use curl::{
     easy::{Easy, List},
@@ -34,7 +34,12 @@ fn parse_api(
                 serde_json::Value::String(fn_id.to_owned()),
             );
         }
-        _ => return Err(gen_error_info(Position::new(interval), ERROR_FN_ID.to_owned())),
+        _ => {
+            return Err(gen_error_info(
+                Position::new(interval),
+                ERROR_FN_ID.to_owned(),
+            ))
+        }
     };
 
     let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
@@ -88,7 +93,12 @@ pub fn api(
             client,
             fn_endpoint,
         }) => (client.to_owned(), fn_endpoint.to_owned()),
-        None => return Err(gen_error_info(Position::new(interval), ERROR_FN_ENDPOINT.to_owned())),
+        None => {
+            return Err(gen_error_info(
+                Position::new(interval),
+                ERROR_FN_ENDPOINT.to_owned(),
+            ))
+        }
     };
 
     let (http_arg, map) = parse_api(&args, interval, client, fn_endpoint)?;

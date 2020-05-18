@@ -15,14 +15,16 @@ lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct Goto {
-    pub flow: String,
-    pub step: String,
+    pub src_flow: String,
+    pub src_step: String,
+    pub dst_flow: String,
+    pub dst_step: String,
     pub interval: Interval,
 }
 
 #[derive(Debug, Clone)]
 pub struct Linter {
-    pub flow: HashMap<String, HashMap<String, Vec<Interval>>>,
+    pub flow: HashMap<String, HashMap<String, Vec<Interval>>>, // can be change ?
     pub goto: Vec<Goto>,
 }
 
@@ -44,10 +46,18 @@ impl Default for Linter {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Goto {
-    fn new(flow: &str, step: &str, interval: Interval) -> Self {
+    fn new(
+        src_flow: &str,
+        src_step: &str,
+        dst_flow: &str,
+        dst_step: &str,
+        interval: Interval,
+    ) -> Self {
         Self {
-            flow: flow.to_owned(),
-            step: step.to_owned(),
+            src_flow: src_flow.to_owned(),
+            src_step: src_step.to_owned(),
+            dst_flow: dst_flow.to_owned(),
+            dst_step: dst_step.to_owned(),
             interval,
         }
     }
@@ -67,7 +77,10 @@ impl Linter {
             .or_insert_with(|| Linter::default());
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter.flow.entry(flow.to_owned()).or_insert_with(|| HashMap::default());
+            linter
+                .flow
+                .entry(flow.to_owned())
+                .or_insert_with(|| HashMap::default());
         }
     }
 
@@ -80,7 +93,10 @@ impl Linter {
             .or_insert_with(|| Linter::default());
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter.flow.entry(flow.to_owned()).or_insert_with(|| HashMap::default());
+            linter
+                .flow
+                .entry(flow.to_owned())
+                .or_insert_with(|| HashMap::default());
 
             if let Some(hashmap_step) = linter.flow.get_mut(flow) {
                 match hashmap_step.get_mut(step) {
@@ -95,7 +111,13 @@ impl Linter {
         }
     }
 
-    pub fn add_goto(flow: &str, step: &str, interval: Interval) {
+    pub fn add_goto(
+        src_flow: &str,
+        src_step: &str,
+        dst_flow: &str,
+        dst_step: &str,
+        interval: Interval,
+    ) {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
@@ -104,7 +126,9 @@ impl Linter {
             .or_insert_with(|| Linter::default());
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter.goto.push(Goto::new(flow, step, interval));
+            linter
+                .goto
+                .push(Goto::new(src_flow, src_step, dst_flow, dst_step, interval));
         }
     }
 

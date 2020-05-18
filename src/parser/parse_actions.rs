@@ -1,9 +1,9 @@
+use crate::data::warnings::Warnings;
 use crate::data::{
     ast::*,
     tokens::*,
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
-use crate::data::warnings::Warnings;
 use crate::error_format::{gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
 // use crate::linter::Linter;
 use crate::parser::{

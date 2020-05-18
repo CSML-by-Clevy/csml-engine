@@ -8,8 +8,8 @@ use crate::interpreter::variable_handler::{
 };
 use crate::parser::ExitCondition;
 // use crate::interpreter::interpret_scope;
-use std::sync::mpsc;
 use crate::data::position::Position;
+use std::sync::mpsc;
 
 fn get_var_info<'a>(
     expr: &'a Expr,

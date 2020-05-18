@@ -1,7 +1,7 @@
 use crate::data::message_data::MessageData;
+use crate::data::position::Position;
 use crate::data::Literal;
 use crate::error_format::*;
-use crate::data::position::Position;
 
 use serde_json::{json, map::Map, Value};
 

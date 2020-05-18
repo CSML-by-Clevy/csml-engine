@@ -1,7 +1,7 @@
+use crate::data::position::Position;
 use crate::data::primitive::Primitive;
 use crate::data::Interval;
 use crate::error_format::*;
-use crate::data::position::Position;
 
 use std::cmp::Ordering;
 

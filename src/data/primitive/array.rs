@@ -1,3 +1,4 @@
+use crate::data::position::Position;
 use crate::data::{
     literal::ContentType,
     primitive::{
@@ -7,7 +8,6 @@ use crate::data::{
     tokens::TYPES,
 };
 use crate::data::{Interval, Literal, Message};
-use crate::data::position::Position;
 use crate::error_format::*;
 use lazy_static::*;
 use rand::seq::SliceRandom;
@@ -104,11 +104,17 @@ pub struct PrimitiveArray {
 
 fn check_index(index: i64, length: i64, interval: Interval) -> Result<(), ErrorInfo> {
     if index.is_negative() {
-        return Err(gen_error_info(Position::new(interval), ERROR_ARRAY_NEGATIVE.to_owned()));
+        return Err(gen_error_info(
+            Position::new(interval),
+            ERROR_ARRAY_NEGATIVE.to_owned(),
+        ));
     }
 
     if index > length {
-        return Err(gen_error_info(Position::new(interval), ERROR_ARRAY_INDEX.to_owned()));
+        return Err(gen_error_info(
+            Position::new(interval),
+            ERROR_ARRAY_INDEX.to_owned(),
+        ));
     }
 
     Ok(())
@@ -123,7 +129,10 @@ impl PrimitiveArray {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
@@ -137,7 +146,10 @@ impl PrimitiveArray {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal("array", interval))
@@ -151,7 +163,10 @@ impl PrimitiveArray {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         Ok(PrimitiveString::get_literal(&array.to_string(), interval))
@@ -176,7 +191,10 @@ impl PrimitiveArray {
         let value = match args.get(0) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -203,7 +221,10 @@ impl PrimitiveArray {
         let usage = "is_empty() => boolean";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let result = array.value.is_empty();
@@ -219,7 +240,10 @@ impl PrimitiveArray {
         let usage = "insert_at(index: int, value: primitive) => null";
 
         if args.len() != 2 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let index = match args.get(0) {
@@ -231,14 +255,20 @@ impl PrimitiveArray {
                 )?
             }
             _ => {
-                return Err(gen_error_info(Position::new(interval), ERROR_ARRAY_INSERT_AT.to_owned()));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_ARRAY_INSERT_AT.to_owned(),
+                ));
             }
         };
 
         let value = match args.get(1) {
             Some(res) => res,
             _ => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -257,13 +287,19 @@ impl PrimitiveArray {
         let usage = "index_of(value: primitive) => int";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let value = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -284,7 +320,10 @@ impl PrimitiveArray {
         let usage = "join(separater: string) => string";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let separator = match args.get(0) {
@@ -292,7 +331,10 @@ impl PrimitiveArray {
                 Literal::get_value::<String>(&res.primitive, interval, ERROR_ARRAY_JOIN.to_owned())?
             }
             _ => {
-                return Err(gen_error_info(Position::new(interval), ERROR_ARRAY_JOIN.to_owned()));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_ARRAY_JOIN.to_owned(),
+                ));
             }
         };
 
@@ -318,7 +360,10 @@ impl PrimitiveArray {
         let usage = "length() => int";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let result = array.value.len();
@@ -334,7 +379,10 @@ impl PrimitiveArray {
         let usage = "one_of() => primitive";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         if let Some(res) = array
@@ -355,13 +403,19 @@ impl PrimitiveArray {
         let usage = "push(value: primitive) => null";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let value = match args.get(0) {
             Some(res) => res,
             None => {
-                return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ));
             }
         };
 
@@ -385,12 +439,18 @@ impl PrimitiveArray {
         let usage = "pop() => primitive";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         match array.value.pop() {
             Some(literal) => Ok(literal),
-            None => Err(gen_error_info(Position::new(interval), ERROR_ARRAY_POP.to_owned())),
+            None => Err(gen_error_info(
+                Position::new(interval),
+                ERROR_ARRAY_POP.to_owned(),
+            )),
         }
     }
 
@@ -402,7 +462,10 @@ impl PrimitiveArray {
         let usage = "remove_at(index: int) => primitive";
 
         if args.len() != 1 {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let index = match args.get(0) {
@@ -414,7 +477,10 @@ impl PrimitiveArray {
                 )?
             }
             _ => {
-                return Err(gen_error_info(Position::new(interval), ERROR_ARRAY_REMOVE_AT.to_owned()));
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_ARRAY_REMOVE_AT.to_owned(),
+                ));
             }
         };
 
@@ -431,7 +497,10 @@ impl PrimitiveArray {
         let usage = "shuffle() => array";
 
         if !args.is_empty() {
-            return Err(gen_error_info(Position::new(interval), format!("usage: {}", usage)));
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
         }
 
         let mut vector = array.value.to_owned();

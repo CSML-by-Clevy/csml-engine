@@ -1,8 +1,8 @@
+use crate::data::position::Position;
 use crate::data::primitive::{PrimitiveObject, PrimitiveType};
 use crate::data::{ast::Interval, tokens::DEFAULT, Literal};
 use crate::error_format::*;
 use std::collections::HashMap;
-use crate::data::position::Position;
 
 pub fn url(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut url: HashMap<String, Literal> = args.clone();
@@ -28,7 +28,10 @@ pub fn url(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal
 
             Ok(result)
         }
-        _ => Err(gen_error_info(Position::new(interval), ERROR_URL.to_owned())),
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_URL.to_owned(),
+        )),
     }
 }
 
@@ -46,7 +49,10 @@ pub fn img(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal
 
             Ok(result)
         }
-        _ => Err(gen_error_info(Position::new(interval), ERROR_IMAGE.to_owned())),
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_IMAGE.to_owned(),
+        )),
     }
 }
 
@@ -70,7 +76,10 @@ pub fn video(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
 
             Ok(result)
         }
-        _ => Err(gen_error_info(Position::new(interval), ERROR_VIDEO.to_owned())),
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_VIDEO.to_owned(),
+        )),
     }
 }
 
@@ -95,6 +104,9 @@ pub fn audio(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
 
             Ok(result)
         }
-        _ => Err(gen_error_info(Position::new(interval), ERROR_AUDIO.to_owned())),
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_AUDIO.to_owned(),
+        )),
     }
 }

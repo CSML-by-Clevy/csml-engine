@@ -1,5 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
+use crate::data::position::Position;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
 use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
@@ -12,7 +13,6 @@ use crate::interpreter::{
     },
 };
 use std::{collections::HashMap, sync::mpsc};
-use crate::data::position::Position;
 
 fn exec_path_literal(
     literal: &mut Literal,

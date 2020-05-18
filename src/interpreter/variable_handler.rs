@@ -9,6 +9,7 @@ use crate::data::literal::ContentType;
 pub use expr_to_literal::expr_to_literal;
 
 use crate::data::error_info::ErrorInfo;
+use crate::data::position::Position;
 use crate::data::primitive::{
     null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
 };
@@ -26,7 +27,6 @@ use crate::interpreter::variable_handler::{
 use std::collections::HashMap;
 use std::slice::Iter;
 use std::sync::mpsc;
-use crate::data::position::Position;
 
 //TODO: return Warning or Error Component
 pub fn get_literal(

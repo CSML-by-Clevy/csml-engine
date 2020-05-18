@@ -6,6 +6,7 @@ pub mod variable_handler;
 pub use json_to_rust::json_to_literal;
 
 use crate::data::error_info::ErrorInfo;
+use crate::data::position::Position;
 use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
@@ -13,7 +14,6 @@ use crate::interpreter::{
     variable_handler::interval::interval_from_expr,
 };
 use crate::parser::ExitCondition;
-use crate::data::position::Position;
 
 use nom::lib::std::collections::HashMap;
 use std::sync::mpsc;
@@ -104,7 +104,10 @@ pub fn interpret_scope(
             }
             e => {
                 // TODO: make Expr printable in order to be included in the error message
-                return Err(gen_error_info(Position::new(interval_from_expr(e)), ERROR_START_INSTRUCTIONS.to_owned()));
+                return Err(gen_error_info(
+                    Position::new(interval_from_expr(e)),
+                    ERROR_START_INSTRUCTIONS.to_owned(),
+                ));
             }
         };
     }
