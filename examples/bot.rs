@@ -54,7 +54,5 @@ fn main() {
         dbg!(result.warnings);
     }
 
-    println!();
-
     dbg!(interpret(bot, context, event, None));
 }

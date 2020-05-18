@@ -3,6 +3,7 @@ use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::ContextJson;
 use csmlinterpreter::interpret;
+use csmlinterpreter::validate_bot;
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "default";
@@ -40,5 +41,15 @@ fn main() {
     );
 
     // Run interpreter
+    let result = validate_bot(bot.to_owned());
+
+    if result.errors.is_some() {
+        dbg!(result.errors);
+        return;
+    }
+    if result.warnings.is_some() {
+        dbg!(result.warnings);
+    }
+
     dbg!(interpret(bot, context, event, None));
 }

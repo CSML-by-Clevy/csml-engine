@@ -86,6 +86,16 @@ fn main() {
     );
 
     // Run interpreter
+    let result = validate_bot(bot.to_owned());
+
+    if result.errors.is_some() {
+        dbg!(result.errors);
+        return;
+    }
+    if result.warnings.is_some() {
+        dbg!(result.warnings);
+    }
+
     dbg!(interpret(bot, context, event, None));
 }
 ```
