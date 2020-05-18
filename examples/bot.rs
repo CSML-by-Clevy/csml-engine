@@ -44,16 +44,17 @@ fn main() {
     );
 
     // Run interpreter
-    // dbg!(interpret(bot, context, event, None));
+    let result = validate_bot(bot.to_owned());
 
-    // Run valide_bot
-    let result = validate_bot(bot);
-
-    if let Some(errors) = result.errors {
-        dbg!(errors);
+    if result.errors.is_some() {
+        dbg!(result.errors);
+        return;
+    }
+    if result.warnings.is_some() {
+        dbg!(result.warnings);
     }
 
-    if let Some(warnings) = result.warnings {
-        dbg!(warnings);
-    }
+    println!();
+
+    dbg!(interpret(bot, context, event, None));
 }
