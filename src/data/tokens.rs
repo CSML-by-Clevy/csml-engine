@@ -100,7 +100,8 @@ pub static RESERVED: &[&str] = &[
 
 // TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
 pub static UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK, COMPONENT,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
+    COMPONENT,
 ];
 
 pub static ASSIGNATION_RESERVED: &[&str] = &[

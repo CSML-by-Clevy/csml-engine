@@ -1,3 +1,4 @@
+use crate::data::ast::PathLiteral;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::string::PrimitiveString;
@@ -6,13 +7,12 @@ use crate::data::{
     Data, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
+use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 use crate::interpreter::{
     json_to_rust::json_to_literal,
     variable_handler::{exec_path_actions, resolve_path},
 };
 use std::sync::mpsc;
-use crate::data::ast::PathLiteral;
-use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
@@ -65,8 +65,12 @@ pub fn gen_literal_from_component(
             let path = resolve_path(path, data, root, sender)?;
 
             if let Some((_interval, function_name)) = path.first() {
-                if let PathLiteral::Func { name, interval, args } = function_name {
-
+                if let PathLiteral::Func {
+                    name,
+                    interval,
+                    args,
+                } = function_name
+                {
                     if let Some(component) = data.header.get(name) {
                         return gen_generic_component(name, interval, args, component);
                     }

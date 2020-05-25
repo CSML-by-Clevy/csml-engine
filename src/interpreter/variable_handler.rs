@@ -1,10 +1,10 @@
 pub mod expr_to_literal;
+pub mod gen_generic_component;
 pub mod gen_literal;
 pub mod interval;
 pub mod match_literals;
 pub mod memory;
 pub mod operations;
-pub mod gen_generic_component;
 
 use crate::data::literal::ContentType;
 pub use expr_to_literal::expr_to_literal;
@@ -16,14 +16,14 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState},
-    tokens::{EVENT, _METADATA, COMPONENT},
+    tokens::{COMPONENT, EVENT, _METADATA},
     Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
-    gen_literal::gen_literal_from_event,
     gen_literal::gen_literal_from_component,
+    gen_literal::gen_literal_from_event,
     memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
 };
 use std::collections::HashMap;
