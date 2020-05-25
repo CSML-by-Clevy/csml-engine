@@ -18,15 +18,13 @@ fn main() {
     let default_content = std::fs::read_to_string("CSML/examples/bot/default.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 
-    let other_content = std::fs::read_to_string("CSML/examples/bot/other.csml").unwrap();
-    let other_flow = CsmlFlow::new(DEFAULT_ID_NAME, "other", &other_content, Vec::default());
-
     // Create a CsmlBot
     let bot = CsmlBot::new(
         DEFAULT_ID_NAME,
         DEFAULT_BOT_NAME,
         None,
-        vec![default_flow, other_flow],
+        vec![default_flow],
+        serde_json::json!({"Generic_0": {}, "Generic_1": {}}),
         DEFAULT_FLOW_NAME,
     );
 
