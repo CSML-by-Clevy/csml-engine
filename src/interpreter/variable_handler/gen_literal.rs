@@ -2,7 +2,7 @@ use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{
-    ast::{Expr, Identifier, Interval, PathState},
+    ast::{Interval, PathState},
     Data, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
@@ -11,13 +11,12 @@ use crate::interpreter::{
     variable_handler::{exec_path_actions, resolve_path},
 };
 use std::sync::mpsc;
+use crate::data::ast::PathLiteral;
+use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 
-// pub fn search_str(name: &str, expr: &Expr) -> bool {
-//     match expr {
-//         Expr::IdentExpr(Identifier { ident, .. }) if ident == name => true,
-//         _ => false,
-//     }
-// }
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
 pub fn gen_literal_from_event(
     interval: Interval,
@@ -56,7 +55,6 @@ pub fn gen_literal_from_event(
 }
 
 pub fn gen_literal_from_component(
-    interval: Interval,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     root: &mut MessageData,
@@ -66,10 +64,20 @@ pub fn gen_literal_from_component(
         Some(path) => {
             let path = resolve_path(path, data, root, sender)?;
 
+            if let Some((_interval, function_name)) = path.first() {
+                if let PathLiteral::Func { name, interval, args } = function_name {
+
+                    if let Some(component) = data.header.get(name) {
+                        return gen_generic_component(name, interval, args, component);
+                    }
+                }
+            }
+
+            eprintln!("[!] Path must always exist with GenericComponent\n");
             unimplemented!();
         }
         None => {
-            eprintln!("[!] Path must always exist with Component\n");
+            eprintln!("[!] Path must always exist with GenericComponent\n");
             unimplemented!();
         }
     }

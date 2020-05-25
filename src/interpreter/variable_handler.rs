@@ -4,6 +4,7 @@ pub mod interval;
 pub mod match_literals;
 pub mod memory;
 pub mod operations;
+pub mod gen_generic_component;
 
 use crate::data::literal::ContentType;
 pub use expr_to_literal::expr_to_literal;
@@ -15,7 +16,7 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState},
-    tokens::{EVENT, _METADATA},
+    tokens::{EVENT, _METADATA, COMPONENT},
     Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
@@ -28,7 +29,6 @@ use crate::interpreter::variable_handler::{
 use std::collections::HashMap;
 use std::slice::Iter;
 use std::sync::mpsc;
-use crate::data::tokens::COMPONENT;
 
 //TODO: return Warning or Error Component
 pub fn get_literal(
@@ -287,7 +287,7 @@ pub fn get_var(
 ) -> Result<Literal, ErrorInfo> {
     let interval = &var.interval;
     match var.ident {
-        name if name == COMPONENT => gen_literal_from_component(*interval, path, data, root, sender),
+        name if name == COMPONENT => gen_literal_from_component(path, data, root, sender),
         name if name == EVENT => gen_literal_from_event(*interval, path, data, root, sender),
         name if name == _METADATA => match path {
             Some(path) => {
