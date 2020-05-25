@@ -16,6 +16,7 @@ pub struct Data {
     pub event: Event,
     pub curl: easy::Easy,
     pub step_vars: HashMap<String, Literal>,
+    pub header: serde_json::Value,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +30,7 @@ impl Data {
         event: &Event,
         curl: easy::Easy,
         step_vars: HashMap<String, Literal>,
+        header: serde_json::Value,
     ) -> Self {
         Self {
             flow: flow.to_owned(),
@@ -36,6 +38,7 @@ impl Data {
             event: event.to_owned(),
             curl,
             step_vars,
+            header,
         }
     }
 }

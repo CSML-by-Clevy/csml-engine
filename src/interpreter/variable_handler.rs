@@ -21,12 +21,14 @@ use crate::data::{
 use crate::data::{MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
-    gen_literal::gen_literal_form_event,
+    gen_literal::gen_literal_from_event,
+    gen_literal::gen_literal_from_component,
     memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
 };
 use std::collections::HashMap;
 use std::slice::Iter;
 use std::sync::mpsc;
+use crate::data::tokens::COMPONENT;
 
 //TODO: return Warning or Error Component
 pub fn get_literal(
@@ -285,7 +287,8 @@ pub fn get_var(
 ) -> Result<Literal, ErrorInfo> {
     let interval = &var.interval;
     match var.ident {
-        name if name == EVENT => gen_literal_form_event(*interval, path, data, root, sender),
+        name if name == COMPONENT => gen_literal_from_component(*interval, path, data, root, sender),
+        name if name == EVENT => gen_literal_from_event(*interval, path, data, root, sender),
         name if name == _METADATA => match path {
             Some(path) => {
                 let path = resolve_path(path, data, root, sender)?;

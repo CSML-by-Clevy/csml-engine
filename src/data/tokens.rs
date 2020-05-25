@@ -55,6 +55,7 @@ pub const IN: &str = "in";
 pub const DO: &str = "do";
 pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
+pub const COMPONENT: &str = "Component";
 
 pub const FLOW: &str = "flow";
 pub const FILE: &str = "file";
@@ -94,17 +95,17 @@ pub static TYPES: &[&str] = &[
 
 pub static RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
+    MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 // TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
 pub static UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK, COMPONENT,
 ];
 
 pub static ASSIGNATION_RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER,
-    _METADATA, TRUE, FALSE, NULL, BREAK,
+    _METADATA, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 pub const TYPING: &str = "Typing";

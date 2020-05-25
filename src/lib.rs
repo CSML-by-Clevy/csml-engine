@@ -162,6 +162,7 @@ pub fn interpret(
             &event,
             Easy::new(),
             step_vars,
+            bot.header.to_owned(),
         );
 
         let rip = match context.hold {

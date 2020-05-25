@@ -12,14 +12,14 @@ use crate::interpreter::{
 };
 use std::sync::mpsc;
 
-pub fn search_str(name: &str, expr: &Expr) -> bool {
-    match expr {
-        Expr::IdentExpr(Identifier { ident, .. }) if ident == name => true,
-        _ => false,
-    }
-}
+// pub fn search_str(name: &str, expr: &Expr) -> bool {
+//     match expr {
+//         Expr::IdentExpr(Identifier { ident, .. }) if ident == name => true,
+//         _ => false,
+//     }
+// }
 
-pub fn gen_literal_form_event(
+pub fn gen_literal_from_event(
     interval: Interval,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
@@ -52,5 +52,25 @@ pub fn gen_literal_form_event(
             &data.event.content,
             interval.to_owned(),
         )),
+    }
+}
+
+pub fn gen_literal_from_component(
+    interval: Interval,
+    path: Option<&[(Interval, PathState)]>,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    match path {
+        Some(path) => {
+            let path = resolve_path(path, data, root, sender)?;
+
+            unimplemented!();
+        }
+        None => {
+            eprintln!("[!] Path must always exist with Component\n");
+            unimplemented!();
+        }
     }
 }
