@@ -1063,25 +1063,6 @@ impl PrimitiveString {
 }
 
 impl Primitive for PrimitiveString {
-    fn do_exec(
-        &mut self,
-        name: &str,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &ContentType,
-    ) -> Result<(Literal, Right), ErrorInfo> {
-        if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
-
-            return Ok((res, *right));
-        }
-
-        Err(gen_error_info(
-            Position::new(interval),
-            format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
-        ))
-    }
-
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
             return match (get_integer(&self.value), get_integer(&rhs.value)) {
@@ -1319,5 +1300,24 @@ impl Primitive for PrimitiveString {
             content_type: result.content_type,
             content: result.primitive.to_json(),
         }
+    }
+
+    fn do_exec(
+        &mut self,
+        name: &str,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &ContentType,
+    ) -> Result<(Literal, Right), ErrorInfo> {
+        if let Some((f, right)) = FUNCTIONS.get(name) {
+            let res = f(self, args, interval)?;
+
+            return Ok((res, *right));
+        }
+
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
+        ))
     }
 }

@@ -437,25 +437,6 @@ impl PrimitiveInt {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Primitive for PrimitiveInt {
-    fn do_exec(
-        &mut self,
-        name: &str,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &ContentType,
-    ) -> Result<(Literal, Right), ErrorInfo> {
-        if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
-
-            return Ok((res, *right));
-        }
-
-        Err(gen_error_info(
-            Position::new(interval),
-            format!("[{}] {}", name, ERROR_INT_UNKNOWN_METHOD),
-        ))
-    }
-
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             return self.value == other.value;
@@ -610,5 +591,24 @@ impl Primitive for PrimitiveInt {
             content_type: result.content_type,
             content: result.primitive.to_json(),
         }
+    }
+
+    fn do_exec(
+        &mut self,
+        name: &str,
+        args: &[Literal],
+        interval: Interval,
+        _content_type: &ContentType,
+    ) -> Result<(Literal, Right), ErrorInfo> {
+        if let Some((f, right)) = FUNCTIONS.get(name) {
+            let res = f(self, args, interval)?;
+
+            return Ok((res, *right));
+        }
+
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("[{}] {}", name, ERROR_INT_UNKNOWN_METHOD),
+        ))
     }
 }

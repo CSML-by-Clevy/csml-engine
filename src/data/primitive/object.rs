@@ -939,58 +939,6 @@ impl PrimitiveObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Primitive for PrimitiveObject {
-    fn do_exec(
-        &mut self,
-        name: &str,
-        args: &[Literal],
-        interval: Interval,
-        content_type: &ContentType,
-    ) -> Result<(Literal, Right), ErrorInfo> {
-        let event = vec![FUNCTIONS_EVENT.clone()];
-        let http = vec![
-            FUNCTIONS_HTTP.clone(),
-            FUNCTIONS_READ.clone(),
-            FUNCTIONS_WRITE.clone(),
-        ];
-        let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
-
-        let mut is_event = false;
-
-        let (content_type, vector) = match content_type {
-            ContentType::Event(event_type) => {
-                is_event = true;
-
-                (event_type.as_ref(), event)
-            }
-            ContentType::Http => ("", http),
-            ContentType::Generics => ("", generics),
-        };
-
-        for function in vector.iter() {
-            if let Some((f, right)) = function.get(name) {
-                let result = f(self, args, interval, &content_type)?;
-
-                return Ok((result, *right));
-            }
-        }
-
-        if is_event == true {
-            if let Some(res) = self.value.get_mut("text") {
-                return res.primitive.do_exec(
-                    name,
-                    args,
-                    interval,
-                    &ContentType::Event(String::default()),
-                );
-            }
-        }
-
-        Err(gen_error_info(
-            Position::new(interval),
-            format!("[{}] {}", name, ERROR_OBJECT_UNKNOWN_METHOD),
-        ))
-    }
-
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             return self.value == other.value;
@@ -1107,5 +1055,57 @@ impl Primitive for PrimitiveObject {
             content_type,
             content: self.to_json(),
         }
+    }
+
+    fn do_exec(
+        &mut self,
+        name: &str,
+        args: &[Literal],
+        interval: Interval,
+        content_type: &ContentType,
+    ) -> Result<(Literal, Right), ErrorInfo> {
+        let event = vec![FUNCTIONS_EVENT.clone()];
+        let http = vec![
+            FUNCTIONS_HTTP.clone(),
+            FUNCTIONS_READ.clone(),
+            FUNCTIONS_WRITE.clone(),
+        ];
+        let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
+
+        let mut is_event = false;
+
+        let (content_type, vector) = match content_type {
+            ContentType::Event(event_type) => {
+                is_event = true;
+
+                (event_type.as_ref(), event)
+            }
+            ContentType::Http => ("", http),
+            ContentType::Generics => ("", generics),
+        };
+
+        for function in vector.iter() {
+            if let Some((f, right)) = function.get(name) {
+                let result = f(self, args, interval, &content_type)?;
+
+                return Ok((result, *right));
+            }
+        }
+
+        if is_event == true {
+            if let Some(res) = self.value.get_mut("text") {
+                return res.primitive.do_exec(
+                    name,
+                    args,
+                    interval,
+                    &ContentType::Event(String::default()),
+                );
+            }
+        }
+
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("[{}] {}", name, ERROR_OBJECT_UNKNOWN_METHOD),
+        ))
     }
 }
