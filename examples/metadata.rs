@@ -24,6 +24,7 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
+        serde_json::json!({}),
         DEFAULT_FLOW_NAME,
     );
 
