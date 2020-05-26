@@ -24,11 +24,12 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
+        serde_json::json!({}),
         DEFAULT_FLOW_NAME,
     );
 
     // Create an Event
-    let event = Event::new("text", "Hello", serde_json::json!({}));
+    let event = Event::new("text", "Hello", serde_json::json!({"text":"Hello"}));
 
     // Create context
     let context = ContextJson::new(

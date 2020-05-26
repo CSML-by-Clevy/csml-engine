@@ -1098,7 +1098,7 @@ impl Primitive for PrimitiveObject {
                     name,
                     args,
                     interval,
-                    &ContentType::Event(String::default()),
+                    &ContentType::Primitive,
                 );
             }
         }

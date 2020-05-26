@@ -27,8 +27,6 @@ impl Default for Event {
 // METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-// By default new event content_type is text
-
 impl Event {
     pub fn new(content_type: &str, content: &str, metadata: serde_json::Value) -> Self {
         Self {

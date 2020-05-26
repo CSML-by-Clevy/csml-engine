@@ -205,8 +205,6 @@ fn loop_path(
             } => {
                 // TODO: change args: Literal to args: Vec< Literal >
                 // TODO: Warning msg element is unmutable ?
-                println!("content_type: {:#?}", content_type);
-
                 let args = match Literal::get_value::<Vec<Literal>>(
                     &args.primitive,
                     *interval,
