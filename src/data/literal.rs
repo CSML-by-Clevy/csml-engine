@@ -20,7 +20,7 @@ pub struct Literal {
 pub enum ContentType {
     Event(String),
     Http,
-    Generics,
+    Primitive,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ impl ContentType {
         match literal.content_type.as_ref() {
             "http" => ContentType::Http,
             "event" => ContentType::Event(String::from("")),
-            _ => ContentType::Generics,
+            _ => ContentType::Primitive,
         }
     }
 }

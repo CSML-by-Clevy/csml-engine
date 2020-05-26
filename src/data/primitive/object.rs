@@ -1081,7 +1081,7 @@ impl Primitive for PrimitiveObject {
                 (event_type.as_ref(), event)
             }
             ContentType::Http => ("", http),
-            ContentType::Generics => ("", generics),
+            ContentType::Primitive => ("", generics),
         };
 
         for function in vector.iter() {

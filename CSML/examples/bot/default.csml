@@ -1,4 +1,4 @@
 start:
-    say Component.Generic_0()
+  say Component.Generic_0()
 
-    goto end
+  goto end

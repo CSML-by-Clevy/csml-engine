@@ -739,7 +739,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("abs", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -747,7 +747,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("abs", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -767,7 +767,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("cos", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -776,7 +776,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("cos", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -796,7 +796,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("ceil", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -804,7 +804,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("ceil", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -824,7 +824,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("pow", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -832,7 +832,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("pow", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -852,7 +852,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("floor", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -860,7 +860,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("floor", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -880,7 +880,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("round", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -888,7 +888,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("round", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -908,7 +908,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sin", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -916,7 +916,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sin", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -936,7 +936,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -944,7 +944,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -964,7 +964,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("tan", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -972,7 +972,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("tan", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -992,7 +992,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_int", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -1000,7 +1000,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_int", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -1020,7 +1020,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_float", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -1028,7 +1028,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_float", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
