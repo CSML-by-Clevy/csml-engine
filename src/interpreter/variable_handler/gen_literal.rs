@@ -55,6 +55,7 @@ pub fn gen_literal_from_event(
 }
 
 pub fn gen_literal_from_component(
+    interval: Interval,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     root: &mut MessageData,
@@ -62,27 +63,26 @@ pub fn gen_literal_from_component(
 ) -> Result<Literal, ErrorInfo> {
     match path {
         Some(path) => {
-            let path = resolve_path(path, data, root, sender)?;
+            let mut path = resolve_path(path, data, root, sender)?;
 
             if let Some((_interval, function_name)) = path.first() {
-                if let PathLiteral::Func {
-                    name,
-                    interval,
-                    args,
-                } = function_name
+                if let PathLiteral::Func { name, interval, args } = function_name
                 {
                     if let Some(component) = data.header.get(name) {
-                        return gen_generic_component(name, interval, args, component);
+                        let mut lit = gen_generic_component(name, interval, args, component)?;
+
+                        path.drain(..1);
+
+                        let (lit, _tmp_mem_update) = exec_path_actions(&mut lit, None, &Some(path), &ContentType::Primitive)?;
+
+                        return Ok(lit);
+
                     }
                 }
             }
 
-            eprintln!("[!] Path must always exist with GenericComponent\n");
-            unimplemented!();
+            Err(gen_error_info(Position::new(interval), ERROR_COMPONENT_UNKNOWN.to_owned()))
         }
-        None => {
-            eprintln!("[!] Path must always exist with GenericComponent\n");
-            unimplemented!();
-        }
+        None => Err(gen_error_info(Position::new(interval), ERROR_COMPONENT_NAMESPACE.to_owned())),
     }
 }

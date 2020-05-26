@@ -198,29 +198,20 @@ fn loop_path(
                     }
                 };
             }
-            PathLiteral::Func {
-                name,
-                interval,
-                args,
-            } => {
+            PathLiteral::Func { name, interval, args } => {
                 // TODO: change args: Literal to args: Vec< Literal >
                 // TODO: Warning msg element is unmutable ?
-                let args = match Literal::get_value::<Vec<Literal>>(
-                    &args.primitive,
-                    *interval,
-                    ERROR_UNREACHABLE.to_owned(),
-                )
-                .ok()
-                {
+                println!("content_type: {:#?}", content_type);
+
+                let args = match Literal::get_value::<Vec<Literal>>(&args.primitive, *interval, ERROR_UNREACHABLE.to_owned()).ok() {
                     Some(args) => args,
-                    // this is unreachable because a function need to have arguments other wise it will be a parsing error
                     None => unreachable!(),
                 };
-                let mut return_lit =
-                    lit.primitive
-                        .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
+
+                let mut return_lit = lit.primitive.exec(name, args, *interval, content_type, &mut tmp_update_var)?;
                 let content_type = ContentType::get(&return_lit);
                 let (lit_new, ..) = loop_path(&mut return_lit, None, path, &content_type)?;
+
                 return Ok((lit_new, tmp_update_var));
             }
         }
@@ -287,7 +278,7 @@ pub fn get_var(
 ) -> Result<Literal, ErrorInfo> {
     let interval = &var.interval;
     match var.ident {
-        name if name == COMPONENT => gen_literal_from_component(path, data, root, sender),
+        name if name == COMPONENT => gen_literal_from_component(*interval, path, data, root, sender),
         name if name == EVENT => gen_literal_from_event(*interval, path, data, root, sender),
         name if name == _METADATA => match path {
             Some(path) => {
