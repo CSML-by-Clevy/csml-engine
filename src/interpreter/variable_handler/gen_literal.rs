@@ -66,23 +66,37 @@ pub fn gen_literal_from_component(
             let mut path = resolve_path(path, data, root, sender)?;
 
             if let Some((_interval, function_name)) = path.first() {
-                if let PathLiteral::Func { name, interval, args } = function_name
+                if let PathLiteral::Func {
+                    name,
+                    interval,
+                    args,
+                } = function_name
                 {
                     if let Some(component) = data.header.get(name) {
                         let mut lit = gen_generic_component(name, interval, args, component)?;
 
                         path.drain(..1);
 
-                        let (lit, _tmp_mem_update) = exec_path_actions(&mut lit, None, &Some(path), &ContentType::Primitive)?;
+                        let (lit, _tmp_mem_update) = exec_path_actions(
+                            &mut lit,
+                            None,
+                            &Some(path),
+                            &ContentType::Primitive,
+                        )?;
 
                         return Ok(lit);
-
                     }
                 }
             }
 
-            Err(gen_error_info(Position::new(interval), ERROR_COMPONENT_UNKNOWN.to_owned()))
+            Err(gen_error_info(
+                Position::new(interval),
+                ERROR_COMPONENT_UNKNOWN.to_owned(),
+            ))
         }
-        None => Err(gen_error_info(Position::new(interval), ERROR_COMPONENT_NAMESPACE.to_owned())),
+        None => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_COMPONENT_NAMESPACE.to_owned(),
+        )),
     }
 }

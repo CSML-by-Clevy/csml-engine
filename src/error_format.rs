@@ -62,7 +62,6 @@ pub const ERROR_EVENT_CONTENT_TYPE: &'static str = "event can only be of Content
 pub const ERROR_COMPONENT_NAMESPACE: &'static str = "Component must have a function apply to it";
 pub const ERROR_COMPONENT_UNKNOWN: &'static str = "Function does not exist for Component";
 
-
 // Fn API
 pub const ERROR_FN_ID: &'static str =
     "to find the function to call function_id beed to be of type string";
