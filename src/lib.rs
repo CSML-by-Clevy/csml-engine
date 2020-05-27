@@ -11,7 +11,7 @@ use crate::data::ast::Expr;
 use crate::data::ast::Flow;
 use crate::data::ast::InstructionType;
 use crate::data::ast::Interval;
-use crate::data::context::get_hashmap;
+use crate::data::context::get_hashmap_from_mem;
 use crate::data::csml_bot::CsmlBot;
 use crate::data::csml_result::CsmlResult;
 use crate::data::error_info::ErrorInfo;
@@ -28,7 +28,6 @@ use crate::linter::linter::lint_flow;
 use crate::parser::state_context::StateContext;
 use crate::parser::ExitCondition;
 
-use curl::easy::Easy;
 use std::collections::HashMap;
 use std::sync::mpsc;
 
@@ -152,17 +151,11 @@ pub fn interpret(
         };
 
         let step_vars = match &context.hold {
-            Some(hold) => get_hashmap(&hold.step_vars),
+            Some(hold) => get_hashmap_from_mem(&hold.step_vars),
             None => HashMap::new(),
         };
 
-        let mut data = Data::new(
-            &ast,
-            &mut context.to_literal(),
-            &event,
-            Easy::new(),
-            step_vars,
-        );
+        let mut data = Data::new(&ast, &mut context.to_literal(), &event, step_vars);
 
         let rip = match context.hold {
             Some(result) => {

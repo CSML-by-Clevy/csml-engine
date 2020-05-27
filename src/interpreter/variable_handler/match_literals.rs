@@ -64,7 +64,10 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> Literal {
             PrimitiveBoolean::get_literal(lit1 == lit2, lit1.interval.to_owned())
         }
         (.., array) if array == "array" => contains(lit2, lit1),
-        (array, ..) if array == "array" => contains(lit1, lit2),
+        (array, ..) if array == "array" => {
+            println!("array");
+            contains(lit1, lit2)
+        }
 
         (..) => PrimitiveBoolean::get_literal(
             lit1.primitive == lit2.primitive.to_owned(),

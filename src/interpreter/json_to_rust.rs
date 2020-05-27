@@ -52,3 +52,52 @@ pub fn json_to_literal(
         }
     }
 }
+
+pub fn memory_to_literal(
+    literal: &serde_json::Value,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    match literal {
+        serde_json::Value::String(val) => Ok(PrimitiveString::get_literal(val, interval)),
+        serde_json::Value::Bool(val) => Ok(PrimitiveBoolean::get_literal(*val, interval)),
+        serde_json::Value::Null => Ok(PrimitiveNull::get_literal(interval)),
+        serde_json::Value::Number(val) => {
+            if let (true, Some(float)) = (val.is_f64(), val.as_f64()) {
+                Ok(PrimitiveFloat::get_literal(float, interval))
+            } else if let (true, Some(int)) = (val.is_i64(), val.as_i64()) {
+                Ok(PrimitiveInt::get_literal(int, interval))
+            } else {
+                Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JSON_TO_LITERAL.to_owned(),
+                ))
+            }
+        }
+        serde_json::Value::Array(val) => {
+            let mut vec = vec![];
+
+            for elem in val {
+                vec.push(memory_to_literal(elem, interval)?);
+            }
+
+            Ok(PrimitiveArray::get_literal(&vec, interval))
+        }
+        serde_json::Value::Object(val) => {
+            let mut map = HashMap::new();
+
+            match (val.get("_content"), val.get("_content_type")) {
+                (Some(content), Some(serde_json::Value::String(conent_type))) => {
+                    let mut literal = memory_to_literal(content, interval)?;
+                    literal.set_content_type(&conent_type);
+                    Ok(literal)
+                }
+                (_, _) => {
+                    for (k, v) in val.iter() {
+                        map.insert(k.to_owned(), memory_to_literal(v, interval)?);
+                    }
+                    Ok(PrimitiveObject::get_literal(&map, interval))
+                }
+            }
+        }
+    }
+}

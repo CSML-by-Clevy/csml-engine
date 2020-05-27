@@ -57,7 +57,6 @@ pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
 
 pub const FLOW: &str = "flow";
-pub const FILE: &str = "file";
 pub const STEP: &str = "step";
 pub const SAY: &str = "say";
 pub const USE: &str = "use";
@@ -93,8 +92,8 @@ pub static TYPES: &[&str] = &[
 ];
 
 pub static RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH,
+    DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
 ];
 
 // TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
@@ -127,12 +126,13 @@ pub const CAROUSEL: &str = "Carousel";
 pub const CARD: &str = "Card";
 pub const FN: &str = "Fn";
 pub const HTTP: &str = "HTTP";
+pub const FILE: &str = "File";
 
 pub const OBJECT: &str = "Object";
 
 pub static BUILT_IN: &[&str] = &[
     TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, VIDEO, AUDIO,
-    QUESTION, BUTTON, CAROUSEL, CARD, FN, HTTP, OBJECT,
+    QUESTION, BUTTON, CAROUSEL, CARD, FN, HTTP, OBJECT, FILE,
 ];
 
 pub const MEMORY: &str = "memory";
