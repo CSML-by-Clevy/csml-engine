@@ -118,7 +118,7 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 
 pub fn interpret(
     bot: CsmlBot,
-    mut context: ContextJson,
+    context: ContextJson,
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
