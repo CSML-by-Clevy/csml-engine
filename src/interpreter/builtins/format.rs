@@ -108,12 +108,10 @@ pub fn carousel(args: HashMap<String, Literal>, interval: Interval) -> Result<Li
 
             Ok(result)
         }
-        _ => {
-            return Err(gen_error_info(
-                Position::new(interval),
-                ERROR_CAROUSEL.to_owned(),
-            ))
-        }
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_CAROUSEL.to_owned(),
+        )),
     }
 }
 

@@ -177,5 +177,5 @@ pub fn interpret(
         context = data.context.to_owned();
     }
 
-    return message_data;
+    message_data
 }

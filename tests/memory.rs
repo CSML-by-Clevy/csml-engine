@@ -1,14 +1,14 @@
 mod support;
 
 use csmlinterpreter::data::context::ContextJson;
+use csmlinterpreter::data::csml_bot::CsmlBot;
+use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::MessageData;
-use csmlinterpreter::data::csml_flow::CsmlFlow;
-use csmlinterpreter::data::csml_bot::CsmlBot;
 use csmlinterpreter::interpret;
 
-use crate::support::tools::read_file;
 use crate::support::tools::message_to_json_value;
+use crate::support::tools::read_file;
 
 use serde_json::Value;
 
@@ -37,8 +37,7 @@ fn format_message(event: Event, context: ContextJson, vector: &[&str]) -> Messag
 
 #[test]
 fn memory() {
-    let data =
-        r#"{"memories":[{"key":"var", "value":42}], "messages":[
+    let data = r#"{"memories":[{"key":"var", "value":42}], "messages":[
         {
             "content": {"text": "var from start: 42"},
             "content_type": "text"
@@ -63,7 +62,10 @@ fn memory() {
             DEFAULT_STEP_NAME,
             DEFAULT_FLOW_NAME,
         ),
-        &vec!["CSML/basic_test/bot/default.csml", "CSML/basic_test/bot/other.csml"],
+        &vec![
+            "CSML/basic_test/bot/default.csml",
+            "CSML/basic_test/bot/other.csml",
+        ],
     );
 
     let v1: Value = message_to_json_value(msg);

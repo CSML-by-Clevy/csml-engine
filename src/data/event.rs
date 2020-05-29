@@ -34,7 +34,7 @@ impl Event {
         Self {
             content_type: content_type.to_owned(),
             content: content.to_owned(),
-            metadata: metadata.to_owned(),
+            metadata,
         }
     }
 }
