@@ -1,0 +1,7 @@
+start:
+    // remember tmp = "true"
+    say "-> {{amerelo42}}"
+    // say "------------"
+    hold
+    // say "event2: => {{event}}"
+    goto end

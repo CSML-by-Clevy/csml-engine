@@ -1,0 +1,105 @@
+service: csml-manager-api
+
+plugins:
+  - serverless-plugin-log-subscription
+  - serverless-dotenv-plugin
+  - serverless-offline
+  - serverless-offline-sns
+  - serverless-plugin-git-variables
+  - serverless-plugin-tracing
+  - serverless-prune-plugin
+  - serverless-api-compression
+
+package:
+  individually: true
+
+custom:
+  secrets: ${ssm:/aws/reference/secretsmanager/csml-stack-${opt:stage}~true, ''}
+
+  contentCompression: 1024
+
+  prune:
+    automatic: true
+    number: 5
+
+  serverless-offline:
+    port: 3310
+
+  serverless-offline-sns:
+    debug: false
+    port: 4675
+    host: 0.0.0.0
+
+  logSubscription:
+    enabled: true
+    destinationArn: ${self:custom.secrets.DD_FORWARDER_ARN, ''}
+    filterPattern: '[w1!=XRAY && w1!=REPORT && w1!=END && w1!=START, w2]'
+    addSourceLambdaPermission: true
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  tracing: true
+  vpc:
+    securityGroupIds:
+      - ${self:custom.secrets.VPC_SG, ''}
+    subnetIds:
+      - ${self:custom.secrets.VPC_SUBNET_1, ''}
+      - ${self:custom.secrets.VPC_SUBNET_2, ''}
+  resourcePolicy:
+    - Effect: Allow
+      Principal: '*'
+      Action: execute-api:Invoke
+      Resource:
+        - execute-api:/*
+      Condition:
+        StringEquals:
+          aws:SourceVpce: ${self:custom.secrets.VPC_ENDPOINT_APIG, ''}
+  endpointType: PRIVATE
+  logs:
+    restApi: true
+  apiGateway:
+    minimumCompressionSize: 1024
+  stage: dev
+  region: eu-west-3
+  timeout: 30
+  memorySize: 832
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource: "*"
+  environment:
+    STAGE: ${opt:stage}
+    REGION: ${opt:region, self:provider.region}
+    ENGINEMS_URL: ${env:CSML_ENGINE_MS_URL, self:custom.secrets.CSML_ENGINE_MS_URL}
+    BUGSNAG_API_KEY: 6ba01b669086e7cae80c4b7ad37bdf2a
+    DEBUG: ${env:DEBUG}
+    ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
+    SNS_ENDPOINT: ${env:SNS_ENDPOINT, "https://sns.${self:provider.environment.REGION}.amazonaws.com"}
+    SNS_TOPIC: ${self:service}-${opt:stage}
+
+
+functions:
+
+  api:
+    handler: index.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+          integration: lambda-proxy
+      - http:
+          path: /{any+}
+          method: ANY
+          cors: true
+          integration: lambda-proxy
+
+  agent:
+    timeout: 60
+    handler: worker.handler
+    events:
+      - sns:
+          arn: "arn:aws:sns:${self:provider.environment.REGION}:${self:provider.environment.ACCOUNT_ID}:${self:provider.environment.SNS_TOPIC}"

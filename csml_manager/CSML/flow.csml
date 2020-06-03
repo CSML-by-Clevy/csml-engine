@@ -1,0 +1,15 @@
+start:
+    say "hola 42"
+    remember amerelo42 = 4
+    // say "test => {{amerelo42}}"
+    goto flow flow2
+
+step2:
+    say "test => {{amerelo42}}"
+    // say "hola from step2"
+    // hold
+    // say "event => {{event}}"
+    // remember toto = Button(event)
+    // say toto
+    goto end
+    // goto flow flow2
