@@ -64,7 +64,7 @@ where
 
     match operator {
         Expr::ObjectExpr(ObjectType::As(idents, expr)) => Ok((s, (idents, expr))),
-        _ => return Err(gen_nom_failure(s, ERROR_REMEMBER)),
+        _ => Err(gen_nom_failure(s, ERROR_REMEMBER)),
     }
 }
 

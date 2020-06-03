@@ -8,7 +8,7 @@ start:
     goto end
 
 step_0:
-    do array = [1, 2, 3];
+    do array = [1, 2, 3]
 
     foreach (key) in array {
         goto flow other

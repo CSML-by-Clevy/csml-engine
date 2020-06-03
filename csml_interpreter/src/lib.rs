@@ -118,11 +118,12 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 
 pub fn interpret(
     bot: CsmlBot,
-    mut context: ContextJson,
+    context: ContextJson,
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let mut message_data = MessageData::default();
+    let mut context = context.to_literal();
 
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();
@@ -155,7 +156,7 @@ pub fn interpret(
             None => HashMap::new(),
         };
 
-        let mut data = Data::new(&ast, &mut context.to_literal(), &event, step_vars);
+        let mut data = Data::new(&ast, &mut context, &event, step_vars);
 
         let rip = match context.hold {
             Some(result) => {
@@ -171,9 +172,10 @@ pub fn interpret(
             message_data.exit_condition = None;
         }
 
-        flow = data.context.flow;
-        step = data.context.step;
+        flow = data.context.flow.to_string();
+        step = data.context.step.to_string();
+        context = data.context.to_owned();
     }
 
-    return message_data;
+    message_data
 }
