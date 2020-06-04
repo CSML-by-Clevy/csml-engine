@@ -24,7 +24,47 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        serde_json::json!({"Generic_0": {}, "Generic_1": {}}),
+        serde_json::json!(
+            {
+                "Button": {
+                    "_primary": "title",
+                    "title": {
+                        "required": true,
+                        "type": "String"
+                    },
+                    "payload": {
+                        "required": false,
+                        "type": "String",
+                        "default_value": {
+                            "$_get": "title"
+                        }
+                    },
+                    "accepts": {
+                        "type": "Array",
+                        "add_values": [
+                            {
+                                "$_get": "title"
+                            },
+                            {
+                                "$_get": "payload"
+                            },
+                            {
+                                "$_set": "poepoe"
+                            },
+                            "machin"
+                        ],
+                        "default_value": [
+                            "tototot",
+                            "tototot",
+                            "tototot",
+                            "tototot",
+                            "tototot",
+                            "tototot"
+                        ]
+                    }
+                }
+            }
+        ),
         DEFAULT_FLOW_NAME,
     );
 

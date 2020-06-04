@@ -1094,12 +1094,9 @@ impl Primitive for PrimitiveObject {
 
         if is_event == true {
             if let Some(res) = self.value.get_mut("text") {
-                return res.primitive.do_exec(
-                    name,
-                    args,
-                    interval,
-                    &ContentType::Primitive,
-                );
+                return res
+                    .primitive
+                    .do_exec(name, args, interval, &ContentType::Primitive);
             }
         }
 

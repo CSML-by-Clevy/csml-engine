@@ -1,4 +1,30 @@
+// BUG: do obj = {}.insert("foo", "bar")
+
 start:
-  say Component.Generic_0()
+  say Component.Button()
 
   goto end
+
+
+  
+// RESULT EXPECTED //
+// Message {
+//     content_type: "button",
+//     content: Object(
+//         {
+//             "accepts": Array(
+//                 [
+//                     String(
+//                         "Hello",
+//                     ),
+//                 ],
+//             ),
+//             "payload": String(
+//                 "Hello",
+//             ),
+//             "title": String(
+//                 "Hello",
+//             ),
+//         },
+//     ),
+// },
