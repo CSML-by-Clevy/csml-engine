@@ -45,8 +45,8 @@ pub fn validate_bot(bot: CsmlBot) -> Result<bool, Vec<ErrorInfo>> {
 }
 
 pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> {
-    let mongo_client = mongodb::Client::with_uri_str("mongodb://localhost:2717/")?;
-    let db = mongo_client.database("csml"); // tmp name
+    let db = init_db()?;
+
     close_all_conversations(&client, &db)
 }
 
@@ -103,6 +103,7 @@ fn get_conversation<'a>(
                     let flow = match get_flow_by_id(&conversation.flow_id, &bot.flows) {
                         Ok(flow) => flow,
                         Err(e) => {
+                            // if flow id exist in db but not in bot close conversation
                             close_conversation(
                                 &bson::Bson::ObjectId(conversation.id),
                                 &client,
@@ -135,14 +136,23 @@ fn get_conversation<'a>(
     }
 }
 
+fn init_db() -> Result<mongodb::Database, ManagerError> {
+    let uri = match env::var("MONGODB_URI") {
+        Ok(var) => var,
+        _ => panic!("error no MONGODB_URI en env"),
+    };
+
+    let client = mongodb::Client::with_uri_str(&uri)?;
+
+    Ok(client.database("csml"))
+}
+
 fn init_conversation_info<'a>(
     default_flow: String,
     event: &Event,
     csmldata: &'a CsmlData,
 ) -> Result<ConversationInfo, ManagerError> {
-    // TODO: mongo uri
-    let client = mongodb::Client::with_uri_str("mongodb://localhost:2717/")?;
-    let db = client.database("csml"); // tmp name
+    let db = init_db()?;
 
     let interaction_id = init_interaction(csmldata.payload.clone(), &csmldata.client, &db)?;
     let mut context = init_context(
