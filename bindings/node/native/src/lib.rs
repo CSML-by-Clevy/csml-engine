@@ -1,6 +1,6 @@
-use serde_json::{json, Value}; //, map::Map
+use csmlrustmanager::{data::CsmlData, start_conversation, user_close_all_conversations};
 use neon::{context::Context, prelude::*, register_module};
-use csmlrustmanager::{data::{CsmlData}, start_conversation, user_close_all_conversations};
+use serde_json::{json, Value}; //, map::Map
 
 fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsbot = cx.argument::<JsValue>(0)?;
@@ -151,7 +151,7 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 
     match user_close_all_conversations(neon_serde::from_value(&mut cx, json_client)?) {
         Ok(_) => Ok(cx.boolean(true)),
-        Err(err) => panic!(err)
+        Err(err) => panic!(err),
     }
 }
 

@@ -11,8 +11,8 @@ use db_interactions::{
 
 use csmlinterpreter::{
     data::{
-        csml_bot::CsmlBot, csml_flow::CsmlFlow, Client, ContextJson, Event, Hold, Memories,
-        Message, MSG, csml_result::CsmlResult, error_info::ErrorInfo
+        csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_result::CsmlResult, error_info::ErrorInfo,
+        Client, ContextJson, Event, Hold, Memories, Message, MSG,
     },
     interpret,
 };
@@ -37,14 +37,14 @@ use tools::*;
 //     }
 // }
 
-pub fn validate_bot(bot: CsmlBot) -> Result<bool, Vec<ErrorInfo> > {
+pub fn validate_bot(bot: CsmlBot) -> Result<bool, Vec<ErrorInfo>> {
     match csmlinterpreter::validate_bot(bot) {
-        CsmlResult{
+        CsmlResult {
             flows: _,
             warnings: _,
             errors: None,
         } => Ok(true),
-        CsmlResult{
+        CsmlResult {
             flows: _,
             warnings: _,
             errors: Some(e),
@@ -52,9 +52,7 @@ pub fn validate_bot(bot: CsmlBot) -> Result<bool, Vec<ErrorInfo> > {
     }
 }
 
-pub fn user_close_all_conversations(
-    client: Client,
-) -> Result<(), ManagerError> {
+pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> {
     let mongo_client = mongodb::Client::with_uri_str("mongodb://localhost:2717/")?;
     let db = mongo_client.database("csml"); // tmp name
     close_all_conversations(&client, &db)
@@ -113,8 +111,12 @@ fn get_conversation<'a>(
                     let flow = match get_flow_by_id(&conversation.flow_id, &bot.flows) {
                         Ok(flow) => flow,
                         Err(e) => {
-                            close_conversation(&bson::Bson::ObjectId(conversation.id), &client, &db)?;
-                            return Err(e)
+                            close_conversation(
+                                &bson::Bson::ObjectId(conversation.id),
+                                &client,
+                                &db,
+                            )?;
+                            return Err(e);
                         }
                     };
 
