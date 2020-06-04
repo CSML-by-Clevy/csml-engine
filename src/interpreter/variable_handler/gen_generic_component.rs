@@ -1,150 +1,156 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::position::Position;
+// use crate::data::position::Position;
 use crate::data::primitive::PrimitiveObject;
 use crate::data::{Interval, Literal};
 use crate::interpreter::json_to_literal;
 
 use nom::lib::std::collections::HashMap;
-use std::collections::HashSet;
+// use std::collections::HashSet;
 
-// [!] serde_json::Value store the object into alphabetic order, so we cannot rely on order of object
-// [!] parameters of the Component or not a hashmap but a vector, parsing fail if ex: title = "Title"
+trait ArithmeticOperation {
+    fn add(
+        lhs: &serde_json::Value,
+        rhs: &serde_json::Value,
+    ) -> Result<serde_json::Value, ErrorInfo>;
+}
 
-// [+] We may not have use case for _primary
-// [+] Do we need multiple type accept ?
+impl ArithmeticOperation for serde_json::Value {
+    fn add(
+        lhs: &serde_json::Value,
+        rhs: &serde_json::Value,
+    ) -> Result<serde_json::Value, ErrorInfo> {
+        dbg!(lhs);
+        dbg!(rhs);
+        println!();
 
-// [*] Default_value is ok but we must have an arguments that i required true !
-// [*] For now if squeleton is malformated, null is return
+        match (lhs, rhs) {
+            (serde_json::Value::Null, serde_json::Value::Null) => Ok(serde_json::Value::Null),
+            (serde_json::Value::Bool(lhs), serde_json::Value::Bool(rhs)) => {
+                Ok(serde_json::Value::Bool(lhs | rhs))
+            }
+            (serde_json::Value::Number(lhs), serde_json::Value::Number(rhs)) => {
+                unimplemented!();
+            }
+            (serde_json::Value::String(lhs), serde_json::Value::String(rhs)) => {
+                Ok(serde_json::Value::String(lhs.to_string() + rhs))
+            }
+            (serde_json::Value::Array(lhs), serde_json::Value::Array(rhs)) => {
+                Ok(serde_json::Value::Array([&lhs[..], &rhs[..]].concat()))
+            }
+            (serde_json::Value::Object(lhs), serde_json::Value::Object(rhs)) => {
+                let mut lhs = lhs.to_owned();
 
-// [!] Maybe reformart format_error to handle different type of errors
+                lhs.extend(rhs.to_owned());
+
+                Ok(serde_json::Value::Object(lhs))
+            }
+            (_, _) => {
+                println!("ERROR: Illegal operation");
+                unimplemented!();
+            }
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn create_generic_component(
-    hashmap: &HashMap<String, Literal>,
-    interval: Interval,
-    name: &str,
-) -> Literal {
-    let mut literal = PrimitiveObject::get_literal(hashmap, interval);
-
-    literal.set_content_type(name);
-
-    literal
+fn get_parameter() -> Option<serde_json::Value> {
+    None
 }
 
-fn get_value_from_header<'a>(
-    key: &'a str,
+fn is_type_valid() -> bool {
+    false
+}
+
+fn is_parameter_required(object: &serde_json::Map<String, serde_json::Value>) -> bool {
+    if let Some(serde_json::Value::Bool(result)) = object.get("required") {
+        if *result == true {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn create_default_object(
+    object: &serde_json::Map<String, serde_json::Value>,
+) -> Result<serde_json::Value, ErrorInfo> {
+    if let Some(serde_json::Value::String(result)) = object.get("type") {
+        return match result.as_str() {
+            "Null" => Ok(serde_json::Value::Null),
+            "Bool" => Ok(serde_json::Value::Bool(false)),
+            "Number" => Ok(serde_json::Value::Number(serde_json::Number::from(0))),
+            "String" => Ok(serde_json::Value::String(String::default())),
+            "Array" => Ok(serde_json::Value::Array(Vec::default())),
+            "Object" => Ok(serde_json::Value::Object(serde_json::Map::default())),
+            _ => {
+                println!("ERROR: type not handled");
+                unimplemented!();
+            }
+        };
+    }
+
+    println!("ERROR: type must exist !");
+    unimplemented!();
+}
+
+fn get_default_object<'a>(
+    object: &serde_json::Map<String, serde_json::Value>,
     value: &'a serde_json::Value,
     args: &Literal,
-    hashset: &mut std::collections::HashSet<&'a str>,
 ) -> Result<serde_json::Value, ErrorInfo> {
-    // Check if we already pass by that node, if yes we are in a circular recursion and we don't want to SO !
-    // If a default value apply all the rules, and create all component dependecies
-    // If required is equal to true, get the arguments from args
+    let mut result = create_default_object(object)?;
 
-    // Otherwirse return NULL
-    
-    if let Some(serde_json::Value::Object(object)) = value.get(key) {
-        if !hashset.insert(key) {
-            return Err(ErrorInfo::new(Position::new(Interval::new_as_u32(0, 0)), "Circular dependencies".to_string()));
-        }
-
-        if let Some(serde_json::Value::Object(default_value)) = object.get("default_value") {
-            for (key, val) in default_value.iter() {
-                if key == "$_get" {
-                    if let Some(key) = val.as_str() {
-                        let value = get_value_from_header(key, value, args, hashset)?;
-
-                        return match object.get("type") {
-                            Some(serde_json::Value::String(result)) if result == "Array" => Ok(serde_json::Value::Array(vec![value])),
-                            _ => Ok(value),
-                        }
-                    }
+    if let Some(default_value) = object.get("default_value") {
+        for function in default_value
+            .as_array()
+            .unwrap_or(&vec![serde_json::Value::default()])
+            .iter()
+        {
+            if let serde_json::Value::Object(function) = function {
+                if let Some(serde_json::Value::String(dependencie)) = function.get("$_get") {
+                    result =
+                        serde_json::Value::add(&result, &get_object(dependencie, value, args)?)?;
                 }
-            }
-        }
-
-        if let Some(serde_json::Value::Bool(required)) = object.get("required") {
-            if *required == true {
-                return Ok(serde_json::Value::String("parameters".to_string()));
+                if let Some(dependencie) = function.get("$_set") {
+                    result = serde_json::Value::add(&result, dependencie)?;
+                }
+            } else {
+                println!("ERROR: function must be inside object");
+                unimplemented!();
             }
         }
     }
 
-    Ok(serde_json::Value::Null)
+    Ok(result)
 }
-
-// {
-//     "Button": {
-//         "_primary": "title",
-//         "title": {
-//             "required": true,
-//             "type": "String"
-//         },
-//         "payload": {
-//             "required": false,
-//             "type": "String",
-//             "default_value": {
-//                 "$_get": "title"
-//             }
-//         },
-//         "accepts": {
-//             "type": "Array",
-//             "add_values": [
-//                 {
-//                     "$_get": "title"
-//                 },
-//                 {
-//                     "$_get": "payload"
-//                 },
-//                 {
-//                     "$_set": "poepoe"
-//                 },
-//                 "machin"
-//             ],
-//             "default_value": [
-//                 "tototot",
-//                 "tototot",
-//                 "tototot",
-//                 "tototot",
-//                 "tototot",
-//                 "tototot"
-//             ]
-//         }
-//     }
-// }
-
-// Use default value if no named parameters is equal to key and _primary is not equal to key
-// Use null if default value is not given and no parameters
 
 fn get_object<'a>(
     key: &'a str,
     value: &'a serde_json::Value,
     args: &Literal,
-    hashset: &mut std::collections::HashSet<&'a str>,
 ) -> Result<serde_json::Value, ErrorInfo> {
     if let Some(serde_json::Value::Object(object)) = value.get(key) {
-        if !hashset.insert(key) {
-            return Err(ErrorInfo::new(Position::new(Interval::new_as_u32(0, 0)), "Circular dependencies".to_string()));
+        // If a named parameter is given, or a parameter exist and self is _primary
+        if let Some(parameter) = get_parameter() {
+            if !is_type_valid() {
+                // error
+            }
+        }
+        // This will be the possible recursive call.
+        else {
+            if is_parameter_required(object) {
+                println!("ERROR: no parameters has been given");
+                unimplemented!();
+            }
+
+            return get_default_object(object, value, args);
         }
 
-
-        
-        if let Some(serde_json::Value::String(t)) = object.get("type") {
-            let mut object = serde_json::Value::Array(vec![]);
-
-            object.as_array_mut().unwrap().append(get_object(key, value, args, hashset)
-
-
-
-            return Ok(object);
-        }
-
-
+        unimplemented!()
     }
-
 
     Ok(serde_json::Value::Null)
 }
@@ -163,25 +169,18 @@ pub fn gen_generic_component(
 
     if let Some(object) = header.as_object() {
         for key in object.keys().skip_while(|key| *key == "_primary") {
-            println!("[+] key: {}", key);
-
-            let object = get_object(key, header, args, &mut HashSet::new())?;
-
-            dbg!(object);
-            println!();
-
-            // hashmap.insert(
-            //     key.to_owned(),
-            //     json_to_literal(
-            //         &get_value_from_header(key, header, args, &mut HashSet::new())?,
-            //         Interval::default(),
-            //     )?,
-            // );
+            hashmap.insert(
+                key.to_owned(),
+                json_to_literal(&get_object(key, header, args)?, *interval)?,
+            );
         }
     }
 
     println!();
-    unimplemented!();
 
-    Ok(create_generic_component(&hashmap, *interval, name))
+    let mut result = PrimitiveObject::get_literal(&hashmap, *interval);
+
+    result.set_content_type(name);
+
+    Ok(result)
 }

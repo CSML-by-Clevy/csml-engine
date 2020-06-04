@@ -29,39 +29,13 @@ fn main() {
                 "Button": {
                     "_primary": "title",
                     "title": {
-                        "required": true,
-                        "type": "String"
-                    },
-                    "payload": {
                         "required": false,
-                        "type": "String",
-                        "default_value": {
-                            "$_get": "title"
-                        }
-                    },
-                    "accepts": {
-                        "type": "Array",
-                        "add_values": [
-                            {
-                                "$_get": "title"
-                            },
-                            {
-                                "$_get": "payload"
-                            },
-                            {
-                                "$_set": "poepoe"
-                            },
-                            "machin"
-                        ],
+                        "type": "Object",
                         "default_value": [
-                            "tototot",
-                            "tototot",
-                            "tototot",
-                            "tototot",
-                            "tototot",
-                            "tototot"
+                            {"$_set": {"hello": "world"}},
+                            {"$_set": {"foo": "bar"}},
                         ]
-                    }
+                    },
                 }
             }
         ),
