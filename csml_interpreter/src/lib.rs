@@ -90,6 +90,25 @@ fn get_ast(
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Option<Vec<String>> {
+    let mut result = Vec::new();
+
+    Warnings::clear();
+    Linter::clear();
+
+    if let Some(flow) = bot.flows.iter().find(|flow| flow.name == flow_name) {
+        if let Ok(flow) = parse_flow(&flow.content) {
+            for InstructionType::NormalStep(step_name) in flow.flow_instructions.keys() {
+                result.push(step_name.to_owned());
+            }
+
+            return Some(result);
+        }
+    }
+
+    None
+}
+
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();
     let mut errors = Vec::new();
