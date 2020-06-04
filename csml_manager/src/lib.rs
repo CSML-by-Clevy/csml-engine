@@ -22,20 +22,12 @@ use serde_json::{map::Map, Value};
 use std::{env, sync::mpsc, thread, time::SystemTime};
 use tools::*;
 
-// pub fn step_exists(file: &str, step_name: &str) -> Result<bool, String> {
-//     let flow: Flow = match parse_flow(file) {
-//         Ok(flow) => flow,
-//         Err(e) => return Err(format!("Error in parsing Flow : {:?}", e)),
-//     };
-
-//     match flow
-//         .flow_instructions
-//         .get(&InstructionType::NormalStep(step_name.to_owned()))
-//     {
-//         Some(_) => Ok(true),
-//         None => Ok(false),
-//     }
-// }
+pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Vec<String> {
+    match csmlinterpreter::get_steps_from_flow(bot, flow_name) {
+        Some(vec) => vec,
+        None => vec!()
+    }
+}
 
 pub fn validate_bot(bot: CsmlBot) -> Result<bool, Vec<ErrorInfo>> {
     match csmlinterpreter::validate_bot(bot) {

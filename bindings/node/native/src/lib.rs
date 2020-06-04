@@ -2,6 +2,23 @@ use csmlrustmanager::{data::CsmlData, start_conversation, user_close_all_convers
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value}; //, map::Map
 
+fn get_flow_steps(mut cx: FunctionContext) -> JsResult<JsArray> {
+    let jsbot = cx.argument::<JsValue>(0)?;
+    let flow = cx.argument::<JsString>(1)?.value();
+    let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
+
+    let vec = csmlrustmanager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap(), flow);
+
+    let js_array = JsArray::new(&mut cx, vec.len() as u32);
+
+    for (i, obj) in vec.iter().enumerate() {
+        let js_string = cx.string(obj);
+        js_array.set(&mut cx, i as u32, js_string).unwrap();
+    }
+    
+    Ok(js_array)
+}
+
 fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsbot = cx.argument::<JsValue>(0)?;
     let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
@@ -142,10 +159,6 @@ fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
-fn get_step_names(mut _cx: FunctionContext) -> JsResult<JsObject> {
-    unimplemented!()
-}
-
 fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     let json_client = cx.argument::<JsValue>(0)?;
 
@@ -158,8 +171,8 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 register_module!(mut cx, {
     // cx.export_function("validFlow", is_valid)?;
     cx.export_function("validateBot", validate_bot)?;
+    cx.export_function("getFlowSteps", get_flow_steps)?;
     cx.export_function("run", run_bot)?;
-    cx.export_function("getStepNames", get_step_names)?;
     cx.export_function("closeAllConversations", close_conversations)?;
     Ok(())
 });
