@@ -12,7 +12,7 @@ use db_interactions::{
 use csmlinterpreter::{
     data::{
         csml_bot::CsmlBot, csml_flow::CsmlFlow, Client, ContextJson, Event, Hold, Memories,
-        Message, MSG,
+        Message, MSG, csml_result::CsmlResult, error_info::ErrorInfo
     },
     interpret,
 };
@@ -37,18 +37,27 @@ use tools::*;
 //     }
 // }
 
-// pub fn valid_flow(file: &str) -> Result<bool, ErrorInfo> {
-//     match parse_flow(file) {
-//         Ok(_flow) => Ok(true),
-//         Err(e) => Err(e),
-//     }
-// }
+pub fn validate_bot(bot: CsmlBot) -> Result<bool, Vec<ErrorInfo> > {
+    match csmlinterpreter::validate_bot(bot) {
+        CsmlResult{
+            flows: _,
+            warnings: _,
+            errors: None,
+        } => Ok(true),
+        CsmlResult{
+            flows: _,
+            warnings: _,
+            errors: Some(e),
+        } => Err(e),
+    }
+}
 
 pub fn user_close_all_conversations(
     client: Client,
-    db: &mongodb::Database,
 ) -> Result<(), ManagerError> {
-    close_all_conversations(&client, db)
+    let mongo_client = mongodb::Client::with_uri_str("mongodb://localhost:2717/")?;
+    let db = mongo_client.database("csml"); // tmp name
+    close_all_conversations(&client, &db)
 }
 
 // reset memory if flow hash is different or see if there are some save tmp memories
@@ -101,10 +110,16 @@ fn get_conversation<'a>(
                 }
                 //TODO: see if need to create a new conversation or create a last_flow
                 None => {
+                    let flow = match get_flow_by_id(&conversation.flow_id, &bot.flows) {
+                        Ok(flow) => flow,
+                        Err(e) => {
+                            close_conversation(&bson::Bson::ObjectId(conversation.id), &client, &db)?;
+                            return Err(e)
+                        }
+                    };
+
                     context.step = conversation.step_id.to_owned();
-                    context.flow = get_flow_by_id(&conversation.flow_id, &bot.flows)?
-                        .name
-                        .to_owned();
+                    context.flow = flow.name.to_owned();
                 }
             };
 

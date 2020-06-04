@@ -1,25 +1,32 @@
 use serde_json::{json, Value}; //, map::Map
 use neon::{context::Context, prelude::*, register_module};
-use csmlrustmanager::{data::CsmlData, start_conversation, valid_flow, user_close_all_conversations};
-// use csmlinterpreter::data::Client;
+use csmlrustmanager::{data::{CsmlData}, start_conversation, user_close_all_conversations};
 
-fn is_valid(mut cx: FunctionContext) -> JsResult<JsObject> {
-    let file = cx.argument::<JsString>(0)?.value();
+fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
+    let jsbot = cx.argument::<JsValue>(0)?;
+    let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
+
     let object = JsObject::new(&mut cx);
 
-    match valid_flow(&file) {
+    match csmlrustmanager::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
         Ok(_) => {
             let valid = cx.boolean(true);
-
             object.set(&mut cx, "valid", valid).unwrap();
             Ok(object)
         }
-        Err(e) => {
-            let valid = cx.boolean(false);
-            let line = cx.number(e.interval.line as f64);
-            let column = cx.number(e.interval.column as f64);
-            let message = cx.string(&e.message);
+        Err(vec) => {
+            let err = vec[0].clone();
 
+            let valid = cx.boolean(false);
+
+            let flow = cx.string(err.position.flow);
+            let step = cx.string(err.position.step);
+            let line = cx.number(err.position.interval.line as f64);
+            let column = cx.number(err.position.interval.column as f64);
+            let message = cx.string(&err.message);
+
+            object.set(&mut cx, "flow", flow).unwrap();
+            object.set(&mut cx, "step", step).unwrap();
             object.set(&mut cx, "valid", valid).unwrap();
             object.set(&mut cx, "line", line).unwrap();
             object.set(&mut cx, "column", column).unwrap();
@@ -88,43 +95,6 @@ fn is_valid(mut cx: FunctionContext) -> JsResult<JsObject> {
 //   }
 // ]
 
-// CsmlData {
-//     pub request_id: String,
-//     pub client: Client,
-//     pub callback_url: Option<String>,
-//     pub payload: CsmlMessagePayload,
-//     pub bot: CsmlBot,
-//     pub metadata: Value,
-//     pub sync: bool,
-// }
-
-// const event = {
-//   request_id: "tmp",
-//   client: { user_id: "alexis", bot_id: "42", channel_id: "1" },
-//   callback_url: null,
-//   payload: {
-//     content_type: 'text',
-//     content: { text: "Song of the day" },
-//   },
-//   metadata: {},
-//   sync: false,
-// }
-
-// const bot = {
-//   id: "botid",
-//   name: "plop",
-//   fn_endpoint: "xxxx",
-//   flows: [
-//     {
-//       id: "flowid",
-//       name: "flow",
-//       content: "start:\n say \"plop\"",
-//       triggers: ["/plop"],
-//     }
-//   ],
-//   default_flow: "flowid",
-// },
-
 fn format_data(json_event: Value, jsdata: Value) -> Result<CsmlData, serde_json::error::Error> {
     Ok(CsmlData {
         request_id: json_event["request_id"].as_str().unwrap().to_owned(),
@@ -168,7 +138,7 @@ fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
     };
     match start_conversation(json_event, data) {
         Err(err) => panic!("{:?}", err),
-        Ok((_, obj)) => Ok(neon_serde::to_value(&mut cx, &obj)?),
+        Ok(obj) => Ok(neon_serde::to_value(&mut cx, &obj)?),
     }
 }
 
@@ -186,7 +156,8 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 }
 
 register_module!(mut cx, {
-    cx.export_function("validFlow", is_valid)?;
+    // cx.export_function("validFlow", is_valid)?;
+    cx.export_function("validateBot", validate_bot)?;
     cx.export_function("run", run_bot)?;
     cx.export_function("getStepNames", get_step_names)?;
     cx.export_function("closeAllConversations", close_conversations)?;
