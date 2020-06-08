@@ -8,7 +8,7 @@ pub struct Conversation {
     pub client: Client,
     pub flow_id: String,
     pub step_id: String,
-    pub metadata: bson::Document, // encrypted
+    pub metadata: serde_json::Value, // encrypted
     pub status: String,           //(OPEN, CLOSED,  //Faild
     pub last_interaction_at: bson::UtcDateTime,
     pub updated_at: bson::UtcDateTime,
@@ -90,7 +90,7 @@ pub fn close_all_conversations(
 pub fn get_latest_open(
     client: &Client,
     db: &mongodb::Database,
-) -> Result<Option<bson::Document>, ManagerError> {
+) -> Result<Option<Conversation>, ManagerError> {
     let collection = db.collection("conversation");
 
     let filter = doc! {
@@ -100,9 +100,19 @@ pub fn get_latest_open(
     let find_options = mongodb::options::FindOneOptions::builder()
         .sort(doc! { "$natural": -1 })
         .build();
-    let conversation = collection.find_one(filter, find_options)?;
+    let result = collection.find_one(filter, find_options)?;
 
-    Ok(conversation)
+    match result {
+        Some(conversation) => {
+            Ok(Some(
+                bson::from_bson(
+                    bson::Bson::Document(conversation)
+                )?
+            ))
+        }
+        None => Ok(None)
+    }
+    
 }
 
 pub fn update_conversation(

@@ -1,4 +1,6 @@
 pub mod data;
+pub use csmlinterpreter::data::Client;
+
 mod db_interactions;
 mod encrypt;
 mod send;
@@ -12,7 +14,7 @@ use db_interactions::{
 use csmlinterpreter::{
     data::{
         csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_result::CsmlResult, error_info::ErrorInfo,
-        Client, ContextJson, Event, Hold, Memories, Message, MSG,
+        ContextJson, Event, Hold, Memories, Message, MSG, //Client
     },
     interpret,
 };
@@ -21,6 +23,12 @@ use md5::{Digest, Md5};
 use serde_json::{map::Map, Value};
 use std::{env, sync::mpsc, thread, time::SystemTime};
 use tools::*;
+
+pub fn get_open_conversation(client: &Client) -> Result<Option<Conversation>, ManagerError> {
+    let db = init_db()?;
+
+    get_latest_open(client, &db)
+}
 
 pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Vec<String> {
     match csmlinterpreter::get_steps_from_flow(bot, flow_name) {
@@ -80,6 +88,27 @@ fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), Ma
     Ok(())
 }
 
+fn create_new_conversation<'a>(
+    context: &mut ContextJson,
+    bot: &'a CsmlBot,
+    flow_found: Option<&'a CsmlFlow>, 
+    client: &Client,
+    metadata: Value,
+    db: &mongodb::Database,
+) ->  Result<bson::Bson, ManagerError> {
+    let flow = match flow_found {
+        Some(flow) => flow,
+        None => get_default_flow(bot)?,
+    };
+    context.step = "start".to_owned();
+    context.flow = flow.name.to_owned();
+
+    let conversation_id =
+        create_conversation(&flow.id, &context.step, client, metadata.clone(), db)?;
+
+    Ok(conversation_id)
+}
+
 fn get_conversation<'a>(
     context: &mut ContextJson,
     bot: &'a CsmlBot,
@@ -89,9 +118,7 @@ fn get_conversation<'a>(
     db: &mongodb::Database,
 ) -> Result<bson::Bson, ManagerError> {
     match get_latest_open(client, db)? {
-        Some(doc) => {
-            let conversation: Conversation = bson::from_bson(bson::Bson::Document(doc))?;
-
+        Some(conversation) => {
             //TODO: check for recursion
             match flow_found {
                 Some(flow) => {
@@ -102,14 +129,22 @@ fn get_conversation<'a>(
                 None => {
                     let flow = match get_flow_by_id(&conversation.flow_id, &bot.flows) {
                         Ok(flow) => flow,
-                        Err(e) => {
+                        Err(..) => {
                             // if flow id exist in db but not in bot close conversation
                             close_conversation(
                                 &bson::Bson::ObjectId(conversation.id),
                                 &client,
                                 &db,
                             )?;
-                            return Err(e);
+                            // and start new conversation at default flow
+                            return create_new_conversation(
+                                context,
+                                bot,
+                                flow_found,
+                                client,
+                                metadata,
+                                db,
+                            )
                         }
                     };
 
@@ -120,19 +155,14 @@ fn get_conversation<'a>(
 
             Ok(bson::Bson::ObjectId(conversation.id))
         }
-        None => {
-            let flow = match flow_found {
-                Some(flow) => flow,
-                None => get_default_flow(bot)?,
-            };
-            context.step = "start".to_owned();
-            context.flow = flow.name.to_owned();
-
-            let conversation_id =
-                create_conversation(&flow.id, &context.step, client, metadata.clone(), db)?;
-
-            Ok(conversation_id)
-        }
+        None => create_new_conversation(
+            context,
+            bot,
+            flow_found,
+            client,
+            metadata,
+            db,
+        )
     }
 }
 

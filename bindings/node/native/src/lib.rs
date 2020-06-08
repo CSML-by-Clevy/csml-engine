@@ -1,11 +1,53 @@
-use csmlrustmanager::{data::CsmlData, start_conversation, user_close_all_conversations};
+use csmlrustmanager::{data::CsmlData, start_conversation, user_close_all_conversations, Client};
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value}; //, map::Map
 
+
+fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsObject> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let jsonclient: Value = neon_serde::from_value(&mut cx, jsclient)?;
+    let client: Client = serde_json::from_value(jsonclient).unwrap();
+    let object = JsObject::new(&mut cx);
+
+    match csmlrustmanager::get_open_conversation(&client){
+        Ok(Some(conversation)) => {
+
+            let id = cx.string(conversation.id.to_string());
+            let client = neon_serde::to_value(&mut cx, &conversation.client)?;
+            let flow_id = cx.string(conversation.flow_id);
+            let step_id = cx.string(conversation.step_id);
+            let metadata: Handle<JsValue> = neon_serde::to_value(&mut cx, &conversation.metadata)?;
+            let status = cx.string(conversation.status);
+            let last_interaction_at = cx.string(conversation.last_interaction_at.to_string());
+            let updated_at = cx.string(conversation.updated_at.to_string());
+            let created_at= cx.string(conversation.created_at.to_string());
+
+            object.set(&mut cx, "id", id).unwrap();
+            object.set(&mut cx, "client", client).unwrap();
+            object.set(&mut cx, "flow_id", flow_id).unwrap();
+            object.set(&mut cx, "step_id", step_id).unwrap();
+            object.set(&mut cx, "metadata", metadata).unwrap();
+            object.set(&mut cx, "status", status).unwrap();
+            object.set(&mut cx, "last_interaction_at", last_interaction_at).unwrap();
+            object.set(&mut cx, "updated_at", updated_at).unwrap();
+            object.set(&mut cx, "created_at", created_at).unwrap();
+
+            Ok(object)
+        },
+        Ok(None) => {
+            let message =  cx.string("no conversation open for this client".to_string());
+
+            object.set(&mut cx, "message", message).unwrap();
+            Ok(object)
+        },
+        Err(err ) => panic!(err)
+    }
+}
+
 fn get_flow_steps(mut cx: FunctionContext) -> JsResult<JsArray> {
     let jsbot = cx.argument::<JsValue>(0)?;
-    let flow = cx.argument::<JsString>(1)?.value();
     let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
+    let flow = cx.argument::<JsString>(1)?.value();
 
     let vec = csmlrustmanager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap(), flow);
 
@@ -170,6 +212,7 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 
 register_module!(mut cx, {
     // cx.export_function("validFlow", is_valid)?;
+    cx.export_function("getOpenConversation", get_open_conversation)?;
     cx.export_function("validateBot", validate_bot)?;
     cx.export_function("getFlowSteps", get_flow_steps)?;
     cx.export_function("run", run_bot)?;
