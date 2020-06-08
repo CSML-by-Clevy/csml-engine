@@ -24,7 +24,7 @@ impl ArithmeticOperation for serde_json::Value {
             (serde_json::Value::Bool(lhs), serde_json::Value::Bool(rhs)) => {
                 Ok(serde_json::Value::Bool(lhs | rhs))
             }
-            (serde_json::Value::Number(lhs), serde_json::Value::Number(rhs)) => {
+            (serde_json::Value::Number(lhs), serde_json::Value::Number(rhs)) => { // TODO
                 unimplemented!();
             }
             (serde_json::Value::String(lhs), serde_json::Value::String(rhs)) => {
@@ -58,10 +58,6 @@ impl ArithmeticOperation for serde_json::Value {
 
 fn get_parameter() -> Option<serde_json::Value> {
     None
-}
-
-fn is_type_valid() -> bool {
-    false
 }
 
 fn is_parameter_required(object: &serde_json::Map<String, serde_json::Value>) -> bool {
@@ -147,12 +143,11 @@ fn get_object(
     }
 
     if let Some(serde_json::Value::Object(object)) = value.get(key) {
-        // [TODO]
-        // If a named parameter is given, or a parameter exist and self is _primary
-        if let Some(parameter) = get_parameter() {
-            if !is_type_valid() {
-                // error
-            }
+        if let Some(parameter) = get_parameter() { // TODO
+            return serde_json::Value::add(
+                &parameter,
+                &get_default_object("add_value", object, value, args, hashset)?,
+            );
         } else {
             if is_parameter_required(object) {
                 println!("ERROR: no parameters has been given");
@@ -166,7 +161,8 @@ fn get_object(
         }
     }
 
-    Ok(serde_json::Value::Null)
+    println!("ERROR: key doens't exist");
+    unimplemented!();
 }
 
 fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {

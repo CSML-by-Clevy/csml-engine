@@ -287,6 +287,7 @@ pub fn get_var(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let interval = &var.interval;
+
     match var.ident {
         name if name == COMPONENT => {
             gen_literal_from_component(*interval, path, data, root, sender)
