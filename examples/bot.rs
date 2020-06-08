@@ -26,16 +26,44 @@ fn main() {
         vec![default_flow],
         serde_json::json!(
             {
+                // "Button": {
+                //     "_primary": "title",
+                //     "title": {
+                //         "required": false,
+                //         "type": "Object",
+                //         "default_value": [
+                //             {"$_set": {"hello": "world"}},
+                //             {"$_set": {"foo": "bar"}},
+                //             {"$_get": "foo"},
+                //         ]
+                //     },
+                //     "foo": {
+                //         "required": false,
+                //         "type": "Object",
+                //         "default_value": [
+                //             {"$_set": {"20": "20"}},
+                //         ],
+                //         "add_value": [
+                //             {"$_set": {"10": "10"}},
+                //         ]
+                //     }
+                // }
                 "Button": {
                     "_primary": "title",
                     "title": {
                         "required": false,
-                        "type": "Object",
+                        "type": "String",
                         "default_value": [
-                            {"$_set": {"hello": "world"}},
-                            {"$_set": {"foo": "bar"}},
+                            {"$_get": "foo"},
                         ]
                     },
+                    "foo": {
+                        "required": false,
+                        "type": "String",
+                        "default_value": [
+                            {"$_set": "title"},
+                        ],
+                    }
                 }
             }
         ),

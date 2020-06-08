@@ -27,7 +27,7 @@ pub fn format_message(event: Event, context: ContextJson, filepath: &str) -> Mes
     let content = read_file(filepath.to_string()).unwrap();
 
     let flow = CsmlFlow::new("id", "flow", &content, Vec::default());
-    let bot = CsmlBot::new("id", "bot", None, vec![flow], "flow");
+    let bot = CsmlBot::new("id", "bot", None, vec![flow], serde_json::json!({}), "flow");
 
     interpret(bot, context, event, None)
 }
