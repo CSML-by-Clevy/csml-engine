@@ -1,7 +1,7 @@
 // BUG: do obj = {}.insert("foo", "bar")
 
 start:
-  do obj = Component.Button()
+  say Component.Button()
 
   goto end
   

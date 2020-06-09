@@ -56,6 +56,20 @@ impl ArithmeticOperation for serde_json::Value {
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> {
+    for (index, object) in array.iter().enumerate() {
+        if let Some(object) = object.as_object() {
+            for value in object.keys() {
+                if key == value {
+                    return Some(index);
+                }
+            }
+        }
+    }
+
+    None
+}
+
 fn get_parameter() -> Option<serde_json::Value> {
     None
 }
@@ -95,7 +109,7 @@ fn create_default_object(
 fn get_default_object(
     key: &str,
     object: &serde_json::Map<String, serde_json::Value>,
-    value: &serde_json::Value,
+    array: &Vec<serde_json::Value>,
     args: &Literal,
     hashset: &mut HashSet<String>,
 ) -> Result<serde_json::Value, ErrorInfo> {
@@ -111,7 +125,7 @@ fn get_default_object(
                 if let Some(serde_json::Value::String(dependencie)) = function.get("$_get") {
                     result = serde_json::Value::add(
                         &result,
-                        &get_object(dependencie, value, args, hashset)?,
+                        &get_object(dependencie, array, args, hashset)?,
                     )?;
                 }
                 if let Some(dependencie) = function.get("$_set") {
@@ -133,35 +147,32 @@ fn get_default_object(
 
 fn get_object(
     key: &str,
-    value: &serde_json::Value,
+    array: &Vec<serde_json::Value>,
     args: &Literal,
     hashset: &mut HashSet<String>,
 ) -> Result<serde_json::Value, ErrorInfo> {
-    if !hashset.insert(key.to_string()) {
-        println!("ERROR: circular dependecies");
-        unimplemented!();
-    }
+    if let Some(index) =  get_index_of_key(key, array) {
+        if let Some(serde_json::Value::Object(object)) = array[index].get(key) {
+            if let Some(parameter) = get_parameter() { // TODO
+                return serde_json::Value::add(
+                    &parameter,
+                    &get_default_object("add_value", object, array, args, hashset)?,
+                );
+            } else {
+                if is_parameter_required(object) {
+                    println!("ERROR: no parameters has been given");
+                    unimplemented!();
+                }
 
-    if let Some(serde_json::Value::Object(object)) = value.get(key) {
-        if let Some(parameter) = get_parameter() { // TODO
-            return serde_json::Value::add(
-                &parameter,
-                &get_default_object("add_value", object, value, args, hashset)?,
-            );
-        } else {
-            if is_parameter_required(object) {
-                println!("ERROR: no parameters has been given");
-                unimplemented!();
+                return serde_json::Value::add(
+                    &get_default_object("default_value", object, array, args, hashset)?,
+                    &get_default_object("add_value", object, array, args, hashset)?,
+                );
             }
-
-            return serde_json::Value::add(
-                &get_default_object("default_value", object, value, args, hashset)?,
-                &get_default_object("add_value", object, value, args, hashset)?,
-            );
         }
     }
 
-    println!("ERROR: key doens't exist");
+    println!("ERROR: key not found");
     unimplemented!();
 }
 
@@ -186,15 +197,22 @@ pub fn gen_generic_component(
     let mut hashmap: HashMap<String, Literal> = HashMap::new();
 
     if let Some(object) = header.as_object() {
-        for key in object.keys().skip_while(|key| *key == "_primary") {
-            hashmap.insert(
-                key.to_owned(),
-                json_to_literal(
-                    &get_object(key, header, args, &mut HashSet::new())?,
-                    *interval,
-                )?,
-            );
+        if let Some(serde_json::Value::Array(array)) = object.get("params") {
+            for object in array.iter() {
+                if let Some(object) = object.as_object() {
+                    for key in object.keys() {
+                        hashmap.insert(
+                            key.to_owned(),
+                            json_to_literal(
+                                &get_object(key, array, args, &mut HashSet::new())?,
+                                *interval,
+                            )?,
+                        );
+                    }
+                }
+            }
         }
+
     }
 
     println!();
