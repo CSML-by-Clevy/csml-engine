@@ -1,4 +1,7 @@
-use crate::{data::DEBUG, ConversationInfo};
+use crate::{
+    data::{DEBUG, DISABLE_SSL_VERIFY},
+    ConversationInfo,
+};
 use curl::{easy::Easy, Error};
 use std::env;
 use std::io::Read;
@@ -6,6 +9,14 @@ use std::time::SystemTime;
 
 fn format_and_transfer(curl: &mut Easy, mut msg: &[u8], result: &mut Vec<u8>) -> Result<(), Error> {
     let now = SystemTime::now();
+
+    match env::var(DISABLE_SSL_VERIFY) {
+        Ok(var) if var == "true" => {
+            curl.ssl_verify_host(false)?;
+            curl.ssl_verify_peer(false)?;
+        }
+        _ => (),
+    };
 
     curl.post_field_size(msg.len() as u64)?;
     let mut transfer = curl.transfer();

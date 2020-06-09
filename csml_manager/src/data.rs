@@ -5,6 +5,7 @@ use mongodb::Database;
 use serde_json::Value;
 
 pub const DEBUG: &str = "DEBUG";
+pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 
 pub struct CsmlData {
     pub request_id: String,

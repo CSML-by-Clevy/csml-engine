@@ -2,47 +2,13 @@ use crate::{
     data::{ConversationInfo, ManagerError, DEBUG},
     db_interactions::state::delete_state_key,
     send::api,
-    ContextJson, CsmlBot, CsmlFlow,
+    CsmlBot, CsmlFlow,
 };
+
 use chrono::{prelude::Utc, SecondsFormat};
-use csmlinterpreter::data::{ApiInfo, Client, Event, Memories, Message};
-use curl::{
-    easy::{Easy, List},
-    Error as CurlError,
-};
+use csmlinterpreter::data::{Client, Event, Memories, Message};
 use serde_json::{json, map::Map, Value};
 use std::env; //ContextJson
-
-pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) -> ContextJson {
-    let api_info = match fn_endpoint {
-        Some(value) => Some(ApiInfo {
-            client,
-            fn_endpoint: value.to_owned(),
-        }),
-        None => None,
-    };
-
-    ContextJson {
-        current: serde_json::json!({}),
-        metadata: serde_json::json!({}),
-        api_info,
-        hold: None,
-        step: "start".to_owned(),
-        flow,
-    }
-}
-
-pub fn init_curl(callback_url: &str) -> Result<Easy, CurlError> {
-    let mut easy = Easy::new();
-    let mut list = List::new();
-    easy.url(callback_url)?;
-    easy.post(true)?;
-
-    list.append("Accept: application/json")?;
-    list.append("Content-Type: application/json")?;
-    easy.http_headers(list)?;
-    Ok(easy)
-}
 
 pub fn update_memories_in_data(data: &mut ConversationInfo, mem: &[Memories]) {
     for elem in mem.iter() {
