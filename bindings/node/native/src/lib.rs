@@ -2,16 +2,14 @@ use csmlrustmanager::{data::CsmlData, start_conversation, user_close_all_convers
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value}; //, map::Map
 
-
 fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsclient = cx.argument::<JsValue>(0)?;
     let jsonclient: Value = neon_serde::from_value(&mut cx, jsclient)?;
     let client: Client = serde_json::from_value(jsonclient).unwrap();
     let object = JsObject::new(&mut cx);
 
-    match csmlrustmanager::get_open_conversation(&client){
+    match csmlrustmanager::get_open_conversation(&client) {
         Ok(Some(conversation)) => {
-
             let id = cx.string(conversation.id.to_string());
             let client = neon_serde::to_value(&mut cx, &conversation.client)?;
             let flow_id = cx.string(conversation.flow_id);
@@ -20,7 +18,7 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsObject> {
             let status = cx.string(conversation.status);
             let last_interaction_at = cx.string(conversation.last_interaction_at.to_string());
             let updated_at = cx.string(conversation.updated_at.to_string());
-            let created_at= cx.string(conversation.created_at.to_string());
+            let created_at = cx.string(conversation.created_at.to_string());
 
             object.set(&mut cx, "id", id).unwrap();
             object.set(&mut cx, "client", client).unwrap();
@@ -28,19 +26,21 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsObject> {
             object.set(&mut cx, "step_id", step_id).unwrap();
             object.set(&mut cx, "metadata", metadata).unwrap();
             object.set(&mut cx, "status", status).unwrap();
-            object.set(&mut cx, "last_interaction_at", last_interaction_at).unwrap();
+            object
+                .set(&mut cx, "last_interaction_at", last_interaction_at)
+                .unwrap();
             object.set(&mut cx, "updated_at", updated_at).unwrap();
             object.set(&mut cx, "created_at", created_at).unwrap();
 
             Ok(object)
-        },
+        }
         Ok(None) => {
-            let message =  cx.string("no conversation open for this client".to_string());
+            let message = cx.string("no conversation open for this client".to_string());
 
             object.set(&mut cx, "message", message).unwrap();
             Ok(object)
-        },
-        Err(err ) => panic!(err)
+        }
+        Err(err) => panic!(err),
     }
 }
 
@@ -57,7 +57,7 @@ fn get_flow_steps(mut cx: FunctionContext) -> JsResult<JsArray> {
         let js_string = cx.string(obj);
         js_array.set(&mut cx, i as u32, js_string).unwrap();
     }
-    
+
     Ok(js_array)
 }
 

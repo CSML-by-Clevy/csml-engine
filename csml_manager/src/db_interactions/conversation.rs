@@ -9,7 +9,7 @@ pub struct Conversation {
     pub flow_id: String,
     pub step_id: String,
     pub metadata: serde_json::Value, // encrypted
-    pub status: String,           //(OPEN, CLOSED,  //Faild
+    pub status: String,              //(OPEN, CLOSED,  //Faild
     pub last_interaction_at: bson::UtcDateTime,
     pub updated_at: bson::UtcDateTime,
     pub created_at: bson::UtcDateTime,
@@ -103,16 +103,9 @@ pub fn get_latest_open(
     let result = collection.find_one(filter, find_options)?;
 
     match result {
-        Some(conversation) => {
-            Ok(Some(
-                bson::from_bson(
-                    bson::Bson::Document(conversation)
-                )?
-            ))
-        }
-        None => Ok(None)
+        Some(conversation) => Ok(Some(bson::from_bson(bson::Bson::Document(conversation))?)),
+        None => Ok(None),
     }
-    
 }
 
 pub fn update_conversation(

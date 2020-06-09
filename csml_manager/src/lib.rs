@@ -13,8 +13,16 @@ use db_interactions::{
 
 use csmlinterpreter::{
     data::{
-        csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_result::CsmlResult, error_info::ErrorInfo,
-        ContextJson, Event, Hold, Memories, Message, MSG, //Client
+        csml_bot::CsmlBot,
+        csml_flow::CsmlFlow,
+        csml_result::CsmlResult,
+        error_info::ErrorInfo,
+        ContextJson,
+        Event,
+        Hold,
+        Memories,
+        Message,
+        MSG, //Client
     },
     interpret,
 };
@@ -33,7 +41,7 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<Conversation>, Ma
 pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Vec<String> {
     match csmlinterpreter::get_steps_from_flow(bot, flow_name) {
         Some(vec) => vec,
-        None => vec!()
+        None => vec![],
     }
 }
 
@@ -91,11 +99,11 @@ fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), Ma
 fn create_new_conversation<'a>(
     context: &mut ContextJson,
     bot: &'a CsmlBot,
-    flow_found: Option<&'a CsmlFlow>, 
+    flow_found: Option<&'a CsmlFlow>,
     client: &Client,
     metadata: Value,
     db: &mongodb::Database,
-) ->  Result<bson::Bson, ManagerError> {
+) -> Result<bson::Bson, ManagerError> {
     let flow = match flow_found {
         Some(flow) => flow,
         None => get_default_flow(bot)?,
@@ -138,13 +146,8 @@ fn get_conversation<'a>(
                             )?;
                             // and start new conversation at default flow
                             return create_new_conversation(
-                                context,
-                                bot,
-                                flow_found,
-                                client,
-                                metadata,
-                                db,
-                            )
+                                context, bot, flow_found, client, metadata, db,
+                            );
                         }
                     };
 
@@ -155,14 +158,7 @@ fn get_conversation<'a>(
 
             Ok(bson::Bson::ObjectId(conversation.id))
         }
-        None => create_new_conversation(
-            context,
-            bot,
-            flow_found,
-            client,
-            metadata,
-            db,
-        )
+        None => create_new_conversation(context, bot, flow_found, client, metadata, db),
     }
 }
 
