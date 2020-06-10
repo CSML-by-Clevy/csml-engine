@@ -27,28 +27,35 @@ fn main() {
         serde_json::json!(
             {
                 "Button": {
-                    "_primary": "title",
                     "params": [
                         {
-                            "title": {
-                                "required": false,
+                            "foo": {
                                 "type": "Object",
                                 "default_value": [
-                                    {"$_set": {"hello": "world"}},
-                                    {"$_set": {"foo": "bar"}},
-                                    {"$_get": "foo"},
+                                    {"$_get": "baz"}
+                                ],
+                                "add_value": [
                                 ]
                             }
                         },
                         {
-                            "foo": {
-                                "required": false,
+                            "bar": {
+                                "required": true,
                                 "type": "Object",
                                 "default_value": [
-                                    {"$_set": {"20": "20"}},
                                 ],
                                 "add_value": [
-                                    {"$_set": {"10": "10"}},
+                                ]
+                            }
+                        },
+                        {
+                            "baz": {
+                                "required": true,
+                                "type": "Object",
+                                "default_value": [
+                                ],
+                                "add_value": [
+                                    {"$_set": {"Hello": "World"}}
                                 ]
                             }
                         }

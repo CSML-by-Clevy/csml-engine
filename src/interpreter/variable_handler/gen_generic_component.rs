@@ -1,8 +1,9 @@
 use crate::data::error_info::ErrorInfo;
-// use crate::data::position::Position;
+use crate::data::position::Position;
 use crate::data::primitive::PrimitiveObject;
 use crate::data::{Interval, Literal};
 use crate::interpreter::json_to_literal;
+use crate::data::primitive::PrimitiveArray;
 
 use nom::lib::std::collections::HashMap;
 use std::collections::HashSet;
@@ -70,8 +71,43 @@ fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> 
     None
 }
 
-fn get_parameter() -> Option<serde_json::Value> {
-    None
+fn get_index_of_parameter(key: &str, array: &Vec<serde_json::Value>) -> Result<usize, ErrorInfo> {
+    let mut result = 0;
+
+    for object in array.iter() {
+        if let Some(object) = object.as_object() {
+            for value in object.keys() {
+                if let Some(serde_json::Value::Object(object)) = object.get(value){
+                    if is_parameter_required(object) {
+                        if key == value {
+                            return Ok(result);
+                        }
+                        result += 1;
+                    }
+
+                }
+            }
+        }
+    }
+
+    unimplemented!();
+}
+
+
+fn get_parameter(args: &Literal, index: usize) -> Result<serde_json::Value, ErrorInfo> {
+    let array = Literal::get_value::<Vec<Literal>>(
+        &args.primitive,
+        Interval::new_as_u32(0, 0),
+        "".to_owned(),
+    )?;
+
+    match array.get(index) {
+        Some(result) => Ok(result.primitive.to_json()),
+        None => {
+            println!("ERROR: array.get at index");
+            unimplemented!();
+        }
+    }
 }
 
 fn is_parameter_required(object: &serde_json::Map<String, serde_json::Value>) -> bool {
@@ -115,12 +151,8 @@ fn get_default_object(
 ) -> Result<serde_json::Value, ErrorInfo> {
     let mut result = create_default_object(object)?;
 
-    if let Some(default_value) = object.get(key) {
-        for function in default_value
-            .as_array()
-            .unwrap_or(&vec![serde_json::Value::default()])
-            .iter()
-        {
+    if let Some(serde_json::Value::Array(default_value)) = object.get(key) {
+        for function in default_value.iter() {
             if let serde_json::Value::Object(function) = function {
                 if let Some(serde_json::Value::String(dependencie)) = function.get("$_get") {
                     result = serde_json::Value::add(
@@ -153,17 +185,13 @@ fn get_object(
 ) -> Result<serde_json::Value, ErrorInfo> {
     if let Some(index) =  get_index_of_key(key, array) {
         if let Some(serde_json::Value::Object(object)) = array[index].get(key) {
-            if let Some(parameter) = get_parameter() { // TODO
+            if is_parameter_required(object) {
                 return serde_json::Value::add(
-                    &parameter,
+                    &get_parameter(args, get_index_of_parameter(key, array)?)?,
                     &get_default_object("add_value", object, array, args, hashset)?,
                 );
-            } else {
-                if is_parameter_required(object) {
-                    println!("ERROR: no parameters has been given");
-                    unimplemented!();
-                }
-
+            }
+            else {
                 return serde_json::Value::add(
                     &get_default_object("default_value", object, array, args, hashset)?,
                     &get_default_object("add_value", object, array, args, hashset)?,
@@ -187,6 +215,9 @@ fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
+
+// THIS MODULE CAN BE HEAVILY OPTIMISED, WITH MEMOIZATION
+// A LOT OF COMPUTATION IS THE SAME, WE COULD KEEP THAT IN MEMORY
 
 pub fn gen_generic_component(
     name: &str,
