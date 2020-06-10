@@ -32,7 +32,7 @@ fn main() {
                             "foo": {
                                 "type": "Object",
                                 "default_value": [
-                                    {"$_get": "baz"}
+                                    {"$_get": "bar"}
                                 ],
                                 "add_value": [
                                 ]
@@ -40,22 +40,12 @@ fn main() {
                         },
                         {
                             "bar": {
-                                "required": true,
                                 "type": "Object",
                                 "default_value": [
-                                ],
-                                "add_value": [
-                                ]
-                            }
-                        },
-                        {
-                            "baz": {
-                                "required": true,
-                                "type": "Object",
-                                "default_value": [
-                                ],
-                                "add_value": [
                                     {"$_set": {"Hello": "World"}}
+                                    
+                                ],
+                                "add_value": [
                                 ]
                             }
                         }
