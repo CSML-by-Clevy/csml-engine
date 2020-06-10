@@ -1,25 +1,9 @@
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, ContextJson, ConversationInfo, ManagerError, Memories,
+    db_interactions::DbMemories,
 };
 use bson::{doc, Bson};
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct DbMemories {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
-    pub id: bson::oid::ObjectId,
-    pub client: Client,
-    pub interaction_id: bson::oid::ObjectId,
-    pub conversation_id: bson::oid::ObjectId,
-    pub flow_id: String,
-    pub step_id: String,
-    pub memory_order: i32,
-    pub interaction_order: i32,
-    pub key: String,
-    pub value: String, // encrypted
-    pub expires_at: Option<bson::UtcDateTime>,
-    pub created_at: bson::UtcDateTime,
-}
 
 pub fn format_memories(
     data: &mut ConversationInfo,
@@ -56,14 +40,14 @@ pub fn format_memories(
 }
 
 pub fn add_memories(
-    data: &mut ConversationInfo,
     memories: Vec<bson::Document>,
+    db: &mongodb::Database,
 ) -> Result<(), ManagerError> {
     if memories.len() == 0 {
         return Ok(());
     }
 
-    let collection = data.db.collection("memory");
+    let collection = db.collection("memory");
     collection.insert_many(memories, None)?;
 
     Ok(())
@@ -71,7 +55,6 @@ pub fn add_memories(
 
 pub fn get_memories(
     client: &Client,
-    // conversation_id: &bson::Bson,
     context: &mut ContextJson,
     metadata: &serde_json::Value,
     db: &mongodb::Database,

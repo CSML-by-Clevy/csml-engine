@@ -1,21 +1,10 @@
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
     ConversationInfo, ManagerError,
+    db_interactions::State,
 };
 use bson::{doc, Bson, Document};
 use csmlinterpreter::data::Client;
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct State {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
-    pub id: bson::oid::ObjectId,
-    pub client: Client,
-    #[serde(rename = "type")]
-    pub _type: String,
-    pub value: String, // encrypted
-    pub expires_at: Option<bson::UtcDateTime>,
-    pub created_at: bson::UtcDateTime,
-}
 
 pub fn format_state_body(
     data: &mut ConversationInfo,
@@ -113,8 +102,8 @@ pub fn get_state_key(
     }
 }
 
-pub fn set_state_items(data: &ConversationInfo, docs: Vec<Document>) -> Result<(), ManagerError> {
-    let state = data.db.collection("state");
+pub fn set_state_items(docs: Vec<Document>, db: &mongodb::Database,) -> Result<(), ManagerError> {
+    let state = db.collection("state");
 
     state.insert_many(docs, None)?;
 

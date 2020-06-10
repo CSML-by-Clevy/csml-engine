@@ -136,13 +136,13 @@ pub fn interpret_step(
         }
     }
 
-    let mem = format_memories(data, &memories)?;
-    let format_msg = format_messages(data, &data.messages, interaction_order, "SEND")?;
+    // let mem = format_memories(data, &memories)?;
+    // let format_msg = format_messages(data, &data.messages, interaction_order, "SEND")?;
 
     let now = SystemTime::now();
     // save in db
-    add_messages_bulk(data, format_msg)?;
-    add_memories(data, mem)?;
+    // add_messages_bulk(data, format_msg)?;
+    // add_memories(data, mem)?;
 
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {

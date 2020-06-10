@@ -1,8 +1,8 @@
 use crate::{Client, ContextJson, CsmlBot};
 use csmlinterpreter::data::message::Message; //ApiInfo, Hold
 use curl::easy::Easy;
-use mongodb::Database;
 use serde_json::Value;
+
 
 pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
@@ -15,6 +15,15 @@ pub struct CsmlData {
     pub bot: CsmlBot,
     pub metadata: Value,
     pub sync: bool,
+}
+
+#[derive(Debug)]
+pub enum Database {
+    #[cfg(feature = "mongo")]
+    Mongo(mongodb::Database),
+    #[cfg(feature = "dynamodb")]
+    Dynamodb(i32),
+    None,
 }
 
 // #[derive(Serialize, Deserialize)]
@@ -37,8 +46,8 @@ pub struct ConversationInfo {
     // pub api_client: APIClient,
     pub request_id: String,
     pub curl: Option<Easy>,
-    pub conversation_id: bson::Bson,
-    pub interaction_id: bson::Bson,
+    pub conversation_id: String,
+    pub interaction_id: String,
     pub client: Client,
     pub context: ContextJson,
     pub metadata: Value,
@@ -63,13 +72,18 @@ pub enum Next {
 pub enum ManagerError {
     Serde(serde_json::Error),
     Io(std::io::Error),
-    BsonDecoder(bson::DecoderError),
-    BsonEncoder(bson::EncoderError),
-    MongoDB(mongodb::error::Error),
+    Manager(String),
+    Interpreter(String),
+    Time(std::time::SystemTimeError),
     Openssl(openssl::error::ErrorStack),
     Base64(base64::DecodeError),
-    Time(std::time::SystemTimeError),
-    Interpreter(String),
+
+    #[cfg(any(feature = "mongo"))]
+    BsonDecoder(bson::DecoderError),
+    #[cfg(any(feature = "mongo"))]
+    BsonEncoder(bson::EncoderError),
+    #[cfg(any(feature = "mongo"))]
+    MongoDB(mongodb::error::Error),
 }
 
 impl From<serde_json::Error> for ManagerError {
@@ -90,24 +104,6 @@ impl From<std::time::SystemTimeError> for ManagerError {
     }
 }
 
-impl From<bson::EncoderError> for ManagerError {
-    fn from(e: bson::EncoderError) -> Self {
-        ManagerError::BsonEncoder(e)
-    }
-}
-
-impl From<bson::DecoderError> for ManagerError {
-    fn from(e: bson::DecoderError) -> Self {
-        ManagerError::BsonDecoder(e)
-    }
-}
-
-impl From<mongodb::error::Error> for ManagerError {
-    fn from(e: mongodb::error::Error) -> Self {
-        ManagerError::MongoDB(e)
-    }
-}
-
 impl From<openssl::error::ErrorStack> for ManagerError {
     fn from(e: openssl::error::ErrorStack) -> Self {
         ManagerError::Openssl(e)
@@ -117,5 +113,26 @@ impl From<openssl::error::ErrorStack> for ManagerError {
 impl From<base64::DecodeError> for ManagerError {
     fn from(e: base64::DecodeError) -> Self {
         ManagerError::Base64(e)
+    }
+}
+
+#[cfg(any(feature = "mongo"))]
+impl From<bson::EncoderError> for ManagerError {
+    fn from(e: bson::EncoderError) -> Self {
+        ManagerError::BsonEncoder(e)
+    }
+}
+
+#[cfg(any(feature = "mongo"))]
+impl From<bson::DecoderError> for ManagerError {
+    fn from(e: bson::DecoderError) -> Self {
+        ManagerError::BsonDecoder(e)
+    }
+}
+
+#[cfg(any(feature = "mongo"))]
+impl From<mongodb::error::Error> for ManagerError {
+    fn from(e: mongodb::error::Error) -> Self {
+        ManagerError::MongoDB(e)
     }
 }

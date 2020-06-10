@@ -1,19 +1,5 @@
-use crate::{encrypt::encrypt_data, Client, ConversationInfo, ManagerError};
+use crate::{encrypt::encrypt_data, Client, ConversationInfo, ManagerError, db_interactions::Conversation};
 use bson::{doc, Bson};
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Conversation {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
-    pub id: bson::oid::ObjectId,
-    pub client: Client,
-    pub flow_id: String,
-    pub step_id: String,
-    pub metadata: serde_json::Value, // encrypted
-    pub status: String,              //(OPEN, CLOSED,  //Faild
-    pub last_interaction_at: bson::UtcDateTime,
-    pub updated_at: bson::UtcDateTime,
-    pub created_at: bson::UtcDateTime,
-}
 
 pub fn create_conversation(
     flow_id: &str,
@@ -21,7 +7,7 @@ pub fn create_conversation(
     client: &Client,
     metadata: serde_json::Value,
     db: &mongodb::Database,
-) -> Result<bson::Bson, ManagerError> {
+) -> Result<String, ManagerError> {
     let collection = db.collection("conversation");
     let time = Bson::UtcDatetime(chrono::Utc::now());
     let metadata = encrypt_data(&metadata)?;
@@ -39,18 +25,20 @@ pub fn create_conversation(
 
     let inserted = collection.insert_one(conversation.clone(), None)?;
 
-    Ok(inserted.inserted_id)
+    let id = inserted.inserted_id.as_object_id().unwrap();
+
+    Ok(id.to_hex())
 }
 
 pub fn close_conversation(
-    id: &bson::Bson,
+    id: &String,
     client: &Client,
     db: &mongodb::Database,
 ) -> Result<(), ManagerError> {
     let collection = db.collection("conversation");
 
     let filter = doc! {
-        "_id": id,
+        "_id": bson::oid::ObjectId::with_string(id).unwrap(),
         "client": bson::to_bson(&client)?,
     };
 
@@ -109,15 +97,17 @@ pub fn get_latest_open(
 }
 
 pub fn update_conversation(
-    data: &ConversationInfo,
+    conversation_id: String,
+    client: &Client,
     flow_id: Option<String>,
     step_id: Option<String>,
+    db: &mongodb::Database,
 ) -> Result<(), ManagerError> {
-    let collection = data.db.collection("conversation");
+    let collection = db.collection("conversation");
 
     let filter = doc! {
-        "_id": &data.conversation_id,
-        "client": bson::to_bson(&data.client)?,
+        "_id": bson::oid::ObjectId::with_string(&conversation_id).unwrap(),
+        "client": bson::to_bson(&client)?,
     };
 
     let doc = match (flow_id, step_id) {

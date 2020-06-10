@@ -1,6 +1,6 @@
-use crate::db_interactions::{conversation::*, interactions::*, memories::*};
+use crate::db_interactions::{init_db, conversation::*, interactions::*, memories::*};
 use crate::{
-    data::{ConversationInfo, CsmlData, ManagerError},
+    data::{ConversationInfo, CsmlData, ManagerError, Database},
     tools::{get_default_flow, get_flow_by_id, search_flow},
     ContextJson, CsmlBot, CsmlFlow,
 };
@@ -10,18 +10,6 @@ use curl::{
     easy::{Easy, List},
     Error as CurlError,
 };
-use std::env;
-
-pub fn init_db() -> Result<mongodb::Database, ManagerError> {
-    let uri = match env::var("MONGODB_URI") {
-        Ok(var) => var,
-        _ => panic!("error no MONGODB_URI en env"),
-    };
-
-    let client = mongodb::Client::with_uri_str(&uri)?;
-
-    Ok(client.database("csml"))
-}
 
 pub fn init_conversation_info<'a>(
     default_flow: String,
@@ -125,8 +113,8 @@ fn get_conversation<'a>(
     flow_found: Option<&'a CsmlFlow>,
     metadata: serde_json::Value,
     client: &Client,
-    db: &mongodb::Database,
-) -> Result<bson::Bson, ManagerError> {
+    db: &Database,
+) -> Result<String, ManagerError> {
     match get_latest_open(client, db)? {
         Some(conversation) => {
             //TODO: check for recursion
@@ -142,7 +130,7 @@ fn get_conversation<'a>(
                         Err(..) => {
                             // if flow id exist in db but not in bot close conversation
                             close_conversation(
-                                &bson::Bson::ObjectId(conversation.id),
+                                &conversation.id,
                                 &client,
                                 &db,
                             )?;
@@ -158,7 +146,7 @@ fn get_conversation<'a>(
                 }
             };
 
-            Ok(bson::Bson::ObjectId(conversation.id))
+            Ok(conversation.id)
         }
         None => create_new_conversation(context, bot, flow_found, client, metadata, db),
     }
@@ -170,8 +158,8 @@ fn create_new_conversation<'a>(
     flow_found: Option<&'a CsmlFlow>,
     client: &Client,
     metadata: serde_json::Value,
-    db: &mongodb::Database,
-) -> Result<bson::Bson, ManagerError> {
+    db: &Database,
+) -> Result<String, ManagerError> {
     let flow = match flow_found {
         Some(flow) => flow,
         None => get_default_flow(bot)?,

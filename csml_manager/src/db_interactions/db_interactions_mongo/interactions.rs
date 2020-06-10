@@ -35,12 +35,12 @@ pub fn init_interaction(
     Ok(insserted.inserted_id)
 }
 
-pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), ManagerError> {
-    let collection = data.db.collection("interaction");
+pub fn update_interaction(interaction_id: String, success: bool, client: &Client, db: &mongodb::Database) -> Result<(), ManagerError> {
+    let collection = db.collection("interaction");
 
     let filter = doc! {
-        "_id": &data.interaction_id,
-        "client": bson::to_bson(&data.client)?,
+        "_id": bson::oid::ObjectId::with_string(&interaction_id).unwrap(),
+        "client": bson::to_bson(&client)?,
     };
 
     collection.update_one(

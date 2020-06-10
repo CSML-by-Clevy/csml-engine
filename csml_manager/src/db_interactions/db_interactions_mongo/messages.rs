@@ -1,23 +1,6 @@
 use crate::{encrypt::encrypt_data, Client, ConversationInfo, ManagerError, Message};
 use bson::{doc, Bson, Document};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Messages {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
-    pub id: bson::oid::ObjectId,
-    pub client: Client,
-    pub interaction_id: bson::oid::ObjectId,
-    pub conversation_id: bson::oid::ObjectId,
-    pub flow_id: String,
-    pub step_id: String,
-    pub message_order: i32,
-    pub interaction_order: i32,
-    pub direction: String, // (SEND, RECEIVE)
-    pub payload: String,   // encrypted
-    pub content_type: String,
-    pub created_at: bson::UtcDateTime,
-}
-
 pub fn format_messages(
     data: &ConversationInfo,
     messages: &Vec<Message>,
@@ -89,10 +72,10 @@ pub fn format_event_message(
 }
 
 pub fn add_messages_bulk(
-    data: &mut ConversationInfo,
     msgs: Vec<Document>,
+    db: &mongodb::Database,
 ) -> Result<(), ManagerError> {
-    let message = data.db.collection("message");
+    let message = db.collection("message");
 
     message.insert_many(msgs, None)?;
 

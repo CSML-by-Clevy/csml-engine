@@ -1,5 +1,5 @@
 use crate::{
-    data::{ConversationInfo, ManagerError, DEBUG},
+    data::{ConversationInfo, ManagerError, DEBUG, Database},
     db_interactions::state::delete_state_key,
     send::api,
     CsmlBot, CsmlFlow,
@@ -178,7 +178,7 @@ pub fn search_flow<'a>(
     event: &Event,
     bot: &'a CsmlBot,
     client: &Client,
-    db: &mongodb::Database,
+    db: &Database,
 ) -> Result<&'a CsmlFlow, ManagerError> {
     match event {
         event if event.content_type == "flow_trigger" => {

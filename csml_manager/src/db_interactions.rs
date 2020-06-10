@@ -1,59 +1,101 @@
-pub mod conversation;
-pub mod interactions;
-pub mod memories;
-pub mod messages;
-pub mod nodes;
-pub mod state;
+use crate::Client;
 
-// ############################## conversation
-// create_conversation(&mut core, &api_client); // OK return ConversationModel
-// get_conversation(&mut core, &api_client); // OK ConversationModel
-// get_latest_open(&mut core, &api_client); // OK InlineResponse200
-// close_all_conversations(&mut core, &api_client); // Ok return ()
-// close_conversation(&mut core, &api_client); // Ok return ()
-// update_conversation(&mut core, &api_client); // Ok return ()
-// ##############################
+mod db;
+#[cfg(feature = "mongo")]
+mod db_interactions_mongo;
+#[cfg(feature = "dynamo")]
+mod db_interactions_dynamo;
 
-// ############################## memories
-// add_memories_bulk(&mut core, &api_client); // OK ()
-// add_memory(&mut core, &api_client); // OK ()
-// get_current_memories(&mut core, &api_client); // OK [memories]
-// get_past_memories(&mut core, &api_client); // OK [memories]
-// ##############################
+pub use db::*;
 
-// ############################## messages
-// add_messages(&mut core, &api_client); // Ok return ()
-// add_messages_bulk(&mut core, &api_client); // Ok return ()
-// ##############################
 
-// ############################## Nodes
-// create_node(&mut core, &api_client); // OK ()
-// get_conversation_nodes(&mut core, &api_client); // OK NodeModel
-// ##############################
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct Conversation {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String, // to_hex bson::oid::ObjectId
+    pub client: Client,
+    pub flow_id: String, // to_hex
+    pub step_id: String, // to_hex
+    pub metadata: serde_json::Value, // encrypted
+    pub status: String, //(OPEN, CLOSED, //Faild?
+    pub last_interaction_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub updated_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+}
 
-// ############################## Interactions
-// get_interaction(&mut core, &api_client); // InteractionModel
-// get_interaction_status(&mut core, &api_client); // Ok InlineResponse2001
-// get_lock_status(&mut core, &api_client); // Ok InlineResponse2002
-// init_interaction(&mut core, &api_client); // OK InteractionModel
-// update_interaction(&mut core, &api_client); // OK ()
-// ##############################
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct Interaction {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String, // to_hex
+    pub client: Client,
+    pub success: bool,
+    pub event: serde_json::Value, // encrypted
+    pub updated_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+}
 
-// ############################## State
-// clear_full_state(bot_id: &str, user_id: &str, channel_id: &str) // OK ()
-// delete_item_state(composite_key: &str, bot_id: &str, user_id: &str, channel_id: &str) // OK ()
-// get_full_state(bot_id: &str, user_id: &str, channel_id: &str) // OK StateModel
-// get_item_state(composite_key: &str, bot_id: &str, user_id: &str, channel_id: &str) // OK StateModel
-// set_item_state(composite_key: &str, bot_id: &str, user_id: &str, channel_id: &str, set_state_body: SetStateBody) // OK StateModel
-// ##############################
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct DbMemories {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String, // to_hex
+    pub client: Client,
+    pub interaction_id: String, // to_hex
+    pub conversation_id: String, // to_hex
+    pub flow_id: String,
+    pub step_id: String,
+    pub memory_order: i32,
+    pub interaction_order: i32,
+    pub key: String,
+    pub value: String, // encrypted
+    pub expires_at: Option<String>, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+}
 
-// delete_state_full(&self, bot_id: &str, user_id: &str, channel_id: &str) -> Result<(), Error>;
-// get_state_full(&self, bot_id: &str, user_id: &str, channel_id: &str) -> Result<Vec<crate::models::StateModel>, Error>;
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct Messages {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String, // to_hex
+    pub client: Client,
+    pub interaction_id: String, // to_hex
+    pub conversation_id: String, // to_hex
+    pub flow_id: String,
+    pub step_id: String,
+    pub message_order: i32,
+    pub interaction_order: i32,
+    pub direction: String, // (SEND, RECEIVE)
+    pub payload: String,   // encrypted
+    pub content_type: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+}
 
-// delete_state_type(&self, _type: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<(), Error>;
-// get_state_type(&self, _type: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<Vec<crate::models::StateModel>, Error>;
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct Node {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String,
+    pub client: Client,
+    pub interaction_id: String,
+    pub conversation_id: String,
+    pub flow_id: String,
+    pub step_id: String,
+    pub next_step: Option<String>,
+    pub next_flow: Option<String>,
+    pub created_at: String,
+}
 
-// delete_state_key(&self, _type: &str, key: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<(), Error>;
-// get_state_key(&self, _type: &str, key: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<crate::models::StateModel, Error>;
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct State {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String,
+    pub client: Client,
+    #[serde(rename = "type")]
+    pub _type: String,
+    pub value: String, // encrypted
+    pub expires_at: Option<String>,
+    pub created_at: String,
+}
+// #[cfg(all(feature = "dynamo", not(feature = "mongo")))]
+// mod db_interactions_dynamo;
 
-// set_state_items(&self, bot_id: &str, user_id: &str, channel_id: &str, create_state_body: Vec<crate::models::CreateStateBody>) -> Result<crate::models::StateModel, Error>;
+// #[cfg(all(feature = "mongo", not(feature = "dynamo")))]
+// #[cfg(all(feature = "dynamo", not(feature = "mongo")))]
+// use db_interactions_dynamo as db_interactions;

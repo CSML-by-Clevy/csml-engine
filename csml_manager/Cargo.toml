@@ -4,6 +4,33 @@ version = "0.1.0"
 authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
 edition = "2018"
 
+[features]
+tmp = []
+# default = ["mongo", "encryption"]
+dynamo = ["dynamodb"]
+mongo = ["mongodb", "bson"]
+# encryption = ["openssl", "base64"]
+
+[dependencies.mongodb]
+version = "0.9.2"
+optional = true
+
+[dependencies.bson]
+version = "0.14.1"
+optional = true
+
+# [dependencies.openssl]
+# version = "0.10.29"
+# optional = true
+
+# [dependencies.base64]
+# version = "0.12.1"
+# optional = true
+
+[dependencies.dynamodb]
+path = "../dynamodb"
+optional = true
+
 [dependencies]
 csmlinterpreter = { path = "../csml_interpreter" }
 multimap = "0.8.1"
@@ -12,10 +39,8 @@ chrono = "0.4"
 uuid = { version = "0.8.1", features = ["serde", "v4"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-mongodb = "0.9.2"
 openssl = "0.10.29"
 base64 = "0.12.1"
-bson = "0.14.1"
 
 [dependencies.curl]
 version = "0.4.25"
