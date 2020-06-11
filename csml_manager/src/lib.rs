@@ -36,10 +36,8 @@ pub fn start_conversation(
     )?;
 
     // save event in db as message RECEIVE
-    #[cfg(any(feature = "mongo"))]
-    let event_receive = format_event_message(&mut data, json_event)?;
-    #[cfg(any(feature = "mongo"))]
-    add_messages_bulk(&mut data, vec![event_receive])?;
+    let msgs = vec![json_event["payload"].to_owned()];
+    add_messages_bulk(&mut data, msgs, 0, "SEND")?;
 
     let flow = get_flow_by_id(&data.context.flow, &csmldata.bot.flows)?;
     check_for_hold(&mut data, flow)?;
@@ -91,7 +89,6 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> 
 
 // reset memory if flow hash is different or see if there are some save tmp memories
 fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), ManagerError> {
-    #[cfg(any(feature = "mongo"))]
     match get_state_key(&data.client, "hold", "position", &data.db) {
         Ok(Some(string)) => {
             let hold = serde_json::to_value(string)?;
