@@ -29,28 +29,57 @@ fn main() {
                 "Button": {
                     "params": [
                         {
-                            "foo": {
+                            "title": {
                                 "type": "Object",
                                 "default_value": [
-                                    {"$_get": "bar"}
-                                ],
-                                "add_value": [
+                                    {"$_get": "payload"},
+                                    {"$_get": "payload"}
                                 ]
                             }
                         },
                         {
-                            "bar": {
+                            "payload": {
                                 "type": "Object",
                                 "default_value": [
-                                    {"$_set": {"Hello": "World"}}
-                                    
-                                ],
-                                "add_value": [
+                                    {"$_set": {"hello": "world"}},
                                 ]
                             }
                         }
                     ]
-                }
+                },
+                // "Button": {
+                //     "params": [
+                //         {
+                //             "title": {
+                //                 "type": "Object",
+                //                 "default_value": [
+                //                     {"$_get": "payload"},
+                //                 ]
+                //             }
+                //         },
+                //         {
+                //             "payload": {
+                //                 "type": "Object",
+                //                 "default_value": [
+                //                     {"$_get": "title"},
+                //                 ]
+                //             }
+                //         }
+                //     ]
+                // }
+                // "Button": {
+                //     "params": [
+                //         {
+                //             "title": {
+                //                 "type": "Object",
+                //                 "default_value": [
+                //                     {"$_get": "title"},
+                //                 ]
+                //             }
+                //         },
+                //     ]
+                // }
+
             }
         ),
         DEFAULT_FLOW_NAME,

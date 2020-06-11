@@ -1,9 +1,9 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
+use crate::data::primitive::PrimitiveArray;
 use crate::data::primitive::PrimitiveObject;
 use crate::data::{Interval, Literal};
 use crate::interpreter::json_to_literal;
-use crate::data::primitive::PrimitiveArray;
 
 use nom::lib::std::collections::HashMap;
 use std::collections::HashSet;
@@ -16,6 +16,7 @@ trait ArithmeticOperation {
     fn add(
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
+        interval: &Interval,
     ) -> Result<serde_json::Value, ErrorInfo>;
 }
 
@@ -23,13 +24,15 @@ impl ArithmeticOperation for serde_json::Value {
     fn add(
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
+        interval: &Interval,
     ) -> Result<serde_json::Value, ErrorInfo> {
         match (lhs, rhs) {
             (serde_json::Value::Null, serde_json::Value::Null) => Ok(serde_json::Value::Null),
             (serde_json::Value::Bool(lhs), serde_json::Value::Bool(rhs)) => {
                 Ok(serde_json::Value::Bool(lhs | rhs))
             }
-            (serde_json::Value::Number(lhs), serde_json::Value::Number(rhs)) => { // TODO
+            (serde_json::Value::Number(lhs), serde_json::Value::Number(rhs)) => {
+                // TODO
                 unimplemented!();
             }
             (serde_json::Value::String(lhs), serde_json::Value::String(rhs)) => {
@@ -49,10 +52,10 @@ impl ArithmeticOperation for serde_json::Value {
 
                 Ok(serde_json::Value::Object(lhs))
             }
-            (_, _) => {
-                println!("ERROR: Illegal operation");
-                unimplemented!();
-            }
+            (_, _) => Err(ErrorInfo::new(
+                Position::new(*interval),
+                "Illegal operation between two different type".to_string(),
+            )),
         }
     }
 }
@@ -63,10 +66,8 @@ impl ArithmeticOperation for serde_json::Value {
 
 fn create_default_object(
     object: &serde_json::Map<String, serde_json::Value>,
+    interval: &Interval,
 ) -> Result<serde_json::Value, ErrorInfo> {
-    // Create a default value of any JSON that will be used to abstract the JSON type and apply trait add to them.
-    // Type must be written in the Component declaration !
-
     if let Some(serde_json::Value::String(result)) = object.get("type") {
         return match result.as_str() {
             "Null" => Ok(serde_json::Value::Null),
@@ -75,15 +76,17 @@ fn create_default_object(
             "String" => Ok(serde_json::Value::String(String::default())),
             "Array" => Ok(serde_json::Value::Array(Vec::default())),
             "Object" => Ok(serde_json::Value::Object(serde_json::Map::default())),
-            _ => {
-                println!("ERROR: type not handled");
-                unimplemented!();
-            }
+            _ => Err(ErrorInfo::new(
+                Position::new(*interval),
+                format!("type '{}' is unknown", result),
+            )),
         };
     }
 
-    println!("ERROR: type must exist !");
-    unimplemented!();
+    return Err(ErrorInfo::new(
+        Position::new(*interval),
+        "type value must exist on all keys".to_string(),
+    ));
 }
 
 fn is_parameter_required(object: &serde_json::Map<String, serde_json::Value>) -> bool {
@@ -97,9 +100,6 @@ fn is_parameter_required(object: &serde_json::Map<String, serde_json::Value>) ->
 }
 
 fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> {
-    // To keep the order of the Component declaration we had to create a vector params
-    // Index of the key will help me to find the key that I need to work with
-
     for (index, object) in array.iter().enumerate() {
         if let Some(object) = object.as_object() {
             for value in object.keys() {
@@ -114,21 +114,18 @@ fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> 
 }
 
 fn get_index_of_parameter(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> {
-    // This index is needed to get the right parameter for a dependecies.
-
     let mut result = 0;
 
     for object in array.iter() {
         if let Some(object) = object.as_object() {
             for value in object.keys() {
-                if let Some(serde_json::Value::Object(object)) = object.get(value){
+                if let Some(serde_json::Value::Object(object)) = object.get(value) {
                     if is_parameter_required(object) {
                         if key == value {
                             return Some(result);
                         }
                         result += 1;
                     }
-
                 }
             }
         }
@@ -143,12 +140,11 @@ fn get_parameter(
     args: &Literal,
     interval: &Interval,
 ) -> serde_json::Value {
-    // Try to get the parameters given to component as an array
-    // If an error occur, Null is return. This could be change in the future for stricter rules.
-
     if let Some(index) = get_index_of_parameter(key, array) {
-        if let Ok(array) = Literal::get_value::<Vec<Literal>>(&args.primitive, *interval, String::default()) {
-            if let Some(value) =  array.get(index) {
+        if let Ok(array) =
+            Literal::get_value::<Vec<Literal>>(&args.primitive, *interval, String::default())
+        {
+            if let Some(value) = array.get(index) {
                 return value.primitive.to_json();
             }
         }
@@ -161,6 +157,14 @@ fn get_parameter(
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {
+    let mut result = PrimitiveObject::get_literal(&hashmap, interval);
+
+    result.set_content_type(name);
+
+    result
+}
+
 fn get_default_object(
     key: &str,
     object: &serde_json::Map<String, serde_json::Value>,
@@ -168,24 +172,50 @@ fn get_default_object(
     args: &Literal,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
+    recursion: &mut HashSet<String>,
 ) -> Result<serde_json::Value, ErrorInfo> {
     // Create a default JSON value to be able to abstract all JSON types (STRING, OBJECT) and then apply the trait add to it.
-    // Apply all rules if found of $_get and $_set, then launch recursion with key as the name of dependencie
+    // Apply all rules if found of $_get and $_set, then launch recursion with key as the name of dependencie.
+    // Eliminates circular dependencie by checking if we already visited this key
+    // Eliminates recurrent recursion if object has already been created once.
 
-    let mut result = create_default_object(object)?;
+    let mut result = create_default_object(object, interval)?;
 
     if let Some(serde_json::Value::Array(default_value)) = object.get(key) {
         for function in default_value.iter() {
             if let serde_json::Value::Object(function) = function {
                 if let Some(serde_json::Value::String(dependencie)) = function.get("$_get") {
-                    result = serde_json::Value::add(
-                        &result,
-                        &get_object(dependencie, array, args, interval, memoization)?,
-                    )?;
-                }
+                    match memoization.get(dependencie) {
+                        Some(value) => {
+                            result = value.to_owned();
+                        }
+                        None => {
+                            if recursion.contains(dependencie) {
+                                return Err(ErrorInfo::new(
+                                    Position::new(*interval),
+                                    "CIRCULAR DEPENDECIE".to_string(),
+                                ));
+                            }
 
+                            result = serde_json::Value::add(
+                                &result,
+                                &get_object(
+                                    dependencie,
+                                    array,
+                                    args,
+                                    interval,
+                                    memoization,
+                                    recursion,
+                                )?,
+                                interval,
+                            )?;
+
+                            memoization.insert(dependencie.to_string(), result.to_owned());
+                        }
+                    }
+                }
                 if let Some(dependencie) = function.get("$_set") {
-                    result = serde_json::Value::add(&result, dependencie)?;
+                    result = serde_json::Value::add(&result, dependencie, interval)?;
                 }
             }
         }
@@ -200,54 +230,65 @@ fn get_object(
     args: &Literal,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
+    recursion: &mut HashSet<String>,
 ) -> Result<serde_json::Value, ErrorInfo> {
+    // Cache the key we visit
     // Find the key to work with, then construct the object like it's supposed to be.
     // Option 1: construct with parameters because required is true, so I need to find the right parameters and add all add_value function to it.
     // Option 2: construct with default_value function and like option 1, add all add_value function to it.
 
+    if !recursion.insert(key.to_string()) {
+        println!("SHOULD NEVER HAPPEN !");
+        unreachable!();
+    }
+
     if let Some(index) = get_index_of_key(key, array) {
         if let Some(serde_json::Value::Object(object)) = array[index].get(key) {
-            match is_parameter_required(object) {
-                true => {
-                    let value = serde_json::Value::add(
-                        &get_parameter(key, array, args, interval),
-                        &get_default_object("add_value", object, array, args, interval, memoization)?,
-                    )?;
-
-                    memoization.insert(key.to_string(), value.to_owned());
-
-                    return Ok(value);
-                }
-                false => {
-                    let value = serde_json::Value::add(
-                        &get_default_object("default_value", object, array, args, interval, memoization)?,
-                        &get_default_object("add_value", object, array, args, interval, memoization)?,
-                    )?;
-
-                    memoization.insert(key.to_string(), value.to_owned());
-
-                    return Ok(value);
-                }
-            }
+            return match is_parameter_required(object) {
+                true => serde_json::Value::add(
+                    &get_parameter(key, array, args, interval),
+                    &get_default_object(
+                        "add_value",
+                        object,
+                        array,
+                        args,
+                        interval,
+                        memoization,
+                        recursion,
+                    )?,
+                    interval,
+                ),
+                false => serde_json::Value::add(
+                    &get_default_object(
+                        "default_value",
+                        object,
+                        array,
+                        args,
+                        interval,
+                        memoization,
+                        recursion,
+                    )?,
+                    &get_default_object(
+                        "add_value",
+                        object,
+                        array,
+                        args,
+                        interval,
+                        memoization,
+                        recursion,
+                    )?,
+                    interval,
+                ),
+            };
         }
     }
 
     Ok(serde_json::Value::Null)
 }
 
-fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {
-    let mut result = PrimitiveObject::get_literal(&hashmap, interval);
-
-    result.set_content_type(name);
-
-    result
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
-
-// [+] handle circular dependecie
 
 pub fn gen_generic_component(
     name: &str,
@@ -255,8 +296,9 @@ pub fn gen_generic_component(
     args: &Literal,
     header: &serde_json::value::Value,
 ) -> Result<Literal, ErrorInfo> {
-    // Create the hashmap that will be the result, and an hashmap for optimisation that will keep this module to make more than one equal computation.
     // Dereferences the JSON Object, iterate on all key, and construct the component.
+    // Create the hashmap that will be the result, and an hashmap for optimisation that will keep this module to make more than one equal computation.
+    // Insert into the final result and eliminates recurrent recursion if object has already been created once.
 
     let mut hashmap: HashMap<String, Literal> = HashMap::new();
     let mut memoization: HashMap<String, serde_json::Value> = HashMap::new();
@@ -267,18 +309,29 @@ pub fn gen_generic_component(
                 if let Some(object) = object.as_object() {
                     for key in object.keys() {
                         if let Some(result) = memoization.get(key) {
-                            hashmap.insert(key.to_owned(), json_to_literal(&result.to_owned(), *interval)?);
-                        }
-                        else {
-                            let result = get_object(key, array, args, interval, &mut memoization)?;
+                            hashmap.insert(
+                                key.to_owned(),
+                                json_to_literal(&result.to_owned(), *interval)?,
+                            );
+                        } else {
+                            let result = get_object(
+                                key,
+                                array,
+                                args,
+                                interval,
+                                &mut memoization,
+                                &mut HashSet::new(),
+                            )?;
 
-                            hashmap.insert(key.to_owned(), json_to_literal(&result.to_owned(), *interval)?);
+                            hashmap.insert(
+                                key.to_owned(),
+                                json_to_literal(&result.to_owned(), *interval)?,
+                            );
                         }
                     }
                 }
             }
         }
-
     }
 
     println!();

@@ -1,14 +1,14 @@
 mod support;
 
 use csmlinterpreter::data::context::ContextJson;
+use csmlinterpreter::data::csml_bot::CsmlBot;
+use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::MessageData;
-use csmlinterpreter::data::csml_flow::CsmlFlow;
-use csmlinterpreter::data::csml_bot::CsmlBot;
 use csmlinterpreter::interpret;
 
-use crate::support::tools::read_file;
 use crate::support::tools::message_to_json_value;
+use crate::support::tools::read_file;
 
 use serde_json::Value;
 
@@ -20,7 +20,12 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 // PRIVATE FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-fn format_message(event: Event, context: ContextJson, vector: &[&str], header: serde_json::Value) -> MessageData {
+fn format_message(
+    event: Event,
+    context: ContextJson,
+    vector: &[&str],
+    header: serde_json::Value,
+) -> MessageData {
     let default_content = read_file(vector[0].to_string()).unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 
@@ -28,9 +33,9 @@ fn format_message(event: Event, context: ContextJson, vector: &[&str], header: s
         DEFAULT_ID_NAME,
         DEFAULT_BOT_NAME,
         None,
-		vec![default_flow],
-		header,
-		DEFAULT_FLOW_NAME,
+        vec![default_flow],
+        header,
+        DEFAULT_FLOW_NAME,
     );
 
     interpret(bot, context, event, None)
@@ -46,8 +51,7 @@ fn format_message(event: Event, context: ContextJson, vector: &[&str], header: s
 
 #[test]
 fn empty() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {},
 		"content_type": "Button"
@@ -63,20 +67,19 @@ fn empty() {
             "without_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
-		serde_json::json!({"Button": {}}),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({"Button": {}}),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 #[test]
 fn default() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {}},
 		"content_type": "Button"
@@ -92,7 +95,7 @@ fn default() {
             "without_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
                 "_primary": "title",
@@ -107,19 +110,18 @@ fn default() {
                     }
                 ]
             }
-        })
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 #[test]
 fn default_set() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {"hello": "world"}},
 		"content_type": "Button"
@@ -135,7 +137,7 @@ fn default_set() {
             "without_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
                 "_primary": "title",
@@ -151,19 +153,18 @@ fn default_set() {
                     }
                 ]
             }
-        })
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 #[test]
 fn default_get() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {
             "title": {"hello": "world"},
@@ -182,7 +183,7 @@ fn default_get() {
             "without_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
                 "_primary": "title",
@@ -194,9 +195,9 @@ fn default_get() {
                             "default_value": [
                                 {"$_get": "payload"}
                             ]
-						}
-					},
-					{
+                        }
+                    },
+                    {
                         "payload": {
                             "required": false,
                             "type": "Object",
@@ -207,19 +208,18 @@ fn default_get() {
                     }
                 ]
             }
-        })
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 #[test]
 fn default_multiple_get() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {
             "title": {
@@ -241,7 +241,7 @@ fn default_multiple_get() {
             "without_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
                 "_primary": "title",
@@ -254,9 +254,9 @@ fn default_multiple_get() {
                                 {"$_get": "payload"},
                                 {"$_get": "payload"}
                             ]
-						}
-					},
-					{
+                        }
+                    },
+                    {
                         "payload": {
                             "required": false,
                             "type": "Object",
@@ -267,19 +267,18 @@ fn default_multiple_get() {
                     }
                 ]
             }
-        })
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 #[test]
 fn default_add_value() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {
             "hello": "world"
@@ -297,7 +296,7 @@ fn default_add_value() {
             "without_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
                 "_primary": "title",
@@ -315,19 +314,18 @@ fn default_add_value() {
                     }
                 ]
             }
-        })
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 #[test]
 fn default_add_value_empty() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {}},
 		"content_type": "Button"
@@ -343,7 +341,7 @@ fn default_add_value_empty() {
             "without_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
                 "_primary": "title",
@@ -359,13 +357,13 @@ fn default_add_value_empty() {
                     }
                 ]
             }
-        })
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -374,8 +372,7 @@ fn default_add_value_empty() {
 
 #[test]
 fn parameter() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {
             "foo": {"param_0": "foo"}
@@ -393,35 +390,34 @@ fn parameter() {
             "with_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
-			"Button": {
-				"params": [
-					{
-						"foo": {
-							"required": true,
-							"type": "Object",
-							"default_value": [
-							],
-							"add_value": [
-							]
-						}
-					}
-				]
-			}
-        })
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "required": true,
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 #[test]
 fn parameter_multiple() {
-	let data =
-	r#"{"memories":[], "messages":[
+    let data = r#"{"memories":[], "messages":[
 	{
 		"content": {
             "foo": {
@@ -447,50 +443,50 @@ fn parameter_multiple() {
             "with_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
-			"Button": {
-				"params": [
-					{
-						"foo": {
-							"type": "Object",
-							"default_value": [
-								{"$_get": "baz"}
-							],
-							"add_value": [
-							]
-						}
-					},
-					{
-						"bar": {
-							"required": true,
-							"type": "Object",
-							"default_value": [
-							],
-							"add_value": [
-							]
-						}
-					},
-					{
-						"baz": {
-							"required": true,
-							"type": "Object",
-							"default_value": [
-							],
-							"add_value": [
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
+                                {"$_get": "baz"}
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    },
+                    {
+                        "bar": {
+                            "required": true,
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    },
+                    {
+                        "baz": {
+                            "required": true,
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
                                 {"$_set": {"Hello": 42}}
-							]
-						}
-					}
-				]
-			}
-        })
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
     );
 
     let v1: Value = message_to_json_value(msg);
-	let v2: Value = serde_json::from_str(data).unwrap();
-	
-	assert_eq!(v1, v2);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -509,22 +505,22 @@ fn unknown_component() {
             "unknown_component",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
-			"Button": {
-				"params": [
-					{
-						"foo": {
-							"type": "Object",
-							"default_value": [
-							],
-							"add_value": [
-							]
-						}
-					}
-				]
-			}
-        })
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
     );
 
     if msg.messages.first().unwrap().content_type == "error" {
@@ -546,33 +542,33 @@ fn circular_dependencie() {
             "with_argument",
             DEFAULT_FLOW_NAME,
         ),
-		&vec!["CSML/basic_test/generic_component.csml"],
+        &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
-			"Button": {
-				"params": [
-					{
-						"foo": {
-							"type": "Object",
-							"default_value": [
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
                                 {"$_get": "bar"}
-							],
-							"add_value": [
-							]
-						}
+                            ],
+                            "add_value": [
+                            ]
+                        }
                     },
                     {
-						"bar": {
-							"type": "Object",
-							"default_value": [
+                        "bar": {
+                            "type": "Object",
+                            "default_value": [
                                 {"$_get": "foo"}
-							],
-							"add_value": [
-							]
-						}
-					}
-				]
-			}
-        })
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
     );
 
     if msg.messages.first().unwrap().content_type == "error" {
