@@ -18,7 +18,7 @@ pub fn init_interaction(
     event: Value,
     client: &Client,
     db: &mongodb::Database,
-) -> Result<bson::Bson, ManagerError> {
+) -> Result<String, ManagerError> {
     let collection = db.collection("interaction");
     let time = Bson::UtcDatetime(chrono::Utc::now());
 
@@ -30,16 +30,18 @@ pub fn init_interaction(
         "created_at": &time
     };
 
-    let insserted = collection.insert_one(doc.clone(), None)?;
+    let inserted = collection.insert_one(doc.clone(), None)?;
 
-    Ok(insserted.inserted_id)
+    let id = inserted.inserted_id.as_object_id().unwrap();
+
+    Ok(id.to_hex())
 }
 
-pub fn update_interaction(interaction_id: String, success: bool, client: &Client, db: &mongodb::Database) -> Result<(), ManagerError> {
+pub fn update_interaction(interaction_id: &str, success: bool, client: &Client, db: &mongodb::Database) -> Result<(), ManagerError> {
     let collection = db.collection("interaction");
 
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(&interaction_id).unwrap(),
+        "_id": bson::oid::ObjectId::with_string(interaction_id).unwrap(),
         "client": bson::to_bson(&client)?,
     };
 

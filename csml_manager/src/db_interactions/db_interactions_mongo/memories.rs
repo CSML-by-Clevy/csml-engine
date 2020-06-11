@@ -2,6 +2,7 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, ContextJson, ConversationInfo, ManagerError, Memories,
     db_interactions::DbMemories,
+    db_interactions::db_interactions_mongo::get_db,
 };
 use bson::{doc, Bson};
 
@@ -40,15 +41,17 @@ pub fn format_memories(
 }
 
 pub fn add_memories(
-    memories: Vec<bson::Document>,
-    db: &mongodb::Database,
+    data: &mut ConversationInfo,
+    memories: &[Memories],
 ) -> Result<(), ManagerError> {
     if memories.len() == 0 {
         return Ok(());
     }
+    let mem = format_memories(data, memories)?;
+    let db = get_db(&data.db)?;
 
     let collection = db.collection("memory");
-    collection.insert_many(memories, None)?;
+    collection.insert_many(mem, None)?;
 
     Ok(())
 }
