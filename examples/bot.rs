@@ -24,64 +24,7 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        serde_json::json!(
-            {
-                "Button": {
-                    "params": [
-                        {
-                            "title": {
-                                "type": "Object",
-                                "default_value": [
-                                    {"$_get": "payload"},
-                                    {"$_get": "payload"}
-                                ]
-                            }
-                        },
-                        {
-                            "payload": {
-                                "type": "Object",
-                                "default_value": [
-                                    {"$_set": {"hello": "world"}},
-                                ]
-                            }
-                        }
-                    ]
-                },
-                // "Button": {
-                //     "params": [
-                //         {
-                //             "title": {
-                //                 "type": "Object",
-                //                 "default_value": [
-                //                     {"$_get": "payload"},
-                //                 ]
-                //             }
-                //         },
-                //         {
-                //             "payload": {
-                //                 "type": "Object",
-                //                 "default_value": [
-                //                     {"$_get": "title"},
-                //                 ]
-                //             }
-                //         }
-                //     ]
-                // }
-                // "Button": {
-                //     "params": [
-                //         {
-                //             "title": {
-                //                 "type": "Object",
-                //                 "default_value": [
-                //                     {"$_get": "title"},
-                //                 ]
-                //             }
-                //         },
-                //     ]
-                // }
-
-            }
-        ),
+        serde_json::json!({}),
         DEFAULT_FLOW_NAME,
     );
 

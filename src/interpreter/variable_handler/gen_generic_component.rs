@@ -197,20 +197,18 @@ fn get_default_object(
                                 ));
                             }
 
-                            result = serde_json::Value::add(
-                                &result,
-                                &get_object(
-                                    dependencie,
-                                    array,
-                                    args,
-                                    interval,
-                                    memoization,
-                                    recursion,
-                                )?,
+                            let value = &get_object(
+                                dependencie,
+                                array,
+                                args,
                                 interval,
+                                memoization,
+                                recursion,
                             )?;
 
-                            memoization.insert(dependencie.to_string(), result.to_owned());
+                            memoization.insert(dependencie.to_string(), value.to_owned());
+
+                            result = serde_json::Value::add(&result, value, interval)?;
                         }
                     }
                 }
@@ -290,6 +288,8 @@ fn get_object(
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
+// [TODO]: arithmetic operation on number
+
 pub fn gen_generic_component(
     name: &str,
     interval: &Interval,
@@ -333,8 +333,6 @@ pub fn gen_generic_component(
             }
         }
     }
-
-    println!();
 
     Ok(get_result(name, &hashmap, *interval))
 }

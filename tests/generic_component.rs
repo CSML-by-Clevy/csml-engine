@@ -98,13 +98,99 @@ fn default() {
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
-                "_primary": "title",
                 "params": [
                     {
                         "title": {
                             "required": false,
                             "type": "Object",
                             "default_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2);
+}
+
+#[test]
+fn test_all() {
+    let data = r#"{"memories":[], "messages":[
+        {
+            "content": {
+                "foo": {
+                    "param_0": "foo",
+                    "Hello": "World",
+                    "Goodbye": "World",
+                    "Morning": "World"
+                },
+                "bar": {
+                    "Goodbye": "World",
+                    "Morning": "World"
+                },
+                "baz": {
+                    "Goodbye": "World",
+                    "Morning": "World"
+                }
+            },
+            "content_type": "Button"
+        }
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "with_argument",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "required": true,
+                            "type": "Object",
+                            "default_value": [
+                                {"$_set": "Hello"}
+                            ],
+                            "add_value": [
+                                {"$_set": {"Hello": "World"}},
+                                {"$_get": "bar"}
+                            ]
+                        }
+                    },
+                    {
+                        "bar": {
+                            "type": "Object",
+                            "default_value": [
+                                {"$_get": "baz"},
+                                {"$_get": "baz"}
+                            ],
+                            "add_value": [
+                                {"$_get": "baz"}
+                            ]
+                        }
+                    },
+                    {
+                        "baz": {
+                            "required": false,
+                            "type": "Object",
+                            "default_value": [
+                                {"$_set": {"Goodbye": "World"}},
+
+                            ],
+                            "add_value": [
+                                {"$_set": {"Goodbye": "World"}},
+                                {"$_set": {"Morning": "World"}}
                             ]
                         }
                     }
@@ -140,7 +226,6 @@ fn default_set() {
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
-                "_primary": "title",
                 "params": [
                     {
                         "title": {
@@ -186,7 +271,6 @@ fn default_get() {
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
-                "_primary": "title",
                 "params": [
                     {
                         "title": {
@@ -244,7 +328,6 @@ fn default_multiple_get() {
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
-                "_primary": "title",
                 "params": [
                     {
                         "title": {
@@ -299,7 +382,6 @@ fn default_add_value() {
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
-                "_primary": "title",
                 "params": [
                     {
                         "title": {
@@ -344,7 +426,6 @@ fn default_add_value_empty() {
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
             "Button": {
-                "_primary": "title",
                 "params": [
                     {
                         "title": {
@@ -523,15 +604,165 @@ fn unknown_component() {
         }),
     );
 
-    if msg.messages.first().unwrap().content_type == "error" {
-        assert!(true);
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
     }
 
     assert!(false);
 }
 
 #[test]
-fn circular_dependencie() {
+fn missing_type() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "unknown_component",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn illegal_operation_default() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "unknown_component",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
+                                {"$_set": "Hello"}
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn illegal_operation_add() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "unknown_component",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                                {"$_set": "Hello"}
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn illegal_operation_parameter() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "unknown_component",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "required": true,
+                            "type": "String",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn circular_dependencie_on_other_key_default() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -571,8 +802,170 @@ fn circular_dependencie() {
         }),
     );
 
-    if msg.messages.first().unwrap().content_type == "error" {
-        assert!(true);
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn circular_dependencie_on_self_default() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "with_argument",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
+                                {"$_get": "foo"}
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    },
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn circular_dependencie_on_other_key_add() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "with_argument",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                                {"$_get": "bar"}
+                            ]
+                        }
+                    },
+                    {
+                        "bar": {
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                                {"$_get": "foo"}
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn circular_dependencie_on_self_add() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "with_argument",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                                {"$_get": "foo"}
+                            ]
+                        }
+                    },
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+
+    assert!(false);
+}
+
+#[test]
+fn missing_parameter() {
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "without_argument",
+            DEFAULT_FLOW_NAME,
+        ),
+        &vec!["CSML/basic_test/generic_component.csml"],
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "foo": {
+                            "required": true,
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    }
+                ]
+            }
+        }),
+    );
+
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
     }
 
     assert!(false);
