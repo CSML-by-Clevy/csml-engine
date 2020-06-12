@@ -1,6 +1,5 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::primitive::PrimitiveArray;
 use crate::data::primitive::PrimitiveObject;
 use crate::data::{Interval, Literal};
 use crate::interpreter::json_to_literal;
@@ -32,8 +31,48 @@ impl ArithmeticOperation for serde_json::Value {
                 Ok(serde_json::Value::Bool(lhs | rhs))
             }
             (serde_json::Value::Number(lhs), serde_json::Value::Number(rhs)) => {
-                // TODO
-                unimplemented!();
+                if let (Some(lhs), Some(rhs)) = (lhs.as_i64(), rhs.as_i64()) {
+                    if let Some(value) = lhs.checked_add(rhs) {
+                        return Ok(serde_json::Value::Number(serde_json::Number::from(value)));
+                    }
+                }
+
+                if let (Some(lhs), Some(rhs)) = (lhs.as_f64(), rhs.as_f64()) {
+                    let a = lhs as i64;
+                    let b = rhs as i64;
+
+                    if let Some(value) = a.checked_add(b) {
+                        if let Some(value) = serde_json::Number::from_f64(lhs + rhs) {
+                            return Ok(serde_json::Value::Number(value));
+                        }
+                    }
+                }
+
+                if let (Some(lhs), Some(rhs)) = (lhs.as_i64(), rhs.as_f64()) {
+                    let b = rhs as i64;
+
+                    if let Some(value) = lhs.checked_add(b) {
+                        if let Some(value) = serde_json::Number::from_f64(lhs as f64 + rhs) {
+                            return Ok(serde_json::Value::Number(value));
+                        }
+                    }
+                }
+
+                if let (Some(lhs), Some(rhs)) = (lhs.as_f64(), rhs.as_i64()) {
+                    let a = lhs as i64;
+
+                    if let Some(value) = a.checked_add(rhs) {
+                        if let Some(value) = serde_json::Number::from_f64(lhs + rhs as f64) {
+                            return Ok(serde_json::Value::Number(value));
+                        }
+                    }
+
+                }
+
+                Err(ErrorInfo::new(
+                    Position::new(*interval),
+                    "Illegal operation: overflow".to_string(),
+                ))
             }
             (serde_json::Value::String(lhs), serde_json::Value::String(rhs)) => {
                 Ok(serde_json::Value::String(lhs.to_string() + rhs))
@@ -54,7 +93,7 @@ impl ArithmeticOperation for serde_json::Value {
             }
             (_, _) => Err(ErrorInfo::new(
                 Position::new(*interval),
-                "Illegal operation between two different type".to_string(),
+                "Illegal operation: arithmetic between two types".to_string(),
             )),
         }
     }
