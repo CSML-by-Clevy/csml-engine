@@ -1,9 +1,9 @@
 use crate::{ConversationInfo, Memories};
+use csmlinterpreter::data::Client;
 use dynamodb::{
     apis::{client::APIClient, Error},
     models::{CreateStateBody, StateModel},
 };
-use csmlinterpreter::data::Client;
 
 pub fn format_memories(
     data: &mut ConversationInfo,

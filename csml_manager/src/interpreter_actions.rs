@@ -137,7 +137,11 @@ pub fn interpret_step(
 
     let now = SystemTime::now();
     // save in db
-    let msgs: Vec<serde_json::Value> = data.messages.iter().map(|var| {var.clone().message_to_json() }).collect();
+    let msgs: Vec<serde_json::Value> = data
+        .messages
+        .iter()
+        .map(|var| var.clone().message_to_json())
+        .collect();
 
     add_messages_bulk(data, msgs, interaction_order, "SEND")?;
     add_memories(data, &memories)?;

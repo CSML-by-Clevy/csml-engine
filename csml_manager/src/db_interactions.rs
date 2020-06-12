@@ -1,26 +1,25 @@
 use crate::Client;
 
 mod db;
-#[cfg(feature = "mongo")]
-mod db_interactions_mongo;
 #[cfg(feature = "dynamo")]
 mod db_interactions_dynamo;
+#[cfg(feature = "mongo")]
+mod db_interactions_mongo;
 
 pub use db::*;
-
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Conversation {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String, // to_hex bson::oid::ObjectId
     pub client: Client,
-    pub flow_id: String, // to_hex
-    pub step_id: String, // to_hex
+    pub flow_id: String,             // to_hex
+    pub step_id: String,             // to_hex
     pub metadata: serde_json::Value, // encrypted
-    pub status: String, //(OPEN, CLOSED, //Faild?
+    pub status: String,              //(OPEN, CLOSED, //Faild?
     pub last_interaction_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
-    pub updated_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
-    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub updated_at: String,          // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String,          // to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -30,8 +29,8 @@ pub struct Interaction {
     pub client: Client,
     pub success: bool,
     pub event: serde_json::Value, // encrypted
-    pub updated_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
-    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub updated_at: String,       // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String,       // to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -39,16 +38,16 @@ pub struct DbMemories {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String, // to_hex
     pub client: Client,
-    pub interaction_id: String, // to_hex
+    pub interaction_id: String,  // to_hex
     pub conversation_id: String, // to_hex
     pub flow_id: String,
     pub step_id: String,
     pub memory_order: i32,
     pub interaction_order: i32,
     pub key: String,
-    pub value: String, // encrypted
+    pub value: String,              // encrypted
     pub expires_at: Option<String>, // to_rfc3339_opts(SecondsFormat::Millis, true)
-    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String,         // to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -56,16 +55,16 @@ pub struct Messages {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String, // to_hex
     pub client: Client,
-    pub interaction_id: String, // to_hex
+    pub interaction_id: String,  // to_hex
     pub conversation_id: String, // to_hex
     pub flow_id: String,
     pub step_id: String,
     pub message_order: i32,
     pub interaction_order: i32,
-    pub direction: String, // (SEND, RECEIVE)
-    pub payload: String,   // encrypted
+    pub direction: String,    // (SEND, RECEIVE)
+    pub payload: String,      // encrypted
     pub content_type: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
-    pub created_at: String, // to_rfc3339_opts(SecondsFormat::Millis, true)
+    pub created_at: String,   // to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]

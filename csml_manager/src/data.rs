@@ -3,7 +3,6 @@ use csmlinterpreter::data::message::Message; //ApiInfo, Hold
 use curl::easy::Easy;
 use serde_json::Value;
 
-
 pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 

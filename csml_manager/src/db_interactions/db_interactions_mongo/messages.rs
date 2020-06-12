@@ -1,6 +1,6 @@
 use crate::{
-    encrypt::encrypt_data, Client, ConversationInfo, ManagerError, Message,
-    db_interactions::db_interactions_mongo::get_db,
+    db_interactions::db_interactions_mongo::get_db, encrypt::encrypt_data, ConversationInfo,
+    ManagerError,
 };
 use bson::{doc, Bson, Document};
 
@@ -13,15 +13,7 @@ fn format_messages(
     messages
         .iter()
         .enumerate()
-        .map(|(i, var)| {
-            format_message(
-                data,
-                var.clone(),
-                i as i32,
-                interaction_order,
-                direction,
-            )
-        })
+        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction))
         .collect::<Result<Vec<Document>, ManagerError>>()
 }
 

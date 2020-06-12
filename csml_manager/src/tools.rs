@@ -1,5 +1,5 @@
 use crate::{
-    data::{ConversationInfo, ManagerError, DEBUG, Database},
+    data::{ConversationInfo, Database, ManagerError, DEBUG},
     db_interactions::state::delete_state_key,
     send::api,
     CsmlBot, CsmlFlow,

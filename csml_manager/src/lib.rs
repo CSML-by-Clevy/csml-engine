@@ -1,22 +1,22 @@
 pub mod data;
 pub use csmlinterpreter::data::Client;
 
+mod db_interactions;
+mod encrypt;
 mod init;
 mod interpreter_actions;
 mod send;
 mod tools;
-mod db_interactions;
-mod encrypt;
 
 use data::*;
-use db_interactions::{Conversation, init_db, conversation::*, messages::*, state::*};
+use db_interactions::{conversation::*, init_db, messages::*, state::*, Conversation};
 use init::*;
 use interpreter_actions::interpret_step;
 use tools::*;
 
 use csmlinterpreter::data::{
     csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_result::CsmlResult, error_info::ErrorInfo,
-    ContextJson, Hold, Memories, Message,
+    ContextJson, Hold, Memories,
 };
 use md5::{Digest, Md5};
 use serde_json::{map::Map, Value};

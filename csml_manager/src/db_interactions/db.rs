@@ -1,7 +1,5 @@
+use crate::data::{Database, ManagerError};
 use std::env;
-use crate::{
-    data::{ManagerError, Database},
-};
 
 pub mod conversation;
 pub mod interactions;
@@ -11,9 +9,8 @@ pub mod nodes;
 pub mod state;
 
 pub fn init_db() -> Result<Database, ManagerError> {
-
     #[cfg(feature = "mongo")]
-    {
+    if cfg!(feature = "mongo") {
         let uri = match env::var("MONGODB_URI") {
             Ok(var) => var,
             _ => panic!("error no MONGODB_URI en env"),

@@ -1,21 +1,17 @@
-use crate::{
-    Database, Client, ContextJson, ConversationInfo, ManagerError, Memories,
-};
+use crate::{Client, ContextJson, ConversationInfo, Database, ManagerError, Memories};
 
 pub fn add_memories(
     data: &mut ConversationInfo,
-    memories: &[Memories]
+    memories: &[Memories],
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    {
+    if cfg!(feature = "mongo") {
         use crate::db_interactions::db_interactions_mongo::memories::add_memories as add;
 
-        return add(data, &memories)
+        return add(data, &memories);
     }
 
-    Err (
-        ManagerError::Manager("db is not init correctly".to_owned())
-    )
+    Err(ManagerError::Manager("db is not init correctly".to_owned()))
 }
 
 pub fn get_memories(
@@ -25,16 +21,14 @@ pub fn get_memories(
     db: &Database,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    {
-        use crate::db_interactions::db_interactions_mongo::memories::get_memories as get;
+    if cfg!(feature = "mongo") {
         use crate::db_interactions::db_interactions_mongo::get_db;
+        use crate::db_interactions::db_interactions_mongo::memories::get_memories as get;
 
         let db: &mongodb::Database = get_db(db)?;
 
-        return get(client, context, metadata, db)
+        return get(client, context, metadata, db);
     }
 
-    Err (
-        ManagerError::Manager("db is not init correctly".to_owned())
-    )
+    Err(ManagerError::Manager("db is not init correctly".to_owned()))
 }

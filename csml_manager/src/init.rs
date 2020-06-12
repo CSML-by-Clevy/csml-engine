@@ -1,6 +1,6 @@
-use crate::db_interactions::{init_db, conversation::*, interactions::*, memories::*};
+use crate::db_interactions::{conversation::*, init_db, interactions::*, memories::*};
 use crate::{
-    data::{ConversationInfo, CsmlData, ManagerError, Database},
+    data::{ConversationInfo, CsmlData, Database, ManagerError},
     tools::{get_default_flow, get_flow_by_id, search_flow},
     ContextJson, CsmlBot, CsmlFlow,
 };
@@ -129,11 +129,7 @@ fn get_conversation<'a>(
                         Ok(flow) => flow,
                         Err(..) => {
                             // if flow id exist in db but not in bot close conversation
-                            close_conversation(
-                                &conversation.id,
-                                &client,
-                                &db,
-                            )?;
+                            close_conversation(&conversation.id, &client, &db)?;
                             // and start new conversation at default flow
                             return create_new_conversation(
                                 context, bot, flow_found, client, metadata, db,

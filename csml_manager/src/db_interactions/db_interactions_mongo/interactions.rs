@@ -1,9 +1,7 @@
 use serde_json::Value;
 
-use crate::{Client, ConversationInfo, ManagerError, db_interactions::Interaction};
+use crate::{Client, ManagerError};
 use bson::{doc, Bson};
-use chrono::{prelude::Utc, SecondsFormat};
-
 
 pub fn init_interaction(
     event: Value,
@@ -28,7 +26,12 @@ pub fn init_interaction(
     Ok(id.to_hex())
 }
 
-pub fn update_interaction(interaction_id: &str, success: bool, client: &Client, db: &mongodb::Database) -> Result<(), ManagerError> {
+pub fn update_interaction(
+    interaction_id: &str,
+    success: bool,
+    client: &Client,
+    db: &mongodb::Database,
+) -> Result<(), ManagerError> {
     let collection = db.collection("interaction");
 
     let filter = doc! {
