@@ -1,5 +1,20 @@
 use crate::{encrypt::encrypt_data, Client, ConversationInfo, ManagerError, db_interactions::Conversation};
 use bson::{doc, Bson};
+use chrono::{prelude::Utc, SecondsFormat};
+
+fn format_conversation_struct(conversation: bson::ordered::OrderedDocument ) -> Result<Conversation, ManagerError> {
+    Ok(Conversation {
+        id: conversation.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
+        client: bson::from_bson(conversation.get("client").unwrap().to_owned())?,
+        flow_id: conversation.get_str("flow_id").unwrap().to_owned(), // to_hex
+        step_id: conversation.get_str("step_id").unwrap().to_owned(), // to_hex
+        metadata: bson::from_bson(conversation.get("metadata").unwrap().to_owned())?, // encrypted
+        status: conversation.get_str("status").unwrap().to_owned(), //(OPEN, CLOSED, //Faild?
+        last_interaction_at: conversation.get_utc_datetime("last_interaction_at").unwrap().to_rfc3339_opts(SecondsFormat::Millis, true),
+        updated_at: conversation.get_utc_datetime("updated_at").unwrap().to_rfc3339_opts(SecondsFormat::Millis, true),
+        created_at: conversation.get_utc_datetime("created_at").unwrap().to_rfc3339_opts(SecondsFormat::Millis, true),
+    })
+}
 
 pub fn create_conversation(
     flow_id: &str,
@@ -91,7 +106,10 @@ pub fn get_latest_open(
     let result = collection.find_one(filter, find_options)?;
 
     match result {
-        Some(conversation) => Ok(Some(bson::from_bson(bson::Bson::Document(conversation))?)),
+        Some(conv) => {
+            let conversation = format_conversation_struct(conv)?;
+            Ok(Some(conversation))
+        },
         None => Ok(None),
     }
 }

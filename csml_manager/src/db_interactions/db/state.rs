@@ -5,52 +5,25 @@ use crate::{
 };
 use csmlinterpreter::data::Client;
 
-pub fn format_state_body(
-    data: &mut ConversationInfo,
-    _type: &str,
-    keys_values: Vec<(&str, &serde_json::Value)>,
-) -> Result<Vec<i32>, ManagerError> { // Document
-    // let client = bson::to_bson(&data.client)?;
-
-    // let value = keys_values.iter().fold(Ok(vec![]), |vec, (key, value)| {
-    //     let time = Bson::UtcDatetime(chrono::Utc::now());
-
-    //     let value = encrypt_data(value)?;
-    //     let mut vec = vec?;
-
-    //     vec.push(doc! {
-    //         "client": client.clone(),
-    //         "type": _type,
-    //         "key": key,
-    //         "value": value,
-    //         "expires_at": Bson::Null,
-    //         "created_at": time
-    //     });
-    //     Ok(vec)
-    // });
-    unimplemented!()
-    // value
-}
-
-// pub fn delete_state_full(api_client: &APIClient, client: &Client) -> Result<(), Error> {
-//     api_client
-//         .state_api()
-//         .delete_state_full(&client.bot_id, &client.user_id, &client.channel_id)
-// }
-
-// pub fn delete_state_type(api_client: &APIClient, client: &Client, _type: &str) -> Result<(), Error> {
-//     api_client
-//     .state_api()
-//     .delete_state_type(_type, &client.bot_id, &client.user_id, &client.channel_id)
-// }
 pub fn delete_state_key(
-    client: &Client,
+    _client: &Client,
     _type: &str,
-    key: &str,
-    db: &Database,
+    _key: &str,
+    _db: &Database,
 ) -> Result<(), ManagerError> {
-    unimplemented!()
-    // Ok(())
+    #[cfg(feature = "mongo")]
+    {
+        use crate::db_interactions::db_interactions_mongo::state::delete_state_key as delete;
+        use crate::db_interactions::db_interactions_mongo::get_db;
+
+        let db: &mongodb::Database = get_db(_db)?;
+
+        return delete(_client, _type, _key, db)
+    }
+
+    Err (
+        ManagerError::Manager("db is not init correctly".to_owned())
+    )
 }
 
 // pub fn get_state_type(
@@ -70,25 +43,40 @@ pub fn delete_state_key(
 // }
 
 pub fn get_state_key(
-    client: &Client,
+    _client: &Client,
     _type: &str,
-    key: &str,
-    db: &Database,
+    _key: &str,
+    _db: &Database,
 ) -> Result<Option<serde_json::Value>, ManagerError> {
-    
-    unimplemented!()
+    #[cfg(feature = "mongo")]
+    {
+        use crate::db_interactions::db_interactions_mongo::state::get_state_key as get_state_key;
+        use crate::db_interactions::db_interactions_mongo::get_db;
 
-    // match state.find_one(filter, None)? {
-    //     Some(value) => {
-    //         let state: State = bson::from_bson(bson::Bson::Document(value))?;
+        let db: &mongodb::Database = get_db(_db)?;
 
-    //         Ok(Some(decrypt_data(state.value)?))
-    //     }
-    //     None => Ok(None),
-    // }
+        return get_state_key(_client, _type, _key, db)
+    }
+
+    Err (
+        ManagerError::Manager("db is not init correctly".to_owned())
+    )
 }
 
-pub fn set_state_items(data: &ConversationInfo, docs: Vec<i32>) -> Result<(), ManagerError> { // Document
-    unimplemented!()
-    // Ok(())
+pub fn set_state_items(
+    _data: &mut ConversationInfo,
+    _type: &str,
+    _keys_values: Vec<(&str, &serde_json::Value)>,
+) -> Result<(), ManagerError> { // Document
+    #[cfg(feature = "mongo")]
+    {
+        use crate::db_interactions::db_interactions_mongo::state::set_state_items;
+
+
+        return set_state_items(_data, _type, _keys_values)
+    }
+
+    Err (
+        ManagerError::Manager("db is not init correctly".to_owned())
+    )
 }

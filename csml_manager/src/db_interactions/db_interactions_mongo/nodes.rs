@@ -1,20 +1,8 @@
-use crate::{Client, ConversationInfo, ManagerError, Database};
+use crate::{Client, ConversationInfo, ManagerError, Database, db_interactions::db_interactions_mongo::get_db,};
 use bson::{doc, Bson};
 
 pub fn create_node(data: &mut ConversationInfo) -> Result<(), ManagerError> {
     let time = Bson::UtcDatetime(chrono::Utc::now());
-    
-
-    let db: &mongodb::Database = if let Database::Mongo(ref db) = data.db {
-        db
-    } else {
-        return Err (
-            ManagerError::Manager("db is not init correctly".to_owned())
-        )
-    };
-    
-    let path = db.collection("path");
-
     let node = doc! {
         "client": bson::to_bson(&data.client)?,
         "interaction_id": &data.interaction_id,
@@ -25,6 +13,9 @@ pub fn create_node(data: &mut ConversationInfo) -> Result<(), ManagerError> {
         "next_step": Bson::Null, //"Option<string>",
         "created_at": time
     };
+
+    let db = get_db(&data.db)?;
+    let path = db.collection("path");
 
     path.insert_one(node, None)?;
 

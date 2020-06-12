@@ -34,7 +34,6 @@ pub fn start_conversation(
         &event,
         &csmldata,
     )?;
-
     // save event in db as message RECEIVE
     let msgs = vec![json_event["payload"].to_owned()];
     add_messages_bulk(&mut data, msgs, 0, "SEND")?;

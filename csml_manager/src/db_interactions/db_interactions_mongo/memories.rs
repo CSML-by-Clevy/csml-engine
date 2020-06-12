@@ -6,7 +6,7 @@ use crate::{
 };
 use bson::{doc, Bson};
 
-pub fn format_memories(
+fn format_memories(
     data: &mut ConversationInfo,
     memories: &[Memories],
 ) -> Result<Vec<bson::Document>, ManagerError> {
@@ -75,12 +75,13 @@ pub fn get_memories(
     let mut map = serde_json::Map::new();
 
     for elem in cursor {
-        if let Ok(doc) = elem {
-            let memorie: DbMemories = bson::from_bson(bson::Bson::Document(doc))?;
-            let value: serde_json::Value = decrypt_data(memorie.value)?;
 
-            if !map.contains_key(&memorie.key) {
-                map.insert(memorie.key, value);
+        if let Ok(doc) = elem {
+            let memorie: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
+            let value: serde_json::Value = decrypt_data(memorie["value"].as_str().unwrap().to_owned())?;
+
+            if !map.contains_key(memorie["key"].as_str().unwrap()) {
+                map.insert(memorie["key"].as_str().unwrap().to_owned(), value);
             }
         }
     }

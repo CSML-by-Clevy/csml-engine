@@ -72,8 +72,7 @@ pub fn get_latest_open(
         use crate::db_interactions::db_interactions_mongo::get_db;
 
         let db: &mongodb::Database = get_db(db)?;
-
-        return get_latest(client, db)
+        return  get_latest(client, db)
     }
 
     Err (

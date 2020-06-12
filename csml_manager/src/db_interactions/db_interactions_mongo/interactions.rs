@@ -1,18 +1,9 @@
 use serde_json::Value;
 
-use crate::{Client, ConversationInfo, ManagerError};
+use crate::{Client, ConversationInfo, ManagerError, db_interactions::Interaction};
 use bson::{doc, Bson};
+use chrono::{prelude::Utc, SecondsFormat};
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Interaction {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
-    pub id: bson::oid::ObjectId,
-    pub client: Client,
-    pub success: bool,
-    pub event: bson::Document, // encrypted
-    pub updated_at: bson::UtcDateTime,
-    pub created_at: bson::UtcDateTime,
-}
 
 pub fn init_interaction(
     event: Value,

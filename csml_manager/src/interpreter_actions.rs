@@ -56,8 +56,7 @@ pub fn interpret_step(
                     "step_vars": step_vars,
                     "hash": format!("{:x}", hash.result())
                 });
-                let state_body = format_state_body(data, "hold", vec![("position", &state_hold)])?;
-                set_state_items(&data, state_body)?;
+                set_state_items(data, "hold", vec![("position", &state_hold)])?;
                 data.context.hold = Some(Hold {
                     index: new_index,
                     step_vars,

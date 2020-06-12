@@ -2,11 +2,12 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     ConversationInfo, ManagerError,
     db_interactions::State,
+    db_interactions::db_interactions_mongo::get_db,
 };
 use bson::{doc, Bson, Document};
 use csmlinterpreter::data::Client;
 
-pub fn format_state_body(
+fn format_state_body(
     data: &mut ConversationInfo,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
@@ -94,15 +95,24 @@ pub fn get_state_key(
     };
     match state.find_one(filter, None)? {
         Some(value) => {
-            let state: State = bson::from_bson(bson::Bson::Document(value))?;
+            let state: serde_json::Value = bson::from_bson(bson::Bson::Document(value))?;
 
-            Ok(Some(decrypt_data(state.value)?))
+            Ok(Some(decrypt_data(state["value"].as_str().unwrap().to_owned())?))
         }
         None => Ok(None),
     }
 }
 
-pub fn set_state_items(docs: Vec<Document>, db: &mongodb::Database,) -> Result<(), ManagerError> {
+// docs: Vec<Document>, db: &mongodb::Database,
+pub fn set_state_items(
+    data: &mut ConversationInfo,
+    _type: &str,
+    keys_values: Vec<(&str, &serde_json::Value)>,
+) -> Result<(), ManagerError> {
+
+    let docs = format_state_body(data, _type, keys_values)?;
+
+    let db = get_db(&data.db)?;
     let state = db.collection("state");
 
     state.insert_many(docs, None)?;
