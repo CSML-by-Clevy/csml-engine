@@ -426,77 +426,112 @@ impl Primitive for PrimitiveFloat {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value + other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveFloat::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            let lhs = self.value as i64;
+            let rhs = other.value as i64;
+
+            if let Some(value) = lhs.checked_add(rhs) {
+                return Ok(Box::new(PrimitiveFloat::new(self.value + other.value)));
+            }
+            
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} + {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value - other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveFloat::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            let lhs = self.value as i64;
+            let rhs = other.value as i64;
+
+            if let Some(value) = lhs.checked_sub(rhs) {
+                return Ok(Box::new(PrimitiveFloat::new(self.value - other.value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} - {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
+
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             check_division_by_zero_f64(self.value, other.value)?;
 
-            let result = self.value / other.value;
+            let lhs = self.value as i64;
+            let rhs = other.value as i64;
 
-            return Ok(Box::new(PrimitiveFloat::new(result)));
+            if let Some(value) = lhs.checked_div(rhs) {
+                return Ok(Box::new(PrimitiveFloat::new(self.value / other.value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} / {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value * other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveFloat::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            let lhs = self.value as i64;
+            let rhs = other.value as i64;
+
+            if let Some(value) = lhs.checked_mul(rhs) {
+                return Ok(Box::new(PrimitiveFloat::new(self.value * other.value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} * {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value % other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveFloat::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            let lhs = self.value as i64;
+            let rhs = other.value as i64;
+
+            if let Some(value) = lhs.checked_rem(rhs) {
+                return Ok(Box::new(PrimitiveFloat::new(self.value % other.value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} % {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))

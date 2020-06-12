@@ -1,6 +1,2 @@
-// BUG: do obj = {}.insert("foo", "bar")
-
 start:
-	say Component.Button({"param_0": "foo"}, {"param_1": "bar"})
-
-  goto end
+	goto end

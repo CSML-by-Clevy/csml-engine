@@ -217,6 +217,7 @@ pub const ERROR_OPS_DIV_INT: &'static str = "[!] Int: Division by zero";
 pub const ERROR_OPS_DIV_FLOAT: &'static str = "[!] Float: Division by zero";
 
 pub const ERROR_ILLEGAL_OPERATION: &'static str = "illegal operation:";
+pub const OVERFLOWING_OPERATION: &'static str = "overflowing operation:";
 
 pub fn gen_error_info(position: Position, message: String) -> ErrorInfo {
     ErrorInfo::new(position, message)
