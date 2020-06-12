@@ -12,6 +12,7 @@ use std::collections::HashSet;
 ////////////////////////////////////////////////////////////////////////////////
 
 trait ArithmeticOperation {
+    fn get_type(value: &serde_json::Value) -> String;
     fn add(
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
@@ -20,6 +21,17 @@ trait ArithmeticOperation {
 }
 
 impl ArithmeticOperation for serde_json::Value {
+    fn get_type(value: &serde_json::Value) -> String {
+        match value {
+            serde_json::Value::Null => "Null".to_string(),
+            serde_json::Value::Bool(_) => String::from("Bool"),
+            serde_json::Value::Number(_) => String::from("Number"),
+            serde_json::Value::String(_) => String::from("String"),
+            serde_json::Value::Array(_) => String::from("Array"),
+            serde_json::Value::Object(_) => String::from("Object"),
+        }
+    }
+
     fn add(
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
@@ -90,9 +102,20 @@ impl ArithmeticOperation for serde_json::Value {
 
                 Ok(serde_json::Value::Object(lhs))
             }
+            (serde_json::Value::String(lhs), serde_json::Value::Array(rhs)) => {
+                let mut rhs = rhs.to_owned();
+
+                rhs.push(serde_json::Value::String(lhs.to_owned()));
+
+                Ok(serde_json::Value::Array(rhs))
+            }
             (_, _) => Err(ErrorInfo::new(
                 Position::new(*interval),
-                "Illegal operation: arithmetic between two types".to_string(),
+                format!(
+                    "Illegal operation: arithmetic between two types -> {} + {}",
+                    serde_json::Value::get_type(lhs),
+                    serde_json::Value::get_type(rhs)
+                ),
             )),
         }
     }
@@ -198,7 +221,7 @@ fn get_parameter(
 fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {
     let mut result = PrimitiveObject::get_literal(&hashmap, interval);
 
-    result.set_content_type(name);
+    result.set_content_type(&name.to_lowercase());
 
     result
 }

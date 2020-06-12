@@ -24,7 +24,38 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        serde_json::json!({}),
+        serde_json::json!({
+            "Button": {
+                "params": [
+                    {
+                        "title": {
+                            "required": true,
+                            "type": "String",
+                            "default_value": [],
+                            "add_value": []
+                        }
+                    },
+                    {
+                        "payload": {
+                            "type": "String",
+                            "default_value": [
+                                {"$_get": "title"}
+                            ],
+                            "add_value": []
+                        }
+                    },
+                    {
+                        "accepts": {
+                            "type": "Array",
+                            "default_value": [
+                                {"$_get": "title"}
+                            ],
+                            "add_value": []
+                        }
+                    },
+                ]
+            }
+        }),
         DEFAULT_FLOW_NAME,
     );
 

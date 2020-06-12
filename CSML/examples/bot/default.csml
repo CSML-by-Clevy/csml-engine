@@ -1,4 +1,5 @@
 start:
 	say Button("my_button")
+	say Component.Button("my_button")
 
 	goto end
