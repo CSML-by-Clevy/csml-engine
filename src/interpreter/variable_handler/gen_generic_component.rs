@@ -66,7 +66,6 @@ impl ArithmeticOperation for serde_json::Value {
                             return Ok(serde_json::Value::Number(value));
                         }
                     }
-
                 }
 
                 Err(ErrorInfo::new(

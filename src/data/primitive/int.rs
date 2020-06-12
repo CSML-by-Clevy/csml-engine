@@ -502,9 +502,7 @@ impl Primitive for PrimitiveInt {
                     let value = self.value as f64 / other.value as f64;
 
                     return Ok(Box::new(PrimitiveFloat::new(value)));
-
                 }
-
             } else {
                 if let Some(value) = self.value.checked_div(other.value) {
                     return Ok(Box::new(PrimitiveInt::new(value)));

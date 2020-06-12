@@ -435,7 +435,7 @@ impl Primitive for PrimitiveFloat {
             if let Some(value) = lhs.checked_add(rhs) {
                 return Ok(Box::new(PrimitiveFloat::new(self.value + other.value)));
             }
-            
+
             error_msg = OVERFLOWING_OPERATION;
         }
 
