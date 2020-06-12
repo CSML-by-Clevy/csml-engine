@@ -41,7 +41,7 @@ impl ArithmeticOperation for serde_json::Value {
                     let a = lhs as i64;
                     let b = rhs as i64;
 
-                    if let Some(value) = a.checked_add(b) {
+                    if a.checked_add(b).is_some() {
                         if let Some(value) = serde_json::Number::from_f64(lhs + rhs) {
                             return Ok(serde_json::Value::Number(value));
                         }
@@ -51,7 +51,7 @@ impl ArithmeticOperation for serde_json::Value {
                 if let (Some(lhs), Some(rhs)) = (lhs.as_i64(), rhs.as_f64()) {
                     let b = rhs as i64;
 
-                    if let Some(value) = lhs.checked_add(b) {
+                    if lhs.checked_add(b).is_some() {
                         if let Some(value) = serde_json::Number::from_f64(lhs as f64 + rhs) {
                             return Ok(serde_json::Value::Number(value));
                         }
@@ -61,7 +61,7 @@ impl ArithmeticOperation for serde_json::Value {
                 if let (Some(lhs), Some(rhs)) = (lhs.as_f64(), rhs.as_i64()) {
                     let a = lhs as i64;
 
-                    if let Some(value) = a.checked_add(rhs) {
+                    if a.checked_add(rhs).is_some() {
                         if let Some(value) = serde_json::Number::from_f64(lhs + rhs as f64) {
                             return Ok(serde_json::Value::Number(value));
                         }

@@ -432,7 +432,7 @@ impl Primitive for PrimitiveFloat {
             let lhs = self.value as i64;
             let rhs = other.value as i64;
 
-            if let Some(value) = lhs.checked_add(rhs) {
+            if lhs.checked_add(rhs).is_some() {
                 return Ok(Box::new(PrimitiveFloat::new(self.value + other.value)));
             }
 
@@ -454,7 +454,7 @@ impl Primitive for PrimitiveFloat {
             let lhs = self.value as i64;
             let rhs = other.value as i64;
 
-            if let Some(value) = lhs.checked_sub(rhs) {
+            if lhs.checked_sub(rhs).is_some() {
                 return Ok(Box::new(PrimitiveFloat::new(self.value - other.value)));
             }
 
@@ -478,7 +478,7 @@ impl Primitive for PrimitiveFloat {
             let lhs = self.value as i64;
             let rhs = other.value as i64;
 
-            if let Some(value) = lhs.checked_div(rhs) {
+            if lhs.checked_div(rhs).is_some() {
                 return Ok(Box::new(PrimitiveFloat::new(self.value / other.value)));
             }
 
@@ -500,7 +500,7 @@ impl Primitive for PrimitiveFloat {
             let lhs = self.value as i64;
             let rhs = other.value as i64;
 
-            if let Some(value) = lhs.checked_mul(rhs) {
+            if lhs.checked_mul(rhs).is_some() {
                 return Ok(Box::new(PrimitiveFloat::new(self.value * other.value)));
             }
 
@@ -522,7 +522,7 @@ impl Primitive for PrimitiveFloat {
             let lhs = self.value as i64;
             let rhs = other.value as i64;
 
-            if let Some(value) = lhs.checked_rem(rhs) {
+            if lhs.checked_rem(rhs).is_some() {
                 return Ok(Box::new(PrimitiveFloat::new(self.value % other.value)));
             }
 

@@ -1,2 +1,4 @@
 start:
+	say Button("my_button")
+
 	goto end
