@@ -349,8 +349,6 @@ fn get_object(
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-// [TODO]: arithmetic operation on number
-
 pub fn gen_generic_component(
     name: &str,
     interval: &Interval,

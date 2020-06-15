@@ -1,5 +1,6 @@
 start:
-	say Button("my_button")
-	say Component.Button("my_button")
+	do button = Component.Button("my_button")
+
+	say Component.Question("my_question", [button])
 
 	goto end

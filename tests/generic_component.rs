@@ -54,7 +54,7 @@ fn empty() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -82,7 +82,7 @@ fn default() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {}},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -138,7 +138,7 @@ fn test_all() {
                     "Morning": "World"
                 }
             },
-            "content_type": "Button"
+            "content_type": "button"
         }
         ]}"#;
     let msg = format_message(
@@ -210,7 +210,7 @@ fn default_set() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {"hello": "world"}},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -255,7 +255,7 @@ fn default_get() {
             "title": {"hello": "world"},
             "payload": {"hello": "world"}
         },
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -312,7 +312,7 @@ fn default_multiple_get() {
             },
             "payload": {"hello": "world"}
         },
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -366,7 +366,7 @@ fn default_add_value() {
 		"content": {"title": {
             "hello": "world"
         }},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -410,7 +410,7 @@ fn default_add_value_empty() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {}},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -458,7 +458,7 @@ fn parameter() {
 		"content": {
             "foo": {"param_0": "foo"}
 		},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -511,7 +511,7 @@ fn parameter_multiple() {
                 "Hello": 42
             }
 		},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
