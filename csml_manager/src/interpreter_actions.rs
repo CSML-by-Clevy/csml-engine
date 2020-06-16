@@ -56,7 +56,7 @@ pub fn interpret_step(
                     "step_vars": step_vars,
                     "hash": format!("{:x}", hash.result())
                 });
-                set_state_items(data, "hold", vec![("position", &state_hold)])?;
+                set_state_items(data, "hold", interaction_order, vec![("position", &state_hold)])?;
                 data.context.hold = Some(Hold {
                     index: new_index,
                     step_vars,
@@ -144,7 +144,7 @@ pub fn interpret_step(
         .collect();
 
     add_messages_bulk(data, msgs, interaction_order, "SEND")?;
-    add_memories(data, &memories)?;
+    add_memories(data, &memories, interaction_order)?;
 
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {
@@ -158,6 +158,7 @@ pub fn interpret_step(
     }
 
     update_interaction(data, interaction_success)?;
+
     Ok(messages_formater(
         data,
         data.messages.clone(),
@@ -175,6 +176,7 @@ fn goto_flow<'a>(
     nextstep: String,
 ) -> Result<(), ManagerError> {
     data.last_flow = Some((data.context.flow.clone(), data.context.step.clone()));
+    create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
 
     *current_flow = get_flow_by_id(&nextflow, &csmldata.bot.flows)?;
     data.context.flow = nextflow;
@@ -187,7 +189,6 @@ fn goto_flow<'a>(
     )?;
 
     *interaction_order += 1;
-    create_node(data)?;
     update_interaction(data, false)?;
 
     Ok(())
@@ -201,6 +202,8 @@ fn goto_step<'a>(
     csmldata: &'a CsmlData,
     nextstep: String,
 ) -> Result<bool, ManagerError> {
+    create_node(data, None, Some(nextstep.clone()))?;
+
     if nextstep == "end" {
         *conversation_end = true;
 
@@ -229,7 +232,5 @@ fn goto_step<'a>(
     }
 
     *interaction_order += 1;
-    create_node(data)?;
-
     Ok(false)
 }

@@ -8,6 +8,7 @@ use bson::{doc, Bson};
 fn format_memories(
     data: &mut ConversationInfo,
     memories: &[Memories],
+    interaction_order: i32,
 ) -> Result<Vec<bson::Document>, ManagerError> {
     let client = bson::to_bson(&data.client)?;
 
@@ -27,7 +28,7 @@ fn format_memories(
                 "flow_id": &data.context.flow,
                 "step_id": &data.context.step,
                 "memory_order": memorie_order as i32,
-                "interaction_order": 0, //tmp
+                "interaction_order": interaction_order,
                 "key": &var.key,
                 "value": value, // encrypted
                 "expires_at": Bson::Null,
@@ -42,11 +43,12 @@ fn format_memories(
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &[Memories],
+    interaction_order: i32,
 ) -> Result<(), ManagerError> {
     if memories.len() == 0 {
         return Ok(());
     }
-    let mem = format_memories(data, memories)?;
+    let mem = format_memories(data, memories, interaction_order)?;
     let db = get_db(&data.db)?;
 
     let collection = db.collection("memory");

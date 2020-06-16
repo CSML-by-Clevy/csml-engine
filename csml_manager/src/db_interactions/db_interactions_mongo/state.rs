@@ -78,7 +78,6 @@ pub fn delete_state_key(
 
 //     Ok(cursor)
 // }
-
 pub fn get_state_key(
     client: &Client,
     _type: &str,

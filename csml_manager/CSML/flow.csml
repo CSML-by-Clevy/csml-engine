@@ -2,6 +2,7 @@ start:
     say "hola 42"
     remember amerelo42 = 4
     // say "test => {{amerelo42}}"
+    say "goto flow 2"
     goto flow flow2
 
 step2:

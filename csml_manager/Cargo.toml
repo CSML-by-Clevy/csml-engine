@@ -7,7 +7,7 @@ edition = "2018"
 [features]
 tmp = []
 # default = ["mongo", "encryption"]
-dynamo = ["dynamodb"]
+dynamo = ["dynamodb", "reqwest"]
 mongo = ["mongodb", "bson"]
 # encryption = ["openssl", "base64"]
 
@@ -29,6 +29,11 @@ optional = true
 
 [dependencies.dynamodb]
 path = "../dynamodb"
+optional = true
+
+[dependencies.reqwest]
+version = "0.9.24"
+features = ["rustls-tls"]
 optional = true
 
 [dependencies]

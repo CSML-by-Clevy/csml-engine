@@ -9,13 +9,24 @@ pub fn delete_state_key(
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") {
-        use crate::db_interactions::db_interactions_mongo::get_db;
         use crate::db_interactions::db_interactions_mongo::state::delete_state_key as delete;
+        use crate::db_interactions::db_interactions_mongo::get_db;
 
         let db: &mongodb::Database = get_db(_db)?;
 
         return delete(_client, _type, _key, db);
     }
+
+    #[cfg(feature = "dynamo")]
+    if cfg!(feature = "dynamo") {
+        use crate::db_interactions::db_interactions_dynamo::state::delete_state_key as delete;
+        use crate::db_interactions::db_interactions_dynamo::get_db;
+
+        let db: &dynamodb::apis::client::APIClient = get_db(_db)?;
+
+        return delete(_client, _type, _key, db);
+    }
+
 
     Err(ManagerError::Manager("db is not init correctly".to_owned()))
 }
@@ -44,10 +55,20 @@ pub fn get_state_key(
 ) -> Result<Option<serde_json::Value>, ManagerError> {
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") {
-        use crate::db_interactions::db_interactions_mongo::get_db;
         use crate::db_interactions::db_interactions_mongo::state::get_state_key;
+        use crate::db_interactions::db_interactions_mongo::get_db;
 
         let db: &mongodb::Database = get_db(_db)?;
+
+        return get_state_key(_client, _type, _key, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if cfg!(feature = "dynamo") {
+        use crate::db_interactions::db_interactions_dynamo::state::get_state_key;
+        use crate::db_interactions::db_interactions_dynamo::get_db;
+
+        let db: &dynamodb::apis::client::APIClient = get_db(_db)?;
 
         return get_state_key(_client, _type, _key, db);
     }
@@ -58,14 +79,30 @@ pub fn get_state_key(
 pub fn set_state_items(
     _data: &mut ConversationInfo,
     _type: &str,
+    _interaction_order: i32,
     _keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
     // Document
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") {
-        use crate::db_interactions::db_interactions_mongo::state::set_state_items;
+        use crate::db_interactions::db_interactions_mongo::state::set_state_items as set_items;
 
-        return set_state_items(_data, _type, _keys_values);
+        return set_items(_data, _type, _keys_values);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if cfg!(feature = "dynamo") {
+        use crate::db_interactions::db_interactions_dynamo::state::format_state_body;
+        use crate::db_interactions::db_interactions_dynamo::state::set_state_items as set_items;
+
+        use crate::db_interactions::db_interactions_dynamo::get_db;
+
+        println!("format");
+        let state_body = format_state_body(_data, _type, _interaction_order, _keys_values);
+        let db: &dynamodb::apis::client::APIClient = get_db(&_data.db)?;
+
+        println!("set_items");
+        return set_items(&_data.client, state_body, db);
     }
 
     Err(ManagerError::Manager("db is not init correctly".to_owned()))

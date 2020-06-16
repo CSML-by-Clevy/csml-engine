@@ -16,12 +16,11 @@ pub struct CsmlData {
     pub sync: bool,
 }
 
-#[derive(Debug)]
 pub enum Database {
     #[cfg(feature = "mongo")]
     Mongo(mongodb::Database),
     #[cfg(feature = "dynamodb")]
-    Dynamodb(i32),
+    Dynamodb(dynamodb::apis::client::APIClient),
     None,
 }
 
@@ -83,6 +82,9 @@ pub enum ManagerError {
     BsonEncoder(bson::EncoderError),
     #[cfg(any(feature = "mongo"))]
     MongoDB(mongodb::error::Error),
+
+    #[cfg(any(feature = "dynamo"))]
+    Reqwest(reqwest::Error),
 }
 
 impl From<serde_json::Error> for ManagerError {
@@ -133,5 +135,24 @@ impl From<bson::DecoderError> for ManagerError {
 impl From<mongodb::error::Error> for ManagerError {
     fn from(e: mongodb::error::Error) -> Self {
         ManagerError::MongoDB(e)
+    }
+}
+
+#[cfg(any(feature = "dynamo"))]
+impl From<reqwest::Error> for ManagerError {
+    fn from(e: reqwest::Error) -> Self {
+        ManagerError::Reqwest(e)
+    }
+}
+
+#[cfg(any(feature = "dynamo"))]
+impl From<dynamodb::apis::Error> for ManagerError {
+    fn from(e: dynamodb::apis::Error) -> Self {
+        match e {
+            dynamodb::apis::Error::Reqwest(reqwest) => ManagerError::Reqwest(reqwest),
+            dynamodb::apis::Error::Serde(serde) => ManagerError::Serde(serde),
+            dynamodb::apis::Error::Io(io) => ManagerError::Io(io),
+            dynamodb::apis::Error::Interpreter(string) => ManagerError::Interpreter(string),
+        }
     }
 }

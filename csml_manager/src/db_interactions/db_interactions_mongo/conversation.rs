@@ -71,7 +71,7 @@ pub fn close_conversation(
     collection.update_one(
         filter,
         doc! {
-            "$set": { "status": "CLOSE" },
+            "$set": { "status": "CLOSED" },
             "$currentDate": { "last_interaction_at": true }
         },
         None,
@@ -92,7 +92,7 @@ pub fn close_all_conversations(
     collection.update_many(
         filter,
         doc! {
-           "$set": { "status": "CLOSE" },
+           "$set": { "status": "CLOSED" },
            "$currentDate": { "test": true }
         },
         None,

@@ -2,6 +2,7 @@ pub mod data;
 pub use csmlinterpreter::data::Client;
 
 mod db_interactions;
+#[cfg(any(feature = "mongo"))]
 mod encrypt;
 mod init;
 mod interpreter_actions;
@@ -36,7 +37,7 @@ pub fn start_conversation(
     )?;
     // save event in db as message RECEIVE
     let msgs = vec![json_event["payload"].to_owned()];
-    add_messages_bulk(&mut data, msgs, 0, "SEND")?;
+    add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
     let flow = get_flow_by_id(&data.context.flow, &csmldata.bot.flows)?;
     check_for_hold(&mut data, flow)?;

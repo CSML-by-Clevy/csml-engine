@@ -402,6 +402,7 @@ dependencies = [
  "mongodb",
  "multimap",
  "openssl",
+ "reqwest",
  "serde",
  "serde_json",
  "uuid 0.8.1",

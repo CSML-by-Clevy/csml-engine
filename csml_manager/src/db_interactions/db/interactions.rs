@@ -15,6 +15,16 @@ pub fn init_interaction(
         return init(event, client, db);
     }
 
+    #[cfg(feature = "dynamo")]
+    if cfg!(feature = "dynamo") {
+        use crate::db_interactions::db_interactions_dynamo::get_db;
+        use crate::db_interactions::db_interactions_dynamo::interactions::init_interaction as init;
+
+        let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+
+        return init(event, client, db);
+    }
+
     Err(ManagerError::Manager("db is not init correctly".to_owned()))
 }
 
@@ -25,6 +35,16 @@ pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), 
         use crate::db_interactions::db_interactions_mongo::interactions::update_interaction as update;
 
         let db: &mongodb::Database = get_db(&data.db)?;
+
+        return update(&data.interaction_id, success, &data.client, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if cfg!(feature = "dynamo") {
+        use crate::db_interactions::db_interactions_dynamo::get_db;
+        use crate::db_interactions::db_interactions_dynamo::interactions::update_interaction as update;
+
+        let db: &dynamodb::apis::client::APIClient = get_db(&data.db)?;
 
         return update(&data.interaction_id, success, &data.client, db);
     }

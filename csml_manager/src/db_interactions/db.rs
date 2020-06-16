@@ -1,5 +1,4 @@
 use crate::data::{Database, ManagerError};
-use std::env;
 
 pub mod conversation;
 pub mod interactions;
@@ -7,6 +6,9 @@ pub mod memories;
 pub mod messages;
 pub mod nodes;
 pub mod state;
+
+#[cfg(feature = "dynamo")]
+use dynamodb::apis::{client::APIClient, configuration::Configuration};
 
 pub fn init_db() -> Result<Database, ManagerError> {
     #[cfg(feature = "mongo")]
@@ -22,7 +24,13 @@ pub fn init_db() -> Result<Database, ManagerError> {
         return Ok(db);
     }
 
-    //dynamo {}
+    #[cfg(feature = "dynamo")]
+    if cfg!(feature = "dynamo") {
+        let conf = Configuration::new();
+        let db = Database::Dynamodb(APIClient::new(conf));
+
+        return Ok(db);
+    }
 
     Ok(Database::None)
 }

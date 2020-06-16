@@ -95,7 +95,8 @@ fn main() {
                     break;
                 }
             }
-            Err(_err) => {
+            Err(err) => {
+                println!("err => {:?}", err);
                 break;
             }
         }

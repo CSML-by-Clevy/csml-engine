@@ -1,59 +1,38 @@
-use crate::ConversationInfo;
-use dynamodb::{apis::Error, models::CreateNodeBody};
-// use serde_json::Value;
+use crate::{db_interactions::db_interactions_dynamo::get_db, ConversationInfo, ManagerError};
+use dynamodb::models::CreateNodeBody;
 use uuid::Uuid;
 
 pub fn new_node(
     data: &mut ConversationInfo,
-    // next_flow: Option<String>,
-    // next_step: Option<String>,
+    nextflow: Option<String>,
+    nextstep: Option<String>,
 ) -> CreateNodeBody {
     CreateNodeBody {
         id: Uuid::new_v4().to_string(),
         interaction_id: data.interaction_id.to_owned(),
-        flow_id: data.flow_info.flow.id.to_owned(),
-        next_flow: Some(data.flow_info.flow.id.to_owned()),
-        step_id: data.flow_info.step_id.to_owned(),
-        next_step: Some(data.flow_info.step_id.to_owned()),
+        flow_id: data.context.flow.to_owned(),
+        next_flow: nextflow,
+        step_id: data.context.step.to_owned(),
+        next_step: nextstep,
     }
 }
 
-// pub fn create_node(
-//     conversation_id: &str,
-//     bot_id: &str,
-//     user_id: &str,
-//     channel_id: &str,
-//     create_node_body: crate::models::CreateNodeBody
-// )
-pub fn create_node(data: &mut ConversationInfo, node: CreateNodeBody) -> Result<(), Error> {
-    data.api_client.nodes_api().create_node(
+pub fn create_node(
+    data: &mut ConversationInfo,
+    nextflow: Option<String>,
+    nextstep: Option<String>,
+) -> Result<(), ManagerError> {
+    let node = new_node(data, nextflow, nextstep);
+
+    let db = get_db(&data.db)?;
+
+    db.nodes_api().create_node(
         &data.conversation_id,
         &data.client.bot_id,
         &data.client.user_id,
         &data.client.channel_id,
         node,
-    )
+    )?;
+
+    Ok(())
 }
-
-// pub fn get_conversation_nodes(
-//     conversation_id: &str,
-//     bot_id: &str,
-//     user_id: &str,
-//     channel_id: &str
-// )
-
-// pub fn get_conversation_nodes(
-//     core: &mut Core,
-//     api_client: &APIClient,
-//     conversation_id: &str,
-//     client: &Client,
-// ) -> Result<Vec<NodeModel>, Error<Value>> {
-//     let future = api_client.nodes_api().get_conversation_nodes(
-//         conversation_id,
-//         &client.bot_id,
-//         &client.user_id,
-//         &client.channel_id,
-//     );
-
-//     core.run(future)
-// }
