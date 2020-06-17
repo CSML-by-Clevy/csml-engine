@@ -9,8 +9,8 @@ pub fn delete_state_key(
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") {
-        use crate::db_interactions::db_interactions_mongo::state::delete_state_key as delete;
         use crate::db_interactions::db_interactions_mongo::get_db;
+        use crate::db_interactions::db_interactions_mongo::state::delete_state_key as delete;
 
         let db: &mongodb::Database = get_db(_db)?;
 
@@ -19,14 +19,13 @@ pub fn delete_state_key(
 
     #[cfg(feature = "dynamo")]
     if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::state::delete_state_key as delete;
         use crate::db_interactions::db_interactions_dynamo::get_db;
+        use crate::db_interactions::db_interactions_dynamo::state::delete_state_key as delete;
 
         let db: &dynamodb::apis::client::APIClient = get_db(_db)?;
 
         return delete(_client, _type, _key, db);
     }
-
 
     Err(ManagerError::Manager("db is not init correctly".to_owned()))
 }
@@ -55,8 +54,8 @@ pub fn get_state_key(
 ) -> Result<Option<serde_json::Value>, ManagerError> {
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") {
-        use crate::db_interactions::db_interactions_mongo::state::get_state_key;
         use crate::db_interactions::db_interactions_mongo::get_db;
+        use crate::db_interactions::db_interactions_mongo::state::get_state_key;
 
         let db: &mongodb::Database = get_db(_db)?;
 
@@ -65,8 +64,8 @@ pub fn get_state_key(
 
     #[cfg(feature = "dynamo")]
     if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::state::get_state_key;
         use crate::db_interactions::db_interactions_dynamo::get_db;
+        use crate::db_interactions::db_interactions_dynamo::state::get_state_key;
 
         let db: &dynamodb::apis::client::APIClient = get_db(_db)?;
 

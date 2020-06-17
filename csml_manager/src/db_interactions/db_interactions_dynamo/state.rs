@@ -1,6 +1,4 @@
-use crate::{
-    ConversationInfo, ManagerError
-};
+use crate::{ConversationInfo, ManagerError};
 use csmlinterpreter::data::Client;
 use dynamodb::{
     apis::client::APIClient,
