@@ -171,13 +171,6 @@ fn format_data(json_event: Value, jsdata: Value) -> Result<CsmlData, serde_json:
                 val => val,
             }
         }, // optional
-        sync: {
-            match json_event["callback_url"].clone() {
-                Value::Null => false,
-                Value::Bool(val) => val,
-                _ => false,
-            }
-        }, // optional
         bot: serde_json::from_value(jsdata)?,
     })
 }
