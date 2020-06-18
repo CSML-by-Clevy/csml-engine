@@ -63,6 +63,7 @@ pub const USE: &str = "use";
 pub const HOLD: &str = "hold";
 pub const GOTO: &str = "goto";
 pub const MATCH: &str = "match";
+pub const NOT_MATCH: &str = "!match";
 pub const DEFAULT: &str = "default";
 pub const REMEMBER: &str = "remember";
 pub const _METADATA: &str = "_metadata";
