@@ -37,7 +37,7 @@ impl Configuration {
 
 impl Default for Configuration {
     fn default() -> Self {
-        let base_path = match env::var("ENGINEMS_URL") {
+        let base_path = match env::var("HTTP_DB_MS_URL") {
             Ok(var) => var,
             Err(_) => "http://localhost:3130".to_owned()
         };
