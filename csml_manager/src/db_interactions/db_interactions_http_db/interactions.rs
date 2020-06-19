@@ -1,7 +1,7 @@
 use uuid::Uuid;
 
 use crate::{Client, ManagerError};
-use dynamodb::{
+use http_db::{
     apis::client::APIClient,
     models::{CreateInteractionBody, InlineObject2},
 };

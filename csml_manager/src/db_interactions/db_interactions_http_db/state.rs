@@ -1,6 +1,6 @@
 use crate::{ConversationInfo, ManagerError};
 use csmlinterpreter::data::Client;
-use dynamodb::{
+use http_db::{
     apis::client::APIClient,
     models::{CreateStateBody, StateModel},
 };

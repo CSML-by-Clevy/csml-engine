@@ -17,12 +17,12 @@ pub fn delete_state_key(
         return delete(_client, _type, _key, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::get_db;
-        use crate::db_interactions::db_interactions_dynamo::state::delete_state_key as delete;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::get_db;
+        use crate::db_interactions::db_interactions_http_db::state::delete_state_key as delete;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(_db)?;
+        let db: &http_db::apis::client::APIClient = get_db(_db)?;
 
         return delete(_client, _type, _key, db);
     }
@@ -62,12 +62,12 @@ pub fn get_state_key(
         return get_state_key(_client, _type, _key, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::get_db;
-        use crate::db_interactions::db_interactions_dynamo::state::get_state_key;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::get_db;
+        use crate::db_interactions::db_interactions_http_db::state::get_state_key;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(_db)?;
+        let db: &http_db::apis::client::APIClient = get_db(_db)?;
 
         return get_state_key(_client, _type, _key, db);
     }
@@ -89,16 +89,16 @@ pub fn set_state_items(
         return set_items(_data, _type, _keys_values);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::state::format_state_body;
-        use crate::db_interactions::db_interactions_dynamo::state::set_state_items as set_items;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::state::format_state_body;
+        use crate::db_interactions::db_interactions_http_db::state::set_state_items as set_items;
 
-        use crate::db_interactions::db_interactions_dynamo::get_db;
+        use crate::db_interactions::db_interactions_http_db::get_db;
 
         println!("format");
         let state_body = format_state_body(_data, _type, _interaction_order, _keys_values);
-        let db: &dynamodb::apis::client::APIClient = get_db(&_data.db)?;
+        let db: &http_db::apis::client::APIClient = get_db(&_data.db)?;
 
         println!("set_items");
         return set_items(&_data.client, state_body, db);

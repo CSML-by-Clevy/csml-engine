@@ -1,5 +1,5 @@
 use crate::{db_interactions::Conversation, Client, ManagerError};
-use dynamodb::{
+use http_db::{
     apis::client::APIClient,
     models::{
         conversation_model::Status as C_Status, inline_object, inline_object_1::Status,

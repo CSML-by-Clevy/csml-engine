@@ -12,9 +12,9 @@ pub fn create_node(
         return create(data, nextflow, nextstep);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::nodes::create_node as create;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::nodes::create_node as create;
 
         return create(data, nextflow, nextstep);
     }

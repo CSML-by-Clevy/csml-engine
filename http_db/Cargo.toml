@@ -1,5 +1,5 @@
 [package]
-name = "dynamodb"
+name = "http_db"
 version = "1.0.0"
 authors = ["OpenAPI Generator team and contributors"]
 

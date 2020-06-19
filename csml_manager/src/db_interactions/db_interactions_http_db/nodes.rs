@@ -1,5 +1,5 @@
-use crate::{db_interactions::db_interactions_dynamo::get_db, ConversationInfo, ManagerError};
-use dynamodb::models::CreateNodeBody;
+use crate::{db_interactions::db_interactions_http_db::get_db, ConversationInfo, ManagerError};
+use http_db::models::CreateNodeBody;
 use uuid::Uuid;
 
 pub fn new_node(

@@ -41,8 +41,8 @@ fn encrypt(text: &[u8]) -> Result<String, ManagerError> {
 }
 
 pub fn encrypt_data(value: &serde_json::Value) -> Result<String, ManagerError> {
-    match env::var("ENCRYPTED") {
-        Ok(var) if "true" == var => encrypt(&value.to_string().as_bytes()),
+    match env::var("ENCRYPTION_SECRET") {
+        Ok(..) => encrypt(&value.to_string().as_bytes()),
         _ => Ok(value.to_string()),
     }
 }
@@ -71,8 +71,8 @@ fn decrypt(text: String) -> Result<String, ManagerError> {
 }
 
 pub fn decrypt_data(value: String) -> Result<serde_json::Value, ManagerError> {
-    match env::var("ENCRYPTED") {
-        Ok(var) if "true" == var => {
+    match env::var("ENCRYPTION_SECRET") {
+        Ok(..) => {
             let value: serde_json::Value = serde_json::from_str(&decrypt(value)?)?;
             Ok(value)
         }

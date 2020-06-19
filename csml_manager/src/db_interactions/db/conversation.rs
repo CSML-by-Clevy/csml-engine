@@ -17,12 +17,12 @@ pub fn create_conversation(
         return create(flow_id, step_id, client, metadata, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::conversation::create_conversation as create;
-        use crate::db_interactions::db_interactions_dynamo::get_db;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::conversation::create_conversation as create;
+        use crate::db_interactions::db_interactions_http_db::get_db;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+        let db: &http_db::apis::client::APIClient = get_db(db)?;
 
         return create(flow_id, step_id, client, metadata, db);
     }
@@ -41,12 +41,12 @@ pub fn close_conversation(id: &String, client: &Client, db: &Database) -> Result
         return close(id, client, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::conversation::close_conversation as close;
-        use crate::db_interactions::db_interactions_dynamo::get_db;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::conversation::close_conversation as close;
+        use crate::db_interactions::db_interactions_http_db::get_db;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+        let db: &http_db::apis::client::APIClient = get_db(db)?;
 
         return close(id, client, "CLOSED", db);
     }
@@ -65,12 +65,12 @@ pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), Man
         return close_all(client, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::conversation::close_all_conversations as close_all;
-        use crate::db_interactions::db_interactions_dynamo::get_db;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::conversation::close_all_conversations as close_all;
+        use crate::db_interactions::db_interactions_http_db::get_db;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+        let db: &http_db::apis::client::APIClient = get_db(db)?;
 
         return close_all(client, db);
     }
@@ -91,12 +91,12 @@ pub fn get_latest_open(
         return get_latest(client, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::conversation::get_latest_open as get_latest;
-        use crate::db_interactions::db_interactions_dynamo::get_db;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::conversation::get_latest_open as get_latest;
+        use crate::db_interactions::db_interactions_http_db::get_db;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+        let db: &http_db::apis::client::APIClient = get_db(db)?;
 
         return get_latest(client, db);
     }
@@ -125,12 +125,12 @@ pub fn update_conversation(
         );
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::conversation::update_conversation as update;
-        use crate::db_interactions::db_interactions_dynamo::get_db;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::conversation::update_conversation as update;
+        use crate::db_interactions::db_interactions_http_db::get_db;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(&data.db)?;
+        let db: &http_db::apis::client::APIClient = get_db(&data.db)?;
 
         return update(&data.conversation_id, &data.client, flow_id, step_id, db);
     }

@@ -13,11 +13,11 @@ pub fn add_messages_bulk(
         return add(data, &msgs, interaction_order, direction);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::messages::add_messages_bulk as add;
-        // use crate::db_interactions::db_interactions_dynamo::get_db;
-        // let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::messages::add_messages_bulk as add;
+        // use crate::db_interactions::db_interactions_http_db::get_db;
+        // let db: &http_db::apis::client::APIClient = get_db(db)?;
 
         return add(data, &msgs, interaction_order, direction);
     }

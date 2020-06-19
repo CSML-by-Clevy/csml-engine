@@ -12,16 +12,16 @@ pub fn add_memories(
         return add(data, &memories, interaction_order);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::memories::format_memories;
-        use crate::db_interactions::db_interactions_dynamo::state::set_state_items;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::memories::format_memories;
+        use crate::db_interactions::db_interactions_http_db::state::set_state_items;
 
-        use crate::db_interactions::db_interactions_dynamo::get_db;
+        use crate::db_interactions::db_interactions_http_db::get_db;
 
         println!("format memories");
         let mem = format_memories(data, memories, interaction_order);
-        let db: &dynamodb::apis::client::APIClient = get_db(&data.db)?;
+        let db: &http_db::apis::client::APIClient = get_db(&data.db)?;
 
         println!("send memories");
         return set_state_items(&data.client, mem, db);
@@ -46,12 +46,12 @@ pub fn get_memories(
         return get(client, context, metadata, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::get_db;
-        use crate::db_interactions::db_interactions_dynamo::state::get_state_type;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::get_db;
+        use crate::db_interactions::db_interactions_http_db::state::get_state_type;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+        let db: &http_db::apis::client::APIClient = get_db(db)?;
 
         let current = get_state_type(db, client, "remember")?;
 

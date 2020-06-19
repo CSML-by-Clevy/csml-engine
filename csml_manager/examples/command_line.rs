@@ -69,7 +69,6 @@ fn init_data() -> CsmlData {
             default_flow: "flowid".to_owned(),
         },
         metadata: json!({}),
-        sync: false,
     }
 }
 

@@ -1,5 +1,5 @@
-use crate::{db_interactions::db_interactions_dynamo::get_db, ConversationInfo, ManagerError};
-use dynamodb::models::{create_message_body::Direction, CreateMessageBody};
+use crate::{db_interactions::db_interactions_http_db::get_db, ConversationInfo, ManagerError};
+use http_db::models::{create_message_body::Direction, CreateMessageBody};
 use uuid::Uuid;
 
 fn get_direction(status: &str) -> Direction {

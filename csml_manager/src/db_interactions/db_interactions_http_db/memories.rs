@@ -1,7 +1,7 @@
 use crate::{
-    db_interactions::db_interactions_dynamo::state::format_state_body, ConversationInfo, Memories,
+    db_interactions::db_interactions_http_db::state::format_state_body, ConversationInfo, Memories,
 };
-use dynamodb::models::CreateStateBody;
+use http_db::models::CreateStateBody;
 
 pub fn format_memories(
     data: &mut ConversationInfo,

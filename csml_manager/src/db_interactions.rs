@@ -1,8 +1,8 @@
 use crate::Client;
 
 mod db;
-#[cfg(feature = "dynamo")]
-mod db_interactions_dynamo;
+#[cfg(feature = "http")]
+mod db_interactions_http_db;
 #[cfg(feature = "mongo")]
 mod db_interactions_mongo;
 
@@ -92,9 +92,9 @@ pub struct State {
     pub expires_at: Option<String>,
     pub created_at: String,
 }
-// #[cfg(all(feature = "dynamo", not(feature = "mongo")))]
-// mod db_interactions_dynamo;
+// #[cfg(all(feature = "http", not(feature = "mongo")))]
+// mod db_interactions_httpdb;
 
-// #[cfg(all(feature = "mongo", not(feature = "dynamo")))]
-// #[cfg(all(feature = "dynamo", not(feature = "mongo")))]
-// use db_interactions_dynamo as db_interactions;
+// #[cfg(all(feature = "mongo", not(feature = "http")))]
+// #[cfg(all(feature = "http", not(feature = "mongo")))]
+// use db_interactions_httpdb as db_interactions;

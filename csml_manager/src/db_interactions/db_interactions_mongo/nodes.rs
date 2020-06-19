@@ -7,6 +7,18 @@ pub fn create_node(
     nextstep: Option<String>,
 ) -> Result<(), ManagerError> {
     let time = Bson::UtcDatetime(chrono::Utc::now());
+
+    let nextflow = match nextflow {
+        Some(nextflow) => Bson::String(nextflow),
+        None => Bson::Null,
+    };
+
+    let nextstep = match nextstep {
+        Some(nextstep) => Bson::String(nextstep),
+        None => Bson::Null,
+    };
+
+
     let node = doc! {
         "client": bson::to_bson(&data.client)?,
         "interaction_id": &data.interaction_id,

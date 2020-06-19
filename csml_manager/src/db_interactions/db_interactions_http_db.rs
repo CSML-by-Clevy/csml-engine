@@ -7,9 +7,9 @@ pub mod state;
 
 use crate::{Database, ManagerError};
 
-pub fn get_db<'a>(db: &'a Database) -> Result<&'a dynamodb::apis::client::APIClient, ManagerError> {
+pub fn get_db<'a>(db: &'a Database) -> Result<&'a http_db::apis::client::APIClient, ManagerError> {
     match db {
-        Database::Dynamodb(dynamo) => Ok(dynamo),
+        Database::Httpdb(httpdb) => Ok(httpdb),
         _ => Err(ManagerError::Manager("db is not init correctly".to_owned())),
     }
 }

@@ -13,14 +13,13 @@ pub struct CsmlData {
     pub payload: Value,
     pub bot: CsmlBot,
     pub metadata: Value,
-    pub sync: bool,
 }
 
 pub enum Database {
     #[cfg(feature = "mongo")]
     Mongo(mongodb::Database),
-    #[cfg(feature = "dynamodb")]
-    Dynamodb(dynamodb::apis::client::APIClient),
+    #[cfg(feature = "http")]
+    Httpdb(http_db::apis::client::APIClient),
     None,
 }
 
@@ -83,7 +82,7 @@ pub enum ManagerError {
     #[cfg(any(feature = "mongo"))]
     MongoDB(mongodb::error::Error),
 
-    #[cfg(any(feature = "dynamo"))]
+    #[cfg(any(feature = "http"))]
     Reqwest(reqwest::Error),
 }
 
@@ -138,21 +137,21 @@ impl From<mongodb::error::Error> for ManagerError {
     }
 }
 
-#[cfg(any(feature = "dynamo"))]
+#[cfg(any(feature = "http"))]
 impl From<reqwest::Error> for ManagerError {
     fn from(e: reqwest::Error) -> Self {
         ManagerError::Reqwest(e)
     }
 }
 
-#[cfg(any(feature = "dynamo"))]
-impl From<dynamodb::apis::Error> for ManagerError {
-    fn from(e: dynamodb::apis::Error) -> Self {
+#[cfg(any(feature = "http"))]
+impl From<http_db::apis::Error> for ManagerError {
+    fn from(e: http_db::apis::Error) -> Self {
         match e {
-            dynamodb::apis::Error::Reqwest(reqwest) => ManagerError::Reqwest(reqwest),
-            dynamodb::apis::Error::Serde(serde) => ManagerError::Serde(serde),
-            dynamodb::apis::Error::Io(io) => ManagerError::Io(io),
-            dynamodb::apis::Error::Interpreter(string) => ManagerError::Interpreter(string),
+            http_db::apis::Error::Reqwest(reqwest) => ManagerError::Reqwest(reqwest),
+            http_db::apis::Error::Serde(serde) => ManagerError::Serde(serde),
+            http_db::apis::Error::Io(io) => ManagerError::Io(io),
+            http_db::apis::Error::Interpreter(string) => ManagerError::Interpreter(string),
         }
     }
 }

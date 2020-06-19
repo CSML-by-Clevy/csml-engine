@@ -15,12 +15,12 @@ pub fn init_interaction(
         return init(event, client, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::get_db;
-        use crate::db_interactions::db_interactions_dynamo::interactions::init_interaction as init;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::get_db;
+        use crate::db_interactions::db_interactions_http_db::interactions::init_interaction as init;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(db)?;
+        let db: &http_db::apis::client::APIClient = get_db(db)?;
 
         return init(event, client, db);
     }
@@ -39,12 +39,12 @@ pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), 
         return update(&data.interaction_id, success, &data.client, db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
-        use crate::db_interactions::db_interactions_dynamo::get_db;
-        use crate::db_interactions::db_interactions_dynamo::interactions::update_interaction as update;
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
+        use crate::db_interactions::db_interactions_http_db::get_db;
+        use crate::db_interactions::db_interactions_http_db::interactions::update_interaction as update;
 
-        let db: &dynamodb::apis::client::APIClient = get_db(&data.db)?;
+        let db: &http_db::apis::client::APIClient = get_db(&data.db)?;
 
         return update(&data.interaction_id, success, &data.client, db);
     }

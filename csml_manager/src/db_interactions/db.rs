@@ -7,27 +7,78 @@ pub mod messages;
 pub mod nodes;
 pub mod state;
 
-#[cfg(feature = "dynamo")]
-use dynamodb::apis::{client::APIClient, configuration::Configuration};
+#[cfg(feature = "http")]
+use http_db::apis::{client::APIClient, configuration::Configuration};
+
+#[cfg(feature = "mongo")]
+fn init_mongo_credentials() -> Option<mongodb::options::auth::Credential> {
+    let username = match std::env::var("MONGODB_USERNAME") {
+        Ok(var) if var.len() > 0 => Some(var),
+        _ => None,
+    };
+    let password = match std::env::var("MONGODB_PASSWORD") {
+        Ok(var) if var.len() > 0 => Some(var),
+        _ => None,
+    };
+
+    if let (&None, &None) = (&username, &password) {
+        return None
+    }
+
+    let credentials = mongodb::options::auth::Credential::builder()
+    .password(password)
+    .username(username)
+    .build();
+
+    Some(credentials)
+}
 
 pub fn init_db() -> Result<Database, ManagerError> {
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") {
-        let uri = match env::var("MONGODB_URI") {
+        let name = match std::env::var("MONGODB_HOST_NAME") {
             Ok(var) => var,
-            _ => panic!("error no MONGODB_URI en env"),
+            _ => panic!("error no MONGODB_HOST en env"),
         };
 
-        let client = mongodb::Client::with_uri_str(&uri)?;
-        let db = Database::Mongo(client.database("csml"));
+        let dbname = match std::env::var("MONGODB_NAME") {
+            Ok(var) => var,
+            _ => panic!("error no MONGODB_NAME en env"),
+        };
+
+        let port: Option<u16> = match std::env::var("MONGODB_HOST_PORT") {
+            Ok(var) => match var.parse::<u16>() {
+                Ok(port) => Some(port),
+                // TODO: update error label
+                Err(err) => return Err(ManagerError::Interpreter(err.to_string()))
+            },
+            _ => None,
+        };
+
+        let credentials = init_mongo_credentials();
+
+        let options = mongodb::options::ClientOptions::builder()
+                  .hosts(vec![
+                    mongodb::options::StreamAddress {
+                          hostname: name.into(),
+                          port,
+                      }
+                  ])
+                  .credential(credentials)
+                  .build();
+
+        let client = mongodb::Client::with_options(options)?;
+
+        let db = Database::Mongo(client.database(dbname));
+
 
         return Ok(db);
     }
 
-    #[cfg(feature = "dynamo")]
-    if cfg!(feature = "dynamo") {
+    #[cfg(feature = "http")]
+    if cfg!(feature = "http") {
         let conf = Configuration::new();
-        let db = Database::Dynamodb(APIClient::new(conf));
+        let db = Database::Httpdb(APIClient::new(conf));
 
         return Ok(db);
     }
