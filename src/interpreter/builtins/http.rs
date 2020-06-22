@@ -2,7 +2,6 @@ use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::{ast::Interval, Literal};
 use crate::error_format::*;
-use crate::interpreter::json_to_rust::json_to_literal;
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +68,7 @@ pub fn http_request(
     object: &HashMap<String, Literal>,
     function: fn(&str) -> ureq::Request,
     interval: Interval,
-) -> Result<Literal, ErrorInfo> {
+) -> Result<serde_json::Value, ErrorInfo> {
     let url = get_url(object, interval)?;
     let header =
         get_value::<HashMap<String, Literal>>("header", object, interval, ERROR_HTTP_GET_VALUE)?;
@@ -86,14 +85,15 @@ pub fn http_request(
     }
 
     let response = request.send_json(serialize(body));
-    let status = response.status();
+    // let status = response.status();
     let body = response.into_json();
 
     match body {
-        Ok(value) => json_to_literal(&value, interval),
-        Err(_) => Err(gen_error_info(
-            Position::new(interval),
-            format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
-        )),
+        Ok(value) => Ok(value),
+        Err(_) => Ok(serde_json::Value::Null),
+        // Err(gen_error_info(
+        //     interval,
+        //     format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
+        // ))
     }
 }

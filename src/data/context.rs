@@ -3,7 +3,7 @@ use crate::data::{
     Client, Hold, Interval, Literal,
 };
 
-use crate::interpreter::json_to_literal;
+use crate::interpreter::{json_to_literal, memory_to_literal};
 
 use nom::lib::std::collections::HashMap;
 
@@ -41,23 +41,27 @@ pub struct Context {
 // STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl Context {
-    pub fn new(
-        current: HashMap<String, Literal>,
-        metadata: HashMap<String, Literal>,
-        api_info: Option<ApiInfo>,
-        hold: Option<Hold>,
-        step: String,
-        flow: String,
-    ) -> Self {
-        Self {
-            current,
-            metadata,
-            api_info,
-            hold,
-            step,
-            flow,
+pub fn get_hashmap_from_mem(lit: &serde_json::Value) -> HashMap<String, Literal> {
+    match memory_to_literal(lit, Interval { line: 0, column: 0 }) {
+        Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
+            match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
+                Some(map) => map.value.clone(),
+                None => HashMap::new(),
+            }
         }
+        _ => HashMap::new(),
+    }
+}
+
+pub fn get_hashmap_from_json(lit: &serde_json::Value) -> HashMap<String, Literal> {
+    match json_to_literal(lit, Interval { line: 0, column: 0 }) {
+        Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
+            match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
+                Some(map) => map.value.clone(),
+                None => HashMap::new(),
+            }
+        }
+        _ => HashMap::new(),
     }
 }
 
@@ -81,14 +85,34 @@ impl ContextJson {
     }
 }
 
+impl Context {
+    pub fn new(
+        current: HashMap<String, Literal>,
+        metadata: HashMap<String, Literal>,
+        api_info: Option<ApiInfo>,
+        hold: Option<Hold>,
+        step: String,
+        flow: String,
+    ) -> Self {
+        Self {
+            current,
+            metadata,
+            api_info,
+            hold,
+            step,
+            flow,
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
 impl ContextJson {
     pub fn to_literal(&self) -> Context {
-        let current = get_hashmap(&self.current);
-        let metadata = get_hashmap(&self.metadata);
+        let current = get_hashmap_from_mem(&self.current);
+        let metadata = get_hashmap_from_json(&self.metadata);
 
         Context::new(
             current,

@@ -13,16 +13,19 @@ fn http_http_0() {
     let data = r#"{
         "memories":[
             {
-                "key":"http", 
+                "key":"http",
                 "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
                     },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content_type":"http"
                 }
             }
         ],
@@ -65,15 +68,19 @@ fn http_get_0() {
     let data = r#"{
         "memories":[
             {
-                "key":"http", "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                "key":"http",
+                "value":{
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
                     },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content_type":"http"
                 }
             }
         ],
@@ -130,14 +137,17 @@ fn http_set_0() {
         "memories":[
             {
                 "key":"http", "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
                     },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content_type":"http"
                 }
             }
         ],
@@ -196,14 +206,17 @@ fn http_query_0() {
             {
                 "key":"http",
                 "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
                     },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content_type":"http"
                 }
             }
         ],
@@ -263,14 +276,17 @@ fn http_delete_0() {
             {
                 "key":"http",
                 "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
                     },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content_type":"http"
                 }
             }
         ],
@@ -329,14 +345,17 @@ fn http_put_0() {
         "memories":[
             {
                 "key":"http", "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
                     },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content_type":"http"
                 }
             }
         ],
@@ -396,14 +415,17 @@ fn http_patch_0() {
             {
                 "key":"http",
                 "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
                     },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content_type":"http"
                 }
             }
         ],
@@ -462,14 +484,17 @@ fn http_post_0() {
         "memories":[
             {
                 "key":"http", "value":{
-                    "body":{},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json"
-                    },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
+                    "_content":{
+                        "body":{},
+                        "header":{
+                            "accept":"application/json,text/*",
+                            "content-type":"application/json"
+                        },
+                        "method":"get",
+                        "query":{},
+                        "url":"https://clevy.io"
+                        },
+                    "_content_type":"http"
                 }
             }
         ],

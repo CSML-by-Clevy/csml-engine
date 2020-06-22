@@ -120,7 +120,7 @@ fn ok_type_of_null() {
 
 #[test]
 fn ok_type_of_object() {
-    let data = r#"{"memories":[{"key":"var", "value":{}}], "messages":[{"content":{"text":"object"}, "content_type":"text"}]}"#;
+    let data = r#"{"memories":[{"key":"var", "value":{"_content":{}, "_content_type": "object"} }], "messages":[{"content":{"text":"object"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(

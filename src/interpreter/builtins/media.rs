@@ -64,14 +64,9 @@ pub fn video(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
             if href.primitive.get_type() == PrimitiveType::PrimitiveString =>
         {
             video.insert("url".to_owned(), href.clone());
-            match args.get("service") {
-                Some(value) if value.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                    video.insert("service".to_owned(), value.to_owned())
-                }
-                _ => None,
-            };
 
             let mut result = PrimitiveObject::get_literal(&video, interval);
+
             result.set_content_type("video");
 
             Ok(result)
@@ -92,14 +87,8 @@ pub fn audio(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
         {
             audio.insert("url".to_owned(), href.clone());
 
-            match args.get("service") {
-                Some(value) if value.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                    audio.insert("service".to_owned(), value.to_owned())
-                }
-                _ => None,
-            };
-
             let mut result = PrimitiveObject::get_literal(&audio, interval);
+
             result.set_content_type("audio");
 
             Ok(result)
@@ -107,6 +96,28 @@ pub fn audio(args: HashMap<String, Literal>, interval: Interval) -> Result<Liter
         _ => Err(gen_error_info(
             Position::new(interval),
             ERROR_AUDIO.to_owned(),
+        )),
+    }
+}
+
+pub fn file(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+    let mut file: HashMap<String, Literal> = args.clone();
+
+    match (file.remove("url"), file.remove(DEFAULT)) {
+        (Some(href), ..) | (.., Some(href))
+            if href.primitive.get_type() == PrimitiveType::PrimitiveString =>
+        {
+            file.insert("url".to_owned(), href.clone());
+
+            let mut result = PrimitiveObject::get_literal(&file, interval);
+
+            result.set_content_type("file");
+
+            Ok(result)
+        }
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_FILE.to_owned(),
         )),
     }
 }

@@ -30,8 +30,8 @@ fn object_step_0() {
 fn object_step_1() {
     let data = r#"{
         "memories":[
-            {"key":"obj", "value":{}},
-            {"key":"obj", "value":{"42": "Hello"}}
+            {"key":"obj", "value":{"_content":{}, "_content_type":"object"} },
+            {"key":"obj", "value": {"_content":{"42": "Hello"}, "_content_type":"object"} }
         ],
         "messages":[
             {"content":{"text": "false"}, "content_type":"text"},
@@ -60,10 +60,10 @@ fn object_step_1() {
 fn object_step_2() {
     let data = r#"{
         "memories":[
-            {"key":"obj", "value":{}},
-            {"key":"obj", "value":{}},
-            {"key":"obj", "value":{"Hello": 42}},
-            {"key":"obj", "value":{}}
+            {"key":"obj", "value":{"_content":{}, "_content_type":"object"}},
+            {"key":"obj", "value":{"_content":{}, "_content_type":"object"}},
+            {"key":"obj", "value": {"_content":{"Hello": 42}, "_content_type":"object"} },
+            {"key":"obj", "value":{"_content":{}, "_content_type":"object"}}
         ],
         "messages":[
             {"content":{"text": null}, "content_type":"text"}
@@ -91,9 +91,9 @@ fn object_step_2() {
 fn object_step_3() {
     let data = r#"{
         "memories":[
-            {"key":"obj", "value":{}},
-            {"key":"obj", "value":{"42": "Hello"}},
-            {"key":"obj", "value":{}}
+            {"key":"obj", "value": {"_content":{}, "_content_type":"object"}},
+            {"key":"obj", "value": {"_content":{"42": "Hello"}, "_content_type":"object"}},
+            {"key":"obj", "value": {"_content":{}, "_content_type":"object"}}
         ],
         "messages":[
             {"content":{"text": "true"}, "content_type":"text"},
@@ -126,8 +126,8 @@ fn object_step_3() {
 fn object_step_4() {
     let data = r#"{
         "memories":[
-            {"key":"obj", "value":{}},
-            {"key":"obj", "value":{"toto": "tutu"}}
+            {"key":"obj", "value":{"_content":{}, "_content_type":"object"}},
+            {"key":"obj", "value":{"_content":{"toto": "tutu"}, "_content_type":"object"}}
         ],
         "messages":[
             {"content":{"text": "true"}, "content_type":"text"}
@@ -155,10 +155,10 @@ fn object_step_4() {
 fn object_step_5() {
     let data = r#"{
         "memories":[
-            {"key":"obj", "value":{}},
-            {"key":"obj", "value":{"_1": "toto"}},
-            {"key":"obj", "value":{"_1": "toto", "_2": "toto"}},
-            {"key":"obj", "value":{"_1": "toto", "_2": "toto", "_3": "toto"}}
+            {"key":"obj", "value":{"_content":{}, "_content_type":"object"}},
+            {"key":"obj", "value":{"_content":{"_1": "toto"}, "_content_type":"object"} },
+            {"key":"obj", "value":{"_content":{"_1": "toto", "_2": "toto"}, "_content_type":"object"} },
+            {"key":"obj", "value":{"_content":{"_1": "toto", "_2": "toto", "_3": "toto"}, "_content_type":"object"} }
         ],
         "messages":[
             {"content":[], "content_type":"array"},

@@ -171,6 +171,7 @@ pub enum Infix {
 
     Not,
     Match,
+    NotMatch,
 
     Equal,
     NotEqual,

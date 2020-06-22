@@ -85,6 +85,14 @@ where
     Ok((rest, Infix::Equal))
 }
 
+pub fn not_match<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (rest, ..) = tag(NOT_MATCH)(s)?;
+    Ok((rest, Infix::NotMatch))
+}
+
 pub fn parse_match<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
     E: ParseError<Span<'a>>,
@@ -149,6 +157,7 @@ where
 {
     alt((
         not_equal_operator,
+        not_match,
         parse_match,
         equal_operator,
         greater_than_equal_operator,

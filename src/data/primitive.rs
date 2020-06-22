@@ -58,6 +58,7 @@ pub trait Primitive {
     fn get_type(&self) -> PrimitiveType;
     fn as_box_clone(&self) -> Box<dyn Primitive>;
     fn to_json(&self) -> serde_json::Value;
+    fn format_mem(&self, content_type: &str, first: bool) -> serde_json::Value;
     fn to_string(&self) -> String;
     fn as_bool(&self) -> bool;
     fn get_value(&self) -> &dyn std::any::Any;

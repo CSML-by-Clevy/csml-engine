@@ -638,6 +638,18 @@ impl Primitive for PrimitiveArray {
         serde_json::Value::Array(vector)
     }
 
+    fn format_mem(&self, _content_type: &str, first: bool) -> serde_json::Value {
+        let mut vector: Vec<serde_json::Value> = Vec::new();
+
+        for literal in self.value.iter() {
+            let content_type = &literal.content_type;
+            let value = literal.primitive.format_mem(content_type, first);
+            vector.push(value);
+        }
+
+        serde_json::Value::Array(vector)
+    }
+
     fn to_string(&self) -> String {
         self.to_json().to_string()
     }

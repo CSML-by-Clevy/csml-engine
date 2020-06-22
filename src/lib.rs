@@ -11,7 +11,7 @@ use crate::data::ast::Expr;
 use crate::data::ast::Flow;
 use crate::data::ast::InstructionType;
 use crate::data::ast::Interval;
-use crate::data::context::get_hashmap;
+use crate::data::context::get_hashmap_from_mem;
 use crate::data::csml_bot::CsmlBot;
 use crate::data::csml_result::CsmlResult;
 use crate::data::error_info::ErrorInfo;
@@ -28,7 +28,6 @@ use crate::linter::linter::lint_flow;
 use crate::parser::state_context::StateContext;
 use crate::parser::ExitCondition;
 
-use curl::easy::Easy;
 use std::collections::HashMap;
 use std::sync::mpsc;
 
@@ -91,6 +90,25 @@ fn get_ast(
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Option<Vec<String>> {
+    let mut result = Vec::new();
+
+    Warnings::clear();
+    Linter::clear();
+
+    if let Some(flow) = bot.flows.iter().find(|flow| flow.name == flow_name) {
+        if let Ok(flow) = parse_flow(&flow.content) {
+            for InstructionType::NormalStep(step_name) in flow.flow_instructions.keys() {
+                result.push(step_name.to_owned());
+            }
+
+            return Some(result);
+        }
+    }
+
+    None
+}
+
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();
     let mut errors = Vec::new();
@@ -119,11 +137,12 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 
 pub fn interpret(
     bot: CsmlBot,
-    mut context: ContextJson,
+    context: ContextJson,
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let mut message_data = MessageData::default();
+    let mut context = context.to_literal();
 
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();
@@ -152,18 +171,11 @@ pub fn interpret(
         };
 
         let step_vars = match &context.hold {
-            Some(hold) => get_hashmap(&hold.step_vars),
+            Some(hold) => get_hashmap_from_mem(&hold.step_vars),
             None => HashMap::new(),
         };
 
-        let mut data = Data::new(
-            &ast,
-            &mut context.to_literal(),
-            &event,
-            Easy::new(),
-            step_vars,
-            bot.header.to_owned(),
-        );
+        let mut data = Data::new(&ast, &mut context, &event, step_vars, bot.header.to_owned(),);
 
         let rip = match context.hold {
             Some(result) => {
@@ -179,9 +191,10 @@ pub fn interpret(
             message_data.exit_condition = None;
         }
 
-        flow = data.context.flow;
-        step = data.context.step;
+        flow = data.context.flow.to_string();
+        step = data.context.step.to_string();
+        context = data.context.to_owned();
     }
 
-    return message_data;
+    message_data
 }
