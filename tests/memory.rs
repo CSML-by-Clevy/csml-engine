@@ -38,7 +38,8 @@ fn format_message(event: Event, context: ContextJson, vector: &[&str]) -> Messag
 
 #[test]
 fn memory() {
-    let data = r#"{"memories":[{"key":"var", "value":42}], "messages":[
+    let data = r#"
+        {"memories":[{"key":"var", "value":42}], "messages":[
         {
             "content": {"text": "var from start: 42"},
             "content_type": "text"

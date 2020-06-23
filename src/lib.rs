@@ -175,7 +175,7 @@ pub fn interpret(
             None => HashMap::new(),
         };
 
-        let mut data = Data::new(&ast, &mut context, &event, step_vars, bot.header.to_owned(),);
+        let mut data = Data::new(&ast, &mut context, &event, step_vars, bot.header.to_owned());
 
         let rip = match context.hold {
             Some(result) => {

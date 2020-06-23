@@ -96,7 +96,7 @@ pub static TYPES: &[&str] = &[
 pub static RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
     MATCH, _METADATA, DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK, COMPONENT,
-    ];
+];
 
 // TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
 pub static UTILISATION_RESERVED: &[&str] = &[
