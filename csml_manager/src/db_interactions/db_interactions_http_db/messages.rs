@@ -35,8 +35,8 @@ fn format_message(
         data.interaction_id.to_owned(),
         msg_order,
         interaction_order,
-        "".to_owned(), // data.flow_info.flow.id.to_owned(),
-        "".to_owned(), // data.flow_info.step_id.to_owned(),
+        data.context.flow.to_owned(),
+        data.context.step.to_owned(),
         direction,
         message,
     )
