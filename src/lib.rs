@@ -4,6 +4,8 @@ pub mod interpreter;
 pub mod linter;
 pub mod parser;
 
+pub use interpreter::builtins::components::read;
+
 use interpreter::interpret_scope;
 use parser::parse_flow;
 

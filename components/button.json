@@ -1,0 +1,31 @@
+{
+    "Button": {
+        "params": [
+            {
+                "title": {
+                    "required": true,
+                    "type": "String"
+                }
+            },
+            {
+                "payload": {
+                    "required": false,
+                    "type": "String",
+                    "default_value": [
+                        {"$_get": "title"}
+                    ]
+                }
+            },
+            {
+                "payload": {
+                    "required": false,
+                    "type": "Array",
+                    "default_value": [
+                        {"$_get": "title"},
+                        {"$_get": "payload"}
+                    ]
+                }
+            }
+        ]
+    }
+}

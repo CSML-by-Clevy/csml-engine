@@ -6,6 +6,8 @@ pub mod http;
 pub mod media;
 pub mod tools;
 
+pub mod components;
+
 use crate::data::{ast::*, tokens::*, Data, Literal};
 use crate::error_format::ErrorInfo;
 use std::collections::HashMap;

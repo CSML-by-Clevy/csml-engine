@@ -407,12 +407,16 @@ fn default_add_value() {
 
 #[test]
 fn default_add_value_empty() {
-    let data = r#"{"memories":[], "messages":[
-	{
-		"content": {"title": {}},
-		"content_type": "button"
-	}
-	]}"#;
+    let data = r#"
+    {
+        "memories":[],
+        "messages":[
+            {
+                "content": {"title": {}},
+                "content_type": "button"
+            }
+        ]
+    }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -453,14 +457,16 @@ fn default_add_value_empty() {
 
 #[test]
 fn parameter() {
-    let data = r#"{"memories":[], "messages":[
-	{
-		"content": {
-            "foo": {"param_0": "foo"}
-		},
-		"content_type": "button"
-	}
-	]}"#;
+    let data = r#"{
+        "memories":[], "messages":[
+        {
+            "content": {
+                "foo": {"param_0": "foo"}
+            },
+            "content_type": "button"
+        }
+        ]
+    }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -498,22 +504,24 @@ fn parameter() {
 
 #[test]
 fn parameter_multiple() {
-    let data = r#"{"memories":[], "messages":[
-	{
-		"content": {
-            "foo": {
-                "param_1": "bar",
-                "Hello": 42
+    let data = r#"
+        {"memories":[], "messages":[
+        {
+            "content": {
+                "foo": {
+                    "param_1": "bar",
+                    "Hello": 42
+                },
+                "bar": {"param_0": "foo"},
+                "baz": {
+                    "param_1": "bar",
+                    "Hello": 42
+                }
             },
-            "bar": {"param_0": "foo"},
-			"baz": {
-                "param_1": "bar",
-                "Hello": 42
-            }
-		},
-		"content_type": "button"
-	}
-	]}"#;
+            "content_type": "button"
+        }
+        ]
+    }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
