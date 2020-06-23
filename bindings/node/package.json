@@ -1,44 +1,16 @@
 {
-  "name": "@clevy/csml-manager",
+  "name": "@csml/manager",
   "version": "0.1.0-beta.01",
-  "description": "CSML manager for node and HTTP server",
-  "main": "lib/index.js",
+  "description": "CSML manager bindings for nodejs",
+  "main": "index.js",
   "author": "Alexis Merelo <alexis.merelo@clevy.io>",
   "license": "UNLICENSED",
   "scripts": {
     "build": "neon build && npm run mvtarget",
-    "build:release": "neon build --release && npm run mvtarget",
-    "mvtarget": "mkdir -p node_modules/@clevy/csml-manager && mv native/index.node node_modules/@clevy/csml-manager/index.node",
-    "install": "npm run build:release",
-    "local": "npm start",
-    "start": "serverless offline start -s local"
+    "install": "neon build --release"
   },
-  "dependencies": {
-    "@bugsnag/js": "^6.5.2",
-    "@bugsnag/plugin-express": "^6.5.1",
-    "bluebird": "^3.7.2",
-    "body-parser": "^1.19.0",
-    "debug": "^4.1.1",
-    "express": "^4.17.1",
-    "http-errors": "^1.7.3",
-    "lodash": "^4.17.15",
-    "morgan": "^1.10.0",
-    "serverless-http": "^2.4.1",
-    "serverless-offline-sns": "^0.68.0",
-    "serverless-plugin-log-subscription": "^1.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "babel-eslint": "^10.1.0",
-    "eslint": "^7.0.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.2",
-    "neon-cli": "^0.3.0",
-    "serverless": "^1.70.1",
-    "serverless-api-compression": "^1.0.1",
-    "serverless-dotenv-plugin": "^2.4.2",
-    "serverless-offline": "^5.12.1",
-    "serverless-plugin-git-variables": "^4.0.0",
-    "serverless-plugin-tracing": "^2.0.0",
-    "serverless-prune-plugin": "^1.4.3"
+    "neon-cli": "^0.3.0"
   }
 }
