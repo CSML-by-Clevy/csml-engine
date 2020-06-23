@@ -108,8 +108,14 @@ pub fn evaluate(
             lhs.primitive.as_bool() & rhs.primitive.as_bool(),
             lhs.interval,
         )),
-        (Infix::Match, Ok(ref lhs), Ok(ref rhs)) => Ok(PrimitiveBoolean::get_literal(match_obj(lhs, rhs), lhs.interval) ),
-        (Infix::NotMatch, Ok(ref lhs), Ok(ref rhs)) => Ok( PrimitiveBoolean::get_literal( !match_obj(lhs, rhs), lhs.interval) ),
+        (Infix::Match, Ok(ref lhs), Ok(ref rhs)) => Ok(PrimitiveBoolean::get_literal(
+            match_obj(lhs, rhs),
+            lhs.interval,
+        )),
+        (Infix::NotMatch, Ok(ref lhs), Ok(ref rhs)) => Ok(PrimitiveBoolean::get_literal(
+            !match_obj(lhs, rhs),
+            lhs.interval,
+        )),
         // TODO: [+] Handle Infix::NOT as Prefix !
         (Infix::Not, Ok(lhs), ..) => Ok(PrimitiveBoolean::get_literal(
             !lhs.primitive.as_bool(),

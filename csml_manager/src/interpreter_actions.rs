@@ -36,7 +36,6 @@ pub fn interpret_step(
         match received {
             MSG::Memory(mem) => memories.push(mem),
             MSG::Message(msg) => {
-                println!("msg => {:?}", msg);
                 send_and_display_msg(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -80,7 +79,6 @@ pub fn interpret_step(
                     )?
                 }
                 (Some(flow), None) => {
-                    println!("memories => {:?}", memories);
                     update_memories_in_data(data, &memories);
                     let step = "start".to_owned();
                     goto_flow(

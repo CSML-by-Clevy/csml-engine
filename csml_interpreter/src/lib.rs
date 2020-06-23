@@ -122,7 +122,6 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 
         match parse_flow(&flow.content) {
             Ok(result) => {
-                println!("=> {:?}", result);
                 flows.insert(flow.name.to_owned(), result);
             }
             Err(error) => {

@@ -96,11 +96,9 @@ pub fn set_state_items(
 
         use crate::db_interactions::db_interactions_http_db::get_db;
 
-        println!("format");
         let state_body = format_state_body(_data, _type, _interaction_order, _keys_values);
         let db: &http_db::apis::client::APIClient = get_db(&_data.db)?;
 
-        println!("set_items");
         return set_items(&_data.client, state_body, db);
     }
 

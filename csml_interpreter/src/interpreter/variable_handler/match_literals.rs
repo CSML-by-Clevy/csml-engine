@@ -21,9 +21,7 @@ fn contains(array_lit: &Literal, key: &Literal) -> bool {
             .downcast_ref::<PrimitiveArray>(),
         key_string,
     ) {
-        (Some(array), None) => {
-            array.value.contains(key)
-        }
+        (Some(array), None) => array.value.contains(key),
         (Some(array), Some(string)) => {
             for elem in array.value.iter() {
                 match elem.primitive.as_any().downcast_ref::<PrimitiveString>() {
@@ -37,7 +35,7 @@ fn contains(array_lit: &Literal, key: &Literal) -> bool {
             }
             false
         }
-        (None, ..) => false
+        (None, ..) => false,
     }
 }
 
@@ -59,9 +57,7 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> bool {
             None => false,
         },
 
-        (array1, array2) if array1 == "array" && array2 == "array" => {
-            lit1 == lit2
-        }
+        (array1, array2) if array1 == "array" && array2 == "array" => lit1 == lit2,
         (.., array) if array == "array" => contains(lit2, lit1),
         (array, ..) if array == "array" => contains(lit1, lit2),
         (..) => lit1.primitive == lit2.primitive.to_owned(),

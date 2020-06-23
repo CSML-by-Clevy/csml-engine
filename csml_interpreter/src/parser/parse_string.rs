@@ -41,7 +41,8 @@ where
 
     if !value.fragment().is_empty() {
         expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-            &value.fragment(), interval,
+            &value.fragment(),
+            interval,
         )));
 
         interval_vector.push(interval);

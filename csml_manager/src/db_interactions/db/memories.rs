@@ -19,11 +19,9 @@ pub fn add_memories(
 
         use crate::db_interactions::db_interactions_http_db::get_db;
 
-        println!("format memories");
         let mem = format_memories(data, memories, interaction_order);
         let db: &http_db::apis::client::APIClient = get_db(&data.db)?;
 
-        println!("send memories");
         return set_state_items(&data.client, mem, db);
     }
 
