@@ -69,8 +69,7 @@ pub fn init_db() -> Result<Database, ManagerError> {
 
         let client = mongodb::Client::with_options(options)?;
 
-        let db = Database::Mongo(client.database(dbname));
-
+        let db = Database::Mongo(client.database(&dbname));
 
         return Ok(db);
     }

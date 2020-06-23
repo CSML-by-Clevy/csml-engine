@@ -1,5 +1,5 @@
 start:
-    say "hola 42"
+    say "hola 42 😀"
     remember amerelo42 = 4
     // say "test => {{amerelo42}}"
     say "goto flow 2"

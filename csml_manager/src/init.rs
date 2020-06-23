@@ -27,11 +27,10 @@ pub fn init_conversation_info<'a>(
 
     let curl = match csmldata.callback_url {
         Some(ref url) => {
-            println!("url => {}", url);
             if let Ok(curl) = init_curl(url) {
                 Some(curl)
             } else {
-                None
+                return Err(ManagerError::Manager(format!("not valid callback_url {}", url)))
             }
         }
         None => None,
@@ -99,9 +98,6 @@ pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) 
 pub fn init_curl(callback_url: &str) -> Result<Easy, CurlError> {
     let mut easy = Easy::new();
     let mut list = List::new();
-
-    println!("callback_url => {:?}", callback_url);
-
     easy.url(callback_url)?;
     easy.post(true)?;
 
