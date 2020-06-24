@@ -95,6 +95,7 @@ fn main() {
                 }
             }
             Err(err) => {
+                println!("{:?}", err);
                 break;
             }
         }

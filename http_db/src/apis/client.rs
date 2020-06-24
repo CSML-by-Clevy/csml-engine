@@ -25,28 +25,27 @@ impl APIClient {
         }
     }
 
-    pub fn conversations_api(&self) -> &dyn crate::apis::ConversationsApi{
+    pub fn conversations_api(&self) -> &dyn crate::apis::ConversationsApi {
         self.conversations_api.as_ref()
     }
 
-    pub fn interactions_api(&self) -> &dyn crate::apis::InteractionsApi{
+    pub fn interactions_api(&self) -> &dyn crate::apis::InteractionsApi {
         self.interactions_api.as_ref()
     }
 
-    pub fn memories_api(&self) -> &dyn crate::apis::MemoriesApi{
+    pub fn memories_api(&self) -> &dyn crate::apis::MemoriesApi {
         self.memories_api.as_ref()
     }
 
-    pub fn messages_api(&self) -> &dyn crate::apis::MessagesApi{
+    pub fn messages_api(&self) -> &dyn crate::apis::MessagesApi {
         self.messages_api.as_ref()
     }
 
-    pub fn nodes_api(&self) -> &dyn crate::apis::NodesApi{
+    pub fn nodes_api(&self) -> &dyn crate::apis::NodesApi {
         self.nodes_api.as_ref()
     }
 
-    pub fn state_api(&self) -> &dyn crate::apis::StateApi{
+    pub fn state_api(&self) -> &dyn crate::apis::StateApi {
         self.state_api.as_ref()
     }
-
 }

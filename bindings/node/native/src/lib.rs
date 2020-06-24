@@ -1,4 +1,7 @@
-use csmlrustmanager::{data::CsmlData, start_conversation, user_close_all_conversations, Client};
+use csmlrustmanager::{
+    data::CsmlData, start_conversation, user_close_all_conversations, Client, CsmlResult,
+    ErrorInfo, Warnings,
+};
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value}; //, map::Map
 
@@ -61,6 +64,52 @@ fn get_flow_steps(mut cx: FunctionContext) -> JsResult<JsArray> {
     Ok(js_array)
 }
 
+fn format_warnings<'a, C: Context<'a>>(
+    cx: &mut C,
+    array: &mut Handle<JsArray>,
+    warnings: Vec<Warnings>,
+) {
+    for (index, warning) in warnings.iter().enumerate() {
+        let object = JsObject::new(cx);
+        let flow = cx.string(warning.position.flow.clone());
+        let step = cx.string(warning.position.step.clone());
+        let line = cx.number(warning.position.interval.line as f64);
+        let column = cx.number(warning.position.interval.column as f64);
+        let message = cx.string(&warning.message);
+
+        object.set(cx, "flow", flow).unwrap();
+        object.set(cx, "step", step).unwrap();
+        object.set(cx, "line", line).unwrap();
+        object.set(cx, "column", column).unwrap();
+        object.set(cx, "message", message).unwrap();
+
+        array.set(cx, index as u32, object).unwrap();
+    }
+}
+
+fn format_errors<'a, C: Context<'a>>(
+    cx: &mut C,
+    array: &mut Handle<JsArray>,
+    errors: Vec<ErrorInfo>,
+) {
+    for (index, err) in errors.iter().enumerate() {
+        let object = JsObject::new(cx);
+        let flow = cx.string(err.position.flow.clone());
+        let step = cx.string(err.position.step.clone());
+        let line = cx.number(err.position.interval.line as f64);
+        let column = cx.number(err.position.interval.column as f64);
+        let message = cx.string(&err.message);
+
+        object.set(cx, "flow", flow).unwrap();
+        object.set(cx, "step", step).unwrap();
+        object.set(cx, "line", line).unwrap();
+        object.set(cx, "column", column).unwrap();
+        object.set(cx, "message", message).unwrap();
+
+        array.set(cx, index as u32, object).unwrap();
+    }
+}
+
 fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsbot = cx.argument::<JsValue>(0)?;
     let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
@@ -68,28 +117,44 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     let object = JsObject::new(&mut cx);
 
     match csmlrustmanager::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
-        Ok(_) => {
+        CsmlResult {
+            flows: _,
+            warnings,
+            errors: None,
+        } => {
             let valid = cx.boolean(true);
             object.set(&mut cx, "valid", valid).unwrap();
+
+            if let Some(warnings) = warnings {
+                let mut js_warnings = JsArray::new(&mut cx, warnings.len() as u32);
+                format_warnings(&mut cx, &mut js_warnings, warnings);
+
+                object.set(&mut cx, "warnings", js_warnings).unwrap();
+            }
+
             Ok(object)
         }
-        Err(vec) => {
-            let err = vec[0].clone();
+        CsmlResult {
+            flows: _,
+            warnings,
+            errors: Some(errors),
+        } => {
+            let valid = cx.boolean(true);
 
-            let valid = cx.boolean(false);
-
-            let flow = cx.string(err.position.flow);
-            let step = cx.string(err.position.step);
-            let line = cx.number(err.position.interval.line as f64);
-            let column = cx.number(err.position.interval.column as f64);
-            let message = cx.string(&err.message);
-
-            object.set(&mut cx, "flow", flow).unwrap();
-            object.set(&mut cx, "step", step).unwrap();
             object.set(&mut cx, "valid", valid).unwrap();
-            object.set(&mut cx, "line", line).unwrap();
-            object.set(&mut cx, "column", column).unwrap();
-            object.set(&mut cx, "message", message).unwrap();
+
+            if let Some(warnings) = warnings {
+                let mut js_warnings = JsArray::new(&mut cx, warnings.len() as u32);
+                format_warnings(&mut cx, &mut js_warnings, warnings);
+
+                object.set(&mut cx, "warnings", js_warnings).unwrap();
+            }
+
+            let mut js_errors = JsArray::new(&mut cx, errors.len() as u32);
+            format_errors(&mut cx, &mut js_errors, errors);
+
+            object.set(&mut cx, "errors", js_errors).unwrap();
+
             Ok(object)
         }
     }

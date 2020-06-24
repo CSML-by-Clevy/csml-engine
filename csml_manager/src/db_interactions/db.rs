@@ -22,13 +22,13 @@ fn init_mongo_credentials() -> Option<mongodb::options::auth::Credential> {
     };
 
     if let (&None, &None) = (&username, &password) {
-        return None
+        return None;
     }
 
     let credentials = mongodb::options::auth::Credential::builder()
-    .password(password)
-    .username(username)
-    .build();
+        .password(password)
+        .username(username)
+        .build();
 
     Some(credentials)
 }
@@ -50,7 +50,7 @@ pub fn init_db() -> Result<Database, ManagerError> {
             Ok(var) => match var.parse::<u16>() {
                 Ok(port) => Some(port),
                 // TODO: update error label
-                Err(err) => return Err(ManagerError::Interpreter(err.to_string()))
+                Err(err) => return Err(ManagerError::Interpreter(err.to_string())),
             },
             _ => None,
         };
@@ -58,14 +58,12 @@ pub fn init_db() -> Result<Database, ManagerError> {
         let credentials = init_mongo_credentials();
 
         let options = mongodb::options::ClientOptions::builder()
-                  .hosts(vec![
-                    mongodb::options::StreamAddress {
-                          hostname: name.into(),
-                          port,
-                      }
-                  ])
-                  .credential(credentials)
-                  .build();
+            .hosts(vec![mongodb::options::StreamAddress {
+                hostname: name.into(),
+                port,
+            }])
+            .credential(credentials)
+            .build();
 
         let client = mongodb::Client::with_options(options)?;
 

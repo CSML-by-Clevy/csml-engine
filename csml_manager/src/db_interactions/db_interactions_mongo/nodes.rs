@@ -18,7 +18,6 @@ pub fn create_node(
         None => Bson::Null,
     };
 
-
     let node = doc! {
         "client": bson::to_bson(&data.client)?,
         "interaction_id": &data.interaction_id,

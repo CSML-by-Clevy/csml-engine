@@ -30,7 +30,10 @@ pub fn init_conversation_info<'a>(
             if let Ok(curl) = init_curl(url) {
                 Some(curl)
             } else {
-                return Err(ManagerError::Manager(format!("not valid callback_url {}", url)))
+                return Err(ManagerError::Manager(format!(
+                    "not valid callback_url {}",
+                    url
+                )));
             }
         }
         None => None,

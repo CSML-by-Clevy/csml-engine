@@ -1,5 +1,7 @@
 pub mod data;
-pub use csmlinterpreter::data::Client;
+pub use csmlinterpreter::data::{
+    csml_result::CsmlResult, error_info::ErrorInfo, warnings::Warnings, Client,
+};
 
 mod db_interactions;
 #[cfg(any(feature = "mongo"))]
@@ -15,10 +17,7 @@ use init::*;
 use interpreter_actions::interpret_step;
 use tools::*;
 
-use csmlinterpreter::data::{
-    csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_result::CsmlResult, error_info::ErrorInfo,
-    ContextJson, Hold, Memories,
-};
+use csmlinterpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memories};
 use md5::{Digest, Md5};
 use serde_json::{map::Map, Value};
 use std::{env, time::SystemTime};
@@ -66,19 +65,8 @@ pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Vec<String> {
     }
 }
 
-pub fn validate_bot(bot: CsmlBot) -> Result<bool, Vec<ErrorInfo>> {
-    match csmlinterpreter::validate_bot(bot) {
-        CsmlResult {
-            flows: _,
-            warnings: _,
-            errors: None,
-        } => Ok(true),
-        CsmlResult {
-            flows: _,
-            warnings: _,
-            errors: Some(e),
-        } => Err(e),
-    }
+pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
+    csmlinterpreter::validate_bot(bot)
 }
 
 pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> {
