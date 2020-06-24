@@ -139,7 +139,7 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
             warnings,
             errors: Some(errors),
         } => {
-            let valid = cx.boolean(true);
+            let valid = cx.boolean(false);
 
             object.set(&mut cx, "valid", valid).unwrap();
 
