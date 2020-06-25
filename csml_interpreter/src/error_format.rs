@@ -17,7 +17,7 @@ pub const ERROR_PARENTHESES_END: &'static str =
 pub const ERROR_NUMBER_AS_IDENT: &'static str = "int/float can't be used as identifier";
 pub const ERROR_RESERVED: &'static str = "reserved keyword can't be used as identifier";
 pub const ERROR_PARSING: &'static str =
-    "invalid argument use one of [say, do, if, ..] keywords to start an action";
+    "invalid argument, use one of the action keywords [say, do, if, ...]";
 pub const ERROR_REMEMBER: &'static str =
     "remember must be assigning to a variable via '=': remember key = value";
 pub const ERROR_USE: &'static str =
