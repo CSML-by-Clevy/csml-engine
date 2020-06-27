@@ -1,6 +1,6 @@
 {
   "name": "csml-engine",
-  "version": "0.0.11",
+  "version": "0.0.12-beta1",
   "description": "CSML engine for nodejs",
   "main": "native/index.node",
   "directories": {

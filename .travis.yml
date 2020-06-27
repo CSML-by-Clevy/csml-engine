@@ -9,6 +9,9 @@ node_js:
 cache:
   - cargo
   - npm
+addons:
+  apt:
+    packages: libssl-dev
 before_install:
   - curl https://sh.rustup.rs -sSf > /tmp/rustup.sh
   - sh /tmp/rustup.sh -y
