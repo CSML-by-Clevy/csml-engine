@@ -22,7 +22,7 @@
     "url": "git+https://github.com/CSML-by-Clevy/csml-engine.git"
   },
   "files": [
-    "csml",
+    "native/index.node",
     "lib"
   ],
   "binary": {
