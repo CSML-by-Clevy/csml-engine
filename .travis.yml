@@ -1,3 +1,4 @@
+# deploy nodejs binding
 os:
   - osx
   - linux
@@ -17,4 +18,6 @@ before_install:
   - cd bindings/node
   - npm i
 script:
-  - npm run upload-binary
+  - # Publish when using '[publish binary]' keywords
+  - COMMIT_MESSAGE=$(git log --format=%B --no-merges -n 1 | tr -d '\n')
+  - if [[ ${COMMIT_MESSAGE} =~ "[publish binary]" ]]; then npm run upload-binary || exit 0; fi;
