@@ -1,0 +1,47 @@
+{
+  "name": "@clevy/csml-engine-tmp",
+  "version": "0.0.7",
+  "description": "CSML engine for nodejs",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "install": "npx node-pre-gyp install --fallback-to-build=false || neon build --release",
+    "package": "npx node-pre-gyp package",
+    "upload-binary": "npx node-pre-gyp package && npx node-pre-gyp-github publish"
+  },
+  "keywords": [
+    "CSML",
+    "chatbots"
+  ],
+  "author": "Clevy <contact@clevy.io>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frsechet/node-csml-engine.git"
+  },
+  "files": [
+    "csml",
+    "lib"
+  ],
+  "binary": {
+    "module_name": "index",
+    "host": "https://github.com/frsechet/node-csml-engine/releases/download/",
+    "remote_path": "{version}",
+    "package_name": "{node_abi}-{platform}-{arch}.tar.gz",
+    "module_path": "./native",
+    "pkg_path": "."
+  },
+  "dependencies": {
+    "node-pre-gyp": "github:amilajack/node-pre-gyp#neon-compat",
+    "node-pre-gyp-github": "^1.4.3"
+  },
+  "devDependencies": {
+    "neon-cli": "^0.4.0"
+  },
+  "bugs": {
+    "url": "https://github.com/frsechet/node-csml-engine/issues"
+  },
+  "homepage": "https://github.com/frsechet/node-csml-engine#readme"
+}

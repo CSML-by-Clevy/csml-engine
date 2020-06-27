@@ -1,0 +1,19 @@
+os:
+  - osx
+  - linux
+language: node_js
+node_js:
+  - node
+  - lts/*
+cache:
+  - cargo
+  - npm
+before_install:
+  - curl https://sh.rustup.rs -sSf > /tmp/rustup.sh
+  - sh /tmp/rustup.sh -y
+  - export PATH="$HOME/.cargo/bin:$PATH"
+  - rustup install 1.44.0
+  - source "$HOME/.cargo/env"
+  - npm i
+script:
+  - npm run upload-binary
