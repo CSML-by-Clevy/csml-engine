@@ -1,6 +1,6 @@
 {
   "name": "@clevy/csml-engine-tmp",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "CSML engine for nodejs",
   "main": "lib/index.js",
   "directories": {
