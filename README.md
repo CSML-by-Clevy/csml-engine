@@ -79,9 +79,3 @@ Please note that if you plan to deploy your project on a different architecture,
 
 * [Roadmap](https://trello.com/b/tZ1MoALL/csml-open-roadmap) - Upcoming new features.
 * [Release notes](https://headwayapp.co/csml-release-notes) - Stay up to date.
-
-### Play with the language
-
-* [Studio] - Create and deploy your chatbot in a matter of minutes.
-
-[Studio]: https://studio.csml.dev
