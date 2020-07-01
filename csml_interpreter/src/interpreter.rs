@@ -113,10 +113,5 @@ pub fn interpret_scope(
         };
     }
 
-    if message_data.exit_condition.is_none() {
-        message_data.exit_condition = Some(ExitCondition::End);
-        data.context.step = "end".to_string();
-    }
-
     Ok(message_data)
 }

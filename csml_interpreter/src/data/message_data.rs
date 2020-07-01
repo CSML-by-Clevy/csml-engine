@@ -67,7 +67,13 @@ impl MessageData {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Self {
         match result {
-            Ok(res) => res,
+            Ok(mut message_data) => {
+
+                if message_data.exit_condition.is_none() {
+                    message_data.exit_condition = Some(ExitCondition::End);
+                }
+                message_data
+            },
             Err(err) => {
                 let msg = PrimitiveString::get_literal(&err.format_error(), err.position.interval);
 
