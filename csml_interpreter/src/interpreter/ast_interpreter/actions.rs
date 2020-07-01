@@ -91,6 +91,7 @@ pub fn match_actions(
 
             data.context.step = step_name.ident.to_owned();
             root.exit_condition = Some(ExitCondition::Goto);
+            data.context.hold = None;
 
             if step_name.ident == "end" {
                 root.exit_condition = Some(ExitCondition::End);
@@ -110,6 +111,7 @@ pub fn match_actions(
             data.context.step = "start".to_string();
             data.context.flow = flow_name.ident.to_owned();
             root.exit_condition = Some(ExitCondition::Goto);
+            data.context.hold = None;
 
             Ok(root)
         }

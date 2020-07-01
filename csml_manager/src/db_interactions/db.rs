@@ -36,17 +36,17 @@ fn init_mongo_credentials() -> Option<mongodb::options::auth::Credential> {
 pub fn init_db() -> Result<Database, ManagerError> {
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") {
-        let name = match std::env::var("MONGODB_HOST_NAME") {
+        let name = match std::env::var("MONGODB_HOST") {
             Ok(var) => var,
             _ => panic!("error no MONGODB_HOST en env"),
         };
 
-        let dbname = match std::env::var("MONGODB_NAME") {
+        let dbname = match std::env::var("MONGODB_DATABASE") {
             Ok(var) => var,
-            _ => panic!("error no MONGODB_NAME en env"),
+            _ => panic!("error no MONGODB_DATABASE en env"),
         };
 
-        let port: Option<u16> = match std::env::var("MONGODB_HOST_PORT") {
+        let port: Option<u16> = match std::env::var("MONGODB_PORT") {
             Ok(var) => match var.parse::<u16>() {
                 Ok(port) => Some(port),
                 // TODO: update error label
