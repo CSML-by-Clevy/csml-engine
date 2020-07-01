@@ -43,7 +43,7 @@ fn execute_step(
 ) -> MessageData {
     let flow = data.flow.to_owned();
 
-    let message_data = match flow
+    let mut message_data = match flow
         .flow_instructions
         .get(&InstructionType::NormalStep(step.to_owned()))
     {
@@ -57,6 +57,21 @@ fn execute_step(
             format!("[{}] {}", step, ERROR_STEP_EXIST),
         )),
     };
+
+    // if no goto at the end of the scope end conversation
+    if let Ok(message_data) = &mut message_data {
+        if message_data.exit_condition.is_none() {
+            message_data.exit_condition = Some(ExitCondition::End);
+            data.context.step = "end".to_string();
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    flow: None,
+                    step: Some("end".to_owned()),
+                },
+            );
+        }
+    }
 
     MessageData::error_to_message(message_data, sender)
 }
