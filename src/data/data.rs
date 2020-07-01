@@ -14,7 +14,8 @@ pub struct Data {
     pub context: Context,
     pub event: Event,
     pub step_vars: HashMap<String, Literal>,
-    pub header: serde_json::Value,
+    pub custom_component: serde_json::Map<String, serde_json::Value>,
+    pub native_component: serde_json::Map<String, serde_json::Value>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,14 +28,16 @@ impl Data {
         context: &mut Context,
         event: &Event,
         step_vars: HashMap<String, Literal>,
-        header: serde_json::Value,
+        custom_component: serde_json::Map<String, serde_json::Value>,
+        native_component: serde_json::Map<String, serde_json::Value>,
     ) -> Self {
         Self {
             flow: flow.to_owned(),
             context: context.to_owned(),
             event: event.to_owned(),
             step_vars,
-            header,
+            custom_component,
+            native_component,
         }
     }
 }

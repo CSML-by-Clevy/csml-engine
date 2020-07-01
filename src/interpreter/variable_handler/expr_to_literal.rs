@@ -31,6 +31,8 @@ fn exec_path_literal(
     }
 }
 
+// This is a temporary solution will we standardized the function call
+// TODO: UPDATE to a standard solution
 fn format_function_args(
     args: &Expr,
     data: &mut Data,
@@ -53,7 +55,6 @@ fn format_function_args(
             Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
                 let value = expr_to_literal(var, None, data, root, sender)?;
 
-                // TODO: Add tow Assign types in ObjectType ?
                 let ident = match **var_name {
                     Expr::IdentExpr(ref ident) => ident.ident.to_owned(),
                     _ => {
@@ -85,20 +86,67 @@ fn format_function_args(
     Ok(obj)
 }
 
+// This is a temporary solution will we standardized the function call
+// TODO: UPDATE to a standard solution
+fn format_function_args_v2(
+    args: &Expr,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    let mut vec_args = vec!();
+    let (vec, interval) = match args {
+        Expr::VecExpr(vec, range) => (vec, range.start),
+        _e => {
+            return Err(gen_error_info(
+                Position::new(interval_from_expr(args)),
+                ERROR_FUNCTIONS_ARGS.to_owned(),
+            ))
+        }
+    };
+
+    for elem in vec.iter() {
+        match elem {
+            Expr::ObjectExpr(ObjectType::Assign(_, var)) => {
+                let value = expr_to_literal(var, None, data, root, sender)?;
+
+                vec_args.push(value);
+            }
+            Expr::ObjectExpr(ObjectType::Normal(Function {
+                name,
+                interval,
+                args,
+            })) => {
+                let (_, literal) =
+                    normal_object_to_literal(&name, args, *interval, data, root, sender)?;
+
+                vec_args.push(literal);
+            }
+            _ => {
+                let value = expr_to_literal(elem, None, data, root, sender)?;
+                vec_args.push(value);
+            }
+        }
+    }
+
+    Ok(PrimitiveArray::get_literal(&vec_args, interval) )
+}
+
 fn normal_object_to_literal(
     name: &str,
-    value: &Expr,
+    args: &Expr,
     interval: Interval,
     data: &mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<(String, Literal), ErrorInfo> {
-    let obj = format_function_args(value, data, root, sender)?;
+    let args_v2 = format_function_args_v2(args, data, root, sender)?;
+    let args = format_function_args(args, data, root, sender)?;
 
     if BUILT_IN.contains(&name) {
         Ok((
             name.to_owned(),
-            match_builtin(&name, obj, interval.to_owned(), data)?,
+            match_builtin(&name, args, args_v2,  interval.to_owned(), data)?,
         ))
     } else {
         Err(gen_error_info(

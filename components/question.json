@@ -1,0 +1,28 @@
+{
+    "Question": {
+        "params": [
+            {
+                "title": {
+                    "required": true,
+                    "type": "String"
+                }
+            },
+            {
+                "buttons": {
+                    "required": true,
+                    "type": "Object"
+                }
+            },
+            {
+                "payload": {
+                    "required": false,
+                    "type": "Array",
+                    "add_value": [
+                        {"$_get": "title"},
+                        {"$_get": "payload"}
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -9,26 +9,23 @@ pub use interpreter::builtins::components::read;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use crate::data::ast::Expr;
-use crate::data::ast::Flow;
-use crate::data::ast::InstructionType;
-use crate::data::ast::Interval;
-use crate::data::context::get_hashmap_from_mem;
-use crate::data::csml_bot::CsmlBot;
-use crate::data::csml_result::CsmlResult;
-use crate::data::error_info::ErrorInfo;
-use crate::data::event::Event;
-use crate::data::message_data::MessageData;
-use crate::data::msg::MSG;
-use crate::data::position::Position;
-use crate::data::warnings::Warnings;
-use crate::data::ContextJson;
-use crate::data::Data;
-use crate::error_format::*;
-use crate::linter::data::Linter;
-use crate::linter::linter::lint_flow;
-use crate::parser::state_context::StateContext;
-use crate::parser::ExitCondition;
+use data::ast::{Expr, Flow, InstructionType, Interval};
+use data::context::get_hashmap_from_mem;
+use data::csml_bot::CsmlBot;
+use data::csml_result::CsmlResult;
+use data::error_info::ErrorInfo;
+use data::event::Event;
+use data::message_data::MessageData;
+use data::msg::MSG;
+use data::position::Position;
+use data::warnings::Warnings;
+use data::ContextJson;
+use data::Data;
+use error_format::*;
+use linter::data::Linter;
+use linter::linter::lint_flow;
+use parser::state_context::StateContext;
+use parser::ExitCondition;
 
 use std::collections::HashMap;
 use std::sync::mpsc;
@@ -177,7 +174,13 @@ pub fn interpret(
             None => HashMap::new(),
         };
 
-        let mut data = Data::new(&ast, &mut context, &event, step_vars, bot.header.to_owned());
+        let native = read().unwrap();
+        let custom = match bot.header.as_object() {
+            Some(obj) => obj.to_owned(),
+            None => panic!("custom component error")
+        };
+
+        let mut data = Data::new(&ast, &mut context, &event, step_vars, custom, native);
 
         let rip = match context.hold {
             Some(result) => {

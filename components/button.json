@@ -17,12 +17,12 @@
                 }
             },
             {
-                "payload": {
+                "accepts": {
                     "required": false,
                     "type": "Array",
                     "default_value": [
-                        {"$_get": "title"},
-                        {"$_get": "payload"}
+                        {"$_get": "title" },
+                        {"$_get": "payload" } 
                     ]
                 }
             }
