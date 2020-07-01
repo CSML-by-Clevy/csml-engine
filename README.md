@@ -56,7 +56,7 @@ neon build -p csml/bindings/node --release
 
 > If you are not familiar with Rust build times, please know that the `neon build` step can take up to 10 minutes. Be patient!
 
-This method will output this native file: `csml/bindings/node/native/index.node` that you can simply `require()` in your project. For more details about how to use this module in your own projects, you can have a look at [our implementation for Docker version](https://github.com/CSML-by-Clevy/csml-engine-docker/blob/master/app/server.js).
+This method will output this native file: `csml/bindings/node/native/index.node` that you can simply `require()` (or `import`) in your project. For more details about how to use this module in your own projects, you can have a look at [our implementation for Docker version](https://github.com/CSML-by-Clevy/csml-engine-docker/blob/master/app/server.js).
 
 Please note that if you plan to deploy your project on a different architecture, you will need to recompile the project on that architecture. We recommend using git submodules if you need to integrate CSML Engine in your own nodejs projects.
 
