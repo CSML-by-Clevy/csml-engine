@@ -187,14 +187,14 @@ fn get_index_of_parameter(key: &str, array: &Vec<serde_json::Value>) -> Option<u
     for object in array.iter() {
         if let Some(object) = object.as_object() {
             for value in object.keys() {
-                if let Some(serde_json::Value::Object(object)) = object.get(value) {
+                // if let Some(serde_json::Value::Object(_object)) = object.get(value) {
                     // if is_parameter_required(object) {
                         if key == value {
                             return Some(result);
                         }
                         result += 1;
                     // }
-                }
+                // }
             }
         }
     }
@@ -255,7 +255,7 @@ fn get_default_object(
                 if let Some(serde_json::Value::String(dependencie)) = function.get("$_get") {
                     match memoization.get(dependencie) {
                         Some(value) => {
-                            result = value.to_owned();
+                            result = serde_json::Value::add(&result, &value, interval)?;
                         }
                         None => {
                             if recursion.contains(dependencie) {
