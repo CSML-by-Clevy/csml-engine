@@ -19,13 +19,12 @@ use tools::*;
 
 use csmlinterpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memories};
 use md5::{Digest, Md5};
-use serde_json::{map::Map, Value};
-use std::{env, time::SystemTime};
+use std::{env, time::SystemTime, collections::HashMap};
 
 pub fn start_conversation(
-    json_event: Value,
+    json_event: serde_json::Value,
     csmldata: CsmlData,
-) -> Result<Map<String, Value>, ManagerError> {
+) -> Result<serde_json::Map<String, serde_json::Value>, ManagerError> {
     let now = SystemTime::now();
 
     let event = format_event(json_event.clone())?;
@@ -58,11 +57,8 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<Conversation>, Ma
     get_latest_open(client, &db)
 }
 
-pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Vec<String> {
-    match csmlinterpreter::get_steps_from_flow(bot, flow_name) {
-        Some(vec) => vec,
-        None => vec![],
-    }
+pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>>{
+    csmlinterpreter::get_steps_from_flow(bot)
 }
 
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {

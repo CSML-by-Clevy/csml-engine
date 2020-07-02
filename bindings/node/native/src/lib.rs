@@ -47,21 +47,27 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsObject> {
     }
 }
 
-fn get_flow_steps(mut cx: FunctionContext) -> JsResult<JsArray> {
+fn get_bot_steps(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsbot = cx.argument::<JsValue>(0)?;
     let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
-    let flow = cx.argument::<JsString>(1)?.value();
 
-    let vec = csmlrustmanager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap(), flow);
+    let map = csmlrustmanager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap());
 
-    let js_array = JsArray::new(&mut cx, vec.len() as u32);
+    let js_object = JsObject::new(&mut cx);
 
-    for (i, obj) in vec.iter().enumerate() {
-        let js_string = cx.string(obj);
-        js_array.set(&mut cx, i as u32, js_string).unwrap();
+    for (flow , steps) in map.iter() {
+        let js_array = JsArray::new(&mut cx, steps.len() as u32);
+        
+        for (i, step) in steps.iter().enumerate() {
+            let step = cx.string(step);
+            js_array.set(&mut cx, i as u32, step).unwrap();
+        }
+        
+        let key = cx.string(flow);
+        js_object.set(&mut cx, key, js_array).unwrap();
     }
 
-    Ok(js_array)
+    Ok(js_object)
 }
 
 fn format_warnings<'a, C: Context<'a>>(
@@ -273,7 +279,7 @@ register_module!(mut cx, {
     // cx.export_function("validFlow", is_valid)?;
     cx.export_function("getOpenConversation", get_open_conversation)?;
     cx.export_function("validateBot", validate_bot)?;
-    cx.export_function("getFlowSteps", get_flow_steps)?;
+    cx.export_function("getBotSteps", get_bot_steps)?;
     cx.export_function("run", run_bot)?;
     cx.export_function("closeAllConversations", close_conversations)?;
     Ok(())
