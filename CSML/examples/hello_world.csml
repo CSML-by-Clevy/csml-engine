@@ -1,9 +1,0 @@
-start:
-    // say "Hello World"
-    // say Component.Button({"param_0": "foo"}, {"param_1": "bar"})
-    // say Text("hola")
-
-    // say Button("hello", accepts = ["toto"], button_type = "quick_button", payload = "test")
-    say Button("hola", "test")
-
-    goto end

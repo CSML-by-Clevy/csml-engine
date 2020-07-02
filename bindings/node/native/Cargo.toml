@@ -1,0 +1,22 @@
+[package]
+name = "manager"
+version = "0.1.0"
+authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
+license = "MIT"
+build = "build.rs"
+exclude = ["artifacts.json", "index.node"]
+edition = "2018"
+
+[lib]
+name = "manager"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+neon-build = "0.4.0"
+
+[dependencies]
+neon = "0.4.0"
+neon-serde = "0.4.0"
+csmlrustmanager = { path = "../../../csml_manager", features = ["http"]}
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

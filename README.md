@@ -1,4 +1,4 @@
-# CSML Language
+# CSML Conversational Engine
 
 ![CSML logo](./images/csml-horizontal-whitebg-v3.png)
 
@@ -10,98 +10,63 @@ The purpose of this language is to simplify the creation and maintenance of rich
 
 By using the CSML language, any developer can integrate arbitrarily complex conversational agents on any channel (Facebook Messenger, Slack, Facebook Workplace, Microsoft Teams, custom webapp, ...) and make any bot available to any end user. The CSML platform comes with a large number of channel integrations that work out of the box, but developers are free to add new custom integrations by using the CSML interfaces.
 
-## Functional diagram
+## Usage
 
-![diagram](./images/csml-interpreter.png)
+The CSML Engine and Language are built in Rust. The full documentation of the project is available on https://docs.csml.dev.
 
-## Examples
+The conversational engine is available for use in several types of projects, depending on your environment of choice.
 
-### Hello World
+### With CSML Studio
 
-    cargo run --example hello_world
+The simplest way to get started with CSML is to use CSML Studio, a free online environment with everything already setup to start creating bots right away, directly in your browser.
 
-### Event
+To get started with CSML Studio: https://studio.csml.dev
 
-    cargo run --example event
+CSML Studio gives you a free playground to experiment with the language as well as options to deploy your chatbots at scale in one-click.
 
-### Metadata
+### With Docker
 
-    cargo run --example metadata
+We also provide a docker image for easy self-hosted usage.
 
-### Memory
-
-    cargo run --example memory
-
-## Quick Start run it yourself
-
- requires Rust version 1.41.
-
-```rust
-use csmlinterpreter::data::csml_bot::CsmlBot;
-use csmlinterpreter::data::csml_flow::CsmlFlow;
-use csmlinterpreter::data::event::Event;
-use csmlinterpreter::data::ContextJson;
-use csmlinterpreter::interpret;
-use csmlinterpreter::validate_bot;
-
-const DEFAULT_ID_NAME: &str = "id";
-const DEFAULT_FLOW_NAME: &str = "flow";
-const DEFAULT_STEP_NAME: &str = "start";
-const DEFAULT_BOT_NAME: &str = "my_bot";
-
-////////////////////////////////////////////////////////////////////////////////
-// PUBLIC FUNCTION
-////////////////////////////////////////////////////////////////////////////////
-
-fn main() {
-    let content = std::fs::read_to_string("./hello_world.csml").unwrap();
-
-    // Create a CsmlFlow
-    let flow = CsmlFlow::new(
-        DEFAULT_ID_NAME,
-        DEFAULT_FLOW_NAME,
-        &content,
-        Vec::default()
-    );
-
-    // Create a CsmlBot
-    let bot = CsmlBot::new(
-        DEFAULT_ID_NAME,
-        DEFAULT_BOT_NAME,
-        None,
-        vec![flow],
-        DEFAULT_FLOW_NAME,
-    );
-
-    // Create an Event
-    let event = Event::default();
-
-    // Create a Context
-    let context = ContextJson::new(
-        serde_json::json!({}),
-        serde_json::json!({}),
-        None,
-        None,
-        DEFAULT_STEP_NAME,
-        DEFAULT_FLOW_NAME,
-    );
-
-    // Run interpreter
-    let result = validate_bot(bot.to_owned());
-
-    if result.errors.is_some() {
-        dbg!(result.errors);
-        return;
-    }
-    if result.warnings.is_some() {
-        dbg!(result.warnings);
-    }
-
-    dbg!(interpret(bot, context, event, None));
-}
+```
+docker pull clevy/csml-engine
 ```
 
+To get started with CSML Engine on Docker: https://github.com/CSML-by-Clevy/csml-engine-docker
+
+### With Rust
+
+(Pending documentation)
+
+### With nodejs
+
+This repository provides nodejs bindings of this rust library. To use this library in a nodejs project, you will need to build it from source. There are a few requirements:
+
+- Rust v1.44
+- Nodejs LTS or above
+- Neon CLI v0.4.0 (make sure that all [required dependencies](https://neon-bindings.com/docs/getting-started/#install-node-build-tools/) are installed)
+- libssl-dev (or equivalent for your architecture: openssl-dev, libssl-devel...)
+
+To compile CSML Engine into a [native node module](https://nodejs.org/api/addons.html), run:
+
+```shell
+git clone https://github.com/CSML-by-Clevy/csml-engine csml
+neon build -p csml/bindings/node --release
+```
+
+> If you are not familiar with Rust build times, please know that the `neon build` step can take up to 10 minutes. Be patient!
+
+This method will output this native file: `csml/bindings/node/native/index.node` that you can simply `require()` (or `import`) in your project. For more details about how to use this module in your own projects, you can have a look at [our implementation for Docker version](https://github.com/CSML-by-Clevy/csml-engine-docker/blob/master/app/server.js).
+
+Please note that if you plan to deploy your project on a different architecture, you will need to recompile the project on that architecture. We recommend using git submodules if you need to integrate CSML Engine in your own nodejs projects.
+
 ## Additional Information
+
+### Play with the language
+
+* [Studio] - Create and deploy your chatbot in a matter of minutes.
+
+[Studio]: https://studio.csml.dev
 
 ### Getting Help
 
@@ -114,9 +79,3 @@ fn main() {
 
 * [Roadmap](https://trello.com/b/tZ1MoALL/csml-open-roadmap) - Upcoming new features.
 * [Release notes](https://headwayapp.co/csml-release-notes) - Stay up to date.
-
-### Play with the language
-
-* [Studio] - Create and deploy your chatbot in a matter of minutes.
-
-[Studio]: https://studio.csml.dev
