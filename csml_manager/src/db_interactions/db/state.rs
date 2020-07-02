@@ -8,7 +8,7 @@ pub fn delete_state_key(
     _db: &Database,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::get_db;
         use crate::db_interactions::db_interactions_mongo::state::delete_state_key as delete;
 
@@ -18,7 +18,7 @@ pub fn delete_state_key(
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::get_db;
         use crate::db_interactions::db_interactions_http_db::state::delete_state_key as delete;
 
@@ -53,7 +53,7 @@ pub fn get_state_key(
     _db: &Database,
 ) -> Result<Option<serde_json::Value>, ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::get_db;
         use crate::db_interactions::db_interactions_mongo::state::get_state_key;
 
@@ -63,7 +63,7 @@ pub fn get_state_key(
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::get_db;
         use crate::db_interactions::db_interactions_http_db::state::get_state_key;
 
@@ -83,14 +83,14 @@ pub fn set_state_items(
 ) -> Result<(), ManagerError> {
     // Document
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::state::set_state_items as set_items;
 
         return set_items(_data, _type, _keys_values);
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::state::format_state_body;
         use crate::db_interactions::db_interactions_http_db::state::set_state_items as set_items;
 

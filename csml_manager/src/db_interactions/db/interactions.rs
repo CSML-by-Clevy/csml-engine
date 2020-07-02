@@ -6,7 +6,7 @@ pub fn init_interaction(
     db: &Database,
 ) -> Result<String, ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::get_db;
         use crate::db_interactions::db_interactions_mongo::interactions::init_interaction as init;
 
@@ -16,7 +16,7 @@ pub fn init_interaction(
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::get_db;
         use crate::db_interactions::db_interactions_http_db::interactions::init_interaction as init;
 
@@ -30,7 +30,7 @@ pub fn init_interaction(
 
 pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::get_db;
         use crate::db_interactions::db_interactions_mongo::interactions::update_interaction as update;
 
@@ -40,7 +40,7 @@ pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), 
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::get_db;
         use crate::db_interactions::db_interactions_http_db::interactions::update_interaction as update;
 
