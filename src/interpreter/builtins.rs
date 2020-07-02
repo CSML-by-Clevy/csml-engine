@@ -42,16 +42,19 @@ pub fn match_builtin(
         // WAIT => wait(args, interval),
         // URL => url(args, interval),
         // IMAGE => img(args, interval),
-        // QUESTION => question(args, interval),
-        // VIDEO => video(args, interval),
         // AUDIO => audio(args, interval),
-        // BUTTON => button(args, interval),
-        // CAROUSEL => carousel(args, interval),
-        // CARD => card(args, interval),
-        // HTTP => http(args, interval),
+        // VIDEO => video(args, interval),
         // FILE => file(args, interval),
 
+        // BUTTON => button(args, interval),
+        // QUESTION => question(args, interval),
+
+        // CARD => card(args, interval),
+        // CAROUSEL => carousel(args, interval),
+
+
         // DEFAULT
+        HTTP => http(args, interval),
         FN => api(args, interval, data),
         ONE_OF => one_of(args, interval),
         SHUFFLE => shuffle(args, interval),
