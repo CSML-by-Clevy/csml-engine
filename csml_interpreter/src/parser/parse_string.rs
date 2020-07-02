@@ -68,7 +68,7 @@ fn get_distance_quote(s: &Span) -> Option<usize> {
     let mut escape = false;
 
     for (result, c) in s.as_bytes().iter().enumerate() {
-        if *c as char == '"' && !escape {
+        if *c as char == '\"' && !escape {
             return Some(result);
         }
 
