@@ -39,9 +39,9 @@ fn init_data() -> CsmlData {
         client: Client::new("alexis".to_owned(), "42".to_owned(), "1".to_owned()),
         callback_url: Some("http://httpbin.org/post".to_owned()),
         payload: json!({
-            "content_type": "payload",
+            "content_type": "text",
             "content": {
-            "value": "hola"
+                 "text": "hola"
             },
             "metadata": {
             "title": "title of button",

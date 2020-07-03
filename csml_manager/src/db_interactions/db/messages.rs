@@ -7,7 +7,7 @@ pub fn add_messages_bulk(
     direction: &str,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::messages::add_messages_bulk as add;
 
         return add(data, &msgs, interaction_order, direction);

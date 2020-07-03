@@ -8,7 +8,7 @@ pub fn create_conversation(
     db: &Database,
 ) -> Result<String, ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::conversation::create_conversation as create;
         use crate::db_interactions::db_interactions_mongo::get_db;
 
@@ -32,7 +32,7 @@ pub fn create_conversation(
 
 pub fn close_conversation(id: &String, client: &Client, db: &Database) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::conversation::close_conversation as close;
         use crate::db_interactions::db_interactions_mongo::get_db;
 
@@ -56,7 +56,7 @@ pub fn close_conversation(id: &String, client: &Client, db: &Database) -> Result
 
 pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::conversation::close_all_conversations as close_all;
         use crate::db_interactions::db_interactions_mongo::get_db;
 
@@ -83,7 +83,7 @@ pub fn get_latest_open(
     db: &Database,
 ) -> Result<Option<Conversation>, ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::conversation::get_latest_open as get_latest;
         use crate::db_interactions::db_interactions_mongo::get_db;
 
@@ -110,7 +110,7 @@ pub fn update_conversation(
     step_id: Option<String>,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::conversation::update_conversation as update;
         use crate::db_interactions::db_interactions_mongo::get_db;
 

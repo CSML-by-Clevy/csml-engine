@@ -36,6 +36,7 @@ pub fn interpret_step(
         match received {
             MSG::Memory(mem) => memories.push(mem),
             MSG::Message(msg) => {
+                println!("msg => {:?}", msg);
                 send_and_display_msg(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }

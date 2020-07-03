@@ -110,6 +110,9 @@ pub fn set_state_items(
     keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
     let docs = format_state_body(data, _type, keys_values)?;
+    if docs.len() == 0 {
+        return Ok(());
+    }
 
     let db = get_db(&data.db)?;
     let state = db.collection("state");

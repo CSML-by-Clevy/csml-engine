@@ -35,7 +35,7 @@ fn init_mongo_credentials() -> Option<mongodb::options::auth::Credential> {
 
 pub fn init_db() -> Result<Database, ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") == Ok("mongodb".to_owned()) {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         let name = match std::env::var("MONGODB_HOST") {
             Ok(var) => var,
             _ => panic!("error no MONGODB_HOST en env"),
