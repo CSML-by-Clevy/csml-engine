@@ -215,7 +215,29 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
 //   }
 // ]
 
-fn format_data(json_event: Value, jsdata: Value) -> Result<CsmlData, serde_json::error::Error> {
+fn check_bot(jsbot: &mut Value) {
+    if let serde_json::Value::Object(map) = jsbot {
+        let id = map.get("id").unwrap().to_owned();
+        if map.contains_key("name") {
+            map.insert("name".to_owned(), id);
+        };
+    };
+    if let Some(serde_json::Value::Array(flows)) = jsbot.get_mut("flows") {
+        for flow in flows.iter_mut() {
+            if let serde_json::Value::Object(map) = flow {
+                let id = map.get("id").unwrap().to_owned();
+                if map.contains_key("name") {
+                    map.insert("name".to_owned(), id);
+                };
+            };
+        }
+    };
+}
+
+fn format_data(json_event: Value, mut jsbot: Value) -> Result<CsmlData, serde_json::error::Error> {
+
+    check_bot(&mut jsbot);
+
     Ok(CsmlData {
         request_id: json_event["request_id"].as_str().unwrap().to_owned(),
         client: serde_json::from_value(json_event["client"].clone())?,
@@ -232,8 +254,7 @@ fn format_data(json_event: Value, jsdata: Value) -> Result<CsmlData, serde_json:
                 val => val,
             }
         }, // optional
-
-        bot: serde_json::from_value(jsdata)?,
+        bot: serde_json::from_value(jsbot)?,
     })
 }
 
