@@ -68,6 +68,7 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> {
     let db = init_db()?;
 
+    delete_state_key(&client, "hold", "position", &db)?;
     close_all_conversations(&client, &db)
 }
 
