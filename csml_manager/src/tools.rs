@@ -166,7 +166,7 @@ pub fn get_flow_by_id<'a>(f_id: &str, flows: &'a [CsmlFlow]) -> Result<&'a CsmlF
 }
 
 pub fn get_default_flow<'a>(bot: &'a CsmlBot) -> Result<&'a CsmlFlow, ManagerError> {
-    match bot.flows.iter().find(|&flow| flow.id == bot.default_flow) {
+    match bot.flows.iter().find(|&flow| flow.id == bot.default_flow || flow.name == bot.default_flow ) {
         Some(flow) => Ok(flow),
         None => Err(ManagerError::Interpreter(
             "default flow does not exist".to_owned(),
