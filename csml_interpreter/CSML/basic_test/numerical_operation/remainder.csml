@@ -1,0 +1,231 @@
+start:
+    use 2 as var1
+    use 3 as var2
+
+    use (var1 % var2) as var
+    say var
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// REMAINDER ARRAY
+////////////////////////////////////////////////////////////////////////////////
+
+remainder_array_step_0:
+    say [] % []
+    goto end
+
+remainder_array_step_1:
+    say [] % true
+    goto end
+
+remainder_array_step_2:
+    say [] % 1.0
+    goto end
+
+remainder_array_step_3:
+    say [] % 1
+    goto end
+
+remainder_array_step_4:
+    say [] % null
+    goto end
+
+remainder_array_step_5:
+    say [] % {}
+    goto end
+
+remainder_array_step_6:
+    say [] % "1"
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// REMAINDER BOOLEAN
+////////////////////////////////////////////////////////////////////////////////
+
+remainder_boolean_step_0:
+    say true % []
+    goto end
+
+remainder_boolean_step_1:
+    say true % true
+    goto end
+
+remainder_boolean_step_2:
+    say true % 1.0
+    goto end
+
+remainder_boolean_step_3:
+    say true % 1
+    goto end
+
+remainder_boolean_step_4:
+    say true % null
+    goto end
+
+remainder_boolean_step_5:
+    say true % {}
+    goto end
+
+remainder_boolean_step_6:
+    say true % "1"
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// REMAINDER FLOAT
+////////////////////////////////////////////////////////////////////////////////
+
+remainder_float_step_0:
+    say 1.0 % []
+    goto end
+
+remainder_float_step_1:
+    say 1.0 % true
+    goto end
+
+remainder_float_step_2:
+    say 1.0 % 1.0
+    goto end
+
+remainder_float_step_3:
+    say 1.0 % 1
+    goto end
+
+remainder_float_step_4:
+    say 1.0 % null
+    goto end
+
+remainder_float_step_5:
+    say 1.0 % {}
+    goto end
+
+remainder_float_step_6:
+    say 1.0 % "1"
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// REMAINDER INT
+////////////////////////////////////////////////////////////////////////////////
+
+remainder_int_step_0:
+    say 1 % []
+    goto end
+
+remainder_int_step_1:
+    say 1 % true
+    goto end
+
+remainder_int_step_2:
+    say 1 % 1.0
+    goto end
+
+remainder_int_step_3:
+    say 1 % 1
+    goto end
+
+remainder_int_step_4:
+    say 1 % null
+    goto end
+
+remainder_int_step_5:
+    say 1 % {}
+    goto end
+
+remainder_int_step_6:
+    say 1 % "1"
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// REMAINDER NULL
+////////////////////////////////////////////////////////////////////////////////
+
+remainder_null_step_0:
+    say null % []
+    goto end
+
+remainder_null_step_1:
+    say null % true
+    goto end
+
+remainder_null_step_2:
+    say null % 1.0
+    goto end
+
+remainder_null_step_3:
+    say null % 1
+    goto end
+
+remainder_null_step_4:
+    say null % null
+    goto end
+
+remainder_null_step_5:
+    say null % {}
+    goto end
+
+remainder_null_step_6:
+    say null % "1"
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// REMAINDER OBJECT
+////////////////////////////////////////////////////////////////////////////////
+
+remainder_object_step_0:
+    say {} % []
+    goto end
+
+remainder_object_step_1:
+    say {} % true
+    goto end
+
+remainder_object_step_2:
+    say {} % 1.0
+    goto end
+
+remainder_object_step_3:
+    say {} % 1
+    goto end
+
+remainder_object_step_4:
+    say {} % null
+    goto end
+
+remainder_object_step_5:
+    say {} % {}
+    goto end
+
+remainder_object_step_6:
+    say {} % "1"
+    goto end
+
+////////////////////////////////////////////////////////////////////////////////
+/// REMAINDER STRING
+////////////////////////////////////////////////////////////////////////////////
+
+remainder_string_step_0:
+    say "1" % []
+    goto end
+
+remainder_string_step_1:
+    say "1" % true
+    goto end
+
+remainder_string_step_2:
+    say "1" % 1.0
+    goto end
+
+remainder_string_step_3:
+    say "1" % 1
+    goto end
+
+remainder_string_step_4:
+    say "1" % null
+    goto end
+
+remainder_string_step_5:
+    say "1" % {}
+    goto end
+
+remainder_string_step_6:
+    say "1" % "1"
+    goto end

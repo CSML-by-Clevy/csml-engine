@@ -1,0 +1,106 @@
+start:
+	goto end
+
+http_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http
+	goto end
+
+get_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.get()
+
+	say http
+	goto end
+
+get_1:
+	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+
+	say http.get().send()
+	goto end
+
+set_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.set({"hello":"world"})
+
+	say http
+	goto end
+
+query_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.query({"hello":"world"})
+
+	say http
+	goto end
+
+delete_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.delete({"hello":"world"})
+
+	say http
+	goto end
+
+delete_1:
+	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+
+	say http.delete({"hello":"world"}).send()
+	goto end
+
+put_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.put({"hello":"world"})
+
+	say http
+	goto end
+
+put_1:
+	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+
+	say http.put({
+		"id":"1",
+		"title":"foo",
+		"body":"bar",
+		"userId":"1",
+	}).send()
+	goto end
+
+patch_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.patch({"hello":"world"})
+
+	say http
+	goto end
+
+patch_1:
+	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+
+	say http.patch({
+		"title":"foo",
+	}).send()
+	goto end
+
+post_0:
+	remember http = HTTP("https://clevy.io")
+
+	say http.post({"hello":"world"})
+
+	say http
+	goto end
+
+post_1:
+	use HTTP("https://jsonplaceholder.typicode.com/posts") as http
+
+	say http.post({
+		"title":"foo",
+		"body":"bar",
+		"userId":"1",
+	}).send()
+	goto end
+	

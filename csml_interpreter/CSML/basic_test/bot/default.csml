@@ -1,0 +1,11 @@
+start:
+    remember var = 42
+
+    say "var from start: {{var}}"
+
+    goto step_0
+
+step_0:
+    say "var from step: {{var}}"
+
+    goto flow other

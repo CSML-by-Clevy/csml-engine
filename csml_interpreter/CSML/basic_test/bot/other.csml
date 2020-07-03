@@ -1,0 +1,4 @@
+start:
+    say "var from flow: {{var}}"
+
+    goto end

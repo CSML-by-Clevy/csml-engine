@@ -1,0 +1,25 @@
+start:
+    say "Hello I am the event Example bot"
+
+    // event is the key word use to get the user input
+    if (event.get_type() == "text") {
+        goto normal_event
+    } else if (event.get_type() == "payload") {
+        goto nlp_event
+    } else if (event.get_type() == "file") {
+        goto file_upload_event
+    }
+
+    goto end
+
+normal_event:
+    say "user input -> [{{event}}]"
+    goto end
+
+nlp_event:
+    say "nlp"
+    goto end
+
+file_upload_event:
+    say "please upload your file"
+    goto end
