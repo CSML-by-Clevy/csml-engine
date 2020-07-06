@@ -3,6 +3,7 @@ use crate::data::position::Position;
 use crate::data::{ast::Interval, Literal};
 use crate::error_format::*;
 use std::collections::HashMap;
+use std::env;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PRIVATE FUNCTIONS
@@ -90,7 +91,18 @@ pub fn http_request(
 
     match body {
         Ok(value) => Ok(value),
-        Err(_) => Ok(serde_json::Value::Null),
+        Err(err) => {
+            if let Ok(var) = env::var("DEBUG") {
+                if var == "true" {
+                    println!(
+                        "FN request failed: {:?}",
+                        err
+                    );
+                }
+            }
+
+            Ok(serde_json::Value::Null)
+        },
         // Err(gen_error_info(
         //     interval,
         //     format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
