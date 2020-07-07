@@ -1,0 +1,18 @@
+start:
+    say Text("Hola")
+    goto end
+
+text1:
+    say "Hola"
+    goto end
+
+text2:
+    say ""
+    goto end
+
+text3:
+	say NULL
+	goto end
+
+text4:
+    say "😀 {{hola}}"

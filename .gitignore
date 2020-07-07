@@ -1,7 +1,13 @@
-/target
+**/.env
+**/target
 **/*.rs.bk
-artifacts.json
-index.node
-.DS_Store
+**/artifacts.json
+**/*.node
+**/node_modules
+**/.DS_Store
+**/.env.local
+**/*.sh
+**/*~
+**/.webpack
 .vscode
 .idea
