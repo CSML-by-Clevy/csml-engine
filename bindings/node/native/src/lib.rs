@@ -218,7 +218,7 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
 fn check_bot(jsbot: &mut Value) {
     if let serde_json::Value::Object(map) = jsbot {
         let id = map.get("id").unwrap().to_owned();
-        if map.contains_key("name") {
+        if !map.contains_key("name") {
             map.insert("name".to_owned(), id);
         };
     };
@@ -226,7 +226,7 @@ fn check_bot(jsbot: &mut Value) {
         for flow in flows.iter_mut() {
             if let serde_json::Value::Object(map) = flow {
                 let id = map.get("id").unwrap().to_owned();
-                if map.contains_key("name") {
+                if !map.contains_key("name") {
                     map.insert("name".to_owned(), id);
                 };
             };
