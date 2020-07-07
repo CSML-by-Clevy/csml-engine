@@ -13,3 +13,6 @@ text2:
 text3:
 	say NULL
 	goto end
+
+text4:
+    say "😀 {{hola}}"

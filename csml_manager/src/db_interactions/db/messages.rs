@@ -7,14 +7,14 @@ pub fn add_messages_bulk(
     direction: &str,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::messages::add_messages_bulk as add;
 
         return add(data, &msgs, interaction_order, direction);
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::messages::add_messages_bulk as add;
         // use crate::db_interactions::db_interactions_http_db::get_db;
         // let db: &http_db::apis::client::APIClient = get_db(db)?;

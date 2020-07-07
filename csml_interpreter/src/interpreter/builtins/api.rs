@@ -67,14 +67,13 @@ fn format_headers(interval: Interval) -> HashMap<String, Literal> {
     );
 
     match env::var("FN_X_API_KEY") {
-        Ok(value) => header.insert(
-            "X-Api-Key".to_owned(),
-            PrimitiveString::get_literal(&value, interval),
-        ),
-        Err(_e) => header.insert(
-            "X-Api-Key".to_owned(),
-            PrimitiveString::get_literal("PoePoe", interval),
-        ),
+        Ok(value) => {
+            header.insert(
+                "X-Api-Key".to_owned(),
+                PrimitiveString::get_literal(&value, interval),
+            );
+        },
+        Err(_e) => {}
     };
 
     header

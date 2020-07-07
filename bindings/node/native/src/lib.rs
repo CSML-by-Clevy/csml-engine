@@ -5,63 +5,59 @@ use csmlrustmanager::{
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value}; //, map::Map
 
-fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsObject> {
+fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
     let jsonclient: Value = neon_serde::from_value(&mut cx, jsclient)?;
     let client: Client = serde_json::from_value(jsonclient).unwrap();
-    let object = JsObject::new(&mut cx);
 
     match csmlrustmanager::get_open_conversation(&client) {
         Ok(Some(conversation)) => {
-            let id = cx.string(conversation.id.to_string());
-            let client = neon_serde::to_value(&mut cx, &conversation.client)?;
-            let flow_id = cx.string(conversation.flow_id);
-            let step_id = cx.string(conversation.step_id);
-            let metadata: Handle<JsValue> = neon_serde::to_value(&mut cx, &conversation.metadata)?;
-            let status = cx.string(conversation.status);
-            let last_interaction_at = cx.string(conversation.last_interaction_at.to_string());
-            let updated_at = cx.string(conversation.updated_at.to_string());
-            let created_at = cx.string(conversation.created_at.to_string());
+            let mut map = serde_json::Map::new();
 
-            object.set(&mut cx, "id", id).unwrap();
-            object.set(&mut cx, "client", client).unwrap();
-            object.set(&mut cx, "flow_id", flow_id).unwrap();
-            object.set(&mut cx, "step_id", step_id).unwrap();
-            object.set(&mut cx, "metadata", metadata).unwrap();
-            object.set(&mut cx, "status", status).unwrap();
-            object
-                .set(&mut cx, "last_interaction_at", last_interaction_at)
+            map.insert( "id".to_owned(), serde_json::json!(conversation.id) ).unwrap();
+            map.insert( "client".to_owned(), serde_json::json!(conversation.client) ).unwrap();
+            map.insert( "flow_id".to_owned(), serde_json::json!(conversation.flow_id)).unwrap();
+            map.insert( "step_id".to_owned(), serde_json::json!(conversation.step_id)).unwrap();
+            map.insert( "metadata".to_owned(), serde_json::json!(conversation.metadata) ).unwrap();
+            map.insert( "status".to_owned(), serde_json::json!(conversation.status) ).unwrap();
+            map.insert( "last_interaction_at".to_owned(), serde_json::json!(conversation.last_interaction_at.to_string()))
                 .unwrap();
-            object.set(&mut cx, "updated_at", updated_at).unwrap();
-            object.set(&mut cx, "created_at", created_at).unwrap();
+            map.insert( "updated_at".to_owned(), serde_json::json!(conversation.updated_at.to_string()) ).unwrap();
+            map.insert( "created_at".to_owned(), serde_json::json!(conversation.created_at.to_string()) ).unwrap();
 
-            Ok(object)
+            let js_value = neon_serde::to_value(&mut cx, &map)?;
+            Ok(js_value)
         }
         Ok(None) => {
-            let message = cx.string("no conversation open for this client".to_string());
-
-            object.set(&mut cx, "message", message).unwrap();
-            Ok(object)
+            let js_value = neon_serde::to_value(&mut cx, &serde_json::json!(null))?;
+            
+            Ok(js_value)
         }
         Err(err) => panic!(err),
     }
 }
 
-fn get_flow_steps(mut cx: FunctionContext) -> JsResult<JsArray> {
+fn get_bot_steps(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsbot = cx.argument::<JsValue>(0)?;
     let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
-    let flow = cx.argument::<JsString>(1)?.value();
 
-    let vec = csmlrustmanager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap(), flow);
+    let map = csmlrustmanager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap());
 
-    let js_array = JsArray::new(&mut cx, vec.len() as u32);
+    let js_object = JsObject::new(&mut cx);
 
-    for (i, obj) in vec.iter().enumerate() {
-        let js_string = cx.string(obj);
-        js_array.set(&mut cx, i as u32, js_string).unwrap();
+    for (flow , steps) in map.iter() {
+        let js_array = JsArray::new(&mut cx, steps.len() as u32);
+        
+        for (i, step) in steps.iter().enumerate() {
+            let step = cx.string(step);
+            js_array.set(&mut cx, i as u32, step).unwrap();
+        }
+        
+        let key = cx.string(flow);
+        js_object.set(&mut cx, key, js_array).unwrap();
     }
 
-    Ok(js_array)
+    Ok(js_object)
 }
 
 fn format_warnings<'a, C: Context<'a>>(
@@ -219,7 +215,29 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
 //   }
 // ]
 
-fn format_data(json_event: Value, jsdata: Value) -> Result<CsmlData, serde_json::error::Error> {
+fn check_bot(jsbot: &mut Value) {
+    if let serde_json::Value::Object(map) = jsbot {
+        let id = map.get("id").unwrap().to_owned();
+        if !map.contains_key("name") {
+            map.insert("name".to_owned(), id);
+        };
+    };
+    if let Some(serde_json::Value::Array(flows)) = jsbot.get_mut("flows") {
+        for flow in flows.iter_mut() {
+            if let serde_json::Value::Object(map) = flow {
+                let id = map.get("id").unwrap().to_owned();
+                if !map.contains_key("name") {
+                    map.insert("name".to_owned(), id);
+                };
+            };
+        }
+    };
+}
+
+fn format_data(json_event: Value, mut jsbot: Value) -> Result<CsmlData, serde_json::error::Error> {
+
+    check_bot(&mut jsbot);
+
     Ok(CsmlData {
         request_id: json_event["request_id"].as_str().unwrap().to_owned(),
         client: serde_json::from_value(json_event["client"].clone())?,
@@ -236,8 +254,7 @@ fn format_data(json_event: Value, jsdata: Value) -> Result<CsmlData, serde_json:
                 val => val,
             }
         }, // optional
-
-        bot: serde_json::from_value(jsdata)?,
+        bot: serde_json::from_value(jsbot)?,
     })
 }
 
@@ -273,7 +290,7 @@ register_module!(mut cx, {
     // cx.export_function("validFlow", is_valid)?;
     cx.export_function("getOpenConversation", get_open_conversation)?;
     cx.export_function("validateBot", validate_bot)?;
-    cx.export_function("getFlowSteps", get_flow_steps)?;
+    cx.export_function("getBotSteps", get_bot_steps)?;
     cx.export_function("run", run_bot)?;
     cx.export_function("closeAllConversations", close_conversations)?;
     Ok(())

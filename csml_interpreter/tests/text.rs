@@ -98,3 +98,26 @@ fn ok_text_step3() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn ok_text_step4() {
+    let data = r#"{"messages":[ {"content":{"text": "😀 Null"},"content_type":"text"} ],"memories":[]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "text4",
+            "flow",
+        ),
+        "CSML/basic_test/built-in/text.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

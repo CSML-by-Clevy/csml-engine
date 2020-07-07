@@ -6,14 +6,14 @@ pub fn add_memories(
     interaction_order: i32,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::memories::add_memories as add;
 
         return add(data, &memories, interaction_order);
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::memories::format_memories;
         use crate::db_interactions::db_interactions_http_db::state::set_state_items;
 
@@ -35,7 +35,7 @@ pub fn get_memories(
     db: &Database,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
-    if cfg!(feature = "mongo") {
+    if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::get_db;
         use crate::db_interactions::db_interactions_mongo::memories::get_memories as get;
 
@@ -45,7 +45,7 @@ pub fn get_memories(
     }
 
     #[cfg(feature = "http")]
-    if cfg!(feature = "http") {
+    if cfg!(feature = "http") && std::env::var("ENGINE_DB_TYPE") == Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_http_db::get_db;
         use crate::db_interactions::db_interactions_http_db::state::get_state_type;
 

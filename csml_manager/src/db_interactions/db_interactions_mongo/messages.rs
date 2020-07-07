@@ -48,6 +48,9 @@ pub fn add_messages_bulk(
     interaction_order: i32,
     direction: &str,
 ) -> Result<(), ManagerError> {
+    if msgs.len() == 0 {
+        return Ok(());
+    }
     let docs = format_messages(data, msgs, interaction_order, direction)?;
     let db = get_db(&data.db)?;
 

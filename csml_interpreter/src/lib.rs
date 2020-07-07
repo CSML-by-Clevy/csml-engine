@@ -104,23 +104,24 @@ fn get_ast(
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn get_steps_from_flow(bot: CsmlBot, flow_name: String) -> Option<Vec<String>> {
-    let mut result = Vec::new();
+pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
+    let mut result = HashMap::new();
 
     Warnings::clear();
     Linter::clear();
 
-    if let Some(flow) = bot.flows.iter().find(|flow| flow.name == flow_name) {
-        if let Ok(flow) = parse_flow(&flow.content) {
-            for InstructionType::NormalStep(step_name) in flow.flow_instructions.keys() {
-                result.push(step_name.to_owned());
-            }
+    for flow in bot.flows.iter() {
+        if let Ok(parsed_flow) = parse_flow(&flow.content) {
+            let mut vec = vec![];
 
-            return Some(result);
+            for InstructionType::NormalStep(step_name) in parsed_flow.flow_instructions.keys() {
+                vec.push(step_name.to_owned());
+            }
+            result.insert(flow.name.to_owned(), vec);
         }
     }
 
-    None
+    result
 }
 
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
