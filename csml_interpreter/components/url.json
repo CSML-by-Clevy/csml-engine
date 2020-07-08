@@ -2,7 +2,7 @@
     "Url": {
         "params": [
             {
-                "title": {
+                "url": {
                     "required": true,
                     "type": "String"
                 }
@@ -12,7 +12,16 @@
                     "required": false,
                     "type": "String",
                     "default_value": [
-                        {"$_get": "title"}
+                        {"$_get": "url"}
+                    ]
+                }
+            },
+            {
+                "title": {
+                    "required": false,
+                    "type": "String",
+                    "default_value": [
+                        {"$_get": "url"}
                     ]
                 }
             }

@@ -12,3 +12,30 @@ with_argument:
 unknown_component:
 	say Component.Unknown({"param_0": "foo"}, {"param_1": "bar"})
 	goto end
+
+
+//  test => Object(
+// 	{
+// 		"memories": Array([]),
+// 		"messages": Array([
+// 			Object({
+// 				"content": Object({
+// 					"bar": Object({
+// 						"Goodbye": String("World"), "Morning": String("World"), "param_1": String("bar")
+// 					}),
+// 					"baz": Object({
+// 						"Goodbye": String("World"), "Morning": String("World")
+// 					}),
+// 					"foo": Object({
+// 						"Goodbye": String("World"),
+// 						"Hello": String("World"),
+// 						"Morning": String("World"),
+// 						"param_0": String("foo"),
+// 						"param_1": String("bar")
+// 					})
+// 				}),
+// 				"content_type": String("button")
+// 			})
+// 		])
+// 	}
+// )
