@@ -2,18 +2,9 @@
     "Audio": {
         "params": [
             {
-                "title": {
+                "url": {
                     "required": true,
                     "type": "String"
-                }
-            },
-            {
-                "text": {
-                    "required": false,
-                    "type": "String",
-                    "default_value": [
-                        {"$_get": "title"}
-                    ]
                 }
             }
         ]

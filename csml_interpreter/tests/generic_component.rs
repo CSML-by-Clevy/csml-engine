@@ -509,12 +509,11 @@ fn parameter_multiple() {
         {
             "content": {
                 "foo": {
-                    "param_1": "bar",
+                    "param_0": "foo",
                     "Hello": 42
                 },
-                "bar": {"param_0": "foo"},
+                "bar": {"param_1": "bar"},
                 "baz": {
-                    "param_1": "bar",
                     "Hello": 42
                 }
             },
@@ -540,9 +539,9 @@ fn parameter_multiple() {
                         "foo": {
                             "type": "Object",
                             "default_value": [
-                                {"$_get": "baz"}
                             ],
                             "add_value": [
+                                {"$_get": "baz"}
                             ]
                         }
                     },
@@ -558,7 +557,6 @@ fn parameter_multiple() {
                     },
                     {
                         "baz": {
-                            "required": true,
                             "type": "Object",
                             "default_value": [
                             ],

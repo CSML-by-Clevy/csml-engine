@@ -187,14 +187,10 @@ fn get_index_of_parameter(key: &str, array: &Vec<serde_json::Value>) -> Option<u
     for object in array.iter() {
         if let Some(object) = object.as_object() {
             for value in object.keys() {
-                // if let Some(serde_json::Value::Object(_object)) = object.get(value) {
-                    // if is_parameter_required(object) {
-                        if key == value {
-                            return Some(result);
-                        }
-                        result += 1;
-                    // }
-                // }
+                if key == value {
+                    return Some(result);
+                }
+                result += 1;
             }
         }
     }
@@ -329,7 +325,11 @@ fn get_object(
                     )
                 }
                 (None, true) => {
-                    Ok(serde_json::Value::Null)
+                    //TODO: send Error component instead of stopping program
+                    Err(ErrorInfo::new(
+                        Position::new(*interval),
+                        format!("{} is a required parameter", key),
+                    ))
                 }
                 (None, false) => {
                     serde_json::Value::add(
@@ -378,11 +378,16 @@ pub fn gen_generic_component(
     let mut hashmap: HashMap<String, Literal> = HashMap::new();
     let mut memoization: HashMap<String, serde_json::Value> = HashMap::new();
 
+    println!("args => {:?}", args);
+
     if let Some(object) = component.as_object() {
         if let Some(serde_json::Value::Array(array)) = object.get("params") {
             for object in array.iter() {
+                println!("object => {:?}", object);
                 if let Some(object) = object.as_object() {
                     for key in object.keys() {
+                        println!("keys => {:?}", key);
+                        println!("memoization => {:?}", memoization);
                         if let Some(result) = memoization.get(key) {
                             hashmap.insert(
                                 key.to_owned(),
