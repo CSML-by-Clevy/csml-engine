@@ -12,16 +12,6 @@
                     "required": true,
                     "type": "Array"
                 }
-            },
-            {
-                "payload": {
-                    "required": false,
-                    "type": "Array",
-                    "add_value": [
-                        {"$_get": "title"},
-                        {"$_get": "payload"}
-                    ]
-                }
             }
         ]
     }

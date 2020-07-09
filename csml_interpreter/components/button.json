@@ -21,6 +21,8 @@
                     "required": false,
                     "type": "Array",
                     "default_value": [
+                    ],
+                    "add_value": [
                         {"$_get": "title" },
                         {"$_get": "payload" } 
                     ]

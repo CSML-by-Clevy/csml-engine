@@ -125,11 +125,13 @@ fn test_all() {
             "content": {
                 "foo": {
                     "param_0": "foo",
+                    "param_1": "bar",
                     "Hello": "World",
                     "Goodbye": "World",
                     "Morning": "World"
                 },
                 "bar": {
+                    "param_1": "bar",
                     "Goodbye": "World",
                     "Morning": "World"
                 },
@@ -160,7 +162,6 @@ fn test_all() {
                             "required": true,
                             "type": "Object",
                             "default_value": [
-                                {"$_set": "Hello"}
                             ],
                             "add_value": [
                                 {"$_set": {"Hello": "World"}},
@@ -172,8 +173,6 @@ fn test_all() {
                         "bar": {
                             "type": "Object",
                             "default_value": [
-                                {"$_get": "baz"},
-                                {"$_get": "baz"}
                             ],
                             "add_value": [
                                 {"$_get": "baz"}
@@ -185,8 +184,6 @@ fn test_all() {
                             "required": false,
                             "type": "Object",
                             "default_value": [
-                                {"$_set": {"Goodbye": "World"}},
-
                             ],
                             "add_value": [
                                 {"$_set": {"Goodbye": "World"}},
@@ -201,7 +198,9 @@ fn test_all() {
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
-
+    println!("\n\n test => {:?}\n\n", v1);
+    println!("\n\n my => {:?}\n\n", v2);
+    
     assert_eq!(v1, v2);
 }
 
@@ -776,7 +775,7 @@ fn circular_dependencie_on_other_key_default() {
             serde_json::json!({}),
             None,
             None,
-            "with_argument",
+            "without_argument",
             DEFAULT_FLOW_NAME,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
@@ -824,7 +823,7 @@ fn circular_dependencie_on_self_default() {
             serde_json::json!({}),
             None,
             None,
-            "with_argument",
+            "without_argument",
             DEFAULT_FLOW_NAME,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
