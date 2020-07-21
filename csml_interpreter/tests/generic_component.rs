@@ -198,9 +198,7 @@ fn test_all() {
 
     let v1: Value = message_to_json_value(msg);
     let v2: Value = serde_json::from_str(data).unwrap();
-    println!("\n\n test => {:?}\n\n", v1);
-    println!("\n\n my => {:?}\n\n", v2);
-    
+
     assert_eq!(v1, v2);
 }
 
@@ -460,7 +458,8 @@ fn parameter() {
         "memories":[], "messages":[
         {
             "content": {
-                "foo": {"param_0": "foo"}
+                "foo": {"param_0": "foo"},
+                "bar": {"param_1": "bar"}
             },
             "content_type": "button"
         }
@@ -483,6 +482,16 @@ fn parameter() {
                     {
                         "foo": {
                             "required": true,
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    },
+                    {
+                        "bar": {
+                            "required": false,
                             "type": "Object",
                             "default_value": [
                             ],
@@ -909,7 +918,7 @@ fn circular_dependencie_on_self_add() {
             serde_json::json!({}),
             None,
             None,
-            "with_argument",
+            "without_argument",
             DEFAULT_FLOW_NAME,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],

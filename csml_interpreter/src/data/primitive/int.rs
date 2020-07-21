@@ -19,7 +19,7 @@ use std::collections::HashMap;
 ////////////////////////////////////////////////////////////////////////////////
 
 type PrimitiveMethod =
-    fn(int: &mut PrimitiveInt, args: &[Literal], interval: Interval) -> Result<Literal, ErrorInfo>;
+    fn(int: &mut PrimitiveInt, args: &HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo>;
 
 lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
@@ -78,7 +78,7 @@ pub struct PrimitiveInt {
 impl PrimitiveInt {
     fn is_number(
         _int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
@@ -95,7 +95,7 @@ impl PrimitiveInt {
 
     fn type_of(
         _int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
@@ -112,7 +112,7 @@ impl PrimitiveInt {
 
     fn to_string(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
@@ -131,7 +131,7 @@ impl PrimitiveInt {
 impl PrimitiveInt {
     fn abs(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "abs() => int";
@@ -153,7 +153,7 @@ impl PrimitiveInt {
 
     fn cos(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "cos() => number";
@@ -177,7 +177,7 @@ impl PrimitiveInt {
 
     fn ceil(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ceil() => int";
@@ -199,7 +199,7 @@ impl PrimitiveInt {
 
     fn floor(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "floor() => int";
@@ -221,7 +221,7 @@ impl PrimitiveInt {
 
     fn pow(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "pow(exponent: number) => number";
@@ -235,7 +235,7 @@ impl PrimitiveInt {
 
         let float = int.value as f64;
 
-        let exponent = match args.get(0) {
+        let exponent = match args.get("arg0") {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 *Literal::get_value::<i64>(
                     &exponent.primitive,
@@ -285,7 +285,7 @@ impl PrimitiveInt {
 
     fn round(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "round() => int";
@@ -307,7 +307,7 @@ impl PrimitiveInt {
 
     fn sin(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "sin() => number";
@@ -331,7 +331,7 @@ impl PrimitiveInt {
 
     fn sqrt(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "round() => number";
@@ -355,7 +355,7 @@ impl PrimitiveInt {
 
     fn tan(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "tan() => number";
@@ -379,7 +379,7 @@ impl PrimitiveInt {
 
     fn to_int(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_int() => int";
@@ -396,7 +396,7 @@ impl PrimitiveInt {
 
     fn to_float(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_float() => float";
@@ -622,7 +622,7 @@ impl Primitive for PrimitiveInt {
     fn do_exec(
         &mut self,
         name: &str,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {

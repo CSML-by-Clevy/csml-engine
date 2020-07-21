@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::{PrimitiveNull, PrimitiveObject, PrimitiveString, PrimitiveType};
-use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
+use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal, ArgsType};
 use crate::error_format::*;
 use crate::interpreter::{
     builtins::{http::http_request, tools::*},
@@ -11,14 +11,14 @@ use crate::interpreter::{
 use std::{collections::HashMap, env};
 
 fn format_body(
-    args: &HashMap<String, Literal>,
+    args: &ArgsType,
     interval: Interval,
     client: Client,
 ) -> Result<Literal, ErrorInfo> {
     let mut map: HashMap<String, Literal> = HashMap::new();
 
-    match (args.get("fn_id"), args.get(DEFAULT)) {
-        (Some(literal), ..) | (.., Some(literal))
+    match args.get("fn_id", 0) {
+        Some(literal)
             if literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
         {
             let fn_id = Literal::get_value::<String>(
@@ -39,8 +39,9 @@ fn format_body(
             ))
         }
     };
+    let mut sub_map = HashMap::new();
+    args.populate(&mut sub_map, &["fn_id"]);
 
-    let sub_map = create_submap(&["fn_id", DEFAULT], &args)?;
     let client = client_to_json(&client, interval);
 
     map.insert(
@@ -80,7 +81,7 @@ fn format_headers(interval: Interval) -> HashMap<String, Literal> {
 }
 
 pub fn api(
-    args: HashMap<String, Literal>,
+    args: ArgsType,
     interval: Interval,
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {

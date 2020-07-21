@@ -2,7 +2,7 @@ use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
-use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
+use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG, ArgsType};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
@@ -31,107 +31,6 @@ fn exec_path_literal(
     }
 }
 
-// This is a temporary solution will we standardized the function call
-// TODO: UPDATE to a standard solution
-fn format_function_args(
-    args: &Expr,
-    data: &mut Data,
-    root: &mut MessageData,
-    sender: &Option<mpsc::Sender<MSG>>,
-) -> Result<HashMap<String, Literal>, ErrorInfo> {
-    let mut obj: HashMap<String, Literal> = HashMap::new();
-    let vec = match args {
-        Expr::VecExpr(vec, ..) => vec,
-        _e => {
-            return Err(gen_error_info(
-                Position::new(interval_from_expr(args)),
-                ERROR_FUNCTIONS_ARGS.to_owned(),
-            ))
-        }
-    };
-
-    for elem in vec.iter() {
-        match elem {
-            Expr::ObjectExpr(ObjectType::Assign(var_name, var)) => {
-                let value = expr_to_literal(var, None, data, root, sender)?;
-
-                let ident = match **var_name {
-                    Expr::IdentExpr(ref ident) => ident.ident.to_owned(),
-                    _ => {
-                        return Err(gen_error_info(
-                            Position::new(interval_from_expr(var)),
-                            ERROR_ASSIGN_IDENT.to_owned(),
-                        ))
-                    }
-                };
-                obj.insert(ident, value);
-            }
-            Expr::ObjectExpr(ObjectType::Normal(Function {
-                name,
-                interval,
-                args,
-            })) => {
-                let (_, literal) =
-                    normal_object_to_literal(&name, args, *interval, data, root, sender)?;
-
-                obj.insert(DEFAULT.to_owned(), literal);
-            }
-            _ => {
-                let value = expr_to_literal(elem, None, data, root, sender)?;
-                obj.insert(DEFAULT.to_owned(), value);
-            }
-        }
-    }
-
-    Ok(obj)
-}
-
-// This is a temporary solution will we standardized the function call
-// TODO: UPDATE to a standard solution
-fn format_function_args_v2(
-    args: &Expr,
-    data: &mut Data,
-    root: &mut MessageData,
-    sender: &Option<mpsc::Sender<MSG>>,
-) -> Result<Literal, ErrorInfo> {
-    let mut vec_args = vec!();
-    let (vec, interval) = match args {
-        Expr::VecExpr(vec, range) => (vec, range.start),
-        _e => {
-            return Err(gen_error_info(
-                Position::new(interval_from_expr(args)),
-                ERROR_FUNCTIONS_ARGS.to_owned(),
-            ))
-        }
-    };
-
-    for elem in vec.iter() {
-        match elem {
-            Expr::ObjectExpr(ObjectType::Assign(_, var)) => {
-                let value = expr_to_literal(var, None, data, root, sender)?;
-
-                vec_args.push(value);
-            }
-            Expr::ObjectExpr(ObjectType::Normal(Function {
-                name,
-                interval,
-                args,
-            })) => {
-                let (_, literal) =
-                    normal_object_to_literal(&name, args, *interval, data, root, sender)?;
-
-                vec_args.push(literal);
-            }
-            _ => {
-                let value = expr_to_literal(elem, None, data, root, sender)?;
-                vec_args.push(value);
-            }
-        }
-    }
-
-    Ok(PrimitiveArray::get_literal(&vec_args, interval) )
-}
-
 fn normal_object_to_literal(
     name: &str,
     args: &Expr,
@@ -140,13 +39,12 @@ fn normal_object_to_literal(
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<(String, Literal), ErrorInfo> {
-    let args_v2 = format_function_args_v2(args, data, root, sender)?;
-    let args = format_function_args(args, data, root, sender)?;
+    let args = resolve_fn_args(args, data, root, sender)?;
 
     if BUILT_IN.contains(&name) {
         Ok((
             name.to_owned(),
-            match_builtin(&name, args, args_v2,  interval.to_owned(), data)?,
+            match_builtin(&name, args, interval.to_owned(), data)?,
         ))
     } else {
         Err(gen_error_info(
@@ -215,6 +113,61 @@ pub fn expr_to_literal(
         e => Err(gen_error_info(
             Position::new(interval_from_expr(e)),
             ERROR_EXPR_TO_LITERAL.to_owned(),
+        )),
+    }
+}
+
+
+pub fn resolve_fn_args(
+    expr: &Expr,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<ArgsType, ErrorInfo> {
+    match expr {
+        Expr::VecExpr(vec, ..) => {
+            let mut map = HashMap::new();
+            let mut first = 0;
+            let mut named_args = false;
+
+            for (index, value) in vec.iter().enumerate() {
+                match value {
+                    Expr::ObjectExpr(ObjectType::Assign(name, var)) => {
+                        let name = match **name {
+                            Expr::IdentExpr(ref var, ..) => var,
+                            _ => return Err(gen_error_info(
+                                Position::new(interval_from_expr(name)),
+                                "key must be of type string".to_owned(),
+                            ))
+                        };
+                        named_args = true;
+
+                        let literal = expr_to_literal(var, None, data, root, sender)?;
+                        map.insert(name.ident.to_owned(), literal);
+                    }
+                    expr => {
+                        first = first + 1;
+                        if named_args && first > 1 {
+                            return Err(gen_error_info(
+                                Position::new(interval_from_expr(expr)),
+                                ERROR_EXPR_TO_LITERAL.to_owned(), // TODO: error mix of named args and anonymous args
+                            ))
+                        }
+                        let literal = expr_to_literal(expr, None, data, root, sender)?;
+                        map.insert(format!("arg{}", index), literal);
+                    }
+
+                }
+            }
+
+            match named_args {
+                true => Ok(ArgsType::Named(map)),
+                false => Ok(ArgsType::Normal(map))
+            }
+        }
+        e => Err(gen_error_info(
+            Position::new(interval_from_expr(e)),
+            ERROR_EXPR_TO_LITERAL.to_owned(), //TODO: internal error fn args bad format 
         )),
     }
 }

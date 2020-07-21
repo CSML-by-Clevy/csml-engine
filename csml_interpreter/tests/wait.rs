@@ -24,10 +24,16 @@ fn wait_0() {
         "CSML/basic_test/built-in/wait.csml",
     );
 
-    let v1: Value = message_to_json_value(msg);
-    let v2: Value = serde_json::from_str(data).unwrap();
+    if msg.messages[0].content_type == "error" {
+        return assert!(true);
+    }
+    
+    assert!(false);
 
-    assert_eq!(v1, v2)
+    // let v1: Value = message_to_json_value(msg);
+    // let v2: Value = serde_json::from_str(data).unwrap();
+
+    // assert_eq!(v1, v2)
 }
 
 #[test]

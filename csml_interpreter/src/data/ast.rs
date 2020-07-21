@@ -1,5 +1,5 @@
 use crate::data::tokens::*;
-use crate::data::Literal;
+use crate::data::{Literal, ArgsType};
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -235,8 +235,7 @@ pub enum PathLiteral {
     Func {
         name: String,
         interval: Interval,
-        // TODO: update to Vec<Literal>
-        args: Literal,
+        args: ArgsType,
     },
 }
 

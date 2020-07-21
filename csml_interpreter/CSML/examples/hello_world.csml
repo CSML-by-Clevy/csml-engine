@@ -1,3 +1,5 @@
 start:
-    say "Hello World 😆"
+    // say "Hello World 😆"
+    say Question(buttons = [Button("hello")])
+
     goto end

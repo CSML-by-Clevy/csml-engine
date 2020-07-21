@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::PrimitiveObject;
-use crate::data::{Interval, Literal};
+use crate::data::{Interval, Literal, ArgsType};
 use crate::interpreter::json_to_literal;
 
 use nom::lib::std::collections::HashMap;
@@ -199,18 +199,15 @@ fn get_index_of_parameter(key: &str, array: &Vec<serde_json::Value>) -> Option<u
 }
 
 fn get_parameter(
+    index_of_key: usize,
     key: &str,
     array: &Vec<serde_json::Value>,
-    args: &Literal,
+    args: &ArgsType,
     interval: &Interval,
 ) -> Option<serde_json::Value> {
     if let Some(index) = get_index_of_parameter(key, array) {
-        if let Ok(array) =
-            Literal::get_value::<Vec<Literal>>(&args.primitive, *interval, String::default())
-        {
-            if let Some(value) = array.get(index) {
-                return Some(value.primitive.to_json());
-            }
+        if let Some(value) = args.get(key, index) {
+            return Some(value.primitive.to_json())
         }
     }
 
@@ -233,7 +230,7 @@ fn get_default_object(
     key: &str,
     object: &serde_json::Map<String, serde_json::Value>,
     array: &Vec<serde_json::Value>,
-    args: &Literal,
+    args: &ArgsType,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
     recursion: &mut HashSet<String>,
@@ -289,7 +286,7 @@ fn get_default_object(
 fn get_object(
     key: &str,
     array: &Vec<serde_json::Value>,
-    args: &Literal,
+    args: &ArgsType,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
     recursion: &mut HashSet<String>,
@@ -304,11 +301,11 @@ fn get_object(
         unreachable!();
     }
 
-    if let Some(index) = get_index_of_key(key, array) {
+    if let Some(index_of_key) = get_index_of_key(key, array) {
 
-         if let Some(serde_json::Value::Object(object)) = array[index].get(key) {
+         if let Some(serde_json::Value::Object(object)) = array[index_of_key].get(key) {
 
-            return match (get_parameter(key, array, args, interval), is_parameter_required(object)) {
+            return match (get_parameter(index_of_key, key, array, args, interval), is_parameter_required(object)) {
                 (Some(param), _) => {
                     serde_json::Value::add(
                         &param,
@@ -368,7 +365,7 @@ fn get_object(
 pub fn gen_generic_component(
     name: &str,
     interval: &Interval,
-    args: &Literal,
+    args: &ArgsType,
     component: &serde_json::Value,
 ) -> Result<Literal, ErrorInfo> {
     // Dereferences the JSON Object, iterate on all key, and construct the component.
@@ -378,16 +375,12 @@ pub fn gen_generic_component(
     let mut hashmap: HashMap<String, Literal> = HashMap::new();
     let mut memoization: HashMap<String, serde_json::Value> = HashMap::new();
 
-    println!("args => {:?}", args);
-
     if let Some(object) = component.as_object() {
         if let Some(serde_json::Value::Array(array)) = object.get("params") {
+            let len = array.len();
             for object in array.iter() {
-                println!("object => {:?}", object);
                 if let Some(object) = object.as_object() {
                     for key in object.keys() {
-                        println!("keys => {:?}", key);
-                        println!("memoization => {:?}", memoization);
                         if let Some(result) = memoization.get(key) {
                             hashmap.insert(
                                 key.to_owned(),
@@ -408,6 +401,7 @@ pub fn gen_generic_component(
                                 json_to_literal(&result.to_owned(), *interval)?,
                             );
                         }
+                        args.populate_json_to_literal(&mut hashmap, key, len);
                     }
                 }
             }

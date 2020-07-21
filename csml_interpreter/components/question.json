@@ -3,8 +3,12 @@
         "params": [
             {
                 "title": {
-                    "required": true,
-                    "type": "String"
+                    "required": false,
+                    "type": "String",
+                    "default_value": [
+                    ],
+                    "add_value": [
+                    ]
                 }
             },
             {

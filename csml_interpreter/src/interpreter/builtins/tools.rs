@@ -4,21 +4,21 @@ use crate::error_format::*;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 
-pub fn create_submap<S: BuildHasher>(
-    keys: &[&str],
-    args: &HashMap<String, Literal, S>,
-) -> Result<HashMap<String, Literal>, ErrorInfo> {
-    let mut map = HashMap::new();
+// pub fn create_submap<S: BuildHasher>(
+//     keys: &[&str],
+//     args: &HashMap<String, Literal, S>,
+// ) -> Result<HashMap<String, Literal>, ErrorInfo> {
+//     let mut map = HashMap::new();
 
-    for elem in args.keys() {
-        if keys.iter().find(|&&x| x == elem).is_none() {
-            if let Some(literal) = args.get(&*elem) {
-                map.insert(elem.clone(), literal.clone());
-            }
-        }
-    }
-    Ok(map)
-}
+//     for elem in args.keys() {
+//         if keys.iter().find(|&&x| x == elem).is_none() {
+//             if let Some(literal) = args.get(&*elem) {
+//                 map.insert(elem.clone(), literal.clone());
+//             }
+//         }
+//     }
+//     Ok(map)
+// }
 
 pub fn client_to_json(client: &Client, interval: Interval) -> HashMap<String, Literal> {
     let mut map = HashMap::new();

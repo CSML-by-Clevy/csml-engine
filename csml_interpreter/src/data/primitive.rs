@@ -22,6 +22,7 @@ use crate::error_format::*;
 
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Rem, Sub};
+use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -67,7 +68,7 @@ pub trait Primitive {
     fn do_exec(
         &mut self,
         name: &str,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo>;
@@ -95,7 +96,7 @@ impl dyn Primitive {
     pub fn exec(
         &mut self,
         name: &str,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &ContentType,
         mem_update: &mut bool,

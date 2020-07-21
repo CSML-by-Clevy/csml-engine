@@ -3,9 +3,9 @@ start:
     goto end
 
 video1:
-    say Video("test") //, service = "youtube"
+    say Video("test", service = "youtube")
     goto end
 
 video2:
-    say Video(url = "test")
+    say Video(url = "test", service = "youtube")
     goto end

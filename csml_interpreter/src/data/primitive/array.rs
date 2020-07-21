@@ -23,7 +23,7 @@ use std::usize;
 
 type PrimitiveMethod = fn(
     array: &mut PrimitiveArray,
-    args: &[Literal],
+    args: &HashMap<String, Literal>,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
@@ -123,7 +123,7 @@ fn check_index(index: i64, length: i64, interval: Interval) -> Result<(), ErrorI
 impl PrimitiveArray {
     fn is_number(
         _array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
@@ -140,7 +140,7 @@ impl PrimitiveArray {
 
     fn type_of(
         _array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
@@ -157,7 +157,7 @@ impl PrimitiveArray {
 
     fn to_string(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
@@ -176,7 +176,7 @@ impl PrimitiveArray {
 impl PrimitiveArray {
     fn find(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "find(value: primitive) => array";
@@ -188,7 +188,7 @@ impl PrimitiveArray {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -215,7 +215,7 @@ impl PrimitiveArray {
 
     fn is_empty(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_empty() => boolean";
@@ -234,7 +234,7 @@ impl PrimitiveArray {
 
     fn insert_at(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "insert_at(index: int, value: primitive) => null";
@@ -246,7 +246,7 @@ impl PrimitiveArray {
             ));
         }
 
-        let index = match args.get(0) {
+        let index = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 Literal::get_value::<i64>(
                     &res.primitive,
@@ -262,7 +262,7 @@ impl PrimitiveArray {
             }
         };
 
-        let value = match args.get(1) {
+        let value = match args.get("arg1") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -281,7 +281,7 @@ impl PrimitiveArray {
 
     fn index_of(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "index_of(value: primitive) => int";
@@ -293,7 +293,7 @@ impl PrimitiveArray {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) => res,
             None => {
                 return Err(gen_error_info(
@@ -314,7 +314,7 @@ impl PrimitiveArray {
 
     fn join(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "join(separater: string) => string";
@@ -326,7 +326,7 @@ impl PrimitiveArray {
             ));
         }
 
-        let separator = match args.get(0) {
+        let separator = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(&res.primitive, interval, ERROR_ARRAY_JOIN.to_owned())?
             }
@@ -354,7 +354,7 @@ impl PrimitiveArray {
 
     fn length(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "length() => int";
@@ -373,7 +373,7 @@ impl PrimitiveArray {
 
     fn one_of(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "one_of() => primitive";
@@ -397,7 +397,7 @@ impl PrimitiveArray {
 
     fn push(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "push(value: primitive) => null";
@@ -409,7 +409,7 @@ impl PrimitiveArray {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) => res,
             None => {
                 return Err(gen_error_info(
@@ -433,7 +433,7 @@ impl PrimitiveArray {
 
     fn pop(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "pop() => primitive";
@@ -456,7 +456,7 @@ impl PrimitiveArray {
 
     fn remove_at(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "remove_at(index: int) => primitive";
@@ -468,7 +468,7 @@ impl PrimitiveArray {
             ));
         }
 
-        let index = match args.get(0) {
+        let index = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 Literal::get_value::<i64>(
                     &res.primitive,
@@ -491,7 +491,7 @@ impl PrimitiveArray {
 
     fn shuffle(
         array: &mut PrimitiveArray,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "shuffle() => array";
@@ -680,7 +680,7 @@ impl Primitive for PrimitiveArray {
     fn do_exec(
         &mut self,
         name: &str,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {

@@ -8,7 +8,7 @@ pub mod tools;
 
 pub mod components;
 
-use crate::data::{ast::*, tokens::*, Data, Literal};
+use crate::data::{ast::*, tokens::*, Data, Literal, ArgsType};
 use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 use crate::error_format::ErrorInfo;
 use std::collections::HashMap;
@@ -22,8 +22,7 @@ use functions::*;
 
 pub fn match_builtin(
     name: &str,
-    args: HashMap<String, Literal>,
-    args_v2: Literal,
+    args: ArgsType,
     interval: Interval,
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
@@ -32,7 +31,7 @@ pub fn match_builtin(
         // Native
         name if data.native_component.contains_key(name) => {
             if let Some(component) = data.native_component.get(name) {
-                gen_generic_component(name, &interval, &args_v2, component)
+                gen_generic_component(name, &interval, &args, component)
             } else {
                 panic!("error in native_component")
             }
@@ -45,6 +44,7 @@ pub fn match_builtin(
         // AUDIO => audio(args, interval),
         // VIDEO => video(args, interval),
         // FILE => file(args, interval),
+        // TEXT => text(args, interval),
 
         // BUTTON => button(args, interval),
         // QUESTION => question(args, interval),
@@ -64,8 +64,6 @@ pub fn match_builtin(
         FLOOR => floor(args, interval),
 
         //old builtin
-        OBJECT => object(args, interval),
-
-        _ => text(args, interval),
+        _OBJECT => object(args, interval),
     }
 }

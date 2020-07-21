@@ -17,6 +17,7 @@ pub mod position;
 pub mod primitive;
 pub mod tokens;
 pub mod warnings;
+pub mod fn_args_type;
 
 pub use ast::Interval;
 pub use client::Client;
@@ -28,5 +29,6 @@ pub use literal::Literal;
 pub use memories::{Memories, MemoryType};
 pub use message::Message;
 pub use message_data::MessageData;
+pub use fn_args_type::ArgsType;
 
 pub use msg::MSG;

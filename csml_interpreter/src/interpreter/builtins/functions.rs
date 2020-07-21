@@ -2,18 +2,17 @@ use crate::data::position::Position;
 use crate::data::primitive::{
     array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
 };
-use crate::data::{ast::Interval, tokens::*, Literal};
+use crate::data::{ast::Interval, tokens::*, Literal, ArgsType};
 use crate::error_format::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn one_of(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get(DEFAULT) {
+pub fn one_of(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get("array", 0) {
         Some(literal) => {
             let res = Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
@@ -35,8 +34,8 @@ pub fn one_of(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
     }
 }
 
-pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get(DEFAULT) {
+pub fn shuffle(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get("array", 0) {
         Some(literal) => {
             let res = Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
@@ -54,8 +53,8 @@ pub fn shuffle(args: HashMap<String, Literal>, interval: Interval) -> Result<Lit
     }
 }
 
-pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get(DEFAULT) {
+pub fn length(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get("length", 0) {
         Some(literal) => {
             if let Ok(res) = Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
@@ -88,11 +87,11 @@ pub fn length(args: HashMap<String, Literal>, interval: Interval) -> Result<Lite
     }
 }
 
-pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn find(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut string = None;
     let mut case = false;
 
-    if let Some(literal) = args.get("in") {
+    if let Some(literal) = args.get("in", 1) {
         if let Ok(res) =
             Literal::get_value::<String>(&literal.primitive, interval, ERROR_FIND.to_owned())
         {
@@ -105,7 +104,7 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
         ));
     }
 
-    if let Some(literal) = args.get("in") {
+    if let Some(literal) = args.get("in", 1) {
         if let Ok(res) =
             Literal::get_value::<bool>(&literal.primitive, interval, ERROR_FIND.to_owned())
         {
@@ -113,7 +112,7 @@ pub fn find(args: HashMap<String, Literal>, interval: Interval) -> Result<Litera
         }
     }
 
-    match (args.get(DEFAULT), string) {
+    match (args.get("value", 0), string) {
         (Some(literal), Some(string)) => {
             let res =
                 Literal::get_value::<String>(&literal.primitive, interval, ERROR_FIND.to_owned())?;
@@ -144,8 +143,8 @@ pub fn random(interval: Interval) -> Result<Literal, ErrorInfo> {
     Ok(PrimitiveFloat::get_literal(random, interval))
 }
 
-pub fn floor(args: HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo> {
-    match args.get(DEFAULT) {
+pub fn floor(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get("float", 0) {
         Some(literal) => {
             let res =
                 Literal::get_value::<f64>(&literal.primitive, interval, ERROR_FLOOR.to_owned())?;
