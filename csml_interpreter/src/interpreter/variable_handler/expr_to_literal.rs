@@ -2,11 +2,11 @@ use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
-use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG, ArgsType};
+use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
-    builtins::match_builtin,
+    builtins::{match_builtin, match_native_builtin},
     variable_handler::{
         exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
         resolve_path,
@@ -41,7 +41,12 @@ fn normal_object_to_literal(
 ) -> Result<(String, Literal), ErrorInfo> {
     let args = resolve_fn_args(args, data, root, sender)?;
 
-    if BUILT_IN.contains(&name) {
+    if data.native_component.contains_key(name) {
+        Ok((
+            name.to_owned(),
+            match_native_builtin(&name, args, interval.to_owned(), data)?,
+        ))
+    } else if BUILT_IN.contains(&name) {
         Ok((
             name.to_owned(),
             match_builtin(&name, args, interval.to_owned(), data)?,
@@ -117,7 +122,6 @@ pub fn expr_to_literal(
     }
 }
 
-
 pub fn resolve_fn_args(
     expr: &Expr,
     data: &mut Data,
@@ -135,10 +139,12 @@ pub fn resolve_fn_args(
                     Expr::ObjectExpr(ObjectType::Assign(name, var)) => {
                         let name = match **name {
                             Expr::IdentExpr(ref var, ..) => var,
-                            _ => return Err(gen_error_info(
-                                Position::new(interval_from_expr(name)),
-                                "key must be of type string".to_owned(),
-                            ))
+                            _ => {
+                                return Err(gen_error_info(
+                                    Position::new(interval_from_expr(name)),
+                                    "key must be of type string".to_owned(),
+                                ))
+                            }
                         };
                         named_args = true;
 
@@ -151,23 +157,22 @@ pub fn resolve_fn_args(
                             return Err(gen_error_info(
                                 Position::new(interval_from_expr(expr)),
                                 ERROR_EXPR_TO_LITERAL.to_owned(), // TODO: error mix of named args and anonymous args
-                            ))
+                            ));
                         }
                         let literal = expr_to_literal(expr, None, data, root, sender)?;
                         map.insert(format!("arg{}", index), literal);
                     }
-
                 }
             }
 
             match named_args {
                 true => Ok(ArgsType::Named(map)),
-                false => Ok(ArgsType::Normal(map))
+                false => Ok(ArgsType::Normal(map)),
             }
         }
         e => Err(gen_error_info(
             Position::new(interval_from_expr(e)),
-            ERROR_EXPR_TO_LITERAL.to_owned(), //TODO: internal error fn args bad format 
+            ERROR_EXPR_TO_LITERAL.to_owned(), //TODO: internal error fn args bad format
         )),
     }
 }

@@ -1,5 +1,5 @@
 use crate::data::tokens::*;
-use crate::data::{Literal, ArgsType};
+use crate::data::{ArgsType, Literal};
 
 use std::cmp::Ordering;
 use std::collections::HashMap;

@@ -1,10 +1,12 @@
-use crate::data::Literal;
+use crate::data::{position::Position, Interval, Literal};
+use crate::error_format::*;
+
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub enum ArgsType {
     Named(HashMap<String, Literal>),
-    Normal(HashMap<String, Literal>)
+    Normal(HashMap<String, Literal>),
 }
 
 impl ArgsType {
@@ -15,45 +17,73 @@ impl ArgsType {
                     (Some(val), _) => Some(val),
                     // tmp ?
                     (None, 0) => var.get(&format!("arg{}", index)),
-                    (None, _) => None
+                    (None, _) => None,
                 }
             }
-            Self::Normal(var) => {
-                var.get(&format!("arg{}", index))
-            }
+            Self::Normal(var) => var.get(&format!("arg{}", index)),
         }
     }
 
-    pub fn populate(&self, map: &mut HashMap<String, Literal>, vec: &[&str]) {
+    pub fn populate(
+        &self,
+        map: &mut HashMap<String, Literal>,
+        vec: &[&str],
+        interval: Interval,
+    ) -> Result<(), ErrorInfo> {
         match self {
             Self::Named(var) => {
-                for (key , value) in var.iter() {
+                for (key, value) in var.iter() {
                     if !vec.contains(&(key as &str)) && key != "arg0" {
                         map.insert(key.to_owned(), value.to_owned());
                     }
                 }
+                Ok(())
             }
             Self::Normal(var) => {
                 if vec.len() < var.len() {
-                    panic!("_-_")
+                    //TODO:: error msg
+                    Err(gen_error_info(
+                        Position::new(interval),
+                        "to many arguments".to_owned(),
+                    ))
+                } else {
+                    Ok(())
                 }
             }
         }
     }
 
-    pub fn populate_json_to_literal(&self, map: &mut HashMap<String, Literal>, value_key: &str, len: usize) {
+    pub fn populate_json_to_literal(
+        &self,
+        map: &mut HashMap<String, Literal>,
+        vec: &[serde_json::Value],
+        interval: Interval,
+    ) -> Result<(), ErrorInfo> {
         match self {
             Self::Named(var) => {
-                for (key , value) in var.iter() {
+                for (key, value) in var.iter() {
+                    let contains = vec.iter().find(|obj| {
+                        if let Some(map) = obj.as_object() {
+                            map.contains_key(key)
+                        } else {
+                            false
+                        }
+                    });
 
-                    if value_key != key && "arg0" != key {
+                    if let (None, true) = (contains, key != "arg0") {
                         map.insert(key.to_owned(), value.to_owned());
                     }
                 }
+                Ok(())
             }
             Self::Normal(var) => {
-                if len < var.len() {
-                    panic!("_-_")
+                if vec.len() < var.len() {
+                    Err(gen_error_info(
+                        Position::new(interval),
+                        "to many arguments".to_owned(),
+                    ))
+                } else {
+                    Ok(())
                 }
             }
         }

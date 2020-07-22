@@ -17,7 +17,7 @@ use crate::data::primitive::{
 use crate::data::{
     ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState},
     tokens::{COMPONENT, EVENT, _METADATA},
-    Data, Literal, ArgsType
+    ArgsType, Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
 use crate::error_format::*;
@@ -175,7 +175,10 @@ fn loop_path(
                 if let (Some(ref new), 0) = (&new, path.len()) {
                     let mut args = HashMap::new();
 
-                    args.insert("arg0".to_owned(), PrimitiveString::get_literal(key, interval.to_owned()));
+                    args.insert(
+                        "arg0".to_owned(),
+                        PrimitiveString::get_literal(key, interval.to_owned()),
+                    );
                     args.insert("arg1".to_owned(), new.to_owned());
 
                     lit.primitive.exec(
@@ -206,12 +209,14 @@ fn loop_path(
                 // TODO: Warning msg element is not mutable ?
                 let args = match args {
                     ArgsType::Normal(args) => args,
-                    ArgsType::Named(_) => return Err(gen_error_info(
-                        Position::new(*interval),
-                        "no named tag allowed".to_owned(), // TODO: error msg
-                    )),
+                    ArgsType::Named(_) => {
+                        return Err(gen_error_info(
+                            Position::new(*interval),
+                            "no named tag allowed".to_owned(), // TODO: error msg
+                        ))
+                    }
                 };
-                
+
                 let mut return_lit =
                     lit.primitive
                         .exec(name, args, *interval, content_type, &mut tmp_update_var)?;

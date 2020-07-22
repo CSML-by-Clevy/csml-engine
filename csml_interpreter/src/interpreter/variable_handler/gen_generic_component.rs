@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::PrimitiveObject;
-use crate::data::{Interval, Literal, ArgsType};
+use crate::data::{ArgsType, Interval, Literal};
 use crate::interpreter::json_to_literal;
 
 use nom::lib::std::collections::HashMap;
@@ -181,34 +181,9 @@ fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> 
     None
 }
 
-fn get_index_of_parameter(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> {
-    let mut result = 0;
-
-    for object in array.iter() {
-        if let Some(object) = object.as_object() {
-            for value in object.keys() {
-                if key == value {
-                    return Some(result);
-                }
-                result += 1;
-            }
-        }
-    }
-
-    None
-}
-
-fn get_parameter(
-    index_of_key: usize,
-    key: &str,
-    array: &Vec<serde_json::Value>,
-    args: &ArgsType,
-    interval: &Interval,
-) -> Option<serde_json::Value> {
-    if let Some(index) = get_index_of_parameter(key, array) {
-        if let Some(value) = args.get(key, index) {
-            return Some(value.primitive.to_json())
-        }
+fn get_parameter(index_of_key: usize, key: &str, args: &ArgsType) -> Option<serde_json::Value> {
+    if let Some(value) = args.get(key, index_of_key) {
+        return Some(value.primitive.to_json());
     }
 
     None
@@ -257,7 +232,6 @@ fn get_default_object(
                                     "CIRCULAR DEPENDECIE".to_string(),
                                 ));
                             }
-
                             let value = &get_object(
                                 dependencie,
                                 array,
@@ -297,30 +271,30 @@ fn get_object(
     // Option 2: construct with default_value function and like option 1, add all add_value function to it.
 
     if !recursion.insert(key.to_string()) {
+        // TODO: error msg
         println!("SHOULD NEVER HAPPEN !");
         unreachable!();
     }
 
     if let Some(index_of_key) = get_index_of_key(key, array) {
-
-         if let Some(serde_json::Value::Object(object)) = array[index_of_key].get(key) {
-
-            return match (get_parameter(index_of_key, key, array, args, interval), is_parameter_required(object)) {
-                (Some(param), _) => {
-                    serde_json::Value::add(
-                        &param,
-                        &get_default_object(
-                            "add_value",
-                            object,
-                            array,
-                            args,
-                            interval,
-                            memoization,
-                            recursion,
-                        )?,
+        if let Some(serde_json::Value::Object(object)) = array[index_of_key].get(key) {
+            return match (
+                get_parameter(index_of_key, key, args),
+                is_parameter_required(object),
+            ) {
+                (Some(param), _) => serde_json::Value::add(
+                    &param,
+                    &get_default_object(
+                        "add_value",
+                        object,
+                        array,
+                        args,
                         interval,
-                    )
-                }
+                        memoization,
+                        recursion,
+                    )?,
+                    interval,
+                ),
                 (None, true) => {
                     //TODO: send Error component instead of stopping program
                     Err(ErrorInfo::new(
@@ -328,30 +302,28 @@ fn get_object(
                         format!("{} is a required parameter", key),
                     ))
                 }
-                (None, false) => {
-                    serde_json::Value::add(
-                        &get_default_object(
-                            "default_value",
-                            object,
-                            array,
-                            args,
-                            interval,
-                            memoization,
-                            recursion,
-                        )?,
-                        &get_default_object(
-                            "add_value",
-                            object,
-                            array,
-                            args,
-                            interval,
-                            memoization,
-                            recursion,
-                        )?,
+                (None, false) => serde_json::Value::add(
+                    &get_default_object(
+                        "default_value",
+                        object,
+                        array,
+                        args,
                         interval,
-                    )
-                }
-            }
+                        memoization,
+                        recursion,
+                    )?,
+                    &get_default_object(
+                        "add_value",
+                        object,
+                        array,
+                        args,
+                        interval,
+                        memoization,
+                        recursion,
+                    )?,
+                    interval,
+                ),
+            };
         }
     }
 
@@ -377,7 +349,6 @@ pub fn gen_generic_component(
 
     if let Some(object) = component.as_object() {
         if let Some(serde_json::Value::Array(array)) = object.get("params") {
-            let len = array.len();
             for object in array.iter() {
                 if let Some(object) = object.as_object() {
                     for key in object.keys() {
@@ -401,10 +372,10 @@ pub fn gen_generic_component(
                                 json_to_literal(&result.to_owned(), *interval)?,
                             );
                         }
-                        args.populate_json_to_literal(&mut hashmap, key, len);
                     }
                 }
             }
+            args.populate_json_to_literal(&mut hashmap, array, interval.to_owned())?;
         }
     }
 

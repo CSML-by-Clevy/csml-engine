@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::{PrimitiveNull, PrimitiveObject, PrimitiveString, PrimitiveType};
-use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal, ArgsType};
+use crate::data::{ast::Interval, ApiInfo, ArgsType, Client, Data, Literal};
 use crate::error_format::*;
 use crate::interpreter::{
     builtins::{http::http_request, tools::*},
@@ -10,17 +10,11 @@ use crate::interpreter::{
 
 use std::{collections::HashMap, env};
 
-fn format_body(
-    args: &ArgsType,
-    interval: Interval,
-    client: Client,
-) -> Result<Literal, ErrorInfo> {
+fn format_body(args: &ArgsType, interval: Interval, client: Client) -> Result<Literal, ErrorInfo> {
     let mut map: HashMap<String, Literal> = HashMap::new();
 
     match args.get("fn_id", 0) {
-        Some(literal)
-            if literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
-        {
+        Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
             let fn_id = Literal::get_value::<String>(
                 &literal.primitive,
                 literal.interval,
@@ -40,7 +34,7 @@ fn format_body(
         }
     };
     let mut sub_map = HashMap::new();
-    args.populate(&mut sub_map, &["fn_id"]);
+    args.populate(&mut sub_map, &["fn_id"], interval)?;
 
     let client = client_to_json(&client, interval);
 
@@ -73,18 +67,14 @@ fn format_headers(interval: Interval) -> HashMap<String, Literal> {
                 "X-Api-Key".to_owned(),
                 PrimitiveString::get_literal(&value, interval),
             );
-        },
+        }
         Err(_e) => {}
     };
 
     header
 }
 
-pub fn api(
-    args: ArgsType,
-    interval: Interval,
-    data: &mut Data,
-) -> Result<Literal, ErrorInfo> {
+pub fn api(args: ArgsType, interval: Interval, data: &mut Data) -> Result<Literal, ErrorInfo> {
     let (client, url) = match &data.context.api_info {
         Some(ApiInfo {
             client,

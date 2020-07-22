@@ -2,7 +2,7 @@ use crate::data::position::Position;
 use crate::data::primitive::{
     array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
 };
-use crate::data::{ast::Interval, tokens::*, Literal, ArgsType};
+use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
 use rand::seq::SliceRandom;
 use rand::Rng;

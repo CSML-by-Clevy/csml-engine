@@ -1,123 +1,17 @@
 use crate::data::position::Position;
 use crate::data::primitive::{object::PrimitiveObject, string::PrimitiveString, PrimitiveType};
-use crate::data::{ast::Interval, tokens::DEFAULT, Literal, ArgsType};
+use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
-use crate::interpreter::builtins::tools::*;
 use std::collections::HashMap;
-
-// pub fn text(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
-//     match args.get(DEFAULT) {
-//         Some(literal) => Ok(PrimitiveString::get_literal(
-//             &literal.primitive.to_string(),
-//             literal.interval,
-//         )),
-//         _ => Err(gen_error_info(
-//             Position::new(interval),
-//             ERROR_TEXT.to_owned(),
-//         )),
-//     }
-// }
-
-// pub fn typing(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
-//     let mut typing: HashMap<String, Literal> = args.clone();
-
-//     match (typing.remove("duration"), typing.remove(DEFAULT)) {
-//         (Some(literal), ..) | (.., Some(literal))
-//             if literal.primitive.get_type() == PrimitiveType::PrimitiveInt
-//                 || literal.primitive.get_type() == PrimitiveType::PrimitiveFloat =>
-//         {
-//             typing.insert("duration".to_owned(), literal.to_owned());
-
-//             let mut result = PrimitiveObject::get_literal(&typing, interval);
-//             result.set_content_type("typing");
-
-//             Ok(result)
-//         }
-//         _ => Err(gen_error_info(
-//             Position::new(interval),
-//             ERROR_TYPING.to_owned(),
-//         )),
-//     }
-// }
-
-// pub fn wait(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
-//     let mut wait: HashMap<String, Literal> = args.clone();
-
-//     match (wait.remove("duration"), wait.remove(DEFAULT)) {
-//         (Some(literal), ..) | (.., Some(literal))
-//             if literal.primitive.get_type() == PrimitiveType::PrimitiveInt
-//                 || literal.primitive.get_type() == PrimitiveType::PrimitiveFloat =>
-//         {
-//             wait.insert("duration".to_owned(), literal.to_owned());
-
-//             let mut result = PrimitiveObject::get_literal(&wait, interval);
-//             result.set_content_type("wait");
-
-//             Ok(result)
-//         }
-//         _ => Err(gen_error_info(
-//             Position::new(interval),
-//             ERROR_WAIT.to_owned(),
-//         )),
-//     }
-// }
 
 // TODO: old builtin need to rm this whene no one use itold built in need to rm this when no one use it
 pub fn object(object: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
-
     let mut map = HashMap::new();
 
-    object.populate(&mut map, &[]);
+    object.populate(&mut map, &[], interval)?;
 
     Ok(PrimitiveObject::get_literal(&map, interval))
 }
-
-// pub fn question(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
-//     let mut question: HashMap<String, Literal> = HashMap::new();
-
-//     match question.get("title", 0) {
-//         Some(title) => {
-//             question.insert("title".to_owned(), title.to_owned());
-//         }
-//         _ => {}
-//     }
-
-//     let buttons = match question.get("buttons") {
-//         Some(literal) => literal.to_owned(),
-//         _ => {
-//             return Err(gen_error_info(
-//                 Position::new(interval),
-//                 ERROR_QUESTION.to_owned(),
-//             ))
-//         }
-//     };
-
-//     let accepts = accepts_from_buttons(&buttons);
-//     question.insert("accepts".to_owned(), accepts);
-
-//     let mut result = PrimitiveObject::get_literal(&question, interval);
-//     result.set_content_type("question");
-
-//     Ok(result)
-// }
-
-// pub fn carousel(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
-//     let mut carousel: HashMap<String, Literal> = args.clone();
-
-//     match (carousel.remove("cards"), carousel.remove(DEFAULT)) {
-//         (Some(cards), ..) | (.., Some(cards)) => {
-//             carousel.insert("cards".to_owned(), cards.to_owned());
-//             let mut result = PrimitiveObject::get_literal(&carousel, interval);
-//             result.set_content_type("carousel");
-
-//             Ok(result)
-//         }
-//         _ => Err(gen_error_info(
-//             Position::new(interval),
-//             ERROR_CAROUSEL.to_owned(),
-//         )),
-//     }
-// }
 
 pub fn http(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut http: HashMap<String, Literal> = HashMap::new();
@@ -147,7 +41,7 @@ pub fn http(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
             let lit_body = PrimitiveObject::get_literal(&HashMap::default(), interval);
             http.insert("body".to_owned(), lit_body);
 
-            args.populate(&mut http, &["url", "header", "query", "body"]);
+            args.populate(&mut http, &["url", "header", "query", "body"], interval)?;
 
             let mut result = PrimitiveObject::get_literal(&http, interval);
 

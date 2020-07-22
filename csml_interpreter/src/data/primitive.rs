@@ -21,8 +21,8 @@ use crate::data::{Interval, Literal, Message};
 use crate::error_format::*;
 
 use std::cmp::Ordering;
-use std::ops::{Add, Div, Mul, Rem, Sub};
 use std::collections::HashMap;
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES

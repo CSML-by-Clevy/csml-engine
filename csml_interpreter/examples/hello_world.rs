@@ -15,7 +15,6 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 ////////////////////////////////////////////////////////////////////////////////
 
 fn main() {
-
     let default_content = std::fs::read_to_string("CSML/examples/hello_world.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 

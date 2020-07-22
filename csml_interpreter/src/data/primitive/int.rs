@@ -18,8 +18,11 @@ use std::collections::HashMap;
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-type PrimitiveMethod =
-    fn(int: &mut PrimitiveInt, args: &HashMap<String, Literal>, interval: Interval) -> Result<Literal, ErrorInfo>;
+type PrimitiveMethod = fn(
+    int: &mut PrimitiveInt,
+    args: &HashMap<String, Literal>,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo>;
 
 lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {

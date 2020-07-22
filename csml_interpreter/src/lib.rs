@@ -193,7 +193,7 @@ pub fn interpret(
         let native = read().unwrap();
         let custom = match bot.header.as_object() {
             Some(obj) => obj.to_owned(),
-            None => panic!("custom component error")
+            None => panic!("custom component error"),
         };
 
         let mut data = Data::new(&ast, &mut context, &event, step_vars, custom, native);
