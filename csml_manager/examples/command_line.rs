@@ -1,4 +1,7 @@
-use csmlinterpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client};
+use csmlinterpreter::{
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
+    read,
+};
 use csmlrustmanager::{data::*, start_conversation};
 use serde_json::{json, Value};
 use std::fs::File;
@@ -66,7 +69,8 @@ fn init_data() -> CsmlData {
                     commands: vec!["/random".to_owned()],
                 },
             ],
-            header: serde_json::json!({}),
+            native_component: Some(read().unwrap()),
+            custom_component: None,
             default_flow: "flowid".to_owned(),
         },
         metadata: json!({}),

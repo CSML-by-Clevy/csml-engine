@@ -189,6 +189,41 @@ fn get_parameter(index_of_key: usize, key: &str, args: &ArgsType) -> Option<serd
     None
 }
 
+//TODO: refactor
+fn actions_exist(object: &serde_json::Map<String, serde_json::Value>) -> Option<()> {
+    match (object.get("default_value"), object.get("add_value")) {
+        (Some(default), Some(add)) => match (default.as_array(), add.as_array()) {
+            (Some(default), Some(add)) => {
+                if default.is_empty() && add.is_empty() {
+                    None
+                } else {
+                    Some(())
+                }
+            }
+            (None, Some(value)) | (Some(value), None) => {
+                if value.is_empty() {
+                    None
+                } else {
+                    Some(())
+                }
+            }
+            (None, None) => None,
+        },
+        (None, Some(value)) | (Some(value), None) => {
+            if let Some(value) = value.as_array() {
+                if value.is_empty() {
+                    None
+                } else {
+                    Some(())
+                }
+            } else {
+                Some(())
+            }
+        }
+        (None, None) => None,
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,9 +276,11 @@ fn get_default_object(
                                 recursion,
                             )?;
 
-                            memoization.insert(dependencie.to_string(), value.to_owned());
+                            if let Some(value) = value {
+                                memoization.insert(dependencie.to_string(), value.to_owned());
 
-                            result = serde_json::Value::add(&result, value, interval)?;
+                                result = serde_json::Value::add(&result, value, interval)?;
+                            }
                         }
                     }
                 }
@@ -264,7 +301,7 @@ fn get_object(
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
     recursion: &mut HashSet<String>,
-) -> Result<serde_json::Value, ErrorInfo> {
+) -> Result<Option<serde_json::Value>, ErrorInfo> {
     // Cache the key we visit
     // Find the key to work with, then construct the object like it's supposed to be.
     // Option 1: construct with parameters because required is true, so I need to find the right parameters and add all add_value function to it.
@@ -282,7 +319,7 @@ fn get_object(
                 get_parameter(index_of_key, key, args),
                 is_parameter_required(object),
             ) {
-                (Some(param), _) => serde_json::Value::add(
+                (Some(param), _) => Ok(Some(serde_json::Value::add(
                     &param,
                     &get_default_object(
                         "add_value",
@@ -294,7 +331,7 @@ fn get_object(
                         recursion,
                     )?,
                     interval,
-                ),
+                )?)),
                 (None, true) => {
                     //TODO: send Error component instead of stopping program
                     Err(ErrorInfo::new(
@@ -302,32 +339,38 @@ fn get_object(
                         format!("{} is a required parameter", key),
                     ))
                 }
-                (None, false) => serde_json::Value::add(
-                    &get_default_object(
-                        "default_value",
-                        object,
-                        array,
-                        args,
-                        interval,
-                        memoization,
-                        recursion,
-                    )?,
-                    &get_default_object(
-                        "add_value",
-                        object,
-                        array,
-                        args,
-                        interval,
-                        memoization,
-                        recursion,
-                    )?,
-                    interval,
-                ),
+                (None, false) => {
+                    if let None = actions_exist(object) {
+                        Ok(None)
+                    } else {
+                        Ok(Some(serde_json::Value::add(
+                            &get_default_object(
+                                "default_value",
+                                object,
+                                array,
+                                args,
+                                interval,
+                                memoization,
+                                recursion,
+                            )?,
+                            &get_default_object(
+                                "add_value",
+                                object,
+                                array,
+                                args,
+                                interval,
+                                memoization,
+                                recursion,
+                            )?,
+                            interval,
+                        )?))
+                    }
+                }
             };
         }
     }
 
-    Ok(serde_json::Value::Null)
+    Ok(None)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -367,10 +410,12 @@ pub fn gen_generic_component(
                                 &mut HashSet::new(),
                             )?;
 
-                            hashmap.insert(
-                                key.to_owned(),
-                                json_to_literal(&result.to_owned(), *interval)?,
-                            );
+                            if let Some(result) = result {
+                                hashmap.insert(
+                                    key.to_owned(),
+                                    json_to_literal(&result.to_owned(), *interval)?,
+                                );
+                            }
                         }
                     }
                 }

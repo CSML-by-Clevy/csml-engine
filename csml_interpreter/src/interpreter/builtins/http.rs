@@ -99,10 +99,9 @@ pub fn http_request(
             }
 
             Ok(serde_json::Value::Null)
-        }
-        // Err(gen_error_info(
-        //     interval,
-        //     format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
-        // ))
+        } // Err(gen_error_info(
+          //     interval,
+          //     format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
+          // ))
     }
 }

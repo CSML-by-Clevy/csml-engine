@@ -213,7 +213,7 @@ fn loop_path(
                         return Err(gen_error_info(
                             Position::new(*interval),
                             "no named tag allowed".to_owned(), // TODO: error msg
-                        ))
+                        ));
                     }
                 };
 

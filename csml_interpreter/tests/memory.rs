@@ -29,7 +29,8 @@ fn format_message(event: Event, context: ContextJson, vector: &[&str]) -> Messag
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow, other_flow],
-        serde_json::json!({}),
+        None,
+        None,
         DEFAULT_FLOW_NAME,
     );
 

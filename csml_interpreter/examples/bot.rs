@@ -2,8 +2,8 @@ use csmlinterpreter::data::csml_bot::CsmlBot;
 use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::ContextJson;
-use csmlinterpreter::interpret;
 use csmlinterpreter::validate_bot;
+use csmlinterpreter::{interpret, read};
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "default";
@@ -18,70 +18,78 @@ fn main() {
     let default_content = std::fs::read_to_string("CSML/examples/bot/default.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 
+    let native_component = read().unwrap();
+    let mut custom_component = serde_json::Map::new();
+
+    custom_component.insert(
+        "Button".to_owned(),
+        serde_json::json!({
+          "params": [
+            {
+              "title": {
+                "required": true,
+                "type": "String",
+                "default_value": [],
+                "add_value": []
+              }
+            },
+            {
+              "payload": {
+                "type": "String",
+                "default_value": [
+                  {
+                    "$_get": "title"
+                  }
+                ],
+                "add_value": []
+              }
+            },
+            {
+              "accepts": {
+                "type": "Array",
+                "default_value": [
+                  {
+                    "$_get": "title"
+                  }
+                ],
+                "add_value": []
+              }
+            }
+          ]
+        }),
+    );
+    custom_component.insert(
+        "Question".to_owned(),
+        serde_json::json!({
+            "params": [
+                {
+                    "title": {
+                        "required": true,
+                        "type": "String",
+                        "default_value": [],
+                        "add_value": []
+                    }
+                },
+                {
+                    "buttons": {
+                        "required": true,
+                        "type": "Array",
+                        "default_value": [],
+                        "add_value": []
+                    }
+                },
+            ]
+        }),
+    );
+
     // Create a CsmlBot
     let bot = CsmlBot::new(
         DEFAULT_ID_NAME,
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        serde_json::json!(
-            {
-                "Button": {
-                  "params": [
-                    {
-                      "title": {
-                        "required": true,
-                        "type": "String",
-                        "default_value": [],
-                        "add_value": []
-                      }
-                    },
-                    {
-                      "payload": {
-                        "type": "String",
-                        "default_value": [
-                          {
-                            "$_get": "title"
-                          }
-                        ],
-                        "add_value": []
-                      }
-                    },
-                    {
-                      "accepts": {
-                        "type": "Array",
-                        "default_value": [
-                          {
-                            "$_get": "title"
-                          }
-                        ],
-                        "add_value": []
-                      }
-                    }
-                  ]
-                },
-                "Question": {
-                    "params": [
-                        {
-                            "title": {
-                                "required": true,
-                                "type": "String",
-                                "default_value": [],
-                                "add_value": []
-                            }
-                        },
-                        {
-                            "buttons": {
-                                "required": true,
-                                "type": "Array",
-                                "default_value": [],
-                                "add_value": []
-                            }
-                        },
-                    ]
-                }
-            }
-        ),
+        Some(native_component),
+        Some(custom_component),
         DEFAULT_FLOW_NAME,
     );
 

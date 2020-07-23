@@ -14,23 +14,49 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
         Ok(Some(conversation)) => {
             let mut map = serde_json::Map::new();
 
-            map.insert( "id".to_owned(), serde_json::json!(conversation.id) ).unwrap();
-            map.insert( "client".to_owned(), serde_json::json!(conversation.client) ).unwrap();
-            map.insert( "flow_id".to_owned(), serde_json::json!(conversation.flow_id)).unwrap();
-            map.insert( "step_id".to_owned(), serde_json::json!(conversation.step_id)).unwrap();
-            map.insert( "metadata".to_owned(), serde_json::json!(conversation.metadata) ).unwrap();
-            map.insert( "status".to_owned(), serde_json::json!(conversation.status) ).unwrap();
-            map.insert( "last_interaction_at".to_owned(), serde_json::json!(conversation.last_interaction_at.to_string()))
+            map.insert("id".to_owned(), serde_json::json!(conversation.id))
                 .unwrap();
-            map.insert( "updated_at".to_owned(), serde_json::json!(conversation.updated_at.to_string()) ).unwrap();
-            map.insert( "created_at".to_owned(), serde_json::json!(conversation.created_at.to_string()) ).unwrap();
+            map.insert("client".to_owned(), serde_json::json!(conversation.client))
+                .unwrap();
+            map.insert(
+                "flow_id".to_owned(),
+                serde_json::json!(conversation.flow_id),
+            )
+            .unwrap();
+            map.insert(
+                "step_id".to_owned(),
+                serde_json::json!(conversation.step_id),
+            )
+            .unwrap();
+            map.insert(
+                "metadata".to_owned(),
+                serde_json::json!(conversation.metadata),
+            )
+            .unwrap();
+            map.insert("status".to_owned(), serde_json::json!(conversation.status))
+                .unwrap();
+            map.insert(
+                "last_interaction_at".to_owned(),
+                serde_json::json!(conversation.last_interaction_at.to_string()),
+            )
+            .unwrap();
+            map.insert(
+                "updated_at".to_owned(),
+                serde_json::json!(conversation.updated_at.to_string()),
+            )
+            .unwrap();
+            map.insert(
+                "created_at".to_owned(),
+                serde_json::json!(conversation.created_at.to_string()),
+            )
+            .unwrap();
 
             let js_value = neon_serde::to_value(&mut cx, &map)?;
             Ok(js_value)
         }
         Ok(None) => {
             let js_value = neon_serde::to_value(&mut cx, &serde_json::json!(null))?;
-            
+
             Ok(js_value)
         }
         Err(err) => panic!(err),
@@ -45,14 +71,14 @@ fn get_bot_steps(mut cx: FunctionContext) -> JsResult<JsObject> {
 
     let js_object = JsObject::new(&mut cx);
 
-    for (flow , steps) in map.iter() {
+    for (flow, steps) in map.iter() {
         let js_array = JsArray::new(&mut cx, steps.len() as u32);
-        
+
         for (i, step) in steps.iter().enumerate() {
             let step = cx.string(step);
             js_array.set(&mut cx, i as u32, step).unwrap();
         }
-        
+
         let key = cx.string(flow);
         js_object.set(&mut cx, key, js_array).unwrap();
     }
@@ -235,7 +261,6 @@ fn check_bot(jsbot: &mut Value) {
 }
 
 fn format_data(json_event: Value, mut jsbot: Value) -> Result<CsmlData, serde_json::error::Error> {
-
     check_bot(&mut jsbot);
 
     Ok(CsmlData {

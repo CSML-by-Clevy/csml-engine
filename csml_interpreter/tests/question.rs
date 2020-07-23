@@ -168,8 +168,7 @@ fn ok_question_step2() {
 
                         "content_type": "button"
                     }
-                ],
-                "title": ""
+                ]
             },
             "content_type":"question"
         } ],

@@ -34,7 +34,8 @@ fn format_message(
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        header,
+        None,
+        Some(header.as_object().unwrap().to_owned()),
         DEFAULT_FLOW_NAME,
     );
 
@@ -81,7 +82,7 @@ fn empty() {
 fn default() {
     let data = r#"{"memories":[], "messages":[
 	{
-		"content": {"title": {}},
+		"content": {},
 		"content_type": "button"
 	}
 	]}"#;
@@ -409,7 +410,7 @@ fn default_add_value_empty() {
         "memories":[],
         "messages":[
             {
-                "content": {"title": {}},
+                "content": {},
                 "content_type": "button"
             }
         ]

@@ -1,8 +1,9 @@
+use crate::data::error_info::ErrorInfo;
 use std::fs;
 use std::io::prelude::*;
 
-pub fn read() -> Result<serde_json::map::Map<String, serde_json::Value>, std::io::Error> {
-    let paths = fs::read_dir("components/")?;
+pub fn read() -> Result<serde_json::Map<String, serde_json::Value>, ErrorInfo> {
+    let paths = fs::read_dir("../components/")?;
     let mut components = serde_json::Map::new();
 
     for path in paths {
@@ -16,7 +17,7 @@ pub fn read() -> Result<serde_json::map::Map<String, serde_json::Value>, std::io
             components.append(&mut obj);
         } else {
             // TODO: error msg
-            println!("error ------------------{:?}", component);
+            println!("native component bad format {:?}", component);
         }
     }
 

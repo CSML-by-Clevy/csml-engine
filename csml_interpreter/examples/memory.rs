@@ -2,8 +2,8 @@ use csmlinterpreter::data::csml_bot::CsmlBot;
 use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::ContextJson;
-use csmlinterpreter::interpret;
 use csmlinterpreter::validate_bot;
+use csmlinterpreter::{interpret, read};
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "default";
@@ -17,6 +17,7 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 fn main() {
     let default_content = std::fs::read_to_string("CSML/examples/memory.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
+    let native_component = read().unwrap();
 
     // Create a CsmlBot
     let bot = CsmlBot::new(
@@ -24,7 +25,8 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        serde_json::json!({}),
+        Some(native_component),
+        None,
         DEFAULT_FLOW_NAME,
     );
 
