@@ -60,7 +60,7 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> bool {
         (array1, array2) if array1 == "array" && array2 == "array" => lit1 == lit2,
         (.., array) if array == "array" => contains(lit2, lit1),
         (array, ..) if array == "array" => contains(lit1, lit2),
-        (..) => lit1.primitive == lit2.primitive.to_owned(),
+        (..) => &lit1.primitive == &lit2.primitive,
     }
 }
 

@@ -167,7 +167,7 @@ fn is_parameter_required(object: &serde_json::Map<String, serde_json::Value>) ->
     result
 }
 
-fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> {
+fn get_index_of_key(key: &str, array: &[serde_json::Value]) -> Option<usize> {
     for (index, object) in array.iter().enumerate() {
         if let Some(object) = object.as_object() {
             for value in object.keys() {
@@ -239,7 +239,7 @@ fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval
 fn get_default_object(
     key: &str,
     object: &serde_json::Map<String, serde_json::Value>,
-    array: &Vec<serde_json::Value>,
+    array: &[serde_json::Value],
     args: &ArgsType,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
@@ -296,7 +296,7 @@ fn get_default_object(
 
 fn get_object(
     key: &str,
-    array: &Vec<serde_json::Value>,
+    array: &[serde_json::Value],
     args: &ArgsType,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
@@ -340,7 +340,7 @@ fn get_object(
                     ))
                 }
                 (None, false) => {
-                    if let None = actions_exist(object) {
+                    if actions_exist(object).is_none() {
                         Ok(None)
                     } else {
                         Ok(Some(serde_json::Value::add(

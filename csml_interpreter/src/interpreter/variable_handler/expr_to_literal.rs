@@ -152,7 +152,7 @@ pub fn resolve_fn_args(
                         map.insert(name.ident.to_owned(), literal);
                     }
                     expr => {
-                        first = first + 1;
+                        first += 1;
                         if named_args && first > 1 {
                             return Err(gen_error_info(
                                 Position::new(interval_from_expr(expr)),

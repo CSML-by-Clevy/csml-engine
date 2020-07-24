@@ -1,9 +1,9 @@
 start:
     // remember tmp = "true"
-    say "-> {{amerelo42}}"
+    say "flow 2 -> {{amerelo42}}"
     // say "------------"
     hold
 
-    say "end"
+    say Button("end", HOLa = "hola")
     // say "event2: => {{event}}"
     goto end
