@@ -2,6 +2,7 @@
 name = "csmlrustmanager"
 version = "1.0.0"
 authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
+license = "Apache-2.0"
 edition = "2018"
 
 [features]
@@ -38,7 +39,7 @@ openssl = "0.10.30"
 base64 = "0.12.3"
 
 [dependencies.curl]
-version = "0.4.30"
+version = "0.4.31"
 default-features = false
 features = ["mesalink"]
 

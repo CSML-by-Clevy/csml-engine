@@ -11,7 +11,7 @@ license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/CSML-by-Clevy/csml-interpreter"
 homepage = "https://www.csml.dev/"
-documentation = "https://docs.rs/nom"
+documentation = "https://docs.csml.dev/language/"
 description = """
 The CSML (Conversational Standard Meta Language) is a Domain-Specific Language developed for creating conversational experiences easily.
 """
