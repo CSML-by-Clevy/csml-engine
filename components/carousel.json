@@ -1,0 +1,12 @@
+{
+    "Carousel": {
+        "params": [
+            {
+                "cards": {
+                    "required": true,
+                    "type": "Array"
+                }
+            }
+        ]
+    }
+}

@@ -17,17 +17,27 @@ use init::*;
 use interpreter_actions::interpret_step;
 use tools::*;
 
-use csmlinterpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memories};
+use csmlinterpreter::{
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memories},
+    read,
+};
 use md5::{Digest, Md5};
-use std::{env, time::SystemTime, collections::HashMap};
+use std::{collections::HashMap, env, time::SystemTime};
 
 pub fn start_conversation(
     json_event: serde_json::Value,
-    csmldata: CsmlData,
+    mut csmldata: CsmlData,
 ) -> Result<serde_json::Map<String, serde_json::Value>, ManagerError> {
     let now = SystemTime::now();
 
     let event = format_event(json_event.clone())?;
+
+    // load native components to the bot
+    csmldata.bot.native_component = match read() {
+        Ok(components) => Some(components),
+        Err(err) => return Err(ManagerError::Interpreter(err.format_error())),
+    };
+
     let mut data = init_conversation_info(
         get_default_flow(&csmldata.bot)?.name.to_owned(),
         &event,
@@ -57,7 +67,7 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<Conversation>, Ma
     get_latest_open(client, &db)
 }
 
-pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>>{
+pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
     csmlinterpreter::get_steps_from_flow(bot)
 }
 

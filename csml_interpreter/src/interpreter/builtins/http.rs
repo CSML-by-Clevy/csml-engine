@@ -94,18 +94,14 @@ pub fn http_request(
         Err(err) => {
             if let Ok(var) = env::var("DEBUG") {
                 if var == "true" {
-                    println!(
-                        "FN request failed: {:?}",
-                        err
-                    );
+                    println!("FN request failed: {:?}", err);
                 }
             }
 
             Ok(serde_json::Value::Null)
-        },
-        // Err(gen_error_info(
-        //     interval,
-        //     format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
-        // ))
+        } // Err(gen_error_info(
+          //     interval,
+          //     format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
+          // ))
     }
 }

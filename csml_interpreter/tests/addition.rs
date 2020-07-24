@@ -21,7 +21,7 @@ fn ok_addition() {
             "start",
             "flow",
         ),
-        "./CSML/basic_test/numerical_operation/addition.csml",
+        "CSML/basic_test/numerical_operation/addition.csml",
     );
 
     let v1: Value = message_to_json_value(msg);

@@ -12,7 +12,7 @@ fn format_memories(
 ) -> Result<Vec<bson::Document>, ManagerError> {
     let client = bson::to_bson(&data.client)?;
 
-    let vec = memories
+    memories
         .iter()
         .enumerate()
         .fold(Ok(vec![]), |vec, (memorie_order, var)| {
@@ -35,9 +35,7 @@ fn format_memories(
                 "created_at": time
             });
             Ok(vec)
-        });
-
-    vec
+        })
 }
 
 pub fn add_memories(

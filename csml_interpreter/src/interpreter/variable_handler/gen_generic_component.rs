@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::PrimitiveObject;
-use crate::data::{Interval, Literal};
+use crate::data::{ArgsType, Interval, Literal};
 use crate::interpreter::json_to_literal;
 
 use nom::lib::std::collections::HashMap;
@@ -12,6 +12,7 @@ use std::collections::HashSet;
 ////////////////////////////////////////////////////////////////////////////////
 
 trait ArithmeticOperation {
+    fn get_type(value: &serde_json::Value) -> String;
     fn add(
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
@@ -20,6 +21,17 @@ trait ArithmeticOperation {
 }
 
 impl ArithmeticOperation for serde_json::Value {
+    fn get_type(value: &serde_json::Value) -> String {
+        match value {
+            serde_json::Value::Null => "Null".to_string(),
+            serde_json::Value::Bool(_) => String::from("Bool"),
+            serde_json::Value::Number(_) => String::from("Number"),
+            serde_json::Value::String(_) => String::from("String"),
+            serde_json::Value::Array(_) => String::from("Array"),
+            serde_json::Value::Object(_) => String::from("Object"),
+        }
+    }
+
     fn add(
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
@@ -41,7 +53,7 @@ impl ArithmeticOperation for serde_json::Value {
                     let a = lhs as i64;
                     let b = rhs as i64;
 
-                    if let Some(value) = a.checked_add(b) {
+                    if a.checked_add(b).is_some() {
                         if let Some(value) = serde_json::Number::from_f64(lhs + rhs) {
                             return Ok(serde_json::Value::Number(value));
                         }
@@ -51,7 +63,7 @@ impl ArithmeticOperation for serde_json::Value {
                 if let (Some(lhs), Some(rhs)) = (lhs.as_i64(), rhs.as_f64()) {
                     let b = rhs as i64;
 
-                    if let Some(value) = lhs.checked_add(b) {
+                    if lhs.checked_add(b).is_some() {
                         if let Some(value) = serde_json::Number::from_f64(lhs as f64 + rhs) {
                             return Ok(serde_json::Value::Number(value));
                         }
@@ -61,7 +73,7 @@ impl ArithmeticOperation for serde_json::Value {
                 if let (Some(lhs), Some(rhs)) = (lhs.as_f64(), rhs.as_i64()) {
                     let a = lhs as i64;
 
-                    if let Some(value) = a.checked_add(rhs) {
+                    if a.checked_add(rhs).is_some() {
                         if let Some(value) = serde_json::Number::from_f64(lhs + rhs as f64) {
                             return Ok(serde_json::Value::Number(value));
                         }
@@ -90,9 +102,27 @@ impl ArithmeticOperation for serde_json::Value {
 
                 Ok(serde_json::Value::Object(lhs))
             }
+            (serde_json::Value::String(lhs), serde_json::Value::Array(rhs)) => {
+                let mut rhs = rhs.to_owned();
+
+                rhs.push(serde_json::Value::String(lhs.to_owned()));
+
+                Ok(serde_json::Value::Array(rhs))
+            }
+            (serde_json::Value::Array(lhs), serde_json::Value::String(rhs)) => {
+                let mut lhs = lhs.to_owned();
+
+                lhs.push(serde_json::Value::String(rhs.to_owned()));
+
+                Ok(serde_json::Value::Array(lhs))
+            }
             (_, _) => Err(ErrorInfo::new(
                 Position::new(*interval),
-                "Illegal operation: arithmetic between two types".to_string(),
+                format!(
+                    "Illegal operation: arithmetic between two types -> {} + {}",
+                    serde_json::Value::get_type(lhs),
+                    serde_json::Value::get_type(rhs)
+                ),
             )),
         }
     }
@@ -137,7 +167,7 @@ fn is_parameter_required(object: &serde_json::Map<String, serde_json::Value>) ->
     result
 }
 
-fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> {
+fn get_index_of_key(key: &str, array: &[serde_json::Value]) -> Option<usize> {
     for (index, object) in array.iter().enumerate() {
         if let Some(object) = object.as_object() {
             for value in object.keys() {
@@ -151,44 +181,47 @@ fn get_index_of_key(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> 
     None
 }
 
-fn get_index_of_parameter(key: &str, array: &Vec<serde_json::Value>) -> Option<usize> {
-    let mut result = 0;
-
-    for object in array.iter() {
-        if let Some(object) = object.as_object() {
-            for value in object.keys() {
-                if let Some(serde_json::Value::Object(object)) = object.get(value) {
-                    if is_parameter_required(object) {
-                        if key == value {
-                            return Some(result);
-                        }
-                        result += 1;
-                    }
-                }
-            }
-        }
+fn get_parameter(index_of_key: usize, key: &str, args: &ArgsType) -> Option<serde_json::Value> {
+    if let Some(value) = args.get(key, index_of_key) {
+        return Some(value.primitive.to_json());
     }
 
     None
 }
 
-fn get_parameter(
-    key: &str,
-    array: &Vec<serde_json::Value>,
-    args: &Literal,
-    interval: &Interval,
-) -> serde_json::Value {
-    if let Some(index) = get_index_of_parameter(key, array) {
-        if let Ok(array) =
-            Literal::get_value::<Vec<Literal>>(&args.primitive, *interval, String::default())
-        {
-            if let Some(value) = array.get(index) {
-                return value.primitive.to_json();
+//TODO: refactor
+fn actions_exist(object: &serde_json::Map<String, serde_json::Value>) -> Option<()> {
+    match (object.get("default_value"), object.get("add_value")) {
+        (Some(default), Some(add)) => match (default.as_array(), add.as_array()) {
+            (Some(default), Some(add)) => {
+                if default.is_empty() && add.is_empty() {
+                    None
+                } else {
+                    Some(())
+                }
+            }
+            (None, Some(value)) | (Some(value), None) => {
+                if value.is_empty() {
+                    None
+                } else {
+                    Some(())
+                }
+            }
+            (None, None) => None,
+        },
+        (None, Some(value)) | (Some(value), None) => {
+            if let Some(value) = value.as_array() {
+                if value.is_empty() {
+                    None
+                } else {
+                    Some(())
+                }
+            } else {
+                Some(())
             }
         }
+        (None, None) => None,
     }
-
-    serde_json::Value::Null
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,7 +231,7 @@ fn get_parameter(
 fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {
     let mut result = PrimitiveObject::get_literal(&hashmap, interval);
 
-    result.set_content_type(name);
+    result.set_content_type(&name.to_lowercase());
 
     result
 }
@@ -206,8 +239,8 @@ fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval
 fn get_default_object(
     key: &str,
     object: &serde_json::Map<String, serde_json::Value>,
-    array: &Vec<serde_json::Value>,
-    args: &Literal,
+    array: &[serde_json::Value],
+    args: &ArgsType,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
     recursion: &mut HashSet<String>,
@@ -225,7 +258,7 @@ fn get_default_object(
                 if let Some(serde_json::Value::String(dependencie)) = function.get("$_get") {
                     match memoization.get(dependencie) {
                         Some(value) => {
-                            result = value.to_owned();
+                            result = serde_json::Value::add(&result, &value, interval)?;
                         }
                         None => {
                             if recursion.contains(dependencie) {
@@ -234,7 +267,6 @@ fn get_default_object(
                                     "CIRCULAR DEPENDECIE".to_string(),
                                 ));
                             }
-
                             let value = &get_object(
                                 dependencie,
                                 array,
@@ -244,9 +276,11 @@ fn get_default_object(
                                 recursion,
                             )?;
 
-                            memoization.insert(dependencie.to_string(), value.to_owned());
+                            if let Some(value) = value {
+                                memoization.insert(dependencie.to_string(), value.to_owned());
 
-                            result = serde_json::Value::add(&result, value, interval)?;
+                                result = serde_json::Value::add(&result, value, interval)?;
+                            }
                         }
                     }
                 }
@@ -262,27 +296,31 @@ fn get_default_object(
 
 fn get_object(
     key: &str,
-    array: &Vec<serde_json::Value>,
-    args: &Literal,
+    array: &[serde_json::Value],
+    args: &ArgsType,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
     recursion: &mut HashSet<String>,
-) -> Result<serde_json::Value, ErrorInfo> {
+) -> Result<Option<serde_json::Value>, ErrorInfo> {
     // Cache the key we visit
     // Find the key to work with, then construct the object like it's supposed to be.
     // Option 1: construct with parameters because required is true, so I need to find the right parameters and add all add_value function to it.
     // Option 2: construct with default_value function and like option 1, add all add_value function to it.
 
     if !recursion.insert(key.to_string()) {
+        // TODO: error msg
         println!("SHOULD NEVER HAPPEN !");
         unreachable!();
     }
 
-    if let Some(index) = get_index_of_key(key, array) {
-        if let Some(serde_json::Value::Object(object)) = array[index].get(key) {
-            return match is_parameter_required(object) {
-                true => serde_json::Value::add(
-                    &get_parameter(key, array, args, interval),
+    if let Some(index_of_key) = get_index_of_key(key, array) {
+        if let Some(serde_json::Value::Object(object)) = array[index_of_key].get(key) {
+            return match (
+                get_parameter(index_of_key, key, args),
+                is_parameter_required(object),
+            ) {
+                (Some(param), _) => Ok(Some(serde_json::Value::add(
+                    &param,
                     &get_default_object(
                         "add_value",
                         object,
@@ -293,46 +331,57 @@ fn get_object(
                         recursion,
                     )?,
                     interval,
-                ),
-                false => serde_json::Value::add(
-                    &get_default_object(
-                        "default_value",
-                        object,
-                        array,
-                        args,
-                        interval,
-                        memoization,
-                        recursion,
-                    )?,
-                    &get_default_object(
-                        "add_value",
-                        object,
-                        array,
-                        args,
-                        interval,
-                        memoization,
-                        recursion,
-                    )?,
-                    interval,
-                ),
+                )?)),
+                (None, true) => {
+                    //TODO: send Error component instead of stopping program
+                    Err(ErrorInfo::new(
+                        Position::new(*interval),
+                        format!("{} is a required parameter", key),
+                    ))
+                }
+                (None, false) => {
+                    if actions_exist(object).is_none() {
+                        Ok(None)
+                    } else {
+                        Ok(Some(serde_json::Value::add(
+                            &get_default_object(
+                                "default_value",
+                                object,
+                                array,
+                                args,
+                                interval,
+                                memoization,
+                                recursion,
+                            )?,
+                            &get_default_object(
+                                "add_value",
+                                object,
+                                array,
+                                args,
+                                interval,
+                                memoization,
+                                recursion,
+                            )?,
+                            interval,
+                        )?))
+                    }
+                }
             };
         }
     }
 
-    Ok(serde_json::Value::Null)
+    Ok(None)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-// [TODO]: arithmetic operation on number
-
 pub fn gen_generic_component(
     name: &str,
     interval: &Interval,
-    args: &Literal,
-    header: &serde_json::value::Value,
+    args: &ArgsType,
+    component: &serde_json::Value,
 ) -> Result<Literal, ErrorInfo> {
     // Dereferences the JSON Object, iterate on all key, and construct the component.
     // Create the hashmap that will be the result, and an hashmap for optimisation that will keep this module to make more than one equal computation.
@@ -341,7 +390,7 @@ pub fn gen_generic_component(
     let mut hashmap: HashMap<String, Literal> = HashMap::new();
     let mut memoization: HashMap<String, serde_json::Value> = HashMap::new();
 
-    if let Some(object) = header.as_object() {
+    if let Some(object) = component.as_object() {
         if let Some(serde_json::Value::Array(array)) = object.get("params") {
             for object in array.iter() {
                 if let Some(object) = object.as_object() {
@@ -361,14 +410,17 @@ pub fn gen_generic_component(
                                 &mut HashSet::new(),
                             )?;
 
-                            hashmap.insert(
-                                key.to_owned(),
-                                json_to_literal(&result.to_owned(), *interval)?,
-                            );
+                            if let Some(result) = result {
+                                hashmap.insert(
+                                    key.to_owned(),
+                                    json_to_literal(&result.to_owned(), *interval)?,
+                                );
+                            }
                         }
                     }
                 }
             }
+            args.populate_json_to_literal(&mut hashmap, array, interval.to_owned())?;
         }
     }
 

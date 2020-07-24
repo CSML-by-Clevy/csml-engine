@@ -1,0 +1,12 @@
+{
+    "Audio": {
+        "params": [
+            {
+                "url": {
+                    "required": true,
+                    "type": "String"
+                }
+            }
+        ]
+    }
+}

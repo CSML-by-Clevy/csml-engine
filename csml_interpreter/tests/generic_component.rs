@@ -34,7 +34,8 @@ fn format_message(
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        header,
+        None,
+        Some(header.as_object().unwrap().to_owned()),
         DEFAULT_FLOW_NAME,
     );
 
@@ -54,7 +55,7 @@ fn empty() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -81,8 +82,8 @@ fn empty() {
 fn default() {
     let data = r#"{"memories":[], "messages":[
 	{
-		"content": {"title": {}},
-		"content_type": "Button"
+		"content": {},
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -125,11 +126,13 @@ fn test_all() {
             "content": {
                 "foo": {
                     "param_0": "foo",
+                    "param_1": "bar",
                     "Hello": "World",
                     "Goodbye": "World",
                     "Morning": "World"
                 },
                 "bar": {
+                    "param_1": "bar",
                     "Goodbye": "World",
                     "Morning": "World"
                 },
@@ -138,7 +141,7 @@ fn test_all() {
                     "Morning": "World"
                 }
             },
-            "content_type": "Button"
+            "content_type": "button"
         }
         ]}"#;
     let msg = format_message(
@@ -160,7 +163,6 @@ fn test_all() {
                             "required": true,
                             "type": "Object",
                             "default_value": [
-                                {"$_set": "Hello"}
                             ],
                             "add_value": [
                                 {"$_set": {"Hello": "World"}},
@@ -172,8 +174,6 @@ fn test_all() {
                         "bar": {
                             "type": "Object",
                             "default_value": [
-                                {"$_get": "baz"},
-                                {"$_get": "baz"}
                             ],
                             "add_value": [
                                 {"$_get": "baz"}
@@ -185,8 +185,6 @@ fn test_all() {
                             "required": false,
                             "type": "Object",
                             "default_value": [
-                                {"$_set": {"Goodbye": "World"}},
-
                             ],
                             "add_value": [
                                 {"$_set": {"Goodbye": "World"}},
@@ -210,7 +208,7 @@ fn default_set() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {"hello": "world"}},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -255,7 +253,7 @@ fn default_get() {
             "title": {"hello": "world"},
             "payload": {"hello": "world"}
         },
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -312,7 +310,7 @@ fn default_multiple_get() {
             },
             "payload": {"hello": "world"}
         },
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -366,7 +364,7 @@ fn default_add_value() {
 		"content": {"title": {
             "hello": "world"
         }},
-		"content_type": "Button"
+		"content_type": "button"
 	}
 	]}"#;
     let msg = format_message(
@@ -407,12 +405,16 @@ fn default_add_value() {
 
 #[test]
 fn default_add_value_empty() {
-    let data = r#"{"memories":[], "messages":[
-	{
-		"content": {"title": {}},
-		"content_type": "Button"
-	}
-	]}"#;
+    let data = r#"
+    {
+        "memories":[],
+        "messages":[
+            {
+                "content": {},
+                "content_type": "button"
+            }
+        ]
+    }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -453,14 +455,17 @@ fn default_add_value_empty() {
 
 #[test]
 fn parameter() {
-    let data = r#"{"memories":[], "messages":[
-	{
-		"content": {
-            "foo": {"param_0": "foo"}
-		},
-		"content_type": "Button"
-	}
-	]}"#;
+    let data = r#"{
+        "memories":[], "messages":[
+        {
+            "content": {
+                "foo": {"param_0": "foo"},
+                "bar": {"param_1": "bar"}
+            },
+            "content_type": "button"
+        }
+        ]
+    }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -478,6 +483,16 @@ fn parameter() {
                     {
                         "foo": {
                             "required": true,
+                            "type": "Object",
+                            "default_value": [
+                            ],
+                            "add_value": [
+                            ]
+                        }
+                    },
+                    {
+                        "bar": {
+                            "required": false,
                             "type": "Object",
                             "default_value": [
                             ],
@@ -498,22 +513,23 @@ fn parameter() {
 
 #[test]
 fn parameter_multiple() {
-    let data = r#"{"memories":[], "messages":[
-	{
-		"content": {
-            "foo": {
-                "param_1": "bar",
-                "Hello": 42
+    let data = r#"
+        {"memories":[], "messages":[
+        {
+            "content": {
+                "foo": {
+                    "param_0": "foo",
+                    "Hello": 42
+                },
+                "bar": {"param_1": "bar"},
+                "baz": {
+                    "Hello": 42
+                }
             },
-            "bar": {"param_0": "foo"},
-			"baz": {
-                "param_1": "bar",
-                "Hello": 42
-            }
-		},
-		"content_type": "Button"
-	}
-	]}"#;
+            "content_type": "button"
+        }
+        ]
+    }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -532,9 +548,9 @@ fn parameter_multiple() {
                         "foo": {
                             "type": "Object",
                             "default_value": [
-                                {"$_get": "baz"}
                             ],
                             "add_value": [
+                                {"$_get": "baz"}
                             ]
                         }
                     },
@@ -550,7 +566,6 @@ fn parameter_multiple() {
                     },
                     {
                         "baz": {
-                            "required": true,
                             "type": "Object",
                             "default_value": [
                             ],
@@ -770,7 +785,7 @@ fn circular_dependencie_on_other_key_default() {
             serde_json::json!({}),
             None,
             None,
-            "with_argument",
+            "without_argument",
             DEFAULT_FLOW_NAME,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
@@ -818,7 +833,7 @@ fn circular_dependencie_on_self_default() {
             serde_json::json!({}),
             None,
             None,
-            "with_argument",
+            "without_argument",
             DEFAULT_FLOW_NAME,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
@@ -904,7 +919,7 @@ fn circular_dependencie_on_self_add() {
             serde_json::json!({}),
             None,
             None,
-            "with_argument",
+            "without_argument",
             DEFAULT_FLOW_NAME,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],

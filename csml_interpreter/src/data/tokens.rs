@@ -95,8 +95,8 @@ pub static TYPES: &[&str] = &[
 
 // COMPONENT,FILE
 pub static RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH,
-    DEFAULT, REMEMBER, _METADATA, TRUE, FALSE, NULL, BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
+    MATCH, _METADATA, DEFAULT, REMEMBER, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 // TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
@@ -135,8 +135,7 @@ pub const FILE: &str = "File";
 pub const OBJECT: &str = "Object";
 
 pub static BUILT_IN: &[&str] = &[
-    TYPING, WAIT, TEXT, URL, IMAGE, ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, VIDEO, AUDIO,
-    QUESTION, BUTTON, CAROUSEL, CARD, FN, HTTP, OBJECT, FILE,
+    ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT,
 ];
 
 pub const MEMORY: &str = "memory";

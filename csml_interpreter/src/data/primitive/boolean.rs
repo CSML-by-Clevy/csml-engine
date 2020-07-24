@@ -17,7 +17,7 @@ use std::collections::HashMap;
 
 type PrimitiveMethod = fn(
     boolean: &mut PrimitiveBoolean,
-    args: &[Literal],
+    args: &HashMap<String, Literal>,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
@@ -54,7 +54,7 @@ pub struct PrimitiveBoolean {
 impl PrimitiveBoolean {
     fn is_number(
         _boolean: &mut PrimitiveBoolean,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
@@ -71,7 +71,7 @@ impl PrimitiveBoolean {
 
     fn type_of(
         _boolean: &mut PrimitiveBoolean,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
@@ -88,7 +88,7 @@ impl PrimitiveBoolean {
 
     fn to_string(
         boolean: &mut PrimitiveBoolean,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
@@ -132,7 +132,7 @@ impl Primitive for PrimitiveBoolean {
     fn do_exec(
         &mut self,
         name: &str,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
     ) -> Result<(Literal, Right), ErrorInfo> {

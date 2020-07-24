@@ -40,7 +40,6 @@ pub enum Database {
 // }
 
 pub struct ConversationInfo {
-    // pub api_client: APIClient,
     pub request_id: String,
     pub curl: Option<Easy>,
     pub conversation_id: String,

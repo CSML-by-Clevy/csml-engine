@@ -1,0 +1,12 @@
+{
+    "Text": {
+        "params": [
+            {
+                "text": {
+                    "required": true,
+                    "type": "String"
+                }
+            }
+        ]
+    }
+}

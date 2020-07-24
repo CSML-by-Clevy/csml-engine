@@ -7,7 +7,7 @@ pub mod memory;
 pub mod operations;
 
 use crate::data::literal::ContentType;
-pub use expr_to_literal::expr_to_literal;
+pub use expr_to_literal::{expr_to_literal, resolve_fn_args};
 
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
@@ -17,7 +17,7 @@ use crate::data::primitive::{
 use crate::data::{
     ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState},
     tokens::{COMPONENT, EVENT, _METADATA},
-    Data, Literal,
+    ArgsType, Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
 use crate::error_format::*;
@@ -142,7 +142,7 @@ pub fn resolve_path(
                 PathLiteral::Func {
                     name: name.to_owned(),
                     interval: interval.to_owned(),
-                    args: expr_to_literal(&args, None, data, root, sender)?,
+                    args: resolve_fn_args(&args, data, root, sender)?,
                 },
             )),
             PathState::StringIndex(key) => {
@@ -173,10 +173,13 @@ fn loop_path(
             },
             PathLiteral::MapIndex(key) => {
                 if let (Some(ref new), 0) = (&new, path.len()) {
-                    let args = [
+                    let mut args = HashMap::new();
+
+                    args.insert(
+                        "arg0".to_owned(),
                         PrimitiveString::get_literal(key, interval.to_owned()),
-                        new.to_owned(),
-                    ];
+                    );
+                    args.insert("arg1".to_owned(), new.to_owned());
 
                     lit.primitive.exec(
                         "insert",
@@ -203,17 +206,15 @@ fn loop_path(
                 interval,
                 args,
             } => {
-                // TODO: change args: Literal to args: Vec< Literal >
-                // TODO: Warning msg element is unmutable ?
-                let args = match Literal::get_value::<Vec<Literal>>(
-                    &args.primitive,
-                    *interval,
-                    ERROR_UNREACHABLE.to_owned(),
-                )
-                .ok()
-                {
-                    Some(args) => args,
-                    None => unreachable!(),
+                // TODO: Warning msg element is not mutable ?
+                let args = match args {
+                    ArgsType::Normal(args) => args,
+                    ArgsType::Named(_) => {
+                        return Err(gen_error_info(
+                            Position::new(*interval),
+                            "no named tag allowed".to_owned(), // TODO: error msg
+                        ));
+                    }
                 };
 
                 let mut return_lit =
@@ -319,6 +320,7 @@ pub fn get_var(
                 Ok(new_literal)
             }
             Err(_) => {
+                // TODO: send Warning
                 // if value does not exist in memory we create a null value and we apply all the path actions
                 let mut null = PrimitiveNull::get_literal(interval.to_owned());
                 let path = if let Some(p) = path {

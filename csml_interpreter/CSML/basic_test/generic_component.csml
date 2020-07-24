@@ -6,7 +6,7 @@ without_argument:
 	goto end
 
 with_argument:
-	say Component.Button({"param_0": "foo"}, {"param_1": "bar"})
+	say Component.Button({"param_0": "foo"}, bar = {"param_1": "bar"})
 	goto end
 
 unknown_component:

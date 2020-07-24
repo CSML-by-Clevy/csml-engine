@@ -72,7 +72,7 @@ pub fn gen_literal_from_component(
                     args,
                 } = function_name
                 {
-                    if let Some(component) = data.header.get(name) {
+                    if let Some(component) = data.custom_component.get(name) {
                         let mut lit = gen_generic_component(name, interval, args, component)?;
 
                         path.drain(..1);

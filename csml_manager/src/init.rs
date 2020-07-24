@@ -133,7 +133,7 @@ fn get_conversation<'a>(
                         Err(..) => {
                             // if flow id exist in db but not in bot close conversation
                             close_conversation(&conversation.id, &client, &db)?;
-                            // and start new conversation at default flow
+                            // start new conversation at default flow
                             return create_new_conversation(
                                 context, bot, flow_found, client, metadata, db,
                             );
