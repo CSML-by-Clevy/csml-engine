@@ -1,0 +1,12 @@
+{
+    "Wait": {
+        "params": [
+            {
+                "duration": {
+                    "required": true,
+                    "type": "Number"
+                }
+            }
+        ]
+    }
+}

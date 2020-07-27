@@ -1,0 +1,12 @@
+{
+    "Image": {
+        "params": [
+            {
+                "url": {
+                    "required": true,
+                    "type": "String"
+                }
+            }
+        ]
+    }
+}

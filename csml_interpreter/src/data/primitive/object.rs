@@ -157,7 +157,7 @@ lazy_static! {
 
 type PrimitiveMethod = fn(
     object: &mut PrimitiveObject,
-    args: &[Literal],
+    args: &HashMap<String, Literal>,
     interval: Interval,
     content_type: &str,
 ) -> Result<Literal, ErrorInfo>;
@@ -174,7 +174,7 @@ pub struct PrimitiveObject {
 impl PrimitiveObject {
     fn set(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -187,7 +187,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let literal = match args.get(0) {
+        let literal = match args.get("arg0") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -215,7 +215,7 @@ impl PrimitiveObject {
 
     fn query(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -228,7 +228,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let literal = match args.get(0) {
+        let literal = match args.get("arg0") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -256,7 +256,7 @@ impl PrimitiveObject {
 
     fn get_http(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -285,7 +285,7 @@ impl PrimitiveObject {
 
     fn post(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -298,7 +298,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let literal = match args.get(0) {
+        let literal = match args.get("arg0") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -331,7 +331,7 @@ impl PrimitiveObject {
 
     fn put(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -344,7 +344,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let literal = match args.get(0) {
+        let literal = match args.get("arg0") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -377,7 +377,7 @@ impl PrimitiveObject {
 
     fn delete(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -390,7 +390,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let literal = match args.get(0) {
+        let literal = match args.get("arg0") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -423,7 +423,7 @@ impl PrimitiveObject {
 
     fn patch(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -436,7 +436,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let literal = match args.get(0) {
+        let literal = match args.get("arg0") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -469,7 +469,7 @@ impl PrimitiveObject {
 
     fn send(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -515,7 +515,7 @@ impl PrimitiveObject {
 impl PrimitiveObject {
     fn get_type(
         _object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -533,7 +533,7 @@ impl PrimitiveObject {
 
     fn get_metadata(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -557,7 +557,7 @@ impl PrimitiveObject {
 impl PrimitiveObject {
     fn is_number(
         _object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -574,7 +574,7 @@ impl PrimitiveObject {
     }
     fn type_of(
         _object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -592,7 +592,7 @@ impl PrimitiveObject {
 
     fn to_string(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -610,7 +610,7 @@ impl PrimitiveObject {
 
     fn contains(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -623,7 +623,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let key = match args.get(0) {
+        let key = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -646,7 +646,7 @@ impl PrimitiveObject {
 
     fn is_empty(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -666,7 +666,7 @@ impl PrimitiveObject {
 
     fn length(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -686,7 +686,7 @@ impl PrimitiveObject {
 
     fn keys(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -710,7 +710,7 @@ impl PrimitiveObject {
 
     fn values(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -734,7 +734,7 @@ impl PrimitiveObject {
 
     fn get_generics(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -747,7 +747,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let key = match args.get(0) {
+        let key = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -773,7 +773,7 @@ impl PrimitiveObject {
 impl PrimitiveObject {
     fn clear_values(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -803,7 +803,7 @@ impl PrimitiveObject {
 
     fn insert(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -816,7 +816,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let key = match args.get(0) {
+        let key = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -832,7 +832,7 @@ impl PrimitiveObject {
             }
         };
 
-        let value = match args.get(1) {
+        let value = match args.get("arg1") {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
@@ -849,7 +849,7 @@ impl PrimitiveObject {
 
     fn remove(
         object: &mut PrimitiveObject,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -862,7 +862,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let key = match args.get(0) {
+        let key = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -940,58 +940,6 @@ impl PrimitiveObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Primitive for PrimitiveObject {
-    fn do_exec(
-        &mut self,
-        name: &str,
-        args: &[Literal],
-        interval: Interval,
-        content_type: &ContentType,
-    ) -> Result<(Literal, Right), ErrorInfo> {
-        let event = vec![FUNCTIONS_EVENT.clone()];
-        let http = vec![
-            FUNCTIONS_HTTP.clone(),
-            FUNCTIONS_READ.clone(),
-            FUNCTIONS_WRITE.clone(),
-        ];
-        let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
-
-        let mut is_event = false;
-
-        let (content_type, vector) = match content_type {
-            ContentType::Event(event_type) => {
-                is_event = true;
-
-                (event_type.as_ref(), event)
-            }
-            ContentType::Http => ("", http),
-            ContentType::Generics => ("", generics),
-        };
-
-        for function in vector.iter() {
-            if let Some((f, right)) = function.get(name) {
-                let result = f(self, args, interval, &content_type)?;
-
-                return Ok((result, *right));
-            }
-        }
-
-        if is_event == true {
-            if let Some(res) = self.value.get_mut("text") {
-                return res.primitive.do_exec(
-                    name,
-                    args,
-                    interval,
-                    &ContentType::Event(String::default()),
-                );
-            }
-        }
-
-        Err(gen_error_info(
-            Position::new(interval),
-            format!("[{}] {}", name, ERROR_OBJECT_UNKNOWN_METHOD),
-        ))
-    }
-
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             return self.value == other.value;
@@ -1142,5 +1090,54 @@ impl Primitive for PrimitiveObject {
             content_type,
             content: self.to_json(),
         }
+    }
+
+    fn do_exec(
+        &mut self,
+        name: &str,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        content_type: &ContentType,
+    ) -> Result<(Literal, Right), ErrorInfo> {
+        let event = vec![FUNCTIONS_EVENT.clone()];
+        let http = vec![
+            FUNCTIONS_HTTP.clone(),
+            FUNCTIONS_READ.clone(),
+            FUNCTIONS_WRITE.clone(),
+        ];
+        let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
+
+        let mut is_event = false;
+
+        let (content_type, vector) = match content_type {
+            ContentType::Event(event_type) => {
+                is_event = true;
+
+                (event_type.as_ref(), event)
+            }
+            ContentType::Http => ("", http),
+            ContentType::Primitive => ("", generics),
+        };
+
+        for function in vector.iter() {
+            if let Some((f, right)) = function.get(name) {
+                let result = f(self, args, interval, &content_type)?;
+
+                return Ok((result, *right));
+            }
+        }
+
+        if is_event == true {
+            if let Some(res) = self.value.get_mut("text") {
+                return res
+                    .primitive
+                    .do_exec(name, args, interval, &ContentType::Primitive);
+            }
+        }
+
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("[{}] {}", name, ERROR_OBJECT_UNKNOWN_METHOD),
+        ))
     }
 }

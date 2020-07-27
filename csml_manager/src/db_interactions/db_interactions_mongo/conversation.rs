@@ -57,7 +57,7 @@ pub fn create_conversation(
 }
 
 pub fn close_conversation(
-    id: &String,
+    id: &str,
     client: &Client,
     db: &mongodb::Database,
 ) -> Result<(), ManagerError> {

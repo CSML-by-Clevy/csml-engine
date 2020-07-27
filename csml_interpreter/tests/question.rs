@@ -49,11 +49,10 @@ fn ok_question() {
     {"messages":
         [ {
             "content": {
-                "accepts": ["b1", "b2"],
                 "buttons": [
                     {
                         "content": {
-                            "accepts": ["b1"],
+                            "accepts": ["b1", "b1"],
                             "payload": "b1",
                             "title": "b1"
                         },
@@ -61,7 +60,7 @@ fn ok_question() {
                     },
                     {
                         "content": {
-                            "accepts": ["b2"],
+                            "accepts": ["b2", "b2"],
                             "payload": "b2",
                             "title": "b2"
                         },
@@ -99,11 +98,10 @@ fn ok_question_step1() {
     { "messages":
         [ {
             "content": {
-                "accepts": ["b1", "b2"],
                 "buttons": [
                     {
                         "content": {
-                            "accepts": ["b1"],
+                            "accepts": ["b1", "b1"],
                             "payload": "b1",
                             "title": "b1"
                         },
@@ -112,7 +110,7 @@ fn ok_question_step1() {
                     },
                     {
                         "content": {
-                            "accepts": ["b2"],
+                            "accepts": ["b2", "b2"],
                             "payload": "b2",
                             "title": "b2"
                         },
@@ -151,11 +149,10 @@ fn ok_question_step2() {
     { "messages":
         [ {
             "content": {
-                "accepts": ["b1", "b2"],
                 "buttons": [
                     {
                         "content": {
-                            "accepts": ["b1"],
+                            "accepts": ["b1", "b1"],
                             "payload": "b1",
                             "title": "b1"
                         },
@@ -164,7 +161,7 @@ fn ok_question_step2() {
                     },
                     {
                         "content": {
-                            "accepts": ["b2"],
+                            "accepts": ["b2", "b2"],
                             "payload": "b2",
                             "title": "b2"
                         },

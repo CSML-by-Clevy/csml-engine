@@ -16,7 +16,7 @@ use std::collections::HashMap;
 
 type PrimitiveMethod = fn(
     null: &mut PrimitiveNull,
-    args: &[Literal],
+    args: &HashMap<String, Literal>,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
@@ -51,7 +51,7 @@ pub struct PrimitiveNull {}
 impl PrimitiveNull {
     fn is_number(
         _null: &mut PrimitiveNull,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
@@ -68,7 +68,7 @@ impl PrimitiveNull {
 
     fn type_of(
         _null: &mut PrimitiveNull,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
@@ -85,7 +85,7 @@ impl PrimitiveNull {
 
     fn to_string(
         null: &mut PrimitiveNull,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
@@ -124,25 +124,6 @@ impl PrimitiveNull {
 }
 
 impl Primitive for PrimitiveNull {
-    fn do_exec(
-        &mut self,
-        name: &str,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &ContentType,
-    ) -> Result<(Literal, Right), ErrorInfo> {
-        if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
-
-            return Ok((res, *right));
-        }
-
-        Err(gen_error_info(
-            Position::new(interval),
-            format!("[{}] {}", name, ERROR_NULL_UNKNOWN_METHOD),
-        ))
-    }
-
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(_other) = other.as_any().downcast_ref::<Self>() {
             return true;
@@ -259,5 +240,24 @@ impl Primitive for PrimitiveNull {
             content_type: result.content_type,
             content: result.primitive.to_json(),
         }
+    }
+
+    fn do_exec(
+        &mut self,
+        name: &str,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &ContentType,
+    ) -> Result<(Literal, Right), ErrorInfo> {
+        if let Some((f, right)) = FUNCTIONS.get(name) {
+            let res = f(self, args, interval)?;
+
+            return Ok((res, *right));
+        }
+
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("[{}] {}", name, ERROR_NULL_UNKNOWN_METHOD),
+        ))
     }
 }

@@ -1,0 +1,30 @@
+{
+    "Url": {
+        "params": [
+            {
+                "url": {
+                    "required": true,
+                    "type": "String"
+                }
+            },
+            {
+                "text": {
+                    "required": false,
+                    "type": "String",
+                    "default_value": [
+                        {"$_get": "url"}
+                    ]
+                }
+            },
+            {
+                "title": {
+                    "required": false,
+                    "type": "String",
+                    "default_value": [
+                        {"$_get": "url"}
+                    ]
+                }
+            }
+        ]
+    }
+}

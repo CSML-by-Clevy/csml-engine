@@ -1,43 +1,41 @@
 pub mod api;
-pub mod buttons;
 pub mod format;
 pub mod functions;
 pub mod http;
-pub mod media;
 pub mod tools;
 
-use crate::data::{ast::*, tokens::*, Data, Literal};
+pub mod components;
+
+use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal};
 use crate::error_format::ErrorInfo;
-use std::collections::HashMap;
+use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 
 use api::api;
-use buttons::*;
 use format::*;
 use functions::*;
-use media::*;
+
+pub fn match_native_builtin(
+    name: &str,
+    args: ArgsType,
+    interval: Interval,
+    data: &mut Data,
+) -> Result<Literal, ErrorInfo> {
+    if let Some(component) = data.native_component.get(name) {
+        gen_generic_component(name, &interval, &args, component)
+    } else {
+        // TODO: error msg
+        panic!("error in native_component")
+    }
+}
 
 pub fn match_builtin(
     name: &str,
-    args: HashMap<String, Literal>,
+    args: ArgsType,
     interval: Interval,
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     match name {
-        // CUSTOM
-        TYPING => typing(args, interval),
-        WAIT => wait(args, interval),
-        URL => url(args, interval),
-        IMAGE => img(args, interval),
-        QUESTION => question(args, interval),
-        VIDEO => video(args, interval),
-        AUDIO => audio(args, interval),
-        BUTTON => button(args, interval),
-        CAROUSEL => carousel(args, interval),
-        CARD => card(args, interval),
         HTTP => http(args, interval),
-        FILE => file(args, interval),
-
-        // DEFAULT
         FN => api(args, interval, data),
         ONE_OF => one_of(args, interval),
         SHUFFLE => shuffle(args, interval),
@@ -47,8 +45,6 @@ pub fn match_builtin(
         FLOOR => floor(args, interval),
 
         //old builtin
-        OBJECT => object(args, interval),
-
-        _ => text(args, interval),
+        _object => object(args, interval),
     }
 }

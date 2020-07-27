@@ -4,6 +4,7 @@ use crate::data::Interval;
 use crate::error_format::*;
 
 use std::cmp::Ordering;
+use std::ops::Add;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -20,7 +21,7 @@ pub struct Literal {
 pub enum ContentType {
     Event(String),
     Http,
-    Generics,
+    Primitive,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +61,7 @@ impl ContentType {
         match literal.content_type.as_ref() {
             "http" => ContentType::Http,
             "event" => ContentType::Event(String::from("")),
-            _ => ContentType::Generics,
+            _ => ContentType::Primitive,
         }
     }
 }
@@ -78,5 +79,13 @@ impl PartialOrd for Literal {
 impl PartialEq for Literal {
     fn eq(&self, other: &Self) -> bool {
         (*self).primitive.is_eq(&(*other.primitive))
+    }
+}
+
+impl Add for Literal {
+    type Output = Result<std::boxed::Box<(dyn Primitive + 'static)>, String>;
+
+    fn add(self, rhs: Literal) -> Result<std::boxed::Box<(dyn Primitive + 'static)>, String> {
+        self.primitive + rhs.primitive
     }
 }

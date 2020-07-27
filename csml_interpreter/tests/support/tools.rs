@@ -3,7 +3,7 @@ use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::message_data::MessageData;
 use csmlinterpreter::data::ContextJson;
-use csmlinterpreter::interpret;
+use csmlinterpreter::{interpret, read};
 use serde_json::{json, map::Map, Value};
 
 use std::fs::File;
@@ -27,7 +27,17 @@ pub fn format_message(event: Event, context: ContextJson, filepath: &str) -> Mes
     let content = read_file(filepath.to_string()).unwrap();
 
     let flow = CsmlFlow::new("id", "flow", &content, Vec::default());
-    let bot = CsmlBot::new("id", "bot", None, vec![flow], "flow");
+    let native_component = read().unwrap();
+
+    let bot = CsmlBot::new(
+        "id",
+        "bot",
+        None,
+        vec![flow],
+        Some(native_component),
+        None,
+        "flow",
+    );
 
     interpret(bot, context, event, None)
 }
@@ -47,8 +57,6 @@ pub fn message_to_json_value(result: MessageData) -> Value {
             let mut map = Map::new();
             map.insert("key".to_owned(), json!(elem.key.to_owned()));
             map.insert("value".to_owned(), elem.value.to_owned());
-            //TODO: UPDATE
-            // map.insert(elem.key.to_owned(), elem.value.to_owned());
             memories.push(json!(map));
         }
     }

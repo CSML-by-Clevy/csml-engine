@@ -30,7 +30,7 @@ pub fn create_conversation(
     Err(ManagerError::Manager("db is not init correctly".to_owned()))
 }
 
-pub fn close_conversation(id: &String, client: &Client, db: &Database) -> Result<(), ManagerError> {
+pub fn close_conversation(id: &str, client: &Client, db: &Database) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if cfg!(feature = "mongo") && std::env::var("ENGINE_DB_TYPE") != Ok("http".to_owned()) {
         use crate::db_interactions::db_interactions_mongo::conversation::close_conversation as close;

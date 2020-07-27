@@ -14,6 +14,8 @@ pub struct CsmlBot {
     pub name: String,
     pub fn_endpoint: Option<String>,
     pub flows: Vec<CsmlFlow>,
+    pub native_component: Option<serde_json::Map<String, serde_json::Value>>,
+    pub custom_component: Option<serde_json::Map<String, serde_json::Value>>,
     pub default_flow: String,
 }
 
@@ -27,6 +29,8 @@ impl CsmlBot {
         name: &str,
         fn_endpoint: Option<String>,
         flows: Vec<CsmlFlow>,
+        native_component: Option<serde_json::Map<String, serde_json::Value>>,
+        custom_component: Option<serde_json::Map<String, serde_json::Value>>,
         default_flow: &str,
     ) -> Self {
         Self {
@@ -34,6 +38,8 @@ impl CsmlBot {
             name: name.to_owned(),
             fn_endpoint,
             flows,
+            native_component,
+            custom_component,
             default_flow: default_flow.to_owned(),
         }
     }

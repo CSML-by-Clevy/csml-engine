@@ -74,13 +74,13 @@ impl Linter {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| Linter::default());
+            .or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter
                 .flow
                 .entry(flow.to_owned())
-                .or_insert_with(|| HashMap::default());
+                .or_insert_with( HashMap::default);
         }
     }
 
@@ -90,13 +90,13 @@ impl Linter {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| Linter::default());
+            .or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter
                 .flow
                 .entry(flow.to_owned())
-                .or_insert_with(|| HashMap::default());
+                .or_insert_with(HashMap::default);
 
             if let Some(hashmap_step) = linter.flow.get_mut(flow) {
                 match hashmap_step.get_mut(step) {
@@ -123,7 +123,7 @@ impl Linter {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| Linter::default());
+            .or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter
@@ -138,7 +138,7 @@ impl Linter {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| Linter::default());
+            .or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter.flow.clear();
@@ -154,7 +154,7 @@ impl Linter {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| Linter::default());
+            .or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get(&thread_id) {
             (*linter).to_owned()

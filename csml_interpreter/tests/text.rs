@@ -101,7 +101,8 @@ fn ok_text_step3() {
 
 #[test]
 fn ok_text_step4() {
-    let data = r#"{"messages":[ {"content":{"text": "😀 Null"},"content_type":"text"} ],"memories":[]}"#;
+    let data =
+        r#"{"messages":[ {"content":{"text": "😀 Null"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(

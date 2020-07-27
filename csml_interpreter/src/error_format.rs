@@ -59,6 +59,10 @@ pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &'static str =
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &'static str = "event can only be of ContentType::Event";
 
+// Component
+pub const ERROR_COMPONENT_NAMESPACE: &'static str = "Component must have a function apply to it";
+pub const ERROR_COMPONENT_UNKNOWN: &'static str = "Function does not exist for Component";
+
 // Fn API
 pub const ERROR_FN_ID: &'static str =
     "to find the function to call function_id beed to be of type string";
@@ -218,6 +222,7 @@ pub const ERROR_OPS_DIV_INT: &'static str = "[!] Int: Division by zero";
 pub const ERROR_OPS_DIV_FLOAT: &'static str = "[!] Float: Division by zero";
 
 pub const ERROR_ILLEGAL_OPERATION: &'static str = "illegal operation:";
+pub const OVERFLOWING_OPERATION: &'static str = "overflowing operation:";
 
 pub fn gen_error_info(position: Position, message: String) -> ErrorInfo {
     ErrorInfo::new(position, message)
