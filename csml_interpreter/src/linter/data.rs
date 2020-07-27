@@ -72,15 +72,13 @@ impl Linter {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(Linter::default);
+        hashmap.entry(thread_id).or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter
                 .flow
                 .entry(flow.to_owned())
-                .or_insert_with( HashMap::default);
+                .or_insert_with(HashMap::default);
         }
     }
 
@@ -88,9 +86,7 @@ impl Linter {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(Linter::default);
+        hashmap.entry(thread_id).or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter
@@ -121,9 +117,7 @@ impl Linter {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(Linter::default);
+        hashmap.entry(thread_id).or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter
@@ -136,9 +130,7 @@ impl Linter {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(Linter::default);
+        hashmap.entry(thread_id).or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get_mut(&thread_id) {
             linter.flow.clear();
@@ -152,9 +144,7 @@ impl Linter {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(Linter::default);
+        hashmap.entry(thread_id).or_insert_with(Linter::default);
 
         if let Some(linter) = hashmap.get(&thread_id) {
             (*linter).to_owned()
