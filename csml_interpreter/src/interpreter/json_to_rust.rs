@@ -1,16 +1,29 @@
-use crate::data::{ast::Interval, Literal};
-use crate::error_format::*;
-use std::collections::HashMap;
-
 use crate::data::position::Position;
 use crate::data::primitive::{
     array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
     null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString,
 };
+use crate::data::{ast::Interval, Data, Literal, MessageData, MSG};
+use crate::error_format::*;
+use crate::parser::parse_string::interpolate_string;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
+
+pub fn interpolate(
+    literal: &serde_json::Value,
+    interval: Interval,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    match literal {
+        serde_json::Value::String(val) => interpolate_string(val, data, root, sender),
+        _ => json_to_literal(literal, interval),
+    }
+}
 
 pub fn json_to_literal(
     literal: &serde_json::Value,

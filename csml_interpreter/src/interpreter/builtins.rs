@@ -6,9 +6,10 @@ pub mod tools;
 
 pub mod components;
 
-use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal};
+use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MessageData, MSG};
 use crate::error_format::ErrorInfo;
 use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
+use std::sync::mpsc;
 
 use api::api;
 use format::*;
@@ -33,10 +34,12 @@ pub fn match_builtin(
     args: ArgsType,
     interval: Interval,
     data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match name {
         HTTP => http(args, interval),
-        FN => api(args, interval, data),
+        FN => api(args, interval, data, root, sender),
         ONE_OF => one_of(args, interval),
         SHUFFLE => shuffle(args, interval),
         LENGTH => length(args, interval),
