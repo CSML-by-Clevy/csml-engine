@@ -42,6 +42,7 @@ fn normal_object_to_literal(
     let args = resolve_fn_args(args, data, root, sender)?;
 
     if data.native_component.contains_key(name) {
+        // add fn type error
         Ok((
             name.to_owned(),
             match_native_builtin(&name, args, interval.to_owned(), data)?,
