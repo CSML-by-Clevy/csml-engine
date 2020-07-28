@@ -6,9 +6,9 @@ pub mod http;
 pub mod media;
 pub mod tools;
 
-use crate::data::{ast::*, tokens::*, Data, Literal};
 use crate::error_format::ErrorInfo;
-use std::collections::HashMap;
+use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
+use std::{collections::HashMap, sync::mpsc};
 
 use api::api;
 use buttons::*;
@@ -21,6 +21,8 @@ pub fn match_builtin(
     args: HashMap<String, Literal>,
     interval: Interval,
     data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match name {
         // CUSTOM
@@ -38,7 +40,7 @@ pub fn match_builtin(
         FILE => file(args, interval),
 
         // DEFAULT
-        FN => api(args, interval, data),
+        FN => api(args, interval, data, root, sender),
         ONE_OF => one_of(args, interval),
         SHUFFLE => shuffle(args, interval),
         LENGTH => length(args, interval),

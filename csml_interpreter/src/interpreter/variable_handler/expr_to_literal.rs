@@ -6,6 +6,7 @@ use crate::data::{ast::*, tokens::*, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
+    json_to_rust::interpolate,
     builtins::match_builtin,
     variable_handler::{
         exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
@@ -23,8 +24,15 @@ fn exec_path_literal(
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
         let path = resolve_path(path, data, root, sender)?;
-        let (new_literal, ..) =
+        let (mut new_literal, ..) =
             exec_path_actions(literal, None, &Some(path), &ContentType::get(&literal))?;
+
+        //TODO: remove this condition when 'root' and 'sender' can be access anywhere in the code
+        if new_literal.content_type == "string" {
+            let string = serde_json::json!(new_literal.primitive.to_string());
+            new_literal = interpolate(&string, new_literal.interval, data, root, sender)?;
+        }
+
         Ok(new_literal)
     } else {
         Ok(literal.to_owned())
@@ -98,7 +106,7 @@ fn normal_object_to_literal(
     if BUILT_IN.contains(&name) {
         Ok((
             name.to_owned(),
-            match_builtin(&name, obj, interval.to_owned(), data)?,
+            match_builtin(&name, obj, interval.to_owned(), data, root, sender)?,
         ))
     } else {
         Err(gen_error_info(

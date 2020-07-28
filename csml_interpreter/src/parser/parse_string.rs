@@ -1,19 +1,18 @@
 use crate::data::primitive::string::PrimitiveString;
-use crate::data::{ast::*, tokens::*};
-use crate::error_format::{gen_nom_failure, *};
+use crate::data::{ast::*, tokens::*, position::Position, Data, Literal, MessageData, MSG};
+use crate::error_format::{gen_nom_failure, CustomError, *};
+use crate::interpreter::variable_handler::expr_to_literal;
 use crate::parser::operator::parse_operator;
 use crate::parser::parse_comments::comment;
-use crate::parser::state_context::StateContext;
-use crate::parser::state_context::StringState;
-use crate::parser::tools::get_distance_brace;
-use crate::parser::tools::get_interval;
-use crate::parser::tools::get_range_interval;
+use crate::parser::state_context::{StateContext, StringState};
+use crate::parser::tools::{get_range_interval, get_distance_brace, get_interval};
 use nom::{
     bytes::complete::tag,
     error::ParseError,
     sequence::{delimited, preceded},
     *,
 };
+use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
@@ -178,6 +177,42 @@ where
     E: ParseError<Span<'a>>,
 {
     delimited(tag(DOUBLE_QUOTE), do_parse_string, tag(DOUBLE_QUOTE))(s)
+}
+
+pub fn interpolate_string(
+    string: &str,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>
+) -> Result<Literal, ErrorInfo> {
+    let string_formatted = format!("\"{}\"", string);
+    let span = Span::new(&string_formatted);
+
+    match parse_string::< CustomError<Span> >(span) {
+        Ok((span, expr)) => {
+            if !span.fragment().is_empty() {
+                Err(gen_error_info(
+                    Position::new(Interval::new_as_u32(
+                        span.location_line(),
+                        span.get_column() as u32,
+                    )),
+                    ERROR_PARSING.to_owned(),
+                ))
+            } else {
+                expr_to_literal(&expr, None, data, root, sender)
+            }
+        },
+        Err(e) => match e {
+            Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
+                Position::new(Interval::new_as_u32(
+                    err.input.location_line(),
+                    err.input.get_column() as u32,
+                )),
+                err.error,
+            )),
+            Err::Incomplete(_err) => unimplemented!(),
+        },
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

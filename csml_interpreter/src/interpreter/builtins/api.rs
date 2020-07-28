@@ -1,14 +1,14 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::{PrimitiveNull, PrimitiveObject, PrimitiveString, PrimitiveType};
-use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal};
+use crate::data::{ast::Interval, tokens::*, ApiInfo, Client, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     builtins::{http::http_request, tools::*},
-    json_to_rust::json_to_literal,
+    json_to_rust::interpolate,
 };
 
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, sync::mpsc};
 
 fn format_body(
     args: &HashMap<String, Literal>,
@@ -83,6 +83,8 @@ pub fn api(
     args: HashMap<String, Literal>,
     interval: Interval,
     data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let (client, url) = match &data.context.api_info {
         Some(ApiInfo {
@@ -113,7 +115,7 @@ pub fn api(
     http.insert("body".to_owned(), body);
 
     if let Some(value) = http_request(&http, ureq::post, interval)?.get("data") {
-        json_to_literal(value, interval)
+        interpolate(value, interval, data, root, sender)
     } else {
         Ok(PrimitiveNull::get_literal(interval))
     }
