@@ -86,22 +86,20 @@ pub fn http_request(
     }
 
     let response = request.send_json(serialize(body));
-    // let status = response.status();
-    let body = response.into_json();
-
-    match body {
-        Ok(value) => Ok(value),
-        Err(err) => {
-            if let Ok(var) = env::var("DEBUG") {
-                if var == "true" {
-                    println!("FN request failed: {:?}", err);
-                }
+    if let Some(err) = response.synthetic_error() {
+        if let Ok(var) = env::var("DEBUG") {
+            if var == "true" {
+                println!("FN request failed: {:?}", err.body_text());
             }
+        }
+        return Err(gen_error_info(Position::new(interval), err.body_text()));
+    }
 
-            Ok(serde_json::Value::Null)
-        } // Err(gen_error_info(
-          //     interval,
-          //     format!("{}: {}", status, ERROR_FAIL_RESPONSE_JSON),
-          // ))
+    match response.into_json() {
+        Ok(value) => Ok(value),
+        Err(_) => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_FAIL_RESPONSE_JSON.to_owned(),
+        )),
     }
 }

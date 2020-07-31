@@ -306,8 +306,13 @@ pub fn get_var(
         },
         _ => match get_var_from_mem(var.to_owned(), path, data, root, sender) {
             Ok((lit, name, mem_type, path)) => {
-                let (new_literal, update_mem) =
-                    exec_path_actions(lit, None, &path, &ContentType::get(&lit))?;
+                let result = exec_path_actions(lit, None, &path, &ContentType::get(&lit));
+
+                let (new_literal, update_mem) = match result {
+                    Ok((lit, update)) => (lit, update),
+                    Err(err) => (MSG::send_error_msg(&sender, root, Err(err)), false),
+                };
+
                 save_literal_in_mem(
                     lit.to_owned(),
                     name,
@@ -319,10 +324,11 @@ pub fn get_var(
                 );
                 Ok(new_literal)
             }
-            Err(_) => {
-                // TODO: send Warning
+            Err(err) => {
+                // TODO: update error message and send warning
                 // if value does not exist in memory we create a null value and we apply all the path actions
-                let mut null = PrimitiveNull::get_literal(interval.to_owned());
+                let mut null = MSG::send_error_msg(&sender, root, Err(err));
+
                 let path = if let Some(p) = path {
                     Some(resolve_path(p, data, root, sender)?)
                 } else {

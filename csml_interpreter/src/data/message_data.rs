@@ -1,10 +1,8 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use crate::data::{Hold, Literal, Memories, Message, MSG};
 use crate::parser::ExitCondition;
 
 use core::ops::Add;
-use nom::lib::std::collections::HashMap;
 use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,21 +67,13 @@ impl MessageData {
         match result {
             Ok(message_data) => message_data,
             Err(err) => {
-                let msg = PrimitiveString::get_literal(&err.format_error(), err.position.interval);
-
-                let mut hashmap = HashMap::new();
-
-                hashmap.insert("error".to_owned(), msg);
-
-                let mut literal = PrimitiveObject::get_literal(&hashmap, err.position.interval);
-
-                literal.set_content_type("error");
+                let json_msg = serde_json::json!({"error": err.format_error()});
 
                 MSG::send(
                     sender,
                     MSG::Error(Message {
                         content_type: "error".to_owned(),
-                        content: literal.primitive.to_json(),
+                        content: json_msg.clone(),
                     }),
                 );
 
@@ -91,7 +81,7 @@ impl MessageData {
                     memories: None,
                     messages: vec![Message {
                         content_type: "error".to_owned(),
-                        content: literal.primitive.to_json(),
+                        content: json_msg,
                     }],
                     hold: None,
                     exit_condition: Some(ExitCondition::Error),

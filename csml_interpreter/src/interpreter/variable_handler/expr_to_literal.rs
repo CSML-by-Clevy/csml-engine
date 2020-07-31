@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
-use crate::data::primitive::{array::PrimitiveArray, object::PrimitiveObject};
+use crate::data::primitive::{PrimitiveArray, PrimitiveObject};
 use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
@@ -46,24 +46,25 @@ fn normal_object_to_literal(
     data: &mut Data,
     root: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
-) -> Result<(String, Literal), ErrorInfo> {
+) -> Result<Literal, ErrorInfo> {
     let args = resolve_fn_args(args, data, root, sender)?;
 
     if data.native_component.contains_key(name) {
-        // add fn type error
-        Ok((
-            name.to_owned(),
-            match_native_builtin(&name, args, interval.to_owned(), data)?,
-        ))
+        let value = match_native_builtin(&name, args, interval.to_owned(), data);
+        Ok(MSG::send_error_msg(&sender, root, value))
     } else if BUILT_IN.contains(&name) {
-        Ok((
-            name.to_owned(),
-            match_builtin(&name, args, interval.to_owned(), data, root, sender)?,
-        ))
+        let value = match_builtin(&name, args, interval.to_owned(), data, root, sender);
+
+        Ok(MSG::send_error_msg(&sender, root, value))
     } else {
-        Err(gen_error_info(
+        let err = gen_error_info(
             Position::new(interval),
             format!("{} [{}]", name, ERROR_BUILTIN_UNKNOWN),
+        );
+        Ok(MSG::send_error_msg(
+            &sender,
+            root,
+            Err(err) as Result<Literal, ErrorInfo>,
         ))
     }
 }
@@ -89,8 +90,7 @@ pub fn expr_to_literal(
             args,
             interval,
         })) => {
-            let (_name, mut literal) =
-                normal_object_to_literal(&name, args, *interval, data, root, sender)?;
+            let mut literal = normal_object_to_literal(&name, args, *interval, data, root, sender)?;
 
             exec_path_literal(&mut literal, path, data, root, sender)
         }
