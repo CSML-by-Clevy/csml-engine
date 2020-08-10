@@ -62,6 +62,8 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![flow],
+        None,
+        None,
         DEFAULT_FLOW_NAME,
     );
 

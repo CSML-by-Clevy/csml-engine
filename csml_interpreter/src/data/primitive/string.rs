@@ -25,7 +25,7 @@ use crate::interpreter::json_to_literal;
 
 type PrimitiveMethod = fn(
     string: &mut PrimitiveString,
-    args: &[Literal],
+    args: &HashMap<String, Literal>,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
@@ -182,7 +182,7 @@ pub struct PrimitiveString {
 impl PrimitiveString {
     fn is_number(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
@@ -201,7 +201,7 @@ impl PrimitiveString {
 
     fn type_of(
         _string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
@@ -218,7 +218,7 @@ impl PrimitiveString {
 
     fn to_string(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
@@ -237,7 +237,7 @@ impl PrimitiveString {
 impl PrimitiveString {
     fn append(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "append(value: string) => string";
@@ -251,7 +251,7 @@ impl PrimitiveString {
 
         let mut result = string.value.to_owned();
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -274,7 +274,7 @@ impl PrimitiveString {
 
     fn contains(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "contains(value: string) => boolean";
@@ -286,7 +286,7 @@ impl PrimitiveString {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -309,7 +309,7 @@ impl PrimitiveString {
 
     fn contains_regex(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "contains_regex(value: string) => boolean";
@@ -321,7 +321,7 @@ impl PrimitiveString {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -354,7 +354,7 @@ impl PrimitiveString {
 
     fn ends_with(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ends_with(value: string) => boolean";
@@ -366,7 +366,7 @@ impl PrimitiveString {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -389,7 +389,7 @@ impl PrimitiveString {
 
     fn ends_with_regex(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ends_with_regex(value: string) => boolean";
@@ -401,7 +401,7 @@ impl PrimitiveString {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -438,7 +438,7 @@ impl PrimitiveString {
 
     fn from_json(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "from_json() => object";
@@ -465,7 +465,7 @@ impl PrimitiveString {
 
     fn is_empty(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_empty() => boolean";
@@ -484,7 +484,7 @@ impl PrimitiveString {
 
     fn length(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "length() => int";
@@ -503,7 +503,7 @@ impl PrimitiveString {
 
     fn do_match(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "match(value: string>) => array";
@@ -517,7 +517,7 @@ impl PrimitiveString {
 
         let mut vector: Vec<Literal> = Vec::new();
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -546,7 +546,7 @@ impl PrimitiveString {
 
     fn do_match_regex(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "match_regex(value: string>) => array";
@@ -561,7 +561,7 @@ impl PrimitiveString {
         let mut s: &str = &string.value;
         let mut vector: Vec<Literal> = Vec::new();
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -604,7 +604,7 @@ impl PrimitiveString {
 
     fn starts_with(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "starts_with(value: string) => boolean";
@@ -616,7 +616,7 @@ impl PrimitiveString {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -639,7 +639,7 @@ impl PrimitiveString {
 
     fn starts_with_regex(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "starts_with_regex(value: string) => boolean";
@@ -651,7 +651,7 @@ impl PrimitiveString {
             ));
         }
 
-        let value = match args.get(0) {
+        let value = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
@@ -688,7 +688,7 @@ impl PrimitiveString {
 
     fn to_lowercase(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_lowercase() => string";
@@ -709,7 +709,7 @@ impl PrimitiveString {
 
     fn to_uppercase(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_uppercase() => string";
@@ -732,14 +732,14 @@ impl PrimitiveString {
 impl PrimitiveString {
     fn abs(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("abs", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -747,7 +747,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("abs", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -760,14 +760,14 @@ impl PrimitiveString {
 
     fn cos(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("cos", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -776,7 +776,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("cos", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -789,14 +789,14 @@ impl PrimitiveString {
 
     fn ceil(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("ceil", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -804,7 +804,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("ceil", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -817,14 +817,14 @@ impl PrimitiveString {
 
     fn pow(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("pow", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -832,7 +832,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("pow", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -845,14 +845,14 @@ impl PrimitiveString {
 
     fn floor(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("floor", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -860,7 +860,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("floor", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -873,14 +873,14 @@ impl PrimitiveString {
 
     fn round(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("round", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -888,7 +888,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("round", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -901,14 +901,14 @@ impl PrimitiveString {
 
     fn sin(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sin", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -916,7 +916,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sin", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -929,14 +929,14 @@ impl PrimitiveString {
 
     fn sqrt(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -944,7 +944,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -957,14 +957,14 @@ impl PrimitiveString {
 
     fn tan(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("tan", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -972,7 +972,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("tan", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -985,14 +985,14 @@ impl PrimitiveString {
 
     fn to_int(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_int", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -1000,7 +1000,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_int", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -1013,14 +1013,14 @@ impl PrimitiveString {
 
     fn to_float(
         string: &mut PrimitiveString,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
             let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_float", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -1028,7 +1028,7 @@ impl PrimitiveString {
             let mut primitive = PrimitiveFloat::new(float);
 
             let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Generics)?;
+                primitive.do_exec("to_float", args, interval, &ContentType::Primitive)?;
 
             return Ok(literal);
         }
@@ -1063,25 +1063,6 @@ impl PrimitiveString {
 }
 
 impl Primitive for PrimitiveString {
-    fn do_exec(
-        &mut self,
-        name: &str,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &ContentType,
-    ) -> Result<(Literal, Right), ErrorInfo> {
-        if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
-
-            return Ok((res, *right));
-        }
-
-        Err(gen_error_info(
-            Position::new(interval),
-            format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
-        ))
-    }
-
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {
             return match (get_integer(&self.value), get_integer(&rhs.value)) {
@@ -1323,5 +1304,24 @@ impl Primitive for PrimitiveString {
             content_type: result.content_type,
             content: result.primitive.to_json(),
         }
+    }
+
+    fn do_exec(
+        &mut self,
+        name: &str,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &ContentType,
+    ) -> Result<(Literal, Right), ErrorInfo> {
+        if let Some((f, right)) = FUNCTIONS.get(name) {
+            let res = f(self, args, interval)?;
+
+            return Ok((res, *right));
+        }
+
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
+        ))
     }
 }

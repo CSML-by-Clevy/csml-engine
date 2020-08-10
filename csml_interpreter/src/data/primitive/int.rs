@@ -18,8 +18,11 @@ use std::collections::HashMap;
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-type PrimitiveMethod =
-    fn(int: &mut PrimitiveInt, args: &[Literal], interval: Interval) -> Result<Literal, ErrorInfo>;
+type PrimitiveMethod = fn(
+    int: &mut PrimitiveInt,
+    args: &HashMap<String, Literal>,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo>;
 
 lazy_static! {
     static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
@@ -78,7 +81,7 @@ pub struct PrimitiveInt {
 impl PrimitiveInt {
     fn is_number(
         _int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
@@ -95,7 +98,7 @@ impl PrimitiveInt {
 
     fn type_of(
         _int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
@@ -112,7 +115,7 @@ impl PrimitiveInt {
 
     fn to_string(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
@@ -131,7 +134,7 @@ impl PrimitiveInt {
 impl PrimitiveInt {
     fn abs(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "abs() => int";
@@ -153,7 +156,7 @@ impl PrimitiveInt {
 
     fn cos(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "cos() => number";
@@ -177,7 +180,7 @@ impl PrimitiveInt {
 
     fn ceil(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ceil() => int";
@@ -199,7 +202,7 @@ impl PrimitiveInt {
 
     fn floor(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "floor() => int";
@@ -221,7 +224,7 @@ impl PrimitiveInt {
 
     fn pow(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "pow(exponent: number) => number";
@@ -235,7 +238,7 @@ impl PrimitiveInt {
 
         let float = int.value as f64;
 
-        let exponent = match args.get(0) {
+        let exponent = match args.get("arg0") {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 *Literal::get_value::<i64>(
                     &exponent.primitive,
@@ -285,7 +288,7 @@ impl PrimitiveInt {
 
     fn round(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "round() => int";
@@ -307,7 +310,7 @@ impl PrimitiveInt {
 
     fn sin(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "sin() => number";
@@ -331,7 +334,7 @@ impl PrimitiveInt {
 
     fn sqrt(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "round() => number";
@@ -355,7 +358,7 @@ impl PrimitiveInt {
 
     fn tan(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "tan() => number";
@@ -379,7 +382,7 @@ impl PrimitiveInt {
 
     fn to_int(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_int() => int";
@@ -396,7 +399,7 @@ impl PrimitiveInt {
 
     fn to_float(
         int: &mut PrimitiveInt,
-        args: &[Literal],
+        args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_float() => float";
@@ -437,25 +440,6 @@ impl PrimitiveInt {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Primitive for PrimitiveInt {
-    fn do_exec(
-        &mut self,
-        name: &str,
-        args: &[Literal],
-        interval: Interval,
-        _content_type: &ContentType,
-    ) -> Result<(Literal, Right), ErrorInfo> {
-        if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
-
-            return Ok((res, *right));
-        }
-
-        Err(gen_error_info(
-            Position::new(interval),
-            format!("[{}] {}", name, ERROR_INT_UNKNOWN_METHOD),
-        ))
-    }
-
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             return self.value == other.value;
@@ -473,83 +457,105 @@ impl Primitive for PrimitiveInt {
     }
 
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value + other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            if let Some(value) = self.value.checked_add(other.value) {
+                return Ok(Box::new(PrimitiveInt::new(value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} + {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_sub(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value - other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            if let Some(value) = self.value.checked_sub(other.value) {
+                return Ok(Box::new(PrimitiveInt::new(value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION
         }
 
         Err(format!(
             "{} {:?} - {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_div(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
+
         if let Some(other) = other.as_any().downcast_ref::<Self>() {
             check_division_by_zero_i64(self.value, other.value)?;
 
             if self.value % other.value != 0 {
-                let result = self.value as f64 / other.value as f64;
+                if let Some(_) = self.value.checked_div(other.value) {
+                    let value = self.value as f64 / other.value as f64;
 
-                return Ok(Box::new(PrimitiveFloat::new(result)));
+                    return Ok(Box::new(PrimitiveFloat::new(value)));
+                }
             } else {
-                let result = self.value / other.value;
+                if let Some(value) = self.value.checked_div(other.value) {
+                    return Ok(Box::new(PrimitiveInt::new(value)));
+                }
 
-                return Ok(Box::new(PrimitiveInt::new(result)));
+                error_msg = OVERFLOWING_OPERATION;
             }
         }
 
         Err(format!(
             "{} {:?} / {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_mul(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value * other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            if let Some(value) = self.value.checked_mul(other.value) {
+                return Ok(Box::new(PrimitiveInt::new(value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} * {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
     }
 
     fn do_rem(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String> {
-        if let Some(other) = other.as_any().downcast_ref::<Self>() {
-            let result = self.value % other.value;
+        let mut error_msg = ERROR_ILLEGAL_OPERATION;
 
-            return Ok(Box::new(PrimitiveInt::new(result)));
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            if let Some(value) = self.value.checked_rem(other.value) {
+                return Ok(Box::new(PrimitiveInt::new(value)));
+            }
+
+            error_msg = OVERFLOWING_OPERATION;
         }
 
         Err(format!(
             "{} {:?} % {:?}",
-            ERROR_ILLEGAL_OPERATION,
+            error_msg,
             self.get_type(),
             other.get_type()
         ))
@@ -614,5 +620,24 @@ impl Primitive for PrimitiveInt {
             content_type: result.content_type,
             content: result.primitive.to_json(),
         }
+    }
+
+    fn do_exec(
+        &mut self,
+        name: &str,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &ContentType,
+    ) -> Result<(Literal, Right), ErrorInfo> {
+        if let Some((f, right)) = FUNCTIONS.get(name) {
+            let res = f(self, args, interval)?;
+
+            return Ok((res, *right));
+        }
+
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("[{}] {}", name, ERROR_INT_UNKNOWN_METHOD),
+        ))
     }
 }

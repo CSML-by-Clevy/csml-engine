@@ -73,7 +73,7 @@ impl StateContext {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| StateContext::default());
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get_mut(&thread_id) {
             state_context.rip += 1;
@@ -86,7 +86,7 @@ impl StateContext {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| StateContext::default());
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get(&thread_id) {
             state_context.rip
@@ -103,7 +103,7 @@ impl StateContext {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| StateContext::default());
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get_mut(&thread_id) {
             state_context.state.clear();
@@ -116,7 +116,7 @@ impl StateContext {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| StateContext::default());
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get_mut(&thread_id) {
             match state {
@@ -136,7 +136,7 @@ impl StateContext {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| StateContext::default());
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get(&thread_id) {
             if state_context.state.is_empty() {
@@ -155,7 +155,7 @@ impl StateContext {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| StateContext::default());
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get_mut(&thread_id) {
             state_context.string_state = state;
@@ -168,7 +168,7 @@ impl StateContext {
 
         hashmap
             .entry(thread_id)
-            .or_insert_with(|| StateContext::default());
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get(&thread_id) {
             return state_context.string_state;

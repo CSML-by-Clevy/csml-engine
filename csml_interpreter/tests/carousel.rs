@@ -19,7 +19,7 @@ fn ok_card() {
                     "buttons": [
                         {
                             "content": {
-                                "accepts": ["b1"],
+                                "accepts": ["b1", "b1"],
                                 "payload": "b1",
                                 "title": "b1",
                                 "theme": "primary",
@@ -66,7 +66,7 @@ fn ok_carousel() {
                             "buttons": [
                                 {
                                     "content": {
-                                        "accepts": ["b1"],
+                                        "accepts": ["b1", "b1"],
                                         "payload": "b1",
                                         "title": "b1"
                                     },
@@ -113,7 +113,7 @@ fn ok_carousel_step1() {
                             "buttons": [
                                 {
                                     "content": {
-                                        "accepts": ["b1"],
+                                        "accepts": ["b1", "b1"],
                                         "payload": "b1",
                                         "title": "b1",
                                         "theme": "primary",

@@ -77,7 +77,7 @@ pub fn create_conversation(
 }
 
 pub fn close_conversation(
-    id: &String,
+    id: &str,
     client: &Client,
     status: &str,
     api_client: &APIClient,
@@ -85,7 +85,7 @@ pub fn close_conversation(
     let status = get_status(status);
 
     api_client.conversations_api().close_conversation(
-        &id,
+        id,
         &client.bot_id,
         &client.user_id,
         &client.channel_id,

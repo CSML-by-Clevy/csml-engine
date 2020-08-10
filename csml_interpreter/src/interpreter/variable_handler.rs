@@ -1,4 +1,5 @@
 pub mod expr_to_literal;
+pub mod gen_generic_component;
 pub mod gen_literal;
 pub mod interval;
 pub mod match_literals;
@@ -6,7 +7,7 @@ pub mod memory;
 pub mod operations;
 
 use crate::data::literal::ContentType;
-pub use expr_to_literal::expr_to_literal;
+pub use expr_to_literal::{expr_to_literal, resolve_fn_args};
 
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
@@ -15,13 +16,14 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState},
-    tokens::{EVENT, _METADATA},
-    Data, Literal,
+    tokens::{COMPONENT, EVENT, _METADATA},
+    ArgsType, Data, Literal,
 };
 use crate::data::{MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
-    gen_literal::gen_literal_form_event,
+    gen_literal::gen_literal_from_component,
+    gen_literal::gen_literal_from_event,
     memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
 };
 use std::collections::HashMap;
@@ -140,7 +142,7 @@ pub fn resolve_path(
                 PathLiteral::Func {
                     name: name.to_owned(),
                     interval: interval.to_owned(),
-                    args: expr_to_literal(&args, None, data, root, sender)?,
+                    args: resolve_fn_args(&args, data, root, sender)?,
                 },
             )),
             PathState::StringIndex(key) => {
@@ -171,10 +173,13 @@ fn loop_path(
             },
             PathLiteral::MapIndex(key) => {
                 if let (Some(ref new), 0) = (&new, path.len()) {
-                    let args = [
+                    let mut args = HashMap::new();
+
+                    args.insert(
+                        "arg0".to_owned(),
                         PrimitiveString::get_literal(key, interval.to_owned()),
-                        new.to_owned(),
-                    ];
+                    );
+                    args.insert("arg1".to_owned(), new.to_owned());
 
                     lit.primitive.exec(
                         "insert",
@@ -201,24 +206,23 @@ fn loop_path(
                 interval,
                 args,
             } => {
-                // TODO: change args: Literal to args: Vec< Literal >
-                // TODO: Warning msg element is unmutable ?
-                let args = match Literal::get_value::<Vec<Literal>>(
-                    &args.primitive,
-                    *interval,
-                    ERROR_UNREACHABLE.to_owned(),
-                )
-                .ok()
-                {
-                    Some(args) => args,
-                    // this is unreachable because a function need to have arguments other wise it will be a parsing error
-                    None => unreachable!(),
+                // TODO: Warning msg element is not mutable ?
+                let args = match args {
+                    ArgsType::Normal(args) => args,
+                    ArgsType::Named(_) => {
+                        return Err(gen_error_info(
+                            Position::new(*interval),
+                            "no named tag allowed".to_owned(), // TODO: error msg
+                        ));
+                    }
                 };
+
                 let mut return_lit =
                     lit.primitive
                         .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
                 let content_type = ContentType::get(&return_lit);
                 let (lit_new, ..) = loop_path(&mut return_lit, None, path, &content_type)?;
+
                 return Ok((lit_new, tmp_update_var));
             }
         }
@@ -284,8 +288,12 @@ pub fn get_var(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let interval = &var.interval;
+
     match var.ident {
-        name if name == EVENT => gen_literal_form_event(*interval, path, data, root, sender),
+        name if name == COMPONENT => {
+            gen_literal_from_component(*interval, path, data, root, sender)
+        }
+        name if name == EVENT => gen_literal_from_event(*interval, path, data, root, sender),
         name if name == _METADATA => match path {
             Some(path) => {
                 let path = resolve_path(path, data, root, sender)?;
@@ -312,6 +320,7 @@ pub fn get_var(
                 Ok(new_literal)
             }
             Err(_) => {
+                // TODO: send Warning
                 // if value does not exist in memory we create a null value and we apply all the path actions
                 let mut null = PrimitiveNull::get_literal(interval.to_owned());
                 let path = if let Some(p) = path {

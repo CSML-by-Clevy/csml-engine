@@ -1,25 +1,24 @@
+use crate::data::ast::PathLiteral;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{
-    ast::{Expr, Identifier, Interval, PathState},
+    ast::{Interval, PathState},
     Data, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
+use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 use crate::interpreter::{
     json_to_rust::json_to_literal,
     variable_handler::{exec_path_actions, resolve_path},
 };
 use std::sync::mpsc;
 
-pub fn search_str(name: &str, expr: &Expr) -> bool {
-    match expr {
-        Expr::IdentExpr(Identifier { ident, .. }) if ident == name => true,
-        _ => false,
-    }
-}
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
 
-pub fn gen_literal_form_event(
+pub fn gen_literal_from_event(
     interval: Interval,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
@@ -51,6 +50,53 @@ pub fn gen_literal_form_event(
         None => Ok(PrimitiveString::get_literal(
             &data.event.content,
             interval.to_owned(),
+        )),
+    }
+}
+
+pub fn gen_literal_from_component(
+    interval: Interval,
+    path: Option<&[(Interval, PathState)]>,
+    data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    match path {
+        Some(path) => {
+            let mut path = resolve_path(path, data, root, sender)?;
+
+            if let Some((_interval, function_name)) = path.first() {
+                if let PathLiteral::Func {
+                    name,
+                    interval,
+                    args,
+                } = function_name
+                {
+                    if let Some(component) = data.custom_component.get(name) {
+                        let mut lit = gen_generic_component(name, interval, args, component)?;
+
+                        path.drain(..1);
+
+                        let (lit, _tmp_mem_update) = exec_path_actions(
+                            &mut lit,
+                            None,
+                            &Some(path),
+                            &ContentType::Primitive,
+                        )?;
+
+                        return Ok(lit);
+                    }
+                }
+            }
+
+            Err(gen_error_info(
+                Position::new(interval),
+                ERROR_COMPONENT_UNKNOWN.to_owned(),
+            ))
+        }
+        None => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_COMPONENT_NAMESPACE.to_owned(),
         )),
     }
 }

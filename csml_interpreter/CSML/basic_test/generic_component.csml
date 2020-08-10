@@ -1,0 +1,14 @@
+start:
+	goto end
+
+without_argument:
+	say Component.Button()
+	goto end
+
+with_argument:
+	say Component.Button({"param_0": "foo"}, bar = {"param_1": "bar"})
+	goto end
+
+unknown_component:
+	say Component.Unknown({"param_0": "foo"}, {"param_1": "bar"})
+	goto end

@@ -1,0 +1,18 @@
+{
+    "Card": {
+        "params": [
+            {
+                "title": {
+                    "required": true,
+                    "type": "String"
+                }
+            },
+            {
+                "buttons": {
+                    "required": true,
+                    "type": "Array"
+                }
+            }
+        ]
+    }
+}

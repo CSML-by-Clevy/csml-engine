@@ -36,3 +36,23 @@ impl ErrorInfo {
         )
     }
 }
+
+// TODO: this is a tmp solution
+impl From<std::io::Error> for ErrorInfo {
+    fn from(e: std::io::Error) -> Self {
+        Self {
+            position: Position::default(),
+            message: e.to_string(),
+        }
+    }
+}
+
+// TODO: this is a tmp solution
+impl From<serde_json::Error> for ErrorInfo {
+    fn from(e: serde_json::Error) -> Self {
+        Self {
+            position: Position::default(),
+            message: e.to_string(),
+        }
+    }
+}

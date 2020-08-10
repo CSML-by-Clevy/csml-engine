@@ -60,7 +60,7 @@ pub fn match_obj(lit1: &Literal, lit2: &Literal) -> bool {
         (array1, array2) if array1 == "array" && array2 == "array" => lit1 == lit2,
         (.., array) if array == "array" => contains(lit2, lit1),
         (array, ..) if array == "array" => contains(lit1, lit2),
-        (..) => lit1.primitive == lit2.primitive.to_owned(),
+        (..) => &lit1.primitive == &lit2.primitive,
     }
 }
 
@@ -69,8 +69,10 @@ mod tests {
     use super::*;
     use crate::data::primitive::array::PrimitiveArray;
     use crate::data::primitive::string::PrimitiveString;
-    use crate::data::{ast::Interval, tokens::*};
-    use crate::interpreter::builtins::buttons::button;
+    use crate::data::{ast::Interval, ArgsType};
+    use crate::interpreter::{
+        builtins::components::read, variable_handler::gen_generic_component::gen_generic_component,
+    };
     use std::collections::HashMap;
 
     fn gen_inter() -> Interval {
@@ -82,13 +84,19 @@ mod tests {
         let interval = gen_inter();
 
         map.insert(
-            DEFAULT.to_owned(),
+            "title".to_owned(),
             PrimitiveString::get_literal(name, interval),
         );
 
-        match button(map, interval) {
-            Ok(lit) => lit,
-            Err(..) => panic!("gen button error"),
+        let native_component = read().unwrap();
+
+        if let Some(component) = native_component.get("Button") {
+            match gen_generic_component("Button", &interval, &ArgsType::Named(map), component) {
+                Ok(lit) => lit,
+                Err(..) => panic!("gen button error"),
+            }
+        } else {
+            panic!("error in native_component")
         }
     }
 
@@ -97,7 +105,7 @@ mod tests {
         let interval = gen_inter();
 
         map.insert(
-            DEFAULT.to_owned(),
+            "title".to_owned(),
             PrimitiveString::get_literal(name, interval),
         );
         map.insert(
@@ -112,9 +120,15 @@ mod tests {
             ),
         );
 
-        match button(map, interval) {
-            Ok(lit) => lit,
-            Err(..) => panic!("gen button error"),
+        let native_component = read().unwrap();
+
+        if let Some(component) = native_component.get("Button") {
+            match gen_generic_component("Button", &interval, &ArgsType::Named(map), component) {
+                Ok(lit) => lit,
+                Err(..) => panic!("gen button error"),
+            }
+        } else {
+            panic!("error in native_component")
         }
     }
 

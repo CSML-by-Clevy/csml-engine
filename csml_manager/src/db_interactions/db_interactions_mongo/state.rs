@@ -13,7 +13,7 @@ fn format_state_body(
 ) -> Result<Vec<Document>, ManagerError> {
     let client = bson::to_bson(&data.client)?;
 
-    let value = keys_values.iter().fold(Ok(vec![]), |vec, (key, value)| {
+    keys_values.iter().fold(Ok(vec![]), |vec, (key, value)| {
         let time = Bson::UtcDatetime(chrono::Utc::now());
 
         let value = encrypt_data(value)?;
@@ -28,9 +28,7 @@ fn format_state_body(
             "created_at": time
         });
         Ok(vec)
-    });
-
-    value
+    })
 }
 
 // pub fn delete_state_full(api_client: &APIClient, client: &Client) -> Result<(), Error> {
