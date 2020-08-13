@@ -1,4 +1,6 @@
 start:
-    say "Hello World 😆"
+
+    do gifs = [1,2,3,4,5]
+    say Image(gifs[6])
 
     goto end

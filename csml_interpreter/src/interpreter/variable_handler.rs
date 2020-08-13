@@ -158,6 +158,8 @@ fn loop_path(
     new: Option<Literal>,
     path: &mut Iter<(Interval, PathLiteral)>,
     content_type: &ContentType,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<(Literal, bool), ErrorInfo> {
     let mut tmp_update_var = false;
     while let Some((interval, action)) = path.next() {
@@ -165,10 +167,11 @@ fn loop_path(
             PathLiteral::VecIndex(index) => match get_at_index(lit, *index) {
                 Some(new_lit) => lit = new_lit,
                 None => {
-                    return Ok((
-                        PrimitiveNull::get_literal(interval.to_owned()),
-                        tmp_update_var,
-                    ))
+                    let err = gen_error_info(
+                        Position::new(interval.clone()),
+                        format!("[{}] {}", index, ERROR_ARRAY_INDEX),
+                    );
+                    return Ok((MSG::send_error_msg(&sender, root, Err(err)), tmp_update_var));
                 }
             },
             PathLiteral::MapIndex(key) => {
@@ -193,10 +196,14 @@ fn loop_path(
                     match get_value_from_key(lit, key) {
                         Some(new_lit) => lit = new_lit,
                         None => {
+                            let err = gen_error_info(
+                                Position::new(interval.clone()),
+                                format!("[{}] {}", key, ERROR_OBJECT_GET),
+                            );
                             return Ok((
-                                PrimitiveNull::get_literal(interval.to_owned()),
+                                MSG::send_error_msg(&sender, root, Err(err)),
                                 tmp_update_var,
-                            ))
+                            ));
                         }
                     }
                 };
@@ -210,10 +217,11 @@ fn loop_path(
                 let args = match args {
                     ArgsType::Normal(args) => args,
                     ArgsType::Named(_) => {
-                        return Err(gen_error_info(
-                            Position::new(*interval),
-                            "no named tag allowed".to_owned(), // TODO: error msg
-                        ));
+                        let err = gen_error_info(
+                            Position::new(interval.clone()),
+                            format!("{}", ERROR_METHOD_NAMED_ARGS),
+                        );
+                        return Ok((MSG::send_error_msg(&sender, root, Err(err)), tmp_update_var));
                     }
                 };
 
@@ -221,7 +229,8 @@ fn loop_path(
                     lit.primitive
                         .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
                 let content_type = ContentType::get(&return_lit);
-                let (lit_new, ..) = loop_path(&mut return_lit, None, path, &content_type)?;
+                let (lit_new, ..) =
+                    loop_path(&mut return_lit, None, path, &content_type, root, sender)?;
 
                 return Ok((lit_new, tmp_update_var));
             }
@@ -240,10 +249,12 @@ pub fn exec_path_actions(
     new: Option<Literal>,
     path: &Option<Vec<(Interval, PathLiteral)>>,
     content_type: &ContentType,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<(Literal, bool), ErrorInfo> {
     if let Some(vec) = path {
         let mut path = vec.iter();
-        let (return_lit, update) = loop_path(lit, new, &mut path, content_type)?;
+        let (return_lit, update) = loop_path(lit, new, &mut path, content_type, root, sender)?;
 
         Ok((return_lit, update))
     } else {
@@ -259,6 +270,8 @@ pub fn exec_path_actions(
 pub fn get_literal_form_metadata(
     path: &[(Interval, PathLiteral)],
     data: &mut Data,
+    root: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let mut lit = match path.get(0) {
         Some((interval, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
@@ -275,8 +288,14 @@ pub fn get_literal_form_metadata(
     };
 
     let content_type = ContentType::get(&lit);
-    let (lit, _tmp_mem_update) =
-        exec_path_actions(&mut lit, None, &Some(path[1..].to_owned()), &content_type)?;
+    let (lit, _tmp_mem_update) = exec_path_actions(
+        &mut lit,
+        None,
+        &Some(path[1..].to_owned()),
+        &content_type,
+        root,
+        sender,
+    )?;
     Ok(lit)
 }
 
@@ -297,7 +316,7 @@ pub fn get_var(
         name if name == _METADATA => match path {
             Some(path) => {
                 let path = resolve_path(path, data, root, sender)?;
-                get_literal_form_metadata(&path, data)
+                get_literal_form_metadata(&path, data, root, sender)
             }
             None => Ok(PrimitiveObject::get_literal(
                 &data.context.metadata,
@@ -306,7 +325,8 @@ pub fn get_var(
         },
         _ => match get_var_from_mem(var.to_owned(), path, data, root, sender) {
             Ok((lit, name, mem_type, path)) => {
-                let result = exec_path_actions(lit, None, &path, &ContentType::get(&lit));
+                let result =
+                    exec_path_actions(lit, None, &path, &ContentType::get(&lit), root, sender);
 
                 let (new_literal, update_mem) = match result {
                     Ok((lit, update)) => (lit, update),
@@ -335,7 +355,8 @@ pub fn get_var(
                     None
                 };
                 let content_type = ContentType::get(&null);
-                let (new_literal, ..) = exec_path_actions(&mut null, None, &path, &content_type)?;
+                let (new_literal, ..) =
+                    exec_path_actions(&mut null, None, &path, &content_type, root, sender)?;
                 Ok(new_literal)
             }
         },

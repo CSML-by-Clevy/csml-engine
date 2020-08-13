@@ -24,8 +24,14 @@ fn exec_path_literal(
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
         let path = resolve_path(path, data, root, sender)?;
-        let (mut new_literal, ..) =
-            exec_path_actions(literal, None, &Some(path), &ContentType::get(&literal))?;
+        let (mut new_literal, ..) = exec_path_actions(
+            literal,
+            None,
+            &Some(path),
+            &ContentType::get(&literal),
+            root,
+            sender,
+        )?;
 
         //TODO: remove this condition when 'root' and 'sender' can be access anywhere in the code
         if new_literal.content_type == "string" {

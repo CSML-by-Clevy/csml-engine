@@ -43,7 +43,7 @@ pub fn gen_literal_from_event(
             };
 
             let (lit, _tmp_mem_update) =
-                exec_path_actions(&mut lit, None, &Some(path), &content_type)?;
+                exec_path_actions(&mut lit, None, &Some(path), &content_type, root, sender)?;
 
             Ok(lit)
         }
@@ -82,6 +82,8 @@ pub fn gen_literal_from_component(
                             None,
                             &Some(path),
                             &ContentType::Primitive,
+                            root,
+                            sender,
                         )?;
 
                         return Ok(lit);

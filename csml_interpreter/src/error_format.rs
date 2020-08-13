@@ -206,6 +206,7 @@ pub const ERROR_HTTP_UNKNOWN_METHOD: &'static str = "is not a method of HTTP";
 
 // #### OBJECT
 pub const ERROR_OBJECT_TYPE: &'static str = "value need to be of type object";
+pub const ERROR_OBJECT_GET: &'static str = "key dose not exist";
 pub const ERROR_OBJECT_CONTAINS: &'static str =
     "[contains] take one parameter of type String usage: object.contains(\"key\")";
 pub const ERROR_OBJECT_GET_GENERICS: &'static str =
@@ -216,6 +217,9 @@ pub const ERROR_OBJECT_REMOVE: &'static str =
     "[remove] take one parameter of type String usage: object.remove(\"key\")";
 pub const ERROR_OBJECT_GET_KEY: &'static str = "key must be of type string";
 pub const ERROR_OBJECT_UNKNOWN_METHOD: &'static str = "is not a method of Object";
+
+// #### METHODS
+pub const ERROR_METHOD_NAMED_ARGS: &'static str = "arguments in methods are not named";
 
 pub const ERROR_OPS: &'static str = "[!] Ops: Illegal operation";
 pub const ERROR_OPS_DIV_INT: &'static str = "[!] Int: Division by zero";
