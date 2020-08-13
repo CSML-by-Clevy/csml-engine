@@ -119,9 +119,9 @@ impl ArithmeticOperation for serde_json::Value {
             (_, _) => Err(ErrorInfo::new(
                 Position::new(*interval),
                 format!(
-                    "Illegal operation: arithmetic between two types -> {} + {}",
+                    "Type Error expecting {} type but {} type was found",
+                    serde_json::Value::get_type(rhs),
                     serde_json::Value::get_type(lhs),
-                    serde_json::Value::get_type(rhs)
                 ),
             )),
         }
