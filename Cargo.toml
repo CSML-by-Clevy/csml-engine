@@ -4,3 +4,6 @@ members = [
     "csml_manager",
     "bindings/node/native",
 ]
+
+[profile.test]
+opt-level = 1
