@@ -89,7 +89,7 @@ fn main() {
         None,
         vec![default_flow],
         Some(native_component),
-        Some(custom_component),
+        Some(serde_json::json!(custom_component)),
         DEFAULT_FLOW_NAME,
     );
 

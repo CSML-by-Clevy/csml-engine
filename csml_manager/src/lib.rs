@@ -33,7 +33,7 @@ pub fn start_conversation(
     let event = format_event(json_event.clone())?;
 
     // load native components to the bot
-    csmldata.bot.native_component = match read() {
+    csmldata.bot.native_components = match read() {
         Ok(components) => Some(components),
         Err(err) => return Err(ManagerError::Interpreter(err.format_error())),
     };
