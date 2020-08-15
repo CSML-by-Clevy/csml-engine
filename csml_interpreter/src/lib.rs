@@ -190,14 +190,14 @@ pub fn interpret(
             None => HashMap::new(),
         };
 
-        let native = match bot.native_component {
+        let native = match bot.native_components {
             Some(ref obj) => obj.to_owned(),
             None => serde_json::Map::new(),
         };
 
-        let custom = match bot.custom_component {
-            Some(ref obj) => obj.to_owned(),
-            None => serde_json::Map::new(),
+        let custom = match bot.custom_components {
+            Some(serde_json::Value::Object(ref obj)) => obj.to_owned(),
+            _ => serde_json::Map::new(),
         };
 
         let mut data = Data::new(&ast, &mut context, &event, step_vars, custom, native);

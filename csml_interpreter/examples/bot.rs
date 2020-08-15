@@ -18,10 +18,10 @@ fn main() {
     let default_content = std::fs::read_to_string("CSML/examples/bot/default.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 
-    let native_component = read().unwrap();
-    let mut custom_component = serde_json::Map::new();
+    let native_components = read().unwrap();
+    let mut custom_components = serde_json::Map::new();
 
-    custom_component.insert(
+    custom_components.insert(
         "Button".to_owned(),
         serde_json::json!({
           "params": [
@@ -58,7 +58,7 @@ fn main() {
           ]
         }),
     );
-    custom_component.insert(
+    custom_components.insert(
         "Question".to_owned(),
         serde_json::json!({
             "params": [
@@ -88,8 +88,8 @@ fn main() {
         DEFAULT_BOT_NAME,
         None,
         vec![default_flow],
-        Some(native_component),
-        Some(custom_component),
+        Some(native_components),
+        Some(serde_json::json!(custom_components)),
         DEFAULT_FLOW_NAME,
     );
 
