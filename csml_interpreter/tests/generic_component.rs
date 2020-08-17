@@ -24,7 +24,7 @@ fn format_message(
     event: Event,
     context: ContextJson,
     vector: &[&str],
-    header: serde_json::Value,
+    custom_components: serde_json::Value,
 ) -> MessageData {
     let default_content = read_file(vector[0].to_string()).unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
@@ -35,7 +35,7 @@ fn format_message(
         None,
         vec![default_flow],
         None,
-        Some(serde_json::json!(header.as_object().unwrap().to_owned())),
+        Some(serde_json::json!(custom_components.as_object().unwrap().to_owned())),
         DEFAULT_FLOW_NAME,
     );
 
@@ -55,7 +55,7 @@ fn empty() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {},
-		"content_type": "button"
+		"content_type": "Component.button"
 	}
 	]}"#;
     let msg = format_message(
@@ -83,7 +83,7 @@ fn default() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {},
-		"content_type": "button"
+		"content_type": "Component.button"
 	}
 	]}"#;
     let msg = format_message(
@@ -141,7 +141,7 @@ fn test_all() {
                     "Morning": "World"
                 }
             },
-            "content_type": "button"
+            "content_type": "Component.button"
         }
         ]}"#;
     let msg = format_message(
@@ -208,7 +208,7 @@ fn default_set() {
     let data = r#"{"memories":[], "messages":[
 	{
 		"content": {"title": {"hello": "world"}},
-		"content_type": "button"
+		"content_type": "Component.button"
 	}
 	]}"#;
     let msg = format_message(
@@ -253,7 +253,7 @@ fn default_get() {
             "title": {"hello": "world"},
             "payload": {"hello": "world"}
         },
-		"content_type": "button"
+		"content_type": "Component.button"
 	}
 	]}"#;
     let msg = format_message(
@@ -310,7 +310,7 @@ fn default_multiple_get() {
             },
             "payload": {"hello": "world"}
         },
-		"content_type": "button"
+		"content_type": "Component.button"
 	}
 	]}"#;
     let msg = format_message(
@@ -364,7 +364,7 @@ fn default_add_value() {
 		"content": {"title": {
             "hello": "world"
         }},
-		"content_type": "button"
+		"content_type": "Component.button"
 	}
 	]}"#;
     let msg = format_message(
@@ -411,7 +411,7 @@ fn default_add_value_empty() {
         "messages":[
             {
                 "content": {},
-                "content_type": "button"
+                "content_type": "Component.button"
             }
         ]
     }"#;
@@ -462,7 +462,7 @@ fn parameter() {
                 "foo": {"param_0": "foo"},
                 "bar": {"param_1": "bar"}
             },
-            "content_type": "button"
+            "content_type": "Component.button"
         }
         ]
     }"#;
@@ -526,7 +526,7 @@ fn parameter_multiple() {
                     "Hello": 42
                 }
             },
-            "content_type": "button"
+            "content_type": "Component.button"
         }
         ]
     }"#;
