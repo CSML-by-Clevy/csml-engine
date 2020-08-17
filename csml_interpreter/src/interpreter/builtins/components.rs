@@ -4,6 +4,7 @@ use std::io::prelude::*;
 
 pub fn read() -> Result<serde_json::Map<String, serde_json::Value>, ErrorInfo> {
     // by default, load components from the `components` dir in the pwd, or override with env var
+    // TODO: missing error handling
     let components_dir = env::var("COMPONENTS_DIR").unwrap_or("./components".to_string());
     let paths = fs::read_dir(components_dir)?;
     let mut components = serde_json::Map::new();
