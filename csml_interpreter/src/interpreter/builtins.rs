@@ -22,7 +22,7 @@ pub fn match_native_builtin(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     if let Some(component) = data.native_component.get(name) {
-        gen_generic_component(name, &interval, &args, component)
+        gen_generic_component(name, false, &interval, &args, component)
     } else {
         // TODO: error msg
         panic!("error in native_component")
