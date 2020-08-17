@@ -1,25 +1,11 @@
 use crate::data::error_info::ErrorInfo;
-use std::path::Path;
 use std::{fs, env};
 use std::io::prelude::*;
 
-// TODO: tmp while there is no CARGO_WORKSPACE_MANIFEST_DIR
-fn get_components_dir() -> String {
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let mut ancestors = Path::new(&manifest_dir).ancestors();
-
-    while let Some(path) = ancestors.next() {
-        let tmp = path.join("components");
-        if tmp.exists(){
-            return format!("{}", tmp.display()) ;
-        }
-    }
-
-    panic!("components_dir not found")
-}
-
 pub fn read() -> Result<serde_json::Map<String, serde_json::Value>, ErrorInfo> {
-    let paths = fs::read_dir(get_components_dir())?;
+    // by default, load components from the `components` dir in the pwd, or override with env var
+    let components_dir = env::var("COMPONENTS_DIR").unwrap_or("./components".to_string());
+    let paths = fs::read_dir(components_dir)?;
     let mut components = serde_json::Map::new();
 
     for path in paths {
