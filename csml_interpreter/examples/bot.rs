@@ -3,7 +3,7 @@ use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::ContextJson;
 use csmlinterpreter::validate_bot;
-use csmlinterpreter::{interpret, read};
+use csmlinterpreter::{interpret, load_components};
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "default";
@@ -18,7 +18,7 @@ fn main() {
     let default_content = std::fs::read_to_string("CSML/examples/bot/default.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 
-    let native_components = read().unwrap();
+    let native_components = load_components().unwrap();
     let mut custom_components = serde_json::Map::new();
 
     custom_components.insert(

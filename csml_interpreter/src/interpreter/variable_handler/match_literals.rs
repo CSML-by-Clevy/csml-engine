@@ -71,7 +71,7 @@ mod tests {
     use crate::data::primitive::string::PrimitiveString;
     use crate::data::{ast::Interval, ArgsType};
     use crate::interpreter::{
-        builtins::components::read, variable_handler::gen_generic_component::gen_generic_component,
+        components::load_components, variable_handler::gen_generic_component::gen_generic_component,
     };
     use std::collections::HashMap;
 
@@ -88,7 +88,7 @@ mod tests {
             PrimitiveString::get_literal(name, interval),
         );
 
-        let native_component = read().unwrap();
+        let native_component = load_components().unwrap();
 
         if let Some(component) = native_component.get("Button") {
             match gen_generic_component("Button", false, &interval, &ArgsType::Named(map), component) {
@@ -120,7 +120,7 @@ mod tests {
             ),
         );
 
-        let native_component = read().unwrap();
+        let native_component = load_components().unwrap();
 
         if let Some(component) = native_component.get("Button") {
             match gen_generic_component("Button", false, &interval, &ArgsType::Named(map), component) {

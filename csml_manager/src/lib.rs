@@ -19,7 +19,7 @@ use tools::*;
 
 use csmlinterpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memories},
-    read,
+    load_components,
 };
 use md5::{Digest, Md5};
 use std::{collections::HashMap, env, time::SystemTime};
@@ -33,7 +33,7 @@ pub fn start_conversation(
     let event = format_event(json_event.clone())?;
 
     // load native components to the bot
-    csmldata.bot.native_components = match read() {
+    csmldata.bot.native_components = match load_components() {
         Ok(components) => Some(components),
         Err(err) => return Err(ManagerError::Interpreter(err.format_error())),
     };

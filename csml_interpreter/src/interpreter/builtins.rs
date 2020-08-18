@@ -4,7 +4,6 @@ pub mod functions;
 pub mod http;
 pub mod tools;
 
-pub mod components;
 
 use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MessageData, MSG};
 use crate::error_format::ErrorInfo;
