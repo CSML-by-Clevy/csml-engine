@@ -1,6 +1,6 @@
 use csmlinterpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
-    read,
+    load_components,
 };
 use csmlrustmanager::{data::*, start_conversation};
 use serde_json::{json, Value};
@@ -69,7 +69,7 @@ fn init_data() -> CsmlData {
                     commands: vec!["/random".to_owned()],
                 },
             ],
-            native_components: Some(read().unwrap()),
+            native_components: Some(load_components().unwrap()),
             custom_components: None,
             default_flow: "flowid".to_owned(),
         },
