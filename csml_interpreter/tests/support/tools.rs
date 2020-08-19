@@ -3,7 +3,7 @@ use csmlinterpreter::data::csml_flow::CsmlFlow;
 use csmlinterpreter::data::event::Event;
 use csmlinterpreter::data::message_data::MessageData;
 use csmlinterpreter::data::ContextJson;
-use csmlinterpreter::{interpret, read};
+use csmlinterpreter::{interpret, load_components};
 use serde_json::{json, map::Map, Value};
 
 use std::fs::File;
@@ -27,7 +27,7 @@ pub fn format_message(event: Event, context: ContextJson, filepath: &str) -> Mes
     let content = read_file(filepath.to_string()).unwrap();
 
     let flow = CsmlFlow::new("id", "flow", &content, Vec::default());
-    let native_component = read().unwrap();
+    let native_component = load_components().unwrap();
 
     let bot = CsmlBot::new(
         "id",
