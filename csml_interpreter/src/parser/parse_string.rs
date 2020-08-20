@@ -30,17 +30,35 @@ where
     let (rest, value) = s.take_split(length);
     let (value, interval) = get_interval(value)?;
 
-    // let mut string = String::new();
+    let mut string = String::new();
+    let mut escape = false;
 
-    // for c in value.as_bytes().iter() {
-    //     if *c != 92 {
-    //         string.push(*c as char);
-    //     }
-    // }
+    for c in value.fragment().chars() {
+        if c != '\\' || escape {
+            if escape {
+                match c {
+                    'n' => string.push('\n'),
+                    't' => string.push('\t'),
+                    'r' => string.push('\r'),
+                    '\'' => string.push('\''),
+                    '\"' => string.push('\"'),
+                    '\\' => string.push('\\'),
+                    c => string.push(c)
+                }
+
+                escape = false;
+            } else {
+                string.push(c);
+            }
+
+        } else {
+            escape = true;
+        }
+    }
 
     if !value.fragment().is_empty() {
         expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-            &value.fragment(),
+            &string,
             interval,
         )));
 

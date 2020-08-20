@@ -150,6 +150,7 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     CsmlResult::new(flows, Warnings::get(), errors)
 }
 
+//TODO: received ast instead of bot
 pub fn interpret(
     bot: CsmlBot,
     context: ContextJson,
@@ -165,7 +166,6 @@ pub fn interpret(
 
     Warnings::clear();
     Linter::clear();
-
     while message_data.exit_condition.is_none() {
         Position::set_flow(&flow);
 
