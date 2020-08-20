@@ -11,7 +11,16 @@ use serde_json::Value;
 
 #[test]
 fn hold_test_none() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}, {"content":{"text":"2"}, "content_type":"text"}, {"content":{"text":"4"}, "content_type":"text"}]}"#;
+    let data = r#"
+    {"memories":[],
+    "messages":[
+        {"content":{"error":"< this_hold > is not in in memory at line 2, column 5 in step [start] from flow [flow]"}, "content_type":"error"},
+        {"content":{"text":"1"}, "content_type":"text"},
+        {"content":{"text":"2"}, "content_type":"text"},
+        {"content":{"error": "< this_hold > is not in in memory at line 8, column 6 in step [start] from flow [flow]"}, "content_type":"error"},
+        {"content":{"text":"4"}, "content_type":"text"}]
+    }
+    "#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(
@@ -33,7 +42,17 @@ fn hold_test_none() {
 
 #[test]
 fn hold_test_some_0() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":"1"}, "content_type":"text"}, {"content":{"text":"2"}, "content_type":"text"}, {"content":{"text":"4"}, "content_type":"text"}]}"#;
+    let data = r#"
+    {
+        "memories":[],
+        "messages":[
+            {"content":{"text":"1"}, "content_type":"text"},
+            {"content":{"text":"2"}, "content_type":"text"},
+            {"content":{"error": "< this_hold > is not in in memory at line 8, column 6 in step [start] from flow [flow]"}, "content_type":"error"},
+            {"content":{"text":"4"}, "content_type":"text"}
+        ]
+    }
+    "#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(

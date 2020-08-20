@@ -63,7 +63,14 @@ pub fn match_actions(
         ObjectType::Do(DoType::Update(old, new)) => {
             let new_value = expr_to_literal(new, None, data, &mut root, sender)?;
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut root, sender)?;
-            exec_path_actions(lit, Some(new_value), &path, &ContentType::get(&lit))?;
+            exec_path_actions(
+                lit,
+                Some(new_value),
+                &path,
+                &ContentType::get(&lit),
+                &mut root,
+                sender,
+            )?;
             save_literal_in_mem(
                 lit.to_owned(),
                 name,
