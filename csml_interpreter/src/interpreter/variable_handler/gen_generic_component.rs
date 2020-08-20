@@ -228,10 +228,14 @@ fn actions_exist(object: &serde_json::Map<String, serde_json::Value>) -> Option<
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn get_result(name: &str, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {
+fn get_result(name: &str, is_custom_component: bool, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {
     let mut result = PrimitiveObject::get_literal(&hashmap, interval);
 
-    result.set_content_type(&name.to_lowercase());
+    if is_custom_component {
+        result.set_content_type(&format!("Component.{}", name.to_lowercase()));
+    } else {
+        result.set_content_type(&name.to_lowercase());
+    }
 
     result
 }
@@ -379,6 +383,7 @@ fn get_object(
 
 pub fn gen_generic_component(
     name: &str,
+    is_custom_component: bool,
     interval: &Interval,
     args: &ArgsType,
     component: &serde_json::Value,
@@ -424,5 +429,5 @@ pub fn gen_generic_component(
         }
     }
 
-    Ok(get_result(name, &hashmap, *interval))
+    Ok(get_result(name, is_custom_component, &hashmap, *interval))
 }
