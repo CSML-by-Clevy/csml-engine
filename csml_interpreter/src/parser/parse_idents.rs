@@ -43,7 +43,7 @@ where
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_idents_utilisation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+pub fn parse_idents_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
     E: ParseError<Span<'a>>,
 {

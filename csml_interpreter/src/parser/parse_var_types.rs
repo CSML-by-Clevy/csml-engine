@@ -4,7 +4,7 @@ use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,
     parse_functions::parse_functions,
-    parse_idents::{parse_idents_as, parse_idents_assignation, parse_idents_utilisation},
+    parse_idents::{parse_idents_as, parse_idents_assignation, parse_idents_usage},
     parse_literal::parse_literal_expr,
     parse_object::parse_object,
     parse_parenthesis::parse_r_parentheses,
@@ -54,11 +54,11 @@ where
     )(s)
 }
 
-fn parse_idents_expr_utilisation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+fn parse_idents_expr_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, idents) = parse_idents_utilisation(s)?;
+    let (s, idents) = parse_idents_usage(s)?;
 
     Ok((s, Expr::IdentExpr(idents)))
 }
@@ -142,7 +142,7 @@ where
                 parse_literal_expr,
                 parse_functions,
                 parse_string,
-                parse_idents_expr_utilisation,
+                parse_idents_expr_usage,
             )),
         )(s)?,
         StringState::Expand => preceded(
@@ -154,7 +154,7 @@ where
                 parse_literal_expr,
                 parse_functions,
                 parse_expand_string,
-                parse_idents_expr_utilisation,
+                parse_idents_expr_usage,
             )),
         )(s)?,
     };
