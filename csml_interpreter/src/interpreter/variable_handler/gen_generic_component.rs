@@ -250,8 +250,8 @@ fn get_default_object(
     recursion: &mut HashSet<String>,
 ) -> Result<serde_json::Value, ErrorInfo> {
     // Create a default JSON value to be able to abstract all JSON types (STRING, OBJECT) and then apply the trait add to it.
-    // Apply all rules if found of $_get and $_set, then launch recursion with key as the name of dependencie.
-    // Eliminates circular dependencie by checking if we already visited this key
+    // Apply all rules if found of $_get and $_set, then launch recursion with key as the name of dependency.
+    // Eliminates circular dependencies by checking if we already visited this key
     // Eliminates recurrent recursion if object has already been created once.
 
     let mut result = create_default_object(object, interval)?;
@@ -259,20 +259,20 @@ fn get_default_object(
     if let Some(serde_json::Value::Array(default_value)) = object.get(key) {
         for function in default_value.iter() {
             if let serde_json::Value::Object(function) = function {
-                if let Some(serde_json::Value::String(dependencie)) = function.get("$_get") {
-                    match memoization.get(dependencie) {
+                if let Some(serde_json::Value::String(dependency)) = function.get("$_get") {
+                    match memoization.get(dependency) {
                         Some(value) => {
                             result = serde_json::Value::add(&result, &value, interval)?;
                         }
                         None => {
-                            if recursion.contains(dependencie) {
+                            if recursion.contains(dependency) {
                                 return Err(ErrorInfo::new(
                                     Position::new(*interval),
-                                    "CIRCULAR DEPENDECIE".to_string(),
+                                    "GENERIC_COMPONENT_CIRCULAR_DEPENDENCY".to_string(),
                                 ));
                             }
                             let value = &get_object(
-                                dependencie,
+                                dependency,
                                 array,
                                 args,
                                 interval,
@@ -281,15 +281,15 @@ fn get_default_object(
                             )?;
 
                             if let Some(value) = value {
-                                memoization.insert(dependencie.to_string(), value.to_owned());
+                                memoization.insert(dependency.to_string(), value.to_owned());
 
                                 result = serde_json::Value::add(&result, value, interval)?;
                             }
                         }
                     }
                 }
-                if let Some(dependencie) = function.get("$_set") {
-                    result = serde_json::Value::add(&result, dependencie, interval)?;
+                if let Some(dependency) = function.get("$_set") {
+                    result = serde_json::Value::add(&result, dependency, interval)?;
                 }
             }
         }
@@ -313,7 +313,7 @@ fn get_object(
 
     if !recursion.insert(key.to_string()) {
         // TODO: error msg
-        println!("SHOULD NEVER HAPPEN !");
+        eprintln!("SHOULD NEVER HAPPEN !");
         unreachable!();
     }
 
