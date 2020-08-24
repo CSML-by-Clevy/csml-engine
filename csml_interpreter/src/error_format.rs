@@ -123,6 +123,10 @@ pub const ERROR_HTTP_QUERY_VALUES: &'static str =
     "must have a value of type String example: {key: \"value\"}";
 pub const ERROR_BUILTIN_UNKNOWN: &'static str = "Unknown Built-in";
 
+// ### native Components
+pub const ERROR_HTTP_NOT_DATA: &'static str = "Bad Format no 'data' in HTTP response";
+pub const ERROR_NATIVE_COMPONENT: &'static str = "native component dose not exist";
+
 // ### Primitives
 // #### Boolean
 pub const ERROR_BOOLEAN_UNKNOWN_METHOD: &'static str = "is not a method of Boolean";

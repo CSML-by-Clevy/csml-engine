@@ -4,9 +4,10 @@ pub mod functions;
 pub mod http;
 pub mod tools;
 
-
-use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MessageData, MSG};
-use crate::error_format::ErrorInfo;
+use crate::data::{
+    ast::*, position::Position, tokens::*, ArgsType, Data, Literal, MessageData, MSG,
+};
+use crate::error_format::{gen_error_info, ErrorInfo, ERROR_NATIVE_COMPONENT};
 use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 use std::sync::mpsc;
 
@@ -23,8 +24,10 @@ pub fn match_native_builtin(
     if let Some(component) = data.native_component.get(name) {
         gen_generic_component(name, false, &interval, &args, component)
     } else {
-        // TODO: error msg
-        panic!("error in native_component")
+        Err(gen_error_info(
+            Position::new(interval),
+            format!("{} [{}]", ERROR_NATIVE_COMPONENT, name),
+        ))
     }
 }
 

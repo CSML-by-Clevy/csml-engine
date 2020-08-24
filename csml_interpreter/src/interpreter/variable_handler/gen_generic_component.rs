@@ -228,7 +228,12 @@ fn actions_exist(object: &serde_json::Map<String, serde_json::Value>) -> Option<
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn get_result(name: &str, is_custom_component: bool, hashmap: &HashMap<String, Literal>, interval: Interval) -> Literal {
+fn get_result(
+    name: &str,
+    is_custom_component: bool,
+    hashmap: &HashMap<String, Literal>,
+    interval: Interval,
+) -> Literal {
     let mut result = PrimitiveObject::get_literal(&hashmap, interval);
 
     if is_custom_component {

@@ -18,6 +18,6 @@ pub fn add_card(map: &mut serde_json::Map<String, serde_json::Value>) {
                     }
                 ]
             }
-        )
+        ),
     );
 }

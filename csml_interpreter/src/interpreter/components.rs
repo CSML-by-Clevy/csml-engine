@@ -12,18 +12,20 @@ pub mod video;
 pub mod wait;
 
 use crate::data::error_info::ErrorInfo;
-use std::{fs, env};
 use std::io::prelude::*;
+use std::{env, fs};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-fn read_components_dir(map: &mut serde_json::Map<String, serde_json::Value>) -> Result<(), ErrorInfo> {
+fn read_components_dir(
+    map: &mut serde_json::Map<String, serde_json::Value>,
+) -> Result<(), ErrorInfo> {
     // load components from the `COMPONENTS_DIR` dir if any
     let components_dir = match env::var("COMPONENTS_DIR") {
         Ok(components_dir) => components_dir,
-        Err(_) => return Ok(())
+        Err(_) => return Ok(()),
     };
 
     let paths = fs::read_dir(components_dir)?;

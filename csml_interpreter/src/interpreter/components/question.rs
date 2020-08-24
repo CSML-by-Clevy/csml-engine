@@ -1,6 +1,6 @@
 pub fn add_question(map: &mut serde_json::Map<String, serde_json::Value>) {
     map.insert(
-        "Question".to_owned(), 
+        "Question".to_owned(),
         serde_json::json!(
             {
                 "params": [
@@ -22,6 +22,6 @@ pub fn add_question(map: &mut serde_json::Map<String, serde_json::Value>) {
                     }
                 ]
             }
-        )
+        ),
     );
 }

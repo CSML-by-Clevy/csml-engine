@@ -1,6 +1,6 @@
 pub fn add_url(map: &mut serde_json::Map<String, serde_json::Value>) {
     map.insert(
-        "Url".to_owned(), 
+        "Url".to_owned(),
         serde_json::json!(
             {
                 "params": [
@@ -30,6 +30,6 @@ pub fn add_url(map: &mut serde_json::Map<String, serde_json::Value>) {
                     }
                 ]
             }
-        )
+        ),
     );
 }

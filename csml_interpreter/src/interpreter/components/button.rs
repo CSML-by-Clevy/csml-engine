@@ -27,12 +27,12 @@ pub fn add_button(map: &mut serde_json::Map<String, serde_json::Value>) {
                             ],
                             "add_value": [
                                 {"$_get": "title" },
-                                {"$_get": "payload" } 
+                                {"$_get": "payload" }
                             ]
                         }
                     }
                 ]
             }
-        )
+        ),
     );
 }
