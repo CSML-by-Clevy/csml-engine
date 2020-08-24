@@ -131,11 +131,12 @@ pub const CARD: &str = "Card";
 pub const FN: &str = "Fn";
 pub const HTTP: &str = "HTTP";
 pub const FILE: &str = "File";
+pub const DEBUG: &str = "Debug";
 
 pub const OBJECT: &str = "Object";
 
 pub static BUILT_IN: &[&str] = &[
-    ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT,
+    ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT, DEBUG
 ];
 
 pub const MEMORY: &str = "memory";

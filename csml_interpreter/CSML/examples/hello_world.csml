@@ -1,4 +1,8 @@
 start:
     say "Hello World 😆"
 
+    say Debug(
+        "hola"
+    )
+
     goto end

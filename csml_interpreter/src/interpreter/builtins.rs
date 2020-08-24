@@ -47,6 +47,7 @@ pub fn match_builtin(
         LENGTH => length(args, interval),
         FIND => find(args, interval),
         RANDOM => random(interval),
+        DEBUG => debug(args, interval),
         FLOOR => floor(args, interval),
 
         //old builtin
