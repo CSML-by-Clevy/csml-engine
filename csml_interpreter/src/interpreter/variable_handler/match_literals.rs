@@ -91,7 +91,13 @@ mod tests {
         let native_component = load_components().unwrap();
 
         if let Some(component) = native_component.get("Button") {
-            match gen_generic_component("Button", false, &interval, &ArgsType::Named(map), component) {
+            match gen_generic_component(
+                "Button",
+                false,
+                &interval,
+                &ArgsType::Named(map),
+                component,
+            ) {
                 Ok(lit) => lit,
                 Err(..) => panic!("gen button error"),
             }
@@ -123,7 +129,13 @@ mod tests {
         let native_component = load_components().unwrap();
 
         if let Some(component) = native_component.get("Button") {
-            match gen_generic_component("Button", false, &interval, &ArgsType::Named(map), component) {
+            match gen_generic_component(
+                "Button",
+                false,
+                &interval,
+                &ArgsType::Named(map),
+                component,
+            ) {
                 Ok(lit) => lit,
                 Err(..) => panic!("gen button error"),
             }

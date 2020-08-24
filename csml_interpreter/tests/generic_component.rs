@@ -35,7 +35,10 @@ fn format_message(
         None,
         vec![default_flow],
         None,
-        Some(serde_json::json!(custom_components.as_object().unwrap().to_owned())),
+        Some(serde_json::json!(custom_components
+            .as_object()
+            .unwrap()
+            .to_owned())),
         DEFAULT_FLOW_NAME,
     );
 

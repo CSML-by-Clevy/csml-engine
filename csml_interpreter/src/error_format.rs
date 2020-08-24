@@ -124,8 +124,7 @@ pub const ERROR_HTTP_QUERY_VALUES: &'static str =
 pub const ERROR_BUILTIN_UNKNOWN: &'static str = "Unknown Built-in";
 
 // ### native Components
-pub const ERROR_HTTP_NOT_DATA: &'static str =
-    "Bad Format no 'data' in HTTP response";
+pub const ERROR_HTTP_NOT_DATA: &'static str = "Bad Format no 'data' in HTTP response";
 pub const ERROR_NATIVE_COMPONENT: &'static str = "native component dose not exist";
 
 // ### Primitives

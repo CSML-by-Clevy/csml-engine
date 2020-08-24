@@ -12,6 +12,6 @@ pub fn add_audio(map: &mut serde_json::Map<String, serde_json::Value>) {
                     }
                 ]
             }
-        )
+        ),
     );
 }

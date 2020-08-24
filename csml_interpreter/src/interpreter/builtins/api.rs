@@ -110,18 +110,13 @@ pub fn api(
     http.insert("body".to_owned(), body);
 
     match http_request(&http, ureq::post, interval) {
-        Ok(value) => {
-            match value.get("data") {
-                Some(value) => interpolate(value, interval, data, root, sender),
-                None => {
-                    let err = gen_error_info(Position::new(interval), ERROR_HTTP_NOT_DATA.to_owned());
-                    Ok(MSG::send_error_msg(sender, root, Err(err)))
-                }
+        Ok(value) => match value.get("data") {
+            Some(value) => interpolate(value, interval, data, root, sender),
+            None => {
+                let err = gen_error_info(Position::new(interval), ERROR_HTTP_NOT_DATA.to_owned());
+                Ok(MSG::send_error_msg(sender, root, Err(err)))
             }
-            
-        }
-        Err(err) => {
-            Ok(MSG::send_error_msg(sender, root, Err(err)))
-        }
+        },
+        Err(err) => Ok(MSG::send_error_msg(sender, root, Err(err))),
     }
 }

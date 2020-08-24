@@ -1,6 +1,6 @@
 pub fn add_wait(map: &mut serde_json::Map<String, serde_json::Value>) {
     map.insert(
-        "Wait".to_owned(), 
+        "Wait".to_owned(),
         serde_json::json!(
             {
                 "params": [
@@ -12,6 +12,6 @@ pub fn add_wait(map: &mut serde_json::Map<String, serde_json::Value>) {
                     }
                 ]
             }
-        )
+        ),
     );
 }

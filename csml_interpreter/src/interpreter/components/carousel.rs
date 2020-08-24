@@ -12,6 +12,6 @@ pub fn add_carousel(map: &mut serde_json::Map<String, serde_json::Value>) {
                     }
                 ]
             }
-        )
+        ),
     );
 }

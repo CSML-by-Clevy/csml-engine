@@ -4,8 +4,10 @@ pub mod functions;
 pub mod http;
 pub mod tools;
 
-use crate::data::{position::Position, ast::*, tokens::*, ArgsType, Data, Literal, MessageData, MSG};
-use crate::error_format::{ERROR_NATIVE_COMPONENT, ErrorInfo, gen_error_info};
+use crate::data::{
+    ast::*, position::Position, tokens::*, ArgsType, Data, Literal, MessageData, MSG,
+};
+use crate::error_format::{gen_error_info, ErrorInfo, ERROR_NATIVE_COMPONENT};
 use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
 use std::sync::mpsc;
 
@@ -24,7 +26,7 @@ pub fn match_native_builtin(
     } else {
         Err(gen_error_info(
             Position::new(interval),
-            format!("{} [{}]", ERROR_NATIVE_COMPONENT, name)
+            format!("{} [{}]", ERROR_NATIVE_COMPONENT, name),
         ))
     }
 }

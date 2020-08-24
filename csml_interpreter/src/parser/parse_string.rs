@@ -43,14 +43,13 @@ where
                     '\'' => string.push('\''),
                     '\"' => string.push('\"'),
                     '\\' => string.push('\\'),
-                    c => string.push(c)
+                    c => string.push(c),
                 }
 
                 escape = false;
             } else {
                 string.push(c);
             }
-
         } else {
             escape = true;
         }
@@ -58,8 +57,7 @@ where
 
     if !value.fragment().is_empty() {
         expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-            &string,
-            interval,
+            &string, interval,
         )));
 
         interval_vector.push(interval);
