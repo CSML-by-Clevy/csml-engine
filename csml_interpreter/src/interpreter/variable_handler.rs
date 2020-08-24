@@ -17,18 +17,16 @@ use crate::data::primitive::{
 use crate::data::{
     ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState},
     tokens::{COMPONENT, EVENT, _METADATA},
-    ArgsType, Data, Literal,
+    ArgsType, Data, Literal, MSG, MessageData, MemoryType
 };
-use crate::data::{MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     gen_literal::gen_literal_from_component,
     gen_literal::gen_literal_from_event,
     memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::mpsc};
 use std::slice::Iter;
-use std::sync::mpsc;
 
 //TODO: return Warning or Error Component
 pub fn get_literal(
@@ -225,9 +223,11 @@ fn loop_path(
                     }
                 };
 
-                let mut return_lit =
-                    lit.primitive
-                        .exec(name, args, *interval, content_type, &mut tmp_update_var)?;
+                let mut return_lit = match lit.primitive.exec(name, args, *interval, content_type, &mut tmp_update_var) {
+                    Ok(lit) => lit,
+                    Err(err) => MSG::send_error_msg(sender, root, Err(err))
+                };
+
                 let content_type = ContentType::get(&return_lit);
                 let (lit_new, ..) =
                     loop_path(&mut return_lit, None, path, &content_type, root, sender)?;

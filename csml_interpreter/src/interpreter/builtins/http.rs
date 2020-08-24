@@ -97,9 +97,11 @@ pub fn http_request(
 
     match response.into_json() {
         Ok(value) => Ok(value),
-        Err(_) => Err(gen_error_info(
-            Position::new(interval),
-            ERROR_FAIL_RESPONSE_JSON.to_owned(),
-        )),
+        Err(_) => {
+            Err(gen_error_info(
+                Position::new(interval),
+                ERROR_FAIL_RESPONSE_JSON.to_owned(),
+            ))
+        },
     }
 }

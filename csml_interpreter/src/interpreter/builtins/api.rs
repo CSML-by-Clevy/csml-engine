@@ -1,6 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::primitive::{PrimitiveNull, PrimitiveObject, PrimitiveString, PrimitiveType};
+use crate::data::primitive::{PrimitiveObject, PrimitiveString, PrimitiveType};
 use crate::data::{ast::Interval, ApiInfo, ArgsType, Client, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
@@ -109,9 +109,19 @@ pub fn api(
     http.insert("query".to_owned(), lit_query);
     http.insert("body".to_owned(), body);
 
-    if let Some(value) = http_request(&http, ureq::post, interval)?.get("data") {
-        interpolate(value, interval, data, root, sender)
-    } else {
-        Ok(PrimitiveNull::get_literal(interval))
+    match http_request(&http, ureq::post, interval) {
+        Ok(value) => {
+            match value.get("data") {
+                Some(value) => interpolate(value, interval, data, root, sender),
+                None => {
+                    let err = gen_error_info(Position::new(interval), ERROR_HTTP_NOT_DATA.to_owned());
+                    Ok(MSG::send_error_msg(sender, root, Err(err)))
+                }
+            }
+            
+        }
+        Err(err) => {
+            Ok(MSG::send_error_msg(sender, root, Err(err)))
+        }
     }
 }
