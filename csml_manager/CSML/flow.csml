@@ -1,12 +1,12 @@
 start:
     say "hola 42 😀"
-    remember amerelo42 = 4
-    // say "test => {{amerelo42}}"
+    remember test = 4
+    // say "test => {{test}}"
     say "goto flow 2"
     goto flow flow2
 
 step2:
-    say "step 2 => {{amerelo42}}"
+    say "step 2 => {{test}}"
     // say "hola from step2"
     // hold
     // say "event => {{event}}"

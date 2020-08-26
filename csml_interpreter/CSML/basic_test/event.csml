@@ -21,3 +21,23 @@ step_3:
 step_4:
     say event.is_number()
     goto end
+
+step_5:
+    say event.is_email()
+    goto end
+
+step_6:
+    do a = Button("a")
+    do b = Button("b")
+    say event.match_any(a, b)
+    goto end
+
+step_7:
+    do a = Button("a")
+    say event.match(a)
+    goto end
+
+step_8:
+    do a = Button("a")
+    say event.match(a)
+    goto end

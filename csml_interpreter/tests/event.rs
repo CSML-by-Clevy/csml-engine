@@ -174,3 +174,143 @@ fn event_step_4() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn event_step_5() {
+    let data = r#"{
+        "memories":[
+        ],
+        "messages":[
+            {"content":{"text":"true"}, "content_type":"text"}
+        ]}"#;
+
+    let mut map = serde_json::Map::new();
+
+    map.insert(
+        "text".to_owned(),
+        serde_json::Value::String("hola@toto.com".to_owned()),
+    );
+
+    let msg = format_message(
+        Event::new("content_type", "content", serde_json::Value::Object(map)),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_5",
+            "flow",
+        ),
+        "CSML/basic_test/event.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn event_step_6() {
+    let data = r#"{
+        "memories":[
+        ],
+        "messages":[
+            {"content":{"text":"true"}, "content_type":"text"}
+        ]}"#;
+
+    let mut map = serde_json::Map::new();
+
+    map.insert(
+        "text".to_owned(),
+        serde_json::Value::String("a".to_owned()),
+    );
+
+    let msg = format_message(
+        Event::new("content_type", "content", serde_json::Value::Object(map)),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_6",
+            "flow",
+        ),
+        "CSML/basic_test/event.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn event_step_7() {
+    let data = r#"{
+        "memories":[
+        ],
+        "messages":[
+            {"content":{"text":"true"}, "content_type":"text"}
+        ]}"#;
+
+    let mut map = serde_json::Map::new();
+
+    map.insert(
+        "text".to_owned(),
+        serde_json::Value::String("a".to_owned()),
+    );
+
+    let msg = format_message(
+        Event::new("content_type", "content", serde_json::Value::Object(map)),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_7",
+            "flow",
+        ),
+        "CSML/basic_test/event.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn event_step_8() {
+    let data = r#"{
+        "memories":[
+        ],
+        "messages":[
+            {"content":{"text":"false"}, "content_type":"text"}
+        ]}"#;
+
+    let mut map = serde_json::Map::new();
+
+    map.insert(
+        "text".to_owned(),
+        serde_json::Value::String("b".to_owned()),
+    );
+
+    let msg = format_message(
+        Event::new("content_type", "content", serde_json::Value::Object(map)),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_8",
+            "flow",
+        ),
+        "CSML/basic_test/event.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

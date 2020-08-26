@@ -1,6 +1,6 @@
 start:
     // remember tmp = "true"
-    say "flow 2 -> {{amerelo42}}"
+    say "flow 2 -> {{test}}"
     // say "------------"
     hold
 
