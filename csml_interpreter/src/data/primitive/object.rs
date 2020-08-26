@@ -5,14 +5,15 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        array::PrimitiveArray, boolean::PrimitiveBoolean, int::PrimitiveInt, null::PrimitiveNull,
-        string::PrimitiveString, Primitive, PrimitiveType, Right,
+        PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull,
+        PrimitiveString, Primitive, PrimitiveType, Right,
     },
     tokens::TYPES,
     Literal,
 };
 use crate::error_format::*;
-use crate::interpreter::{builtins::http::http_request, json_to_rust::json_to_literal};
+use crate::interpreter::{builtins::http::http_request, json_to_rust::json_to_literal, variable_handler::match_literals::match_obj};
+use regex::Regex;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -74,6 +75,27 @@ lazy_static! {
             "get_metadata",
             (
                 PrimitiveObject::get_metadata as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "is_email",
+            (
+                PrimitiveObject::is_email as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "match_any",
+            (
+                PrimitiveObject::match_any_args as PrimitiveMethod,
+                Right::Read,
+            ),
+        );
+        map.insert(
+            "match",
+            (
+                PrimitiveObject::match_args as PrimitiveMethod,
                 Right::Read,
             ),
         );
@@ -551,6 +573,83 @@ impl PrimitiveObject {
             primitive: Box::new(object.clone()),
             interval,
         })
+    }
+
+    fn is_email(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_email() => boolean";
+
+        let text =  match object.value.get("text") {
+            Some(lit) if lit.content_type == "string" => lit.primitive.to_string(),
+            _ => return Ok(PrimitiveBoolean::get_literal(false, interval))
+        };
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let email_regex = Regex::new(r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})").unwrap();
+
+        let lit = PrimitiveBoolean::get_literal(email_regex.is_match(&text), interval);
+
+        Ok(lit)
+    }
+
+    fn match_any_args(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "match_any(a, b, ...) => boolean";
+
+        let lit =  match object.value.get("text") {
+            Some(lit) if lit.content_type == "string" => lit,
+            _ => return Ok(PrimitiveBoolean::get_literal(false, interval))
+        };
+
+        if args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let is_match = args.iter().any(|(_name, arg)| match_obj(lit, arg));
+
+        Ok(PrimitiveBoolean::get_literal(is_match, interval))
+    }
+
+    fn match_args(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "match(a, b, .. => boolean";
+
+        let lit =  match object.value.get("text") {
+            Some(lit) if lit.content_type == "string" => lit,
+            _ => return Ok(PrimitiveBoolean::get_literal(false, interval))
+        };
+
+        if args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let is_match = args.iter().all(|(_name, arg)| match_obj(lit, arg));
+
+        Ok(PrimitiveBoolean::get_literal(is_match, interval))
     }
 }
 
