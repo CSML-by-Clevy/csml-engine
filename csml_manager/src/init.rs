@@ -64,7 +64,6 @@ pub fn init_conversation_info<'a>(
         metadata: csmldata.metadata.clone(), // ??
         request_id: csmldata.request_id.clone(),
         curl,
-        last_flow: None,
         client: csmldata.client.clone(),
         messages: vec![],
         db,

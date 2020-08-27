@@ -47,9 +47,6 @@ pub struct ConversationInfo {
     pub client: Client,
     pub context: ContextJson,
     pub metadata: Value,
-    // pub flow_info: FlowInfo<'a>,
-    // if switch the last_flow contains the info of the last flow | (flow_name, step_name) |
-    pub last_flow: Option<(String, String)>,
     pub messages: Vec<Message>,
     pub db: Database,
 }

@@ -45,9 +45,6 @@ pub fn interpret_step(
             }) => {
                 let mut hash = Md5::new();
 
-                // delete info of last_flow if any in order to prevent recursive flow
-                data.last_flow = None;
-
                 hash.input(current_flow.content.as_bytes());
 
                 let state_hold: Value = serde_json::json!({
@@ -95,8 +92,6 @@ pub fn interpret_step(
                         data,
                         &mut conversation_end,
                         &mut interaction_order,
-                        &mut current_flow,
-                        csmldata,
                         step,
                     )? {
                         break;
@@ -108,8 +103,6 @@ pub fn interpret_step(
                         data,
                         &mut conversation_end,
                         &mut interaction_order,
-                        &mut current_flow,
-                        csmldata,
                         step,
                     )? {
                         break;
@@ -178,7 +171,6 @@ fn goto_flow<'a>(
     nextflow: String,
     nextstep: String,
 ) -> Result<(), ManagerError> {
-    data.last_flow = Some((data.context.flow.clone(), data.context.step.clone()));
     create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
 
     *current_flow = get_flow_by_id(&nextflow, &csmldata.bot.flows)?;
@@ -201,8 +193,6 @@ fn goto_step<'a>(
     data: &mut ConversationInfo,
     conversation_end: &mut bool,
     interaction_order: &mut i32,
-    current_flow: &mut &'a CsmlFlow,
-    csmldata: &'a CsmlData,
     nextstep: String,
 ) -> Result<bool, ManagerError> {
     create_node(data, None, Some(nextstep.clone()))?;
@@ -210,23 +200,11 @@ fn goto_step<'a>(
     if nextstep == "end" {
         *conversation_end = true;
 
-        if let Some((flow_name, step)) = &data.last_flow {
-            *conversation_end = false;
-            *current_flow = get_flow_by_id(&flow_name, &csmldata.bot.flows)?;
-            data.context.flow = current_flow.name.clone();
-            data.context.step = step.to_owned();
-            update_conversation(
-                &data,
-                Some(current_flow.id.to_owned()),
-                Some(data.context.step.to_owned()),
-            )?;
-        } else {
-            // send end of conversation
-            send_and_display_msg(data, vec![], *interaction_order, *conversation_end);
-            update_conversation(&data, None, Some("end".to_owned()))?;
-            close_conversation(&data.conversation_id, &data.client, &data.db)?;
-        }
-        data.last_flow = None;
+        // send end of conversation
+        send_and_display_msg(data, vec![], *interaction_order, *conversation_end);
+        update_conversation(&data, None, Some("end".to_owned()))?;
+        close_conversation(&data.conversation_id, &data.client, &data.db)?;
+
         // break interpret_step loop
         return Ok(*conversation_end);
     } else {
