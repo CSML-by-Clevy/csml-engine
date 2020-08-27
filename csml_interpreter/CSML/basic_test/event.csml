@@ -29,15 +29,28 @@ step_5:
 step_6:
     do a = Button("a")
     do b = Button("b")
-    say event.match_any(a, b)
+    if (event.match(a, b) ){
+        say true
+    } else {
+        say false
+    }
+
     goto end
 
 step_7:
     do a = Button("a")
-    say event.match(a)
+    if (event.match(a) ){
+        say true
+    } else {
+        say false
+    }
     goto end
 
 step_8:
     do a = Button("a")
-    say event.match(a)
+    if (event.match(a) ){
+        say true
+    } else {
+        say false
+    }
     goto end
