@@ -29,6 +29,14 @@ lazy_static! {
             (PrimitiveNull::is_number as PrimitiveMethod, Right::Read),
         );
         map.insert(
+            "is_int",
+            (PrimitiveNull::is_int as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_float",
+            (PrimitiveNull::is_float as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
             "type_of",
             (PrimitiveNull::type_of as PrimitiveMethod, Right::Read),
         );
@@ -55,6 +63,40 @@ impl PrimitiveNull {
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
+    fn is_int(
+        _null: &mut PrimitiveNull,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_int() => boolean";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
+    fn is_float(
+        _null: &mut PrimitiveNull,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_float() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(

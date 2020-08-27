@@ -113,6 +113,14 @@ lazy_static! {
             "is_number",
             (PrimitiveObject::is_number as PrimitiveMethod, Right::Read),
         );
+        map.insert(
+            "is_int",
+            (PrimitiveObject::is_int as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_float",
+            (PrimitiveObject::is_float as PrimitiveMethod, Right::Read),
+        );
 
         map.insert(
             "contains",
@@ -642,6 +650,43 @@ impl PrimitiveObject {
 
         Ok(PrimitiveBoolean::get_literal(false, interval))
     }
+
+    fn is_int(
+        _object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_int() => boolean";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
+    fn is_float(
+        _object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_float() => boolean";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        Ok(PrimitiveBoolean::get_literal(false, interval))
+    }
+
     fn type_of(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
