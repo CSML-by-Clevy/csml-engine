@@ -38,6 +38,14 @@ lazy_static! {
             (PrimitiveString::is_number as PrimitiveMethod, Right::Read),
         );
         map.insert(
+            "is_int",
+            (PrimitiveString::is_int as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "is_float",
+            (PrimitiveString::is_float as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
             "type_of",
             (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
         );
@@ -197,6 +205,53 @@ impl PrimitiveString {
         let result = string.value.parse::<f64>().is_ok();
 
         Ok(PrimitiveBoolean::get_literal(result, interval))
+    }
+
+    fn is_int(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_int() => boolean";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let result = string.value.parse::<i64>().is_ok();
+
+        Ok(PrimitiveBoolean::get_literal(result, interval))
+    }
+
+    fn is_float(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_float() => boolean";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let result = string.value.parse::<f64>();
+
+        match result {
+            Ok(_float) if string.value.find('.').is_some() => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            },
+            _ => {
+                Ok(PrimitiveBoolean::get_literal(false, interval))
+            }
+        }
+
+        
     }
 
     fn type_of(
