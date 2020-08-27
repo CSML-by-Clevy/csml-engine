@@ -1,26 +1,87 @@
-# CSML Conversational Engine
 
-![CSML logo](./images/csml-horizontal-whitebg-v3.png)
+<h1 align="center">
+  <br>
+  <a href="https://www.csml.dev"><img src="./images/csml-horizontal-whitebg-v3.png?raw=true" alt="CSML" width="200"></a>
+  <br>
 
-## Introduction
+</h1>
 
-![](https://github.com/CSML-by-Clevy/csml-engine/workflows/Rust/badge.svg)
+<h4 align="center">First programming language dedicated to building chatbots.</h4>
 
-The CSML (Conversational Standard Meta Language) is a Domain-Specific Language developed for creating conversational experiences easily.
+<p align="center">
+  <img src="https://github.com/CSML-by-Clevy/csml-engine/workflows/Rust/badge.svg"
+         alt="Rust">
+  <a href="https://join.slack.com/t/csml-by-clevy/shared_invite/enQtODAxMzY2MDQ4Mjk0LWZjOTZlODI0YTMxZTg4ZGIwZDEzYTRlYmU1NmZjYWM2MjAwZTU5MmU2NDdhNmU2N2Q5ZTU2ZTcxZDYzNTBhNTc"><img src="https://img.shields.io/badge/slack-CSML-blue.svg?logo=slack" alt="Slack"></a>
+<img src="https://img.shields.io/github/commits-since/CSML-by-Clevy/csml-engine/v1.0.0">
+<img src="https://img.shields.io/badge/Docs-up--to--date-brightgreen">
+  
+</p>
 
-The purpose of this language is to simplify the creation and maintenance of rich conversational interactions between humans and machines. With a very expressive and text-only syntax, CSML flows are easy to understand, making it easy to deploy and maintain conversational agents. The CSML handles short and long-term memory slots, metadata injection, and connecting to any third party API or injecting arbitrary code in any programming language thanks to its powerful runtime APIs.
+<p align="center">
+  <a href="#key-features">Key Features</a> •
+  <a href="#example">Example</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#additional-information">Additional Information</a>
+</p>
 
-By using the CSML language, any developer can integrate arbitrarily complex conversational agents on any channel (Facebook Messenger, Slack, Facebook Workplace, Microsoft Teams, custom webapp, ...) and make any bot available to any end user. The CSML platform comes with a large number of channel integrations that work out of the box, but developers are free to add new custom integrations by using the CSML interfaces.
+<h2 align="center">
+  <img src="./images/csml-demo.png" alt="CSML-demo" width="700">
+</h2>
+
+[CSML (Conversational Standard Meta Language)](https://csml.dev) is a Domain-Specific Language designed for easily creating conversational experiences.
+
+The purpose of this language is to simplify the creation and maintenance of rich conversational interactions between humans and machines. With a very expressive and text-only syntax, CSML flows are easy to understand, making it easy to deploy and maintain conversational agents. CSML handles short and long-term memory slots, metadata injection, and connecting to any third party API or injecting arbitrary code in any programming language thanks to its powerful runtime APIs.
+
+## Key Features
+
+* Super easy syntax
+* Conversation-oriented components
+* Native bindings with functions written in other languages
+* Chatbot-specific keywords
+* Out-of-the-box short-term and long-term memory slots
+
+## Example
+
+```cpp
+start:
+  say "Hi, nice to meet you, I'm a demo bot 👋"
+  if (name) {
+    say "I already know you 😉"
+    goto known
+  }
+  else 
+    goto name
+
+name:
+  say Question("I'd like to know you better, what's your name?",
+    buttons=[
+      Button("I'm anonymous 😎", accepts=["No", "Nope"]) as anonBtn
+  ])
+  hold
+  if (event match anonBtn) {
+    remember name = "anon"
+  } else {
+    remember name = event
+  }
+  goto known
+
+known:
+  if (name == "anon")
+    say "...but I know you don't want to say too much about yourself!"
+  else 
+    say "You are {{name}}!"
+  goto end
+```
 
 ## Usage
 
-The CSML Engine and Language are built in Rust. The full documentation of the project is available on https://docs.csml.dev.
+The CSML Engine and Language are built in Rust. The full documentation of the project is available on https://docs.csml.dev/language.
 
 The conversational engine is available for use in several types of projects, depending on your environment of choice.
 
 ### With CSML Studio
 
-The simplest way to get started with CSML is to use CSML Studio, a free online environment with everything already setup to start creating bots right away, directly in your browser.
+The simplest way to get started with CSML is to use CSML Studio, a free online development environment with everything already setup to start creating bots right away, directly in your browser.
 
 To get started with CSML Studio: https://studio.csml.dev
 
