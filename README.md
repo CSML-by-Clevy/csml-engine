@@ -24,7 +24,9 @@
   <a href="#additional-information">Additional Information</a>
 </p>
 
-![screenshot](./images/csml-demo.png)
+<h2 align="center">
+  <img src="./images/csml-demo.png" alt="CSML-demo" width="700">
+</h2>
 
 The CSML (Conversational Standard Meta Language) is a Domain-Specific Language developed for creating conversational experiences easily.
 
