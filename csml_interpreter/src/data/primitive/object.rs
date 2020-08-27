@@ -86,13 +86,6 @@ lazy_static! {
             ),
         );
         map.insert(
-            "match_any",
-            (
-                PrimitiveObject::match_any_args as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
             "match",
             (
                 PrimitiveObject::match_args as PrimitiveMethod,
@@ -602,38 +595,13 @@ impl PrimitiveObject {
         Ok(lit)
     }
 
-    fn match_any_args(
-        object: &mut PrimitiveObject,
-        args: &HashMap<String, Literal>,
-        interval: Interval,
-        _content_type: &str,
-    ) -> Result<Literal, ErrorInfo> {
-        let usage = "match_any(a, b, ...) => boolean";
-
-        let lit =  match object.value.get("text") {
-            Some(lit) if lit.content_type == "string" => lit,
-            _ => return Ok(PrimitiveBoolean::get_literal(false, interval))
-        };
-
-        if args.is_empty() {
-            return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            ));
-        }
-
-        let is_match = args.iter().any(|(_name, arg)| match_obj(lit, arg));
-
-        Ok(PrimitiveBoolean::get_literal(is_match, interval))
-    }
-
     fn match_args(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "match(a, b, .. => boolean";
+        let usage = "match(a) => a";
 
         let lit =  match object.value.get("text") {
             Some(lit) if lit.content_type == "string" => lit,
@@ -647,9 +615,12 @@ impl PrimitiveObject {
             ));
         }
 
-        let is_match = args.iter().all(|(_name, arg)| match_obj(lit, arg));
+        let is_match = args.iter().find(|(_name, arg)| match_obj(lit, arg));
 
-        Ok(PrimitiveBoolean::get_literal(is_match, interval))
+        match is_match {
+            Some((_, lit)) => Ok(lit.to_owned()),
+            None => Ok(PrimitiveNull::get_literal(interval))
+        }
     }
 }
 
