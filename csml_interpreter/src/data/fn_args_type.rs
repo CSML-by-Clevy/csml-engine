@@ -1,4 +1,4 @@
-use crate::data::{position::Position, Interval, Literal, primitive::{PrimitiveString, PrimitiveObject}};
+use crate::data::{position::Position, Interval, Literal, primitive::{PrimitiveString, PrimitiveObject, PrimitiveArray}};
 use crate::error_format::*;
 
 use std::collections::HashMap;
@@ -17,11 +17,15 @@ impl ArgsType {
             | Self::Normal(map) => {
                 let mut obj = HashMap::new();
 
-                let value = PrimitiveObject::get_literal(&map, interval);
-                obj.insert("debug".to_owned(),
-                    PrimitiveString::get_literal(
-                        &value.primitive.to_string(),
-                        value.interval
+                let value = map
+                        .iter()
+                        .map(|(_k, lit)| PrimitiveString::get_literal(&lit.primitive.to_string(), lit.interval) )
+                        .collect::<Vec<_>>();
+
+                obj.insert("args".to_owned(),
+                    PrimitiveArray::get_literal(
+                        &value,
+                        interval
                     )
                 );
 
