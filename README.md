@@ -20,11 +20,11 @@
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#example">Example</a> •
-  <a href="#download">Usage</a> •
-  <a href="#infos">Additional Information</a>
+  <a href="#usage">Usage</a> •
+  <a href="#additional-information">Additional Information</a>
 </p>
 
-![screenshot](https://www.csml.dev/img/csml-demo.png)
+![screenshot](./images/csml-demo.png)
 
 The CSML (Conversational Standard Meta Language) is a Domain-Specific Language developed for creating conversational experiences easily.
 
