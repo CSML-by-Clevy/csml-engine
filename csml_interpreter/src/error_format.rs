@@ -15,6 +15,8 @@ pub const ERROR_PARENTHESES: &'static str = "list elem type ( ... ) not found";
 pub const ERROR_PARENTHESES_END: &'static str =
     "invalid argument expect one ',' between each argument or ')' to end the list";
 pub const ERROR_NUMBER_AS_IDENT: &'static str = "int/float can't be used as identifier";
+pub const ERROR_FLOW_STEP: &'static str =
+    "Flow's must have steps declared as follow 'step_name:' previous to any action";
 pub const ERROR_RESERVED: &'static str = "reserved keyword can't be used as identifier";
 pub const ERROR_PARSING: &'static str =
     "invalid argument, use one of the action keywords [say, do, if, ...]";

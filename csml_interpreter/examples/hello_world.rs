@@ -33,7 +33,7 @@ fn main() {
     );
 
     // Create an Event
-    let event = Event{
+    let event = Event {
         content_type: "text".to_owned(),
         content: "4".to_owned(),
         metadata: serde_json::json!({"text":"4"}),

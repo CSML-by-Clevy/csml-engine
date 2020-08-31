@@ -5,16 +5,19 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull,
-        PrimitiveString, Primitive, PrimitiveType, Right,
+        Primitive, PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
+        PrimitiveType, Right,
     },
     tokens::TYPES,
     Literal,
 };
 use crate::error_format::*;
-use crate::interpreter::{builtins::http::http_request, json_to_rust::json_to_literal, variable_handler::match_literals::match_obj};
-use regex::Regex;
+use crate::interpreter::{
+    builtins::http::http_request, json_to_rust::json_to_literal,
+    variable_handler::match_literals::match_obj,
+};
 use lazy_static::*;
+use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
@@ -80,17 +83,11 @@ lazy_static! {
         );
         map.insert(
             "is_email",
-            (
-                PrimitiveObject::is_email as PrimitiveMethod,
-                Right::Read,
-            ),
+            (PrimitiveObject::is_email as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "match",
-            (
-                PrimitiveObject::match_args as PrimitiveMethod,
-                Right::Read,
-            ),
+            (PrimitiveObject::match_args as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -584,9 +581,9 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_email() => boolean";
 
-        let text =  match object.value.get("text") {
+        let text = match object.value.get("text") {
             Some(lit) if lit.content_type == "string" => lit.primitive.to_string(),
-            _ => return Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => return Ok(PrimitiveBoolean::get_literal(false, interval)),
         };
 
         if !args.is_empty() {
@@ -596,7 +593,10 @@ impl PrimitiveObject {
             ));
         }
 
-        let email_regex = Regex::new(r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})").unwrap();
+        let email_regex = Regex::new(
+            r"^([a-z0-9_+]([a-z0-9_+.]*[a-z0-9_+])?)@([a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,6})",
+        )
+        .unwrap();
 
         let lit = PrimitiveBoolean::get_literal(email_regex.is_match(&text), interval);
 
@@ -611,9 +611,9 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "match(a) => a";
 
-        let lit =  match object.value.get("text") {
+        let lit = match object.value.get("text") {
             Some(lit) if lit.content_type == "string" => lit,
-            _ => return Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => return Ok(PrimitiveBoolean::get_literal(false, interval)),
         };
 
         if args.is_empty() {
@@ -627,7 +627,7 @@ impl PrimitiveObject {
 
         match is_match {
             Some((_, lit)) => Ok(lit.to_owned()),
-            None => Ok(PrimitiveNull::get_literal(interval))
+            None => Ok(PrimitiveNull::get_literal(interval)),
         }
     }
 }

@@ -34,6 +34,38 @@ use nom::error::ParseError;
 use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
+////////////////////////////////////////////////////////////////////////////////
+// TOOL FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_step_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, ident) = match parse_idents_assignation(s) {
+        Ok((s, ident)) => (s, ident),
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            return match s.fragment().is_empty() {
+                true => Err(gen_nom_error(s, ERROR_FLOW_STEP)),
+                false => Err(gen_nom_failure(s, ERROR_FLOW_STEP)),
+            };
+        }
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    };
+
+    match tag(COLON)(s) {
+        Ok((rest, _)) => Ok((rest, ident)),
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(gen_nom_failure(s, ERROR_FLOW_STEP))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => Ok(Flow {
@@ -56,9 +88,15 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
     }
 }
 
-fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E> {
-    let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
-    let (s, _) = preceded(comment, tag(COLON))(s)?;
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, ident) = preceded(comment, parse_step_name)(s)?;
 
     let (s, interval) = get_interval(s)?;
 
@@ -86,7 +124,6 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Ins
 fn start_parsing<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
-    // TODO: handle FlowType::Recursive with Context
     let flow_type = FlowType::Normal;
 
     let (s, flow) = fold_many0(parse_step, Vec::new(), |mut acc, item| {

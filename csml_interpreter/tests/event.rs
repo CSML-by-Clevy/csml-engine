@@ -221,10 +221,7 @@ fn event_step_6() {
 
     let mut map = serde_json::Map::new();
 
-    map.insert(
-        "text".to_owned(),
-        serde_json::Value::String("a".to_owned()),
-    );
+    map.insert("text".to_owned(), serde_json::Value::String("a".to_owned()));
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
@@ -256,10 +253,7 @@ fn event_step_7() {
 
     let mut map = serde_json::Map::new();
 
-    map.insert(
-        "text".to_owned(),
-        serde_json::Value::String("a".to_owned()),
-    );
+    map.insert("text".to_owned(), serde_json::Value::String("a".to_owned()));
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
@@ -291,10 +285,7 @@ fn event_step_8() {
 
     let mut map = serde_json::Map::new();
 
-    map.insert(
-        "text".to_owned(),
-        serde_json::Value::String("b".to_owned()),
-    );
+    map.insert("text".to_owned(), serde_json::Value::String("b".to_owned()));
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
