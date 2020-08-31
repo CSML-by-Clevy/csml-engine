@@ -136,7 +136,7 @@ pub const DEBUG: &str = "Debug";
 pub const OBJECT: &str = "Object";
 
 pub static BUILT_IN: &[&str] = &[
-    ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT, DEBUG
+    ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT, DEBUG,
 ];
 
 pub const MEMORY: &str = "memory";

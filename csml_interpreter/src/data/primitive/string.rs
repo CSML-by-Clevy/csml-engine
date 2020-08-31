@@ -245,13 +245,9 @@ impl PrimitiveString {
         match result {
             Ok(_float) if string.value.find('.').is_some() => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
-            },
-            _ => {
-                Ok(PrimitiveBoolean::get_literal(false, interval))
             }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
-
-        
     }
 
     fn type_of(

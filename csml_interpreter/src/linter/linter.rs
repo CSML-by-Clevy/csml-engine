@@ -41,6 +41,7 @@ fn check_missing_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo
 
 fn check_valid_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>) {
     for flow in linter.flow.keys() {
+        Position::set_flow(&flow);
         let mut result = false;
 
         if let Some(hashmap) = linter.flow.get(flow) {
@@ -49,6 +50,7 @@ fn check_valid_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>)
                     result = true;
                 }
             }
+            Position::set_step("");
 
             if !result {
                 error.push(gen_error_info(
@@ -62,8 +64,10 @@ fn check_valid_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>)
 
 fn check_duplicate_step(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>) {
     for flow in linter.flow.keys() {
+        Position::set_flow(&flow);
         if let Some(hashmap_step) = linter.flow.get(flow) {
             for step in hashmap_step.keys() {
+                Position::set_step(&step);
                 if let Some(vector_step) = hashmap_step.get(step) {
                     if vector_step.len() > 1 {
                         error.push(gen_error_info(
