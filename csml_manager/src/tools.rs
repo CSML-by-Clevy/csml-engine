@@ -191,9 +191,11 @@ pub fn search_flow<'a>(
         }
         event => {
             for flow in bot.flows.iter() {
-                if flow.commands.contains(&event.content.to_ascii_lowercase()) {
-                    delete_state_key(&client, "hold", "position", db)?;
-                    return Ok(flow);
+                for command in flow.commands.iter() {
+                    if &command.to_lowercase() == &event.content.to_lowercase() {
+                        delete_state_key(&client, "hold", "position", db)?;
+                        return Ok(flow);
+                    }
                 }
             }
             Err(ManagerError::Interpreter(format!(
