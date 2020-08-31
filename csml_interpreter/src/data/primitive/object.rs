@@ -611,9 +611,10 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "match(a) => a";
 
-        let lit = match object.value.get("text") {
-            Some(lit) if lit.content_type == "string" => lit,
-            _ => return Ok(PrimitiveBoolean::get_literal(false, interval)),
+        let lit = match (object.value.get("text"), object.value.get("payload")) {
+            (Some(lit), _)
+            | (_, Some(lit)) if lit.content_type == "string" => lit,
+            _ => return Ok(PrimitiveNull::get_literal(interval)),
         };
 
         if args.is_empty() {
