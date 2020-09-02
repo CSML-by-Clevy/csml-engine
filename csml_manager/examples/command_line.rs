@@ -2,7 +2,7 @@ use csmlinterpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
     load_components,
 };
-use csmlrustmanager::{data::*, start_conversation};
+use csml_manager::{data::*, start_conversation};
 use serde_json::{json, Value};
 use std::fs::File;
 use std::io::prelude::*;
