@@ -28,10 +28,11 @@ use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
 use parse_scope::parse_root;
+use parse_var_types::parse_fn_args;
 use tools::*;
 
 use nom::error::ParseError;
-use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
+use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, branch::alt, Err, *};
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                 .into_iter()
                 .map(|elem| (elem.instruction_type, elem.actions))
                 .collect::<HashMap<InstructionType, Expr>>(),
+
             flow_type,
         }),
         Err(e) => match e {
@@ -121,12 +123,43 @@ where
     ))
 }
 
+fn parse_function<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, _) = preceded(comment, tag("fn"))(s)?;
+    let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
+    let (s, args) = parse_fn_args(s)?;
+
+    // let (s, interval) = get_interval(s)?;
+
+    // Position::set_step(&ident.ident);
+    // Linter::add_step(&Position::get_flow(), &ident.ident, interval);
+    // StateContext::clear_rip();
+
+    let (s, start) = get_interval(s)?;
+    let (s, actions) = preceded(comment, parse_root)(s)?;
+    let (s, end) = get_interval(s)?;
+
+    Ok((
+        s,
+        Instruction {
+            instruction_type: InstructionType::FunctionStep{name: ident.ident, args},
+            actions: Expr::Scope {
+                block_type: BlockType::Step,
+                scope: actions,
+                range: RangeInterval { start, end },
+            },
+        },
+    ))
+}
+
 fn start_parsing<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
     let flow_type = FlowType::Normal;
 
-    let (s, flow) = fold_many0(parse_step, Vec::new(), |mut acc, item| {
+    let (s, flow) = fold_many0(alt((parse_function, parse_step)), Vec::new(), |mut acc, item| {
         acc.push(item);
         acc
     })(s)?;

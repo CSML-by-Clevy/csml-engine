@@ -84,6 +84,29 @@ where
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+pub fn parse_fn_args<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<String>, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    // let (s, start) = preceded(comment, get_interval)(s)?;
+    let (s, (vec, _)) = preceded(
+        tag(L_PAREN),
+        cut(terminated(
+            tuple((
+                separated_list(
+                    preceded(comment, tag(COMMA)),
+                    preceded(comment, get_string),
+                ),
+                opt(preceded(comment, tag(COMMA))),
+            )),
+            preceded(comment, parse_r_parentheses),
+        )),
+    )(s)?;
+    // let (s, end) = get_interval(s)?;
+
+    Ok((s, vec)) // , RangeInterval { start, end }
+}
+
 pub fn parse_expr_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,

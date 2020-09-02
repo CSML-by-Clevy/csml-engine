@@ -69,6 +69,7 @@ pub const DEFAULT: &str = "default";
 pub const REMEMBER: &str = "remember";
 pub const _METADATA: &str = "_metadata";
 pub const BREAK: &str = "break";
+pub const RETURN: &str = "return";
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";

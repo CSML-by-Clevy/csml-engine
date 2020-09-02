@@ -4,6 +4,7 @@ use crate::data::{ArgsType, Literal};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
+use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
 pub struct Flow {
@@ -14,19 +15,40 @@ pub struct Flow {
 #[derive(PartialEq, Debug, Clone)]
 pub enum FlowType {
     Normal,
-    Recursive,
 }
 
-#[derive(Eq, PartialEq, Debug, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub enum InstructionType {
     NormalStep(String),
-    //hook ?
+    FunctionStep{ name: String, args: Vec<String>}
 }
+
+impl Hash for InstructionType {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            InstructionType::NormalStep(name) => name.hash(state),
+            InstructionType::FunctionStep{name,..} => name.hash(state)
+        }
+    }
+}
+
+impl PartialEq for InstructionType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (InstructionType::NormalStep(name1), InstructionType::NormalStep(name2)) => name1 == name2,
+            (InstructionType::FunctionStep{name: name1,..}, InstructionType::FunctionStep{name: name2,..}) => name1 == name2,
+            _ => false
+        }
+    }
+}
+
+impl Eq for InstructionType {}
 
 impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             InstructionType::NormalStep(ref idents) => write!(f, "{}", idents),
+            InstructionType::FunctionStep{name, ..} => write!(f, "{}", name),
         }
     }
 }
@@ -61,9 +83,10 @@ pub struct Function {
 pub enum ObjectType {
     Goto(GotoType, Identifier),
     Hold(Interval),
-    Use(Box<Expr>),
-    Do(DoType),
     Say(Box<Expr>),
+    Return(Box<Expr>),
+    Do(DoType),
+    Use(Box<Expr>),
 
     Remember(Identifier, Box<Expr>),
     // Assign{old: Box<Expr>, new: Box<Expr>},

@@ -255,5 +255,32 @@ where
         parse_break,
         parse_if,
         parse_foreach,
+
+        parse_return,
     ))(s)
+}
+
+fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, RETURN)(s)?;
+
+    let (s, expr) = preceded(comment, parse_operator)(s)?;
+
+    let instruction_info = InstructionInfo {
+        index: StateContext::get_rip(),
+        total: 0,
+    };
+
+    StateContext::inc_rip();
+
+    Ok((
+        s,
+        (
+            Expr::ObjectExpr(ObjectType::Return(Box::new(expr))),
+            instruction_info,
+        ),
+    ))
 }

@@ -114,8 +114,10 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
         if let Ok(parsed_flow) = parse_flow(&flow.content) {
             let mut vec = vec![];
 
-            for InstructionType::NormalStep(step_name) in parsed_flow.flow_instructions.keys() {
-                vec.push(step_name.to_owned());
+            for instruction_type in parsed_flow.flow_instructions.keys() {
+                if let InstructionType::NormalStep(step_name) = instruction_type {
+                    vec.push(step_name.to_owned());
+                }
             }
             result.insert(flow.name.to_owned(), vec);
         }
@@ -137,6 +139,9 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 
         match parse_flow(&flow.content) {
             Ok(result) => {
+                println!("flow {} => {:#?}", flow.name, result);
+                println!("get fn => {:?}", result.flow_instructions.get(&InstructionType::FunctionStep{name:"toto".to_owned(), args: vec!()} ) );
+
                 flows.insert(flow.name.to_owned(), result);
             }
             Err(error) => {

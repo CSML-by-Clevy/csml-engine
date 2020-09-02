@@ -62,10 +62,12 @@ fn normal_object_to_literal(
         let value = match_builtin(&name, args, interval.to_owned(), data, root, sender);
 
         Ok(MSG::send_error_msg(&sender, root, value))
+    } else if data.flow.flow_instructions.get(&InstructionType::FunctionStep{name: name.to_owned(), args: Vec::new()}).is_some() {
+        unimplemented!()
     } else {
         let err = gen_error_info(
             Position::new(interval),
-            format!("{} [{}]", name, ERROR_BUILTIN_UNKNOWN),
+            format!("{} [{}]", ERROR_BUILTIN_UNKNOWN, name),
         );
         Ok(MSG::send_error_msg(
             &sender,
