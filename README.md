@@ -58,7 +58,7 @@ name:
       Button("I'm anonymous 😎", accepts=["No", "Nope"]) as anonBtn
   ])
   hold
-  if (event match anonBtn) {
+  if (event.match(anonBtn)) {
     remember name = "anon"
   } else {
     remember name = event
