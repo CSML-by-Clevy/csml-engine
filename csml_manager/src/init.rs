@@ -5,7 +5,7 @@ use crate::{
     ContextJson, CsmlBot, CsmlFlow,
 };
 
-use csmlinterpreter::data::{ApiInfo, Client, Event};
+use csml_interpreter::data::{ApiInfo, Client, Event};
 use curl::{
     easy::{Easy, List},
     Error as CurlError,

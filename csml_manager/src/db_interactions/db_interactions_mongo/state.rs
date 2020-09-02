@@ -4,7 +4,7 @@ use crate::{
     ConversationInfo, ManagerError,
 };
 use bson::{doc, Bson, Document};
-use csmlinterpreter::data::Client;
+use csml_interpreter::data::Client;
 
 fn format_state_body(
     data: &mut ConversationInfo,

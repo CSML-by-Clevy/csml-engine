@@ -1,4 +1,4 @@
-use csmlrustmanager::{
+use csml_manager::{
     data::CsmlData, start_conversation, user_close_all_conversations, Client, CsmlResult,
     ErrorInfo, Warnings,
 };
@@ -10,7 +10,7 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsonclient: Value = neon_serde::from_value(&mut cx, jsclient)?;
     let client: Client = serde_json::from_value(jsonclient).unwrap();
 
-    match csmlrustmanager::get_open_conversation(&client) {
+    match csml_manager::get_open_conversation(&client) {
         Ok(Some(conversation)) => {
             let mut map = serde_json::Map::new();
 
@@ -67,7 +67,7 @@ fn get_bot_steps(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsbot = cx.argument::<JsValue>(0)?;
     let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
 
-    let map = csmlrustmanager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap());
+    let map = csml_manager::get_steps_from_flow(serde_json::from_value(jsonbot).unwrap());
 
     let js_object = JsObject::new(&mut cx);
 
@@ -138,7 +138,7 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
 
     let object = JsObject::new(&mut cx);
 
-    match csmlrustmanager::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
+    match csml_manager::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
         CsmlResult {
             flows: _,
             warnings,
