@@ -6,7 +6,7 @@ use crate::{
 };
 
 use chrono::{prelude::Utc, SecondsFormat};
-use csmlinterpreter::data::{Client, Event, Memories, Message};
+use csml_interpreter::data::{Client, Event, Memories, Message};
 use serde_json::{json, map::Map, Value};
 use std::env; //ContextJson
 

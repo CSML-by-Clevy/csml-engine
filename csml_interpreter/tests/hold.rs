@@ -1,8 +1,8 @@
 mod support;
 
-use csmlinterpreter::data::event::Event;
-use csmlinterpreter::data::hold::Hold;
-use csmlinterpreter::data::ContextJson;
+use csml_interpreter::data::event::Event;
+use csml_interpreter::data::hold::Hold;
+use csml_interpreter::data::ContextJson;
 
 use crate::support::tools::format_message;
 use crate::support::tools::message_to_json_value;

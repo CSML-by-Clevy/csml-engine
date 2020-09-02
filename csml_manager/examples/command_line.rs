@@ -1,4 +1,4 @@
-use csmlinterpreter::{
+use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
     load_components,
 };
