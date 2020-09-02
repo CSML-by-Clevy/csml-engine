@@ -1,5 +1,5 @@
 use crate::{Client, ContextJson, CsmlBot};
-use csmlinterpreter::data::message::Message; //ApiInfo, Hold
+use csml_interpreter::data::message::Message; //ApiInfo, Hold
 use curl::easy::Easy;
 use serde_json::Value;
 

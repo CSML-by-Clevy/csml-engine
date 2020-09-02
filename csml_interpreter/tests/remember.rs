@@ -1,8 +1,8 @@
 mod support;
 
-use csmlinterpreter::data::ast::Flow;
-use csmlinterpreter::error_format::ErrorInfo;
-use csmlinterpreter::parser::parse_flow;
+use csml_interpreter::data::ast::Flow;
+use csml_interpreter::error_format::ErrorInfo;
+use csml_interpreter::parser::parse_flow;
 
 use support::tools::read_file;
 

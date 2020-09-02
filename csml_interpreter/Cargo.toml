@@ -1,5 +1,5 @@
 [package]
-name = "csmlinterpreter"
+name = "csml_interpreter"
 version = "1.1.0"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
@@ -20,7 +20,7 @@ categories = ["text-processing"]
 edition = "2018"
 
 [lib]
-name = "csmlinterpreter"
+name = "csml_interpreter"
 crate-type = ["rlib"]
 
 [dependencies]

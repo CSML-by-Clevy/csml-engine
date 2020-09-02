@@ -1,5 +1,5 @@
 use crate::{ConversationInfo, Database, ManagerError};
-use csmlinterpreter::data::Client;
+use csml_interpreter::data::Client;
 
 pub fn delete_state_key(
     _client: &Client,

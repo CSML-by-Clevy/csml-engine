@@ -1,5 +1,5 @@
 pub mod data;
-pub use csmlinterpreter::data::{
+pub use csml_interpreter::data::{
     csml_result::CsmlResult, error_info::ErrorInfo, warnings::Warnings, Client,
 };
 
@@ -17,7 +17,7 @@ use init::*;
 use interpreter_actions::interpret_step;
 use tools::*;
 
-use csmlinterpreter::{
+use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memories},
     load_components,
 };
@@ -68,11 +68,11 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<Conversation>, Ma
 }
 
 pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
-    csmlinterpreter::get_steps_from_flow(bot)
+    csml_interpreter::get_steps_from_flow(bot)
 }
 
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
-    csmlinterpreter::validate_bot(bot)
+    csml_interpreter::validate_bot(bot)
 }
 
 pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> {

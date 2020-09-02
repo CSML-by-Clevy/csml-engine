@@ -1,6 +1,6 @@
 // mod support;
 
-// use csmlinterpreter::data::event::Event;
+// use csml_interpreter::data::event::Event;
 
 // use crate::support::tools::format_message;
 // use crate::support::tools::message_to_json_value;

@@ -29,12 +29,12 @@
  requires Rust version 1.41.
 
 ```rust
-use csmlinterpreter::data::csml_bot::CsmlBot;
-use csmlinterpreter::data::csml_flow::CsmlFlow;
-use csmlinterpreter::data::event::Event;
-use csmlinterpreter::data::ContextJson;
-use csmlinterpreter::interpret;
-use csmlinterpreter::validate_bot;
+use csml_interpreter::data::csml_bot::CsmlBot;
+use csml_interpreter::data::csml_flow::CsmlFlow;
+use csml_interpreter::data::event::Event;
+use csml_interpreter::data::ContextJson;
+use csml_interpreter::interpret;
+use csml_interpreter::validate_bot;
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "flow";
