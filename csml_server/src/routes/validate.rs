@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
-use csmlrustmanager::{validate_bot, CsmlResult};
-use csmlinterpreter::data::csml_bot::CsmlBot;
+use csml_manager::{validate_bot, CsmlResult};
+use csml_interpreter::data::csml_bot::CsmlBot;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]

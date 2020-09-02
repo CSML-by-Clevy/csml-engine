@@ -738,25 +738,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "697c714f50560202b1f4e2e09cd50a421881c83e9025db75d15f276616f04f40"
 
 [[package]]
-name = "csml_server"
-version = "1.2.0"
-dependencies = [
- "actix-cors",
- "actix-files",
- "actix-rt",
- "actix-service",
- "actix-web",
- "bytes 0.5.6",
- "csmlinterpreter",
- "csmlrustmanager",
- "env_logger 0.7.1",
- "futures 0.3.5",
- "json",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "csml_interpreter"
 version = "1.1.0"
 dependencies = [
@@ -799,6 +780,25 @@ dependencies = [
  "neon",
  "neon-build",
  "neon-serde",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "csml_server"
+version = "1.2.0"
+dependencies = [
+ "actix-cors",
+ "actix-files",
+ "actix-rt",
+ "actix-service",
+ "actix-web",
+ "bytes 0.5.6",
+ "csml_interpreter",
+ "csml_manager",
+ "env_logger 0.7.1",
+ "futures 0.3.5",
+ "json",
  "serde",
  "serde_json",
 ]

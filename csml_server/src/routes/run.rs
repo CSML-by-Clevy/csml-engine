@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse};
-use csmlrustmanager::{data::CsmlData, start_conversation};
+use csml_manager::{data::CsmlData, start_conversation};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
