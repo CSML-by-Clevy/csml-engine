@@ -6,11 +6,15 @@ mod routes;
 
 const MAX_BODY_SIZE: usize = 8_388_608; // 8MB
 
-
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
   std::env::set_var("RUST_LOG", "actix_web=info");
   env_logger::init();
+
+  let server_port: String = match std::env::var("ENGINE_SERVER_PORT") {
+    Ok(val) => val,
+    Err(_) => "5000".to_owned(),
+  };
 
   HttpServer::new(|| {
     App::new()
@@ -48,7 +52,7 @@ async fn main() -> std::io::Result<()> {
       )
 
   })
-  .bind("0.0.0.0:5000")?
+  .bind(format!("0.0.0.0:{}", server_port))?
   .run()
   .await
 }
