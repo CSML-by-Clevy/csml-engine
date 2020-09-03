@@ -84,6 +84,9 @@ pub const ERROR_JSON_TO_LITERAL: &'static str = "this number is to big to be an 
 pub const ERROR_STEP_MEMORY: &'static str = "variable does not exist in step memory";
 pub const ERROR_FIND_MEMORY: &'static str = "is not in in memory";
 
+// ### Functions
+pub const ERROR_FN_ARGS: &'static str = "Function Arguments are not valid";
+
 // ### Built-in
 pub const ERROR_TEXT: &'static str =
     "Builtin Text expect one argument of type string | example: Text(\"hola\")";

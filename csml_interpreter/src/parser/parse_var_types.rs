@@ -93,10 +93,7 @@ where
         tag(L_PAREN),
         cut(terminated(
             tuple((
-                separated_list(
-                    preceded(comment, tag(COMMA)),
-                    preceded(comment, get_string),
-                ),
+                separated_list(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
                 opt(preceded(comment, tag(COMMA))),
             )),
             preceded(comment, parse_r_parentheses),

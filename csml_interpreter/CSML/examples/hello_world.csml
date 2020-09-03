@@ -1,8 +1,5 @@
-fn toto(toto, hola)
-    do y = 4 + toto + hola
-    return y
-
 start:
+
     say "Hello World 😆"
-    say toto(1, 2)
+
     goto end

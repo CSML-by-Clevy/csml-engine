@@ -612,8 +612,7 @@ impl PrimitiveObject {
         let usage = "match(a) => a";
 
         let lit = match (object.value.get("text"), object.value.get("payload")) {
-            (Some(lit), _)
-            | (_, Some(lit)) if lit.content_type == "string" => lit,
+            (Some(lit), _) | (_, Some(lit)) if lit.content_type == "string" => lit,
             _ => return Ok(PrimitiveNull::get_literal(interval)),
         };
 

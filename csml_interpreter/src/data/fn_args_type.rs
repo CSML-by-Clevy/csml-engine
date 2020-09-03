@@ -5,7 +5,7 @@ use crate::data::{
 };
 use crate::error_format::*;
 
-use std::collections::HashMap;
+use std::collections::{hash_map::Iter, HashMap};
 
 #[derive(Debug, Clone)]
 pub enum ArgsType {
@@ -52,6 +52,38 @@ impl ArgsType {
             Self::Normal(var) => var.get(&format!("arg{}", index)),
         }
     }
+
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Named(var) | Self::Normal(var) => var.len(),
+        }
+    }
+
+    pub fn iter(&self) -> Iter<'_, String, Literal> {
+        match self {
+            Self::Named(var) | Self::Normal(var) => var.iter(),
+        }
+    }
+
+    //TODO: tmp
+    // pub fn add_to_memory(
+    //     &self,
+    //     args: Vec<String>,
+    //     data: &mut Data,
+    //     root: &mut MessageData,
+    //     sender: &Option<mpsc::Sender<MSG>>,
+    // ) {
+
+    //     match self {
+    //         Self::Named(var) => {
+
+    //         }
+    //         Self::Normal(vars) => {
+    //             // for (_, var) in var.iter()
+    //         }
+    //     }
+
+    // }
 
     pub fn populate(
         &self,

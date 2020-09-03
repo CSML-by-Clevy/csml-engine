@@ -20,14 +20,14 @@ pub enum FlowType {
 #[derive(Debug, Clone)]
 pub enum InstructionType {
     NormalStep(String),
-    FunctionStep{ name: String, args: Vec<String>}
+    FunctionStep { name: String, args: Vec<String> },
 }
 
 impl Hash for InstructionType {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
             InstructionType::NormalStep(name) => name.hash(state),
-            InstructionType::FunctionStep{name,..} => name.hash(state)
+            InstructionType::FunctionStep { name, .. } => name.hash(state),
         }
     }
 }
@@ -35,9 +35,14 @@ impl Hash for InstructionType {
 impl PartialEq for InstructionType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (InstructionType::NormalStep(name1), InstructionType::NormalStep(name2)) => name1 == name2,
-            (InstructionType::FunctionStep{name: name1,..}, InstructionType::FunctionStep{name: name2,..}) => name1 == name2,
-            _ => false
+            (InstructionType::NormalStep(name1), InstructionType::NormalStep(name2)) => {
+                name1 == name2
+            }
+            (
+                InstructionType::FunctionStep { name: name1, .. },
+                InstructionType::FunctionStep { name: name2, .. },
+            ) => name1 == name2,
+            _ => false,
         }
     }
 }
@@ -48,7 +53,7 @@ impl Display for InstructionType {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             InstructionType::NormalStep(ref idents) => write!(f, "{}", idents),
-            InstructionType::FunctionStep{name, ..} => write!(f, "{}", name),
+            InstructionType::FunctionStep { name, .. } => write!(f, "{}", name),
         }
     }
 }
@@ -136,6 +141,7 @@ pub enum BlockType {
     Block,
     IfLoop,
     Step,
+    Function,
 }
 
 #[derive(Debug, Clone)]

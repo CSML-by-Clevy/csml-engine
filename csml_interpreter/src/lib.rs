@@ -139,9 +139,6 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 
         match parse_flow(&flow.content) {
             Ok(result) => {
-                println!("flow {} => {:#?}", flow.name, result);
-                println!("get fn => {:?}", result.flow_instructions.get(&InstructionType::FunctionStep{name:"toto".to_owned(), args: vec!()} ) );
-
                 flows.insert(flow.name.to_owned(), result);
             }
             Err(error) => {

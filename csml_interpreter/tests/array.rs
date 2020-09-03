@@ -146,7 +146,7 @@ fn array_step_5() {
         "CSML/basic_test/stdlib/array.csml",
     );
 
-    println!("=> {:?}", msg.messages);
+    eprintln!("=> {:?}", msg.messages);
     assert_eq!(msg.messages[0].content_type, "error")
 }
 

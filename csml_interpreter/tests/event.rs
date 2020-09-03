@@ -253,7 +253,10 @@ fn event_step_7() {
 
     let mut map = serde_json::Map::new();
 
-    map.insert("payload".to_owned(), serde_json::Value::String("a".to_owned()));
+    map.insert(
+        "payload".to_owned(),
+        serde_json::Value::String("a".to_owned()),
+    );
 
     let msg = format_message(
         Event::new("content_type", "text", serde_json::Value::Object(map)),

@@ -2,15 +2,16 @@ use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::{PrimitiveArray, PrimitiveObject};
-use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MessageData, MSG};
+use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
     builtins::{match_builtin, match_native_builtin},
+    interpret_function_scope,
     json_to_rust::interpolate,
     variable_handler::{
         exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
-        resolve_path,
+        resolve_path, save_literal_in_mem,
     },
 };
 use std::{collections::HashMap, sync::mpsc};
@@ -55,25 +56,84 @@ fn normal_object_to_literal(
 ) -> Result<Literal, ErrorInfo> {
     let args = resolve_fn_args(args, data, root, sender)?;
 
-    if data.native_component.contains_key(name) {
-        let value = match_native_builtin(&name, args, interval.to_owned(), data);
-        Ok(MSG::send_error_msg(&sender, root, value))
-    } else if BUILT_IN.contains(&name) {
-        let value = match_builtin(&name, args, interval.to_owned(), data, root, sender);
+    let (inst, expr) = data
+        .flow
+        .flow_instructions
+        .get_key_value(&InstructionType::FunctionStep {
+            name: name.to_owned(),
+            args: Vec::new(),
+        })
+        .unwrap();
 
-        Ok(MSG::send_error_msg(&sender, root, value))
-    } else if data.flow.flow_instructions.get(&InstructionType::FunctionStep{name: name.to_owned(), args: Vec::new()}).is_some() {
-        unimplemented!()
-    } else {
-        let err = gen_error_info(
-            Position::new(interval),
-            format!("{} [{}]", ERROR_BUILTIN_UNKNOWN, name),
-        );
-        Ok(MSG::send_error_msg(
-            &sender,
-            root,
-            Err(err) as Result<Literal, ErrorInfo>,
-        ))
+    match (
+        data.native_component.contains_key(name),
+        BUILT_IN.contains(&name),
+        (inst.to_owned(), expr.to_owned()),
+    ) {
+        (true, ..) => {
+            let value = match_native_builtin(&name, args, interval.to_owned(), data);
+            Ok(MSG::send_error_msg(&sender, root, value))
+        }
+
+        (_, true, _) => {
+            let value = match_builtin(&name, args, interval.to_owned(), data, root, sender);
+
+            Ok(MSG::send_error_msg(&sender, root, value))
+        }
+
+        (
+            ..,
+            // Some(
+            (
+                InstructionType::FunctionStep {
+                    name: _,
+                    args: fn_args,
+                },
+                expr,
+            ), // ),
+        ) => {
+            if fn_args.len() > args.len() {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_FN_ARGS.to_owned(),
+                ));
+            }
+
+            for (index, name) in fn_args.iter().enumerate() {
+                let value = args.get(name, index).unwrap();
+
+                save_literal_in_mem(
+                    value.to_owned(),
+                    name.to_owned(),
+                    &MemoryType::Use,
+                    true,
+                    data,
+                    root,
+                    sender,
+                );
+            }
+
+            match expr {
+                Expr::Scope {
+                    block_type: _,
+                    scope,
+                    range: _,
+                } => interpret_function_scope(&scope, data, interval, sender),
+                _ => panic!("error in parsing need to be expr scope"),
+            }
+        }
+
+        _ => {
+            let err = gen_error_info(
+                Position::new(interval),
+                format!("{} [{}]", ERROR_BUILTIN_UNKNOWN, name),
+            );
+            Ok(MSG::send_error_msg(
+                &sender,
+                root,
+                Err(err) as Result<Literal, ErrorInfo>,
+            ))
+        }
     }
 }
 

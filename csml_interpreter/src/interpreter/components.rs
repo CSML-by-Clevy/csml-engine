@@ -41,7 +41,7 @@ fn read_components_dir(
             map.append(&mut obj);
         } else {
             // TODO: error msg
-            println!("native component bad format {:?}", component);
+            eprintln!("native component bad format {:?}", component);
         }
     }
 

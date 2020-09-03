@@ -32,7 +32,7 @@ use parse_var_types::parse_fn_args;
 use tools::*;
 
 use nom::error::ParseError;
-use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, branch::alt, Err, *};
+use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,9 +144,12 @@ where
     Ok((
         s,
         Instruction {
-            instruction_type: InstructionType::FunctionStep{name: ident.ident, args},
+            instruction_type: InstructionType::FunctionStep {
+                name: ident.ident,
+                args,
+            },
             actions: Expr::Scope {
-                block_type: BlockType::Step,
+                block_type: BlockType::Function, // Step / Function
                 scope: actions,
                 range: RangeInterval { start, end },
             },
@@ -159,10 +162,14 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
 ) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
     let flow_type = FlowType::Normal;
 
-    let (s, flow) = fold_many0(alt((parse_function, parse_step)), Vec::new(), |mut acc, item| {
-        acc.push(item);
-        acc
-    })(s)?;
+    let (s, flow) = fold_many0(
+        alt((parse_function, parse_step)),
+        Vec::new(),
+        |mut acc, item| {
+            acc.push(item);
+            acc
+        },
+    )(s)?;
 
     let (last, _) = comment(s)?;
     if !last.fragment().is_empty() {
