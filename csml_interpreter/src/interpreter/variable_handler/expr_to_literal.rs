@@ -56,19 +56,22 @@ fn normal_object_to_literal(
 ) -> Result<Literal, ErrorInfo> {
     let args = resolve_fn_args(args, data, root, sender)?;
 
-    let (inst, expr) = data
+    //TODO: refactor get_key_value as to_owned values
+    let result =  match data
         .flow
         .flow_instructions
         .get_key_value(&InstructionType::FunctionStep {
             name: name.to_owned(),
             args: Vec::new(),
-        })
-        .unwrap();
+        }) {
+            Some((i, e)) => Some((i.to_owned(), e.to_owned())),
+            None => None
+        };
 
     match (
         data.native_component.contains_key(name),
         BUILT_IN.contains(&name),
-        (inst.to_owned(), expr.to_owned()),
+        result,
     ) {
         (true, ..) => {
             let value = match_native_builtin(&name, args, interval.to_owned(), data);
@@ -83,14 +86,13 @@ fn normal_object_to_literal(
 
         (
             ..,
-            // Some(
-            (
+            Some((
                 InstructionType::FunctionStep {
                     name: _,
                     args: fn_args,
                 },
                 expr,
-            ), // ),
+            )),
         ) => {
             if fn_args.len() > args.len() {
                 return Err(gen_error_info(

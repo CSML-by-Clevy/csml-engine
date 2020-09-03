@@ -65,26 +65,6 @@ impl ArgsType {
         }
     }
 
-    //TODO: tmp
-    // pub fn add_to_memory(
-    //     &self,
-    //     args: Vec<String>,
-    //     data: &mut Data,
-    //     root: &mut MessageData,
-    //     sender: &Option<mpsc::Sender<MSG>>,
-    // ) {
-
-    //     match self {
-    //         Self::Named(var) => {
-
-    //         }
-    //         Self::Normal(vars) => {
-    //             // for (_, var) in var.iter()
-    //         }
-    //     }
-
-    // }
-
     pub fn populate(
         &self,
         map: &mut HashMap<String, Literal>,
