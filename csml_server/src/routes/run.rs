@@ -1,43 +1,51 @@
 use actix_web::{web, HttpResponse};
-use csml_manager::{data::CsmlData, start_conversation};
+use csml_manager::start_conversation;
+use csml_manager::data::CsmlData;
+use csml_interpreter::data::{csml_bot::CsmlBot, Client};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct CsmlRunBody {
-  bot: serde_json::Value,
-  event: serde_json::Value,
+pub struct RequestRun {
+  bot: CsmlBot,
+  event: RequestEvent,
 }
 
-pub async fn handler(body: web::Json<CsmlRunBody>) -> HttpResponse {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct RequestEvent {
+  request_id: String,
+  client: Client,
+  callback_url: Option<String>,
+  payload: serde_json::Value,
+  metadata: serde_json::Value,
+}
 
+pub async fn handler(body: web::Json<RequestRun>) -> HttpResponse {
+  let event = &body.event;
+  let bot = &body.bot;
   let data = CsmlData {
-    request_id: body.event["request_id"].as_str().unwrap().to_owned(),
-    client: serde_json::from_value(body.event["client"].clone()).unwrap(),
-    callback_url: {
-        match body.event["callback_url"].clone() {
-          Value::Null => None,
-          val => Some(val.as_str().unwrap().to_owned()),
-        }
-    },
-    payload: serde_json::from_value(body.event["payload"].clone()).unwrap(),
+    request_id: event.request_id.clone(),
+    client: event.client.clone(),
+    callback_url: event.callback_url.clone(),
+    payload: event.payload.clone(),
     metadata: {
-        match body.event["metadata"].clone() {
-            Value::Null => json!({}),
-            val => val,
-        }
+      match event.metadata.clone() {
+          Value::Null => json!({}),
+          val => val,
+      }
     },
-    bot: serde_json::from_value(body.bot.clone()).unwrap(),
+    bot: bot.clone(),
   };
 
-  let res: HttpResponse = match start_conversation(body.event.clone(), data) {
+  let res = match start_conversation(
+    json!(&event),
+    data
+  ) {
       Err(err) => {
-        eprintln!("notok: {:?}", err);
-        // TODO: handle manager errors gracefully
-        panic!("{:?}", err);
+        eprintln!("ManagerError: {:?}", err);
+        HttpResponse::InternalServerError().finish()
       },
       Ok(obj) => {
-        eprintln!("ok   : {:?}", obj);
         HttpResponse::Ok().json(obj)
       },
   };
