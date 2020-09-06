@@ -1,6 +1,6 @@
 [package]
-name = "csmlrustmanager"
-version = "1.0.0"
+name = "csml_manager"
+version = "1.1.0"
 authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
 license = "Apache-2.0"
 edition = "2018"
@@ -28,7 +28,7 @@ features = ["rustls-tls"]
 optional = true
 
 [dependencies]
-csmlinterpreter = { path = "../csml_interpreter" }
+csml_interpreter = { path = "../csml_interpreter" }
 multimap = "0.8.1"
 md-5 = "0.8.0"
 chrono = "0.4"

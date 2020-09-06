@@ -1,7 +1,7 @@
 mod support;
 
-use csmlinterpreter::data::context::ContextJson;
-use csmlinterpreter::data::event::Event;
+use csml_interpreter::data::context::ContextJson;
+use csml_interpreter::data::event::Event;
 
 use crate::support::tools::format_message;
 use crate::support::tools::message_to_json_value;
@@ -103,9 +103,9 @@ fn ok_text_step3() {
 fn ok_text_step4() {
     let data = r#"
         {
-            "messages":[ 
+            "messages":[
                 {"content":{"error": "< hola > is not in in memory at line 18, column 17 in step [text4] from flow [flow]"}, "content_type": "error"},
-                {"content":{"text": "😀 Null"},"content_type":"text"} 
+                {"content":{"text": "😀 Null"},"content_type":"text"}
             ],"memories":[]
         }"#;
     let msg = format_message(

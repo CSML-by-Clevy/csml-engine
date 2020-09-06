@@ -2,6 +2,7 @@
 members = [
     "csml_interpreter",
     "csml_manager",
+    "csml_server",
     "bindings/node/native",
 ]
 

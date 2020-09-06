@@ -97,20 +97,47 @@ docker pull clevy/csml-engine
 
 To get started with CSML Engine on Docker: https://github.com/CSML-by-Clevy/csml-engine-docker
 
-### With Rust
+### With Rust, from source
 
-(Pending documentation)
+Make sure you are running Rust v1.46, then run:
 
-### With nodejs
+```
+cd csml_server
+cargo build --release
+```
 
-This repository provides nodejs bindings of this rust library. To use this library in a nodejs project, you will need to build it from source. There are a few requirements:
+Make sure that you have the environment set with following options:
 
-- Rust v1.44
-- Nodejs LTS or above
+```
+ENGINE_DB_TYPE=mongodb
+
+MONGODB_HOST=localhost
+MONGODB_PORT=27017
+MONGODB_DATABASE=csml
+MONGODB_USERNAME=root
+MONGODB_PASSWORD=root
+
+ENGINE_SERVER_PORT=5000
+
+ENCRYPTION_SECRET=some-secret-string
+DISABLE_SSL_VERIFY=false
+DEBUG=true
+```
+
+Note that you will need a database of some sort - default is mongodb, but you can also use an HTTP-based microservice to use the DB of your choice with options ENGINE_DB_TYPE=http and HTTP_DB_MS_URL=http://your-microservice-endpoint.
+
+After that, execute your build (by default under ./targets/release/csml_server) and visit http://localhost:5000 for some request examples.
+
+### With Node.js
+
+This repository provides Node.js bindings of this rust library. To use this library in a Node.js project, you will need to build it from source. There are a few requirements:
+
+- Rust v1.46
+- Node.js LTS or above
 - Neon CLI v0.4.0 (make sure that all [required dependencies](https://neon-bindings.com/docs/getting-started/#install-node-build-tools/) are installed)
 - libssl-dev (or equivalent for your architecture: openssl-dev, libssl-devel...)
 
-To compile CSML Engine into a [native node module](https://nodejs.org/api/addons.html), run:
+To compile CSML Engine into a [native node module](https://Node.js.org/api/addons.html), run:
 
 ```shell
 git clone https://github.com/CSML-by-Clevy/csml-engine csml
@@ -121,7 +148,7 @@ neon build -p csml/bindings/node --release
 
 This method will output this native file: `csml/bindings/node/native/index.node` that you can simply `require()` (or `import`) in your project. For more details about how to use this module in your own projects, you can have a look at [our implementation for Docker version](https://github.com/CSML-by-Clevy/csml-engine-docker/blob/master/app/server.js).
 
-Please note that if you plan to deploy your project on a different architecture, you will need to recompile the project on that architecture. We recommend using git submodules if you need to integrate CSML Engine in your own nodejs projects.
+Please note that if you plan to deploy your project on a different architecture, you will need to recompile the project on that architecture. We recommend using git submodules if you need to integrate CSML Engine in your own Node.js projects.
 
 ## Additional Information
 
