@@ -104,7 +104,7 @@ fn ok_text_step4() {
     let data = r#"
         {
             "messages":[
-                {"content":{"error": "< hola > is not in in memory at line 18, column 17 in step [text4] from flow [flow]"}, "content_type": "error"},
+                {"content":{"error": "< hola > is not set in memory at line 18, column 17 in step [text4] from flow [flow]"}, "content_type": "error"},
                 {"content":{"text": "😀 Null"},"content_type":"text"}
             ],"memories":[]
         }"#;

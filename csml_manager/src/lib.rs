@@ -1,7 +1,8 @@
 pub mod data;
 pub use csml_interpreter::data::{
-    csml_result::CsmlResult, error_info::ErrorInfo, warnings::Warnings, Client,
+    csml_result::CsmlResult, error_info::ErrorInfo, warnings::Warnings, Client
 };
+use serde_json::json;
 
 mod db_interactions;
 #[cfg(any(feature = "mongo"))]
@@ -25,32 +26,33 @@ use md5::{Digest, Md5};
 use std::{collections::HashMap, env, time::SystemTime};
 
 pub fn start_conversation(
-    json_event: serde_json::Value,
-    mut csmldata: CsmlData,
+    request: CsmlRequest,
+    mut bot: CsmlBot,
 ) -> Result<serde_json::Map<String, serde_json::Value>, ManagerError> {
     let now = SystemTime::now();
 
-    let event = format_event(json_event.clone())?;
+    let formatted_event = format_event(json!(request))?;
 
     // load native components to the bot
-    csmldata.bot.native_components = match load_components() {
+    bot.native_components = match load_components() {
         Ok(components) => Some(components),
         Err(err) => return Err(ManagerError::Interpreter(err.format_error())),
     };
 
     let mut data = init_conversation_info(
-        get_default_flow(&csmldata.bot)?.name.to_owned(),
-        &event,
-        &csmldata,
+        get_default_flow(&bot)?.name.to_owned(),
+        &formatted_event,
+        &request,
+        &bot,
     )?;
     // save event in db as message RECEIVE
-    let msgs = vec![json_event["payload"].to_owned()];
+    let msgs = vec![request.payload.to_owned()];
     add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
-    let flow = get_flow_by_id(&data.context.flow, &csmldata.bot.flows)?;
+    let flow = get_flow_by_id(&data.context.flow, &bot.flows)?;
     check_for_hold(&mut data, flow)?;
 
-    let res = interpret_step(&mut data, event.to_owned(), &csmldata);
+    let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {

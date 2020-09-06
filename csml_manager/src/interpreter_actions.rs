@@ -5,7 +5,7 @@ use crate::db_interactions::{
 use crate::tools::*;
 
 use csml_interpreter::{
-    data::{csml_flow::CsmlFlow, Event, Hold, MSG},
+    data::{csml_flow::CsmlFlow, csml_bot::CsmlBot, Event, Hold, MSG},
     interpret,
 };
 use md5::{Digest, Md5};
@@ -15,17 +15,18 @@ use std::{env, sync::mpsc, thread, time::SystemTime};
 pub fn interpret_step(
     data: &mut ConversationInfo,
     event: Event,
-    csmldata: &CsmlData,
+    bot: &CsmlBot,
 ) -> Result<Map<String, Value>, ManagerError> {
-    let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &csmldata.bot.flows)?;
+    let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &bot.flows)?;
     let mut interaction_order = 0;
     let mut conversation_end = false;
     let mut interaction_success = true;
-    let bot = csmldata.bot.clone();
+    let bot = bot.clone();
     let (sender, receiver) = mpsc::channel::<MSG>();
     let context = data.context.clone();
     let interpret_step = SystemTime::now();
 
+    let new_bot = bot.clone();
     thread::spawn(move || {
         interpret(bot, context, event, Some(sender));
     });
@@ -70,7 +71,7 @@ pub fn interpret_step(
                         data,
                         &mut interaction_order,
                         &mut current_flow,
-                        csmldata,
+                        &new_bot,
                         flow,
                         step,
                     )?
@@ -82,7 +83,7 @@ pub fn interpret_step(
                         data,
                         &mut interaction_order,
                         &mut current_flow,
-                        csmldata,
+                        &new_bot,
                         flow,
                         step,
                     )?
@@ -167,13 +168,13 @@ fn goto_flow<'a>(
     data: &mut ConversationInfo,
     interaction_order: &mut i32,
     current_flow: &mut &'a CsmlFlow,
-    csmldata: &'a CsmlData,
+    bot: &'a CsmlBot,
     nextflow: String,
     nextstep: String,
 ) -> Result<(), ManagerError> {
     create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
 
-    *current_flow = get_flow_by_id(&nextflow, &csmldata.bot.flows)?;
+    *current_flow = get_flow_by_id(&nextflow, &bot.flows)?;
     data.context.flow = nextflow;
     data.context.step = nextstep;
 

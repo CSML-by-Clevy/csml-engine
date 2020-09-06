@@ -776,6 +776,7 @@ dependencies = [
 name = "csml_manager_node"
 version = "1.1.0"
 dependencies = [
+ "csml_interpreter",
  "csml_manager",
  "neon",
  "neon-build",
