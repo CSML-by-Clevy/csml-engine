@@ -1,9 +1,11 @@
 use csml_manager::{
-    data::CsmlData, start_conversation, user_close_all_conversations, Client, CsmlResult,
+    start_conversation, user_close_all_conversations, Client, CsmlResult,
     ErrorInfo, Warnings,
+    data::CsmlRequest,
 };
+use csml_interpreter::data::{csml_bot::CsmlBot};
 use neon::{context::Context, prelude::*, register_module};
-use serde_json::{json, Value}; //, map::Map
+use serde_json::{json, Value};
 
 fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
@@ -182,121 +184,58 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     }
 }
 
-// const payloads = [
-//   {
-//     content_type: "image",
-//     content: {
-//       url: "https://...."
-//     }
-//    metadata: OBJ{
-//      type: "jpg", //  ou autre type opt
-//     } opt
-//   },
-//   {
-//     content_type: "video",
-//     content: {
-//       url: "https://...."
-//     }
-//    metadata: OBJ{
-//      type: "jpg", //  ou autre type opt
-//     } opt
-//   },
-//   {
-//     content_type: "audio",
-//     content: {
-//       url: "https://...."
-//     }
-//    metadata: OBJ{
-//      type: "jpg", //  ou autre type opt
-//     } opt
-//   },
-//   {
-//     content_type: "attachment",
-//     content: {
-//       url: "https://...."
-//     }
-//    metadata: OBJ{
-//      type: "jpg", //  ou autre type opt
-//     } opt
-//   },
-//   {
-//     content_type: "payload",
-//     content: {
-//       value: String
-//     }
-//    metadata: OBJ{
-//      title: "title of button",
-//      type: "jpg", //  ou autre type opt
-//     } opt
-//   },
-//   {
-//     content_type: "flow_trigger",
-//     content: {
-//        flow_id: "xxxxx",
-//     }
-//     metadata: OBJ{
-//      title: "title of button",
-//      type: "jpg", //  ou autre type opt
-//     } opt
-//   }
-// ]
-
-fn check_bot(jsbot: &mut Value) {
-    if let serde_json::Value::Object(map) = jsbot {
-        let id = map.get("id").unwrap().to_owned();
-        if !map.contains_key("name") {
-            map.insert("name".to_owned(), id);
-        };
-    };
-    if let Some(serde_json::Value::Array(flows)) = jsbot.get_mut("flows") {
-        for flow in flows.iter_mut() {
-            if let serde_json::Value::Object(map) = flow {
-                let id = map.get("id").unwrap().to_owned();
-                if !map.contains_key("name") {
-                    map.insert("name".to_owned(), id);
-                };
-            };
-        }
-    };
-}
-
-fn format_data(json_event: Value, mut jsbot: Value) -> Result<CsmlData, serde_json::error::Error> {
-    check_bot(&mut jsbot);
-
-    Ok(CsmlData {
-        request_id: json_event["request_id"].as_str().unwrap().to_owned(),
-        client: serde_json::from_value(json_event["client"].clone())?,
+fn format_request(json_request: Value) -> Result<CsmlRequest, serde_json::error::Error> {
+    Ok(CsmlRequest {
+        request_id: json_request["request_id"].as_str().unwrap().to_owned(),
+        client: serde_json::from_value(json_request["client"].clone())?,
         callback_url: {
-            match json_event["callback_url"].clone() {
+            match json_request["callback_url"].clone() {
                 Value::Null => None,
                 val => Some(val.as_str().unwrap().to_owned()),
             }
-        }, // optional
-        payload: serde_json::from_value(json_event.clone())?,
+        },
+        payload: serde_json::from_value(json_request["payload"].clone())?,
         metadata: {
-            match json_event["metadata"].clone() {
+            match json_request["metadata"].clone() {
                 Value::Null => json!({}),
                 val => val,
             }
-        }, // optional
-        bot: serde_json::from_value(jsbot)?,
+        },
+    })
+}
+fn format_bot(data: Value) -> Result<CsmlBot, serde_json::error::Error> {
+    Ok(CsmlBot {
+        id: data["id"].as_str().unwrap().to_owned(),
+        name: data["name"].as_str().unwrap().to_owned(),
+        default_flow: data["default_flow"].as_str().unwrap().to_owned(),
+        fn_endpoint: match data["fn_endpoint"].to_owned() {
+            serde_json::Value::Null => None,
+            val => Some(val.as_str().unwrap().to_owned()),
+        },
+        flows: serde_json::from_value(data["flows"].to_owned()).unwrap(),
+        custom_components: serde_json::from_value(data["custom_components"].to_owned()).unwrap(),
+        native_components: serde_json::from_value(data["native_components"].to_owned()).unwrap(),
     })
 }
 
 fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let raw_event = cx.argument::<JsValue>(0)?;
-    let bot = cx.argument::<JsValue>(1)?;
+    let raw_request = cx.argument::<JsValue>(0)?;
+    let raw_bot = cx.argument::<JsValue>(1)?;
 
-    let jsdata: Value = neon_serde::from_value(&mut cx, bot)?;
-    let json_event: Value = neon_serde::from_value(&mut cx, raw_event)?;
+    let json_request: Value = neon_serde::from_value(&mut cx, raw_request)?;
+    let json_bot: Value = neon_serde::from_value(&mut cx, raw_bot)?;
 
-    // Calling panic!() in Neon will throw an Error in Node.
-    // So panic!("program errored!") is equivalent to throw new Error('program errored!')
-    let data = match format_data(json_event.clone(), jsdata) {
-        Err(err) => panic!("event bad format {:?}", err),
+    let request = match format_request(json_request) {
+        Err(err) => panic!("Bad request: event format {:?}", err),
         Ok(value) => value,
     };
-    match start_conversation(json_event, data) {
+
+    let bot: CsmlBot = match format_bot(json_bot) {
+        Err(err) => panic!("Bad request: bot format {:?}", err),
+        Ok(value) => value,
+    };
+
+    match start_conversation(request, bot) {
         Err(err) => panic!("{:?}", err),
         Ok(obj) => Ok(neon_serde::to_value(&mut cx, &obj)?),
     }

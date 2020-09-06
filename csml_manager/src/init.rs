@@ -1,6 +1,6 @@
 use crate::db_interactions::{conversation::*, init_db, interactions::*, memories::*};
 use crate::{
-    data::{ConversationInfo, CsmlData, Database, ManagerError},
+    data::{CsmlRequest, ConversationInfo, Database, ManagerError},
     tools::{get_default_flow, get_flow_by_id, search_flow},
     ContextJson, CsmlBot, CsmlFlow,
 };
@@ -14,18 +14,19 @@ use curl::{
 pub fn init_conversation_info<'a>(
     default_flow: String,
     event: &Event,
-    csmldata: &'a CsmlData,
+    request: &'a CsmlRequest,
+    bot: &'a CsmlBot,
 ) -> Result<ConversationInfo, ManagerError> {
     let db = init_db()?;
 
-    let interaction_id = init_interaction(csmldata.payload.clone(), &csmldata.client, &db)?;
+    let interaction_id = init_interaction(request.payload.clone(), &request.client, &db)?;
     let mut context = init_context(
         default_flow,
-        csmldata.client.clone(),
-        &csmldata.bot.fn_endpoint,
+        request.client.clone(),
+        &bot.fn_endpoint,
     );
 
-    let curl = match csmldata.callback_url {
+    let curl = match request.callback_url {
         Some(ref url) => {
             if let Ok(curl) = init_curl(url) {
                 Some(curl)
@@ -39,21 +40,21 @@ pub fn init_conversation_info<'a>(
         None => None,
     };
 
-    let flow_found = search_flow(event, &csmldata.bot, &csmldata.client, &db).ok();
+    let flow_found = search_flow(event, &bot, &request.client, &db).ok();
     let conversation_id = get_conversation(
         &mut context,
-        &csmldata.bot,
+        &bot,
         flow_found,
-        csmldata.metadata.clone(),
-        &csmldata.client,
+        event.metadata.clone(),
+        &request.client,
         &db,
     )?;
 
     get_memories(
-        &csmldata.client,
+        &request.client,
         // &conversation_id,
         &mut context,
-        &csmldata.metadata,
+        &event.metadata,
         &db,
     )?;
 
@@ -61,10 +62,10 @@ pub fn init_conversation_info<'a>(
         conversation_id,
         interaction_id,
         context,
-        metadata: csmldata.metadata.clone(), // ??
-        request_id: csmldata.request_id.clone(),
+        metadata: event.metadata.clone(), // ??
+        request_id: request.request_id.clone(),
         curl,
-        client: csmldata.client.clone(),
+        client: request.client.clone(),
         messages: vec![],
         db,
     };
