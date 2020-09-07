@@ -21,14 +21,13 @@ pub fn interpret_step(
     let mut interaction_order = 0;
     let mut conversation_end = false;
     let mut interaction_success = true;
-    let bot = bot.clone();
     let (sender, receiver) = mpsc::channel::<MSG>();
     let context = data.context.clone();
     let interpret_step = SystemTime::now();
 
     let new_bot = bot.clone();
     thread::spawn(move || {
-        interpret(bot, context, event, Some(sender));
+        interpret(new_bot, context, event, Some(sender));
     });
 
     let mut memories = vec![];
@@ -71,7 +70,7 @@ pub fn interpret_step(
                         data,
                         &mut interaction_order,
                         &mut current_flow,
-                        &new_bot,
+                        &bot,
                         flow,
                         step,
                     )?
@@ -83,7 +82,7 @@ pub fn interpret_step(
                         data,
                         &mut interaction_order,
                         &mut current_flow,
-                        &new_bot,
+                        &bot,
                         flow,
                         step,
                     )?
