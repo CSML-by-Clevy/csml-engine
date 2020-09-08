@@ -21,7 +21,7 @@ pub fn add_memories(
         use http_connector::{memories::format_memories, state::set_state_items};
 
         let mem = format_memories(data, memories, interaction_order);
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(&data.db)?;
+        let db = http_connector::get_db(&data.db)?;
 
         return set_state_items(&data.client, mem, db);
     }
@@ -37,13 +37,13 @@ pub fn get_memories(
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let db: &mongodb::Database = mongodb_connector::get_db(db)?;
+        let db = mongodb_connector::get_db(db)?;
         return mongodb_connector::memories::get_memories(client, context, metadata, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(db)?;
+        let db = http_connector::get_db(db)?;
 
         let current = http_connector::state::get_state_type(db, client, "remember")?;
 

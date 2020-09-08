@@ -13,13 +13,13 @@ pub fn init_interaction(
 ) -> Result<String, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let db: &mongodb::Database = mongodb_connector::get_db(db)?;
+        let db = mongodb_connector::get_db(db)?;
         return mongodb_connector::interactions::init_interaction(event, client, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(db)?;
+        let db = http_connector::get_db(db)?;
         return http_connector::interactions::init_interaction(event, client, db);
     }
 
@@ -29,13 +29,13 @@ pub fn init_interaction(
 pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let db: &mongodb::Database = mongodb_connector::get_db(&data.db)?;
+        let db = mongodb_connector::get_db(&data.db)?;
         return mongodb_connector::interactions::update_interaction(&data.interaction_id, success, &data.client, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(&data.db)?;
+        let db = http_connector::get_db(&data.db)?;
         return http_connector::interactions::update_interaction(&data.interaction_id, success, &data.client, db);
     }
 

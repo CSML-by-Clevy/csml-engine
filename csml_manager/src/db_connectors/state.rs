@@ -50,22 +50,22 @@ pub fn get_state_key(
 }
 
 pub fn set_state_items(
-    _data: &mut ConversationInfo,
+    data: &mut ConversationInfo,
     _type: &str,
     _interaction_order: i32,
     _keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
-    // Document
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        return mongodb_connector::state::set_state_items(_data, _type, _keys_values);
+        return mongodb_connector::state::set_state_items(data, _type, _keys_values);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
-        let state_body = http_connector::state::format_state_body(_data, _type, _interaction_order, _keys_values);
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(&_data.db)?;
-        return http_connector::state::set_state_items(&_data.client, state_body, db);
+        let state_body = http_connector::state::format_state_body(data, _type, _interaction_order, _keys_values);
+        let db: &http_db::apis::client::APIClient = http_connector::get_db(&data.db)?;
+        return http_connector::state::set_state_items(&data.client, state_body, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))

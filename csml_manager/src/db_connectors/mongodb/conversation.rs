@@ -126,7 +126,7 @@ pub fn get_latest_open(
 }
 
 pub fn update_conversation(
-    conversation_id: String,
+    conversation_id: &str,
     client: &Client,
     flow_id: Option<String>,
     step_id: Option<String>,
@@ -135,7 +135,7 @@ pub fn update_conversation(
     let collection = db.collection("conversation");
 
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(&conversation_id).unwrap(),
+        "_id": bson::oid::ObjectId::with_string(conversation_id).unwrap(),
         "client": bson::to_bson(&client)?,
     };
 
