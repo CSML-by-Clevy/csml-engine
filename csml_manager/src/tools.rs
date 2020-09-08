@@ -1,6 +1,6 @@
 use crate::{
     data::{ConversationInfo, Database, ManagerError, DEBUG},
-    db_interactions::state::delete_state_key,
+    db_connectors::state::delete_state_key,
     send::api,
     CsmlBot, CsmlFlow,
 };

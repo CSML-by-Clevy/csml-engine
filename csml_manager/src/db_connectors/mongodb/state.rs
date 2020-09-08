@@ -1,5 +1,5 @@
 use crate::{
-    db_interactions::db_interactions_mongo::get_db,
+    db_connectors::mongodb::get_db,
     encrypt::{decrypt_data, encrypt_data},
     ConversationInfo, ManagerError,
 };

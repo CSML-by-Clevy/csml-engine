@@ -1,5 +1,5 @@
 use crate::{
-    db_interactions::db_interactions_http_db::state::format_state_body, ConversationInfo, Memories,
+    db_connectors::http::state::format_state_body, ConversationInfo, Memories,
 };
 use http_db::models::CreateStateBody;
 

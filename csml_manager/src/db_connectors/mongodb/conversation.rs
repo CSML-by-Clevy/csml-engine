@@ -1,4 +1,4 @@
-use crate::{db_interactions::Conversation, encrypt::encrypt_data, Client, ManagerError};
+use crate::{db_connectors::Conversation, encrypt::encrypt_data, Client, ManagerError};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
