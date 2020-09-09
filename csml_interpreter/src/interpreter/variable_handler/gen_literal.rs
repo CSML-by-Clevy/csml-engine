@@ -28,7 +28,7 @@ pub fn gen_literal_from_event(
     match path {
         Some(path) => {
             let path = resolve_path(path, data, root, sender)?;
-            let mut lit = json_to_literal(&data.event.metadata, interval.to_owned())?;
+            let mut lit = json_to_literal(&data.event.content, interval.to_owned())?;
 
             lit.set_content_type("event");
 
@@ -48,7 +48,7 @@ pub fn gen_literal_from_event(
             Ok(lit)
         }
         None => Ok(PrimitiveString::get_literal(
-            &data.event.content,
+            &data.event.content_value,
             interval.to_owned(),
         )),
     }

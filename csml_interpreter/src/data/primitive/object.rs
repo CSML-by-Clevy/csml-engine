@@ -75,9 +75,9 @@ lazy_static! {
             (PrimitiveObject::get_type as PrimitiveMethod, Right::Read),
         );
         map.insert(
-            "get_metadata",
+            "get_content",
             (
-                PrimitiveObject::get_metadata as PrimitiveMethod,
+                PrimitiveObject::get_content as PrimitiveMethod,
                 Right::Read,
             ),
         );
@@ -551,13 +551,13 @@ impl PrimitiveObject {
         Ok(PrimitiveString::get_literal(content_type, interval))
     }
 
-    fn get_metadata(
+    fn get_content(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "get_metadata() => object";
+        let usage = "get_content() => object";
 
         if !args.is_empty() {
             return Err(gen_error_info(
