@@ -42,9 +42,9 @@ pub fn save_literal_in_mem(
 ) {
     match mem_type {
         MemoryType::Remember if update => {
-            // add mesage to rememeber new value
+            // save new value in current memory
             msg_data.add_to_memory(&name, lit.clone());
-            // add value in current mem
+            // send new value to manager in order to be save in db
             MSG::send(
                 sender,
                 MSG::Memory(Memories::new(name.clone(), lit.clone())),
@@ -55,27 +55,8 @@ pub fn save_literal_in_mem(
             data.step_vars.insert(name, lit);
         }
         _ => {
-            // TODO: Warning msg element is unmutable ?
+            // TODO: Warning msg element is immutable ?
             // unimplemented!()
         }
     }
 }
-
-// pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a Literal> {
-//     match (name, expr) {
-//         (Expr::IdentExpr(Identifier { ident, .. }), Expr::LitExpr(literal))
-//             if ident == MEMORY
-//                 && literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
-//         {
-//             let value = Literal::get_value::<String>(&literal.primitive)?;
-//             memory.current.get(value)
-//         }
-//         (_, Expr::LitExpr(literal))
-//             if literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
-//         {
-//             let value = Literal::get_value::<String>(&literal.primitive)?;
-//             memory.metadata.get(value)
-//         }
-//         _ => None,
-//     }
-// }

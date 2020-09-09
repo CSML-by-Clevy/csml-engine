@@ -2,7 +2,9 @@ use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::{PrimitiveArray, PrimitiveObject};
-use crate::data::{ast::*, tokens::*, ArgsType, Data, Literal, MemoryType, MessageData, MSG};
+use crate::data::{
+    ast::*, tokens::*, ArgsType, Context, Data, Literal, MemoryType, MessageData, MSG,
+};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
@@ -100,6 +102,22 @@ fn normal_object_to_literal(
                 ));
             }
 
+            let mut new_scope_data = Data {
+                flow: data.flow.clone(),
+                context: Context {
+                    current: HashMap::new(),
+                    metadata: HashMap::new(),
+                    api_info: None,
+                    hold: None,
+                    step: data.context.step.clone(),
+                    flow: data.context.flow.clone(),
+                },
+                event: data.event.clone(),
+                step_vars: HashMap::new(),
+                custom_component: data.custom_component.clone(),
+                native_component: data.native_component.clone(),
+            };
+
             for (index, name) in fn_args.iter().enumerate() {
                 let value = args.get(name, index).unwrap();
 
@@ -108,7 +126,7 @@ fn normal_object_to_literal(
                     name.to_owned(),
                     &MemoryType::Use,
                     true,
-                    data,
+                    &mut new_scope_data,
                     msg_data,
                     sender,
                 );
@@ -116,10 +134,10 @@ fn normal_object_to_literal(
 
             match expr {
                 Expr::Scope {
-                    block_type: _,
+                    block_type: BlockType::Function,
                     scope,
-                    range: _,
-                } => interpret_function_scope(&scope, data, interval),
+                    range: RangeInterval { start, .. },
+                } => interpret_function_scope(&scope, &mut new_scope_data, start),
                 _ => panic!("error in parsing need to be expr scope"),
             }
         }

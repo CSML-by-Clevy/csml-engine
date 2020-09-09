@@ -137,7 +137,7 @@ where
         tag(L_BRACKET),
         cut(terminated(
             tuple((
-                separated_list(preceded(comment, tag(COMMA)), parse_basic_expr),
+                separated_list(preceded(comment, tag(COMMA)), parse_operator), //parse_basic_expr
                 opt(preceded(comment, tag(COMMA))),
             )),
             preceded(comment, parse_r_bracket),

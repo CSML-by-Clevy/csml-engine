@@ -42,7 +42,7 @@ fn execute_step(
 ) -> MessageData {
     let flow = data.flow.to_owned();
 
-    let mut message_data = match flow
+    let mut msg_data = match flow
         .flow_instructions
         .get(&InstructionType::NormalStep(step.to_owned()))
     {
@@ -58,9 +58,9 @@ fn execute_step(
     };
 
     // if no goto at the end of the scope end conversation
-    if let Ok(message_data) = &mut message_data {
-        if message_data.exit_condition.is_none() {
-            message_data.exit_condition = Some(ExitCondition::End);
+    if let Ok(msg_data) = &mut msg_data {
+        if msg_data.exit_condition.is_none() {
+            msg_data.exit_condition = Some(ExitCondition::End);
             data.context.step = "end".to_string();
             MSG::send(
                 &sender,
@@ -72,7 +72,7 @@ fn execute_step(
         }
     }
 
-    MessageData::error_to_message(message_data, sender)
+    MessageData::error_to_message(msg_data, sender)
 }
 
 fn get_ast(
@@ -159,7 +159,7 @@ pub fn interpret(
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
-    let mut message_data = MessageData::default();
+    let mut msg_data = MessageData::default();
     let mut context = context.to_literal();
 
     let mut flow = context.flow.to_owned();
@@ -168,7 +168,7 @@ pub fn interpret(
 
     Warnings::clear();
     Linter::clear();
-    while message_data.exit_condition.is_none() {
+    while msg_data.exit_condition.is_none() {
         Position::set_flow(&flow);
 
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
@@ -177,13 +177,13 @@ pub fn interpret(
                 StateContext::clear_state();
                 StateContext::clear_rip();
 
-                let mut message_data = MessageData::default();
+                let mut msg_data = MessageData::default();
 
                 for err in error {
-                    message_data = message_data + MessageData::error_to_message(Err(err), &None);
+                    msg_data = msg_data + MessageData::error_to_message(Err(err), &None);
                 }
 
-                return message_data;
+                return msg_data;
             }
         };
 
@@ -212,10 +212,10 @@ pub fn interpret(
             None => None,
         };
 
-        message_data = message_data + execute_step(&step, &mut data, rip, &sender);
+        msg_data = msg_data + execute_step(&step, &mut data, rip, &sender);
 
-        if let Some(ExitCondition::Goto) = message_data.exit_condition {
-            message_data.exit_condition = None;
+        if let Some(ExitCondition::Goto) = msg_data.exit_condition {
+            msg_data.exit_condition = None;
         }
 
         flow = data.context.flow.to_string();
@@ -223,5 +223,5 @@ pub fn interpret(
         context = data.context.to_owned();
     }
 
-    message_data
+    msg_data
 }

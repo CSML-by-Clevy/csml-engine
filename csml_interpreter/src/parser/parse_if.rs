@@ -107,7 +107,6 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(IF))(s)?;
-    println!("if");
     let (s, condition) = parse_strict_condition_group(s)?;
 
     let index = StateContext::get_rip();
