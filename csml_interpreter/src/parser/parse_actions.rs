@@ -236,29 +236,6 @@ where
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// PUBLIC FUNCTION
-////////////////////////////////////////////////////////////////////////////////
-
-pub fn parse_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
-where
-    E: ParseError<Span<'a>>,
-{
-    alt((
-        parse_do,
-        parse_goto,
-        parse_remember,
-        parse_say,
-        parse_use,
-        parse_import,
-        parse_hold,
-        parse_break,
-        parse_if,
-        parse_foreach,
-        parse_return,
-    ))(s)
-}
-
 fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
@@ -282,4 +259,48 @@ where
             instruction_info,
         ),
     ))
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    //TODO: catch use of 'return' and return error informing user that this functions are not allowed in the normal scope
+    alt((
+        parse_do,
+        parse_goto,
+        parse_remember,
+        parse_say,
+        parse_use,
+        parse_import,
+        parse_hold,
+        parse_break,
+        parse_if,
+        parse_foreach,
+        // parse_return,
+    ))(s)
+}
+
+pub fn parse_fn_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    //TODO: catch use of goto, remember, use, .. and return error informing user that this functions are not allowed in the Fn scope
+    alt((
+        parse_do,
+        // parse_goto,
+        // parse_remember,
+        parse_say,
+        // parse_use,
+        // parse_import,
+        // parse_hold,
+        // parse_break,
+        parse_if,
+        parse_foreach,
+        parse_return,
+    ))(s)
 }

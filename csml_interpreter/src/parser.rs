@@ -27,7 +27,7 @@ use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
-use parse_scope::parse_root;
+use parse_scope::{parse_root, parse_fn_root};
 use parse_var_types::parse_fn_args;
 use tools::*;
 
@@ -47,8 +47,8 @@ where
         Ok((s, ident)) => (s, ident),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
             return match s.fragment().is_empty() {
-                true => Err(gen_nom_error(s, ERROR_FLOW_STEP)),
-                false => Err(gen_nom_failure(s, ERROR_FLOW_STEP)),
+                true => Err(gen_nom_error(s, ERROR_PARSING)),
+                false => Err(gen_nom_failure(s, ERROR_PARSING)),
             };
         }
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
@@ -57,7 +57,7 @@ where
     match tag(COLON)(s) {
         Ok((rest, _)) => Ok((rest, ident)),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
-            Err(gen_nom_failure(s, ERROR_FLOW_STEP))
+            Err(gen_nom_failure(s, ERROR_PARSING))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
@@ -131,14 +131,8 @@ where
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, args) = parse_fn_args(s)?;
 
-    // let (s, interval) = get_interval(s)?;
-
-    // Position::set_step(&ident.ident);
-    // Linter::add_step(&Position::get_flow(), &ident.ident, interval);
-    // StateContext::clear_rip();
-
     let (s, start) = get_interval(s)?;
-    let (s, actions) = preceded(comment, parse_root)(s)?;
+    let (s, actions) = preceded(comment, parse_fn_root)(s)?;
     let (s, end) = get_interval(s)?;
 
     Ok((

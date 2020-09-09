@@ -60,11 +60,6 @@ pub fn interpret_scope(
         }
 
         match action {
-            Expr::ObjectExpr(ObjectType::Return(..)) => {
-                // message_data.exit_condition = Some(ExitCondition::Break);
-
-                return Ok(message_data);
-            }
             Expr::ObjectExpr(ObjectType::Break(..)) => {
                 message_data.exit_condition = Some(ExitCondition::Break);
 
@@ -110,7 +105,6 @@ pub fn interpret_scope(
                 )?
             }
             e => {
-                // TODO: make Expr printable in order to be included in the error message
                 return Err(gen_error_info(
                     Position::new(interval_from_expr(e)),
                     ERROR_START_INSTRUCTIONS.to_owned(),
@@ -133,7 +127,6 @@ pub fn interpret_function_scope(
     for (action, instruction_info) in actions.commands.iter() {
         match action {
             Expr::ObjectExpr(ObjectType::Return(var)) => {
-                // message_data.exit_condition = Some(ExitCondition::Break);
                 let lit = expr_to_literal(var, None, data, &mut message_data, sender)?;
 
                 return Ok(lit);
@@ -165,7 +158,6 @@ pub fn interpret_function_scope(
                 )?
             }
             e => {
-                // TODO: make Expr printable in order to be included in the error message
                 return Err(gen_error_info(
                     Position::new(interval_from_expr(e)),
                     ERROR_START_INSTRUCTIONS.to_owned(),

@@ -134,7 +134,6 @@ pub fn match_actions(
             data.context.current.insert(name.ident.to_owned(), lit);
             Ok(root)
         }
-        // ObjectType::
         // ObjectType::Import {
         //     step_name: name, ..
         // } => {

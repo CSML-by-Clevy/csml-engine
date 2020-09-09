@@ -68,7 +68,7 @@ pub fn load_components() -> Result<serde_json::Map<String, serde_json::Value>, E
     video::add_video(&mut map);
     wait::add_wait(&mut map);
 
-    let _res = read_components_dir(&mut map);
+    let _res = read_components_dir(&mut map)?;
 
     Ok(map)
 }
