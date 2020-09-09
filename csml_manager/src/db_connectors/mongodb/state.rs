@@ -1,17 +1,16 @@
 use crate::{
-    db_interactions::db_interactions_mongo::get_db,
     encrypt::{decrypt_data, encrypt_data},
-    ConversationInfo, ManagerError,
+    ManagerError,
 };
 use bson::{doc, Bson, Document};
 use csml_interpreter::data::Client;
 
-fn format_state_body(
-    data: &mut ConversationInfo,
+pub fn format_state_data(
+    client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<Vec<Document>, ManagerError> {
-    let client = bson::to_bson(&data.client)?;
+    let client = bson::to_bson(client)?;
 
     keys_values.iter().fold(Ok(vec![]), |vec, (key, value)| {
         let time = Bson::UtcDatetime(chrono::Utc::now());
@@ -31,17 +30,6 @@ fn format_state_body(
     })
 }
 
-// pub fn delete_state_full(api_client: &APIClient, client: &Client) -> Result<(), Error> {
-//     api_client
-//         .state_api()
-//         .delete_state_full(&client.bot_id, &client.user_id, &client.channel_id)
-// }
-
-// pub fn delete_state_type(api_client: &APIClient, client: &Client, _type: &str) -> Result<(), Error> {
-//     api_client
-//     .state_api()
-//     .delete_state_type(_type, &client.bot_id, &client.user_id, &client.channel_id)
-// }
 pub fn delete_state_key(
     client: &Client,
     _type: &str,
@@ -61,21 +49,6 @@ pub fn delete_state_key(
     Ok(())
 }
 
-// pub fn get_state_type(
-//     client: &Client,
-//     _type: &str,
-//     db: &mongodb::Database,
-// ) -> Result<mongodb::Cursor, Error> {
-//     let state = db.collection("state");
-
-//     let filter = doc! {
-//         "client": bson::to_bson(client)?,
-//         "type": _type,
-//     };
-//     let cursor = state.find(filter, None)?;
-
-//     Ok(cursor)
-// }
 pub fn get_state_key(
     client: &Client,
     _type: &str,
@@ -101,21 +74,18 @@ pub fn get_state_key(
     }
 }
 
-// docs: Vec<Document>, db: &mongodb::Database,
 pub fn set_state_items(
-    data: &mut ConversationInfo,
-    _type: &str,
-    keys_values: Vec<(&str, &serde_json::Value)>,
+    _client: &Client,
+    state_data: Vec<Document>,
+    db: &mongodb::Database
 ) -> Result<(), ManagerError> {
-    let docs = format_state_body(data, _type, keys_values)?;
-    if docs.len() == 0 {
-        return Ok(());
+
+    if state_data.len() == 0 {
+        return Ok(())
     }
 
-    let db = get_db(&data.db)?;
     let state = db.collection("state");
-
-    state.insert_many(docs, None)?;
+    state.insert_many(state_data, None)?;
 
     Ok(())
 }

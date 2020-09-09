@@ -1,4 +1,4 @@
-use crate::{db_interactions::db_interactions_mongo::get_db, ConversationInfo, ManagerError};
+use crate::{db_connectors::mongodb::get_db, ConversationInfo, ManagerError};
 use bson::{doc, Bson};
 
 pub fn create_node(

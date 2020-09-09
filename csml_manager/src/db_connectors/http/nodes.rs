@@ -1,4 +1,4 @@
-use crate::{db_interactions::db_interactions_http_db::get_db, ConversationInfo, ManagerError};
+use crate::{db_connectors::http::get_db, ConversationInfo, ManagerError};
 use http_db::models::CreateNodeBody;
 use uuid::Uuid;
 

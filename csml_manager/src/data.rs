@@ -24,22 +24,6 @@ pub enum Database {
     None,
 }
 
-// #[derive(Serialize, Deserialize)]
-// pub enum ContentType {
-//     #[serde(rename = "url")]
-//     Url,
-//     #[serde(rename = "audio")]
-//     Audio,
-//     #[serde(rename = "video")]
-//     Video,
-//     #[serde(rename = "image")]
-//     Image,
-//     #[serde(rename = "payload")]
-//     Payload,
-//     #[serde(rename = "flow_trigger")]
-//     FlowTrigger,
-// }
-
 pub struct ConversationInfo {
     pub request_id: String,
     pub curl: Option<Easy>,

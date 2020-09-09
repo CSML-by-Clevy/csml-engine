@@ -1,4 +1,4 @@
-use crate::{db_interactions::Conversation, Client, ManagerError};
+use crate::{db_connectors::Conversation, Client, ManagerError};
 use http_db::{
     apis::client::APIClient,
     models::{
