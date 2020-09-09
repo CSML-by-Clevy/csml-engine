@@ -54,7 +54,7 @@ pub fn init_conversation_info<'a>(
         &request.client,
         // &conversation_id,
         &mut context,
-        &event.metadata,
+        &request.metadata,
         &db,
     )?;
 
@@ -62,7 +62,7 @@ pub fn init_conversation_info<'a>(
         conversation_id,
         interaction_id,
         context,
-        metadata: event.metadata.clone(), // ??
+        metadata: request.metadata.clone(), // ??
         request_id: request.request_id.clone(),
         curl,
         client: request.client.clone(),
