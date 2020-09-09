@@ -1,6 +1,5 @@
 use crate::{
-    data::{DEBUG, DISABLE_SSL_VERIFY},
-    ConversationInfo,
+    data::{DEBUG, DISABLE_SSL_VERIFY, ConversationInfo},
 };
 use curl::{easy::Easy, Error};
 use std::env;
@@ -41,17 +40,20 @@ fn format_and_transfer(curl: &mut Easy, mut msg: &[u8], result: &mut Vec<u8>) ->
     Ok(())
 }
 
-//-> Result<(), Error>
-pub fn api(c_info: &mut ConversationInfo, msg: &[u8]) {
+/**
+ * If a callback_url is defined, we must send each message to its endpoint as it comes.
+ * Otherwise, just continue!
+ */
+pub fn send_to_callback_url(c_info: &mut ConversationInfo, msg: &[u8]) {
     let curl = match &mut c_info.curl {
-        Some(val) => val,
+        Some(curl) => curl,
         None => return,
     };
 
     let mut result = Vec::new();
     if let Err(err) = format_and_transfer(curl, msg, &mut result) {
         match env::var(DEBUG) {
-            Ok(ref var) if var == "true" => println!("fail to send msg {:?}", err),
+            Ok(ref var) if var == "true" => println!("failed to send msg to callback_url {:?}", err),
             _ => (),
         };
         return;

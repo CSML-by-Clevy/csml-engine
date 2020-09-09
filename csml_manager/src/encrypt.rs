@@ -1,3 +1,17 @@
+/**
+ * Encryption and decryption utils for securely storing sensitive data.
+ * It is not mandatory to setup encryption in CSML engine, however it is greatly recommended
+ * if the chatbot is handling sensitive data of any sort.
+ *
+ * To automatically setup encryption/decryption of data, you must set an ENCRYPTION_SECRET
+ * environment variable with a complex enough string.
+ *
+ * Encrypt: Data is JSON-stringified before encryption, and is returned as an encrypted string.
+ * Decrypt: Data is decrypted from an encrypted string and is returned as a JSON Value.
+ *
+ * The encryption algorithm used is AES-256-GCM.
+ */
+
 use crate::ManagerError;
 
 use openssl::{
