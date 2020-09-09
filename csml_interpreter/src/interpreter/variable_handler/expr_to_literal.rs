@@ -20,24 +20,24 @@ fn exec_path_literal(
     literal: &mut Literal,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
-        let path = resolve_path(path, data, root, sender)?;
+        let path = resolve_path(path, data, msg_data, sender)?;
         let (mut new_literal, ..) = exec_path_actions(
             literal,
             None,
             &Some(path),
             &ContentType::get(&literal),
-            root,
+            msg_data,
             sender,
         )?;
 
         //TODO: remove this condition when 'root' and 'sender' can be access anywhere in the code
         if new_literal.content_type == "string" {
             let string = serde_json::json!(new_literal.primitive.to_string());
-            new_literal = interpolate(&string, new_literal.interval, data, root, sender)?;
+            new_literal = interpolate(&string, new_literal.interval, data, msg_data, sender)?;
         }
 
         Ok(new_literal)
@@ -51,22 +51,21 @@ fn normal_object_to_literal(
     args: &Expr,
     interval: Interval,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
-    let args = resolve_fn_args(args, data, root, sender)?;
+    let args = resolve_fn_args(args, data, msg_data, sender)?;
 
-    //TODO: refactor get_key_value as to_owned values
-    let result =  match data
+    let result = match data
         .flow
         .flow_instructions
         .get_key_value(&InstructionType::FunctionStep {
             name: name.to_owned(),
             args: Vec::new(),
         }) {
-            Some((i, e)) => Some((i.to_owned(), e.to_owned())),
-            None => None
-        };
+        Some((i, e)) => Some((i.to_owned(), e.to_owned())),
+        None => None,
+    };
 
     match (
         data.native_component.contains_key(name),
@@ -75,13 +74,13 @@ fn normal_object_to_literal(
     ) {
         (true, ..) => {
             let value = match_native_builtin(&name, args, interval.to_owned(), data);
-            Ok(MSG::send_error_msg(&sender, root, value))
+            Ok(MSG::send_error_msg(&sender, msg_data, value))
         }
 
         (_, true, _) => {
-            let value = match_builtin(&name, args, interval.to_owned(), data, root, sender);
+            let value = match_builtin(&name, args, interval.to_owned(), data, msg_data, sender);
 
-            Ok(MSG::send_error_msg(&sender, root, value))
+            Ok(MSG::send_error_msg(&sender, msg_data, value))
         }
 
         (
@@ -110,7 +109,7 @@ fn normal_object_to_literal(
                     &MemoryType::Use,
                     true,
                     data,
-                    root,
+                    msg_data,
                     sender,
                 );
             }
@@ -120,7 +119,7 @@ fn normal_object_to_literal(
                     block_type: _,
                     scope,
                     range: _,
-                } => interpret_function_scope(&scope, data, interval, sender),
+                } => interpret_function_scope(&scope, data, interval),
                 _ => panic!("error in parsing need to be expr scope"),
             }
         }
@@ -132,7 +131,7 @@ fn normal_object_to_literal(
             );
             Ok(MSG::send_error_msg(
                 &sender,
-                root,
+                msg_data,
                 Err(err) as Result<Literal, ErrorInfo>,
             ))
         }
@@ -143,26 +142,27 @@ pub fn expr_to_literal(
     expr: &Expr,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::ObjectExpr(ObjectType::As(name, var)) => {
-            let value = expr_to_literal(var, None, data, root, sender)?;
+            let value = expr_to_literal(var, None, data, msg_data, sender)?;
             data.step_vars.insert(name.ident.to_owned(), value.clone());
             Ok(value)
         }
         Expr::PathExpr { literal, path } => {
-            expr_to_literal(literal, Some(path), data, root, sender)
+            expr_to_literal(literal, Some(path), data, msg_data, sender)
         }
         Expr::ObjectExpr(ObjectType::Normal(Function {
             name,
             args,
             interval,
         })) => {
-            let mut literal = normal_object_to_literal(&name, args, *interval, data, root, sender)?;
+            let mut literal =
+                normal_object_to_literal(&name, args, *interval, data, msg_data, sender)?;
 
-            exec_path_literal(&mut literal, path, data, root, sender)
+            exec_path_literal(&mut literal, path, data, msg_data, sender)
         }
         Expr::MapExpr(map, RangeInterval { start, .. }) => {
             let mut object = HashMap::new();
@@ -170,30 +170,32 @@ pub fn expr_to_literal(
             for (key, value) in map.iter() {
                 object.insert(
                     key.to_owned(),
-                    expr_to_literal(&value, None, data, root, sender)?,
+                    expr_to_literal(&value, None, data, msg_data, sender)?,
                 );
             }
             let mut literal = PrimitiveObject::get_literal(&object, start.to_owned());
-            exec_path_literal(&mut literal, path, data, root, sender)
+            exec_path_literal(&mut literal, path, data, msg_data, sender)
         }
         Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => {
             let mut string =
-                get_string_from_complex_string(vec, start.to_owned(), data, root, sender)?;
-            exec_path_literal(&mut string, path, data, root, sender)
+                get_string_from_complex_string(vec, start.to_owned(), data, msg_data, sender)?;
+            exec_path_literal(&mut string, path, data, msg_data, sender)
         }
         Expr::VecExpr(vec, range) => {
             let mut array = vec![];
             for value in vec.iter() {
-                array.push(expr_to_literal(value, None, data, root, sender)?)
+                array.push(expr_to_literal(value, None, data, msg_data, sender)?)
             }
             let mut literal = PrimitiveArray::get_literal(&array, range.start.to_owned());
-            exec_path_literal(&mut literal, path, data, root, sender)
+            exec_path_literal(&mut literal, path, data, msg_data, sender)
         }
         Expr::InfixExpr(infix, exp_1, exp_2) => {
-            evaluate_condition(infix, exp_1, exp_2, data, root, sender)
+            evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)
         }
-        Expr::LitExpr(literal) => exec_path_literal(&mut literal.clone(), path, data, root, sender),
-        Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), path, data, root, sender)?),
+        Expr::LitExpr(literal) => {
+            exec_path_literal(&mut literal.clone(), path, data, msg_data, sender)
+        }
+        Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), path, data, msg_data, sender)?),
         e => Err(gen_error_info(
             Position::new(interval_from_expr(e)),
             ERROR_EXPR_TO_LITERAL.to_owned(),
@@ -204,7 +206,7 @@ pub fn expr_to_literal(
 pub fn resolve_fn_args(
     expr: &Expr,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<ArgsType, ErrorInfo> {
     match expr {
@@ -227,7 +229,7 @@ pub fn resolve_fn_args(
                         };
                         named_args = true;
 
-                        let literal = expr_to_literal(var, None, data, root, sender)?;
+                        let literal = expr_to_literal(var, None, data, msg_data, sender)?;
                         map.insert(name.ident.to_owned(), literal);
                     }
                     expr => {
@@ -238,7 +240,7 @@ pub fn resolve_fn_args(
                                 ERROR_EXPR_TO_LITERAL.to_owned(), // TODO: error mix of named args and anonymous args
                             ));
                         }
-                        let literal = expr_to_literal(expr, None, data, root, sender)?;
+                        let literal = expr_to_literal(expr, None, data, msg_data, sender)?;
                         map.insert(format!("arg{}", index), literal);
                     }
                 }

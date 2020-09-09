@@ -1,6 +1,9 @@
 use crate::data::{ast::*, tokens::*};
 use crate::parser::parse_braces::parse_r_brace;
-use crate::parser::{parse_actions::{parse_root_functions, parse_fn_root_functions}, parse_comments::comment};
+use crate::parser::{
+    parse_actions::{parse_fn_root_functions, parse_root_functions},
+    parse_comments::comment,
+};
 use nom::{
     bytes::complete::tag, error::ParseError, multi::fold_many0, sequence::delimited,
     sequence::preceded, *,

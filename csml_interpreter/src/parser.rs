@@ -27,7 +27,7 @@ use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
-use parse_scope::{parse_root, parse_fn_root};
+use parse_scope::{parse_fn_root, parse_root};
 use parse_var_types::parse_fn_args;
 use tools::*;
 

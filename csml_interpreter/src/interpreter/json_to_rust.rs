@@ -16,11 +16,11 @@ pub fn interpolate(
     literal: &serde_json::Value,
     interval: Interval,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match literal {
-        serde_json::Value::String(val) => interpolate_string(val, data, root, sender),
+        serde_json::Value::String(val) => interpolate_string(val, data, msg_data, sender),
         _ => json_to_literal(literal, interval),
     }
 }

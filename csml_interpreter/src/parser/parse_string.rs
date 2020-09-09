@@ -198,7 +198,7 @@ where
 pub fn interpolate_string(
     string: &str,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let string_formatted = format!("\"{}\"", string);
@@ -215,7 +215,7 @@ pub fn interpolate_string(
                     ERROR_PARSING.to_owned(),
                 ))
             } else {
-                expr_to_literal(&expr, None, data, root, sender)
+                expr_to_literal(&expr, None, data, msg_data, sender)
             }
         }
         Err(e) => match e {

@@ -120,19 +120,18 @@ pub fn interpret_function_scope(
     actions: &Block,
     data: &mut Data,
     interval: Interval,
-    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let mut message_data = MessageData::default();
 
     for (action, instruction_info) in actions.commands.iter() {
         match action {
             Expr::ObjectExpr(ObjectType::Return(var)) => {
-                let lit = expr_to_literal(var, None, data, &mut message_data, sender)?;
+                let lit = expr_to_literal(var, None, data, &mut message_data, &None)?;
 
                 return Ok(lit);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, None, &sender)?
+                message_data = match_actions(fun, message_data, data, None, &None)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
@@ -141,7 +140,7 @@ pub fn interpret_function_scope(
                     data,
                     None,
                     instruction_info,
-                    &sender,
+                    &None,
                 )?;
             }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
@@ -154,7 +153,7 @@ pub fn interpret_function_scope(
                     message_data,
                     data,
                     None,
-                    &sender,
+                    &None,
                 )?
             }
             e => {

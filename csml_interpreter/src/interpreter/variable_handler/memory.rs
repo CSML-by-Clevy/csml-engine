@@ -37,13 +37,13 @@ pub fn save_literal_in_mem(
     mem_type: &MemoryType,
     update: bool,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) {
     match mem_type {
         MemoryType::Remember if update => {
             // add mesage to rememeber new value
-            root.add_to_memory(&name, lit.clone());
+            msg_data.add_to_memory(&name, lit.clone());
             // add value in current mem
             MSG::send(
                 sender,

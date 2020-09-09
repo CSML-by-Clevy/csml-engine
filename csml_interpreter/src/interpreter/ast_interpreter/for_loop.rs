@@ -16,12 +16,12 @@ pub fn for_loop(
     expr: &Expr,
     block: &Block,
     range: &RangeInterval,
-    mut root: MessageData,
+    mut msg_data: MessageData,
     data: &mut Data,
     instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-    let literal = expr_to_literal(expr, None, data, &mut root, sender)?;
+    let literal = expr_to_literal(expr, None, data, &mut msg_data, sender)?;
     let array = Literal::get_value::<Vec<Literal>>(
         &literal.primitive,
         range.start.to_owned(),
@@ -38,11 +38,11 @@ pub fn for_loop(
             );
         };
 
-        root = root + interpret_scope(block, data, instruction_index, sender)?;
-        if let Some(ExitCondition::Break) = root.exit_condition {
-            root.exit_condition = None;
+        msg_data = msg_data + interpret_scope(block, data, instruction_index, sender)?;
+        if let Some(ExitCondition::Break) = msg_data.exit_condition {
+            msg_data.exit_condition = None;
             break;
-        } else if root.exit_condition.is_some() {
+        } else if msg_data.exit_condition.is_some() {
             break;
         }
     }
@@ -50,5 +50,5 @@ pub fn for_loop(
     if let Some(index) = i {
         data.step_vars.remove(&index.ident);
     };
-    Ok(root)
+    Ok(msg_data)
 }
