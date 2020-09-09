@@ -85,13 +85,13 @@ pub fn format_event(json_event: serde_json::Value) -> Result<Event, ManagerError
             ))
         }
     };
-    let metadata = json_event["payload"]["content"].to_owned();
+    let content = json_event["payload"]["content"].to_owned();
 
-    let content = get_event_content(&content_type, &metadata)?;
+    let content_value = get_event_content(&content_type, &content)?;
     Ok(Event {
         content_type,
+        content_value,
         content,
-        metadata,
     })
 }
 
@@ -225,12 +225,12 @@ pub fn search_flow<'a>(
     match event {
         event if event.content_type == "flow_trigger" => {
             delete_state_key(&client, "hold", "position", db)?;
-            get_flow_by_id(&event.content, &bot.flows)
+            get_flow_by_id(&event.content_value, &bot.flows)
         }
         event => {
             for flow in bot.flows.iter() {
                 for command in flow.commands.iter() {
-                    if &command.to_lowercase() == &event.content.to_lowercase() {
+                    if &command.to_lowercase() == &event.content_value.to_lowercase() {
                         delete_state_key(&client, "hold", "position", db)?;
                         return Ok(flow);
                     }
@@ -238,7 +238,7 @@ pub fn search_flow<'a>(
             }
             Err(ManagerError::Interpreter(format!(
                 "Flow '{}' does not exist",
-                event.content
+                event.content_value
             )))
         }
     }

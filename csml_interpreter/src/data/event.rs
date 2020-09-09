@@ -5,8 +5,8 @@
 #[derive(Debug, Clone)]
 pub struct Event {
     pub content_type: String,
-    pub content: String,
-    pub metadata: serde_json::Value,
+    pub content_value: String,
+    pub content: serde_json::Value,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,8 +17,8 @@ impl Default for Event {
     fn default() -> Self {
         Self {
             content_type: String::default(),
-            content: String::default(),
-            metadata: serde_json::json!({}),
+            content_value: String::default(),
+            content: serde_json::json!({}),
         }
     }
 }
@@ -28,11 +28,11 @@ impl Default for Event {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Event {
-    pub fn new(content_type: &str, content: &str, metadata: serde_json::Value) -> Self {
+    pub fn new(content_type: &str, content_value: &str, content: serde_json::Value) -> Self {
         Self {
             content_type: content_type.to_owned(),
-            content: content.to_owned(),
-            metadata,
+            content_value: content_value.to_owned(),
+            content,
         }
     }
 }

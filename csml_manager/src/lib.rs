@@ -38,8 +38,6 @@ use std::{collections::HashMap, env, time::SystemTime};
  * - bot_id: differentiate bots handled by the same CSML engine instance
  * - channel_id: a given bot may be used on different channels (messenger, slack...)
  * - user_id: differentiate users on the same communication channel
- *
- *
  */
 pub fn start_conversation(
     request: CsmlRequest,
