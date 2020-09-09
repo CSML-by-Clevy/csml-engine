@@ -14,7 +14,7 @@ mod send;
 mod tools;
 
 use data::*;
-use db_connectors::{conversation::*, init_db, messages::*, state::*, Conversation};
+use db_connectors::{conversations::*, init_db, messages::*, state::*, Conversation};
 use init::*;
 use interpreter_actions::interpret_step;
 use tools::*;

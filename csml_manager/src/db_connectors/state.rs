@@ -8,42 +8,42 @@ use crate::db_connectors::mongodb as mongodb_connector;
 use crate::db_connectors::http as http_connector;
 
 pub fn delete_state_key(
-    _client: &Client,
+    client: &Client,
     _type: &str,
     _key: &str,
-    _db: &Database,
+    db: &Database,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let db: &mongodb::Database = mongodb_connector::get_db(_db)?;
-        return mongodb_connector::state::delete_state_key(_client, _type, _key, db);
+        let db = mongodb_connector::get_db(db)?;
+        return mongodb_connector::state::delete_state_key(client, _type, _key, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(_db)?;
-        return http_connector::state::delete_state_key(_client, _type, _key, db);
+        let db = http_connector::get_db(db)?;
+        return http_connector::state::delete_state_key(client, _type, _key, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
 pub fn get_state_key(
-    _client: &Client,
+    client: &Client,
     _type: &str,
     _key: &str,
-    _db: &Database,
+    db: &Database,
 ) -> Result<Option<serde_json::Value>, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let db: &mongodb::Database = mongodb_connector::get_db(_db)?;
-        return mongodb_connector::state::get_state_key(_client, _type, _key, db);
+        let db = mongodb_connector::get_db(db)?;
+        return mongodb_connector::state::get_state_key(client, _type, _key, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(_db)?;
-        return http_connector::state::get_state_key(_client, _type, _key, db);
+        let db = http_connector::get_db(db)?;
+        return http_connector::state::get_state_key(client, _type, _key, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -52,20 +52,22 @@ pub fn get_state_key(
 pub fn set_state_items(
     data: &mut ConversationInfo,
     _type: &str,
-    _interaction_order: i32,
-    _keys_values: Vec<(&str, &serde_json::Value)>,
+    interaction_order: i32,
+    keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        return mongodb_connector::state::set_state_items(data, _type, _keys_values);
+    let state_data = mongodb_connector::state::format_state_data(&data.client, _type, keys_values)?;
+    let db = mongodb_connector::get_db(&data.db)?;
+        return mongodb_connector::state::set_state_items(&data.client, state_data, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
-        let state_body = http_connector::state::format_state_body(data, _type, _interaction_order, _keys_values);
-        let db: &http_db::apis::client::APIClient = http_connector::get_db(&data.db)?;
-        return http_connector::state::set_state_items(&data.client, state_body, db);
+        let state_data = http_connector::state::format_state_data(data, _type, interaction_order, keys_values);
+        let db = http_connector::get_db(&data.db)?;
+        return http_connector::state::set_state_items(&data.client, state_data, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))

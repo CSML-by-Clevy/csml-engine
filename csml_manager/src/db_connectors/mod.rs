@@ -26,7 +26,7 @@ use self::mongodb as mongodb_connector;
 use self::http as http_connector;
 use crate::error_messages::ERROR_DB_SETUP;
 
-pub mod conversation;
+pub mod conversations;
 pub mod interactions;
 pub mod memories;
 pub mod messages;

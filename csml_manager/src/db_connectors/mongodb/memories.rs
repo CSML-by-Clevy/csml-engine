@@ -1,7 +1,7 @@
 use crate::{
     db_connectors::mongodb::get_db,
     encrypt::{decrypt_data, encrypt_data},
-    Client, ContextJson, ConversationInfo, ManagerError, Memories,
+    Client, ConversationInfo, ManagerError, Memories,
 };
 use bson::{doc, Bson};
 
@@ -57,10 +57,8 @@ pub fn add_memories(
 
 pub fn get_memories(
     client: &Client,
-    context: &mut ContextJson,
-    metadata: &serde_json::Value,
     db: &mongodb::Database,
-) -> Result<(), ManagerError> {
+) -> Result<serde_json::Value, ManagerError> {
     let collection = db.collection("memory");
 
     let filter = doc! {
@@ -75,17 +73,15 @@ pub fn get_memories(
 
     for elem in cursor {
         if let Ok(doc) = elem {
-            let memorie: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
+            let mem: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
             let value: serde_json::Value =
-                decrypt_data(memorie["value"].as_str().unwrap().to_owned())?;
+                decrypt_data(mem["value"].as_str().unwrap().to_owned())?;
 
-            if !map.contains_key(memorie["key"].as_str().unwrap()) {
-                map.insert(memorie["key"].as_str().unwrap().to_owned(), value);
+            if !map.contains_key(mem["key"].as_str().unwrap()) {
+                map.insert(mem["key"].as_str().unwrap().to_owned(), value);
             }
         }
     }
 
-    context.current = serde_json::Value::Object(map);
-    context.metadata = metadata.clone();
-    Ok(())
+    Ok(serde_json::json!(map))
 }

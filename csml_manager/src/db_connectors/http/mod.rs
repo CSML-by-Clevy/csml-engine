@@ -1,4 +1,4 @@
-pub mod conversation;
+pub mod conversations;
 pub mod interactions;
 pub mod memories;
 pub mod messages;

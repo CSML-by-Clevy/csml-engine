@@ -1,4 +1,4 @@
-use crate::db_connectors::{conversation::*, init_db, interactions::*, memories::*};
+use crate::db_connectors::{conversations::*, init_db, interactions::*, memories::*};
 use crate::{
     data::{CsmlRequest, ConversationInfo, Database, ManagerError},
     tools::{get_default_flow, get_flow_by_id, search_flow},
@@ -50,11 +50,9 @@ pub fn init_conversation_info<'a>(
         &db,
     )?;
 
-    get_memories(
+    context.metadata = event.metadata.clone();
+    context.current = get_memories(
         &request.client,
-        // &conversation_id,
-        &mut context,
-        &request.metadata,
         &db,
     )?;
 

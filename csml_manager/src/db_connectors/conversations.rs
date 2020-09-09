@@ -2,9 +2,9 @@ use crate::{Client, Conversation, ConversationInfo, Database, ManagerError};
 use crate::db_connectors::{is_mongodb, is_http};
 use crate::error_messages::ERROR_DB_SETUP;
 #[cfg(feature = "mongo")]
-use crate::db_connectors::{mongodb as mongodb_connector};
+use crate::db_connectors::mongodb as mongodb_connector;
 #[cfg(feature = "http")]
-use crate::db_connectors::{http as http_connector};
+use crate::db_connectors::http as http_connector;
 
 pub fn create_conversation(
     flow_id: &str,
@@ -16,13 +16,13 @@ pub fn create_conversation(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::conversation::create_conversation(flow_id, step_id, client, metadata, db);
+        return mongodb_connector::conversations::create_conversation(flow_id, step_id, client, metadata, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
         let db = http_connector::get_db(db)?;
-        return http_connector::conversation::create_conversation(flow_id, step_id, client, metadata, db);
+        return http_connector::conversations::create_conversation(flow_id, step_id, client, metadata, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -32,13 +32,13 @@ pub fn close_conversation(id: &str, client: &Client, db: &Database) -> Result<()
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::conversation::close_conversation(id, client, db);
+        return mongodb_connector::conversations::close_conversation(id, client, "CLOSED", db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
         let db = http_connector::get_db(db)?;
-        return http_connector::conversation::close_conversation(id, client, "CLOSED", db);
+        return http_connector::conversations::close_conversation(id, client, "CLOSED", db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -48,13 +48,13 @@ pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), Man
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::conversation::close_all_conversations(client, db);
+        return mongodb_connector::conversations::close_all_conversations(client, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
         let db = http_connector::get_db(db)?;
-        return http_connector::conversation::close_all_conversations(client, db);
+        return http_connector::conversations::close_all_conversations(client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -67,13 +67,13 @@ pub fn get_latest_open(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::conversation::get_latest_open(client, db);
+        return mongodb_connector::conversations::get_latest_open(client, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
         let db = http_connector::get_db(db)?;
-        return http_connector::conversation::get_latest_open(client, db);
+        return http_connector::conversations::get_latest_open(client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -87,7 +87,7 @@ pub fn update_conversation(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(&data.db)?;
-        return mongodb_connector::conversation::update_conversation(
+        return mongodb_connector::conversations::update_conversation(
             &data.conversation_id,
             &data.client,
             flow_id,
@@ -99,7 +99,7 @@ pub fn update_conversation(
     #[cfg(feature = "http")]
     if is_http() {
         let db = http_connector::get_db(&data.db)?;
-        return http_connector::conversation::update_conversation(
+        return http_connector::conversations::update_conversation(
             &data.conversation_id,
             &data.client,
             flow_id,

@@ -1,4 +1,4 @@
-use crate::{Client, ContextJson, ConversationInfo, Database, ManagerError, Memories};
+use crate::{Client, ConversationInfo, Database, ManagerError, Memories};
 use crate::db_connectors::{is_mongodb, is_http};
 use crate::error_messages::ERROR_DB_SETUP;
 #[cfg(feature = "mongo")]
@@ -29,34 +29,25 @@ pub fn add_memories(
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
+/**
+ * Memories will be injected into the conversation's current context
+ * so `context` must be mutable.
+ */
 pub fn get_memories(
     client: &Client,
-    context: &mut ContextJson,
-    metadata: &serde_json::Value,
     db: &Database,
-) -> Result<(), ManagerError> {
+) -> Result<serde_json::Value, ManagerError> {
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::memories::get_memories(client, context, metadata, db);
+        return mongodb_connector::memories::get_memories(client, db);
     }
 
     #[cfg(feature = "http")]
     if is_http() {
         let db = http_connector::get_db(db)?;
-
-        let current = http_connector::state::get_state_type(db, client, "remember")?;
-
-        let map = current.iter().fold(serde_json::Map::new(), |mut map, mem| {
-            if !map.contains_key(&mem.key) {
-                map.insert(mem.key.clone(), mem.value.clone());
-            }
-            map
-        });
-        context.current = serde_json::json!(map);
-        context.metadata = metadata.clone();
-
-        return Ok(());
+        return http_connector::memories::get_memories(client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))

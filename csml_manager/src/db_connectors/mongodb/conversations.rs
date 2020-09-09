@@ -59,6 +59,7 @@ pub fn create_conversation(
 pub fn close_conversation(
     id: &str,
     client: &Client,
+    status: &str,
     db: &mongodb::Database,
 ) -> Result<(), ManagerError> {
     let collection = db.collection("conversation");
@@ -71,7 +72,7 @@ pub fn close_conversation(
     collection.update_one(
         filter,
         doc! {
-            "$set": { "status": "CLOSED" },
+            "$set": { "status": status },
             "$currentDate": { "last_interaction_at": true }
         },
         None,

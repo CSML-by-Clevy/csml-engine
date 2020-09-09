@@ -2,10 +2,10 @@ use crate::{ConversationInfo, ManagerError};
 use csml_interpreter::data::Client;
 use http_db::{
     apis::client::APIClient,
-    models::{CreateStateBody, StateModel},
+    models::CreateStateBody,
 };
 
-pub fn format_state_body(
+pub fn format_state_data(
     data: &mut ConversationInfo,
     _type: &str,
     interaction_order: i32,
@@ -34,18 +34,6 @@ pub fn format_state_body(
         })
 }
 
-// pub fn delete_state_full(api_client: &APIClient, client: &Client) -> Result<(), Error> {
-//     api_client
-//         .state_api()
-//         .delete_state_full(&client.bot_id, &client.user_id, &client.channel_id)
-// }
-
-// pub fn delete_state_type(api_client: &APIClient, client: &Client, _type: &str) -> Result<(), Error> {
-//     api_client
-//     .state_api()
-//     .delete_state_type(_type, &client.bot_id, &client.user_id, &client.channel_id)
-// }
-
 pub fn delete_state_key(
     client: &Client,
     _type: &str,
@@ -61,27 +49,6 @@ pub fn delete_state_key(
     )?;
 
     Ok(())
-}
-
-// pub fn get_state_full(api_client: &APIClient, client: &Client) -> Result<Vec<StateModel>, Error> {
-//     api_client
-//     .state_api()
-//     .get_state_full(&client.bot_id, &client.user_id, &client.channel_id)
-// }
-
-pub fn get_state_type(
-    api_client: &APIClient,
-    client: &Client,
-    _type: &str,
-) -> Result<Vec<StateModel>, ManagerError> {
-    let states = api_client.state_api().get_state_type(
-        _type,
-        &client.bot_id,
-        &client.user_id,
-        &client.channel_id,
-    )?;
-
-    Ok(states)
 }
 
 pub fn get_state_key(
@@ -103,14 +70,14 @@ pub fn get_state_key(
 
 pub fn set_state_items(
     client: &Client,
-    state_body: Vec<CreateStateBody>,
-    api_client: &APIClient,
+    state_data: Vec<CreateStateBody>,
+    db: &APIClient,
 ) -> Result<(), ManagerError> {
-    api_client.state_api().set_state_items(
+    db.state_api().set_state_items(
         &client.bot_id,
         &client.user_id,
         &client.channel_id,
-        state_body,
+        state_data,
     )?;
 
     Ok(())

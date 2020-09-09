@@ -1,6 +1,6 @@
 use crate::data::*;
 use crate::db_connectors::{
-    conversation::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
+    conversations::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
 };
 use crate::tools::*;
 
