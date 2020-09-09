@@ -182,9 +182,10 @@ pub fn messages_formater(
  * - as name is similar to a flow's alias, both flow.name and flow.id can be matched.
  */
 pub fn get_flow_by_id<'a>(f_id: &str, flows: &'a [CsmlFlow]) -> Result<&'a CsmlFlow, ManagerError> {
+    let id = f_id.to_ascii_lowercase();
     // TODO: move to_lowercase at creation of vars
     match flows.iter().find(
-        |&val| val.id == f_id || val.name.to_ascii_lowercase() == f_id.to_ascii_lowercase(), // || val.commands.contains(&f_id.to_ascii_lowercase())
+        |&val| val.id.to_ascii_lowercase() == id || val.name.to_ascii_lowercase() == id
     ) {
         Some(ref f) => Ok(f),
         None => Err(ManagerError::Interpreter(format!(
