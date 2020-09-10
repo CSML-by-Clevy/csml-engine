@@ -4,7 +4,9 @@ use crate::data::{
     tokens::*,
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
-use crate::error_format::{ERROR_RETURN ,gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
+use crate::error_format::{
+    gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_RETURN, ERROR_USE,
+};
 // use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,

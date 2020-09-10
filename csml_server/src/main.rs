@@ -50,6 +50,14 @@ async fn main() -> std::io::Result<()> {
         web::resource("/run")
           .route(web::post().to(routes::run::handler))
       )
+      .service(
+        web::resource("/conversations/open")
+          .route(web::post().to(routes::conversations::get_open))
+      )
+      .service(
+        web::resource("/conversations/close")
+          .route(web::post().to(routes::conversations::close_user_conversations))
+      )
 
   })
   .bind(format!("0.0.0.0:{}", server_port))?

@@ -18,5 +18,6 @@ neon-build = "0.4.0"
 neon = "0.4.0"
 neon-serde = "0.4.0"
 csml_manager = { path = "../../../csml_manager", features = ["http", "mongo"]}
+csml_interpreter = { path = "../../../csml_interpreter"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

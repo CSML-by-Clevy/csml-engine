@@ -1,18 +1,19 @@
-use crate::{Client, ContextJson, CsmlBot};
+use crate::{Client, ContextJson};
 use csml_interpreter::data::message::Message; //ApiInfo, Hold
 use curl::easy::Easy;
 use serde_json::Value;
+use serde::{Deserialize, Serialize};
 
 pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 
-pub struct CsmlData {
-    pub request_id: String,
-    pub client: Client,
-    pub callback_url: Option<String>,
-    pub payload: Value,
-    pub bot: CsmlBot,
-    pub metadata: Value,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CsmlRequest {
+  pub request_id: String,
+  pub client: Client,
+  pub callback_url: Option<String>,
+  pub payload: serde_json::Value,
+  pub metadata: serde_json::Value,
 }
 
 pub enum Database {
@@ -22,22 +23,6 @@ pub enum Database {
     Httpdb(http_db::apis::client::APIClient),
     None,
 }
-
-// #[derive(Serialize, Deserialize)]
-// pub enum ContentType {
-//     #[serde(rename = "url")]
-//     Url,
-//     #[serde(rename = "audio")]
-//     Audio,
-//     #[serde(rename = "video")]
-//     Video,
-//     #[serde(rename = "image")]
-//     Image,
-//     #[serde(rename = "payload")]
-//     Payload,
-//     #[serde(rename = "flow_trigger")]
-//     FlowTrigger,
-// }
 
 pub struct ConversationInfo {
     pub request_id: String,

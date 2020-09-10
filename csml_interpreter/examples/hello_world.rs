@@ -35,8 +35,8 @@ fn main() {
     // Create an Event
     let event = Event {
         content_type: "text".to_owned(),
-        content: "4".to_owned(),
-        metadata: serde_json::json!({"text":"4"}),
+        content_value: "4".to_owned(),
+        content: serde_json::json!({"text":"4"}),
     };
 
     // Create context

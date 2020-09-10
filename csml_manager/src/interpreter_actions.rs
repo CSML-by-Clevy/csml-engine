@@ -1,33 +1,38 @@
 use crate::data::*;
-use crate::db_interactions::{
-    conversation::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
+use crate::db_connectors::{
+    conversations::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
 };
-use crate::tools::*;
+use crate::utils::*;
 
 use csml_interpreter::{
-    data::{csml_flow::CsmlFlow, Event, Hold, MSG},
+    data::{csml_flow::CsmlFlow, csml_bot::CsmlBot, Event, Hold, MSG},
     interpret,
 };
 use md5::{Digest, Md5};
 use serde_json::{map::Map, Value};
 use std::{env, sync::mpsc, thread, time::SystemTime};
 
+/**
+ * This is the CSML Engine action.
+ * A request came in and should be handled. Once the ConversationInfo is correctly setup,
+ * this step is called in a loop until a `hold` or `goto end` is reached.
+ */
 pub fn interpret_step(
     data: &mut ConversationInfo,
     event: Event,
-    csmldata: &CsmlData,
+    bot: &CsmlBot,
 ) -> Result<Map<String, Value>, ManagerError> {
-    let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &csmldata.bot.flows)?;
+    let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &bot.flows)?;
     let mut interaction_order = 0;
     let mut conversation_end = false;
     let mut interaction_success = true;
-    let bot = csmldata.bot.clone();
     let (sender, receiver) = mpsc::channel::<MSG>();
     let context = data.context.clone();
     let interpret_step = SystemTime::now();
 
+    let new_bot = bot.clone();
     thread::spawn(move || {
-        interpret(bot, context, event, Some(sender));
+        interpret(new_bot, context, event, Some(sender));
     });
 
     let mut memories = vec![];
@@ -36,7 +41,7 @@ pub fn interpret_step(
         match received {
             MSG::Memory(mem) => memories.push(mem),
             MSG::Message(msg) => {
-                send_and_display_msg(data, vec![msg.clone()], interaction_order, false);
+                send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
             MSG::Hold(Hold {
@@ -65,24 +70,24 @@ pub fn interpret_step(
             }
             MSG::Next { flow, step } => match (flow, step) {
                 (Some(flow), Some(step)) => {
-                    update_memories_in_data(data, &memories);
+                    update_current_context(data, &memories);
                     goto_flow(
                         data,
                         &mut interaction_order,
                         &mut current_flow,
-                        csmldata,
+                        &bot,
                         flow,
                         step,
                     )?
                 }
                 (Some(flow), None) => {
-                    update_memories_in_data(data, &memories);
+                    update_current_context(data, &memories);
                     let step = "start".to_owned();
                     goto_flow(
                         data,
                         &mut interaction_order,
                         &mut current_flow,
-                        csmldata,
+                        &bot,
                         flow,
                         step,
                     )?
@@ -112,7 +117,7 @@ pub fn interpret_step(
             MSG::Error(err_msg) => {
                 conversation_end = true;
                 interaction_success = false;
-                send_and_display_msg(data, vec![err_msg.clone()], interaction_order, true);
+                send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
                 data.messages.push(err_msg);
                 close_conversation(&data.conversation_id, &data.client, &data.db)?;
             }
@@ -163,17 +168,20 @@ pub fn interpret_step(
     ))
 }
 
+/**
+ * CSML `goto flow` action
+ */
 fn goto_flow<'a>(
     data: &mut ConversationInfo,
     interaction_order: &mut i32,
     current_flow: &mut &'a CsmlFlow,
-    csmldata: &'a CsmlData,
+    bot: &'a CsmlBot,
     nextflow: String,
     nextstep: String,
 ) -> Result<(), ManagerError> {
     create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
 
-    *current_flow = get_flow_by_id(&nextflow, &csmldata.bot.flows)?;
+    *current_flow = get_flow_by_id(&nextflow, &bot.flows)?;
     data.context.flow = nextflow;
     data.context.step = nextstep;
 
@@ -189,6 +197,9 @@ fn goto_flow<'a>(
     Ok(())
 }
 
+/**
+ * CSML `goto step` action
+ */
 fn goto_step<'a>(
     data: &mut ConversationInfo,
     conversation_end: &mut bool,
@@ -201,7 +212,7 @@ fn goto_step<'a>(
         *conversation_end = true;
 
         // send end of conversation
-        send_and_display_msg(data, vec![], *interaction_order, *conversation_end);
+        send_msg_to_callback_url(data, vec![], *interaction_order, *conversation_end);
         update_conversation(&data, None, Some("end".to_owned()))?;
         close_conversation(&data.conversation_id, &data.client, &data.db)?;
 

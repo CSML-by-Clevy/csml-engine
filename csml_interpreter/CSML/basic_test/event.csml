@@ -15,7 +15,7 @@ step_2:
     goto end
 
 step_3:
-    say event.get_metadata()
+    say event.get_content()
     goto end
 
 step_4:

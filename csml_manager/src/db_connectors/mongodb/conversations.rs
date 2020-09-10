@@ -1,4 +1,4 @@
-use crate::{db_interactions::Conversation, encrypt::encrypt_data, Client, ManagerError};
+use crate::{db_connectors::Conversation, encrypt::encrypt_data, Client, ManagerError};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
@@ -59,6 +59,7 @@ pub fn create_conversation(
 pub fn close_conversation(
     id: &str,
     client: &Client,
+    status: &str,
     db: &mongodb::Database,
 ) -> Result<(), ManagerError> {
     let collection = db.collection("conversation");
@@ -71,7 +72,7 @@ pub fn close_conversation(
     collection.update_one(
         filter,
         doc! {
-            "$set": { "status": "CLOSED" },
+            "$set": { "status": status },
             "$currentDate": { "last_interaction_at": true }
         },
         None,
@@ -126,7 +127,7 @@ pub fn get_latest_open(
 }
 
 pub fn update_conversation(
-    conversation_id: String,
+    conversation_id: &str,
     client: &Client,
     flow_id: Option<String>,
     step_id: Option<String>,
@@ -135,7 +136,7 @@ pub fn update_conversation(
     let collection = db.collection("conversation");
 
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(&conversation_id).unwrap(),
+        "_id": bson::oid::ObjectId::with_string(conversation_id).unwrap(),
         "client": bson::to_bson(&client)?,
     };
 

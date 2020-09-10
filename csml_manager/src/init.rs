@@ -1,7 +1,7 @@
-use crate::db_interactions::{conversation::*, init_db, interactions::*, memories::*};
+use crate::db_connectors::{conversations::*, init_db, interactions::*, memories::*};
 use crate::{
-    data::{ConversationInfo, CsmlData, Database, ManagerError},
-    tools::{get_default_flow, get_flow_by_id, search_flow},
+    data::{CsmlRequest, ConversationInfo, Database, ManagerError},
+    utils::{get_default_flow, get_flow_by_id, search_flow},
     ContextJson, CsmlBot, CsmlFlow,
 };
 
@@ -11,21 +11,41 @@ use curl::{
     Error as CurlError,
 };
 
+/**
+ * Initialize a new ConversationInfo data, usually upon new chat request.
+ * This will contain meaningful information about the request being processsed
+ * and get regularly updated as the request progresses.
+ *
+ * This will hold references to:
+ * - the bot's data,
+ * - the current status of the request (steps, messages, variables, context...)
+ * - the DB to use for data persistence
+ * - the cached Curl connexion to the configured callback_url, if any
+ *
+ * This method takes care of the initialization of the data as well as setting up
+ * some information in the database (conversation_id, metadata, state...).
+ */
 pub fn init_conversation_info<'a>(
     default_flow: String,
     event: &Event,
-    csmldata: &'a CsmlData,
+    request: &'a CsmlRequest,
+    bot: &'a CsmlBot,
 ) -> Result<ConversationInfo, ManagerError> {
     let db = init_db()?;
 
-    let interaction_id = init_interaction(csmldata.payload.clone(), &csmldata.client, &db)?;
+    // Create a new interaction. An interaction is basically each request,
+    // initiated from the bot or the user.
+    let interaction_id = init_interaction(request.payload.clone(), &request.client, &db)?;
     let mut context = init_context(
         default_flow,
-        csmldata.client.clone(),
-        &csmldata.bot.fn_endpoint,
+        request.client.clone(),
+        &bot.fn_endpoint,
     );
 
-    let curl = match csmldata.callback_url {
+    // Create and cache a curl agent to call the callback_url for every new message.
+    // If no callback_url is set, no message will be sent as they are processed and
+    // they will only be returned at the end of the fully-processed and successful request.
+    let curl = match request.callback_url {
         Some(ref url) => {
             if let Ok(curl) = init_curl(url) {
                 Some(curl)
@@ -39,21 +59,22 @@ pub fn init_conversation_info<'a>(
         None => None,
     };
 
-    let flow_found = search_flow(event, &csmldata.bot, &csmldata.client, &db).ok();
-    let conversation_id = get_conversation(
+    // Do we have a flow matching the request? If the user is requesting a flow in one way
+    // or another, this takes precedence over any previously open conversation
+    // and a new conversation is created with the new flow as a starting point.
+    let flow_found = search_flow(event, &bot, &request.client, &db).ok();
+    let conversation_id = get_or_create_conversation(
         &mut context,
-        &csmldata.bot,
+        &bot,
         flow_found,
-        csmldata.metadata.clone(),
-        &csmldata.client,
+        request.metadata.clone(),
+        &request.client,
         &db,
     )?;
 
-    get_memories(
-        &csmldata.client,
-        // &conversation_id,
-        &mut context,
-        &csmldata.metadata,
+    context.metadata = request.metadata.clone();
+    context.current = get_memories(
+        &request.client,
         &db,
     )?;
 
@@ -61,14 +82,16 @@ pub fn init_conversation_info<'a>(
         conversation_id,
         interaction_id,
         context,
-        metadata: csmldata.metadata.clone(), // ??
-        request_id: csmldata.request_id.clone(),
+        metadata: request.metadata.clone(), // ??
+        request_id: request.request_id.clone(),
         curl,
-        client: csmldata.client.clone(),
+        client: request.client.clone(),
         messages: vec![],
         db,
     };
 
+    // Now that everything is correctly setup, update the conversation with wherever
+    // we are now and continue with the rest of the request!
     update_conversation(
         &data,
         Some(data.context.flow.to_owned()),
@@ -78,6 +101,9 @@ pub fn init_conversation_info<'a>(
     Ok(data)
 }
 
+/**
+ * Initialize the context object for incoming requests
+ */
 pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) -> ContextJson {
     let api_info = match fn_endpoint {
         Some(value) => Some(ApiInfo {
@@ -97,10 +123,14 @@ pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) 
     }
 }
 
-pub fn init_curl(callback_url: &str) -> Result<Easy, CurlError> {
+/**
+ * Initialize a curl agent for standardized post requests to a given url.
+ * It should be cached whenever possible to reuse existing connections.
+ */
+pub fn init_curl(url: &str) -> Result<Easy, CurlError> {
     let mut easy = Easy::new();
     let mut list = List::new();
-    easy.url(callback_url)?;
+    easy.url(url)?;
     easy.post(true)?;
 
     list.append("Accept: application/json")?;
@@ -109,7 +139,10 @@ pub fn init_curl(callback_url: &str) -> Result<Easy, CurlError> {
     Ok(easy)
 }
 
-fn get_conversation<'a>(
+/**
+ * Retrieve the current conversation, or create one if none exists.
+ */
+fn get_or_create_conversation<'a>(
     context: &mut ContextJson,
     bot: &'a CsmlBot,
     flow_found: Option<&'a CsmlFlow>,
@@ -119,13 +152,11 @@ fn get_conversation<'a>(
 ) -> Result<String, ManagerError> {
     match get_latest_open(client, db)? {
         Some(conversation) => {
-            //TODO: check for recursion
             match flow_found {
                 Some(flow) => {
                     context.step = "start".to_owned();
                     context.flow = flow.name.to_owned();
                 }
-                //TODO: see if need to create a new conversation or create a last_flow
                 None => {
                     let flow = match get_flow_by_id(&conversation.flow_id, &bot.flows) {
                         Ok(flow) => flow,
@@ -150,6 +181,9 @@ fn get_conversation<'a>(
     }
 }
 
+/**
+ * Create and save a new conversation in DB
+ */
 fn create_new_conversation<'a>(
     context: &mut ContextJson,
     bot: &'a CsmlBot,
