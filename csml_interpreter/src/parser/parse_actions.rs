@@ -5,7 +5,8 @@ use crate::data::{
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
 use crate::error_format::{
-    gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_RETURN, ERROR_USE,
+    gen_nom_failure, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_HOLD, ERROR_REMEMBER, ERROR_RETURN,
+    ERROR_SCOPE, ERROR_USE,
 };
 // use crate::linter::Linter;
 use crate::parser::{
@@ -192,8 +193,8 @@ fn parse_hold<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), 
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, inter) = get_interval(s)?;
-    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, inter) = preceded(comment, get_interval)(s)?;
+    let (s, name) = get_string(s)?;
 
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
@@ -217,8 +218,8 @@ fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo),
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, inter) = get_interval(s)?;
-    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, inter) = preceded(comment, get_interval)(s)?;
+    let (s, name) = get_string(s)?;
 
     let (s, ..) = get_tag(name, BREAK)(s)?;
 
@@ -268,6 +269,34 @@ where
     ))
 }
 
+fn catch_scope_fn_common_mistakes<'a, E>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+
+    if FN_SCOPE_REJECTED.contains(&name.as_ref()) {
+        return Err(gen_nom_failure(s, ERROR_FN_SCOPE));
+    }
+
+    Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+}
+
+fn catch_scope_common_mistakes<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+
+    if SCOPE_REJECTED.contains(&name.as_ref()) {
+        return Err(gen_nom_failure(s, ERROR_SCOPE));
+    }
+
+    Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +305,6 @@ pub fn parse_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Inst
 where
     E: ParseError<Span<'a>>,
 {
-    //TODO: catch use of 'return' and return error informing user that this function is not allowed in the normal scope
     alt((
         parse_do,
         parse_goto,
@@ -288,7 +316,7 @@ where
         parse_break,
         parse_if,
         parse_foreach,
-        // parse_return,
+        catch_scope_common_mistakes,
     ))(s)
 }
 
@@ -296,18 +324,11 @@ pub fn parse_fn_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, I
 where
     E: ParseError<Span<'a>>,
 {
-    //TODO: catch use of goto, remember, use, .. and return error informing user that this functions are not allowed in the Fn scope
     alt((
         parse_do,
-        // parse_goto,
-        // parse_remember,
-        parse_say,
-        // parse_use,
-        // parse_import,
-        // parse_hold,
-        // parse_break,
         parse_if,
         parse_foreach,
         parse_return,
+        catch_scope_fn_common_mistakes,
     ))(s)
 }

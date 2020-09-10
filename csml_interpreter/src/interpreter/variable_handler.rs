@@ -166,7 +166,7 @@ fn loop_path(
                 Some(new_lit) => lit = new_lit,
                 None => {
                     let err = gen_error_info(
-                        Position::new(interval.clone()),
+                        Position::new(*interval),
                         format!("[{}] {}", index, ERROR_ARRAY_INDEX),
                     );
                     return Ok((
@@ -198,7 +198,7 @@ fn loop_path(
                         Some(new_lit) => lit = new_lit,
                         None => {
                             let err = gen_error_info(
-                                Position::new(interval.clone()),
+                                Position::new(*interval),
                                 format!("[{}] {}", key, ERROR_OBJECT_GET),
                             );
                             return Ok((
@@ -219,7 +219,7 @@ fn loop_path(
                     ArgsType::Normal(args) => args,
                     ArgsType::Named(_) => {
                         let err = gen_error_info(
-                            Position::new(interval.clone()),
+                            Position::new(*interval),
                             format!("{}", ERROR_METHOD_NAMED_ARGS),
                         );
                         return Ok((

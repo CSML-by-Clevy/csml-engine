@@ -71,6 +71,10 @@ pub const _METADATA: &str = "_metadata";
 pub const BREAK: &str = "break";
 pub const RETURN: &str = "return";
 
+pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, USE, IMPORT, HOLD, BREAK];
+
+pub const SCOPE_REJECTED: &[&str] = &[RETURN];
+
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
 pub const NULL: &str = "null";
@@ -83,7 +87,7 @@ pub const INT: &str = "int";
 pub const FLOAT: &str = "float";
 pub const BOOLEAN: &str = "boolean";
 
-pub static TYPES: &[&str] = &[
+pub const TYPES: &[&str] = &[
     OBJECT_TYPE,
     ARRAY,
     TEXT_TYPE,
@@ -95,18 +99,18 @@ pub static TYPES: &[&str] = &[
 ];
 
 // COMPONENT,FILE
-pub static RESERVED: &[&str] = &[
+pub const RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
     MATCH, _METADATA, DEFAULT, REMEMBER, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 // TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
-pub static UTILISATION_RESERVED: &[&str] = &[
+pub const UTILISATION_RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
     COMPONENT,
 ];
 
-pub static ASSIGNATION_RESERVED: &[&str] = &[
+pub const ASSIGNATION_RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER,
     _METADATA, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
@@ -136,12 +140,12 @@ pub const DEBUG: &str = "Debug";
 
 pub const OBJECT: &str = "Object";
 
-pub static BUILT_IN: &[&str] = &[
+pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT, DEBUG,
 ];
-
-pub const MEMORY: &str = "memory";
 
 pub const FROM_FILE: &str = "FromFile";
 pub const GET_VALUE: &str = "GetValue";
 pub const FIRST: &str = "first";
+
+pub const MEMORY: &str = "memory";

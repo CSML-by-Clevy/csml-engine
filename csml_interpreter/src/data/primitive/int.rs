@@ -543,7 +543,7 @@ impl Primitive for PrimitiveInt {
             check_division_by_zero_i64(self.value, other.value)?;
 
             if self.value % other.value != 0 {
-                if let Some(_) = self.value.checked_div(other.value) {
+                if self.value.checked_div(other.value).is_some() {
                     let value = self.value as f64 / other.value as f64;
 
                     return Ok(Box::new(PrimitiveFloat::new(value)));

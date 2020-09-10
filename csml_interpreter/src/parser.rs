@@ -143,7 +143,7 @@ where
                 args,
             },
             actions: Expr::Scope {
-                block_type: BlockType::Function, // Step / Function
+                block_type: BlockType::Function,
                 scope: actions,
                 range: RangeInterval { start, end },
             },
