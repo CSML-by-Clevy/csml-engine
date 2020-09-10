@@ -25,6 +25,7 @@ pub const ERROR_REMEMBER: &'static str =
 pub const ERROR_USE: &'static str =
     "use must be assigning to a variable via 'as': use value as key";
 pub const ERROR_BREAK: &'static str = "break can only be used inside a foreach";
+pub const ERROR_RETURN: &'static str = "return expects a value to return";
 pub const ERROR_HOLD: &'static str = "hold cannot be used inside a foreach";
 pub const ERROR_LEFT_BRACE: &'static str = "expect '('";
 pub const ERROR_RIGHT_BRACE: &'static str = "expect ')'";

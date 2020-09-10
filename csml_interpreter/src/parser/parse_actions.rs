@@ -4,7 +4,7 @@ use crate::data::{
     tokens::*,
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
-use crate::error_format::{gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
+use crate::error_format::{ERROR_RETURN ,gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
 // use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,
@@ -152,7 +152,7 @@ where
     ))
 }
 
-//TODO: deprecat use
+//TODO: deprecate use
 fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
@@ -243,7 +243,12 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, RETURN)(s)?;
 
-    let (s, expr) = preceded(comment, parse_operator)(s)?;
+    let (s, expr) = match preceded(comment, parse_operator)(s) {
+        Ok(value) => value,
+        Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_RETURN, e))),
+        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    };
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -269,7 +274,7 @@ pub fn parse_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, Inst
 where
     E: ParseError<Span<'a>>,
 {
-    //TODO: catch use of 'return' and return error informing user that this functions are not allowed in the normal scope
+    //TODO: catch use of 'return' and return error informing user that this function is not allowed in the normal scope
     alt((
         parse_do,
         parse_goto,
