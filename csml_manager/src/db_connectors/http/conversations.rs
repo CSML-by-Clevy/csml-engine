@@ -1,4 +1,4 @@
-use crate::{db_connectors::Conversation, Client, ManagerError};
+use crate::{db_connectors::DbConversation, Client, ManagerError};
 use http_db::{
     apis::client::APIClient,
     models::{
@@ -33,14 +33,14 @@ fn status_to_str(status: &C_Status) -> String {
     }
 }
 
-fn format_conversation_struct(model: ConversationModel) -> Result<Conversation, ManagerError> {
+fn format_conversation_struct(model: ConversationModel) -> Result<DbConversation, ManagerError> {
     let client = Client {
         bot_id: model.client.bot_id,
         channel_id: model.client.channel_id,
         user_id: model.client.user_id,
     };
 
-    Ok(Conversation {
+    Ok(DbConversation {
         id: model.id,
         client,
         flow_id: model.flow_id.unwrap(),
@@ -112,7 +112,7 @@ pub fn close_all_conversations(
 pub fn get_latest_open(
     client: &Client,
     api_client: &APIClient,
-) -> Result<Option<Conversation>, ManagerError> {
+) -> Result<Option<DbConversation>, ManagerError> {
     let object200 = api_client.conversations_api().get_latest_open(
         &client.bot_id,
         &client.user_id,

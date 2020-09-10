@@ -1,4 +1,5 @@
-use crate::{Client, Conversation, ConversationInfo, Database, ManagerError};
+use crate::{Client, DbConversation, ConversationInfo, Database, ManagerError};
+use crate::db_connectors::{is_mongodb, is_http};
 use crate::error_messages::ERROR_DB_SETUP;
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
@@ -62,7 +63,7 @@ pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), Man
 pub fn get_latest_open(
     client: &Client,
     db: &Database,
-) -> Result<Option<Conversation>, ManagerError> {
+) -> Result<Option<DbConversation>, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;

@@ -14,7 +14,7 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{conversations::*, init_db, messages::*, state::*, Conversation};
+use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
@@ -82,7 +82,7 @@ pub fn start_conversation(
  * Return the latest conversation that is still open for a given user
  * (there should not be more than one), or None if there isn't any.
  */
-pub fn get_open_conversation(client: &Client) -> Result<Option<Conversation>, ManagerError> {
+pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, ManagerError> {
     let db = init_db()?;
 
     get_latest_open(client, &db)

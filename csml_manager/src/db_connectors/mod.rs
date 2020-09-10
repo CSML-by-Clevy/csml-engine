@@ -18,6 +18,10 @@
  *   - HTTP_DB_MS_URL
  *
  * If the ENGINE_DB_TYPE env var is not set, mongodb is used by default.
+ *
+ * To add a new DB type, please use one of the existing templates implementations.
+ * Each method of each module must be fully reimplemented in order to extend the "generic"
+ * implementation at the root of db_connectors directory.
  */
 
 use crate::data::{Database, ManagerError};
@@ -41,7 +45,7 @@ mod mongodb;
 mod http;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Conversation {
+pub struct DbConversation {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
@@ -55,7 +59,7 @@ pub struct Conversation {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Interaction {
+pub struct DbInteraction {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
@@ -66,7 +70,7 @@ pub struct Interaction {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct DbMemories {
+pub struct DbMemory {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
@@ -83,7 +87,7 @@ pub struct DbMemories {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Messages {
+pub struct DbMessage {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
@@ -100,7 +104,7 @@ pub struct Messages {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct Node {
+pub struct DbNode {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
@@ -114,7 +118,7 @@ pub struct Node {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct State {
+pub struct DbState {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
