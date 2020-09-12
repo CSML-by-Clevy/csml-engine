@@ -60,7 +60,7 @@ pub fn create_conversation(
     metadata: Value,
     api_client: &APIClient,
 ) -> Result<String, ManagerError> {
-    let ccb = CreateConversationBody::new(
+    let body = CreateConversationBody::new(
         Uuid::new_v4().to_string(),
         metadata,
         Some(flow_id.to_owned()),
@@ -70,7 +70,7 @@ pub fn create_conversation(
         &client.bot_id,
         &client.user_id,
         &client.channel_id,
-        ccb,
+        body,
     )?;
 
     Ok(conversation_model.id)
