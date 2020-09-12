@@ -3,6 +3,11 @@ use csml_interpreter::data::message::Message; //ApiInfo, Hold
 use curl::easy::Easy;
 use serde_json::Value;
 use serde::{Deserialize, Serialize};
+use tokio::runtime::Runtime;
+
+#[cfg(feature = "dynamo")]
+use rusoto_core::Region;
+use rusoto_dynamodb::DynamoDbClient as RusotoDynamoDbClient;
 
 pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
@@ -21,7 +26,28 @@ pub enum Database {
     Mongo(mongodb::Database),
     #[cfg(feature = "http")]
     Httpdb(http_db::apis::client::APIClient),
+    #[cfg(feature = "dynamo")]
+    Dynamodb(DynamoDbClient),
     None,
+}
+
+/**
+ * Dynamodb runs in async by default and returns futures, that need to be awaited on.
+ * The proper way to do it is by using tokio's runtime::block_on(). It is however quite costly
+ * to setup, so let's just do it once in the base DynamoDbStruct here.
+ */
+#[cfg(feature = "dynamo")]
+pub struct DynamoDbClient {
+    pub client: RusotoDynamoDbClient,
+    pub runtime: Runtime,
+}
+impl DynamoDbClient {
+    pub fn new(region: Region) -> Self {
+        Self {
+            client: RusotoDynamoDbClient::new(region),
+            runtime: Runtime::new().unwrap(),
+        }
+    }
 }
 
 pub struct ConversationInfo {

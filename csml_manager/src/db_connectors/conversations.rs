@@ -1,10 +1,11 @@
 use crate::{Client, DbConversation, ConversationInfo, Database, ManagerError};
-use crate::db_connectors::{is_mongodb, is_http};
 use crate::error_messages::ERROR_DB_SETUP;
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "http")]
 use crate::db_connectors::{is_http, http as http_connector};
+#[cfg(feature = "dynamo")]
+use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
 
 pub fn create_conversation(
     flow_id: &str,
@@ -13,6 +14,7 @@ pub fn create_conversation(
     metadata: serde_json::Value,
     db: &Database,
 ) -> Result<String, ManagerError> {
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -23,6 +25,12 @@ pub fn create_conversation(
     if is_http() {
         let db = http_connector::get_db(db)?;
         return http_connector::conversations::create_conversation(flow_id, step_id, client, metadata, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::create_conversation(flow_id, step_id, client, metadata, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))

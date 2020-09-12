@@ -12,9 +12,20 @@
  *   - MONGODB_DATABASE
  *   - MONGODB_USERNAME
  *   - MONGODB_PASSWORD
+ *
+ * - `dynamodb`: requires a DynamoDB-compatible database (on AWS, or dynamodb-local
+ * for dev purposes). The following env vars are required (alternatively if deploying on AWS,
+ * use IAM roles)
+ *   - AWS_REGION defaults to `us-east-1`
+ *   - AWS_ACCESS_KEY_ID defaults to `foo`
+ *   - AWS_SECRET_ACCESS_KEY defaults to `bar`
+ *   - AWS_DYNAMODB_ENDPOINT defaults to the default dynamodb endpoint for the given region.
+ *   - AWS_DYNAMODB_TABLE defaults to the default dynamodb endpoint for the given region.
+ * Both AWS_REGION AND AWS_DYNAMODB_ENDPOINT must be set to use a custom dynamodb-compatible DB.
+ *
  * - `http`: if the developer wants to use a different DB engine, they can also create a HTTP-driven
- *   microservice to accomodate the required routes. If `http` mode is set, an additional variable
- *   is required:
+ * microservice to accomodate the required routes. If `http` mode is set, an additional variable
+ * is required:
  *   - HTTP_DB_MS_URL
  *
  * If the ENGINE_DB_TYPE env var is not set, mongodb is used by default.
@@ -25,10 +36,12 @@
  */
 
 use crate::data::{Database, ManagerError};
+use serde::{Serialize, Deserialize};
+use crate::error_messages::ERROR_DB_SETUP;
 
 use self::mongodb as mongodb_connector;
 use self::http as http_connector;
-use crate::error_messages::ERROR_DB_SETUP;
+use self::dynamodb as dynamodb_connector;
 
 pub mod conversations;
 pub mod interactions;
@@ -41,10 +54,12 @@ use crate::Client;
 
 #[cfg(feature = "mongo")]
 mod mongodb;
+#[cfg(feature = "dynamo")]
+mod dynamodb;
 #[cfg(feature = "http")]
 mod http;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DbConversation {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
@@ -58,7 +73,7 @@ pub struct DbConversation {
     pub created_at: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DbInteraction {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
@@ -69,7 +84,7 @@ pub struct DbInteraction {
     pub created_at: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DbMemory {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
@@ -81,12 +96,12 @@ pub struct DbMemory {
     pub memory_order: i32,
     pub interaction_order: i32,
     pub key: String,
-    pub value: String,
+    pub value: serde_json::Value,
     pub expires_at: Option<String>,
     pub created_at: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DbMessage {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
@@ -98,12 +113,12 @@ pub struct DbMessage {
     pub message_order: i32,
     pub interaction_order: i32,
     pub direction: String,
-    pub payload: String,
+    pub payload: serde_json::Value,
     pub content_type: String,
     pub created_at: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DbNode {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
@@ -117,14 +132,14 @@ pub struct DbNode {
     pub created_at: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DbState {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
     #[serde(rename = "type")]
     pub _type: String,
-    pub value: String,
+    pub value: serde_json::Value,
     pub expires_at: Option<String>,
     pub created_at: String,
 }
@@ -136,6 +151,14 @@ pub fn is_mongodb() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
         Ok(val) => val == "mongodb".to_owned(),
         Err(_) => true
+    }
+}
+
+#[cfg(feature = "dynamo")]
+pub fn is_dynamodb() -> bool {
+    match std::env::var("ENGINE_DB_TYPE") {
+        Ok(val) => val == "dynamodb".to_owned(),
+        Err(_) => false
     }
 }
 
@@ -159,58 +182,10 @@ pub fn init_db() -> Result<Database, ManagerError> {
         return http_connector::init();
     }
 
+    #[cfg(feature = "dynamo")]
+    if is_http() {
+        return dynamodb_connector::init();
+    }
+
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
-
-// ############################## conversation
-// create_conversation(&mut core, &api_client); // OK return ConversationModel
-// get_conversation(&mut core, &api_client); // OK ConversationModel
-// get_latest_open(&mut core, &api_client); // OK InlineResponse200
-// close_all_conversations(&mut core, &api_client); // Ok return ()
-// close_conversation(&mut core, &api_client); // Ok return ()
-// update_conversation(&mut core, &api_client); // Ok return ()
-// ##############################
-
-// ############################## memories
-// add_memories_bulk(&mut core, &api_client); // OK ()
-// add_memory(&mut core, &api_client); // OK ()
-// get_current_memories(&mut core, &api_client); // OK [memories]
-// get_past_memories(&mut core, &api_client); // OK [memories]
-// ##############################
-
-// ############################## messages
-// add_messages(&mut core, &api_client); // Ok return ()
-// add_messages_bulk(&mut core, &api_client); // Ok return ()
-// ##############################
-
-// ############################## Nodes
-// create_node(&mut core, &api_client); // OK ()
-// get_conversation_nodes(&mut core, &api_client); // OK NodeModel
-// ##############################
-
-// ############################## Interactions
-// get_interaction(&mut core, &api_client); // InteractionModel
-// get_interaction_status(&mut core, &api_client); // Ok InlineResponse2001
-// get_lock_status(&mut core, &api_client); // Ok InlineResponse2002
-// init_interaction(&mut core, &api_client); // OK InteractionModel
-// update_interaction(&mut core, &api_client); // OK ()
-// ##############################
-
-// ############################## State
-// clear_full_state(bot_id: &str, user_id: &str, channel_id: &str) // OK ()
-// delete_item_state(composite_key: &str, bot_id: &str, user_id: &str, channel_id: &str) // OK ()
-// get_full_state(bot_id: &str, user_id: &str, channel_id: &str) // OK StateModel
-// get_item_state(composite_key: &str, bot_id: &str, user_id: &str, channel_id: &str) // OK StateModel
-// set_item_state(composite_key: &str, bot_id: &str, user_id: &str, channel_id: &str, set_state_body: SetStateBody) // OK StateModel
-// ##############################
-
-// delete_state_full(&self, bot_id: &str, user_id: &str, channel_id: &str) -> Result<(), Error>;
-// get_state_full(&self, bot_id: &str, user_id: &str, channel_id: &str) -> Result<Vec<crate::models::StateModel>, Error>;
-
-// delete_state_type(&self, _type: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<(), Error>;
-// get_state_type(&self, _type: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<Vec<crate::models::StateModel>, Error>;
-
-// delete_state_key(&self, _type: &str, key: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<(), Error>;
-// get_state_key(&self, _type: &str, key: &str, bot_id: &str, user_id: &str, channel_id: &str) -> Result<crate::models::StateModel, Error>;
-
-// set_state_items(&self, bot_id: &str, user_id: &str, channel_id: &str, create_state_body: Vec<crate::models::CreateStateBody>) -> Result<crate::models::StateModel, Error>;
