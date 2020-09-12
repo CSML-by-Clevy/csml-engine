@@ -14,13 +14,11 @@ pub struct Flow {
 #[derive(PartialEq, Debug, Clone)]
 pub enum FlowType {
     Normal,
-    Recursive,
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Hash)]
 pub enum InstructionType {
     NormalStep(String),
-    //hook ?
 }
 
 impl Display for InstructionType {

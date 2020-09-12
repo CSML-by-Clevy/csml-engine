@@ -40,7 +40,6 @@ pub struct ConversationInfo {
 pub enum Next {
     Flow(String),
     Step(String),
-    Recursive,
     Hold, //(i32)
     End,
     Error,
