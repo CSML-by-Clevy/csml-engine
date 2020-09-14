@@ -41,7 +41,7 @@ fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
 pub fn interpret_scope(
     actions: &Block,
     data: &mut Data,
-    instruction_index: Option<usize>,
+    instruction_index: &Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let mut message_data = MessageData::default();
@@ -50,7 +50,7 @@ pub fn interpret_scope(
         let instruction_total = instruction_info.index + instruction_info.total;
 
         if let Some(instruction_index) = instruction_index {
-            if instruction_index >= instruction_total {
+            if *instruction_index >= instruction_total {
                 continue;
             }
         }
@@ -79,7 +79,7 @@ pub fn interpret_scope(
                 return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, instruction_index, &sender)?
+                message_data = match_actions(fun, message_data, data, *instruction_index, &sender)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
@@ -138,7 +138,7 @@ pub fn interpret_function_scope(
                     if_statement,
                     message_data,
                     data,
-                    None,
+                    &None,
                     instruction_info,
                     &None,
                 )?;
@@ -152,7 +152,7 @@ pub fn interpret_function_scope(
                     range,
                     message_data,
                     data,
-                    None,
+                    &None,
                     &None,
                 )?
             }

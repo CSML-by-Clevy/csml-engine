@@ -37,7 +37,7 @@ use std::sync::mpsc;
 fn execute_step(
     step: &str,
     mut data: &mut Data,
-    rip: Option<usize>,
+    instruction_index: &Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let flow = data.flow.to_owned();
@@ -49,7 +49,7 @@ fn execute_step(
         Some(Expr::Scope { scope, .. }) => {
             Position::set_step(&step);
 
-            interpret_scope(scope, &mut data, rip, &sender)
+            interpret_scope(scope, &mut data, &instruction_index, &sender)
         }
         _ => Err(gen_error_info(
             Position::new(Interval::new_as_u32(0, 0)),
@@ -57,18 +57,24 @@ fn execute_step(
         )),
     };
 
-    // if no goto at the end of the scope end conversation
     if let Ok(msg_data) = &mut msg_data {
-        if msg_data.exit_condition.is_none() {
-            msg_data.exit_condition = Some(ExitCondition::End);
-            data.context.step = "end".to_string();
-            MSG::send(
-                &sender,
-                MSG::Next {
-                    flow: None,
-                    step: Some("end".to_owned()),
-                },
-            );
+        match &mut msg_data.exit_condition {
+            Some(condition) if *condition == ExitCondition::Goto => {
+                msg_data.exit_condition = None;
+            }
+            Some(_) => (),
+            // if no goto at the end of the scope end conversation
+            None => {
+                msg_data.exit_condition = Some(ExitCondition::End);
+                data.context.step = "end".to_string();
+                MSG::send(
+                    &sender,
+                    MSG::Next {
+                        flow: None,
+                        step: Some("end".to_owned()),
+                    },
+                );
+            }
         }
     }
 
@@ -166,6 +172,29 @@ pub fn interpret(
     let mut step = context.step.to_owned();
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
+    let mut step_vars = match &context.hold {
+        Some(hold) => get_hashmap_from_mem(&hold.step_vars),
+        None => HashMap::new(),
+    };
+
+    let mut instruction_index = match context.hold {
+        Some(result) => {
+            context.hold = None;
+            Some(result.index)
+        }
+        None => None,
+    };
+
+    let native = match bot.native_components {
+        Some(ref obj) => obj.to_owned(),
+        None => serde_json::Map::new(),
+    };
+
+    let custom = match bot.custom_components {
+        Some(serde_json::Value::Object(ref obj)) => obj.to_owned(),
+        _ => serde_json::Map::new(),
+    };
+
     Warnings::clear();
     Linter::clear();
     while msg_data.exit_condition.is_none() {
@@ -187,40 +216,14 @@ pub fn interpret(
             }
         };
 
-        let step_vars = match &context.hold {
-            Some(hold) => get_hashmap_from_mem(&hold.step_vars),
-            None => HashMap::new(),
-        };
+        let mut data = Data::new(&ast, &mut context, &event, step_vars, &custom, &native);
 
-        let native = match bot.native_components {
-            Some(ref obj) => obj.to_owned(),
-            None => serde_json::Map::new(),
-        };
-
-        let custom = match bot.custom_components {
-            Some(serde_json::Value::Object(ref obj)) => obj.to_owned(),
-            _ => serde_json::Map::new(),
-        };
-
-        let mut data = Data::new(&ast, &mut context, &event, step_vars, custom, native);
-
-        let rip = match context.hold {
-            Some(result) => {
-                context.hold = None;
-                Some(result.index)
-            }
-            None => None,
-        };
-
-        msg_data = msg_data + execute_step(&step, &mut data, rip, &sender);
-
-        if let Some(ExitCondition::Goto) = msg_data.exit_condition {
-            msg_data.exit_condition = None;
-        }
+        msg_data = msg_data + execute_step(&step, &mut data, &instruction_index, &sender);
 
         flow = data.context.flow.to_string();
         step = data.context.step.to_string();
-        context = data.context.to_owned();
+        step_vars = HashMap::new();
+        instruction_index = None;
     }
 
     msg_data

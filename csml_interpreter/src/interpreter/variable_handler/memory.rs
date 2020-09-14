@@ -18,7 +18,10 @@ pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, E
     }
 }
 
-pub fn search_var_memory(name: Identifier, data: &mut Data) -> Result<&mut Literal, ErrorInfo> {
+pub fn search_var_memory<'a>(
+    name: Identifier,
+    data: &'a mut Data,
+) -> Result<&'a mut Literal, ErrorInfo> {
     match data.context.current.get_mut(&name.ident) {
         Some(lit) => {
             lit.interval = name.interval;

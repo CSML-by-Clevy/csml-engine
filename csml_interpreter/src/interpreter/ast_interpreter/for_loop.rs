@@ -18,7 +18,7 @@ pub fn for_loop(
     range: &RangeInterval,
     mut msg_data: MessageData,
     data: &mut Data,
-    instruction_index: Option<usize>,
+    instruction_index: &Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let literal = expr_to_literal(expr, None, data, &mut msg_data, sender)?;

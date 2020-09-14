@@ -102,21 +102,22 @@ fn normal_object_to_literal(
                 ));
             }
 
-            let mut new_scope_data = Data {
-                flow: data.flow.clone(),
-                context: Context {
-                    current: HashMap::new(),
-                    metadata: HashMap::new(),
-                    api_info: None,
-                    hold: None,
-                    step: data.context.step.clone(),
-                    flow: data.context.flow.clone(),
-                },
-                event: data.event.clone(),
-                step_vars: HashMap::new(),
-                custom_component: data.custom_component.clone(),
-                native_component: data.native_component.clone(),
+            let mut context = Context {
+                current: HashMap::new(),
+                metadata: HashMap::new(),
+                api_info: data.context.api_info.clone(),
+                hold: None,
+                step: data.context.step.clone(),
+                flow: data.context.flow.clone(),
             };
+            let mut new_scope_data = Data::new(
+                &data.flow,
+                &mut context,
+                &data.event,
+                HashMap::new(),
+                &data.custom_component,
+                &data.native_component,
+            );
 
             for (index, name) in fn_args.iter().enumerate() {
                 let value = args.get(name, index).unwrap();
