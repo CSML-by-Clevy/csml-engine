@@ -26,9 +26,9 @@ pub fn interval_from_if_stmt(ifstmt: &IfStatement) -> Interval {
     }
 }
 
-pub fn interval_from_reserved_fn(reservedfn: &ObjectType) -> Interval {
-    match reservedfn {
-        ObjectType::Goto(_g, ident) => ident.interval.to_owned(),
+pub fn interval_from_reserved_fn(reserved_fn: &ObjectType) -> Interval {
+    match reserved_fn {
+        ObjectType::Goto(_g, interval) => interval.to_owned(),
         ObjectType::Use(expr) => interval_from_expr(expr),
         ObjectType::Do(DoType::Update(expr, ..)) => interval_from_expr(expr),
         ObjectType::Do(DoType::Exec(expr)) => interval_from_expr(expr),

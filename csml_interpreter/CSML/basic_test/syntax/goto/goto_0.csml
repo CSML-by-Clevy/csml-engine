@@ -1,3 +1,15 @@
 start:
     // pass
     goto key
+
+step1:
+    // pass
+    goto key@
+
+step2:
+    // pass
+    goto @
+
+step3:
+    // pass
+    goto step_name@flow_name
