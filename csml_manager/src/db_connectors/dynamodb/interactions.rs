@@ -28,6 +28,7 @@ pub fn init_interaction(
 
 
     let input = PutItemInput {
+        table_name: get_table_name()?,
         item: to_attribute_value_map(&interaction)?,
         condition_expression: Some("#hashKey <> :hashVal AND #rangeKey <> :rangeVal".to_owned()),
         expression_attribute_names: Some(expr_attr_names),
@@ -70,6 +71,7 @@ pub fn update_interaction(
     let update_expr = "SET #updatedAtKey = :updatedAtVal, #succesKey = :successVal".to_string();
 
     let input = UpdateItemInput {
+        table_name: get_table_name()?,
         key: to_attribute_value_map(&key)?,
         condition_expression: Some(condition_expr),
         update_expression: Some(update_expr),

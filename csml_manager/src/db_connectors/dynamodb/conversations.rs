@@ -193,6 +193,7 @@ pub fn get_latest_open(
     ].iter().cloned().collect();
 
     let input = QueryInput {
+        table_name: get_table_name()?,
         index_name: Some(String::from("TimeIndex")),
         key_condition_expression: Some(condition_expr),
         expression_attribute_names: Some(expr_attr_names),
@@ -283,6 +284,7 @@ pub fn update_conversation(
     }
 
     let input = UpdateItemInput {
+        table_name: get_table_name()?,
         key: to_attribute_value_map(&DynamoDbKey::new(&hash, &range))?,
         condition_expression: Some(condition_expr),
         update_expression: Some(update_expr.to_string()),

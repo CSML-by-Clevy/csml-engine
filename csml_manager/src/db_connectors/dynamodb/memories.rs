@@ -57,13 +57,14 @@ pub fn add_memories(
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
                     item: to_attribute_value_map(&data)?,
+                    ..Default::default()
                 }),
                 ..Default::default()
             });
         };
 
         request_items.insert(
-            "PutRequest".to_owned(),
+            get_table_name()?,
             items_to_write,
         );
 

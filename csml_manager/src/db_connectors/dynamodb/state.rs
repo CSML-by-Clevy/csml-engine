@@ -19,6 +19,7 @@ pub fn delete_state_key(
     };
 
     let input = DeleteItemInput {
+        table_name: get_table_name()?,
         key: to_attribute_value_map(&item_key)?,
         ..Default::default()
     };
@@ -43,6 +44,7 @@ pub fn get_state_key(
     };
 
     let input = GetItemInput {
+        table_name: get_table_name()?,
         key: to_attribute_value_map(&item_key)?,
         ..Default::default()
     };
@@ -107,7 +109,7 @@ pub fn set_state_items(
         };
 
         request_items.insert(
-            "PutRequest".to_owned(),
+            get_table_name()?,
             items_to_write,
         );
 

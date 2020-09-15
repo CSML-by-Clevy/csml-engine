@@ -63,7 +63,7 @@ pub fn add_messages_bulk(
         };
 
         request_items.insert(
-            "PutRequest".to_owned(),
+            get_table_name()?,
             items_to_write,
         );
 
