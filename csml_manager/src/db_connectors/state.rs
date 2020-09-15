@@ -5,6 +5,8 @@ use crate::error_messages::ERROR_DB_SETUP;
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "http")]
 use crate::db_connectors::{is_http, http as http_connector};
+#[cfg(feature = "dynamo")]
+use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
 
 pub fn delete_state_key(
     client: &Client,
@@ -22,6 +24,12 @@ pub fn delete_state_key(
     if is_http() {
         let db = http_connector::get_db(db)?;
         return http_connector::state::delete_state_key(client, _type, _key, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::state::delete_state_key(client, _type, _key, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -45,6 +53,12 @@ pub fn get_state_key(
         return http_connector::state::get_state_key(client, _type, _key, db);
     }
 
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::state::get_state_key(client, _type, _key, db);
+    }
+
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -57,9 +71,7 @@ pub fn set_state_items(
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-    let state_data = mongodb_connector::state::format_state_data(&data.client, _type, keys_values)?;
-    let db = mongodb_connector::get_db(&data.db)?;
-        return mongodb_connector::state::set_state_items(&data.client, state_data, db);
+        return mongodb_connector::state::set_state_items(data, _type, keys_values);
     }
 
     #[cfg(feature = "http")]
@@ -67,6 +79,11 @@ pub fn set_state_items(
         let state_data = http_connector::state::format_state_data(data, _type, interaction_order, keys_values);
         let db = http_connector::get_db(&data.db)?;
         return http_connector::state::set_state_items(&data.client, state_data, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        return dynamodb_connector::state::set_state_items(data, _type, keys_values);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))

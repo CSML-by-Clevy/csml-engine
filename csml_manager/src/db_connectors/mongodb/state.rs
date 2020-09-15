@@ -1,7 +1,8 @@
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
-    ManagerError,
+    ManagerError, ConversationInfo,
 };
+use crate::db_connectors::mongodb as mongodb_connector;
 use bson::{doc, Bson, Document};
 use csml_interpreter::data::Client;
 
@@ -43,8 +44,7 @@ pub fn delete_state_key(
         "type": _type,
         "key": key,
     };
-    // let find_options = mongodb::options::FindOneOptions::builder().sort(doc! { "$natural": -1 }).build();
-    let _doc_find = state.delete_one(filter, None)?;
+    state.delete_one(filter, None)?;
 
     Ok(())
 }
@@ -75,15 +75,17 @@ pub fn get_state_key(
 }
 
 pub fn set_state_items(
-    _client: &Client,
-    state_data: Vec<Document>,
-    db: &mongodb::Database
+    data: &ConversationInfo,
+    _type: &str,
+    keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
 
-    if state_data.len() == 0 {
+    if keys_values.len() == 0 {
         return Ok(())
     }
 
+    let state_data = format_state_data(&data.client, _type, keys_values)?;
+    let db = mongodb_connector::get_db(&data.db)?;
     let state = db.collection("state");
     state.insert_many(state_data, None)?;
 

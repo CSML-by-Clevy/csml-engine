@@ -4,6 +4,8 @@ use crate::error_messages::ERROR_DB_SETUP;
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "http")]
 use crate::db_connectors::{is_http, http as http_connector};
+#[cfg(feature = "dynamo")]
+use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
 
 pub fn init_interaction(
     event: serde_json::Value,
@@ -22,6 +24,12 @@ pub fn init_interaction(
         return http_connector::interactions::init_interaction(event, client, db);
     }
 
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::interactions::init_interaction(event, client, db);
+    }
+
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -36,6 +44,12 @@ pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), 
     if is_http() {
         let db = http_connector::get_db(&data.db)?;
         return http_connector::interactions::update_interaction(&data.interaction_id, success, &data.client, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(&data.db)?;
+        return dynamodb_connector::interactions::update_interaction(&data.interaction_id, success, &data.client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))

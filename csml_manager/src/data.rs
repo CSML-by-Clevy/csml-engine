@@ -3,7 +3,6 @@ use csml_interpreter::data::message::Message; //ApiInfo, Hold
 use curl::easy::Easy;
 use serde_json::Value;
 use serde::{Deserialize, Serialize};
-use tokio::runtime::Runtime;
 
 #[cfg(feature = "dynamo")]
 use rusoto_core::Region;
@@ -39,13 +38,19 @@ pub enum Database {
 #[cfg(feature = "dynamo")]
 pub struct DynamoDbClient {
     pub client: RusotoDynamoDbClient,
-    pub runtime: Runtime,
+    pub runtime: Option<tokio::runtime::Runtime>,
 }
 impl DynamoDbClient {
     pub fn new(region: Region) -> Self {
         Self {
             client: RusotoDynamoDbClient::new(region),
-            runtime: Runtime::new().unwrap(),
+            runtime: None,
+        }
+    }
+    pub fn get_runtime(&self) -> Result<tokio::runtime::Runtime, ManagerError> {
+        match tokio::runtime::Runtime::new() {
+            Ok(rt) => Ok(rt),
+            Err(err) => Err(ManagerError::Manager(err.to_string())),
         }
     }
 }
@@ -90,6 +95,9 @@ pub enum ManagerError {
 
     #[cfg(any(feature = "http"))]
     Reqwest(reqwest::Error),
+
+    #[cfg(any(feature = "dynamo"))]
+    Rusoto(String),
 }
 
 impl From<serde_json::Error> for ManagerError {
@@ -159,5 +167,12 @@ impl From<http_db::apis::Error> for ManagerError {
             http_db::apis::Error::Io(io) => ManagerError::Io(io),
             http_db::apis::Error::Interpreter(string) => ManagerError::Interpreter(string),
         }
+    }
+}
+
+#[cfg(any(feature = "dynamo"))]
+impl<E: std::error::Error + 'static> From<rusoto_core::RusotoError<E>> for ManagerError {
+    fn from(e: rusoto_core::RusotoError<E>) -> Self {
+        ManagerError::Rusoto(e.to_string())
     }
 }

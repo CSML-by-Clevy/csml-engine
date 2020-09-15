@@ -49,6 +49,12 @@ pub fn close_conversation(id: &str, client: &Client, db: &Database) -> Result<()
         return http_connector::conversations::close_conversation(id, client, "CLOSED", db);
     }
 
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::close_conversation(id, client, "CLOSED", db);
+    }
+
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -63,6 +69,12 @@ pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), Man
     if is_http() {
         let db = http_connector::get_db(db)?;
         return http_connector::conversations::close_all_conversations(client, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::close_all_conversations(client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -82,6 +94,12 @@ pub fn get_latest_open(
     if is_http() {
         let db = http_connector::get_db(db)?;
         return http_connector::conversations::get_latest_open(client, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::get_latest_open(client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -108,6 +126,18 @@ pub fn update_conversation(
     if is_http() {
         let db = http_connector::get_db(&data.db)?;
         return http_connector::conversations::update_conversation(
+            &data.conversation_id,
+            &data.client,
+            flow_id,
+            step_id,
+            db,
+        );
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(&data.db)?;
+        return dynamodb_connector::conversations::update_conversation(
             &data.conversation_id,
             &data.client,
             flow_id,

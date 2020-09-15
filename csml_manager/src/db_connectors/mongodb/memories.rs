@@ -1,21 +1,20 @@
 use crate::{
     db_connectors::mongodb::get_db,
     encrypt::{decrypt_data, encrypt_data},
-    Client, ConversationInfo, ManagerError, Memories,
+    Client, ConversationInfo, ManagerError, Memories as Memory,
 };
 use bson::{doc, Bson};
 
 fn format_memories(
     data: &mut ConversationInfo,
-    memories: &[Memories],
+    memories: &[Memory],
     interaction_order: i32,
 ) -> Result<Vec<bson::Document>, ManagerError> {
     let client = bson::to_bson(&data.client)?;
 
-    memories
-        .iter()
+    memories.iter()
         .enumerate()
-        .fold(Ok(vec![]), |vec, (memorie_order, var)| {
+        .fold(Ok(vec![]), |vec, (memory_order, var)| {
             let time = Bson::UtcDatetime(chrono::Utc::now());
             let value = encrypt_data(&var.value)?;
 
@@ -27,7 +26,7 @@ fn format_memories(
                 "conversation_id": &data.conversation_id,
                 "flow_id": &data.context.flow,
                 "step_id": &data.context.step,
-                "memory_order": memorie_order as i32,
+                "memory_order": memory_order as i32,
                 "interaction_order": interaction_order,
                 "key": &var.key,
                 "value": value, // encrypted
@@ -40,12 +39,9 @@ fn format_memories(
 
 pub fn add_memories(
     data: &mut ConversationInfo,
-    memories: &[Memories],
+    memories: &[Memory],
     interaction_order: i32,
 ) -> Result<(), ManagerError> {
-    if memories.len() == 0 {
-        return Ok(());
-    }
     let mem = format_memories(data, memories, interaction_order)?;
     let db = get_db(&data.db)?;
 

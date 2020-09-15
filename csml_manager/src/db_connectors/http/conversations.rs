@@ -80,11 +80,11 @@ pub fn close_conversation(
     id: &str,
     client: &Client,
     status: &str,
-    api_client: &APIClient,
+    db: &APIClient,
 ) -> Result<(), ManagerError> {
     let status = get_status(status);
 
-    api_client.conversations_api().close_conversation(
+    db.conversations_api().close_conversation(
         id,
         &client.bot_id,
         &client.user_id,
@@ -97,9 +97,9 @@ pub fn close_conversation(
 
 pub fn close_all_conversations(
     client: &Client,
-    api_client: &APIClient,
+    db: &APIClient,
 ) -> Result<(), ManagerError> {
-    api_client.conversations_api().close_all_conversations(
+    db.conversations_api().close_all_conversations(
         &client.bot_id,
         &client.user_id,
         &client.channel_id,
