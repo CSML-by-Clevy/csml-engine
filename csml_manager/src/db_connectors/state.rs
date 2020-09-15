@@ -1,11 +1,10 @@
 use crate::{ConversationInfo, Database, ManagerError};
 use csml_interpreter::data::Client;
 use crate::error_messages::ERROR_DB_SETUP;
-use crate::db_connectors::{is_mongodb, is_http};
 #[cfg(feature = "mongo")]
-use crate::db_connectors::mongodb as mongodb_connector;
+use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "http")]
-use crate::db_connectors::http as http_connector;
+use crate::db_connectors::{is_http, http as http_connector};
 
 pub fn delete_state_key(
     client: &Client,
