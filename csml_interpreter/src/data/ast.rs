@@ -39,8 +39,9 @@ pub struct Instruction {
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum GotoType {
-    Step,
-    Flow,
+    Step(String),
+    Flow(String),
+    StepFlow { step: String, flow: String },
 }
 
 #[derive(Debug, Clone)]
@@ -59,7 +60,7 @@ pub struct Function {
 
 #[derive(Debug, Clone)]
 pub enum ObjectType {
-    Goto(GotoType, Identifier),
+    Goto(GotoType, Interval),
     Hold(Interval),
     Use(Box<Expr>),
     Do(DoType),

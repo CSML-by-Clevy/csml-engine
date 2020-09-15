@@ -55,8 +55,7 @@ pub const ERROR_ASSIGN_IDENT: &'static str = "key must be of type identifier";
 pub const ERROR_SIZE_IDENT: &'static str = "key can't be longer than 255 character";
 pub const ERROR_FUNCTIONS_ARGS: &'static str = "argument in of function must be in an array";
 pub const ERROR_EXPR_TO_LITERAL: &'static str = "expression can't be converted to Literal";
-pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &'static str =
-    "payload exceeds max payload size (16kb)";
+pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &'static str = "payload exceeds max payload size (16kb)";
 
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &'static str = "event can only be of ContentType::Event";
@@ -66,8 +65,7 @@ pub const ERROR_COMPONENT_NAMESPACE: &'static str = "component must have a funct
 pub const ERROR_COMPONENT_UNKNOWN: &'static str = "function does not exist for component";
 
 // Fn API
-pub const ERROR_FN_ID: &'static str =
-    "Fn's name must be of type string";
+pub const ERROR_FN_ID: &'static str = "Fn's name must be of type string";
 pub const ERROR_FN_ENDPOINT: &'static str =
     "Fn can not be called because fn_endpoint is not set in bot";
 pub const ERROR_FAIL_RESPONSE_JSON: &'static str = "failed to read response as JSON";
