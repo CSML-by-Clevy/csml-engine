@@ -2,8 +2,7 @@ use crate::{ConversationInfo, ManagerError};
 use crate::db_connectors::dynamodb::{Node, get_db};
 use rusoto_dynamodb::*;
 
-#[path = "utils.rs"]
-mod utils;
+use crate::db_connectors::dynamodb::utils::*;
 
 pub fn create_node(
     data: &mut ConversationInfo,
@@ -20,7 +19,7 @@ pub fn create_node(
         nextstep
     );
 
-    let item = utils::to_attribute_value_map(&node)?;
+    let item = to_attribute_value_map(&node)?;
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),

@@ -11,11 +11,10 @@ pub mod messages;
 pub mod nodes;
 pub mod state;
 
-#[path = "utils.rs"]
-mod utils;
+pub mod utils;
 
+use crate::db_connectors::dynamodb::utils::*;
 
-#[cfg(feature = "dynamo")]
 use rusoto_core::Region;
 
 pub fn init() -> Result<Database, ManagerError> {
@@ -37,7 +36,7 @@ pub fn init() -> Result<Database, ManagerError> {
     }
 
     // check that the table name is set in env
-    utils::get_table_name()?;
+    get_table_name()?;
 
     let client = DynamoDbClient::new(region);
 
@@ -86,11 +85,11 @@ pub struct Conversation {
 impl Conversation {
 
     pub fn get_hash(client: &Client) -> String {
-        utils::make_hash(client)
+        make_hash(client)
     }
 
     pub fn get_range(id: &str) -> String {
-        utils::make_range(&["conversation", id])
+        make_range(&["conversation", id])
     }
 
     pub fn get_key(client: &Client, id: &str) -> DynamoDbKey {
@@ -104,38 +103,39 @@ impl Conversation {
      * range = conversation#id
      * range_time = conversation#OPEN|CLOSED#timestamp#id
      */
-    pub fn new(client: &Client, metadata: serde_json::Value, flow_id: &str, step_id: &str) -> Self {
+    pub fn new(client: &Client, encrypted_metadata: &str, flow_id: &str, step_id: &str) -> Self {
         let id = Uuid::new_v4().to_string();
-        let now = utils::get_date_time();
+        let now = get_date_time();
         let status = "OPEN";
         let class_name= "conversation";
         Self {
             hash: Self::get_hash(client),
             range: Self::get_range(&id),
-            range_time: utils::make_range(&[class_name, status, &now, &id]),
+            range_time: make_range(&[class_name, status, &now, &id]),
             id,
             client: client.to_owned(),
-            class: class_name.to_string(),
-            metadata: encrypt_data(&metadata).unwrap(),
-            flow_id: flow_id.to_string(),
-            step_id: step_id.to_string(),
-            status: status.to_string(),
-            last_interaction_at: now.clone(),
-            updated_at: now.clone(),
-            created_at: now.clone(),
+            class: class_name.to_owned(),
+            metadata: encrypted_metadata.to_owned(),
+            flow_id: flow_id.to_owned(),
+            step_id: step_id.to_owned(),
+            status: status.to_owned(),
+            last_interaction_at: now.to_owned(),
+            updated_at: now.to_owned(),
+            created_at: now.to_owned(),
         }
     }
 
     pub fn from(conversation: &DbConversation) -> Self {
         let class_name= "conversation";
+        let metadata = encrypt_data(&conversation.metadata).unwrap();
         Self {
             hash: Self::get_hash(&conversation.client),
             range: Self::get_range(&conversation.id),
-            range_time: utils::make_range(&[class_name, &conversation.status, &conversation.last_interaction_at, &conversation.id]),
+            range_time: make_range(&[class_name, &conversation.status, &conversation.last_interaction_at, &conversation.id]),
             id: conversation.id.to_owned(),
             client: conversation.client.to_owned(),
             class: class_name.to_string(),
-            metadata: encrypt_data(&conversation.metadata).unwrap(),
+            metadata,
             flow_id: conversation.flow_id.to_owned(),
             step_id: conversation.step_id.to_owned(),
             status: conversation.status.to_owned(),
@@ -164,11 +164,11 @@ pub struct Interaction {
 impl Interaction {
 
     pub fn get_hash(client: &Client) -> String {
-        utils::make_hash(client)
+        make_hash(client)
     }
 
     pub fn get_range(id: &str) -> String {
-        utils::make_range(&["interaction", id])
+        make_range(&["interaction", id])
     }
 
     pub fn get_key(client: &Client, id: &str) -> DynamoDbKey {
@@ -184,12 +184,12 @@ impl Interaction {
      */
     pub fn new(id: &Uuid, client: &Client, encrypted_event: &str) -> Interaction {
         let class_name = "interaction";
-        let now = utils::get_date_time();
+        let now = get_date_time();
         let id = id.to_string();
         Interaction {
             hash: Self::get_hash(client),
             range: Self::get_range(&id),
-            range_time: utils::make_range(&[class_name, &now, &id]),
+            range_time: make_range(&[class_name, &now, &id]),
             class: class_name.to_string(),
             id: id.to_owned(),
             client: client.clone(),
@@ -223,11 +223,11 @@ pub struct Memory {
 impl Memory {
 
     pub fn get_hash(client: &Client) -> String {
-        utils::make_hash(client)
+        make_hash(client)
     }
 
     pub fn get_range(key: &str, id: &str) -> String {
-        utils::make_range(&["memory", key, id])
+        make_range(&["memory", key, id])
     }
 
     /**
@@ -249,13 +249,13 @@ impl Memory {
         let id = uuid::Uuid::new_v4().to_string();
         let hash = Self::get_hash(client);
         let range = Self::get_range(key, &id);
-        let now = utils::get_date_time();
+        let now = get_date_time();
 
         let class_name = "memory";
         Self {
             hash: hash.to_owned(),
             range: range.to_owned(),
-            range_time: utils::make_range(&[
+            range_time: make_range(&[
                 class_name,
                 &now,
                 &interaction_order.to_string(),
@@ -302,11 +302,11 @@ pub struct Message {
 impl Message {
 
     pub fn get_hash(client: &Client) -> String {
-        utils::make_hash(client)
+        make_hash(client)
     }
 
     pub fn get_range(conversation_id: &str, id: &str) -> String {
-        utils::make_range(&["message", conversation_id, id])
+        make_range(&["message", conversation_id, id])
     }
 
     /**
@@ -328,11 +328,11 @@ impl Message {
     ) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
         let class_name = "message";
-        let now = utils::get_date_time();
+        let now = get_date_time();
         Message {
             hash: Self::get_hash(&client),
             range: Self::get_range(&conversation_id, &id),
-            range_time: utils::make_range(&[
+            range_time: make_range(&[
                 class_name,
                 &now,
                 &interaction_order.to_string(),
@@ -390,11 +390,11 @@ impl Node {
     ) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
         let class_name = "path";
-        let now = utils::get_date_time();
+        let now = get_date_time();
         Node {
-            hash: utils::make_range(&["conversation", conversation_id]),
-            range: utils::make_range(&[class_name, &id]),
-            range_time: utils::make_range(&[
+            hash: make_range(&["conversation", conversation_id]),
+            range: make_range(&[class_name, &id]),
+            range_time: make_range(&[
                 class_name,
                 &now,
                 &id,
@@ -430,11 +430,11 @@ pub struct State {
 impl State {
 
     pub fn get_hash(client: &Client) -> String {
-        utils::make_hash(client)
+        make_hash(client)
     }
 
     pub fn get_range(_type: &str, key: &str) -> String {
-        utils::make_range(&["state", _type, key])
+        make_range(&["state", _type, key])
     }
 
     /**
@@ -449,7 +449,7 @@ impl State {
     ) -> Self {
         let class_name = "state";
         let id = uuid::Uuid::new_v4().to_string();
-        let now = utils::get_date_time();
+        let now = get_date_time();
         State {
             hash: Self::get_hash(&client),
             range: Self::get_range(_type, key),

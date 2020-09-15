@@ -4,8 +4,7 @@ use crate::data::DynamoDbClient;
 use std::collections::HashMap;
 use rusoto_dynamodb::*;
 
-#[path = "utils.rs"]
-mod utils;
+use crate::db_connectors::dynamodb::utils::*;
 
 pub fn delete_state_key(
     client: &Client,
@@ -20,7 +19,7 @@ pub fn delete_state_key(
     };
 
     let input = DeleteItemInput {
-        key: utils::to_attribute_value_map(&item_key)?,
+        key: to_attribute_value_map(&item_key)?,
         ..Default::default()
     };
 
@@ -44,7 +43,7 @@ pub fn get_state_key(
     };
 
     let input = GetItemInput {
-        key: utils::to_attribute_value_map(&item_key)?,
+        key: to_attribute_value_map(&item_key)?,
         ..Default::default()
     };
 
@@ -54,7 +53,7 @@ pub fn get_state_key(
 
     match res.item {
         Some(val) => {
-            let mut val = utils::from_attribute_value_map(&val)?;
+            let mut val = from_attribute_value_map(&val)?;
             val["value"] = decrypt_data(val["value"].to_string())?;
             Ok(Some(val))
         },
@@ -101,7 +100,7 @@ pub fn set_state_items(
         for data in chunk {
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
-                    item: utils::to_attribute_value_map(&data)?,
+                    item: to_attribute_value_map(&data)?,
                 }),
                 ..Default::default()
             });

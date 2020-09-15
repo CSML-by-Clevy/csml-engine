@@ -4,8 +4,7 @@ use rusoto_dynamodb::*;
 use crate::data::DynamoDbClient;
 use uuid::Uuid;
 
-#[path = "utils.rs"]
-mod utils;
+use crate::db_connectors::dynamodb::utils::*;
 
 pub fn init_interaction(
     event: serde_json::Value,
@@ -29,7 +28,7 @@ pub fn init_interaction(
 
 
     let input = PutItemInput {
-        item: utils::to_attribute_value_map(&interaction)?,
+        item: to_attribute_value_map(&interaction)?,
         condition_expression: Some("#hashKey <> :hashVal AND #rangeKey <> :rangeVal".to_owned()),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
@@ -63,7 +62,7 @@ pub fn update_interaction(
         (String::from(":hashVal"), AttributeValue { s: Some(key.hash.to_owned()), ..Default::default() }),
         (String::from(":rangeVal"), AttributeValue { s: Some(key.range.to_owned()), ..Default::default() }),
         (String::from(":successVal"), AttributeValue { bool: Some(success), ..Default::default() }),
-        (String::from(":updatedAtVal"), AttributeValue { s: Some(utils::get_date_time()), ..Default::default() }),
+        (String::from(":updatedAtVal"), AttributeValue { s: Some(get_date_time()), ..Default::default() }),
     ].iter().cloned().collect();
 
     // make sure that if the item does not already exist, it is NOT created automatically
@@ -71,7 +70,7 @@ pub fn update_interaction(
     let update_expr = "SET #updatedAtKey = :updatedAtVal, #succesKey = :successVal".to_string();
 
     let input = UpdateItemInput {
-        key: utils::to_attribute_value_map(&key)?,
+        key: to_attribute_value_map(&key)?,
         condition_expression: Some(condition_expr),
         update_expression: Some(update_expr),
         expression_attribute_names: Some(expr_attr_names),

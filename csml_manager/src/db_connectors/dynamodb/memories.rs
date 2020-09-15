@@ -5,9 +5,7 @@ use csml_interpreter::data::Memories as InterpreterMemory;
 use crate::data::DynamoDbClient;
 use std::collections::HashMap;
 
-#[path = "utils.rs"]
-mod utils;
-
+use crate::db_connectors::dynamodb::utils::*;
 
 fn format_memories(
     data: &ConversationInfo,
@@ -58,7 +56,7 @@ pub fn add_memories(
         for data in chunk {
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
-                    item: utils::to_attribute_value_map(&data)?,
+                    item: to_attribute_value_map(&data)?,
                 }),
                 ..Default::default()
             });
@@ -108,7 +106,7 @@ fn scan_memories(
     ].iter().cloned().collect();
 
     let input = QueryInput {
-        table_name: utils::get_table_name()?,
+        table_name: get_table_name()?,
         key_condition_expression: Some("#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefixMem)".to_owned()),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
@@ -127,7 +125,7 @@ fn scan_memories(
     match data.items {
         Some(val) => {
             for item in val.iter() {
-                let mut clean = utils::from_attribute_value_map(&item)?;
+                let mut clean = from_attribute_value_map(&item)?;
                 clean["value"] = decrypt_data(clean["value"].to_string())?;
                 items.push(clean);
             }

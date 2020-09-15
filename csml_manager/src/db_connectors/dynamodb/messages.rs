@@ -3,8 +3,7 @@ use crate::db_connectors::dynamodb::{Message, get_db};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
 
-#[path = "utils.rs"]
-mod utils;
+use crate::db_connectors::dynamodb::utils::*;
 
 fn format_messages(
     data: &ConversationInfo,
@@ -57,7 +56,7 @@ pub fn add_messages_bulk(
         for data in chunk {
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
-                    item: utils::to_attribute_value_map(&data)?,
+                    item: to_attribute_value_map(&data)?,
                 }),
                 ..Default::default()
             });

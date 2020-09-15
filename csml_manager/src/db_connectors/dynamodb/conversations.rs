@@ -1,12 +1,11 @@
-use crate::{Client, ManagerError};
+use crate::{Client, ManagerError, encrypt::encrypt_data};
 use crate::db_connectors::DbConversation;
 use crate::db_connectors::dynamodb::{Conversation, DynamoDbKey};
 use rusoto_dynamodb::*;
 use crate::data::DynamoDbClient;
 use std::collections::HashMap;
 
-#[path = "utils.rs"]
-mod utils;
+use crate::db_connectors::dynamodb::utils::*;
 
 pub fn create_conversation(
     flow_id: &str,
@@ -16,10 +15,10 @@ pub fn create_conversation(
     db: &DynamoDbClient,
 ) -> Result<String, ManagerError> {
 
-    let data = Conversation::new(client, metadata.clone(), flow_id, step_id);
+    let data = Conversation::new(client, &encrypt_data(&metadata)?, flow_id, step_id);
     let input = PutItemInput {
-        item: utils::to_attribute_value_map(&data)?,
-        table_name: utils::get_table_name()?,
+        item: to_attribute_value_map(&data)?,
+        table_name: get_table_name()?,
         ..Default::default()
     };
 
@@ -51,7 +50,7 @@ pub fn close_conversation(
 
     // get conv with ID
     let get_input = GetItemInput {
-        key: utils::to_attribute_value_map(&key)?,
+        key: to_attribute_value_map(&key)?,
         ..Default::default()
     };
 
@@ -67,7 +66,7 @@ pub fn close_conversation(
         Some(data) => data,
     };
 
-    let new_conv = utils::from_attribute_value_map(&item)?;
+    let new_conv = from_attribute_value_map(&item)?;
 
     let new_conv = DbConversation {
         id: new_conv["id"].to_string(),
@@ -82,14 +81,14 @@ pub fn close_conversation(
     };
 
     let mut new_conv = Conversation::from(&new_conv);
-    let now = utils::get_date_time();
+    let now = get_date_time();
     new_conv.status = status.to_owned();
     new_conv.last_interaction_at = now.to_owned();
     new_conv.updated_at = now.to_owned();
-    new_conv.range_time = utils::make_range(&["interaction", status, &now, &id]);
+    new_conv.range_time = make_range(&["interaction", status, &now, &id]);
     let key = Conversation::get_key(&client, &id);
 
-    let new_conv = utils::to_attribute_value_map(&new_conv)?;
+    let new_conv = to_attribute_value_map(&new_conv)?;
 
     replace_conversation(&key, new_conv, db)?;
 
@@ -127,7 +126,7 @@ fn replace_conversation(
 
     let to_remove = TransactWriteItem {
         put: Some(Put {
-            table_name: utils::get_table_name()?,
+            table_name: get_table_name()?,
             item: new_conversation,
             ..Default::default()
         }),
@@ -135,8 +134,8 @@ fn replace_conversation(
     };
     let to_insert = TransactWriteItem  {
         delete: Some(Delete {
-            table_name: utils::get_table_name()?,
-            key: utils::to_attribute_value_map(key.to_owned())?,
+            table_name: get_table_name()?,
+            key: to_attribute_value_map(key.to_owned())?,
             ..Default::default()
         }),
         ..Default::default()
@@ -162,14 +161,14 @@ pub fn close_all_conversations(
     let ids = get_all_open_conversations(client, db);
     for conv in ids.iter() {
         let mut new_conv = Conversation::from(conv);
-        let now = utils::get_date_time();
+        let now = get_date_time();
         new_conv.status = "CLOSED".to_owned();
         new_conv.last_interaction_at = now.to_owned();
         new_conv.updated_at = now.to_owned();
-        new_conv.range_time = utils::make_range(&["interaction", "CLOSED", &now, &conv.id]);
+        new_conv.range_time = make_range(&["interaction", "CLOSED", &now, &conv.id]);
         let key = Conversation::get_key(&conv.client, &conv.id);
 
-        let new_conv = utils::to_attribute_value_map(&new_conv)?;
+        let new_conv = to_attribute_value_map(&new_conv)?;
         replace_conversation(&key, new_conv, db)?;
     }
     Ok(())
@@ -215,7 +214,7 @@ pub fn get_latest_open(
         Some(items) => items[0].clone(),
     };
 
-    let conv = utils::from_attribute_value_map(&conv)?;
+    let conv = from_attribute_value_map(&conv)?;
 
     Ok(Some(DbConversation {
         id: conv["id"].to_string(),
@@ -259,7 +258,7 @@ pub fn update_conversation(
     let mut update_expr = "SET last_interaction_at = :lastInteractionAtVal".to_string();
 
     // all items get the last_interaction_at date updated
-    let now = utils::get_date_time();
+    let now = get_date_time();
     expr_attr_values.insert(
         ":lastInteractionAtVal".to_string(),
         AttributeValue { s: Some(now), ..Default::default() },
@@ -284,7 +283,7 @@ pub fn update_conversation(
     }
 
     let input = UpdateItemInput {
-        key: utils::to_attribute_value_map(&DynamoDbKey::new(&hash, &range))?,
+        key: to_attribute_value_map(&DynamoDbKey::new(&hash, &range))?,
         condition_expression: Some(condition_expr),
         update_expression: Some(update_expr.to_string()),
         expression_attribute_names: Some(expr_attr_names),
