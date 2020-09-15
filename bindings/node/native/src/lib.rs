@@ -1,9 +1,8 @@
+use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_manager::{
-    start_conversation, user_close_all_conversations, Client, CsmlResult,
+    data::CsmlRequest, start_conversation, user_close_all_conversations, Client, CsmlResult,
     ErrorInfo, Warnings,
-    data::CsmlRequest,
 };
-use csml_interpreter::data::{csml_bot::CsmlBot};
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value};
 

@@ -17,12 +17,7 @@ fn form_idents(ident: String, position: Interval) -> Identifier {
     Expr::new_idents(ident, position)
 }
 
-fn parse_idents<'a, E>(
-    s: Span<'a>,
-    interval: Interval,
-    reserved: &[&str],
-    var: &str,
-) -> IResult<Span<'a>, Identifier, E>
+fn validate_string<'a, E>(s: Span<'a>, reserved: &[&str], var: &str) -> IResult<Span<'a>, (), E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -38,31 +33,53 @@ where
         return Err(gen_nom_error(s, ERROR_NUMBER_AS_IDENT));
     }
 
-    Ok((s, form_idents(var.to_owned(), interval)))
+    Ok((s, ()))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+pub fn parse_string_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, var) = get_string(s)?;
+    let (s, ..) = validate_string(s, UTILISATION_RESERVED, &var)?;
+
+    Ok((s, var))
+}
+
+pub fn parse_string_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, var) = get_string(s)?;
+    let (s, ..) = validate_string(s, ASSIGNATION_RESERVED, &var)?;
+
+    Ok((s, var))
+}
+
 pub fn parse_idents_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, position) = get_interval(s)?;
-    let (s, var) = preceded(comment, get_string)(s)?;
+    let (s, position) = preceded(comment, get_interval)(s)?;
 
-    parse_idents(s, position, UTILISATION_RESERVED, &var)
+    let (s, var) = parse_string_usage(s)?;
+
+    Ok((s, form_idents(var.to_owned(), position)))
 }
 
 pub fn parse_idents_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, position) = get_interval(s)?;
-    let (s, var) = preceded(comment, get_string)(s)?;
+    let (s, position) = preceded(comment, get_interval)(s)?;
 
-    parse_idents(s, position, ASSIGNATION_RESERVED, &var)
+    let (s, var) = parse_string_assignation(s)?;
+
+    Ok((s, form_idents(var.to_owned(), position)))
 }
 
 pub fn parse_idents_as<'a, E>(s: Span<'a>, expr: Expr) -> IResult<Span<'a>, Expr, E>
@@ -74,7 +91,7 @@ where
     match arg {
         Err(_) => Ok((s, expr)),
         Ok((s2, tmp)) => match preceded(get_tag(tmp, AS), parse_idents_assignation)(s2) {
-            Ok((s, name)) => (Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr)))))),
+            Ok((s, name)) => Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))))),
             Err(err) => match err {
                 Failure(err) => Err(Failure(err)),
                 _ => Ok((s, expr)),

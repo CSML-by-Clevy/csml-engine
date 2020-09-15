@@ -1,10 +1,9 @@
 use crate::{ConversationInfo, ManagerError};
-use crate::db_connectors::{is_mongodb, is_http};
 use crate::error_messages::ERROR_DB_SETUP;
 #[cfg(feature = "mongo")]
-use crate::db_connectors::mongodb as mongodb_connector;
+use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "http")]
-use crate::db_connectors::http as http_connector;
+use crate::db_connectors::{is_http, http as http_connector};
 
 pub fn add_messages_bulk(
     data: &ConversationInfo,
