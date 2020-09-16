@@ -423,6 +423,7 @@ pub struct State {
     pub client: Client,
     #[serde(rename = "type")]
     pub _type: String,
+    pub key: String,
     pub value: String,
     pub expires_at: Option<String>,
     pub created_at: String,
@@ -457,6 +458,7 @@ impl State {
             id,
             client: client.clone(),
             _type: _type.to_string(),
+            key: key.to_owned(),
             value: encrypted_value.to_owned(),
             expires_at: None,
             created_at: now.to_string(),
