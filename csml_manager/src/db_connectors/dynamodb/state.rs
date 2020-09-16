@@ -57,9 +57,9 @@ pub fn get_state_key(
         Some(val) => {
             let state: State = serde_dynamodb::from_hashmap(val)?;
 
-            let mut val = serde_json::json!(state);
-            val["value"] = decrypt_data(val["value"].as_str().unwrap().to_string())?;
-            Ok(Some(val))
+            let val = serde_json::json!(state);
+            let value = decrypt_data(val["value"].as_str().unwrap().to_string())?;
+            Ok(Some(value))
         },
         _ => Ok(None),
     }
