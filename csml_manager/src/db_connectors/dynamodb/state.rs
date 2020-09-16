@@ -20,7 +20,7 @@ pub fn delete_state_key(
 
     let input = DeleteItemInput {
         table_name: get_table_name()?,
-        key: to_attribute_value_map(&item_key)?,
+        key: serde_dynamodb::to_hashmap(&item_key)?,
         ..Default::default()
     };
 
@@ -45,7 +45,7 @@ pub fn get_state_key(
 
     let input = GetItemInput {
         table_name: get_table_name()?,
-        key: to_attribute_value_map(&item_key)?,
+        key: serde_dynamodb::to_hashmap(&item_key)?,
         ..Default::default()
     };
 
@@ -55,8 +55,10 @@ pub fn get_state_key(
 
     match res.item {
         Some(val) => {
-            let mut val = from_attribute_value_map(&val)?;
-            val["value"] = decrypt_data(val["value"].to_string())?;
+            let state: State = serde_dynamodb::from_hashmap(val)?;
+
+            let mut val = serde_json::json!(state);
+            val["value"] = decrypt_data(val["value"].as_str().unwrap().to_string())?;
             Ok(Some(val))
         },
         _ => Ok(None),
@@ -102,7 +104,7 @@ pub fn set_state_items(
         for data in chunk {
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
-                    item: to_attribute_value_map(&data)?,
+                    item: serde_dynamodb::to_hashmap(&data)?,
                 }),
                 ..Default::default()
             });

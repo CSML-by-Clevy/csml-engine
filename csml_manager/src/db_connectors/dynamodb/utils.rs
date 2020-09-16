@@ -1,7 +1,4 @@
-use std::collections::HashMap;
 use crate::{ManagerError, Client};
-use rusoto_dynamodb::AttributeValue;
-use serde::Serialize;
 
 /**
  * Return the current datetime formatted as YYYY-MM-DDTHH:mm:ss.SSS[Z].
@@ -9,26 +6,6 @@ use serde::Serialize;
  */
 pub fn get_date_time() -> String {
   return chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S.%3fZ").to_string();
-}
-
-/**
- * Convert any data struct into an AttributeValue
- */
-pub fn to_attribute_value_map<T: Serialize>(data: &T) -> Result<HashMap<String, AttributeValue>, ManagerError> {
-  match serde_dynamodb::to_hashmap(data) {
-      Ok(val) => Ok(val),
-      Err(err) => Err(ManagerError::Manager(err.to_string())),
-  }
-}
-
-/**
- * Convert any AttributeValue to a generic serde_json::Value
- */
-pub fn from_attribute_value_map(data: &HashMap<String, AttributeValue>) -> Result<serde_json::Value, ManagerError> {
-  match serde_dynamodb::from_hashmap(data.to_owned()) {
-    Ok(val) => Ok(val),
-    Err(err) => return Err(ManagerError::Manager(err.to_string())),
-  }
 }
 
 /**

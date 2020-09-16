@@ -56,7 +56,7 @@ pub fn add_messages_bulk(
         for data in chunk {
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
-                    item: to_attribute_value_map(&data)?,
+                    item: serde_dynamodb::to_hashmap(&data)?,
                 }),
                 ..Default::default()
             });

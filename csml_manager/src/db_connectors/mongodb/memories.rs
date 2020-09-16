@@ -70,8 +70,7 @@ pub fn get_memories(
     for elem in cursor {
         if let Ok(doc) = elem {
             let mem: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
-            let value: serde_json::Value =
-                decrypt_data(mem["value"].as_str().unwrap().to_owned())?;
+            let value: serde_json::Value = decrypt_data(mem["value"].as_str().unwrap().to_owned())?;
 
             if !map.contains_key(mem["key"].as_str().unwrap()) {
                 map.insert(mem["key"].as_str().unwrap().to_owned(), value);

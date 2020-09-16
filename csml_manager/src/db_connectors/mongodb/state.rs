@@ -65,10 +65,8 @@ pub fn get_state_key(
     match state.find_one(filter, None)? {
         Some(value) => {
             let state: serde_json::Value = bson::from_bson(bson::Bson::Document(value))?;
-
-            Ok(Some(decrypt_data(
-                state["value"].as_str().unwrap().to_owned(),
-            )?))
+            let val = state["value"].as_str().unwrap().to_owned();
+            Ok(Some(decrypt_data(val)?))
         }
         None => Ok(None),
     }

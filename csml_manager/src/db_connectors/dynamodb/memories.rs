@@ -56,7 +56,7 @@ pub fn add_memories(
         for data in chunk {
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
-                    item: to_attribute_value_map(&data)?,
+                    item: serde_dynamodb::to_hashmap(&data)?,
                     ..Default::default()
                 }),
                 ..Default::default()
@@ -127,8 +127,10 @@ fn scan_memories(
     match data.items {
         Some(val) => {
             for item in val.iter() {
-                let mut clean = from_attribute_value_map(&item)?;
-                clean["value"] = decrypt_data(clean["value"].to_string())?;
+                let mem: Memory = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+                let mut clean = serde_json::json!(mem);
+                clean["value"] = decrypt_data(clean["value"].as_str().unwrap().to_string())?;
                 items.push(clean);
             }
         },

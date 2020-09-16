@@ -1,4 +1,4 @@
-use crate::{Client, ManagerError, encrypt::encrypt_data};
+use crate::{Client, ManagerError, encrypt::{encrypt_data, decrypt_data}};
 use crate::db_connectors::DbConversation;
 use crate::db_connectors::dynamodb::{Conversation, DynamoDbKey};
 use rusoto_dynamodb::*;
@@ -17,7 +17,7 @@ pub fn create_conversation(
 
     let data = Conversation::new(client, &encrypt_data(&metadata)?, flow_id, step_id);
     let input = PutItemInput {
-        item: to_attribute_value_map(&data)?,
+        item: serde_dynamodb::to_hashmap(&data)?,
         table_name: get_table_name()?,
         ..Default::default()
     };
@@ -50,7 +50,7 @@ pub fn close_conversation(
 
     // get conv with ID
     let get_input = GetItemInput {
-        key: to_attribute_value_map(&key)?,
+        key: serde_dynamodb::to_hashmap(&key)?,
         ..Default::default()
     };
 
@@ -66,18 +66,19 @@ pub fn close_conversation(
         Some(data) => data,
     };
 
-    let new_conv = from_attribute_value_map(&item)?;
+    let new_conv: Conversation = serde_dynamodb::from_hashmap(item)?;
+    let metadata = serde_json::from_str(&new_conv.metadata)?;
 
     let new_conv = DbConversation {
-        id: new_conv["id"].to_string(),
+        id: new_conv.id.to_string(),
         client: client.to_owned(),
-        flow_id: new_conv["flow_id"].to_string(),
-        step_id: new_conv["step_id"].to_string(),
-        metadata: new_conv["metadata"].to_owned(),
-        status: new_conv["status"].to_string(),
-        last_interaction_at: new_conv["last_interaction_at"].to_string(),
-        updated_at: new_conv["updated_at"].to_string(),
-        created_at: new_conv["created_at"].to_string(),
+        flow_id: new_conv.flow_id.to_string(),
+        step_id: new_conv.step_id.to_string(),
+        metadata: decrypt_data(metadata)?,
+        status: new_conv.status.to_string(),
+        last_interaction_at: new_conv.last_interaction_at.to_string(),
+        updated_at: new_conv.updated_at.to_string(),
+        created_at: new_conv.created_at.to_string(),
     };
 
     let mut new_conv = Conversation::from(&new_conv);
@@ -88,7 +89,7 @@ pub fn close_conversation(
     new_conv.range_time = make_range(&["interaction", status, &now, &id]);
     let key = Conversation::get_key(&client, &id);
 
-    let new_conv = to_attribute_value_map(&new_conv)?;
+    let new_conv = serde_dynamodb::to_hashmap(&new_conv)?;
 
     replace_conversation(&key, new_conv, db)?;
 
@@ -135,7 +136,7 @@ fn replace_conversation(
     let to_insert = TransactWriteItem  {
         delete: Some(Delete {
             table_name: get_table_name()?,
-            key: to_attribute_value_map(key.to_owned())?,
+            key: serde_dynamodb::to_hashmap(key.to_owned())?,
             ..Default::default()
         }),
         ..Default::default()
@@ -168,7 +169,7 @@ pub fn close_all_conversations(
         new_conv.range_time = make_range(&["interaction", "CLOSED", &now, &conv.id]);
         let key = Conversation::get_key(&conv.client, &conv.id);
 
-        let new_conv = to_attribute_value_map(&new_conv)?;
+        let new_conv = serde_dynamodb::to_hashmap(&new_conv)?;
         replace_conversation(&key, new_conv, db)?;
     }
     Ok(())
@@ -209,24 +210,24 @@ pub fn get_latest_open(
 
     // The query returns an array of items (max 1, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
-    let conv = match data.items {
+    let item = match data.items {
         None => return Ok(None),
         Some(items) if items.len() == 0 => return Ok(None),
         Some(items) => items[0].clone(),
     };
 
-    let conv = from_attribute_value_map(&conv)?;
+    let conv: Conversation = serde_dynamodb::from_hashmap(item)?;
 
     Ok(Some(DbConversation {
-        id: conv["id"].to_string(),
+        id: conv.id.to_string(),
         client: client.to_owned(),
-        flow_id: conv["flow_id"].to_string(),
-        step_id: conv["step_id"].to_string(),
-        metadata: conv["metadata"].to_owned(),
-        status: conv["status"].to_string(),
-        last_interaction_at: conv["last_interaction_at"].to_string(),
-        updated_at: conv["updated_at"].to_string(),
-        created_at: conv["created_at"].to_string(),
+        flow_id: conv.flow_id.to_string(),
+        step_id: conv.step_id.to_string(),
+        metadata: decrypt_data(conv.metadata)?,
+        status: conv.status.to_string(),
+        last_interaction_at: conv.last_interaction_at.to_string(),
+        updated_at: conv.updated_at.to_string(),
+        created_at: conv.created_at.to_string(),
     }))
 }
 
@@ -285,7 +286,7 @@ pub fn update_conversation(
 
     let input = UpdateItemInput {
         table_name: get_table_name()?,
-        key: to_attribute_value_map(&DynamoDbKey::new(&hash, &range))?,
+        key: serde_dynamodb::to_hashmap(&DynamoDbKey::new(&hash, &range))?,
         condition_expression: Some(condition_expr),
         update_expression: Some(update_expr.to_string()),
         expression_attribute_names: Some(expr_attr_names),

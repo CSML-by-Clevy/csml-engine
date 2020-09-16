@@ -29,7 +29,7 @@ pub fn init_interaction(
 
     let input = PutItemInput {
         table_name: get_table_name()?,
-        item: to_attribute_value_map(&interaction)?,
+        item: serde_dynamodb::to_hashmap(&interaction)?,
         condition_expression: Some("#hashKey <> :hashVal AND #rangeKey <> :rangeVal".to_owned()),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
@@ -72,7 +72,7 @@ pub fn update_interaction(
 
     let input = UpdateItemInput {
         table_name: get_table_name()?,
-        key: to_attribute_value_map(&key)?,
+        key: serde_dynamodb::to_hashmap(&key)?,
         condition_expression: Some(condition_expr),
         update_expression: Some(update_expr),
         expression_attribute_names: Some(expr_attr_names),

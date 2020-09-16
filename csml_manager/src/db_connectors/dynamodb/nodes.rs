@@ -2,8 +2,6 @@ use crate::{ConversationInfo, ManagerError};
 use crate::db_connectors::dynamodb::{Node, get_db};
 use rusoto_dynamodb::*;
 
-use crate::db_connectors::dynamodb::utils::*;
-
 pub fn create_node(
     data: &mut ConversationInfo,
     nextflow: Option<String>,
@@ -19,7 +17,7 @@ pub fn create_node(
         nextstep
     );
 
-    let item = to_attribute_value_map(&node)?;
+    let item = serde_dynamodb::to_hashmap(&node)?;
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),

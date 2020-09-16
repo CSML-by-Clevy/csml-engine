@@ -98,6 +98,8 @@ pub enum ManagerError {
 
     #[cfg(any(feature = "dynamo"))]
     Rusoto(String),
+    #[cfg(any(feature = "dynamo"))]
+    SerdeDynamodb(serde_dynamodb::Error),
 }
 
 impl From<serde_json::Error> for ManagerError {
@@ -174,5 +176,12 @@ impl From<http_db::apis::Error> for ManagerError {
 impl<E: std::error::Error + 'static> From<rusoto_core::RusotoError<E>> for ManagerError {
     fn from(e: rusoto_core::RusotoError<E>) -> Self {
         ManagerError::Rusoto(e.to_string())
+    }
+}
+
+#[cfg(any(feature = "dynamo"))]
+impl From<serde_dynamodb::Error> for ManagerError {
+    fn from(e: serde_dynamodb::Error) -> Self {
+        ManagerError::SerdeDynamodb(e)
     }
 }
