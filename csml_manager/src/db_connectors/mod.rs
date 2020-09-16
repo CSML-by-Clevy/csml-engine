@@ -183,7 +183,7 @@ pub fn init_db() -> Result<Database, ManagerError> {
     }
 
     #[cfg(feature = "dynamo")]
-    if is_http() {
+    if is_dynamodb() {
         return dynamodb_connector::init();
     }
 
