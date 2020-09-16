@@ -2,6 +2,8 @@ use crate::{ConversationInfo, ManagerError};
 use crate::db_connectors::dynamodb::{Node, get_db};
 use rusoto_dynamodb::*;
 
+use crate::db_connectors::dynamodb::utils::*;
+
 pub fn create_node(
     data: &mut ConversationInfo,
     nextflow: Option<String>,
@@ -30,6 +32,7 @@ pub fn create_node(
     ].iter().cloned().collect();
 
     let input = PutItemInput {
+        table_name: get_table_name()?,
         item,
         condition_expression: Some("#hashKey <> :hashVal AND #rangeKey <> :rangeVal".to_owned()),
         expression_attribute_names: Some(expr_attr_names),
