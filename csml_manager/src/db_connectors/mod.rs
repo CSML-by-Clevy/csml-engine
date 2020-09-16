@@ -17,10 +17,10 @@
  * for dev purposes). The following env vars are required (alternatively if deploying on AWS,
  * use IAM roles)
  *   - AWS_REGION defaults to `us-east-1`
- *   - AWS_ACCESS_KEY_ID defaults to `foo`
- *   - AWS_SECRET_ACCESS_KEY defaults to `bar`
- *   - AWS_DYNAMODB_ENDPOINT defaults to the default dynamodb endpoint for the given region.
+ *   - AWS_ACCESS_KEY_ID
+ *   - AWS_SECRET_ACCESS_KEY
  *   - AWS_DYNAMODB_TABLE defaults to the default dynamodb endpoint for the given region.
+ *   - AWS_DYNAMODB_ENDPOINT optional, defaults to the default dynamodb endpoint for the given region.
  * Both AWS_REGION AND AWS_DYNAMODB_ENDPOINT must be set to use a custom dynamodb-compatible DB.
  *
  * - `http`: if the developer wants to use a different DB engine, they can also create a HTTP-driven
@@ -147,7 +147,7 @@ pub struct DbState {
 
 #[cfg(feature = "mongo")]
 pub fn is_mongodb() -> bool {
-    // If the env var is not available, use mongodb by default
+    // If the env var is not set at all, use mongodb by default
     match std::env::var("ENGINE_DB_TYPE") {
         Ok(val) => val == "mongodb".to_owned(),
         Err(_) => true
