@@ -181,10 +181,10 @@ pub fn get_latest_open(
 
     let hash = Conversation::get_hash(client);
 
-    let condition_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
+    let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time"))
+        (String::from("#rangeKey"), String::from("range_time")), // time index
     ].iter().cloned().collect();
 
     let expr_attr_values = [
@@ -195,7 +195,7 @@ pub fn get_latest_open(
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name: Some(String::from("TimeIndex")),
-        key_condition_expression: Some(condition_expr),
+        key_condition_expression: Some(key_cond_expr),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(1),

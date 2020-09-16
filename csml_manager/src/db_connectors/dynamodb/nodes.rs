@@ -23,7 +23,7 @@ pub fn create_node(
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time"))
+        (String::from("#rangeKey"), String::from("range"))
     ].iter().cloned().collect();
 
     let expr_attr_values = [
@@ -41,7 +41,6 @@ pub fn create_node(
 
     let db = get_db(&data.db)?;
     let mut runtime = db.get_runtime()?;
-
     let future = db.client.put_item(input);
     runtime.block_on(future)?;
 

@@ -18,7 +18,7 @@ pub fn init_interaction(
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time"))
+        (String::from("#rangeKey"), String::from("range"))
     ].iter().cloned().collect();
 
     let expr_attr_values = [
@@ -54,7 +54,7 @@ pub fn update_interaction(
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")),
+        (String::from("#rangeKey"), String::from("range")),
         (String::from("#successKey"), String::from("success")),
         (String::from("#updatedAtKey"), String::from("updated_at")),
     ].iter().cloned().collect();
@@ -68,7 +68,7 @@ pub fn update_interaction(
 
     // make sure that if the item does not already exist, it is NOT created automatically
     let condition_expr = "#hashKey = :hashVal AND #rangeKey = :rangeVal".to_string();
-    let update_expr = "SET #updatedAtKey = :updatedAtVal, #succesKey = :successVal".to_string();
+    let update_expr = "SET #updatedAtKey = :updatedAtVal, #successKey = :successVal".to_string();
 
     let input = UpdateItemInput {
         table_name: get_table_name()?,

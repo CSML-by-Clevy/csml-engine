@@ -8,7 +8,7 @@ use serde::Serialize;
  * For example: 2020-03-12T12:33:42.123Z
  */
 pub fn get_date_time() -> String {
-  return chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S.%3f[Z]").to_string();
+  return chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S.%3fZ").to_string();
 }
 
 /**

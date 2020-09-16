@@ -98,7 +98,7 @@ fn scan_memories(
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time"))
+        (String::from("#rangeKey"), String::from("range_time")) // time index
     ].iter().cloned().collect();
 
     let expr_attr_values = [
@@ -108,12 +108,13 @@ fn scan_memories(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        key_condition_expression: Some("#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefixMem)".to_owned()),
+        index_name: Some(String::from("TimeIndex")),
+        key_condition_expression: Some("#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned()),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         exclusive_start_key: last_evaluated_key,
         scan_index_forward: Some(true),
-        select: Some("ALL".to_owned()),
+        select: Some(String::from("ALL_ATTRIBUTES")),
         ..Default::default()
     };
 
