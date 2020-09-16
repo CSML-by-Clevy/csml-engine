@@ -163,7 +163,7 @@ pub fn is_dynamodb() -> bool {
 }
 
 #[cfg(feature = "http")]
-pub fn is_http() -> bool {
+pub fn is_httpdb() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
         Ok(val) => val == "http".to_owned(),
         Err(_) => false
@@ -178,7 +178,7 @@ pub fn init_db() -> Result<Database, ManagerError> {
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         return http_connector::init();
     }
 

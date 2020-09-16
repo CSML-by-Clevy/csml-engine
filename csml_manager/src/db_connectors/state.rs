@@ -4,7 +4,7 @@ use crate::error_messages::ERROR_DB_SETUP;
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "http")]
-use crate::db_connectors::{is_http, http as http_connector};
+use crate::db_connectors::{is_httpdb, http as http_connector};
 #[cfg(feature = "dynamo")]
 use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
 
@@ -21,7 +21,7 @@ pub fn delete_state_key(
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let db = http_connector::get_db(db)?;
         return http_connector::state::delete_state_key(client, _type, _key, db);
     }
@@ -48,7 +48,7 @@ pub fn get_state_key(
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let db = http_connector::get_db(db)?;
         return http_connector::state::get_state_key(client, _type, _key, db);
     }
@@ -75,7 +75,7 @@ pub fn set_state_items(
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let state_data = http_connector::state::format_state_data(data, _type, interaction_order, keys_values);
         let db = http_connector::get_db(&data.db)?;
         return http_connector::state::set_state_items(&data.client, state_data, db);
