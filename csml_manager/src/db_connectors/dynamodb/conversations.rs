@@ -50,6 +50,7 @@ pub fn close_conversation(
 
     // get conv with ID
     let get_input = GetItemInput {
+        table_name: get_table_name()?,
         key: serde_dynamodb::to_hashmap(&key)?,
         ..Default::default()
     };
