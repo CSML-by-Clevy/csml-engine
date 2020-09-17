@@ -88,19 +88,19 @@ impl Conversation {
         make_hash(client)
     }
 
-    pub fn get_range(id: &str) -> String {
-        make_range(&["conversation", id])
+    pub fn get_range(status: &str, id: &str) -> String {
+        make_range(&["conversation", status, id])
     }
 
-    pub fn get_key(client: &Client, id: &str) -> DynamoDbKey {
+    pub fn get_key(client: &Client, status: &str, id: &str) -> DynamoDbKey {
         let hash = Self::get_hash(client);
-        let range = Self::get_range(id);
+        let range = Self::get_range(status, id);
         DynamoDbKey::new(&hash, &range)
     }
 
     /**
      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
-     * range = conversation#id
+     * range = conversation#OPEN|CLOSED#id
      * range_time = conversation#OPEN|CLOSED#timestamp#id
      */
     pub fn new(client: &Client, encrypted_metadata: &str, flow_id: &str, step_id: &str) -> Self {
@@ -110,7 +110,7 @@ impl Conversation {
         let class_name= "conversation";
         Self {
             hash: Self::get_hash(client),
-            range: Self::get_range(&id),
+            range: Self::get_range("OPEN", &id),
             range_time: make_range(&[class_name, status, &now, &id]),
             id,
             client: client.to_owned(),
@@ -130,7 +130,7 @@ impl Conversation {
         let metadata = encrypt_data(&conversation.metadata).unwrap();
         Self {
             hash: Self::get_hash(&conversation.client),
-            range: Self::get_range(&conversation.id),
+            range: Self::get_range(&conversation.status, &conversation.id),
             range_time: make_range(&[class_name, &conversation.status, &conversation.last_interaction_at, &conversation.id]),
             id: conversation.id.to_owned(),
             client: conversation.client.to_owned(),

@@ -44,14 +44,15 @@ pub fn close_conversation(
     db: &DynamoDbClient,
 ) -> Result<(), ManagerError> {
 
+    // retrieve the old conversation, which at this stage must still be open
     let hash = Conversation::get_hash(client);
-    let range = Conversation::get_range(id);
-    let key = DynamoDbKey::new(&hash, &range);
+    let range = Conversation::get_range("OPEN", id);
+    let old_key = DynamoDbKey::new(&hash, &range);
 
     // get conv with ID
     let get_input = GetItemInput {
         table_name: get_table_name()?,
-        key: serde_dynamodb::to_hashmap(&key)?,
+        key: serde_dynamodb::to_hashmap(&old_key)?,
         ..Default::default()
     };
 
@@ -68,31 +69,30 @@ pub fn close_conversation(
     };
 
     let new_conv: Conversation = serde_dynamodb::from_hashmap(item)?;
-    let metadata = serde_json::from_str(&new_conv.metadata)?;
-
     let new_conv = DbConversation {
-        id: new_conv.id.to_string(),
+        id: new_conv.id.to_owned(),
         client: client.to_owned(),
-        flow_id: new_conv.flow_id.to_string(),
-        step_id: new_conv.step_id.to_string(),
-        metadata: decrypt_data(metadata)?,
-        status: new_conv.status.to_string(),
-        last_interaction_at: new_conv.last_interaction_at.to_string(),
-        updated_at: new_conv.updated_at.to_string(),
-        created_at: new_conv.created_at.to_string(),
+        flow_id: new_conv.flow_id.to_owned(),
+        step_id: new_conv.step_id.to_owned(),
+        metadata: decrypt_data(new_conv.metadata.to_owned())?,
+        status: new_conv.status.to_owned(),
+        last_interaction_at: new_conv.last_interaction_at.to_owned(),
+        updated_at: new_conv.updated_at.to_owned(),
+        created_at: new_conv.created_at.to_owned(),
     };
 
-    let mut new_conv = Conversation::from(&new_conv);
     let now = get_date_time();
+    let mut new_conv = Conversation::from(&new_conv);
+
     new_conv.status = status.to_owned();
     new_conv.last_interaction_at = now.to_owned();
     new_conv.updated_at = now.to_owned();
-    new_conv.range_time = make_range(&["interaction", status, &now, &id]);
-    let key = Conversation::get_key(&client, &id);
+    new_conv.range_time = make_range(&["interaction", "CLOSED", &now, &id]);
+    new_conv.range = Conversation::get_range("CLOSED", &id);
 
-    let new_conv = serde_dynamodb::to_hashmap(&new_conv)?;
+    let new_item = serde_dynamodb::to_hashmap(&new_conv)?;
 
-    replace_conversation(&key, new_conv, db)?;
+    replace_conversation(&old_key, new_item, db)?;
 
     Ok(())
 }
@@ -111,7 +111,7 @@ fn get_all_open_conversations(client: &Client, db: &DynamoDbClient) -> Vec<DbCon
         _ => None,
     } {
         res.push(conv);
-    }
+    };
 
     res
 }
@@ -160,18 +160,21 @@ pub fn close_all_conversations(
     db: &DynamoDbClient,
 ) -> Result<(), ManagerError> {
 
-    let ids = get_all_open_conversations(client, db);
-    for conv in ids.iter() {
+    let status = "CLOSED";
+    let now = get_date_time();
+    let conversations = get_all_open_conversations(client, db);
+    for conv in conversations.iter() {
         let mut new_conv = Conversation::from(conv);
-        let now = get_date_time();
-        new_conv.status = "CLOSED".to_owned();
+        new_conv.status = status.to_owned();
         new_conv.last_interaction_at = now.to_owned();
         new_conv.updated_at = now.to_owned();
-        new_conv.range_time = make_range(&["interaction", "CLOSED", &now, &conv.id]);
-        let key = Conversation::get_key(&conv.client, &conv.id);
+        new_conv.range_time = make_range(&["interaction", status, &now, &conv.id]);
+        new_conv.range = Conversation::get_range(status, &new_conv.id);
 
-        let new_conv = serde_dynamodb::to_hashmap(&new_conv)?;
-        replace_conversation(&key, new_conv, db)?;
+        let old_key = Conversation::get_key(&conv.client, "OPEN", &conv.id);
+        let new_item = serde_dynamodb::to_hashmap(&new_conv)?;
+
+        replace_conversation(&old_key, new_item, db)?;
     }
     Ok(())
 }
@@ -241,7 +244,7 @@ pub fn update_conversation(
 ) -> Result<(), ManagerError> {
 
     let hash = Conversation::get_hash(client);
-    let range = Conversation::get_range(conversation_id);
+    let range = Conversation::get_range("OPEN", conversation_id);
 
     // make sure that if the item does not already exist, it is NOT created automatically
     let condition_expr = "#hashKey = :hashVal AND #rangeKey = :rangeVal".to_string();
