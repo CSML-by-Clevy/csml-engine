@@ -165,8 +165,6 @@ pub fn get_memories(
     let mut map = serde_json::Map::new();
 
     for mem in memories {
-        println!("asstr: {:#?}", mem["value"].to_string());
-
         let value: serde_json::Value = decrypt_data(mem["value"].to_string())?;
         let key = mem["key"].as_str().unwrap();
 
