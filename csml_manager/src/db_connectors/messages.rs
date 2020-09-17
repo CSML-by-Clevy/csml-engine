@@ -8,7 +8,7 @@ use crate::db_connectors::{is_httpdb, http as http_connector};
 use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
 
 pub fn add_messages_bulk(
-    data: &ConversationInfo,
+    data: &mut ConversationInfo,
     msgs: Vec<serde_json::Value>,
     interaction_order: i32,
     direction: &str,

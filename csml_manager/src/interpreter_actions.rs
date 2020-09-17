@@ -119,7 +119,7 @@ pub fn interpret_step(
                 interaction_success = false;
                 send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
                 data.messages.push(err_msg);
-                close_conversation(&data.conversation_id, &data.client, &data.db)?;
+                close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
             }
         }
     }
@@ -186,7 +186,7 @@ fn goto_flow<'a>(
     data.context.step = nextstep;
 
     update_conversation(
-        &data,
+        data,
         Some(current_flow.id.clone()),
         Some(data.context.step.clone()),
     )?;
@@ -213,14 +213,14 @@ fn goto_step<'a>(
 
         // send end of conversation
         send_msg_to_callback_url(data, vec![], *interaction_order, *conversation_end);
-        update_conversation(&data, None, Some("end".to_owned()))?;
-        close_conversation(&data.conversation_id, &data.client, &data.db)?;
+        update_conversation(data, None, Some("end".to_owned()))?;
+        close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
 
         // break interpret_step loop
         return Ok(*conversation_end);
     } else {
         data.context.step = nextstep;
-        update_conversation(&data, None, Some(data.context.step.to_owned()))?;
+        update_conversation(data, None, Some(data.context.step.to_owned()))?;
     }
 
     *interaction_order += 1;

@@ -10,7 +10,7 @@ use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
 pub fn init_interaction(
     event: serde_json::Value,
     client: &Client,
-    db: &Database,
+    db: &mut Database,
 ) -> Result<String, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -33,7 +33,7 @@ pub fn init_interaction(
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), ManagerError> {
+pub fn update_interaction(data: &mut ConversationInfo, success: bool) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(&data.db)?;
@@ -48,7 +48,7 @@ pub fn update_interaction(data: &ConversationInfo, success: bool) -> Result<(), 
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-        let db = dynamodb_connector::get_db(&data.db)?;
+        let db = dynamodb_connector::get_db(&mut data.db)?;
         return dynamodb_connector::interactions::update_interaction(&data.interaction_id, success, &data.client, db);
     }
 

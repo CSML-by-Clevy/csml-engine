@@ -41,7 +41,7 @@ pub fn add_memories(
  */
 pub fn get_memories(
     client: &Client,
-    db: &Database,
+    db: &mut Database,
 ) -> Result<serde_json::Value, ManagerError> {
 
     #[cfg(feature = "mongo")]

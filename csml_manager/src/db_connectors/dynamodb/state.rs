@@ -10,7 +10,7 @@ pub fn delete_state_key(
     client: &Client,
     _type: &str,
     key: &str,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
 
     let item_key = DynamoDbKey {
@@ -24,9 +24,8 @@ pub fn delete_state_key(
         ..Default::default()
     };
 
-    let mut runtime = db.get_runtime()?;
     let future = db.client.delete_item(input);
-    runtime.block_on(future)?;
+    db.runtime.block_on(future)?;
 
     Ok(())
 }
@@ -35,7 +34,7 @@ pub fn get_state_key(
     client: &Client,
     _type: &str,
     key: &str,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<Option<serde_json::Value>, ManagerError> {
 
     let item_key = DynamoDbKey {
@@ -49,9 +48,8 @@ pub fn get_state_key(
         ..Default::default()
     };
 
-    let mut runtime = db.get_runtime()?;
     let future = db.client.get_item(input);
-    let res = runtime.block_on(future)?;
+    let res = db.runtime.block_on(future)?;
 
     match res.item {
         Some(val) => {
@@ -120,11 +118,10 @@ pub fn set_state_items(
             ..Default::default()
         };
 
-        let db = get_db(&data.db)?;
-        let mut runtime = db.get_runtime()?;
+        let db = get_db(&mut data.db)?;
         let future = db.client.batch_write_item(input);
 
-        runtime.block_on(future)?;
+        db.runtime.block_on(future)?;
     }
 
     Ok(())

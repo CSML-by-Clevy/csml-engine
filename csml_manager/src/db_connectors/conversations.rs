@@ -12,7 +12,7 @@ pub fn create_conversation(
     step_id: &str,
     client: &Client,
     metadata: serde_json::Value,
-    db: &Database,
+    db: &mut Database,
 ) -> Result<String, ManagerError> {
 
     #[cfg(feature = "mongo")]
@@ -36,7 +36,7 @@ pub fn create_conversation(
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn close_conversation(id: &str, client: &Client, db: &Database) -> Result<(), ManagerError> {
+pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -58,7 +58,7 @@ pub fn close_conversation(id: &str, client: &Client, db: &Database) -> Result<()
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), ManagerError> {
+pub fn close_all_conversations(client: &Client, db: &mut Database) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -82,7 +82,7 @@ pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), Man
 
 pub fn get_latest_open(
     client: &Client,
-    db: &Database,
+    db: &mut Database,
 ) -> Result<Option<DbConversation>, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -106,7 +106,7 @@ pub fn get_latest_open(
 }
 
 pub fn update_conversation(
-    data: &ConversationInfo,
+    data: &mut ConversationInfo,
     flow_id: Option<String>,
     step_id: Option<String>,
 ) -> Result<(), ManagerError> {
@@ -136,7 +136,7 @@ pub fn update_conversation(
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-        let db = dynamodb_connector::get_db(&data.db)?;
+        let db = dynamodb_connector::get_db(&mut data.db)?;
         return dynamodb_connector::conversations::update_conversation(
             &data.conversation_id,
             &data.client,

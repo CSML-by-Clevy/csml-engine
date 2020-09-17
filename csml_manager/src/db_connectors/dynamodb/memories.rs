@@ -73,11 +73,10 @@ pub fn add_memories(
             ..Default::default()
         };
 
-        let db = get_db(&data.db)?;
-        let mut runtime = db.get_runtime()?;
+        let db = get_db(&mut data.db)?;
         let future = db.client.batch_write_item(input);
 
-        runtime.block_on(future)?;
+        db.runtime.block_on(future)?;
     }
 
     Ok(())
@@ -90,7 +89,7 @@ struct QueryResult {
 
 fn scan_memories(
     client: &Client,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
     last_evaluated_key: Option<HashMap<String, AttributeValue>>,
 ) -> Result<QueryResult, ManagerError> {
 
@@ -118,10 +117,8 @@ fn scan_memories(
         ..Default::default()
     };
 
-    let mut runtime = db.get_runtime()?;
     let future = db.client.query(input);
-
-    let data = runtime.block_on(future)?;
+    let data = db.runtime.block_on(future)?;
 
     let mut items = vec![];
     match data.items {
@@ -146,7 +143,7 @@ fn scan_memories(
 
 pub fn get_memories(
     client: &Client,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<serde_json::Value, ManagerError> {
 
     let mut memories = vec![];

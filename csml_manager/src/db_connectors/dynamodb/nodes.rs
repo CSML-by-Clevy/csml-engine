@@ -40,10 +40,9 @@ pub fn create_node(
     ..Default::default()
     };
 
-    let db = get_db(&data.db)?;
-    let mut runtime = db.get_runtime()?;
+    let db = get_db(&mut data.db)?;
     let future = db.client.put_item(input);
-    runtime.block_on(future)?;
+    db.runtime.block_on(future)?;
 
     Ok(())
 }

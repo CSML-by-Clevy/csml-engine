@@ -12,7 +12,7 @@ pub fn delete_state_key(
     client: &Client,
     _type: &str,
     _key: &str,
-    db: &Database,
+    mut db: &mut Database,
 ) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -28,7 +28,7 @@ pub fn delete_state_key(
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-        let db = dynamodb_connector::get_db(db)?;
+        let db = dynamodb_connector::get_db(&mut db)?;
         return dynamodb_connector::state::delete_state_key(client, _type, _key, db);
     }
 
@@ -39,7 +39,7 @@ pub fn get_state_key(
     client: &Client,
     _type: &str,
     _key: &str,
-    db: &Database,
+    db: &mut Database,
 ) -> Result<Option<serde_json::Value>, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {

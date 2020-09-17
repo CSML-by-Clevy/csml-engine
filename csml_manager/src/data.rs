@@ -34,20 +34,17 @@ pub enum Database {
 #[cfg(feature = "dynamo")]
 pub struct DynamoDbClient {
     pub client: rusoto_dynamodb::DynamoDbClient,
-    pub runtime: Option<tokio::runtime::Runtime>,
+    pub runtime: tokio::runtime::Runtime,
 }
+
 #[cfg(feature = "dynamo")]
 impl DynamoDbClient {
     pub fn new(region: rusoto_core::Region) -> Self {
         Self {
             client: rusoto_dynamodb::DynamoDbClient::new(region),
-            runtime: None,
-        }
-    }
-    pub fn get_runtime(&self) -> Result<tokio::runtime::Runtime, ManagerError> {
-        match tokio::runtime::Runtime::new() {
-            Ok(rt) => Ok(rt),
-            Err(err) => Err(ManagerError::Manager(err.to_string())),
+            runtime: {
+                tokio::runtime::Runtime::new().unwrap()
+            }
         }
     }
 }

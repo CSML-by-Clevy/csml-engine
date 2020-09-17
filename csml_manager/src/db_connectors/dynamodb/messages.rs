@@ -33,7 +33,7 @@ fn format_messages(
 }
 
 pub fn add_messages_bulk(
-    data: &ConversationInfo,
+    data: &mut ConversationInfo,
     messages: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
@@ -72,11 +72,10 @@ pub fn add_messages_bulk(
             ..Default::default()
         };
 
-        let db = get_db(&data.db)?;
-        let mut runtime = db.get_runtime()?;
+        let db = get_db(&mut data.db)?;
         let future = db.client.batch_write_item(input);
 
-        runtime.block_on(future)?;
+        db.runtime.block_on(future)?;
     }
 
     Ok(())

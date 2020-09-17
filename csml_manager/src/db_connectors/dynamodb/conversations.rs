@@ -12,7 +12,7 @@ pub fn create_conversation(
     step_id: &str,
     client: &Client,
     metadata: serde_json::Value,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<String, ManagerError> {
 
     let data = Conversation::new(client, &encrypt_data(&metadata)?, flow_id, step_id);
@@ -24,9 +24,8 @@ pub fn create_conversation(
 
     let client = db.client.to_owned();
     let future = client.put_item(input);
-    let mut runtime = db.get_runtime()?;
 
-    runtime.block_on(future)?;
+    db.runtime.block_on(future)?;
     Ok(data.id.to_owned())
 }
 
@@ -41,7 +40,7 @@ pub fn close_conversation(
     id: &str,
     client: &Client,
     status: &str,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
 
     // retrieve the old conversation, which at this stage must still be open
@@ -57,8 +56,7 @@ pub fn close_conversation(
     };
 
     let future = db.client.get_item(get_input);
-    let mut runtime = db.get_runtime()?;
-    let res = runtime.block_on(future)?;
+    let res = db.runtime.block_on(future)?;
 
     if let None = res.item {
         return Ok(());
@@ -103,7 +101,7 @@ pub fn close_conversation(
  * there is more than one, there should not be many.
  * For this reason it should be ok to just get them all one by one like this.
  */
-fn get_all_open_conversations(client: &Client, db: &DynamoDbClient) -> Vec<DbConversation> {
+fn get_all_open_conversations(client: &Client, db: &mut DynamoDbClient) -> Vec<DbConversation> {
     let mut res = vec![];
 
     while let Some(conv) = match get_latest_open(client, db) {
@@ -121,43 +119,47 @@ fn get_all_open_conversations(client: &Client, db: &DynamoDbClient) -> Vec<DbCon
  * ideally in a transaction to make sure that we don't lose a conversation in the process.
  */
 fn replace_conversation(
-    key: &DynamoDbKey,
-    new_conversation: HashMap<String, AttributeValue>,
-    db: &DynamoDbClient
+    old_key: &DynamoDbKey,
+    new_item: HashMap<String, AttributeValue>,
+    db: &mut DynamoDbClient,
+    // runtime: &mut tokio::runtime::Runtime,
 ) -> Result<(), ManagerError> {
 
-    let to_remove = TransactWriteItem {
-        put: Some(Put {
-            table_name: get_table_name()?,
-            item: new_conversation,
-            ..Default::default()
-        }),
-        ..Default::default()
-    };
-    let to_insert = TransactWriteItem  {
-        delete: Some(Delete {
-            table_name: get_table_name()?,
-            key: serde_dynamodb::to_hashmap(key.to_owned())?,
-            ..Default::default()
-        }),
+    let put = Put {
+        table_name: get_table_name()?,
+        item: new_item,
         ..Default::default()
     };
 
-    let mut runtime = db.get_runtime()?;
+    let del = Delete {
+        table_name: get_table_name()?,
+        key: serde_dynamodb::to_hashmap(old_key.to_owned())?,
+        ..Default::default()
+    };
+
+    let to_insert = TransactWriteItem {
+        put: Some(put),
+        ..Default::default()
+    };
+    let to_remove = TransactWriteItem  {
+        delete: Some(del),
+        ..Default::default()
+    };
+
     let input = TransactWriteItemsInput {
         transact_items: vec![to_remove, to_insert],
         ..Default::default()
     };
 
     let future = db.client.transact_write_items(input);
-    runtime.block_on(future)?;
+    db.runtime.block_on(future)?;
 
     Ok(())
 }
 
 pub fn close_all_conversations(
     client: &Client,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
 
     let status = "CLOSED";
@@ -181,7 +183,7 @@ pub fn close_all_conversations(
 
 pub fn get_latest_open(
     client: &Client,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<Option<DbConversation>, ManagerError> {
 
     let hash = Conversation::get_hash(client);
@@ -208,9 +210,8 @@ pub fn get_latest_open(
         ..Default::default()
     };
 
-    let mut runtime = db.get_runtime()?;
     let query = db.client.query(input);
-    let data = runtime.block_on(query)?;
+    let data = db.runtime.block_on(query)?;
 
     // The query returns an array of items (max 1, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -240,7 +241,7 @@ pub fn update_conversation(
     client: &Client,
     flow_id: Option<String>,
     step_id: Option<String>,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
 
     let hash = Conversation::get_hash(client);
@@ -299,8 +300,7 @@ pub fn update_conversation(
     };
 
     let future = db.client.update_item(input);
-    let mut runtime = db.get_runtime()?;
-    runtime.block_on(future)?;
+    db.runtime.block_on(future)?;
 
     Ok(())
 }

@@ -43,7 +43,7 @@ pub fn init() -> Result<Database, ManagerError> {
     Ok(Database::Dynamodb(client))
 }
 
-pub fn get_db<'a>(db: &'a Database) -> Result<&'a DynamoDbClient, ManagerError> {
+pub fn get_db<'a>(db: &'a mut Database) -> Result<&'a mut DynamoDbClient, ManagerError> {
     match db {
         Database::Dynamodb(val) => Ok(val),
         _ => Err(ManagerError::Manager("DynamoDB connector is not setup correctly".to_owned())),

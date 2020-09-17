@@ -9,7 +9,7 @@ use crate::db_connectors::dynamodb::utils::*;
 pub fn init_interaction(
     event: serde_json::Value,
     client: &Client,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<String, ManagerError> {
 
     let id = Uuid::new_v4();
@@ -36,9 +36,8 @@ pub fn init_interaction(
         ..Default::default()
     };
 
-    let mut runtime = db.get_runtime()?;
     let future = db.client.put_item(input);
-    runtime.block_on(future)?;
+    db.runtime.block_on(future)?;
 
     Ok(id.to_string())
 }
@@ -47,7 +46,7 @@ pub fn update_interaction(
     interaction_id: &str,
     success: bool,
     client: &Client,
-    db: &DynamoDbClient,
+    db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
 
     let key = Interaction::get_key(client, interaction_id);
@@ -80,9 +79,8 @@ pub fn update_interaction(
         ..Default::default()
     };
 
-    let mut runtime = db.get_runtime()?;
     let future = db.client.update_item(input);
-    runtime.block_on(future)?;
+    db.runtime.block_on(future)?;
 
     Ok(())
 }
