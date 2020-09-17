@@ -4,10 +4,6 @@ use curl::easy::Easy;
 use serde_json::Value;
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "dynamo")]
-use rusoto_core::Region;
-use rusoto_dynamodb::DynamoDbClient as RusotoDynamoDbClient;
-
 pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 
@@ -37,13 +33,14 @@ pub enum Database {
  */
 #[cfg(feature = "dynamo")]
 pub struct DynamoDbClient {
-    pub client: RusotoDynamoDbClient,
+    pub client: rusoto_dynamodb::DynamoDbClient,
     pub runtime: Option<tokio::runtime::Runtime>,
 }
+#[cfg(feature = "dynamo")]
 impl DynamoDbClient {
-    pub fn new(region: Region) -> Self {
+    pub fn new(region: rusoto_core::Region) -> Self {
         Self {
-            client: RusotoDynamoDbClient::new(region),
+            client: rusoto_dynamodb::DynamoDbClient::new(region),
             runtime: None,
         }
     }

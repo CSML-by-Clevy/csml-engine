@@ -39,8 +39,11 @@ use crate::data::{Database, ManagerError};
 use serde::{Serialize, Deserialize};
 use crate::error_messages::ERROR_DB_SETUP;
 
+#[cfg(feature = "mongo")]
 use self::mongodb as mongodb_connector;
+#[cfg(feature = "http")]
 use self::http as http_connector;
+#[cfg(feature = "dynamo")]
 use self::dynamodb as dynamodb_connector;
 
 pub mod conversations;
