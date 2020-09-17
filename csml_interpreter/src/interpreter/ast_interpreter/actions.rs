@@ -125,6 +125,7 @@ pub fn match_actions(
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
 
             let mut flow_opt = Some(flow.to_owned());
+            root.exit_condition = Some(ExitCondition::Goto);
 
             if step == "end" {
                 root.exit_condition = Some(ExitCondition::End);
@@ -141,9 +142,7 @@ pub fn match_actions(
 
             data.context.step = step.to_owned();
             data.context.flow = flow.to_owned();
-            root.exit_condition = Some(ExitCondition::Goto);
             data.context.hold = None;
-
             Ok(root)
         }
         ObjectType::Remember(name, variable) => {
