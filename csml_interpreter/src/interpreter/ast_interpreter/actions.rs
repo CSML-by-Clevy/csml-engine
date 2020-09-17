@@ -123,10 +123,18 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
+
+            let mut flow_opt = Some(flow.to_owned());
+
+            if step == "end" {
+                root.exit_condition = Some(ExitCondition::End);
+                flow_opt = None;
+            }
+
             MSG::send(
                 &sender,
                 MSG::Next {
-                    flow: Some(flow.clone()),
+                    flow: flow_opt,
                     step: Some(step.clone()),
                 },
             );
@@ -135,10 +143,6 @@ pub fn match_actions(
             data.context.flow = flow.to_owned();
             root.exit_condition = Some(ExitCondition::Goto);
             data.context.hold = None;
-
-            if step == "end" {
-                root.exit_condition = Some(ExitCondition::End);
-            }
 
             Ok(root)
         }
