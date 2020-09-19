@@ -14,7 +14,7 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{conversations::*, init_db, messages::*, state::*, Conversation};
+use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
@@ -82,10 +82,10 @@ pub fn start_conversation(
  * Return the latest conversation that is still open for a given user
  * (there should not be more than one), or None if there isn't any.
  */
-pub fn get_open_conversation(client: &Client) -> Result<Option<Conversation>, ManagerError> {
-    let db = init_db()?;
+pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, ManagerError> {
+    let mut db = init_db()?;
 
-    get_latest_open(client, &db)
+    get_latest_open(client, &mut db)
 }
 
 /**
@@ -110,10 +110,10 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
  * that outdated variables or hold positions are not loaded into the next open conversation.
  */
 pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> {
-    let db = init_db()?;
+    let mut db = init_db()?;
 
-    delete_state_key(&client, "hold", "position", &db)?;
-    close_all_conversations(&client, &db)
+    delete_state_key(&client, "hold", "position", &mut db)?;
+    close_all_conversations(&client, &mut db)
 }
 
 /**
@@ -127,7 +127,7 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), ManagerError> 
  * (context.hold.step_vars) into the conversation context.
  */
 fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), ManagerError> {
-    match get_state_key(&data.client, "hold", "position", &data.db) {
+    match get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(string)) => {
             let hold = serde_json::to_value(string)?;
@@ -139,7 +139,7 @@ fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), Ma
             // cleanup the current hold and restart flow
             if new_hash != hold["hash"] {
                 data.context.step = "start".to_owned();
-                delete_state_key(&data.client, "hold", "position", &data.db)?;
+                delete_state_key(&data.client, "hold", "position", &mut data.db)?;
                 data.context.hold = None;
                 return Ok(());
             }
@@ -151,7 +151,7 @@ fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), Ma
                 ))? as usize,
                 step_vars: hold["step_vars"].clone(),
             });
-            delete_state_key(&data.client, "hold", "position", &data.db)?;
+            delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }
         // user is not on hold
         Ok(None) => (),

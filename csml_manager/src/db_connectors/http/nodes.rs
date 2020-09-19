@@ -2,7 +2,7 @@ use crate::{db_connectors::http::get_db, ConversationInfo, ManagerError};
 use http_db::models::CreateNodeBody;
 use uuid::Uuid;
 
-pub fn new_node(
+fn new_node(
     data: &mut ConversationInfo,
     nextflow: Option<String>,
     nextstep: Option<String>,

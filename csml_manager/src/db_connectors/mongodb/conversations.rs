@@ -1,11 +1,11 @@
-use crate::{db_connectors::Conversation, encrypt::encrypt_data, Client, ManagerError};
+use crate::{db_connectors::DbConversation, encrypt::encrypt_data, Client, ManagerError};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
 fn format_conversation_struct(
     conversation: bson::ordered::OrderedDocument,
-) -> Result<Conversation, ManagerError> {
-    Ok(Conversation {
+) -> Result<DbConversation, ManagerError> {
+    Ok(DbConversation {
         id: conversation.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
         client: bson::from_bson(conversation.get("client").unwrap().to_owned())?,
         flow_id: conversation.get_str("flow_id").unwrap().to_owned(), // to_hex
@@ -105,7 +105,7 @@ pub fn close_all_conversations(
 pub fn get_latest_open(
     client: &Client,
     db: &mongodb::Database,
-) -> Result<Option<Conversation>, ManagerError> {
+) -> Result<Option<DbConversation>, ManagerError> {
     let collection = db.collection("conversation");
 
     let filter = doc! {

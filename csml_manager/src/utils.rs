@@ -221,7 +221,7 @@ pub fn search_flow<'a>(
     event: &Event,
     bot: &'a CsmlBot,
     client: &Client,
-    db: &Database,
+    db: &mut Database,
 ) -> Result<&'a CsmlFlow, ManagerError> {
     match event {
         event if event.content_type == "flow_trigger" => {

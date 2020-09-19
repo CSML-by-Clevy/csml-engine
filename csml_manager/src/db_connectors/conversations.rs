@@ -1,17 +1,20 @@
-use crate::{Client, Conversation, ConversationInfo, Database, ManagerError};
+use crate::{Client, DbConversation, ConversationInfo, Database, ManagerError};
 use crate::error_messages::ERROR_DB_SETUP;
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "http")]
-use crate::db_connectors::{is_http, http as http_connector};
+use crate::db_connectors::{is_httpdb, http as http_connector};
+#[cfg(feature = "dynamo")]
+use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
 
 pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
     metadata: serde_json::Value,
-    db: &Database,
+    db: &mut Database,
 ) -> Result<String, ManagerError> {
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -19,15 +22,21 @@ pub fn create_conversation(
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let db = http_connector::get_db(db)?;
         return http_connector::conversations::create_conversation(flow_id, step_id, client, metadata, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::create_conversation(flow_id, step_id, client, metadata, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn close_conversation(id: &str, client: &Client, db: &Database) -> Result<(), ManagerError> {
+pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -35,15 +44,21 @@ pub fn close_conversation(id: &str, client: &Client, db: &Database) -> Result<()
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let db = http_connector::get_db(db)?;
         return http_connector::conversations::close_conversation(id, client, "CLOSED", db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::close_conversation(id, client, "CLOSED", db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), ManagerError> {
+pub fn close_all_conversations(client: &Client, db: &mut Database) -> Result<(), ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -51,9 +66,15 @@ pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), Man
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let db = http_connector::get_db(db)?;
         return http_connector::conversations::close_all_conversations(client, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::close_all_conversations(client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -61,8 +82,8 @@ pub fn close_all_conversations(client: &Client, db: &Database) -> Result<(), Man
 
 pub fn get_latest_open(
     client: &Client,
-    db: &Database,
-) -> Result<Option<Conversation>, ManagerError> {
+    db: &mut Database,
+) -> Result<Option<DbConversation>, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -70,16 +91,22 @@ pub fn get_latest_open(
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let db = http_connector::get_db(db)?;
         return http_connector::conversations::get_latest_open(client, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::conversations::get_latest_open(client, db);
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
 pub fn update_conversation(
-    data: &ConversationInfo,
+    data: &mut ConversationInfo,
     flow_id: Option<String>,
     step_id: Option<String>,
 ) -> Result<(), ManagerError> {
@@ -96,9 +123,21 @@ pub fn update_conversation(
     }
 
     #[cfg(feature = "http")]
-    if is_http() {
+    if is_httpdb() {
         let db = http_connector::get_db(&data.db)?;
         return http_connector::conversations::update_conversation(
+            &data.conversation_id,
+            &data.client,
+            flow_id,
+            step_id,
+            db,
+        );
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(&mut data.db)?;
+        return dynamodb_connector::conversations::update_conversation(
             &data.conversation_id,
             &data.client,
             flow_id,

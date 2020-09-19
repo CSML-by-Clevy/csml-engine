@@ -4,6 +4,7 @@ use csml_manager::data::CsmlRequest;
 use csml_interpreter::data::{csml_bot::CsmlBot};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use std::thread;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RequestRun {
@@ -22,16 +23,16 @@ pub async fn handler(body: web::Json<RequestRun>) -> HttpResponse {
     val => val,
   };
 
-  match start_conversation(
-    request,
-    bot,
-  ) {
-      Err(err) => {
-        eprintln!("ManagerError: {:?}", err);
-        HttpResponse::InternalServerError().finish()
-      },
-      Ok(data) => {
-        HttpResponse::Ok().json(data)
-      },
+  let res = thread::spawn(move || {
+    start_conversation(request, bot)
+  }).join().unwrap();
+
+  match res {
+    Ok(data) => HttpResponse::Ok().json(data),
+    Err(err) => {
+      eprintln!("ManagerError: {:?}", err);
+      HttpResponse::InternalServerError().finish()
+    }
   }
+
 }
