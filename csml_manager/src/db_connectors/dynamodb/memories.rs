@@ -87,7 +87,7 @@ struct QueryResult {
     items: Vec<serde_json::Value>
 }
 
-fn scan_memories(
+fn query_memories(
     client: &Client,
     db: &mut DynamoDbClient,
     last_evaluated_key: Option<HashMap<String, AttributeValue>>,
@@ -149,8 +149,9 @@ pub fn get_memories(
     let mut memories = vec![];
     let mut last_evaluated_key = None;
 
+    // recursively retrieve all memories from dynamodb
     loop {
-        let tmp = scan_memories(client, db, last_evaluated_key)?;
+        let tmp = query_memories(client, db, last_evaluated_key)?;
         let mut items = tmp.items.to_owned();
         memories.append(&mut items);
         if let None = tmp.last_evaluated_key {
@@ -159,15 +160,12 @@ pub fn get_memories(
         last_evaluated_key = tmp.last_evaluated_key;
     }
 
+    // format memories output
     let mut map = serde_json::Map::new();
-
     for mem in memories {
-        let value: serde_json::Value = decrypt_data(mem["value"].to_string())?;
         let key = mem["key"].as_str().unwrap();
-
-
         if !map.contains_key(key) {
-            map.insert(key.to_string(), value);
+            map.insert(key.to_string(), mem["value"].clone());
         }
     }
 

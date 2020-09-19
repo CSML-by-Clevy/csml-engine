@@ -254,12 +254,8 @@ pub fn update_conversation(
         ("#rangeKey".to_string(), "range".to_string())
     ].iter().cloned().collect();
     let mut expr_attr_values: HashMap<String, AttributeValue> = [
-        (
-            String::from(":hashVal"), AttributeValue { s: Some(hash.to_string()), ..Default::default() },
-        ),
-        (
-            String::from(":rangeVal"), AttributeValue { s: Some(range.to_string()), ..Default::default() },
-        ),
+        (String::from(":hashVal"), AttributeValue { s: Some(hash.to_string()), ..Default::default() }),
+        (String::from(":rangeVal"), AttributeValue { s: Some(range.to_string()), ..Default::default() }),
     ].iter().cloned().collect();
 
     let mut update_expr = "SET last_interaction_at = :lastInteractionAtVal".to_string();
