@@ -23,24 +23,16 @@ pub async fn handler(body: web::Json<RequestRun>) -> HttpResponse {
     val => val,
   };
 
-
-  let res = thread::spawn(|| {
-    match start_conversation(
-      request,
-      bot,
-    ) {
-        Err(err) => {
-          eprintln!("ManagerError: {:?}", err);
-          None
-        },
-        Ok(data) => {
-          Some(data)
-        },
-    }
+  let res = thread::spawn(move || {
+    start_conversation(request, bot)
   }).join().unwrap();
 
   match res {
-    Some(data) => HttpResponse::Ok().json(data),
-    None => HttpResponse::InternalServerError().finish()
+    Ok(data) => HttpResponse::Ok().json(data),
+    Err(err) => {
+      eprintln!("ManagerError: {:?}", err);
+      HttpResponse::InternalServerError().finish()
+    }
   }
+
 }
