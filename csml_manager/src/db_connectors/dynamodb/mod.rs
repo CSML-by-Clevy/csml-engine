@@ -73,6 +73,9 @@ pub struct Conversation {
     pub class: String,
     pub id: String,
     pub client: Client,
+    pub bot_id: String,
+    pub channel_id: String,
+    pub user_id: String,
     pub flow_id: String,
     pub step_id: String,
     pub metadata: String,
@@ -114,6 +117,9 @@ impl Conversation {
             range_time: make_range(&[class_name, status, &now, &id]),
             id,
             client: client.to_owned(),
+            bot_id: client.bot_id.to_owned(),
+            channel_id: client.channel_id.to_owned(),
+            user_id: client.user_id.to_owned(),
             class: class_name.to_owned(),
             metadata: encrypted_metadata.to_owned(),
             flow_id: flow_id.to_owned(),
@@ -134,6 +140,9 @@ impl Conversation {
             range_time: make_range(&[class_name, &conversation.status, &conversation.last_interaction_at, &conversation.id]),
             id: conversation.id.to_owned(),
             client: conversation.client.to_owned(),
+            bot_id: conversation.client.bot_id.to_owned(),
+            channel_id: conversation.client.channel_id.to_owned(),
+            user_id: conversation.client.user_id.to_owned(),
             class: class_name.to_string(),
             metadata,
             flow_id: conversation.flow_id.to_owned(),
@@ -155,6 +164,9 @@ pub struct Interaction {
     pub class: String,
     pub id: String,
     pub client: Client,
+    pub bot_id: String,
+    pub channel_id: String,
+    pub user_id: String,
     pub success: bool,
     pub event: String,
     pub updated_at: String,
@@ -182,17 +194,20 @@ impl Interaction {
      * range = interaction#id
      * range_time = interaction#timestamp#id
      */
-    pub fn new(id: &Uuid, client: &Client, encrypted_event: &str) -> Interaction {
+    pub fn new(id: &Uuid, client: &Client, encrypted_event: &str) -> Self {
         let class_name = "interaction";
         let now = get_date_time();
         let id = id.to_string();
-        Interaction {
+        Self {
             hash: Self::get_hash(client),
             range: Self::get_range(&id),
             range_time: make_range(&[class_name, &now, &id]),
             class: class_name.to_string(),
             id: id.to_owned(),
             client: client.clone(),
+            bot_id: client.bot_id.to_owned(),
+            channel_id: client.channel_id.to_owned(),
+            user_id: client.user_id.to_owned(),
             success: false,
             event: encrypted_event.to_owned(),
             updated_at: now.to_owned(),
@@ -209,6 +224,9 @@ pub struct Memory {
     pub class: String,
     pub id: String,
     pub client: Client,
+    pub bot_id: String,
+    pub channel_id: String,
+    pub user_id: String,
     pub interaction_id: String,
     pub conversation_id: String,
     pub flow_id: String,
@@ -265,6 +283,9 @@ impl Memory {
             class: class_name.to_owned(),
             id: id.to_string(),
             client: client.to_owned(),
+            bot_id: client.bot_id.to_owned(),
+            channel_id: client.channel_id.to_owned(),
+            user_id: client.user_id.to_owned(),
             interaction_id: interaction_id.to_owned(),
             conversation_id: conversation_id.to_owned(),
             flow_id: flow_id.to_owned(),
@@ -287,6 +308,9 @@ pub struct Message {
     pub class: String,
     pub id: String,
     pub client: Client,
+    pub bot_id: String,
+    pub channel_id: String,
+    pub user_id: String,
     pub interaction_id: String,
     pub conversation_id: String,
     pub flow_id: String,
@@ -329,7 +353,7 @@ impl Message {
         let id = uuid::Uuid::new_v4().to_string();
         let class_name = "message";
         let now = get_date_time();
-        Message {
+        Self {
             hash: Self::get_hash(&client),
             range: Self::get_range(&conversation_id, &id),
             range_time: make_range(&[
@@ -341,7 +365,10 @@ impl Message {
             ]),
             class: class_name.to_owned(),
             id: id.to_owned(),
-            client: client.clone(),
+            client: client.to_owned(),
+            bot_id: client.bot_id.to_owned(),
+            channel_id: client.channel_id.to_owned(),
+            user_id: client.user_id.to_owned(),
             interaction_id: interaction_id.to_owned(),
             conversation_id: conversation_id.to_owned(),
             flow_id: flow_id.to_owned(),
@@ -364,6 +391,9 @@ pub struct Node {
     pub class: String,
     pub id: String,
     pub client: Client,
+    pub bot_id: String,
+    pub channel_id: String,
+    pub user_id: String,
     pub conversation_id: String,
     pub interaction_id: String,
     pub flow_id: String,
@@ -391,7 +421,7 @@ impl Node {
         let id = uuid::Uuid::new_v4().to_string();
         let class_name = "path";
         let now = get_date_time();
-        Node {
+        Self {
             hash: make_range(&["conversation", conversation_id]),
             range: make_range(&[class_name, &id]),
             range_time: make_range(&[
@@ -401,7 +431,10 @@ impl Node {
             ]),
             class: class_name.to_owned(),
             id: id.to_owned(),
-            client: client.clone(),
+            client: client.to_owned(),
+            bot_id: client.bot_id.to_owned(),
+            channel_id: client.channel_id.to_owned(),
+            user_id: client.user_id.to_owned(),
             conversation_id: conversation_id.to_owned(),
             interaction_id: interaction_id.to_owned(),
             flow_id: flow_id.to_owned(),
@@ -421,6 +454,9 @@ pub struct State {
     pub class: String,
     pub id: String,
     pub client: Client,
+    pub bot_id: String,
+    pub channel_id: String,
+    pub user_id: String,
     #[serde(rename = "type")]
     pub _type: String,
     pub key: String,
@@ -451,12 +487,15 @@ impl State {
         let class_name = "state";
         let id = uuid::Uuid::new_v4().to_string();
         let now = get_date_time();
-        State {
+        Self {
             hash: Self::get_hash(&client),
             range: Self::get_range(_type, key),
             class: class_name.to_string(),
             id,
-            client: client.clone(),
+            client: client.to_owned(),
+            bot_id: client.bot_id.to_owned(),
+            channel_id: client.channel_id.to_owned(),
+            user_id: client.user_id.to_owned(),
             _type: _type.to_string(),
             key: key.to_owned(),
             value: encrypted_value.to_owned(),

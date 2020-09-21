@@ -34,7 +34,7 @@ pub fn create_conversation(
  * For simplicity's sake, we first retrieve the item then must rewrite it
  * entirely. This is not great but necessary because STATUS is embedded
  * in range key (ideally, we would use a secondary index instead).
- * FIXME: This should be improved on at some point.
+ * FIXME: This should really be improved on at some point.
  */
 pub fn close_conversation(
     id: &str,
@@ -58,30 +58,16 @@ pub fn close_conversation(
     let future = db.client.get_item(get_input);
     let res = db.runtime.block_on(future)?;
 
-    if let None = res.item {
-        return Ok(());
-    }
+    // If no conversation matches the request, we assume it's already closed and move on
     let item = match res.item {
         None => return Ok(()),
         Some(data) => data,
     };
 
-    let new_conv: Conversation = serde_dynamodb::from_hashmap(item)?;
-    let new_conv = DbConversation {
-        id: new_conv.id.to_owned(),
-        client: client.to_owned(),
-        flow_id: new_conv.flow_id.to_owned(),
-        step_id: new_conv.step_id.to_owned(),
-        metadata: decrypt_data(new_conv.metadata.to_owned())?,
-        status: new_conv.status.to_owned(),
-        last_interaction_at: new_conv.last_interaction_at.to_owned(),
-        updated_at: new_conv.updated_at.to_owned(),
-        created_at: new_conv.created_at.to_owned(),
-    };
+    // Update the conversation with the new status and closed state
+    let mut new_conv: Conversation = serde_dynamodb::from_hashmap(item)?;
 
     let now = get_date_time();
-    let mut new_conv = Conversation::from(&new_conv);
-
     new_conv.status = status.to_owned();
     new_conv.last_interaction_at = now.to_owned();
     new_conv.updated_at = now.to_owned();
@@ -98,8 +84,9 @@ pub fn close_conversation(
 /**
  * There should not be many open conversations for any given client.
  * In a normal scenario, there should be either 1, or none. If for some reason,
- * there is more than one, there should not be many.
- * For this reason it should be ok to just get them all one by one like this.
+ * there is more than one, there should definitely not be many, and it would lead to all
+ * sorts of other issues anyway.
+ * For this reason it should be safe to just get them all one by one like this.
  */
 fn get_all_open_conversations(client: &Client, db: &mut DynamoDbClient) -> Vec<DbConversation> {
     let mut res = vec![];
