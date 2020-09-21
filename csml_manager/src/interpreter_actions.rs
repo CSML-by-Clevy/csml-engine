@@ -60,7 +60,6 @@ pub fn interpret_step(
                 set_state_items(
                     data,
                     "hold",
-                    interaction_order,
                     vec![("position", &state_hold)],
                 )?;
                 data.context.hold = Some(Hold {
