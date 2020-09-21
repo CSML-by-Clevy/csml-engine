@@ -38,6 +38,25 @@ fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), ManagerError> {
     Ok(())
 }
 
+/**
+ * Decode base64 or hex-encoded strings.
+ * The legacy engine used hex encoding which must still be decoded properly
+ * so in case b64 does not work, try hex as well before returning an error.
+ * This will not impact performance of newly-encrypted data, while
+ * retaining full retrocompatibility with older data at a small cost.
+ */
+fn decode(text: &str) -> Result<Vec<u8>, ManagerError> {
+    match base64::decode(text.to_owned()) {
+        Ok(val) => Ok(val),
+        Err(err) => {
+            match hex::decode(text.to_owned()) {
+                Ok(val) => Ok(val),
+                _ => Err(ManagerError::Base64(err)),
+            }
+        }
+    }
+}
+
 fn encrypt(text: &[u8]) -> Result<String, ManagerError> {
     let cipher = Cipher::aes_256_gcm();
 
@@ -62,7 +81,7 @@ pub fn encrypt_data(value: &serde_json::Value) -> Result<String, ManagerError> {
 }
 
 fn decrypt(text: String) -> Result<String, ManagerError> {
-    let ciphertext = base64::decode(text)?;
+    let ciphertext = decode(&text)?;
     let cipher = Cipher::aes_256_gcm();
 
     let iv_length = 16;
