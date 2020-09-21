@@ -785,6 +785,7 @@ dependencies = [
  "chrono",
  "csml_interpreter",
  "curl",
+ "hex 0.4.2",
  "http_db",
  "md-5",
  "mongodb",
