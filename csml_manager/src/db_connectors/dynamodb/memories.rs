@@ -112,7 +112,7 @@ fn query_memories(
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         exclusive_start_key: last_evaluated_key,
-        scan_index_forward: Some(true),
+        scan_index_forward: Some(false),
         select: Some(String::from("ALL_ATTRIBUTES")),
         ..Default::default()
     };
