@@ -19,8 +19,6 @@ pub struct CsmlRequest {
 pub enum Database {
     #[cfg(feature = "mongo")]
     Mongo(mongodb::Database),
-    #[cfg(feature = "http")]
-    Httpdb(http_db::apis::client::APIClient),
     #[cfg(feature = "dynamo")]
     Dynamodb(DynamoDbClient),
     None,
@@ -87,9 +85,6 @@ pub enum ManagerError {
     #[cfg(any(feature = "mongo"))]
     MongoDB(mongodb::error::Error),
 
-    #[cfg(any(feature = "http"))]
-    Reqwest(reqwest::Error),
-
     #[cfg(any(feature = "dynamo"))]
     Rusoto(String),
     #[cfg(any(feature = "dynamo"))]
@@ -144,25 +139,6 @@ impl From<bson::DecoderError> for ManagerError {
 impl From<mongodb::error::Error> for ManagerError {
     fn from(e: mongodb::error::Error) -> Self {
         ManagerError::MongoDB(e)
-    }
-}
-
-#[cfg(any(feature = "http"))]
-impl From<reqwest::Error> for ManagerError {
-    fn from(e: reqwest::Error) -> Self {
-        ManagerError::Reqwest(e)
-    }
-}
-
-#[cfg(any(feature = "http"))]
-impl From<http_db::apis::Error> for ManagerError {
-    fn from(e: http_db::apis::Error) -> Self {
-        match e {
-            http_db::apis::Error::Reqwest(reqwest) => ManagerError::Reqwest(reqwest),
-            http_db::apis::Error::Serde(serde) => ManagerError::Serde(serde),
-            http_db::apis::Error::Io(io) => ManagerError::Io(io),
-            http_db::apis::Error::Interpreter(string) => ManagerError::Interpreter(string),
-        }
     }
 }
 

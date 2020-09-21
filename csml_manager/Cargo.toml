@@ -6,8 +6,6 @@ license = "Apache-2.0"
 edition = "2018"
 
 [features]
-tmp = []
-http = ["http_db", "reqwest"]
 mongo = ["mongodb", "bson"]
 dynamo = ["rusoto_core", "rusoto_dynamodb", "serde_dynamodb"]
 
@@ -17,15 +15,6 @@ optional = true
 
 [dependencies.bson]
 version = "0.14.1"
-optional = true
-
-[dependencies.http_db]
-path = "../http_db"
-optional = true
-
-[dependencies.reqwest]
-version = "0.9.24"
-features = ["rustls-tls"]
 optional = true
 
 [dependencies.serde_dynamodb]

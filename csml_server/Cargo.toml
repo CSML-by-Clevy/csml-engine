@@ -19,5 +19,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 json = "0.12"
 
-csml_manager = { path = "../csml_manager", features = ["http", "mongo", "dynamo"]}
+csml_manager = { path = "../csml_manager", features = ["mongo", "dynamo"]}
 csml_interpreter = { path = "../csml_interpreter" }

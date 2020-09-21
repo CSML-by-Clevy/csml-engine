@@ -106,25 +106,35 @@ cd csml_server
 cargo build --release
 ```
 
+Note that you will need a database available. The default choice is MongoDB, but Amazon DynamoDB
+is also available with the `dynamodb` type with a slightly different set of environment variables.
+
 Make sure that you have the environment set with following options:
 
 ```
-ENGINE_DB_TYPE=mongodb
+ENGINE_DB_TYPE=mongodb # or dynamodb
 
+# for mongodb
 MONGODB_HOST=localhost
 MONGODB_PORT=27017
 MONGODB_DATABASE=csml
 MONGODB_USERNAME=root
 MONGODB_PASSWORD=root
 
+# for dynamodb
+AWS_ACCESS_KEY_ID= # or use an IAM role
+AWS_SECRET_ACCESS_KEY= # or use an IAM role
+AWS_REGION=
+AWS_DYNAMODB_ENDPOINT= # optional, defaults to the default dynamodb endpoint for the given region.
+AWS_DYNAMODB_TABLE=
+
 ENGINE_SERVER_PORT=5000
 
-ENCRYPTION_SECRET=some-secret-string
+ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
 DISABLE_SSL_VERIFY=false
 DEBUG=true
 ```
 
-Note that you will need a database of some sort - default is mongodb, but you can also use an HTTP-based microservice to use the DB of your choice with options ENGINE_DB_TYPE=http and HTTP_DB_MS_URL=http://your-microservice-endpoint.
 
 After that, execute your build (by default under ./targets/release/csml_server) and visit http://localhost:5000 for some request examples.
 

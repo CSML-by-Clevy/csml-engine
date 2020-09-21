@@ -16,17 +16,12 @@
  * - `dynamodb`: requires a DynamoDB-compatible database (on AWS, or dynamodb-local
  * for dev purposes). The following env vars are required (alternatively if deploying on AWS,
  * use IAM roles)
- *   - AWS_REGION defaults to `us-east-1`
+ *   - AWS_REGION
  *   - AWS_ACCESS_KEY_ID
  *   - AWS_SECRET_ACCESS_KEY
- *   - AWS_DYNAMODB_TABLE defaults to the default dynamodb endpoint for the given region.
+ *   - AWS_DYNAMODB_TABLE
  *   - AWS_DYNAMODB_ENDPOINT optional, defaults to the default dynamodb endpoint for the given region.
  * Both AWS_REGION AND AWS_DYNAMODB_ENDPOINT must be set to use a custom dynamodb-compatible DB.
- *
- * - `http`: if the developer wants to use a different DB engine, they can also create a HTTP-driven
- * microservice to accomodate the required routes. If `http` mode is set, an additional variable
- * is required:
- *   - HTTP_DB_MS_URL
  *
  * If the ENGINE_DB_TYPE env var is not set, mongodb is used by default.
  *
@@ -41,8 +36,6 @@ use crate::error_messages::ERROR_DB_SETUP;
 
 #[cfg(feature = "mongo")]
 use self::mongodb as mongodb_connector;
-#[cfg(feature = "http")]
-use self::http as http_connector;
 #[cfg(feature = "dynamo")]
 use self::dynamodb as dynamodb_connector;
 
@@ -59,8 +52,6 @@ use crate::Client;
 mod mongodb;
 #[cfg(feature = "dynamo")]
 mod dynamodb;
-#[cfg(feature = "http")]
-mod http;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbConversation {
@@ -165,24 +156,11 @@ pub fn is_dynamodb() -> bool {
     }
 }
 
-#[cfg(feature = "http")]
-pub fn is_httpdb() -> bool {
-    match std::env::var("ENGINE_DB_TYPE") {
-        Ok(val) => val == "http".to_owned(),
-        Err(_) => false
-    }
-}
-
 
 pub fn init_db() -> Result<Database, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         return mongodb_connector::init();
-    }
-
-    #[cfg(feature = "http")]
-    if is_httpdb() {
-        return http_connector::init();
     }
 
     #[cfg(feature = "dynamo")]
