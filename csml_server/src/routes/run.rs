@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse};
-use csml_manager::start_conversation;
-use csml_manager::data::CsmlRequest;
+use csml_engine::start_conversation;
+use csml_engine::data::CsmlRequest;
 use csml_interpreter::data::{csml_bot::CsmlBot};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -30,7 +30,7 @@ pub async fn handler(body: web::Json<RequestRun>) -> HttpResponse {
   match res {
     Ok(data) => HttpResponse::Ok().json(data),
     Err(err) => {
-      eprintln!("ManagerError: {:?}", err);
+      eprintln!("EngineError: {:?}", err);
       HttpResponse::InternalServerError().finish()
     }
   }
