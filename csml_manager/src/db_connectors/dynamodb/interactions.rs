@@ -1,7 +1,7 @@
-use crate::{Client, ManagerError, encrypt::encrypt_data};
-use crate::db_connectors::dynamodb::Interaction;
-use rusoto_dynamodb::*;
 use crate::data::DynamoDbClient;
+use crate::db_connectors::dynamodb::Interaction;
+use crate::{encrypt::encrypt_data, Client, ManagerError};
+use rusoto_dynamodb::*;
 use uuid::Uuid;
 
 use crate::db_connectors::dynamodb::utils::*;
@@ -11,21 +11,37 @@ pub fn init_interaction(
     client: &Client,
     db: &mut DynamoDbClient,
 ) -> Result<String, ManagerError> {
-
     let id = Uuid::new_v4();
     let encrypted_event = encrypt_data(&event)?;
     let interaction = Interaction::new(&id, client, &encrypted_event);
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range"))
-    ].iter().cloned().collect();
+        (String::from("#rangeKey"), String::from("range")),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let expr_attr_values = [
-        (String::from(":hashVal"), AttributeValue { s: Some(interaction.hash.to_owned()), ..Default::default() }),
-        (String::from(":rangeVal"), AttributeValue { s: Some(interaction.range.to_owned()), ..Default::default() }),
-    ].iter().cloned().collect();
-
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(interaction.hash.to_owned()),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":rangeVal"),
+            AttributeValue {
+                s: Some(interaction.range.to_owned()),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let input = PutItemInput {
         table_name: get_table_name()?,
@@ -48,7 +64,6 @@ pub fn update_interaction(
     client: &Client,
     db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
-
     let key = Interaction::get_key(client, interaction_id);
 
     let expr_attr_names = [
@@ -56,14 +71,44 @@ pub fn update_interaction(
         (String::from("#rangeKey"), String::from("range")),
         (String::from("#successKey"), String::from("success")),
         (String::from("#updatedAtKey"), String::from("updated_at")),
-    ].iter().cloned().collect();
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let expr_attr_values = [
-        (String::from(":hashVal"), AttributeValue { s: Some(key.hash.to_owned()), ..Default::default() }),
-        (String::from(":rangeVal"), AttributeValue { s: Some(key.range.to_owned()), ..Default::default() }),
-        (String::from(":successVal"), AttributeValue { bool: Some(success), ..Default::default() }),
-        (String::from(":updatedAtVal"), AttributeValue { s: Some(get_date_time()), ..Default::default() }),
-    ].iter().cloned().collect();
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(key.hash.to_owned()),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":rangeVal"),
+            AttributeValue {
+                s: Some(key.range.to_owned()),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":successVal"),
+            AttributeValue {
+                bool: Some(success),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":updatedAtVal"),
+            AttributeValue {
+                s: Some(get_date_time()),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     // make sure that if the item does not already exist, it is NOT created automatically
     let condition_expr = "#hashKey = :hashVal AND #rangeKey = :rangeVal".to_string();

@@ -66,6 +66,8 @@ pub fn init() -> Result<Database, ManagerError> {
 pub fn get_db<'a>(db: &'a Database) -> Result<&'a mongodb::Database, ManagerError> {
     match db {
         Database::Mongo(db) => Ok(db),
-        _ => Err(ManagerError::Manager("MongoDB connector is not setup correctly".to_owned())),
+        _ => Err(ManagerError::Manager(
+            "MongoDB connector is not setup correctly".to_owned(),
+        )),
     }
 }

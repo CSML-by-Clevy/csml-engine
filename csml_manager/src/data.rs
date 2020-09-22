@@ -1,19 +1,19 @@
 use crate::{Client, ContextJson};
 use csml_interpreter::data::message::Message; //ApiInfo, Hold
 use curl::easy::Easy;
-use serde_json::Value;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CsmlRequest {
-  pub request_id: String,
-  pub client: Client,
-  pub callback_url: Option<String>,
-  pub payload: serde_json::Value,
-  pub metadata: serde_json::Value,
+    pub request_id: String,
+    pub client: Client,
+    pub callback_url: Option<String>,
+    pub payload: serde_json::Value,
+    pub metadata: serde_json::Value,
 }
 
 pub enum Database {
@@ -40,9 +40,7 @@ impl DynamoDbClient {
     pub fn new(region: rusoto_core::Region) -> Self {
         Self {
             client: rusoto_dynamodb::DynamoDbClient::new(region),
-            runtime: {
-                tokio::runtime::Runtime::new().unwrap()
-            }
+            runtime: { tokio::runtime::Runtime::new().unwrap() },
         }
     }
 }

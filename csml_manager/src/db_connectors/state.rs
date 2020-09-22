@@ -1,10 +1,10 @@
-use crate::{ConversationInfo, Database, ManagerError};
-use csml_interpreter::data::Client;
-use crate::error_messages::ERROR_DB_SETUP;
+#[cfg(feature = "dynamo")]
+use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
-#[cfg(feature = "dynamo")]
-use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
+use crate::error_messages::ERROR_DB_SETUP;
+use crate::{ConversationInfo, Database, ManagerError};
+use csml_interpreter::data::Client;
 
 pub fn delete_state_key(
     client: &Client,
@@ -53,7 +53,6 @@ pub fn set_state_items(
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
-
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         return mongodb_connector::state::set_state_items(data, _type, keys_values);

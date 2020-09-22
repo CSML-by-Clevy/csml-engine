@@ -29,15 +29,14 @@
  * Each method of each module must be fully reimplemented in order to extend the "generic"
  * implementation at the root of db_connectors directory.
  */
-
 use crate::data::{Database, ManagerError};
-use serde::{Serialize, Deserialize};
 use crate::error_messages::ERROR_DB_SETUP;
+use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "mongo")]
-use self::mongodb as mongodb_connector;
 #[cfg(feature = "dynamo")]
 use self::dynamodb as dynamodb_connector;
+#[cfg(feature = "mongo")]
+use self::mongodb as mongodb_connector;
 
 pub mod conversations;
 pub mod interactions;
@@ -48,10 +47,10 @@ pub mod state;
 
 use crate::Client;
 
-#[cfg(feature = "mongo")]
-mod mongodb;
 #[cfg(feature = "dynamo")]
 mod dynamodb;
+#[cfg(feature = "mongo")]
+mod mongodb;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbConversation {
@@ -138,13 +137,12 @@ pub struct DbState {
     pub created_at: String,
 }
 
-
 #[cfg(feature = "mongo")]
 pub fn is_mongodb() -> bool {
     // If the env var is not set at all, use mongodb by default
     match std::env::var("ENGINE_DB_TYPE") {
         Ok(val) => val == "mongodb".to_owned(),
-        Err(_) => true
+        Err(_) => true,
     }
 }
 
@@ -152,10 +150,9 @@ pub fn is_mongodb() -> bool {
 pub fn is_dynamodb() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
         Ok(val) => val == "dynamodb".to_owned(),
-        Err(_) => false
+        Err(_) => false,
     }
 }
-
 
 pub fn init_db() -> Result<Database, ManagerError> {
     #[cfg(feature = "mongo")]

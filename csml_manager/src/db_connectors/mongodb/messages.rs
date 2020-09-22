@@ -1,6 +1,5 @@
 use crate::{
-    db_connectors::mongodb::get_db, encrypt::encrypt_data, ConversationInfo,
-    ManagerError,
+    db_connectors::mongodb::get_db, encrypt::encrypt_data, ConversationInfo, ManagerError,
 };
 use bson::{doc, Bson, Document};
 

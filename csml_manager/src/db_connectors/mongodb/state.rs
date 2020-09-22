@@ -1,8 +1,8 @@
+use crate::db_connectors::mongodb as mongodb_connector;
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
-    ManagerError, ConversationInfo,
+    ConversationInfo, ManagerError,
 };
-use crate::db_connectors::mongodb as mongodb_connector;
 use bson::{doc, Bson, Document};
 use csml_interpreter::data::Client;
 
@@ -77,9 +77,8 @@ pub fn set_state_items(
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
-
     if keys_values.len() == 0 {
-        return Ok(())
+        return Ok(());
     }
 
     let state_data = format_state_data(&data.client, _type, keys_values)?;

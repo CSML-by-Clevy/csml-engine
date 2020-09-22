@@ -123,11 +123,7 @@ pub fn send_msg_to_callback_url(
 /**
  * Update ConversationInfo data with current information about the request.
  */
-fn add_info_to_message(
-    data: &ConversationInfo,
-    mut msg: Message,
-    interaction_order: i32,
-) -> Value {
+fn add_info_to_message(data: &ConversationInfo, mut msg: Message, interaction_order: i32) -> Value {
     let payload = msg.message_to_json();
 
     let mut map_msg: Map<String, Value> = Map::new();
@@ -184,9 +180,10 @@ pub fn messages_formater(
 pub fn get_flow_by_id<'a>(f_id: &str, flows: &'a [CsmlFlow]) -> Result<&'a CsmlFlow, ManagerError> {
     let id = f_id.to_ascii_lowercase();
     // TODO: move to_lowercase at creation of vars
-    match flows.iter().find(
-        |&val| val.id.to_ascii_lowercase() == id || val.name.to_ascii_lowercase() == id
-    ) {
+    match flows
+        .iter()
+        .find(|&val| val.id.to_ascii_lowercase() == id || val.name.to_ascii_lowercase() == id)
+    {
         Some(ref f) => Ok(f),
         None => Err(ManagerError::Interpreter(format!(
             "Flow '{}' does not exist",

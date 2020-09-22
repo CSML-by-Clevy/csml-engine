@@ -1,6 +1,6 @@
 use crate::db_connectors::{conversations::*, init_db, interactions::*, memories::*};
 use crate::{
-    data::{CsmlRequest, ConversationInfo, Database, ManagerError},
+    data::{ConversationInfo, CsmlRequest, Database, ManagerError},
     utils::{get_default_flow, get_flow_by_id, search_flow},
     ContextJson, CsmlBot, CsmlFlow,
 };
@@ -36,11 +36,7 @@ pub fn init_conversation_info<'a>(
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
     let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
-    let mut context = init_context(
-        default_flow,
-        request.client.clone(),
-        &bot.fn_endpoint,
-    );
+    let mut context = init_context(default_flow, request.client.clone(), &bot.fn_endpoint);
 
     // Create and cache a curl agent to call the callback_url for every new message.
     // If no callback_url is set, no message will be sent as they are processed and
@@ -73,10 +69,7 @@ pub fn init_conversation_info<'a>(
     )?;
 
     context.metadata = request.metadata.clone();
-    context.current = get_memories(
-        &request.client,
-        &mut db,
-    )?;
+    context.current = get_memories(&request.client, &mut db)?;
 
     let mut data = ConversationInfo {
         conversation_id,
@@ -95,11 +88,7 @@ pub fn init_conversation_info<'a>(
 
     // Now that everything is correctly setup, update the conversation with wherever
     // we are now and continue with the rest of the request!
-    update_conversation(
-        &mut data,
-        Some(flow),
-        Some(step),
-    )?;
+    update_conversation(&mut data, Some(flow), Some(step))?;
 
     Ok(data)
 }
