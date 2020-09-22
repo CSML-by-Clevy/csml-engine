@@ -1,13 +1,5 @@
 start:
 
     say "Hello World 😆"
-    goto step toto
 
-<<<<<<< HEAD
-=======
-toto:
-
-    say "hola from toto"
-
->>>>>>> master
     goto end
