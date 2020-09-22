@@ -111,7 +111,7 @@ pub fn resolve_path(
     for (interval, node) in path.iter() {
         match node {
             PathState::ExprIndex(expr) => {
-                let lit = expr_to_literal(&expr, None, data, msg_data, sender)?;
+                let lit = expr_to_literal(&expr, false, None, data, msg_data, sender)?;
                 if let Ok(val) = Literal::get_value::<i64>(
                     &lit.primitive,
                     lit.interval,
@@ -313,6 +313,7 @@ pub fn get_literal_form_metadata(
 
 pub fn get_var(
     var: Identifier,
+    condition: bool, // TODO: find better method than this
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     msg_data: &mut MessageData,
@@ -357,9 +358,15 @@ pub fn get_var(
                 Ok(new_literal)
             }
             Err(err) => {
-                // TODO: update error message and send warning
                 // if value does not exist in memory we create a null value and we apply all the path actions
-                let mut null = MSG::send_error_msg(&sender, msg_data, Err(err));
+                // if we are not in a condition an error message is created and send
+                let mut null = match condition {
+                    true => PrimitiveNull::get_literal(err.position.interval),
+                    false => {
+                        println!("send error");
+                        MSG::send_error_msg(&sender, msg_data, Err(err))
+                    }
+                };
 
                 let path = if let Some(p) = path {
                     Some(resolve_path(p, data, msg_data, sender)?)
@@ -419,7 +426,7 @@ pub fn get_string_from_complex_string(
 
     //TODO: log error with span
     for elem in exprs.iter() {
-        match expr_to_literal(elem, None, data, msg_data, sender) {
+        match expr_to_literal(elem, false, None, data, msg_data, sender) {
             Ok(var) => new_string.push_str(&var.primitive.to_string()),
             Err(err) => {
                 return Err(err);

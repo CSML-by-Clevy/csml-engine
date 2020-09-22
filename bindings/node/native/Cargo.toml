@@ -1,6 +1,6 @@
 [package]
-name = "csml_manager_node"
-version = "1.1.0"
+name = "csml_engine_node"
+version = "1.2.0"
 authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
 license = "MIT"
 build = "build.rs"
@@ -8,7 +8,7 @@ exclude = ["artifacts.json", "index.node"]
 edition = "2018"
 
 [lib]
-name = "csml_manager_node"
+name = "csml_engine_node"
 crate-type = ["cdylib"]
 
 [build-dependencies]
@@ -17,7 +17,7 @@ neon-build = "0.4.0"
 [dependencies]
 neon = "0.4.0"
 neon-serde = "0.4.0"
-csml_manager = { path = "../../../csml_manager", features = ["http", "mongo"]}
+csml_engine = { path = "../../../csml_engine", features = ["mongo", "dynamo"]}
 csml_interpreter = { path = "../../../csml_interpreter"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

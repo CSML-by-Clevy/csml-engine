@@ -126,7 +126,7 @@ pub fn interpret_function_scope(
     for (action, instruction_info) in actions.commands.iter() {
         match action {
             Expr::ObjectExpr(ObjectType::Return(var)) => {
-                let lit = expr_to_literal(var, None, data, &mut message_data, &None)?;
+                let lit = expr_to_literal(var, false, None, data, &mut message_data, &None)?;
 
                 return Ok(lit);
             }

@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "csml_interpreter",
-    "csml_manager",
+    "csml_engine",
     "csml_server",
     "bindings/node/native",
 ]

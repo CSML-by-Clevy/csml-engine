@@ -215,7 +215,7 @@ pub fn interpolate_string(
                     ERROR_PARSING.to_owned(),
                 ))
             } else {
-                expr_to_literal(&expr, None, data, msg_data, sender)
+                expr_to_literal(&expr, false, None, data, msg_data, sender)
             }
         }
         Err(e) => match e {

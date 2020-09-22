@@ -54,16 +54,23 @@ pub fn match_actions(
 ) -> Result<MessageData, ErrorInfo> {
     match function {
         ObjectType::Say(arg) => {
-            let msg = Message::new(expr_to_literal(arg, None, data, &mut msg_data, sender)?)?;
+            let msg = Message::new(expr_to_literal(
+                arg,
+                false,
+                None,
+                data,
+                &mut msg_data,
+                sender,
+            )?)?;
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
         ObjectType::Use(arg) => {
-            expr_to_literal(arg, None, data, &mut msg_data, sender)?;
+            expr_to_literal(arg, false, None, data, &mut msg_data, sender)?;
             Ok(msg_data)
         }
         ObjectType::Do(DoType::Update(old, new)) => {
-            let new_value = expr_to_literal(new, None, data, &mut msg_data, sender)?;
+            let new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
             exec_path_actions(
                 lit,
@@ -86,7 +93,7 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Do(DoType::Exec(expr)) => {
-            expr_to_literal(expr, None, data, &mut msg_data, sender)?;
+            expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::Step(step), ..) => {
@@ -125,27 +132,29 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
+            let mut flow_opt = Some(flow.to_owned());
+            msg_data.exit_condition = Some(ExitCondition::Goto);
+
+            if step == "end" {
+                msg_data.exit_condition = Some(ExitCondition::End);
+                flow_opt = None;
+            }
+
             MSG::send(
                 &sender,
                 MSG::Next {
-                    flow: Some(flow.clone()),
+                    flow: flow_opt,
                     step: Some(step.clone()),
                 },
             );
 
             data.context.step = step.to_owned();
             data.context.flow = flow.to_owned();
-            msg_data.exit_condition = Some(ExitCondition::Goto);
             data.context.hold = None;
-
-            if step == "end" {
-                msg_data.exit_condition = Some(ExitCondition::End);
-            }
-
             Ok(msg_data)
         }
         ObjectType::Remember(name, variable) => {
-            let lit = expr_to_literal(variable, None, data, &mut msg_data, sender)?;
+            let lit = expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
             msg_data.add_to_memory(&name.ident, lit.clone());
 
             MSG::send(
