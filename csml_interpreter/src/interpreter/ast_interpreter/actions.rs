@@ -52,16 +52,16 @@ pub fn match_actions(
 ) -> Result<MessageData, ErrorInfo> {
     match function {
         ObjectType::Say(arg) => {
-            let msg = Message::new(expr_to_literal(arg, None, data, &mut root, sender)?)?;
+            let msg = Message::new(expr_to_literal(arg, false, None, data, &mut root, sender)?)?;
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(root, MessageType::Msg(msg)))
         }
         ObjectType::Use(arg) => {
-            expr_to_literal(arg, None, data, &mut root, sender)?;
+            expr_to_literal(arg, false, None, data, &mut root, sender)?;
             Ok(root)
         }
         ObjectType::Do(DoType::Update(old, new)) => {
-            let new_value = expr_to_literal(new, None, data, &mut root, sender)?;
+            let new_value = expr_to_literal(new, false, None, data, &mut root, sender)?;
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut root, sender)?;
             exec_path_actions(
                 lit,
@@ -84,7 +84,7 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Do(DoType::Exec(expr)) => {
-            expr_to_literal(expr, None, data, &mut root, sender)?;
+            expr_to_literal(expr, false, None, data, &mut root, sender)?;
             Ok(root)
         }
         ObjectType::Goto(GotoType::Step(step), ..) => {
@@ -123,7 +123,6 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
-
             let mut flow_opt = Some(flow.to_owned());
             root.exit_condition = Some(ExitCondition::Goto);
 
@@ -146,7 +145,7 @@ pub fn match_actions(
             Ok(root)
         }
         ObjectType::Remember(name, variable) => {
-            let lit = expr_to_literal(variable, None, data, &mut root, sender)?;
+            let lit = expr_to_literal(variable, false, None, data, &mut root, sender)?;
             root.add_to_memory(&name.ident, lit.clone());
 
             MSG::send(

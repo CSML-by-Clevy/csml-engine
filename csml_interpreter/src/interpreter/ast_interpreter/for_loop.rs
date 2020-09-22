@@ -21,7 +21,7 @@ pub fn for_loop(
     instruction_index: Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-    let literal = expr_to_literal(expr, None, data, &mut root, sender)?;
+    let literal = expr_to_literal(expr, false, None, data, &mut root, sender)?;
     let array = Literal::get_value::<Vec<Literal>>(
         &literal.primitive,
         range.start.to_owned(),

@@ -77,6 +77,7 @@ fn normal_object_to_literal(
 
 pub fn expr_to_literal(
     expr: &Expr,
+    condition: bool,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     root: &mut MessageData,
@@ -84,12 +85,12 @@ pub fn expr_to_literal(
 ) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::ObjectExpr(ObjectType::As(name, var)) => {
-            let value = expr_to_literal(var, None, data, root, sender)?;
+            let value = expr_to_literal(var, false, None, data, root, sender)?;
             data.step_vars.insert(name.ident.to_owned(), value.clone());
             Ok(value)
         }
         Expr::PathExpr { literal, path } => {
-            expr_to_literal(literal, Some(path), data, root, sender)
+            expr_to_literal(literal, false, Some(path), data, root, sender)
         }
         Expr::ObjectExpr(ObjectType::Normal(Function {
             name,
@@ -106,7 +107,7 @@ pub fn expr_to_literal(
             for (key, value) in map.iter() {
                 object.insert(
                     key.to_owned(),
-                    expr_to_literal(&value, None, data, root, sender)?,
+                    expr_to_literal(&value, false, None, data, root, sender)?,
                 );
             }
             let mut literal = PrimitiveObject::get_literal(&object, start.to_owned());
@@ -120,7 +121,7 @@ pub fn expr_to_literal(
         Expr::VecExpr(vec, range) => {
             let mut array = vec![];
             for value in vec.iter() {
-                array.push(expr_to_literal(value, None, data, root, sender)?)
+                array.push(expr_to_literal(value, false, None, data, root, sender)?)
             }
             let mut literal = PrimitiveArray::get_literal(&array, range.start.to_owned());
             exec_path_literal(&mut literal, path, data, root, sender)
@@ -129,7 +130,14 @@ pub fn expr_to_literal(
             evaluate_condition(infix, exp_1, exp_2, data, root, sender)
         }
         Expr::LitExpr(literal) => exec_path_literal(&mut literal.clone(), path, data, root, sender),
-        Expr::IdentExpr(var, ..) => Ok(get_var(var.to_owned(), path, data, root, sender)?),
+        Expr::IdentExpr(var, ..) => Ok(get_var(
+            var.to_owned(),
+            condition,
+            path,
+            data,
+            root,
+            sender,
+        )?),
         e => Err(gen_error_info(
             Position::new(interval_from_expr(e)),
             ERROR_EXPR_TO_LITERAL.to_owned(),
@@ -163,7 +171,7 @@ pub fn resolve_fn_args(
                         };
                         named_args = true;
 
-                        let literal = expr_to_literal(var, None, data, root, sender)?;
+                        let literal = expr_to_literal(var, false, None, data, root, sender)?;
                         map.insert(name.ident.to_owned(), literal);
                     }
                     expr => {
@@ -174,7 +182,7 @@ pub fn resolve_fn_args(
                                 ERROR_EXPR_TO_LITERAL.to_owned(), // TODO: error mix of named args and anonymous args
                             ));
                         }
-                        let literal = expr_to_literal(expr, None, data, root, sender)?;
+                        let literal = expr_to_literal(expr, false, None, data, root, sender)?;
                         map.insert(format!("arg{}", index), literal);
                     }
                 }
