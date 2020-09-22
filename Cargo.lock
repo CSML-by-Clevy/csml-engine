@@ -704,7 +704,7 @@ dependencies = [
 
 [[package]]
 name = "csml_engine_node"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "csml_engine",
  "csml_interpreter",
