@@ -33,12 +33,12 @@ fn valid_condition(
     match expr {
         Expr::LitExpr(literal) => valid_literal(Ok(literal.to_owned())),
         Expr::IdentExpr(ident) => {
-            valid_literal(get_var(ident.to_owned(), None, data, root, sender))
+            valid_literal(get_var(ident.to_owned(), true, None, data, root, sender))
         }
         Expr::InfixExpr(inf, exp_1, exp_2) => {
             valid_literal(evaluate_condition(inf, exp_1, exp_2, data, root, sender))
         }
-        value => valid_literal(expr_to_literal(value, None, data, root, sender)),
+        value => valid_literal(expr_to_literal(value, true, None, data, root, sender)),
     }
 }
 
@@ -84,7 +84,7 @@ pub fn evaluate_condition(
 ) -> Result<Literal, ErrorInfo> {
     match (expr1, expr2) {
         (exp_1, ..) if Infix::Not == *infix => {
-            let value = !valid_literal(expr_to_literal(exp_1, None, data, root, sender));
+            let value = !valid_literal(expr_to_literal(exp_1, true, None, data, root, sender));
             let interval = interval_from_expr(exp_1);
             Ok(PrimitiveBoolean::get_literal(value, interval))
         }
@@ -96,17 +96,17 @@ pub fn evaluate_condition(
         (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
             infix,
             evaluate_condition(i1, ex1, ex2, data, root, sender),
-            expr_to_literal(exp, None, data, root, sender),
+            expr_to_literal(exp, true, None, data, root, sender),
         ),
         (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
             infix,
-            expr_to_literal(exp, None, data, root, sender),
+            expr_to_literal(exp, true, None, data, root, sender),
             evaluate_condition(i1, ex1, ex2, data, root, sender),
         ),
         (exp_1, exp_2) => evaluate(
             infix,
-            expr_to_literal(exp_1, None, data, root, sender),
-            expr_to_literal(exp_2, None, data, root, sender),
+            expr_to_literal(exp_1, true, None, data, root, sender),
+            expr_to_literal(exp_2, true, None, data, root, sender),
         ),
     }
 }
