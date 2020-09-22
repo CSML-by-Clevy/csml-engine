@@ -1,5 +1,5 @@
-use crate::{ConversationInfo, ManagerError, encrypt::encrypt_data};
-use crate::db_connectors::dynamodb::{Message, get_db};
+use crate::db_connectors::dynamodb::{get_db, Message};
+use crate::{encrypt::encrypt_data, ConversationInfo, ManagerError};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
 
@@ -11,7 +11,6 @@ fn format_messages(
     interaction_order: i32,
     direction: &str,
 ) -> Result<Vec<Message>, ManagerError> {
-
     let mut res = vec![];
 
     for (i, message) in messages.iter().enumerate() {
@@ -38,7 +37,6 @@ pub fn add_messages_bulk(
     interaction_order: i32,
     direction: &str,
 ) -> Result<(), ManagerError> {
-
     if messages.len() == 0 {
         return Ok(());
     }
@@ -49,7 +47,6 @@ pub fn add_messages_bulk(
     // so we need to split the messages to write into chunks of max
     // 25 items.
     for chunk in messages.chunks(25) {
-
         let mut request_items = HashMap::new();
 
         let mut items_to_write = vec![];
@@ -60,12 +57,9 @@ pub fn add_messages_bulk(
                 }),
                 ..Default::default()
             });
-        };
+        }
 
-        request_items.insert(
-            get_table_name()?,
-            items_to_write,
-        );
+        request_items.insert(get_table_name()?, items_to_write);
 
         let input = BatchWriteItemInput {
             request_items,

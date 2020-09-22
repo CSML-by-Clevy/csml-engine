@@ -11,7 +11,6 @@
  *
  * The encryption algorithm used is AES-256-GCM.
  */
-
 use crate::ManagerError;
 
 use openssl::{
@@ -46,14 +45,12 @@ fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), ManagerError> {
  * retaining full retrocompatibility with older data at a small cost.
  */
 fn decode(text: &str) -> Result<Vec<u8>, ManagerError> {
-    match base64::decode(text.to_owned()) {
+    match hex::decode(text.to_owned()) {
         Ok(val) => Ok(val),
-        Err(err) => {
-            match hex::decode(text.to_owned()) {
-                Ok(val) => Ok(val),
-                _ => Err(ManagerError::Base64(err)),
-            }
-        }
+        Err(_) => match base64::decode(text.to_owned()) {
+            Ok(val) => Ok(val),
+            Err(err) => Err(ManagerError::Base64(err)),
+        },
     }
 }
 

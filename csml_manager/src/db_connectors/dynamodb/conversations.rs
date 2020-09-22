@@ -1,8 +1,11 @@
-use crate::{Client, ManagerError, encrypt::{encrypt_data, decrypt_data}};
-use crate::db_connectors::DbConversation;
-use crate::db_connectors::dynamodb::{Conversation, DynamoDbKey};
-use rusoto_dynamodb::*;
 use crate::data::DynamoDbClient;
+use crate::db_connectors::dynamodb::{Conversation, DynamoDbKey};
+use crate::db_connectors::DbConversation;
+use crate::{
+    encrypt::{decrypt_data, encrypt_data},
+    Client, ManagerError,
+};
+use rusoto_dynamodb::*;
 use std::collections::HashMap;
 
 use crate::db_connectors::dynamodb::utils::*;
@@ -14,7 +17,6 @@ pub fn create_conversation(
     metadata: serde_json::Value,
     db: &mut DynamoDbClient,
 ) -> Result<String, ManagerError> {
-
     let data = Conversation::new(client, &encrypt_data(&metadata)?, flow_id, step_id);
     let input = PutItemInput {
         item: serde_dynamodb::to_hashmap(&data)?,
@@ -42,7 +44,6 @@ pub fn close_conversation(
     status: &str,
     db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
-
     // retrieve the old conversation, which at this stage must still be open
     let hash = Conversation::get_hash(client);
     let range = Conversation::get_range("OPEN", id);
@@ -96,7 +97,7 @@ fn get_all_open_conversations(client: &Client, db: &mut DynamoDbClient) -> Vec<D
         _ => None,
     } {
         res.push(conv);
-    };
+    }
 
     res
 }
@@ -111,7 +112,6 @@ fn replace_conversation(
     db: &mut DynamoDbClient,
     // runtime: &mut tokio::runtime::Runtime,
 ) -> Result<(), ManagerError> {
-
     let put = Put {
         table_name: get_table_name()?,
         item: new_item,
@@ -128,7 +128,7 @@ fn replace_conversation(
         put: Some(put),
         ..Default::default()
     };
-    let to_remove = TransactWriteItem  {
+    let to_remove = TransactWriteItem {
         delete: Some(del),
         ..Default::default()
     };
@@ -148,7 +148,6 @@ pub fn close_all_conversations(
     client: &Client,
     db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
-
     let status = "CLOSED";
     let now = get_date_time();
     let conversations = get_all_open_conversations(client, db);
@@ -172,19 +171,36 @@ pub fn get_latest_open(
     client: &Client,
     db: &mut DynamoDbClient,
 ) -> Result<Option<DbConversation>, ManagerError> {
-
     let hash = Conversation::get_hash(client);
 
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
         (String::from("#rangeKey"), String::from("range_time")), // time index
-    ].iter().cloned().collect();
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let expr_attr_values = [
-        (String::from(":hashVal"), AttributeValue { s: Some(hash.to_string()), ..Default::default() }),
-        (String::from(":rangePrefix"), AttributeValue { s: Some(String::from("conversation#OPEN")), ..Default::default() }),
-    ].iter().cloned().collect();
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(hash.to_string()),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":rangePrefix"),
+            AttributeValue {
+                s: Some(String::from("conversation#OPEN")),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let input = QueryInput {
         table_name: get_table_name()?,
@@ -230,7 +246,6 @@ pub fn update_conversation(
     step_id: Option<String>,
     db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
-
     let hash = Conversation::get_hash(client);
     let range = Conversation::get_range("OPEN", conversation_id);
 
@@ -238,12 +253,30 @@ pub fn update_conversation(
     let condition_expr = "#hashKey = :hashVal AND #rangeKey = :rangeVal".to_string();
     let expr_attr_names = [
         ("#hashKey".to_string(), "hash".to_string()),
-        ("#rangeKey".to_string(), "range".to_string())
-    ].iter().cloned().collect();
+        ("#rangeKey".to_string(), "range".to_string()),
+    ]
+    .iter()
+    .cloned()
+    .collect();
     let mut expr_attr_values: HashMap<String, AttributeValue> = [
-        (String::from(":hashVal"), AttributeValue { s: Some(hash.to_string()), ..Default::default() }),
-        (String::from(":rangeVal"), AttributeValue { s: Some(range.to_string()), ..Default::default() }),
-    ].iter().cloned().collect();
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(hash.to_string()),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":rangeVal"),
+            AttributeValue {
+                s: Some(range.to_string()),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let mut update_expr = "SET last_interaction_at = :lastInteractionAtVal".to_string();
 
@@ -251,7 +284,10 @@ pub fn update_conversation(
     let now = get_date_time();
     expr_attr_values.insert(
         ":lastInteractionAtVal".to_string(),
-        AttributeValue { s: Some(now), ..Default::default() },
+        AttributeValue {
+            s: Some(now),
+            ..Default::default()
+        },
     );
 
     // only update the flow_id if there is a need for that
@@ -259,7 +295,10 @@ pub fn update_conversation(
         update_expr = format!("{}, flow_id = :flowIdVal", update_expr);
         expr_attr_values.insert(
             ":flowIdVal".to_string(),
-            AttributeValue { s: Some(flow_id), ..Default::default() },
+            AttributeValue {
+                s: Some(flow_id),
+                ..Default::default()
+            },
         );
     }
 
@@ -268,7 +307,10 @@ pub fn update_conversation(
         update_expr = format!("{}, step_id = :stepIdVal", update_expr);
         expr_attr_values.insert(
             ":stepIdVal".to_string(),
-            AttributeValue { s: Some(step_id), ..Default::default() },
+            AttributeValue {
+                s: Some(step_id),
+                ..Default::default()
+            },
         );
     }
 

@@ -1,11 +1,11 @@
 pub mod data;
 pub use csml_interpreter::data::{
-    csml_result::CsmlResult, error_info::ErrorInfo, warnings::Warnings, Client
+    csml_result::CsmlResult, error_info::ErrorInfo, warnings::Warnings, Client,
 };
 use serde_json::json;
 
-mod error_messages;
 mod db_connectors;
+mod error_messages;
 
 mod encrypt;
 mod init;

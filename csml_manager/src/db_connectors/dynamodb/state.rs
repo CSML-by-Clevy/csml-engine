@@ -1,8 +1,11 @@
-use crate::{ConversationInfo, ManagerError, Client, encrypt::{encrypt_data, decrypt_data}};
-use crate::db_connectors::dynamodb::{DynamoDbKey, State, get_db};
 use crate::data::DynamoDbClient;
-use std::collections::HashMap;
+use crate::db_connectors::dynamodb::{get_db, DynamoDbKey, State};
+use crate::{
+    encrypt::{decrypt_data, encrypt_data},
+    Client, ConversationInfo, ManagerError,
+};
 use rusoto_dynamodb::*;
+use std::collections::HashMap;
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -12,7 +15,6 @@ pub fn delete_state_key(
     key: &str,
     db: &mut DynamoDbClient,
 ) -> Result<(), ManagerError> {
-
     let item_key = DynamoDbKey {
         hash: State::get_hash(client),
         range: State::get_range(_type, key),
@@ -36,7 +38,6 @@ pub fn get_state_key(
     key: &str,
     db: &mut DynamoDbClient,
 ) -> Result<Option<serde_json::Value>, ManagerError> {
-
     let item_key = DynamoDbKey {
         hash: State::get_hash(client),
         range: State::get_range(_type, key),
@@ -58,12 +59,10 @@ pub fn get_state_key(
             let val = serde_json::json!(state);
             let value = decrypt_data(val["value"].as_str().unwrap().to_string())?;
             Ok(Some(value))
-        },
+        }
         _ => Ok(None),
     }
-
 }
-
 
 fn format_state_data(
     data: &mut ConversationInfo,
@@ -73,12 +72,7 @@ fn format_state_data(
     let mut vec = vec![];
     for (key, value) in keys_values.iter() {
         let encrypted_value = encrypt_data(value)?;
-        vec.push(State::new(
-            &data.client,
-            _type,
-            *key,
-            &encrypted_value,
-        ));
+        vec.push(State::new(&data.client, _type, *key, &encrypted_value));
     }
     Ok(vec)
 }
@@ -88,14 +82,12 @@ pub fn set_state_items(
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<(), ManagerError> {
-
     let states = format_state_data(data, _type, keys_values)?;
 
     // We can only use BatchWriteItem on up to 25 items at once,
     // so we need to split the memories to write into chunks of max
     // 25 items.
     for chunk in states.chunks(25) {
-
         let mut request_items = HashMap::new();
 
         let mut items_to_write = vec![];
@@ -106,12 +98,9 @@ pub fn set_state_items(
                 }),
                 ..Default::default()
             });
-        };
+        }
 
-        request_items.insert(
-            get_table_name()?,
-            items_to_write,
-        );
+        request_items.insert(get_table_name()?, items_to_write);
 
         let input = BatchWriteItemInput {
             request_items,

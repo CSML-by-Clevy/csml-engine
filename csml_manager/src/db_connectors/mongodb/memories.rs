@@ -12,7 +12,8 @@ fn format_memories(
 ) -> Result<Vec<bson::Document>, ManagerError> {
     let client = bson::to_bson(&data.client)?;
 
-    memories.iter()
+    memories
+        .iter()
         .enumerate()
         .fold(Ok(vec![]), |vec, (memory_order, var)| {
             let time = Bson::UtcDatetime(chrono::Utc::now());

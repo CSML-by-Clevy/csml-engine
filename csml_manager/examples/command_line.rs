@@ -17,7 +17,6 @@ fn get_flow(name: &str) -> Result<String, ::std::io::Error> {
     Ok(contents)
 }
 
-
 fn init_request(string: &str) -> CsmlRequest {
     CsmlRequest {
         request_id: "tmp".to_owned(),
@@ -31,10 +30,9 @@ fn init_request(string: &str) -> CsmlRequest {
             "content_type": "text",
             "content": { "text": string},
         }),
-        metadata: json!({"some": "custom-value"})
+        metadata: json!({"some": "custom-value"}),
     }
 }
-
 
 fn init_bot() -> CsmlBot {
     CsmlBot {

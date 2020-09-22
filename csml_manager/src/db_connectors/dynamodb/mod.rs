@@ -1,7 +1,7 @@
-use crate::{Database, ManagerError, Client, encrypt::encrypt_data};
-use crate::db_connectors::DbConversation;
 use crate::data::DynamoDbClient;
-use serde::{Serialize, Deserialize};
+use crate::db_connectors::DbConversation;
+use crate::{encrypt::encrypt_data, Client, Database, ManagerError};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub mod conversations;
@@ -46,7 +46,9 @@ pub fn init() -> Result<Database, ManagerError> {
 pub fn get_db<'a>(db: &'a mut Database) -> Result<&'a mut DynamoDbClient, ManagerError> {
     match db {
         Database::Dynamodb(val) => Ok(val),
-        _ => Err(ManagerError::Manager("DynamoDB connector is not setup correctly".to_owned())),
+        _ => Err(ManagerError::Manager(
+            "DynamoDB connector is not setup correctly".to_owned(),
+        )),
     }
 }
 
@@ -56,14 +58,13 @@ pub struct DynamoDbKey {
     range: String,
 }
 impl DynamoDbKey {
-    pub fn new(hash: &str, range: &str) -> Self{
+    pub fn new(hash: &str, range: &str) -> Self {
         Self {
             hash: hash.to_owned(),
             range: range.to_owned(),
         }
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Conversation {
@@ -86,7 +87,6 @@ pub struct Conversation {
 }
 
 impl Conversation {
-
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)
     }
@@ -110,7 +110,7 @@ impl Conversation {
         let id = Uuid::new_v4().to_string();
         let now = get_date_time();
         let status = "OPEN";
-        let class_name= "conversation";
+        let class_name = "conversation";
         Self {
             hash: Self::get_hash(client),
             range: Self::get_range("OPEN", &id),
@@ -132,12 +132,17 @@ impl Conversation {
     }
 
     pub fn from(conversation: &DbConversation) -> Self {
-        let class_name= "conversation";
+        let class_name = "conversation";
         let metadata = encrypt_data(&conversation.metadata).unwrap();
         Self {
             hash: Self::get_hash(&conversation.client),
             range: Self::get_range(&conversation.status, &conversation.id),
-            range_time: make_range(&[class_name, &conversation.status, &conversation.last_interaction_at, &conversation.id]),
+            range_time: make_range(&[
+                class_name,
+                &conversation.status,
+                &conversation.last_interaction_at,
+                &conversation.id,
+            ]),
             id: conversation.id.to_owned(),
             client: conversation.client.to_owned(),
             bot_id: conversation.client.bot_id.to_owned(),
@@ -154,7 +159,6 @@ impl Conversation {
         }
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Interaction {
@@ -174,7 +178,6 @@ pub struct Interaction {
 }
 
 impl Interaction {
-
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)
     }
@@ -239,7 +242,6 @@ pub struct Memory {
     pub created_at: String,
 }
 impl Memory {
-
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)
     }
@@ -262,7 +264,7 @@ impl Memory {
         flow_id: &str,
         step_id: &str,
         key: &str,
-        encrypted_value: Option<String>
+        encrypted_value: Option<String>,
     ) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
         let hash = Self::get_hash(client);
@@ -324,7 +326,6 @@ pub struct Message {
 }
 
 impl Message {
-
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)
     }
@@ -424,11 +425,7 @@ impl Node {
         Self {
             hash: make_range(&["conversation", conversation_id]),
             range: make_range(&[class_name, &id]),
-            range_time: make_range(&[
-                class_name,
-                &now,
-                &id,
-            ]),
+            range_time: make_range(&[class_name, &now, &id]),
             class: class_name.to_owned(),
             id: id.to_owned(),
             client: client.to_owned(),
@@ -445,7 +442,6 @@ impl Node {
         }
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct State {
@@ -465,7 +461,6 @@ pub struct State {
     pub created_at: String,
 }
 impl State {
-
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)
     }
@@ -478,12 +473,7 @@ impl State {
      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
      * range = mem_state#id
      */
-    pub fn new(
-        client: &Client,
-        _type: &str,
-        key: &str,
-        encrypted_value: &str,
-    ) -> Self {
+    pub fn new(client: &Client, _type: &str, key: &str, encrypted_value: &str) -> Self {
         let class_name = "state";
         let id = uuid::Uuid::new_v4().to_string();
         let now = get_date_time();
@@ -504,4 +494,3 @@ impl State {
         }
     }
 }
-

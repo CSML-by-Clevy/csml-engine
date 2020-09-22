@@ -1,6 +1,4 @@
-use crate::{
-    data::{DEBUG, DISABLE_SSL_VERIFY, ConversationInfo},
-};
+use crate::data::{ConversationInfo, DEBUG, DISABLE_SSL_VERIFY};
 use curl::{easy::Easy, Error};
 use std::env;
 use std::io::Read;
@@ -53,7 +51,9 @@ pub fn send_to_callback_url(c_info: &mut ConversationInfo, msg: &[u8]) {
     let mut result = Vec::new();
     if let Err(err) = format_and_transfer(curl, msg, &mut result) {
         match env::var(DEBUG) {
-            Ok(ref var) if var == "true" => println!("failed to send msg to callback_url {:?}", err),
+            Ok(ref var) if var == "true" => {
+                println!("failed to send msg to callback_url {:?}", err)
+            }
             _ => (),
         };
         return;

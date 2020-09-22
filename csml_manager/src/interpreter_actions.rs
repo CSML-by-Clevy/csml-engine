@@ -5,7 +5,7 @@ use crate::db_connectors::{
 use crate::utils::*;
 
 use csml_interpreter::{
-    data::{csml_flow::CsmlFlow, csml_bot::CsmlBot, Event, Hold, MSG},
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Event, Hold, MSG},
     interpret,
 };
 use md5::{Digest, Md5};
@@ -57,11 +57,7 @@ pub fn interpret_step(
                     "step_vars": step_vars,
                     "hash": format!("{:x}", hash.result())
                 });
-                set_state_items(
-                    data,
-                    "hold",
-                    vec![("position", &state_hold)],
-                )?;
+                set_state_items(data, "hold", vec![("position", &state_hold)])?;
                 data.context.hold = Some(Hold {
                     index: new_index,
                     step_vars,
@@ -92,23 +88,13 @@ pub fn interpret_step(
                     )?
                 }
                 (None, Some(step)) => {
-                    if goto_step(
-                        data,
-                        &mut conversation_end,
-                        &mut interaction_order,
-                        step,
-                    )? {
+                    if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
                         break;
                     }
                 }
                 (None, None) => {
                     let step = "end".to_owned();
-                    if goto_step(
-                        data,
-                        &mut conversation_end,
-                        &mut interaction_order,
-                        step,
-                    )? {
+                    if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
                         break;
                     }
                 }

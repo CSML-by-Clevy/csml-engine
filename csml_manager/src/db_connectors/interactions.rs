@@ -1,9 +1,9 @@
-use crate::{Client, ConversationInfo, Database, ManagerError};
-use crate::error_messages::ERROR_DB_SETUP;
+#[cfg(feature = "dynamo")]
+use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
-#[cfg(feature = "dynamo")]
-use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
+use crate::error_messages::ERROR_DB_SETUP;
+use crate::{Client, ConversationInfo, Database, ManagerError};
 
 pub fn init_interaction(
     event: serde_json::Value,
@@ -29,13 +29,23 @@ pub fn update_interaction(data: &mut ConversationInfo, success: bool) -> Result<
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(&data.db)?;
-        return mongodb_connector::interactions::update_interaction(&data.interaction_id, success, &data.client, db);
+        return mongodb_connector::interactions::update_interaction(
+            &data.interaction_id,
+            success,
+            &data.client,
+            db,
+        );
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(&mut data.db)?;
-        return dynamodb_connector::interactions::update_interaction(&data.interaction_id, success, &data.client, db);
+        return dynamodb_connector::interactions::update_interaction(
+            &data.interaction_id,
+            success,
+            &data.client,
+            db,
+        );
     }
 
     Err(ManagerError::Manager(ERROR_DB_SETUP.to_owned()))

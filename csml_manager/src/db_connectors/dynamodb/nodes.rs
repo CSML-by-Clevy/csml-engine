@@ -1,5 +1,5 @@
+use crate::db_connectors::dynamodb::{get_db, Node};
 use crate::{ConversationInfo, ManagerError};
-use crate::db_connectors::dynamodb::{Node, get_db};
 use rusoto_dynamodb::*;
 
 use crate::db_connectors::dynamodb::utils::*;
@@ -16,20 +16,38 @@ pub fn create_node(
         &data.context.flow,
         &data.context.step,
         nextflow,
-        nextstep
+        nextstep,
     );
 
     let item = serde_dynamodb::to_hashmap(&node)?;
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range"))
-    ].iter().cloned().collect();
+        (String::from("#rangeKey"), String::from("range")),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let expr_attr_values = [
-        (String::from(":hashVal"), AttributeValue { s: Some(node.hash.to_owned()), ..Default::default() }),
-        (String::from(":rangeVal"), AttributeValue { s: Some(node.range.to_owned()), ..Default::default() }),
-    ].iter().cloned().collect();
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(node.hash.to_owned()),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":rangeVal"),
+            AttributeValue {
+                s: Some(node.range.to_owned()),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     let input = PutItemInput {
         table_name: get_table_name()?,
@@ -37,7 +55,7 @@ pub fn create_node(
         condition_expression: Some("#hashKey <> :hashVal AND #rangeKey <> :rangeVal".to_owned()),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
-    ..Default::default()
+        ..Default::default()
     };
 
     let db = get_db(&mut data.db)?;

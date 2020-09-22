@@ -1,9 +1,9 @@
-use crate::{Client, ConversationInfo, Database, ManagerError, Memories as Memory};
-use crate::error_messages::ERROR_DB_SETUP;
+#[cfg(feature = "dynamo")]
+use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
-#[cfg(feature = "dynamo")]
-use crate::db_connectors::{is_dynamodb, dynamodb as dynamodb_connector};
+use crate::error_messages::ERROR_DB_SETUP;
+use crate::{Client, ConversationInfo, Database, ManagerError, Memories as Memory};
 
 pub fn add_memories(
     data: &mut ConversationInfo,
@@ -27,11 +27,7 @@ pub fn add_memories(
  * Memories will be injected into the conversation's current context
  * so `context` must be mutable.
  */
-pub fn get_memories(
-    client: &Client,
-    db: &mut Database,
-) -> Result<serde_json::Value, ManagerError> {
-
+pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, ManagerError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
