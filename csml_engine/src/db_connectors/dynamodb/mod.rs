@@ -1,6 +1,5 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::DbConversation;
-use crate::{encrypt::encrypt_data, Client, Database, EngineError};
+use crate::{Client, Database, EngineError};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -128,34 +127,6 @@ impl Conversation {
             last_interaction_at: now.to_owned(),
             updated_at: now.to_owned(),
             created_at: now.to_owned(),
-        }
-    }
-
-    pub fn from(conversation: &DbConversation) -> Self {
-        let class_name = "conversation";
-        let metadata = encrypt_data(&conversation.metadata).unwrap();
-        Self {
-            hash: Self::get_hash(&conversation.client),
-            range: Self::get_range(&conversation.status, &conversation.id),
-            range_time: make_range(&[
-                class_name,
-                &conversation.status,
-                &conversation.last_interaction_at,
-                &conversation.id,
-            ]),
-            id: conversation.id.to_owned(),
-            client: Some(conversation.client.to_owned()),
-            bot_id: Some(conversation.client.bot_id.to_owned()),
-            channel_id: Some(conversation.client.channel_id.to_owned()),
-            user_id: Some(conversation.client.user_id.to_owned()),
-            class: class_name.to_string(),
-            metadata,
-            flow_id: conversation.flow_id.to_owned(),
-            step_id: conversation.step_id.to_owned(),
-            status: conversation.status.to_owned(),
-            last_interaction_at: conversation.last_interaction_at.to_owned(),
-            updated_at: conversation.updated_at.to_owned(),
-            created_at: conversation.created_at.to_owned(),
         }
     }
 }
