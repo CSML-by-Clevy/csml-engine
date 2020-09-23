@@ -16,7 +16,7 @@ pub const ERROR_PARENTHESES_END: &'static str =
     "invalid argument expect one ',' between each argument or ')' to end the list";
 pub const ERROR_NUMBER_AS_IDENT: &'static str = "Int/Float can't be used as identifier";
 pub const ERROR_FLOW_STEP: &'static str =
-    "flow must have steps declared as 'step_name:' before any action";
+    "syntax error.";
 pub const ERROR_RESERVED: &'static str = "reserved keyword can't be used as identifier";
 pub const ERROR_PARSING: &'static str =
     "invalid argument. Use one of the action keywords [say, do, if, ...]";
@@ -46,7 +46,7 @@ pub const ERROR_NO_FLOW: &'static str = "bot must have at least one flow";
 pub const ERROR_STEP_EXIST: &'static str = "step does not exist";
 pub const ERROR_INVALID_FLOW: &'static str = "invalid flow: ";
 pub const ERROR_START_INSTRUCTIONS: &'static str =
-"to start an action one of the following instructions is expected: [say, do, if, foreach, goto]";
+    "to start an action one of the following instructions is expected: [say, do, if, foreach, goto]";
 pub const ERROR_FOREACH: &'static str =
     "foreach only accepts array as iterable elements. Example: foreach(elem) in [1, 2, 3]";
 pub const ERROR_FIND_BY_INDEX: &'static str =
@@ -80,7 +80,7 @@ pub const ERROR_JSON_TO_LITERAL: &'static str = "number is too big to be an int 
 
 // ### Memory
 pub const ERROR_STEP_MEMORY: &'static str = "variable does not exist in step's memory";
-pub const ERROR_FIND_MEMORY: &'static str = "is not set in memory";
+pub const ERROR_FIND_MEMORY: &'static str = "is used before it was saved in memory";
 
 // ### Built-in
 pub const ERROR_TEXT: &'static str =
