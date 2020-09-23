@@ -250,7 +250,6 @@ where
         parse_remember,
         parse_say,
         parse_use,
-        parse_import,
         parse_hold,
         parse_break,
         parse_if,
