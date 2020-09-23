@@ -53,10 +53,12 @@ start:
     goto name
 
 name:
-  say Question("I'd like to know you better, what's your name?",
+  say Question(
+    "I'd like to know you better, what's your name?",
     buttons=[
       Button("I'm anonymous 😎", accepts=["No", "Nope"]) as anonBtn
-  ])
+    ],
+  )
   hold
   if (event.match(anonBtn)) {
     remember name = "anon"
@@ -73,13 +75,9 @@ known:
   goto end
 ```
 
-## Usage
+The full documentation of the project is available on https://docs.csml.dev/language.
 
-The CSML Engine and Language are built in Rust. The full documentation of the project is available on https://docs.csml.dev/language.
-
-The conversational engine is available for use in several types of projects, depending on your environment of choice.
-
-### With CSML Studio
+## Using CSML Studio
 
 The simplest way to get started with CSML is to use CSML Studio, a free online development environment with everything already setup to start creating bots right away, directly in your browser.
 
@@ -87,29 +85,14 @@ To get started with CSML Studio: https://studio.csml.dev
 
 CSML Studio gives you a free playground to experiment with the language as well as options to deploy your chatbots at scale in one-click.
 
-### With Docker
+## Self-hosted / local installation
 
-We also provide a docker image for easy self-hosted usage.
+CSML is available as a self-hostable web server that you can easily install with one of the options below.
 
-```
-docker pull clevy/csml-engine
-```
+Note that you will need a database. The default choice is **MongoDB**, but **Amazon DynamoDB**
+is also available by choosing the `dynamodb` engine DB type with a slightly different set of environment variables.
 
-To get started with CSML Engine on Docker: https://github.com/CSML-by-Clevy/csml-engine-docker
-
-### With Rust, from source
-
-Make sure you are running Rust v1.46, then run:
-
-```
-cd csml_server
-cargo build --release
-```
-
-Note that you will need a database available. The default choice is MongoDB, but Amazon DynamoDB
-is also available with the `dynamodb` type with a slightly different set of environment variables.
-
-Make sure that you have the environment set with following options:
+Before you start, make sure that you have the environment set with following options:
 
 ```
 ENGINE_DB_TYPE=mongodb # or dynamodb
@@ -135,6 +118,24 @@ DISABLE_SSL_VERIFY=false
 DEBUG=true
 ```
 
+### With Docker
+
+We provide a docker image for easy self-hosted usage.
+
+```
+docker pull clevy/csml-engine
+```
+
+To get started with CSML Engine on Docker: https://github.com/CSML-by-Clevy/csml-engine-docker
+
+### With Rust, from source
+
+CSML is built in [Rust](https://www.rust-lang.org/). You don't need to know any Rust to run it though! Make sure you are running Rust v1.46, then run:
+
+```
+cd csml_server
+cargo build --release
+```
 
 After that, execute your build (by default under ./targets/release/csml_server) and visit http://localhost:5000 for some request examples.
 
