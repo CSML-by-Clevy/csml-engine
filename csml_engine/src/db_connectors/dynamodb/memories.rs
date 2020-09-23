@@ -4,7 +4,7 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, ConversationInfo, EngineError,
 };
-use csml_interpreter::data::Memories as InterpreterMemory;
+use csml_interpreter::data::Memory as InterpreterMemory;
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
 
