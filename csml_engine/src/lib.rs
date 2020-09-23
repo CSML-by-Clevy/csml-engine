@@ -20,7 +20,7 @@ use interpreter_actions::interpret_step;
 use utils::*;
 
 use csml_interpreter::{
-    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memories},
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memory},
     load_components,
 };
 use md5::{Digest, Md5};
