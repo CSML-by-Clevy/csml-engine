@@ -8,11 +8,11 @@ pub use json_to_rust::{json_to_literal, memory_to_literal};
 
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
+use crate::data::{ast::*, primitive::PrimitiveNull, Data, Hold, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statement},
-    variable_handler::interval::interval_from_expr,
+    variable_handler::{expr_to_literal, interval::interval_from_expr},
 };
 use crate::parser::ExitCondition;
 
@@ -41,7 +41,7 @@ fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
 pub fn interpret_scope(
     actions: &Block,
     data: &mut Data,
-    instruction_index: Option<usize>,
+    instruction_index: &Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let mut message_data = MessageData::default();
@@ -50,7 +50,7 @@ pub fn interpret_scope(
         let instruction_total = instruction_info.index + instruction_info.total;
 
         if let Some(instruction_index) = instruction_index {
-            if instruction_index >= instruction_total {
+            if *instruction_index >= instruction_total {
                 continue;
             }
         }
@@ -79,7 +79,7 @@ pub fn interpret_scope(
                 return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, instruction_index, &sender)?
+                message_data = match_actions(fun, message_data, data, *instruction_index, &sender)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
@@ -105,7 +105,6 @@ pub fn interpret_scope(
                 )?
             }
             e => {
-                // TODO: make Expr printable in order to be included in the error message
                 return Err(gen_error_info(
                     Position::new(interval_from_expr(e)),
                     ERROR_START_INSTRUCTIONS.to_owned(),
@@ -115,4 +114,56 @@ pub fn interpret_scope(
     }
 
     Ok(message_data)
+}
+
+pub fn interpret_function_scope(
+    actions: &Block,
+    data: &mut Data,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
+    let mut message_data = MessageData::default();
+
+    for (action, instruction_info) in actions.commands.iter() {
+        match action {
+            Expr::ObjectExpr(ObjectType::Return(var)) => {
+                let lit = expr_to_literal(var, false, None, data, &mut message_data, &None)?;
+
+                return Ok(lit);
+            }
+            Expr::ObjectExpr(fun) => {
+                message_data = match_actions(fun, message_data, data, None, &None)?
+            }
+            Expr::IfExpr(ref if_statement) => {
+                message_data = solve_if_statement(
+                    if_statement,
+                    message_data,
+                    data,
+                    &None,
+                    instruction_info,
+                    &None,
+                )?;
+            }
+            Expr::ForEachExpr(ident, i, expr, block, range) => {
+                message_data = for_loop(
+                    ident,
+                    i,
+                    expr,
+                    block,
+                    range,
+                    message_data,
+                    data,
+                    &None,
+                    &None,
+                )?
+            }
+            e => {
+                return Err(gen_error_info(
+                    Position::new(interval_from_expr(e)),
+                    ERROR_START_INSTRUCTIONS.to_owned(),
+                ));
+            }
+        };
+    }
+
+    Ok(PrimitiveNull::get_literal(interval))
 }

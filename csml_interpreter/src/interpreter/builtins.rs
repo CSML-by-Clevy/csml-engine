@@ -36,12 +36,12 @@ pub fn match_builtin(
     args: ArgsType,
     interval: Interval,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match name {
         HTTP => http(args, interval),
-        FN => api(args, interval, data, root, sender),
+        FN => api(args, interval, data, msg_data, sender),
         ONE_OF => one_of(args, interval),
         SHUFFLE => shuffle(args, interval),
         LENGTH => length(args, interval),

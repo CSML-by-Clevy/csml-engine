@@ -18,7 +18,10 @@ pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, E
     }
 }
 
-pub fn search_var_memory(name: Identifier, data: &mut Data) -> Result<&mut Literal, ErrorInfo> {
+pub fn search_var_memory<'a>(
+    name: Identifier,
+    data: &'a mut Data,
+) -> Result<&'a mut Literal, ErrorInfo> {
     match data.context.current.get_mut(&name.ident) {
         Some(lit) => {
             lit.interval = name.interval;
@@ -37,14 +40,14 @@ pub fn save_literal_in_mem(
     mem_type: &MemoryType,
     update: bool,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) {
     match mem_type {
         MemoryType::Remember if update => {
-            // add mesage to rememeber new value
-            root.add_to_memory(&name, lit.clone());
-            // add value in current mem
+            // save new value in current memory
+            msg_data.add_to_memory(&name, lit.clone());
+            // send new value to manager in order to be save in db
             MSG::send(
                 sender,
                 MSG::Memory(Memories::new(name.clone(), lit.clone())),
@@ -55,27 +58,8 @@ pub fn save_literal_in_mem(
             data.step_vars.insert(name, lit);
         }
         _ => {
-            // TODO: Warning msg element is unmutable ?
+            // TODO: Warning msg element is immutable ?
             // unimplemented!()
         }
     }
 }
-
-// pub fn memory_get<'a>(memory: &'a Context, name: &Expr, expr: &Expr) -> Option<&'a Literal> {
-//     match (name, expr) {
-//         (Expr::IdentExpr(Identifier { ident, .. }), Expr::LitExpr(literal))
-//             if ident == MEMORY
-//                 && literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
-//         {
-//             let value = Literal::get_value::<String>(&literal.primitive)?;
-//             memory.current.get(value)
-//         }
-//         (_, Expr::LitExpr(literal))
-//             if literal.primitive.get_type() == PrimitiveType::PrimitiveString =>
-//         {
-//             let value = Literal::get_value::<String>(&literal.primitive)?;
-//             memory.metadata.get(value)
-//         }
-//         _ => None,
-//     }
-// }

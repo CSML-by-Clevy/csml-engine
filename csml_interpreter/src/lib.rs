@@ -37,19 +37,19 @@ use std::sync::mpsc;
 fn execute_step(
     step: &str,
     mut data: &mut Data,
-    rip: Option<usize>,
+    instruction_index: &Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let flow = data.flow.to_owned();
 
-    let mut message_data = match flow
+    let mut msg_data = match flow
         .flow_instructions
         .get(&InstructionType::NormalStep(step.to_owned()))
     {
         Some(Expr::Scope { scope, .. }) => {
             Position::set_step(&step);
 
-            interpret_scope(scope, &mut data, rip, &sender)
+            interpret_scope(scope, &mut data, &instruction_index, &sender)
         }
         _ => Err(gen_error_info(
             Position::new(Interval::new_as_u32(0, 0)),
@@ -57,22 +57,28 @@ fn execute_step(
         )),
     };
 
-    // if no goto at the end of the scope end conversation
-    if let Ok(message_data) = &mut message_data {
-        if message_data.exit_condition.is_none() {
-            message_data.exit_condition = Some(ExitCondition::End);
-            data.context.step = "end".to_string();
-            MSG::send(
-                &sender,
-                MSG::Next {
-                    flow: None,
-                    step: Some("end".to_owned()),
-                },
-            );
+    if let Ok(msg_data) = &mut msg_data {
+        match &mut msg_data.exit_condition {
+            Some(condition) if *condition == ExitCondition::Goto => {
+                msg_data.exit_condition = None;
+            }
+            Some(_) => (),
+            // if no goto at the end of the scope end conversation
+            None => {
+                msg_data.exit_condition = Some(ExitCondition::End);
+                data.context.step = "end".to_string();
+                MSG::send(
+                    &sender,
+                    MSG::Next {
+                        flow: None,
+                        step: Some("end".to_owned()),
+                    },
+                );
+            }
         }
     }
 
-    MessageData::error_to_message(message_data, sender)
+    MessageData::error_to_message(msg_data, sender)
 }
 
 fn get_ast(
@@ -114,8 +120,10 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
         if let Ok(parsed_flow) = parse_flow(&flow.content) {
             let mut vec = vec![];
 
-            for InstructionType::NormalStep(step_name) in parsed_flow.flow_instructions.keys() {
-                vec.push(step_name.to_owned());
+            for instruction_type in parsed_flow.flow_instructions.keys() {
+                if let InstructionType::NormalStep(step_name) = instruction_type {
+                    vec.push(step_name.to_owned());
+                }
             }
             result.insert(flow.name.to_owned(), vec);
         }
@@ -157,16 +165,39 @@ pub fn interpret(
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
-    let mut message_data = MessageData::default();
+    let mut msg_data = MessageData::default();
     let mut context = context.to_literal();
 
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();
     let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
+    let mut step_vars = match &context.hold {
+        Some(hold) => get_hashmap_from_mem(&hold.step_vars),
+        None => HashMap::new(),
+    };
+
+    let mut instruction_index = match context.hold {
+        Some(result) => {
+            context.hold = None;
+            Some(result.index)
+        }
+        None => None,
+    };
+
+    let native = match bot.native_components {
+        Some(ref obj) => obj.to_owned(),
+        None => serde_json::Map::new(),
+    };
+
+    let custom = match bot.custom_components {
+        Some(serde_json::Value::Object(ref obj)) => obj.to_owned(),
+        _ => serde_json::Map::new(),
+    };
+
     Warnings::clear();
     Linter::clear();
-    while message_data.exit_condition.is_none() {
+    while msg_data.exit_condition.is_none() {
         Position::set_flow(&flow);
 
         let ast = match get_ast(&bot, &flow, &mut hashmap) {
@@ -175,51 +206,25 @@ pub fn interpret(
                 StateContext::clear_state();
                 StateContext::clear_rip();
 
-                let mut message_data = MessageData::default();
+                let mut msg_data = MessageData::default();
 
                 for err in error {
-                    message_data = message_data + MessageData::error_to_message(Err(err), &None);
+                    msg_data = msg_data + MessageData::error_to_message(Err(err), &None);
                 }
 
-                return message_data;
+                return msg_data;
             }
         };
 
-        let step_vars = match &context.hold {
-            Some(hold) => get_hashmap_from_mem(&hold.step_vars),
-            None => HashMap::new(),
-        };
+        let mut data = Data::new(&ast, &mut context, &event, step_vars, &custom, &native);
 
-        let native = match bot.native_components {
-            Some(ref obj) => obj.to_owned(),
-            None => serde_json::Map::new(),
-        };
-
-        let custom = match bot.custom_components {
-            Some(serde_json::Value::Object(ref obj)) => obj.to_owned(),
-            _ => serde_json::Map::new(),
-        };
-
-        let mut data = Data::new(&ast, &mut context, &event, step_vars, custom, native);
-
-        let rip = match context.hold {
-            Some(result) => {
-                context.hold = None;
-                Some(result.index)
-            }
-            None => None,
-        };
-
-        message_data = message_data + execute_step(&step, &mut data, rip, &sender);
-
-        if let Some(ExitCondition::Goto) = message_data.exit_condition {
-            message_data.exit_condition = None;
-        }
+        msg_data = msg_data + execute_step(&step, &mut data, &instruction_index, &sender);
 
         flow = data.context.flow.to_string();
         step = data.context.step.to_string();
-        context = data.context.to_owned();
+        step_vars = HashMap::new();
+        instruction_index = None;
     }
 
-    message_data
+    msg_data
 }

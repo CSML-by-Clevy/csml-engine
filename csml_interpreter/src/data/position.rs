@@ -51,9 +51,7 @@ impl Position {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(|| Position::default());
+        hashmap.entry(thread_id).or_insert_with(Position::default);
 
         if let Some(position) = hashmap.get_mut(&thread_id) {
             position.flow = flow.to_owned();
@@ -64,9 +62,7 @@ impl Position {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(|| Position::default());
+        hashmap.entry(thread_id).or_insert_with(Position::default);
 
         if let Some(position) = hashmap.get_mut(&thread_id) {
             position.step = step.to_owned();
@@ -77,9 +73,7 @@ impl Position {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(|| Position::default());
+        hashmap.entry(thread_id).or_insert_with(Position::default);
 
         if let Some(position) = hashmap.get(&thread_id) {
             position.flow.to_owned()
@@ -92,9 +86,7 @@ impl Position {
         let thread_id = current().id();
         let mut hashmap = HASHMAP.lock().unwrap();
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(|| Position::default());
+        hashmap.entry(thread_id).or_insert_with(Position::default);
 
         if let Some(position) = hashmap.get(&thread_id) {
             position.step.to_owned()

@@ -4,7 +4,10 @@ use crate::data::{
     tokens::*,
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
-use crate::error_format::{gen_nom_failure, ERROR_BREAK, ERROR_HOLD, ERROR_REMEMBER, ERROR_USE};
+use crate::error_format::{
+    gen_nom_failure, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_HOLD, ERROR_REMEMBER, ERROR_RETURN,
+    ERROR_SCOPE, ERROR_USE,
+};
 // use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,
@@ -152,7 +155,7 @@ where
     ))
 }
 
-//TODO: deprecat use
+//TODO: deprecate use
 fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
@@ -190,8 +193,8 @@ fn parse_hold<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), 
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, inter) = get_interval(s)?;
-    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, inter) = preceded(comment, get_interval)(s)?;
+    let (s, name) = get_string(s)?;
 
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
@@ -215,8 +218,8 @@ fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo),
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, inter) = get_interval(s)?;
-    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, inter) = preceded(comment, get_interval)(s)?;
+    let (s, name) = get_string(s)?;
 
     let (s, ..) = get_tag(name, BREAK)(s)?;
 
@@ -234,6 +237,64 @@ where
         }
         ExecutionState::Normal => Err(gen_nom_failure(s, ERROR_BREAK)),
     }
+}
+
+fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, RETURN)(s)?;
+
+    let (s, expr) = match preceded(comment, parse_operator)(s) {
+        Ok(value) => value,
+        Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_RETURN, e))),
+        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    };
+
+    let instruction_info = InstructionInfo {
+        index: StateContext::get_rip(),
+        total: 0,
+    };
+
+    StateContext::inc_rip();
+
+    Ok((
+        s,
+        (
+            Expr::ObjectExpr(ObjectType::Return(Box::new(expr))),
+            instruction_info,
+        ),
+    ))
+}
+
+fn catch_scope_fn_common_mistakes<'a, E>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+
+    if FN_SCOPE_REJECTED.contains(&name.as_ref()) {
+        return Err(gen_nom_failure(s, ERROR_FN_SCOPE));
+    }
+
+    Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+}
+
+fn catch_scope_common_mistakes<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+
+    if SCOPE_REJECTED.contains(&name.as_ref()) {
+        return Err(gen_nom_failure(s, ERROR_SCOPE));
+    }
+
+    Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,5 +315,19 @@ where
         parse_break,
         parse_if,
         parse_foreach,
+        catch_scope_common_mistakes,
+    ))(s)
+}
+
+pub fn parse_fn_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    alt((
+        parse_do,
+        parse_if,
+        parse_foreach,
+        parse_return,
+        catch_scope_fn_common_mistakes,
     ))(s)
 }
