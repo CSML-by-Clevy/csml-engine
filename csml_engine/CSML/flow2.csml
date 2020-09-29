@@ -1,7 +1,19 @@
+fn test(var1, var2):
+    do toto = 3
+    return var1 + toto + var2 + 2
+
+fn add(var1, var2):
+    return var1 + var2 
+
+fn pow(var, exp):
+    do add = add(1, 2)
+    return var.pow(exp) + add
+
+// fn pow(var, exp) {
+//     return var.pow(exp)
+// }
+
 start:
-    // remember tmp = "true"
-    say "flow 2 -> {{test}}"
-    // say "------------"
-    say Button("end", HOLa = "hola")
-    // say "event2: => {{event}}"
-    goto end
+  say "flow 2 -> {{test}}"
+  say Button("end", hola = "hola")
+  goto end

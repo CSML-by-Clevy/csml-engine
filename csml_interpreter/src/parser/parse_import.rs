@@ -1,30 +1,18 @@
-use crate::data::{ast::*, tokens::*};
-use crate::error_format::{gen_nom_failure, ERROR_IMPORT_STEP};
-use crate::parser::{parse_comments::comment, get_tag, StateContext, get_string, parse_idents::{parse_idents_as, parse_idents_assignation}};
-
+use crate::data::{ast::*, position::Position, tokens::*};
+use crate::parser::{
+    get_interval, get_string, get_tag,
+    parse_comments::comment,
+    parse_idents::{parse_idents_as, parse_idents_assignation},
+};
 use nom::{
-    bytes::complete::tag,
-    bytes::complete::take_till1,
-    combinator::{cut, map, opt},
     branch::alt,
-    error::{context, ParseError},
+    bytes::complete::tag,
+    combinator::{map, opt},
+    error::ParseError,
     multi::separated_list,
-    sequence::{preceded, separated_pair, terminated, tuple},
+    sequence::{preceded, terminated, tuple},
     IResult,
 };
-
-
-// // _params_
-// test
-// {test, ...}
-// test as plop
-// // *
-
-// // --------------------------------------
-
-// import _params_
-// // import _params_ from fn_flow
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// TOOL FUNCTION
@@ -34,7 +22,7 @@ use nom::{
 //// PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn parse_fn_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> 
+fn parse_fn_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -43,32 +31,26 @@ where
     parse_idents_as(s, Expr::IdentExpr(identifier))
 }
 
-
-fn parse_fn_name_as_vec<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E> 
+fn parse_fn_name_as_vec<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
     E: ParseError<Span<'a>>,
 {
     let (s, expr) = parse_fn_name(s)?;
 
-    Ok((s, vec!(expr)))
+    Ok((s, vec![expr]))
 }
 
-fn parse_group<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E> 
+fn parse_group<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, (vec, ..) ) = preceded(
+    let (s, (vec, ..)) = preceded(
         tag(L_BRACE),
         terminated(
             tuple((
                 map(
                     separated_list(preceded(comment, tag(COMMA)), parse_fn_name),
-                    |vec| {
-                        vec
-                            .into_iter()
-                            .map(|expr| expr)
-                            .collect()
-                    },
+                    |vec| vec.into_iter().map(|expr| expr).collect(),
                 ),
                 opt(preceded(comment, tag(COMMA))),
             )),
@@ -83,26 +65,52 @@ fn parse_import_params<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    alt((
-        parse_group,
-        parse_fn_name_as_vec
-    ))(s)
+    alt((parse_group, parse_fn_name_as_vec))(s)
+}
+
+fn parse_from<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, FROM)(s)?;
+    let (s, name) = preceded(comment, get_string)(s)?;
+
+    Ok((s, name))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //// PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (), E>
+pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
 where
     E: ParseError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
+
     let (s, ..) = get_tag(name, IMPORT)(s)?;
 
-    let (s, vec) = preceded(comment, parse_import_params)(s)?;
+    let (s, start) = get_interval(s)?;
+    let (s, fn_names) = preceded(comment, parse_import_params)(s)?;
+    let (s, end) = get_interval(s)?;
+    
 
-    Ok((s, ()))
+    let (s, from_flow) = opt(parse_from)(s)?;
+
+    let range = RangeInterval { start, end };
+
+    Ok((
+        s,
+        Instruction {
+            instruction_type: InstructionScope::ImportScope(ImportScope {
+                at_flow: Position::get_flow(),
+                from_flow,
+                position: range.clone(),
+            }),
+            actions: Expr::VecExpr(fn_names, range),
+        },
+    ))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

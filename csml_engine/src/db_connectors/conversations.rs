@@ -31,11 +31,7 @@ pub fn create_conversation(
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn close_conversation(
-    id: &str,
-    client: &Client,
-    db: &mut Database,
-) -> Result<(), EngineError> {
+pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;

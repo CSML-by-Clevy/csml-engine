@@ -1,7 +1,5 @@
 start:
 
-    say "Hello World 😆" as toto
-
-    say toto
+    say "Hello World 😆"
 
     goto end

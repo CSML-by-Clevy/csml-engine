@@ -8,7 +8,8 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
 pub struct Flow {
-    pub flow_instructions: HashMap<InstructionType, Expr>,
+    pub flow_instructions: HashMap<InstructionScope, Expr>,
+    pub import_instructions: HashMap<ImportScope, Expr>,
     pub flow_type: FlowType,
 }
 
@@ -17,50 +18,69 @@ pub enum FlowType {
     Normal,
 }
 
-#[derive(Debug, Clone)]
-pub enum InstructionType {
-    NormalStep(String),
-    FunctionStep { name: String, args: Vec<String> },
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct ImportScope {
+    pub at_flow: String,
+    pub from_flow: Option<String>,
+    pub position: RangeInterval,
 }
 
-impl Hash for InstructionType {
+#[derive(Debug, Clone)]
+pub enum InstructionScope {
+    NormalScope(String),
+    FunctionScope {
+        name: String,
+        args: Vec<String>,
+    },
+    ImportScope(ImportScope),
+}
+
+impl Hash for InstructionScope {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            InstructionType::NormalStep(name) => name.hash(state),
-            InstructionType::FunctionStep { name, .. } => name.hash(state),
+            InstructionScope::NormalScope(name) => name.hash(state),
+            InstructionScope::FunctionScope { name, .. } => name.hash(state),
+            InstructionScope::ImportScope(import_scope) => import_scope.hash(state)
         }
     }
 }
 
-impl PartialEq for InstructionType {
+impl PartialEq for InstructionScope {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (InstructionType::NormalStep(name1), InstructionType::NormalStep(name2)) => {
+            (InstructionScope::NormalScope(name1), InstructionScope::NormalScope(name2)) => {
                 name1 == name2
             }
             (
-                InstructionType::FunctionStep { name: name1, .. },
-                InstructionType::FunctionStep { name: name2, .. },
+                InstructionScope::FunctionScope { name: name1, .. },
+                InstructionScope::FunctionScope { name: name2, .. },
             ) => name1 == name2,
+            (
+                InstructionScope::ImportScope(import_scope1),
+                InstructionScope::ImportScope(import_scope2),
+            ) => import_scope1 == import_scope2,
             _ => false,
         }
     }
 }
 
-impl Eq for InstructionType {}
+impl Eq for InstructionScope {}
 
-impl Display for InstructionType {
+impl Display for InstructionScope {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionType::NormalStep(ref idents) => write!(f, "{}", idents),
-            InstructionType::FunctionStep { name, .. } => write!(f, "{}", name),
+            InstructionScope::NormalScope(ref idents) => write!(f, "{}", idents),
+            InstructionScope::FunctionScope { name, .. } => write!(f, "{}", name),
+            InstructionScope::ImportScope(ImportScope {
+                at_flow, from_flow, ..
+            }) => write!(f, "import from {:?} at {} ", from_flow, at_flow),
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Instruction {
-    pub instruction_type: InstructionType,
+    pub instruction_type: InstructionScope,
     pub actions: Expr,
 }
 

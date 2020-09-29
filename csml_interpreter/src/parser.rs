@@ -27,6 +27,7 @@ use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
+use parse_import::parse_import;
 use parse_scope::{parse_fn_root, parse_root};
 use parse_var_types::parse_fn_args;
 use tools::*;
@@ -69,14 +70,26 @@ where
 
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
-        Ok((_, (instructions, flow_type))) => Ok(Flow {
-            flow_instructions: instructions
-                .into_iter()
-                .map(|elem| (elem.instruction_type, elem.actions))
-                .collect::<HashMap<InstructionType, Expr>>(),
+        Ok((_, (instructions, flow_type))) => {
+            let (flow_instructions, import_instructions) = instructions.into_iter().fold(
+                (HashMap::new(), HashMap::new()),
+                |(mut flow, mut import), elem| {
+                    match elem.instruction_type {
+                        InstructionScope::ImportScope(importscope ) => {
+                            import.insert(importscope, elem.actions)
+                        }
+                        _ => flow.insert(elem.instruction_type, elem.actions),
+                    };
 
-            flow_type,
-        }),
+                    (flow, import)
+                },
+            );
+            Ok(Flow {
+                flow_instructions,
+                import_instructions,
+                flow_type,
+            })
+        }
         Err(e) => match e {
             Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
                 Position::new(Interval::new_as_u32(
@@ -113,7 +126,7 @@ where
     Ok((
         s,
         Instruction {
-            instruction_type: InstructionType::NormalStep(ident.ident),
+            instruction_type: InstructionScope::NormalScope(ident.ident),
             actions: Expr::Scope {
                 block_type: BlockType::Step,
                 scope: actions,
@@ -131,14 +144,16 @@ where
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, args) = parse_fn_args(s)?;
 
+    let (s, _) = preceded(comment, tag(":"))(s)?;
     let (s, start) = get_interval(s)?;
     let (s, actions) = preceded(comment, parse_fn_root)(s)?;
     let (s, end) = get_interval(s)?;
+    // let (s, _) = preceded(comment, tag(R_BRACE))(s)?;
 
     Ok((
         s,
         Instruction {
-            instruction_type: InstructionType::FunctionStep {
+            instruction_type: InstructionScope::FunctionScope {
                 name: ident.ident,
                 args,
             },
@@ -157,7 +172,7 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
     let flow_type = FlowType::Normal;
 
     let (s, flow) = fold_many0(
-        alt((parse_function, parse_step)),
+        alt((parse_import, parse_function, parse_step)),
         Vec::new(),
         |mut acc, item| {
             acc.push(item);

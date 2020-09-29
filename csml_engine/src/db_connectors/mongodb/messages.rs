@@ -1,6 +1,4 @@
-use crate::{
-    db_connectors::mongodb::get_db, encrypt::encrypt_data, ConversationInfo, EngineError,
-};
+use crate::{db_connectors::mongodb::get_db, encrypt::encrypt_data, ConversationInfo, EngineError};
 use bson::{doc, Bson, Document};
 
 fn format_messages(

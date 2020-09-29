@@ -43,6 +43,10 @@ pub fn add_memories(
     memories: &[Memory],
     interaction_order: i32,
 ) -> Result<(), EngineError> {
+    if memories.is_empty() {
+        return Ok(());
+    }
+
     let mem = format_memories(data, memories, interaction_order)?;
     let db = get_db(&data.db)?;
 

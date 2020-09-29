@@ -9,7 +9,7 @@ pub use interpreter::components::load_components;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use data::ast::{Expr, Flow, InstructionType, Interval};
+use data::ast::{Expr, Flow, InstructionScope, Interval, ObjectType, ImportScope};
 use data::context::get_hashmap_from_mem;
 use data::csml_bot::CsmlBot;
 use data::csml_result::CsmlResult;
@@ -44,7 +44,7 @@ fn execute_step(
 
     let mut msg_data = match flow
         .flow_instructions
-        .get(&InstructionType::NormalStep(step.to_owned()))
+        .get(&InstructionScope::NormalScope(step.to_owned()))
     {
         Some(Expr::Scope { scope, .. }) => {
             Position::set_step(&step);
@@ -82,26 +82,27 @@ fn execute_step(
 }
 
 fn get_ast(
-    bot: &CsmlBot,
+    // bot: &CsmlBot,
     flow_name: &str,
     hashmap: &mut HashMap<String, Flow>,
 ) -> Result<Flow, Vec<ErrorInfo>> {
-    let content = bot.get_flow(&flow_name)?;
+    // let content = bot.get_flow(&flow_name)?;
 
     return match hashmap.get(flow_name) {
         Some(ast) => Ok(ast.to_owned()),
         None => {
-            Position::set_flow(&flow_name);
-            Warnings::clear();
+            unimplemented!()
+            // Position::set_flow(&flow_name);
+            // Warnings::clear();
 
-            match parse_flow(&content) {
-                Ok(result) => {
-                    hashmap.insert(flow_name.to_owned(), result.to_owned());
+            // match parse_flow(&content) {
+            //     Ok(result) => {
+            //         hashmap.insert(flow_name.to_owned(), result.to_owned());
 
-                    Ok(result)
-                }
-                Err(error) => Err(vec![error]),
-            }
+            //         Ok(result)
+            //     }
+            //     Err(error) => Err(vec![error]),
+            // }
         }
     };
 }
@@ -121,7 +122,7 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
             let mut vec = vec![];
 
             for instruction_type in parsed_flow.flow_instructions.keys() {
-                if let InstructionType::NormalStep(step_name) = instruction_type {
+                if let InstructionScope::NormalScope(step_name) = instruction_type {
                     vec.push(step_name.to_owned());
                 }
             }
@@ -132,20 +133,113 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
     result
 }
 
+// ###################################################################
+
+fn get_fn_names(vec: &[Expr]) -> Vec<(String, Option<String>)> {
+        vec
+        .iter()
+        .map(|value| match value {
+            Expr::IdentExpr(ident) => (ident.ident.to_owned(), None),
+            Expr::ObjectExpr(ObjectType::As(name, expr)) => {
+                let ident = match &**expr {
+                    Expr::IdentExpr(ident) => ident.to_owned(),
+                    _ => unimplemented!()
+                };
+
+                (ident.ident.to_owned(), Some(name.ident.to_owned()) )
+            },
+            _ => unimplemented!(),
+        })
+        .collect()
+}
+
+fn get_function(flow: &Flow, fn_name: &str, as_name: &Option<String>) -> Option<(InstructionScope, Expr)> {
+    if let ( InstructionScope::FunctionScope{name, args} , expr) = flow 
+        .flow_instructions
+        .get_key_value(&InstructionScope::FunctionScope {
+            name: fn_name.to_owned(),
+            args: Vec::new(),
+        })? 
+    {
+        let name = match as_name {
+            Some(as_name) => as_name.to_owned(),
+            None => name.to_owned()
+        };
+
+       return Some((InstructionScope::FunctionScope{name, args: args.to_owned()} , expr.to_owned()))
+    }
+    None
+}
+
+fn search_function(
+    bot: &mut HashMap<String, Flow>,
+    fn_name: &str,
+    as_name: &Option<String>,
+    from_flow: &Option<String>,
+) -> Option<(InstructionScope, Expr)> {
+    match from_flow {
+        Some(flow_name) => match bot.get(flow_name) {
+            Some(flow) => get_function(flow, fn_name, as_name),
+            None => None,
+        },
+        None => {
+            for (_name, flow) in bot.iter() {
+                if let Some(values) = get_function(flow, fn_name, as_name) {
+                    return Some(values);
+                }
+            }
+            None
+        }
+    }
+}
+
+fn import_functions(bot: &mut HashMap<String, Flow>, import: HashMap<ImportScope, Expr>) {
+    for (instruction, expr) in import.iter() {
+        if let (
+            ImportScope {
+                at_flow,
+                from_flow,
+                position: _position,
+            },
+            Expr::VecExpr(vec, ..),
+        ) = (instruction, expr)
+        {
+            let fn_names = get_fn_names(vec);
+
+            for (fn_name, as_name) in fn_names.iter() {
+                match search_function(bot, fn_name, as_name,from_flow) {
+                    Some((scope, expr)) => {
+                        let flow = bot.get_mut(at_flow).unwrap();
+                        flow.flow_instructions.insert(scope, expr);
+                    }
+                    None => unimplemented!(),
+                }
+            }
+        }
+    }
+}
+
+// ###################################################################
+
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();
+    let mut imports = HashMap::default();
     let mut errors = Vec::new();
 
     Warnings::clear();
     Linter::clear();
 
-    for flow in &bot.flows {
+    for flow in bot.flows.iter() {
         Position::set_flow(&flow.name);
         Linter::add_flow(&flow.name);
 
         match parse_flow(&flow.content) {
-            Ok(result) => {
-                flows.insert(flow.name.to_owned(), result);
+            Ok(ast_flow) => {
+                for (k, v) in ast_flow.import_instructions.iter() {
+                    imports.insert(k.clone(), v.clone());
+                }
+
+                flows.insert(flow.name.to_owned(), ast_flow);
             }
             Err(error) => {
                 errors.push(error);
@@ -153,6 +247,7 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
         }
     }
 
+    import_functions(&mut flows, imports);
     lint_flow(&bot, &mut errors);
 
     CsmlResult::new(flows, Warnings::get(), errors)
@@ -170,7 +265,7 @@ pub fn interpret(
 
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();
-    let mut hashmap: HashMap<String, Flow> = HashMap::default();
+    // let mut hashmap: HashMap<String, Flow> = HashMap::default();
 
     let mut step_vars = match &context.hold {
         Some(hold) => get_hashmap_from_mem(&hold.step_vars),
@@ -195,12 +290,21 @@ pub fn interpret(
         _ => serde_json::Map::new(),
     };
 
+    // TMP #####################
+        let bot = validate_bot(bot);
+        let mut flows = match bot.flows {
+            Some(flows) => flows,
+            None => unimplemented!()
+        };
+    // ########################
+
+
     Warnings::clear();
     Linter::clear();
     while msg_data.exit_condition.is_none() {
         Position::set_flow(&flow);
 
-        let ast = match get_ast(&bot, &flow, &mut hashmap) {
+        let ast = match get_ast(&flow, &mut flows) {
             Ok(result) => result,
             Err(error) => {
                 StateContext::clear_state();
@@ -215,6 +319,8 @@ pub fn interpret(
                 return msg_data;
             }
         };
+
+
 
         let mut data = Data::new(&ast, &mut context, &event, step_vars, &custom, &native);
 

@@ -46,7 +46,7 @@ pub struct StateContext {
 impl Default for StateContext {
     fn default() -> Self {
         Self {
-            state: Vec::default(),
+            state: Vec::new(),
             string_state: StringState::Normal,
             rip: 0,
         }
