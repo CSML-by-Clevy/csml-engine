@@ -71,22 +71,15 @@ where
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => {
-            let (flow_instructions, import_instructions) = instructions.into_iter().fold(
-                (HashMap::new(), HashMap::new()),
-                |(mut flow, mut import), elem| {
-                    match elem.instruction_type {
-                        InstructionScope::ImportScope(importscope ) => {
-                            import.insert(importscope, elem.actions)
-                        }
-                        _ => flow.insert(elem.instruction_type, elem.actions),
-                    };
-
-                    (flow, import)
+            let flow_instructions = instructions.into_iter().fold(
+                HashMap::new(),
+                | mut flow, elem | {
+                    flow.insert(elem.instruction_type, elem.actions);
+                    flow
                 },
             );
             Ok(Flow {
                 flow_instructions,
-                import_instructions,
                 flow_type,
             })
         }
@@ -107,7 +100,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
 // PRIVATE FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -125,18 +118,18 @@ where
 
     Ok((
         s,
-        Instruction {
-            instruction_type: InstructionScope::NormalScope(ident.ident),
+        vec!(Instruction {
+            instruction_type: InstructionScope::StepScope(ident.ident),
             actions: Expr::Scope {
                 block_type: BlockType::Step,
                 scope: actions,
                 range: RangeInterval { start, end },
             },
-        },
+        }),
     ))
 }
 
-fn parse_function<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+fn parse_function<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -148,11 +141,10 @@ where
     let (s, start) = get_interval(s)?;
     let (s, actions) = preceded(comment, parse_fn_root)(s)?;
     let (s, end) = get_interval(s)?;
-    // let (s, _) = preceded(comment, tag(R_BRACE))(s)?;
 
     Ok((
         s,
-        Instruction {
+        vec!(Instruction {
             instruction_type: InstructionScope::FunctionScope {
                 name: ident.ident,
                 args,
@@ -162,7 +154,7 @@ where
                 scope: actions,
                 range: RangeInterval { start, end },
             },
-        },
+        }),
     ))
 }
 
@@ -174,8 +166,8 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
     let (s, flow) = fold_many0(
         alt((parse_import, parse_function, parse_step)),
         Vec::new(),
-        |mut acc, item| {
-            acc.push(item);
+        |mut acc, mut item| {
+            acc.append(&mut item);
             acc
         },
     )(s)?;

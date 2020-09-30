@@ -3,8 +3,11 @@ import {pow} from flow2
 
 // import test 
 
-fn add(var)
-    retrun 3
+// fn add(var)
+//     retrun 3
+
+fn add(var1, var2):
+    return 56
 
 start:
     do value = "value = {{ pow(2, 5) }}"

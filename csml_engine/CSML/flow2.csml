@@ -1,9 +1,11 @@
+// import add from flow3
+ 
 fn test(var1, var2):
     do toto = 3
     return var1 + toto + var2 + 2
 
 fn add(var1, var2):
-    return var1 + var2 
+    return -32
 
 fn pow(var, exp):
     do add = add(1, 2)

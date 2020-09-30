@@ -9,7 +9,6 @@ use std::hash::{Hash, Hasher};
 #[derive(Debug, Clone)]
 pub struct Flow {
     pub flow_instructions: HashMap<InstructionScope, Expr>,
-    pub import_instructions: HashMap<ImportScope, Expr>,
     pub flow_type: FlowType,
 }
 
@@ -18,16 +17,31 @@ pub enum FlowType {
     Normal,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone)]
 pub struct ImportScope {
-    pub at_flow: String,
+    pub name: String,
+    pub original_name: Option<String>,
     pub from_flow: Option<String>,
-    pub position: RangeInterval,
+    pub interval: Interval,
 }
+
+impl Hash for ImportScope {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
+}
+
+impl PartialEq for ImportScope {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Eq for ImportScope {}
 
 #[derive(Debug, Clone)]
 pub enum InstructionScope {
-    NormalScope(String),
+    StepScope(String),
     FunctionScope {
         name: String,
         args: Vec<String>,
@@ -38,7 +52,7 @@ pub enum InstructionScope {
 impl Hash for InstructionScope {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            InstructionScope::NormalScope(name) => name.hash(state),
+            InstructionScope::StepScope(name) => name.hash(state),
             InstructionScope::FunctionScope { name, .. } => name.hash(state),
             InstructionScope::ImportScope(import_scope) => import_scope.hash(state)
         }
@@ -48,7 +62,7 @@ impl Hash for InstructionScope {
 impl PartialEq for InstructionScope {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (InstructionScope::NormalScope(name1), InstructionScope::NormalScope(name2)) => {
+            (InstructionScope::StepScope(name1), InstructionScope::StepScope(name2)) => {
                 name1 == name2
             }
             (
@@ -69,11 +83,11 @@ impl Eq for InstructionScope {}
 impl Display for InstructionScope {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionScope::NormalScope(ref idents) => write!(f, "{}", idents),
+            InstructionScope::StepScope(ref idents) => write!(f, "{}", idents),
             InstructionScope::FunctionScope { name, .. } => write!(f, "{}", name),
             InstructionScope::ImportScope(ImportScope {
-                at_flow, from_flow, ..
-            }) => write!(f, "import from {:?} at {} ", from_flow, at_flow),
+                name, original_name: _, from_flow, ..
+            }) => write!(f, "import {} from {:?} ", name,from_flow),
         }
     }
 }

@@ -9,7 +9,7 @@ pub use interpreter::components::load_components;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use data::ast::{Expr, Flow, InstructionScope, Interval, ObjectType, ImportScope};
+use data::ast::{Expr, Flow, InstructionScope, Interval};
 use data::context::get_hashmap_from_mem;
 use data::csml_bot::CsmlBot;
 use data::csml_result::CsmlResult;
@@ -36,15 +36,14 @@ use std::sync::mpsc;
 
 fn execute_step(
     step: &str,
+    flow: &Flow,
     mut data: &mut Data,
     instruction_index: &Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
-    let flow = data.flow.to_owned();
-
     let mut msg_data = match flow
         .flow_instructions
-        .get(&InstructionScope::NormalScope(step.to_owned()))
+        .get(&InstructionScope::StepScope(step.to_owned()))
     {
         Some(Expr::Scope { scope, .. }) => {
             Position::set_step(&step);
@@ -122,7 +121,7 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
             let mut vec = vec![];
 
             for instruction_type in parsed_flow.flow_instructions.keys() {
-                if let InstructionScope::NormalScope(step_name) = instruction_type {
+                if let InstructionScope::StepScope(step_name) = instruction_type {
                     vec.push(step_name.to_owned());
                 }
             }
@@ -135,56 +134,83 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
 
 // ###################################################################
 
-fn get_fn_names(vec: &[Expr]) -> Vec<(String, Option<String>)> {
-        vec
-        .iter()
-        .map(|value| match value {
-            Expr::IdentExpr(ident) => (ident.ident.to_owned(), None),
-            Expr::ObjectExpr(ObjectType::As(name, expr)) => {
-                let ident = match &**expr {
-                    Expr::IdentExpr(ident) => ident.to_owned(),
-                    _ => unimplemented!()
-                };
+// fn get_fn_names(vec: &[Expr]) -> Vec<(String, Option<String>)> {
+//         vec
+//         .iter()
+//         .map(|value| match value {
+//             Expr::IdentExpr(ident) => (ident.ident.to_owned(), None),
+//             Expr::ObjectExpr(ObjectType::As(name, expr)) => {
+//                 let ident = match &**expr {
+//                     Expr::IdentExpr(ident) => ident.to_owned(),
+//                     _ => unimplemented!()
+//                 };
 
-                (ident.ident.to_owned(), Some(name.ident.to_owned()) )
-            },
-            _ => unimplemented!(),
-        })
-        .collect()
-}
+//                 (ident.ident.to_owned(), Some(name.ident.to_owned()) )
+//             },
+//             _ => unimplemented!(),
+//         })
+//         .collect()
+// }
 
-fn get_function(flow: &Flow, fn_name: &str, as_name: &Option<String>) -> Option<(InstructionScope, Expr)> {
-    if let ( InstructionScope::FunctionScope{name, args} , expr) = flow 
+// fn import_functions(bot: &mut HashMap<String, Flow>, import: HashMap<ImportScope, Expr>) {
+//     for (instruction, expr) in import.iter() {
+//         if let (
+//             ImportScope {
+//                 at_flow,
+//                 from_flow,
+//                 position: _position,
+//             },
+//             Expr::VecExpr(vec, ..),
+//         ) = (instruction, expr)
+//         {
+//             let fn_names = get_fn_names(vec);
+
+//             for (fn_name, as_name) in fn_names.iter() {
+//                 match search_function(bot, fn_name, as_name,from_flow) {
+//                     Some((scope, expr)) => {
+//                         let flow = bot.get_mut(at_flow).unwrap();
+//                         flow.flow_instructions.insert(scope, expr);
+//                     }
+//                     None => unimplemented!(),
+//                 }
+//             }
+//         }
+//     }
+// }
+
+fn get_function<'a>(flow: &'a Flow, fn_name: &str, original_name: &Option<String>) -> Option<(Vec<String>, Expr, &'a Flow)> {
+
+    let name = match original_name {
+        Some(original_name) => original_name.to_owned(),
+        None => fn_name.to_owned()
+    };
+
+    if let ( InstructionScope::FunctionScope{name: _, args} , expr) = flow 
         .flow_instructions
         .get_key_value(&InstructionScope::FunctionScope {
-            name: fn_name.to_owned(),
+            name,
             args: Vec::new(),
         })? 
     {
-        let name = match as_name {
-            Some(as_name) => as_name.to_owned(),
-            None => name.to_owned()
-        };
-
-       return Some((InstructionScope::FunctionScope{name, args: args.to_owned()} , expr.to_owned()))
+       return Some((args.to_owned() , expr.to_owned(), flow))
     }
     None
 }
 
-fn search_function(
-    bot: &mut HashMap<String, Flow>,
+pub fn search_function<'a>(
+    bot: &'a HashMap<String, Flow>,
     fn_name: &str,
-    as_name: &Option<String>,
+    original_name: &Option<String>,
     from_flow: &Option<String>,
-) -> Option<(InstructionScope, Expr)> {
+) -> Option<(Vec<String>, Expr, &'a Flow)> {
     match from_flow {
         Some(flow_name) => match bot.get(flow_name) {
-            Some(flow) => get_function(flow, fn_name, as_name),
+            Some(flow) => get_function(flow, fn_name, original_name),
             None => None,
         },
         None => {
             for (_name, flow) in bot.iter() {
-                if let Some(values) = get_function(flow, fn_name, as_name) {
+                if let Some(values) = get_function(flow, fn_name, original_name) {
                     return Some(values);
                 }
             }
@@ -193,37 +219,10 @@ fn search_function(
     }
 }
 
-fn import_functions(bot: &mut HashMap<String, Flow>, import: HashMap<ImportScope, Expr>) {
-    for (instruction, expr) in import.iter() {
-        if let (
-            ImportScope {
-                at_flow,
-                from_flow,
-                position: _position,
-            },
-            Expr::VecExpr(vec, ..),
-        ) = (instruction, expr)
-        {
-            let fn_names = get_fn_names(vec);
-
-            for (fn_name, as_name) in fn_names.iter() {
-                match search_function(bot, fn_name, as_name,from_flow) {
-                    Some((scope, expr)) => {
-                        let flow = bot.get_mut(at_flow).unwrap();
-                        flow.flow_instructions.insert(scope, expr);
-                    }
-                    None => unimplemented!(),
-                }
-            }
-        }
-    }
-}
-
 // ###################################################################
 
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();
-    let mut imports = HashMap::default();
     let mut errors = Vec::new();
 
     Warnings::clear();
@@ -235,10 +234,6 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 
         match parse_flow(&flow.content) {
             Ok(ast_flow) => {
-                for (k, v) in ast_flow.import_instructions.iter() {
-                    imports.insert(k.clone(), v.clone());
-                }
-
                 flows.insert(flow.name.to_owned(), ast_flow);
             }
             Err(error) => {
@@ -247,7 +242,8 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
         }
     }
 
-    import_functions(&mut flows, imports);
+    // validate import
+    // import_functions(&mut flows, imports);
     lint_flow(&bot, &mut errors);
 
     CsmlResult::new(flows, Warnings::get(), errors)
@@ -320,11 +316,9 @@ pub fn interpret(
             }
         };
 
+        let mut data = Data::new(&flows, &ast, &mut context, &event, step_vars, &custom, &native);
 
-
-        let mut data = Data::new(&ast, &mut context, &event, step_vars, &custom, &native);
-
-        msg_data = msg_data + execute_step(&step, &mut data, &instruction_index, &sender);
+        msg_data = msg_data + execute_step(&step, &ast, &mut data, &instruction_index, &sender);
 
         flow = data.context.flow.to_string();
         step = data.context.step.to_string();

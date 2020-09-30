@@ -1,4 +1,4 @@
-use crate::data::{ast::*, position::Position, tokens::*};
+use crate::data::{ast::*, tokens::*, primitive::PrimitiveNull};
 use crate::parser::{
     get_interval, get_string, get_tag,
     parse_comments::comment,
@@ -83,7 +83,7 @@ where
 //// PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -93,23 +93,36 @@ where
 
     let (s, start) = get_interval(s)?;
     let (s, fn_names) = preceded(comment, parse_import_params)(s)?;
-    let (s, end) = get_interval(s)?;
-    
 
     let (s, from_flow) = opt(parse_from)(s)?;
 
-    let range = RangeInterval { start, end };
+
+    let instructions = fn_names.iter().map(|name| {
+        let (name, original_name) = match name {
+            Expr::IdentExpr(ident) => (ident.ident.to_owned(), None),
+            Expr::ObjectExpr(ObjectType::As(name, expr)) => {
+                match &**expr {
+                    Expr::IdentExpr(ident) => (name.ident.to_owned(), Some(ident.ident.to_owned())),
+                    _ => unreachable!()
+                }
+            }
+            _ => unreachable!()
+        };
+
+        Instruction {
+            instruction_type: InstructionScope::ImportScope(ImportScope {
+                name,
+                original_name,
+                from_flow: from_flow.clone(),
+                interval: start.clone(),
+            }),
+            actions: Expr::LitExpr(PrimitiveNull::get_literal(start)),
+        }
+    }).collect();
 
     Ok((
         s,
-        Instruction {
-            instruction_type: InstructionScope::ImportScope(ImportScope {
-                at_flow: Position::get_flow(),
-                from_flow,
-                position: range.clone(),
-            }),
-            actions: Expr::VecExpr(fn_names, range),
-        },
+        instructions,
     ))
 }
 
