@@ -13,44 +13,12 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::get_open_conversation(&client) {
         Ok(Some(conversation)) => {
-            let mut map = serde_json::Map::new();
+            let mut map = serde_json::json!(conversation).as_object().unwrap().to_owned();
 
-            map.insert("id".to_owned(), serde_json::json!(conversation.id))
-                .unwrap();
-            map.insert("client".to_owned(), serde_json::json!(conversation.client))
-                .unwrap();
-            map.insert(
-                "flow_id".to_owned(),
-                serde_json::json!(conversation.flow_id),
-            )
-            .unwrap();
-            map.insert(
-                "step_id".to_owned(),
-                serde_json::json!(conversation.step_id),
-            )
-            .unwrap();
-            map.insert(
-                "metadata".to_owned(),
-                serde_json::json!(conversation.metadata),
-            )
-            .unwrap();
-            map.insert("status".to_owned(), serde_json::json!(conversation.status))
-                .unwrap();
-            map.insert(
-                "last_interaction_at".to_owned(),
-                serde_json::json!(conversation.last_interaction_at.to_string()),
-            )
-            .unwrap();
-            map.insert(
-                "updated_at".to_owned(),
-                serde_json::json!(conversation.updated_at.to_string()),
-            )
-            .unwrap();
-            map.insert(
-                "created_at".to_owned(),
-                serde_json::json!(conversation.created_at.to_string()),
-            )
-            .unwrap();
+            // DbConversation uses _id instead of id for the default mongodb mapping
+            if let Some(id) = map.remove("_id") {
+                map.insert("id".to_owned(), id);
+            }
 
             let js_value = neon_serde::to_value(&mut cx, &map)?;
             Ok(js_value)

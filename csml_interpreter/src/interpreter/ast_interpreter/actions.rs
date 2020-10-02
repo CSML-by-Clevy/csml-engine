@@ -1,6 +1,6 @@
 use crate::data::{
     ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data, Literal,
-    Memories, MemoryType, MessageData, MSG,
+    Memory, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
@@ -159,7 +159,7 @@ pub fn match_actions(
 
             MSG::send(
                 &sender,
-                MSG::Memory(Memories::new(name.ident.to_owned(), lit.clone())),
+                MSG::Memory(Memory::new(name.ident.to_owned(), lit.clone())),
             );
 
             data.context.current.insert(name.ident.to_owned(), lit);

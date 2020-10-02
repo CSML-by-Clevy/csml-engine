@@ -83,26 +83,6 @@ pub fn close_conversation(
 }
 
 /**
- * There should not be many open conversations for any given client.
- * In a normal scenario, there should be either 1, or none. If for some reason,
- * there is more than one, there should definitely not be many, and it would lead to all
- * sorts of other issues anyway.
- * For this reason it should be safe to just get them all one by one like this.
- */
-fn get_all_open_conversations(client: &Client, db: &mut DynamoDbClient) -> Vec<DbConversation> {
-    let mut res = vec![];
-
-    while let Some(conv) = match get_latest_open(client, db) {
-        Ok(val) => val,
-        _ => None,
-    } {
-        res.push(conv);
-    }
-
-    res
-}
-
-/**
  * To close a conversation, we must replace the given conversation,
  * ideally in a transaction to make sure that we don't lose a conversation in the process.
  */
@@ -144,22 +124,91 @@ fn replace_conversation(
     Ok(())
 }
 
+
+fn get_all_open_conversations(
+    client: &Client,
+    db: &mut DynamoDbClient,
+) -> Result<Vec<Conversation>, EngineError> {
+    let hash = Conversation::get_hash(client);
+
+    let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
+    let expr_attr_names = [
+        (String::from("#hashKey"), String::from("hash")),
+        (String::from("#rangeKey"), String::from("range_time")), // time index
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let expr_attr_values = [
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(hash.to_string()),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":rangePrefix"),
+            AttributeValue {
+                s: Some(String::from("conversation#OPEN")),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    // There should not be many open conversations for any given client.
+    // In a normal scenario, there should be either 1, or none. If for some reason,
+    // there is more than one, there should definitely not be many, and it would lead to all
+    // sorts of other issues anyway.
+    // For this reason it *should* be safe to limit to 50 max, and assume there are not 51+.
+    let limit = Some(50);
+
+    let input = QueryInput {
+        table_name: get_table_name()?,
+        index_name: Some(String::from("TimeIndex")),
+        key_condition_expression: Some(key_cond_expr),
+        expression_attribute_names: Some(expr_attr_names),
+        expression_attribute_values: Some(expr_attr_values),
+        limit,
+        select: Some(String::from("ALL_ATTRIBUTES")),
+        ..Default::default()
+    };
+
+    let query = db.client.query(input);
+    let data = db.runtime.block_on(query)?;
+
+    let keys = match data.items {
+        Some(items) => {
+            items.iter()
+                .map(|hm| serde_dynamodb::from_hashmap(hm.clone()).unwrap())
+                .collect()
+        },
+        None => vec![],
+    };
+
+    Ok(keys)
+}
+
 pub fn close_all_conversations(
     client: &Client,
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
     let status = "CLOSED";
     let now = get_date_time();
-    let conversations = get_all_open_conversations(client, db);
-    for conv in conversations.iter() {
-        let mut new_conv = Conversation::from(conv);
+
+    let mut conversations = get_all_open_conversations(client, db)?;
+    for new_conv in conversations.iter_mut() {
         new_conv.status = status.to_owned();
         new_conv.last_interaction_at = now.to_owned();
         new_conv.updated_at = now.to_owned();
-        new_conv.range_time = make_range(&["interaction", status, &now, &conv.id]);
+        new_conv.range_time = make_range(&["interaction", status, &now, &new_conv.id]);
         new_conv.range = Conversation::get_range(status, &new_conv.id);
 
-        let old_key = Conversation::get_key(&conv.client, "OPEN", &conv.id);
+        let old_key = Conversation::get_key(&client, "OPEN", &new_conv.id);
         let new_item = serde_dynamodb::to_hashmap(&new_conv)?;
 
         replace_conversation(&old_key, new_item, db)?;

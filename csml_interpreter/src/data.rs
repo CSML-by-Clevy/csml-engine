@@ -27,7 +27,7 @@ pub use event::Event;
 pub use fn_args_type::ArgsType;
 pub use hold::Hold;
 pub use literal::Literal;
-pub use memories::{Memories, MemoryType};
+pub use memories::{Memory, MemoryType};
 pub use message::Message;
 pub use message_data::MessageData;
 

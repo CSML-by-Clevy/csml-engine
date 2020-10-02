@@ -1,6 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::primitive::PrimitiveNull;
-use crate::data::{hold::Hold, message::Message, Literal, Memories, MessageData};
+use crate::data::{hold::Hold, message::Message, Literal, Memory, MessageData};
 
 use std::sync::mpsc;
 
@@ -10,7 +10,7 @@ use std::sync::mpsc;
 
 #[derive(Debug)]
 pub enum MSG {
-    Memory(Memories),
+    Memory(Memory),
     Message(Message),
     Hold(Hold),
     Next {

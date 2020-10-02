@@ -1,6 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::{ast::Identifier, Data, Literal, Memories, MemoryType, MessageData, MSG};
+use crate::data::{ast::Identifier, Data, Literal, Memory, MemoryType, MessageData, MSG};
 use crate::error_format::*;
 use std::sync::mpsc;
 
@@ -50,7 +50,7 @@ pub fn save_literal_in_mem(
             // send new value to manager in order to be save in db
             MSG::send(
                 sender,
-                MSG::Memory(Memories::new(name.clone(), lit.clone())),
+                MSG::Memory(Memory::new(name.clone(), lit.clone())),
             );
             data.context.current.insert(name, lit);
         }
