@@ -15,7 +15,7 @@ pub const ERROR_PARENTHESES: &str = "list elem type ( ... ) not found";
 pub const ERROR_PARENTHESES_END: &str =
     "invalid argument expect one ',' between each argument or ')' to end the list";
 pub const ERROR_NUMBER_AS_IDENT: &str = "Int/Float can't be used as identifier";
-pub const ERROR_FLOW_STEP: &str = "flow must have steps declared as 'step_name:' before any action";
+pub const ERROR_FLOW_STEP: &str = "syntax error.";
 pub const ERROR_RESERVED: &str = "reserved keyword can't be used as identifier";
 pub const ERROR_PARSING: &str =
     "invalid argument. Use one of the action keywords [say, do, if, ...]";
@@ -82,7 +82,7 @@ pub const ERROR_JSON_TO_LITERAL: &str = "number is too big to be an int 64 bit";
 
 // ### Memory
 pub const ERROR_STEP_MEMORY: &str = "variable does not exist in step's memory";
-pub const ERROR_FIND_MEMORY: &str = "is not set in memory";
+pub const ERROR_FIND_MEMORY: &str = "is used before it was saved in memory";
 
 // ### Functions
 pub const ERROR_FN_ARGS: &str = "Function Arguments are not valid";

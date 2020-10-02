@@ -1,5 +1,5 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::{Hold, Literal, Memories, Message, MSG};
+use crate::data::{Hold, Literal, Memory, Message, MSG};
 use crate::parser::ExitCondition;
 
 use core::ops::Add;
@@ -11,7 +11,7 @@ use std::sync::mpsc;
 
 #[derive(Debug, Clone)]
 pub struct MessageData {
-    pub memories: Option<Vec<Memories>>,
+    pub memories: Option<Vec<Memory>>,
     pub messages: Vec<Message>,
     pub hold: Option<Hold>,
     pub exit_condition: Option<ExitCondition>,
@@ -105,12 +105,12 @@ impl MessageData {
         let content_type = &value.content_type;
 
         if let Some(ref mut vec) = self.memories {
-            vec.push(Memories {
+            vec.push(Memory {
                 key: key.to_owned(),
                 value: value.primitive.format_mem(content_type, true),
             });
         } else {
-            self.memories = Some(vec![Memories {
+            self.memories = Some(vec![Memory {
                 key: key.to_owned(),
                 value: value.primitive.format_mem(content_type, true),
             }])

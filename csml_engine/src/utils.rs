@@ -6,7 +6,7 @@ use crate::{
 };
 
 use chrono::{prelude::Utc, SecondsFormat};
-use csml_interpreter::data::{Client, Event, Memories, Message};
+use csml_interpreter::data::{Client, Event, Memory, Message};
 use serde_json::{json, map::Map, Value};
 use std::env;
 
@@ -16,7 +16,7 @@ use std::env;
  * Instead, the memory is saved in bulk at the end of each step or interaction, but we still
  * must allow the user to use the `remembered` data immediately.
  */
-pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memories]) {
+pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memory]) {
     for elem in mem.iter() {
         if let Value::Object(ref mut obj) = data.context.current {
             obj.insert(elem.key.to_owned(), elem.value.clone());

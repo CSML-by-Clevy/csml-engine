@@ -1,7 +1,7 @@
 use crate::{
     db_connectors::mongodb::get_db,
     encrypt::{decrypt_data, encrypt_data},
-    Client, ConversationInfo, EngineError, Memories as Memory,
+    Client, ConversationInfo, EngineError, Memory,
 };
 use bson::{doc, Bson};
 
