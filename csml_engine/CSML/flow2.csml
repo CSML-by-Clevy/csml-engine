@@ -2,7 +2,7 @@
  
 fn test(var1, var2):
     do toto = 3
-    return var1 + toto + var2 + 2
+    return "fn test = {{var1 + toto + var2 + 2}}"
 
 fn add(var1, var2):
     return -32

@@ -1,6 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
-use crate::data::position::Position;
+use crate::data::Position;
 use crate::data::primitive::{PrimitiveArray, PrimitiveObject};
 use crate::data::{
     ast::*, tokens::*, ArgsType, Context, Data, Literal, MemoryType, MessageData, MSG,
@@ -127,25 +127,20 @@ fn normal_object_to_literal(
                 name: name.to_owned(),
                 original_name: None,
                 from_flow: None,
-                interval: interval.clone()
+                position: Position::new(interval.clone())
             })) {
                 Some((
-                    InstructionScope::ImportScope( ImportScope {
-                        name,
-                        original_name,
-                        from_flow,
-                        interval: _
-                    }),
+                    InstructionScope::ImportScope( import),
                     _expr,
                 )) 
                 => {
-                    match search_function(data.flows, &name, &original_name, &from_flow) {
-                        Some((
+                    match search_function(data.flows, import) {
+                        Ok((
                             fn_args,
                             expr,
                             new_flow
                         )) => Some((fn_args, expr, new_flow)), // if new_flow == data.flow {
-                        _ => None
+                        _err => None
                     }
                 },
                 _ => None,

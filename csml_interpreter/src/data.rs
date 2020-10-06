@@ -30,5 +30,6 @@ pub use literal::Literal;
 pub use memories::{Memory, MemoryType};
 pub use message::Message;
 pub use message_data::MessageData;
+pub use position::Position;
 
 pub use msg::MSG;

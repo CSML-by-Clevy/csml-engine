@@ -1,5 +1,5 @@
 use crate::data::tokens::*;
-use crate::data::{ArgsType, Literal};
+use crate::data::{ArgsType, Literal, Position};
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -22,7 +22,7 @@ pub struct ImportScope {
     pub name: String,
     pub original_name: Option<String>,
     pub from_flow: Option<String>,
-    pub interval: Interval,
+    pub position: Position,
 }
 
 impl Hash for ImportScope {

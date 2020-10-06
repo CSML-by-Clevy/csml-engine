@@ -1,4 +1,4 @@
-use crate::data::{ast::*, tokens::*, primitive::PrimitiveNull};
+use crate::data::{ast::*, tokens::*, primitive::PrimitiveNull, Position};
 use crate::parser::{
     get_interval, get_string, get_tag,
     parse_comments::comment,
@@ -114,7 +114,7 @@ where
                 name,
                 original_name,
                 from_flow: from_flow.clone(),
-                interval: start.clone(),
+                position: Position::new(start.clone()),
             }),
             actions: Expr::LitExpr(PrimitiveNull::get_literal(start)),
         }

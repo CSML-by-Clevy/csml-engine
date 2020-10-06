@@ -124,7 +124,6 @@ fn replace_conversation(
     Ok(())
 }
 
-
 fn get_all_open_conversations(
     client: &Client,
     db: &mut DynamoDbClient,
@@ -182,11 +181,10 @@ fn get_all_open_conversations(
     let data = db.runtime.block_on(query)?;
 
     let keys = match data.items {
-        Some(items) => {
-            items.iter()
-                .map(|hm| serde_dynamodb::from_hashmap(hm.clone()).unwrap())
-                .collect()
-        },
+        Some(items) => items
+            .iter()
+            .map(|hm| serde_dynamodb::from_hashmap(hm.clone()).unwrap())
+            .collect(),
         None => vec![],
     };
 
