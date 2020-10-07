@@ -86,6 +86,7 @@ pub const ERROR_FIND_MEMORY: &str = "is used before it was saved in memory";
 
 // ### Functions
 pub const ERROR_FN_ARGS: &str = "Function Arguments are not valid";
+pub const ERROR_FN_COLON: &str = "Expect a ':' at the end of function prototype. Example: 'fn name():' ";
 
 // ### Built-in
 pub const ERROR_TEXT: &str =

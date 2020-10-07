@@ -9,7 +9,7 @@ use nom::{error::*, IResult};
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+pub fn parse_built_in<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {

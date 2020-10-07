@@ -2,11 +2,6 @@ import {test as plop}
 import {pow} from flow2
 import {amerelo}
 
-// import test
-
-// fn add(var)
-//     retrun 3
-
 fn add(var1, var2):
     return 56
 
@@ -14,7 +9,5 @@ start:
     do value = "value = {{ pow(2, 5) }}"
     say value
     say plop(1, 2)
-    hold
-    do test = event.get_content()
-    say test
+
     goto end

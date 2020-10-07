@@ -59,7 +59,6 @@ pub fn save_literal_in_mem(
         }
         _ => {
             // TODO: Warning msg element is immutable ?
-            // unimplemented!()
         }
     }
 }

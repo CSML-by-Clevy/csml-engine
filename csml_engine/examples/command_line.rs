@@ -77,6 +77,7 @@ fn main() {
         }
         match start_conversation(init_request(&input), data) {
             Ok(obj) => {
+                // println!("=> {:?}", obj);
                 if obj["conversation_end"].as_bool().unwrap() {
                     break;
                 }

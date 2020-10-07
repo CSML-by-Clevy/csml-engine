@@ -244,7 +244,6 @@ pub fn interpret(
         Some(flows) => flows,
         None => HashMap::new(),
     };
-    println!("errors => {:?}", bot.errors);
     // ########################
 
     while msg_data.exit_condition.is_none() {

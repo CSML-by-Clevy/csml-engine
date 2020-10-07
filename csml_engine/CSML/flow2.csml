@@ -11,10 +11,6 @@ fn pow(var, exp):
     do add = add(1, 2)
     return var.pow(exp) + add
 
-// fn pow(var, exp) {
-//     return var.pow(exp)
-// }
-
 start:
   say "flow 2 -> {{test}}"
   say Button("end", hola = "hola")

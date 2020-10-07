@@ -4,7 +4,8 @@ pub mod parse_braces;
 pub mod parse_comments;
 pub mod parse_expand_string;
 pub mod parse_foreach;
-pub mod parse_functions;
+pub mod parse_built_in;
+// pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;
 pub mod parse_if;
@@ -91,7 +92,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                 )),
                 err.error,
             )),
-            Err::Incomplete(_err) => unimplemented!(),
+            Err::Incomplete(_err) => unreachable!(),
         },
     }
 }
@@ -137,7 +138,17 @@ where
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, args) = parse_fn_args(s)?;
 
-    let (s, _) = preceded(comment, tag(":"))(s)?;
+    let (s, _) = match preceded(comment,tag(COLON))(s) {
+        Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
+        Ok((s, _)) => {
+            return Err(gen_nom_failure(s, ERROR_FN_COLON))
+        }
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            return Err(gen_nom_failure(s, ERROR_FN_COLON))
+        }
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    };
+
     let (s, start) = get_interval(s)?;
     let (s, actions) = preceded(comment, parse_fn_root)(s)?;
     let (s, end) = get_interval(s)?;

@@ -363,7 +363,6 @@ pub fn get_var(
                 let mut null = match condition {
                     true => PrimitiveNull::get_literal(err.position.interval),
                     false => {
-                        println!("send error");
                         MSG::send_error_msg(&sender, msg_data, Err(err))
                     }
                 };
