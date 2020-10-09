@@ -33,7 +33,7 @@ impl MSG {
 
     pub fn send_error_msg(
         sender: &Option<mpsc::Sender<MSG>>,
-        root: &mut MessageData,
+        msg_data: &mut MessageData,
         value: Result<Literal, ErrorInfo>,
     ) -> Literal {
         match value {
@@ -43,7 +43,7 @@ impl MSG {
                     content_type: "error".to_owned(),
                     content: serde_json::json!({"error": err.format_error()}),
                 };
-                root.messages.push(message.clone());
+                msg_data.messages.push(message.clone());
                 if let Some(sender) = sender {
                     let msg = MSG::Message(message);
                     sender.send(msg).unwrap();

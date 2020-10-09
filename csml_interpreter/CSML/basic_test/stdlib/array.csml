@@ -134,7 +134,7 @@ array_find_1:
     goto end
 
 array_find_2:
-    do vec = [1, {"obj":"42"}, 2, [1, 2]]
+    do vec = [1, {"obj":"42"}, 4 / 2, [1, 2]]
 
     say vec.find({"obj":"42"}) // [{"obj":"42"}]
 

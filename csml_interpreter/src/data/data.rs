@@ -9,32 +9,32 @@ use std::collections::HashMap;
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug)]
-pub struct Data {
-    pub flow: Flow,
-    pub context: Context,
-    pub event: Event,
+pub struct Data<'a> {
+    pub flow: &'a Flow,
+    pub context: &'a mut Context,
+    pub event: &'a Event,
     pub step_vars: HashMap<String, Literal>,
-    pub custom_component: serde_json::Map<String, serde_json::Value>,
-    pub native_component: serde_json::Map<String, serde_json::Value>,
+    pub custom_component: &'a serde_json::Map<String, serde_json::Value>,
+    pub native_component: &'a serde_json::Map<String, serde_json::Value>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl Data {
+impl<'a> Data<'a> {
     pub fn new(
-        flow: &Flow,
-        context: &mut Context,
-        event: &Event,
+        flow: &'a Flow,
+        context: &'a mut Context,
+        event: &'a Event,
         step_vars: HashMap<String, Literal>,
-        custom_component: serde_json::Map<String, serde_json::Value>,
-        native_component: serde_json::Map<String, serde_json::Value>,
+        custom_component: &'a serde_json::Map<String, serde_json::Value>,
+        native_component: &'a serde_json::Map<String, serde_json::Value>,
     ) -> Self {
         Self {
-            flow: flow.to_owned(),
-            context: context.to_owned(),
-            event: event.to_owned(),
+            flow,
+            context,
+            event,
             step_vars,
             custom_component,
             native_component,

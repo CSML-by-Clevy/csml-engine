@@ -27,11 +27,12 @@ use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
-use parse_scope::parse_root;
+use parse_scope::{parse_fn_root, parse_root};
+use parse_var_types::parse_fn_args;
 use tools::*;
 
 use nom::error::ParseError;
-use nom::{bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
+use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,8 +47,8 @@ where
         Ok((s, ident)) => (s, ident),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
             return match s.fragment().is_empty() {
-                true => Err(gen_nom_error(s, ERROR_FLOW_STEP)),
-                false => Err(gen_nom_failure(s, ERROR_FLOW_STEP)),
+                true => Err(gen_nom_error(s, ERROR_PARSING)),
+                false => Err(gen_nom_failure(s, ERROR_PARSING)),
             };
         }
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
@@ -56,7 +57,7 @@ where
     match tag(COLON)(s) {
         Ok((rest, _)) => Ok((rest, ident)),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
-            Err(gen_nom_failure(s, ERROR_FLOW_STEP))
+            Err(gen_nom_failure(s, ERROR_PARSING))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
@@ -73,6 +74,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                 .into_iter()
                 .map(|elem| (elem.instruction_type, elem.actions))
                 .collect::<HashMap<InstructionType, Expr>>(),
+
             flow_type,
         }),
         Err(e) => match e {
@@ -121,15 +123,47 @@ where
     ))
 }
 
+fn parse_function<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, _) = preceded(comment, tag("fn"))(s)?;
+    let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
+    let (s, args) = parse_fn_args(s)?;
+
+    let (s, start) = get_interval(s)?;
+    let (s, actions) = preceded(comment, parse_fn_root)(s)?;
+    let (s, end) = get_interval(s)?;
+
+    Ok((
+        s,
+        Instruction {
+            instruction_type: InstructionType::FunctionStep {
+                name: ident.ident,
+                args,
+            },
+            actions: Expr::Scope {
+                block_type: BlockType::Function,
+                scope: actions,
+                range: RangeInterval { start, end },
+            },
+        },
+    ))
+}
+
 fn start_parsing<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
     let flow_type = FlowType::Normal;
 
-    let (s, flow) = fold_many0(parse_step, Vec::new(), |mut acc, item| {
-        acc.push(item);
-        acc
-    })(s)?;
+    let (s, flow) = fold_many0(
+        alt((parse_function, parse_step)),
+        Vec::new(),
+        |mut acc, item| {
+            acc.push(item);
+            acc
+        },
+    )(s)?;
 
     let (last, _) = comment(s)?;
     if !last.fragment().is_empty() {

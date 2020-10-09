@@ -1022,7 +1022,7 @@ fn insert_to_object(
                 unreachable!();
             }
         })
-        .or_insert(literal.to_owned());
+        .or_insert_with(|| literal.to_owned());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1239,7 +1239,7 @@ impl Primitive for PrimitiveObject {
             }
         }
 
-        if is_event == true {
+        if is_event {
             if let Some(res) = self.value.get_mut("text") {
                 return res
                     .primitive

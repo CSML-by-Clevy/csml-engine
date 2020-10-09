@@ -38,10 +38,10 @@ impl Message {
         Ok(literal.primitive.to_msg(literal.content_type))
     }
 
-    pub fn add_to_message(root: MessageData, action: MessageType) -> MessageData {
+    pub fn add_to_message(msg_data: MessageData, action: MessageType) -> MessageData {
         match action {
-            MessageType::Msg(msg) => root.add_message(msg),
-            MessageType::Empty => root,
+            MessageType::Msg(msg) => msg_data.add_message(msg),
+            MessageType::Empty => msg_data,
         }
     }
 

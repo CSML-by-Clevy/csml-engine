@@ -78,7 +78,7 @@ pub fn api(
     args: ArgsType,
     interval: Interval,
     data: &mut Data,
-    root: &mut MessageData,
+    msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let (client, url) = match &data.context.api_info {
@@ -111,12 +111,12 @@ pub fn api(
 
     match http_request(&http, ureq::post, interval) {
         Ok(value) => match value.get("data") {
-            Some(value) => interpolate(value, interval, data, root, sender),
+            Some(value) => interpolate(value, interval, data, msg_data, sender),
             None => {
                 let err = gen_error_info(Position::new(interval), ERROR_HTTP_NOT_DATA.to_owned());
-                Ok(MSG::send_error_msg(sender, root, Err(err)))
+                Ok(MSG::send_error_msg(sender, msg_data, Err(err)))
             }
         },
-        Err(err) => Ok(MSG::send_error_msg(sender, root, Err(err))),
+        Err(err) => Ok(MSG::send_error_msg(sender, msg_data, Err(err))),
     }
 }

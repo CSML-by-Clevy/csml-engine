@@ -89,7 +89,7 @@ pub fn http_request(
     if let Some(err) = response.synthetic_error() {
         if let Ok(var) = env::var("DEBUG") {
             if var == "true" {
-                println!("FN request failed: {:?}", err.body_text());
+                eprintln!("FN request failed: {:?}", err.body_text());
             }
         }
         return Err(gen_error_info(Position::new(interval), err.body_text()));
