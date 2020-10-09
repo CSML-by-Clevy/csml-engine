@@ -171,7 +171,7 @@ pub fn match_actions(
         //     if let Some(Expr::Scope { scope: actions, .. }) = data
         //         .flow
         //         .flow_instructions
-        //         .get(&InstructionType::NormalStep(name.ident.to_owned()))
+        //         .get(&InstructionScope::NormalStep(name.ident.to_owned()))
         //     {
         //         match interpret_scope(actions, data, instruction_index, sender) {
         //             Ok(root2) => Ok(root +msg_data2),

@@ -1,6 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
-use crate::data::position::Position;
+use crate::data::Position;
 use crate::data::primitive::{PrimitiveArray, PrimitiveObject};
 use crate::data::{
     ast::*, tokens::*, ArgsType, Context, Data, Literal, MemoryType, MessageData, MSG,
@@ -17,6 +17,8 @@ use crate::interpreter::{
     },
 };
 use std::{collections::HashMap, sync::mpsc};
+
+use crate::search_function;
 
 fn exec_path_literal(
     literal: &mut Literal,
@@ -36,7 +38,7 @@ fn exec_path_literal(
             sender,
         )?;
 
-        //TODO: remove this condition when 'root' and 'sender' can be access anywhere in the code
+        //TODO: remove this condition when 'msg_data' and 'sender' can be access anywhere in the code
         if new_literal.content_type == "string" {
             let string = serde_json::json!(new_literal.primitive.to_string());
             new_literal = interpolate(&string, new_literal.interval, data, msg_data, sender)?;
@@ -45,6 +47,54 @@ fn exec_path_literal(
         Ok(new_literal)
     } else {
         Ok(literal.to_owned())
+    }
+}
+
+fn init_new_scope<'a>(data: &'a Data, context: &'a mut Context) -> Data<'a> {
+    Data::new(
+        &data.flows,
+        &data.flow,
+        context,
+        &data.event,
+        HashMap::new(),
+        &data.custom_component,
+        &data.native_component,
+    )
+}
+
+fn insert_args_in_scope_memory(
+    new_scope_data: &mut Data,
+    fn_args: &Vec<String>,
+    args: &ArgsType,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) {
+    for (index, name) in fn_args.iter().enumerate() {
+        let value = args.get(name, index).unwrap();
+
+        save_literal_in_mem(
+            value.to_owned(),
+            name.to_owned(),
+            &MemoryType::Use,
+            true,
+            new_scope_data,
+            msg_data,
+            sender,
+        );
+    }
+}
+
+fn exec_fn_in_new_scope(
+    expr: Expr,
+    new_scope_data: &mut Data,
+) -> Result<Literal, ErrorInfo> {
+    match expr {
+        Expr::Scope {
+            block_type: BlockType::Function,
+            scope,
+            range: RangeInterval { start, .. },
+        } => interpret_function_scope(&scope, new_scope_data, start),
+        _ => panic!("error in parsing need to be expr scope"),
     }
 }
 
@@ -58,28 +108,57 @@ fn normal_object_to_literal(
 ) -> Result<Literal, ErrorInfo> {
     let args = resolve_fn_args(args, data, msg_data, sender)?;
 
-    let result = match data
-        .flow
-        .flow_instructions
-        .get_key_value(&InstructionType::FunctionStep {
-            name: name.to_owned(),
-            args: Vec::new(),
-        }) {
-        Some((i, e)) => Some((i.to_owned(), e.to_owned())),
-        None => None,
+    let function =
+        match data
+            .flow
+            .flow_instructions
+            .get_key_value(&InstructionScope::FunctionScope {
+                name: name.to_owned(),
+                args: Vec::new(),
+            }) {
+            Some((i, e)) => Some((i.to_owned(), e.to_owned())),
+            None => None,
+        };
+    let import = {
+        match data
+            .flow
+            .flow_instructions
+            .get_key_value(&InstructionScope::ImportScope( ImportScope {
+                name: name.to_owned(),
+                original_name: None,
+                from_flow: None,
+                position: Position::new(interval.clone())
+            })) {
+                Some((
+                    InstructionScope::ImportScope( import),
+                    _expr,
+                )) 
+                => {
+                    match search_function(data.flows, import) {
+                        Ok((
+                            fn_args,
+                            expr,
+                            new_flow
+                        )) => Some((fn_args, expr, new_flow)), // if new_flow == data.flow {
+                        _err => None
+                    }
+                },
+                _ => None,
+        }
     };
 
     match (
         data.native_component.contains_key(name),
         BUILT_IN.contains(&name),
-        result,
+        function,
+        import,
     ) {
         (true, ..) => {
             let value = match_native_builtin(&name, args, interval.to_owned(), data);
             Ok(MSG::send_error_msg(&sender, msg_data, value))
         }
 
-        (_, true, _) => {
+        (_, true, ..) => {
             let value = match_builtin(&name, args, interval.to_owned(), data, msg_data, sender);
 
             Ok(MSG::send_error_msg(&sender, msg_data, value))
@@ -88,12 +167,41 @@ fn normal_object_to_literal(
         (
             ..,
             Some((
-                InstructionType::FunctionStep {
+                InstructionScope::FunctionScope {
                     name: _,
                     args: fn_args,
                 },
                 expr,
             )),
+            _
+        ) => {
+
+            if fn_args.len() > args.len() {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_FN_ARGS.to_owned(),
+                ));
+            }
+
+            let mut context = Context {
+                current: HashMap::new(),
+                metadata: HashMap::new(),
+                api_info: data.context.api_info.clone(),
+                hold: None,
+                step: data.context.step.clone(),
+                flow: data.context.flow.clone(),
+            };
+
+            let mut new_scope_data = init_new_scope(data, &mut context);
+
+            insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
+
+            exec_fn_in_new_scope(expr, &mut new_scope_data)
+        }
+
+        (
+            ..,
+            Some((fn_args, expr, new_flow)),
         ) => {
             if fn_args.len() > args.len() {
                 return Err(gen_error_info(
@@ -110,37 +218,13 @@ fn normal_object_to_literal(
                 step: data.context.step.clone(),
                 flow: data.context.flow.clone(),
             };
-            let mut new_scope_data = Data::new(
-                &data.flow,
-                &mut context,
-                &data.event,
-                HashMap::new(),
-                &data.custom_component,
-                &data.native_component,
-            );
 
-            for (index, name) in fn_args.iter().enumerate() {
-                let value = args.get(name, index).unwrap();
+            let mut new_scope_data = init_new_scope(data, &mut context);
+            new_scope_data.flow = new_flow;
 
-                save_literal_in_mem(
-                    value.to_owned(),
-                    name.to_owned(),
-                    &MemoryType::Use,
-                    true,
-                    &mut new_scope_data,
-                    msg_data,
-                    sender,
-                );
-            }
+            insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
 
-            match expr {
-                Expr::Scope {
-                    block_type: BlockType::Function,
-                    scope,
-                    range: RangeInterval { start, .. },
-                } => interpret_function_scope(&scope, &mut new_scope_data, start),
-                _ => panic!("error in parsing need to be expr scope"),
-            }
+            exec_fn_in_new_scope(expr, &mut new_scope_data)
         }
 
         _ => {

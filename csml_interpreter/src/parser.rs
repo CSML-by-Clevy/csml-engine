@@ -4,7 +4,8 @@ pub mod parse_braces;
 pub mod parse_comments;
 pub mod parse_expand_string;
 pub mod parse_foreach;
-pub mod parse_functions;
+pub mod parse_built_in;
+// pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;
 pub mod parse_if;
@@ -27,6 +28,7 @@ use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
+use parse_import::parse_import;
 use parse_scope::{parse_fn_root, parse_root};
 use parse_var_types::parse_fn_args;
 use tools::*;
@@ -69,14 +71,19 @@ where
 
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
-        Ok((_, (instructions, flow_type))) => Ok(Flow {
-            flow_instructions: instructions
-                .into_iter()
-                .map(|elem| (elem.instruction_type, elem.actions))
-                .collect::<HashMap<InstructionType, Expr>>(),
-
-            flow_type,
-        }),
+        Ok((_, (instructions, flow_type))) => {
+            let flow_instructions = instructions.into_iter().fold(
+                HashMap::new(),
+                | mut flow, elem | {
+                    flow.insert(elem.instruction_type, elem.actions);
+                    flow
+                },
+            );
+            Ok(Flow {
+                flow_instructions,
+                flow_type,
+            })
+        }
         Err(e) => match e {
             Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
                 Position::new(Interval::new_as_u32(
@@ -85,7 +92,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                 )),
                 err.error,
             )),
-            Err::Incomplete(_err) => unimplemented!(),
+            Err::Incomplete(_err) => unreachable!(),
         },
     }
 }
@@ -94,7 +101,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
 // PRIVATE FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -112,18 +119,18 @@ where
 
     Ok((
         s,
-        Instruction {
-            instruction_type: InstructionType::NormalStep(ident.ident),
+        vec!(Instruction {
+            instruction_type: InstructionScope::StepScope(ident.ident),
             actions: Expr::Scope {
                 block_type: BlockType::Step,
                 scope: actions,
                 range: RangeInterval { start, end },
             },
-        },
+        }),
     ))
 }
 
-fn parse_function<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Instruction, E>
+fn parse_function<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -131,14 +138,25 @@ where
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, args) = parse_fn_args(s)?;
 
+    let (s, _) = match preceded(comment,tag(COLON))(s) {
+        Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
+        Ok((s, _)) => {
+            return Err(gen_nom_failure(s, ERROR_FN_COLON))
+        }
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            return Err(gen_nom_failure(s, ERROR_FN_COLON))
+        }
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    };
+
     let (s, start) = get_interval(s)?;
     let (s, actions) = preceded(comment, parse_fn_root)(s)?;
     let (s, end) = get_interval(s)?;
 
     Ok((
         s,
-        Instruction {
-            instruction_type: InstructionType::FunctionStep {
+        vec!(Instruction {
+            instruction_type: InstructionScope::FunctionScope {
                 name: ident.ident,
                 args,
             },
@@ -147,7 +165,7 @@ where
                 scope: actions,
                 range: RangeInterval { start, end },
             },
-        },
+        }),
     ))
 }
 
@@ -157,10 +175,10 @@ fn start_parsing<'a, E: ParseError<Span<'a>>>(
     let flow_type = FlowType::Normal;
 
     let (s, flow) = fold_many0(
-        alt((parse_function, parse_step)),
+        alt((parse_import, parse_function, parse_step)),
         Vec::new(),
-        |mut acc, item| {
-            acc.push(item);
+        |mut acc, mut item| {
+            acc.append(&mut item);
             acc
         },
     )(s)?;

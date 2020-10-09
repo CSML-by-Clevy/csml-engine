@@ -1,8 +1,8 @@
+use csml_engine::{data::CsmlRequest, start_conversation};
 use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
     load_components,
 };
-use csml_engine::{data::CsmlRequest, start_conversation};
 use serde_json::json;
 use std::fs::File;
 use std::io::prelude::*;
@@ -77,6 +77,7 @@ fn main() {
         }
         match start_conversation(init_request(&input), data) {
             Ok(obj) => {
+                // println!("=> {:?}", obj);
                 if obj["conversation_end"].as_bool().unwrap() {
                     break;
                 }

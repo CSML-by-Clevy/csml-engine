@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Data<'a> {
+    pub flows: &'a HashMap<String, Flow>,
     pub flow: &'a Flow,
     pub context: &'a mut Context,
     pub event: &'a Event,
@@ -24,6 +25,7 @@ pub struct Data<'a> {
 
 impl<'a> Data<'a> {
     pub fn new(
+        flows: &'a HashMap<String, Flow>,
         flow: &'a Flow,
         context: &'a mut Context,
         event: &'a Event,
@@ -32,6 +34,7 @@ impl<'a> Data<'a> {
         native_component: &'a serde_json::Map<String, serde_json::Value>,
     ) -> Self {
         Self {
+            flows,
             flow,
             context,
             event,

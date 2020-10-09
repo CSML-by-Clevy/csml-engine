@@ -80,10 +80,7 @@ pub fn close_conversation(
     Ok(())
 }
 
-pub fn close_all_conversations(
-    client: &Client,
-    db: &mongodb::Database,
-) -> Result<(), EngineError> {
+pub fn close_all_conversations(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
     let collection = db.collection("conversation");
 
     let filter = doc! {

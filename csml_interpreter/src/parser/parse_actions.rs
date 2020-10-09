@@ -16,10 +16,8 @@ use crate::parser::{
     parse_goto::parse_goto,
     parse_idents::parse_idents_assignation,
     parse_if::parse_if,
-    parse_import::parse_import,
     parse_path::parse_path,
-    tools::get_interval,
-    tools::{get_string, get_tag},
+    tools::{get_interval, get_string, get_tag},
     ExecutionState, StateContext,
 };
 use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, *};
@@ -311,7 +309,6 @@ where
         parse_remember,
         parse_say,
         parse_use,
-        parse_import,
         parse_hold,
         parse_break,
         parse_if,

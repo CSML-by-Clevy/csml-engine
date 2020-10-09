@@ -146,9 +146,10 @@ fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), En
 
             // all good, let's load the position and local variables
             data.context.hold = Some(Hold {
-                index: hold["index"].as_u64().ok_or(EngineError::Interpreter(
-                    "hold index bad format".to_owned(),
-                ))? as usize,
+                index: hold["index"]
+                    .as_u64()
+                    .ok_or(EngineError::Interpreter("hold index bad format".to_owned()))?
+                    as usize,
                 step_vars: hold["step_vars"].clone(),
             });
             delete_state_key(&data.client, "hold", "position", &mut data.db)?;

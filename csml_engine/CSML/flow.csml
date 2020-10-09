@@ -1,16 +1,13 @@
-start:
-    say "hola 42 😀"
-    remember test = 4
-    // say "test => {{test}}"
-    say "goto flow 2"
-    goto flow flow2
+import {test as plop}
+import {pow} from flow2
+import {amerelo}
 
-step2:
-    say "step 2 => {{test}}"
-    // say "hola from step2"
-    // hold
-    // say "event => {{event}}"
-    // remember toto = Button(event)
-    // say toto
+fn add(var1, var2):
+    return 56
+
+start:
+    do value = "value = {{ pow(2, 5) }}"
+    say value
+    say plop(1, 2)
+
     goto end
-    // goto flow flow2

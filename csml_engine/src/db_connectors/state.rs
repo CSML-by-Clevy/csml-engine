@@ -10,7 +10,7 @@ pub fn delete_state_key(
     client: &Client,
     _type: &str,
     _key: &str,
-    mut db: &mut Database,
+    db: &mut Database,
 ) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -20,7 +20,7 @@ pub fn delete_state_key(
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-        let db = dynamodb_connector::get_db(&mut db)?;
+        let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::state::delete_state_key(client, _type, _key, db);
     }
 

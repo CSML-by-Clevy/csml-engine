@@ -50,10 +50,10 @@ pub const IF: &str = "if";
 pub const ELSE: &str = "else";
 
 pub const IMPORT: &str = "import";
+pub const FROM: &str = "from";
 pub const AS: &str = "as";
 pub const IN: &str = "in";
 pub const DO: &str = "do";
-pub const FROM: &str = "from";
 pub const EVENT: &str = "event";
 pub const COMPONENT: &str = "Component";
 
