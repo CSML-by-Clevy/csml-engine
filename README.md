@@ -134,7 +134,12 @@ CSML is built in [Rust](https://www.rust-lang.org/). You don't need to know any 
 
 ```
 cd csml_server
-cargo build --release
+
+# for use with MongoDB
+cargo build --release --features csml_engine/mongo
+
+# for use with Amazon DynamoDB
+cargo build --release --features csml_engine/dynamo
 ```
 
 After that, execute your build (by default under ./targets/release/csml_server) and visit http://localhost:5000 for some request examples.
