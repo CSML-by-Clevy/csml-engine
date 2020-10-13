@@ -308,3 +308,53 @@ fn event_step_8() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn event_types() {
+    let context = ContextJson::new(
+        serde_json::json!({}),
+        serde_json::json!({}),
+        None,
+        None,
+        "event_types",
+        "flow",
+    );
+
+    let ok_types = ["text", "payload"];
+    let err_types = ["file", "audio", "video", "image", "url", "flow_trigger"];
+
+    for ok_type in ok_types.iter() {
+        let mut map = serde_json::Map::new();
+        map.insert(
+            ok_type.to_string(),
+            serde_json::Value::String("42".to_owned()),
+        );
+        let msg = format_message(
+            Event::new("content_type", "content", serde_json::Value::Object(map)),
+            context.clone(),
+            "CSML/basic_test/event.csml",
+        );
+        let messages: Value = message_to_json_value(msg);
+        if Some("true") != messages["messages"][0]["content"]["text"].as_str() {
+            panic!("{} event type can't be use as string", ok_type)
+        }
+    }
+    // We should get 2 messages warning and null because we can't use string methods whit this types
+    for err_type in err_types.iter() {
+        let mut map = serde_json::Map::new();
+        map.insert(
+            err_type.to_string(),
+            serde_json::Value::String("42".to_owned()),
+        );
+        let msg = format_message(
+            Event::new("content_type", "content", serde_json::Value::Object(map)),
+            context.clone(),
+            "CSML/basic_test/event.csml",
+        );
+        let messages: Value = message_to_json_value(msg);
+
+        if "null" != &messages["messages"][1]["content"]["text"].to_string() {
+            panic!("{} event type is use as string", err_type)
+        }
+    }
+}

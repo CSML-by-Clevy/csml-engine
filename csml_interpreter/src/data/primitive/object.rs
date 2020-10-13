@@ -1240,10 +1240,13 @@ impl Primitive for PrimitiveObject {
         }
 
         if is_event {
-            if let Some(res) = self.value.get_mut("text") {
-                return res
-                    .primitive
-                    .do_exec(name, args, interval, &ContentType::Primitive);
+            let vec = ["text", "payload"];
+            for value in vec.iter() {
+                if let Some(res) = self.value.get_mut(*value) {
+                    return res
+                        .primitive
+                        .do_exec(name, args, interval, &ContentType::Primitive);
+                }
             }
         }
 
