@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
-use crate::data::Position;
 use crate::data::primitive::{PrimitiveArray, PrimitiveObject};
+use crate::data::Position;
 use crate::data::{
     ast::*, tokens::*, ArgsType, Context, Data, Literal, MemoryType, MessageData, MSG,
 };
@@ -84,10 +84,7 @@ fn insert_args_in_scope_memory(
     }
 }
 
-fn exec_fn_in_new_scope(
-    expr: Expr,
-    new_scope_data: &mut Data,
-) -> Result<Literal, ErrorInfo> {
+fn exec_fn_in_new_scope(expr: Expr, new_scope_data: &mut Data) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::Scope {
             block_type: BlockType::Function,
@@ -123,27 +120,19 @@ fn normal_object_to_literal(
         match data
             .flow
             .flow_instructions
-            .get_key_value(&InstructionScope::ImportScope( ImportScope {
+            .get_key_value(&InstructionScope::ImportScope(ImportScope {
                 name: name.to_owned(),
                 original_name: None,
                 from_flow: None,
-                position: Position::new(interval.clone())
+                position: Position::new(interval.clone()),
             })) {
-                Some((
-                    InstructionScope::ImportScope( import),
-                    _expr,
-                )) 
-                => {
-                    match search_function(data.flows, import) {
-                        Ok((
-                            fn_args,
-                            expr,
-                            new_flow
-                        )) => Some((fn_args, expr, new_flow)), // if new_flow == data.flow {
-                        _err => None
-                    }
-                },
-                _ => None,
+            Some((InstructionScope::ImportScope(import), _expr)) => {
+                match search_function(data.flows, import) {
+                    Ok((fn_args, expr, new_flow)) => Some((fn_args, expr, new_flow)), // if new_flow == data.flow {
+                    _err => None,
+                }
+            }
+            _ => None,
         }
     };
 
@@ -173,9 +162,8 @@ fn normal_object_to_literal(
                 },
                 expr,
             )),
-            _
+            _,
         ) => {
-
             if fn_args.len() > args.len() {
                 return Err(gen_error_info(
                     Position::new(interval),
@@ -199,10 +187,7 @@ fn normal_object_to_literal(
             exec_fn_in_new_scope(expr, &mut new_scope_data)
         }
 
-        (
-            ..,
-            Some((fn_args, expr, new_flow)),
-        ) => {
+        (.., Some((fn_args, expr, new_flow))) => {
             if fn_args.len() > args.len() {
                 return Err(gen_error_info(
                     Position::new(interval),

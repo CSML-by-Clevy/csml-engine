@@ -325,7 +325,10 @@ fn event_types() {
 
     for ok_type in ok_types.iter() {
         let mut map = serde_json::Map::new();
-        map.insert(ok_type.to_string(), serde_json::Value::String("42".to_owned()));
+        map.insert(
+            ok_type.to_string(),
+            serde_json::Value::String("42".to_owned()),
+        );
         let msg = format_message(
             Event::new("content_type", "content", serde_json::Value::Object(map)),
             context.clone(),
@@ -339,7 +342,10 @@ fn event_types() {
     // We should get 2 messages warning and null because we can't use string methods whit this types
     for err_type in err_types.iter() {
         let mut map = serde_json::Map::new();
-        map.insert(err_type.to_string(), serde_json::Value::String("42".to_owned()));
+        map.insert(
+            err_type.to_string(),
+            serde_json::Value::String("42".to_owned()),
+        );
         let msg = format_message(
             Event::new("content_type", "content", serde_json::Value::Object(map)),
             context.clone(),

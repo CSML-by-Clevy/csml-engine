@@ -362,9 +362,7 @@ pub fn get_var(
                 // if we are not in a condition an error message is created and send
                 let mut null = match condition {
                     true => PrimitiveNull::get_literal(err.position.interval),
-                    false => {
-                        MSG::send_error_msg(&sender, msg_data, Err(err))
-                    }
+                    false => MSG::send_error_msg(&sender, msg_data, Err(err)),
                 };
 
                 let path = if let Some(p) = path {
