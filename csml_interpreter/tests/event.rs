@@ -316,7 +316,7 @@ fn event_types() {
         serde_json::json!({}),
         None,
         None,
-        "event_type",
+        "event_types",
         "flow",
     );
 
