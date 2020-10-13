@@ -118,6 +118,14 @@ DISABLE_SSL_VERIFY=false
 DEBUG=true
 ```
 
+### Using a ready-to-use binary (Linux and MacOS only)
+
+The easiest way to launch a CSML Engine on your own machine is to use one of our pre-built, optimized binaries (available for both MongoDB and Amazon DynamoDB). These binaries are available as executables on each of CSML's releases since v1.3.0.
+
+To download the latest CSML Server binaries, [head over to the latest release](https://github.com/CSML-by-Clevy/csml-engine/releases/download/v1.2.1/csml-server-linux-amd64) and make sure to download the right version for your architecture.
+
+**Mac users**: upon first execution of this binary, Mac will probably open a warning about the application not being signed ([more info from Apple](https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution)). As this is not intended as a widely-distributed application, we decided to not go through the notarization process for now, but you can safely ignore that warning! However, if you prefer, you can always [build this package from source](#with-rust-from-source).
+
 ### With Docker
 
 We provide a docker image for easy self-hosted usage.
@@ -130,7 +138,7 @@ To get started with CSML Engine on Docker: https://github.com/CSML-by-Clevy/csml
 
 ### With Rust, from source
 
-CSML is built in [Rust](https://www.rust-lang.org/). You don't need to know any Rust to run it though! Make sure you are running Rust v1.46, then run:
+CSML is built in [Rust](https://www.rust-lang.org/). You don't need to know any Rust to run it though! Make sure you are running Rust v1.46+ and that you have openssl installed on your machine (or an equivalent for your linux distribution, such as libssl), then run:
 
 ```
 cd csml_server

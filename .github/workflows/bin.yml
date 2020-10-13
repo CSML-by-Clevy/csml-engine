@@ -1,13 +1,11 @@
-name: Rust
+name: Publish binaries
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  release:
+    types: [published]
 
 jobs:
-  build:
+  publish:
 
     runs-on: ${{ matrix.os }}
     env:
@@ -15,6 +13,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            asset_name: csml-server-linux-amd64
+          - os: macos-latest
+            asset_name: csml-server-macos-amd64
 
     steps:
     - uses: actions/checkout@v2
@@ -36,14 +39,17 @@ jobs:
         toolchain: stable
         override: true
 
-    - name: Build
+    - name: Build Server
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --verbose --manifest-path=csml_interpreter/Cargo.toml
+        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --release
 
-    - name: Test
-      uses: actions-rs/cargo@v1
+    - name: Upload binary to release
+      uses: svenstaro/upload-release-action@2.2.0
       with:
-        command: test
-        args: --verbose --manifest-path=csml_interpreter/Cargo.toml
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/release/csml_server
+        asset_name: ${{ matrix.asset_name }}
+        tag: ${{ github.ref }}
+        overwrite: true
