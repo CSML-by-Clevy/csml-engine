@@ -15,6 +15,7 @@ async fn main() -> std::io::Result<()> {
     Ok(val) => val,
     Err(_) => "5000".to_owned(),
   };
+  println!("CSML Server listening on port {}", server_port);
 
   HttpServer::new(|| {
     App::new()
