@@ -1,96 +1,10 @@
 # CSML Language Interpreter
 
-![CSML logo](../images/csml-horizontal-whitebg-v3.png)
+This crate contains the CSML language interpreter and is a part of the CSML Engine.
 
-## Functional diagram
+You are probably looking for:
 
-![diagram](../images/csml-interpreter.png)
-
-## Examples
-
-### Hello World
-
-    cargo run --example hello_world
-
-### Event
-
-    cargo run --example event
-
-### Metadata
-
-    cargo run --example metadata
-
-### Memory
-
-    cargo run --example memory
-
-## Quick Start run it yourself
-
- requires Rust version 1.41.
-
-```rust
-use csml_interpreter::data::csml_bot::CsmlBot;
-use csml_interpreter::data::csml_flow::CsmlFlow;
-use csml_interpreter::data::event::Event;
-use csml_interpreter::data::ContextJson;
-use csml_interpreter::interpret;
-use csml_interpreter::validate_bot;
-
-const DEFAULT_ID_NAME: &str = "id";
-const DEFAULT_FLOW_NAME: &str = "flow";
-const DEFAULT_STEP_NAME: &str = "start";
-const DEFAULT_BOT_NAME: &str = "my_bot";
-
-////////////////////////////////////////////////////////////////////////////////
-// PUBLIC FUNCTION
-////////////////////////////////////////////////////////////////////////////////
-
-fn main() {
-    let content = std::fs::read_to_string("./hello_world.csml").unwrap();
-
-    // Create a CsmlFlow
-    let flow = CsmlFlow::new(
-        DEFAULT_ID_NAME,
-        DEFAULT_FLOW_NAME,
-        &content,
-        Vec::default()
-    );
-
-    // Create a CsmlBot
-    let bot = CsmlBot::new(
-        DEFAULT_ID_NAME,
-        DEFAULT_BOT_NAME,
-        None,
-        vec![flow],
-        None,
-        None,
-        DEFAULT_FLOW_NAME,
-    );
-
-    // Create an Event
-    let event = Event::default();
-
-    // Create a Context
-    let context = ContextJson::new(
-        serde_json::json!({}),
-        serde_json::json!({}),
-        None,
-        None,
-        DEFAULT_STEP_NAME,
-        DEFAULT_FLOW_NAME,
-    );
-
-    // Run interpreter
-    let result = validate_bot(bot.to_owned());
-
-    if result.errors.is_some() {
-        dbg!(result.errors);
-        return;
-    }
-    if result.warnings.is_some() {
-        dbg!(result.warnings);
-    }
-
-    dbg!(interpret(bot, context, event, None));
-}
-```
+- the CSML homepage: https://www.csml.dev
+- the CSML documentation: https://docs.csml.dev
+- the Github repository: https://github.com/CSML-by-Clevy/csml-engine
+- the main CSML Engine crate: https://crates.io/
