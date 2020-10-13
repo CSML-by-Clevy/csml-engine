@@ -1,10 +1,10 @@
 pub mod operator;
 pub mod parse_actions;
 pub mod parse_braces;
+pub mod parse_built_in;
 pub mod parse_comments;
 pub mod parse_expand_string;
 pub mod parse_foreach;
-pub mod parse_built_in;
 // pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;
@@ -72,13 +72,13 @@ where
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => {
-            let flow_instructions = instructions.into_iter().fold(
-                HashMap::new(),
-                | mut flow, elem | {
-                    flow.insert(elem.instruction_type, elem.actions);
-                    flow
-                },
-            );
+            let flow_instructions =
+                instructions
+                    .into_iter()
+                    .fold(HashMap::new(), |mut flow, elem| {
+                        flow.insert(elem.instruction_type, elem.actions);
+                        flow
+                    });
             Ok(Flow {
                 flow_instructions,
                 flow_type,
@@ -119,18 +119,20 @@ where
 
     Ok((
         s,
-        vec!(Instruction {
+        vec![Instruction {
             instruction_type: InstructionScope::StepScope(ident.ident),
             actions: Expr::Scope {
                 block_type: BlockType::Step,
                 scope: actions,
                 range: RangeInterval { start, end },
             },
-        }),
+        }],
     ))
 }
 
-fn parse_function<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
+fn parse_function<'a, E: ParseError<Span<'a>>>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -138,11 +140,9 @@ where
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
     let (s, args) = parse_fn_args(s)?;
 
-    let (s, _) = match preceded(comment,tag(COLON))(s) {
+    let (s, _) = match preceded(comment, tag(COLON))(s) {
         Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
-        Ok((s, _)) => {
-            return Err(gen_nom_failure(s, ERROR_FN_COLON))
-        }
+        Ok((s, _)) => return Err(gen_nom_failure(s, ERROR_FN_COLON)),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
             return Err(gen_nom_failure(s, ERROR_FN_COLON))
         }
@@ -155,7 +155,7 @@ where
 
     Ok((
         s,
-        vec!(Instruction {
+        vec![Instruction {
             instruction_type: InstructionScope::FunctionScope {
                 name: ident.ident,
                 args,
@@ -165,7 +165,7 @@ where
                 scope: actions,
                 range: RangeInterval { start, end },
             },
-        }),
+        }],
     ))
 }
 

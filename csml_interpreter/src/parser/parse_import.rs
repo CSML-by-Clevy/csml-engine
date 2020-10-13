@@ -1,4 +1,4 @@
-use crate::data::{ast::*, tokens::*, primitive::PrimitiveNull, Position};
+use crate::data::{ast::*, primitive::PrimitiveNull, tokens::*, Position};
 use crate::parser::{
     get_interval, get_string, get_tag,
     parse_comments::comment,
@@ -96,34 +96,31 @@ where
 
     let (s, from_flow) = opt(parse_from)(s)?;
 
-
-    let instructions = fn_names.iter().map(|name| {
-        let (name, original_name) = match name {
-            Expr::IdentExpr(ident) => (ident.ident.to_owned(), None),
-            Expr::ObjectExpr(ObjectType::As(name, expr)) => {
-                match &**expr {
+    let instructions = fn_names
+        .iter()
+        .map(|name| {
+            let (name, original_name) = match name {
+                Expr::IdentExpr(ident) => (ident.ident.to_owned(), None),
+                Expr::ObjectExpr(ObjectType::As(name, expr)) => match &**expr {
                     Expr::IdentExpr(ident) => (name.ident.to_owned(), Some(ident.ident.to_owned())),
-                    _ => unreachable!()
-                }
+                    _ => unreachable!(),
+                },
+                _ => unreachable!(),
+            };
+
+            Instruction {
+                instruction_type: InstructionScope::ImportScope(ImportScope {
+                    name,
+                    original_name,
+                    from_flow: from_flow.clone(),
+                    position: Position::new(start.clone()),
+                }),
+                actions: Expr::LitExpr(PrimitiveNull::get_literal(start)),
             }
-            _ => unreachable!()
-        };
+        })
+        .collect();
 
-        Instruction {
-            instruction_type: InstructionScope::ImportScope(ImportScope {
-                name,
-                original_name,
-                from_flow: from_flow.clone(),
-                position: Position::new(start.clone()),
-            }),
-            actions: Expr::LitExpr(PrimitiveNull::get_literal(start)),
-        }
-    }).collect();
-
-    Ok((
-        s,
-        instructions,
-    ))
+    Ok((s, instructions))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

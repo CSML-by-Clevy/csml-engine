@@ -102,6 +102,7 @@ pub fn get_value_from_key<'a>(lit: &'a mut Literal, key: &str) -> Option<&'a mut
 
 pub fn resolve_path(
     path: &[(Interval, PathState)],
+    condition: bool,
     data: &mut Data,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
@@ -111,7 +112,7 @@ pub fn resolve_path(
     for (interval, node) in path.iter() {
         match node {
             PathState::ExprIndex(expr) => {
-                let lit = expr_to_literal(&expr, false, None, data, msg_data, sender)?;
+                let lit = expr_to_literal(&expr, condition, None, data, msg_data, sender)?;
                 if let Ok(val) = Literal::get_value::<i64>(
                     &lit.primitive,
                     lit.interval,
@@ -153,6 +154,7 @@ pub fn resolve_path(
 
 fn loop_path(
     mut lit: &mut Literal,
+    condition: bool,
     new: Option<Literal>,
     path: &mut Iter<(Interval, PathLiteral)>,
     content_type: &ContentType,
@@ -169,10 +171,11 @@ fn loop_path(
                         Position::new(*interval),
                         format!("[{}] {}", index, ERROR_ARRAY_INDEX),
                     );
-                    return Ok((
-                        MSG::send_error_msg(&sender, msg_data, Err(err)),
-                        tmp_update_var,
-                    ));
+                    let null = match condition {
+                        true => PrimitiveNull::get_literal(err.position.interval),
+                        false => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                    };
+                    return Ok((null, tmp_update_var));
                 }
             },
             PathLiteral::MapIndex(key) => {
@@ -201,10 +204,11 @@ fn loop_path(
                                 Position::new(*interval),
                                 format!("[{}] {}", key, ERROR_OBJECT_GET),
                             );
-                            return Ok((
-                                MSG::send_error_msg(&sender, msg_data, Err(err)),
-                                tmp_update_var,
-                            ));
+                            let null = match condition {
+                                true => PrimitiveNull::get_literal(err.position.interval),
+                                false => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                            };
+                            return Ok((null, tmp_update_var));
                         }
                     }
                 };
@@ -241,8 +245,15 @@ fn loop_path(
                 };
 
                 let content_type = ContentType::get(&return_lit);
-                let (lit_new, ..) =
-                    loop_path(&mut return_lit, None, path, &content_type, msg_data, sender)?;
+                let (lit_new, ..) = loop_path(
+                    &mut return_lit,
+                    false,
+                    None,
+                    path,
+                    &content_type,
+                    msg_data,
+                    sender,
+                )?;
 
                 return Ok((lit_new, tmp_update_var));
             }
@@ -258,6 +269,7 @@ fn loop_path(
 //TODO: Add Warning for nonexisting key
 pub fn exec_path_actions(
     lit: &mut Literal,
+    condition: bool,
     new: Option<Literal>,
     path: &Option<Vec<(Interval, PathLiteral)>>,
     content_type: &ContentType,
@@ -266,7 +278,15 @@ pub fn exec_path_actions(
 ) -> Result<(Literal, bool), ErrorInfo> {
     if let Some(vec) = path {
         let mut path = vec.iter();
-        let (return_lit, update) = loop_path(lit, new, &mut path, content_type, msg_data, sender)?;
+        let (return_lit, update) = loop_path(
+            lit,
+            condition,
+            new,
+            &mut path,
+            content_type,
+            msg_data,
+            sender,
+        )?;
 
         Ok((return_lit, update))
     } else {
@@ -281,6 +301,7 @@ pub fn exec_path_actions(
 
 pub fn get_literal_form_metadata(
     path: &[(Interval, PathLiteral)],
+    condition: bool,
     data: &mut Data,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
@@ -302,6 +323,7 @@ pub fn get_literal_form_metadata(
     let content_type = ContentType::get(&lit);
     let (lit, _tmp_mem_update) = exec_path_actions(
         &mut lit,
+        condition,
         None,
         &Some(path[1..].to_owned()),
         &content_type,
@@ -325,21 +347,30 @@ pub fn get_var(
         name if name == COMPONENT => {
             gen_literal_from_component(*interval, path, data, msg_data, sender)
         }
-        name if name == EVENT => gen_literal_from_event(*interval, path, data, msg_data, sender),
+        name if name == EVENT => {
+            gen_literal_from_event(*interval, condition, path, data, msg_data, sender)
+        }
         name if name == _METADATA => match path {
             Some(path) => {
-                let path = resolve_path(path, data, msg_data, sender)?;
-                get_literal_form_metadata(&path, data, msg_data, sender)
+                let path = resolve_path(path, condition, data, msg_data, sender)?;
+                get_literal_form_metadata(&path, condition, data, msg_data, sender)
             }
             None => Ok(PrimitiveObject::get_literal(
                 &data.context.metadata,
                 interval.to_owned(),
             )),
         },
-        _ => match get_var_from_mem(var.to_owned(), path, data, msg_data, sender) {
+        _ => match get_var_from_mem(var.to_owned(), condition, path, data, msg_data, sender) {
             Ok((lit, name, mem_type, path)) => {
-                let result =
-                    exec_path_actions(lit, None, &path, &ContentType::get(&lit), msg_data, sender);
+                let result = exec_path_actions(
+                    lit,
+                    condition,
+                    None,
+                    &path,
+                    &ContentType::get(&lit),
+                    msg_data,
+                    sender,
+                );
 
                 let (new_literal, update_mem) = match result {
                     Ok((lit, update)) => (lit, update),
@@ -362,19 +393,24 @@ pub fn get_var(
                 // if we are not in a condition an error message is created and send
                 let mut null = match condition {
                     true => PrimitiveNull::get_literal(err.position.interval),
-                    false => {
-                        MSG::send_error_msg(&sender, msg_data, Err(err))
-                    }
+                    false => MSG::send_error_msg(&sender, msg_data, Err(err)),
                 };
 
                 let path = if let Some(p) = path {
-                    Some(resolve_path(p, data, msg_data, sender)?)
+                    Some(resolve_path(p, condition, data, msg_data, sender)?)
                 } else {
                     None
                 };
                 let content_type = ContentType::get(&null);
-                let (new_literal, ..) =
-                    exec_path_actions(&mut null, None, &path, &content_type, msg_data, sender)?;
+                let (new_literal, ..) = exec_path_actions(
+                    &mut null,
+                    condition,
+                    None,
+                    &path,
+                    &content_type,
+                    msg_data,
+                    sender,
+                )?;
                 Ok(new_literal)
             }
         },
@@ -383,6 +419,7 @@ pub fn get_var(
 
 pub fn get_var_from_mem<'a>(
     name: Identifier,
+    condition: bool, // TODO: find better method than this
     path: Option<&[(Interval, PathState)]>,
     data: &'a mut Data,
     msg_data: &mut MessageData,
@@ -397,7 +434,7 @@ pub fn get_var_from_mem<'a>(
     ErrorInfo,
 > {
     let path = if let Some(p) = path {
-        Some(resolve_path(p, data, msg_data, sender)?)
+        Some(resolve_path(p, condition, data, msg_data, sender)?)
     } else {
         None
     };

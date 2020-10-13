@@ -9,7 +9,7 @@ pub use interpreter::components::load_components;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use data::ast::{Expr, Flow, InstructionScope, Interval, ImportScope};
+use data::ast::{Expr, Flow, ImportScope, InstructionScope, Interval};
 use data::context::get_hashmap_from_mem;
 use data::csml_bot::CsmlBot;
 use data::csml_result::CsmlResult;
@@ -17,10 +17,10 @@ use data::error_info::ErrorInfo;
 use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
-use data::Position;
 use data::warnings::Warnings;
 use data::ContextJson;
 use data::Data;
+use data::Position;
 use error_format::*;
 use linter::data::Linter;
 use linter::linter::lint_flow;
@@ -106,29 +106,37 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
 
 // ###################################################################
 
-fn validate_imports(bot: &HashMap<String, Flow>, imports: Vec<ImportScope>, errors: &mut Vec<ErrorInfo>) {
+fn validate_imports(
+    bot: &HashMap<String, Flow>,
+    imports: Vec<ImportScope>,
+    errors: &mut Vec<ErrorInfo>,
+) {
     for import in imports.iter() {
         match search_function(bot, import) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(err) => errors.push(err),
         }
     }
 }
 
-fn get_function<'a>(flow: &'a Flow, fn_name: &str, original_name: &Option<String>) -> Option<(Vec<String>, Expr, &'a Flow)> {
+fn get_function<'a>(
+    flow: &'a Flow,
+    fn_name: &str,
+    original_name: &Option<String>,
+) -> Option<(Vec<String>, Expr, &'a Flow)> {
     let name = match original_name {
         Some(original_name) => original_name.to_owned(),
-        None => fn_name.to_owned()
+        None => fn_name.to_owned(),
     };
 
-    if let ( InstructionScope::FunctionScope{name: _, args} , expr) = flow 
+    if let (InstructionScope::FunctionScope { name: _, args }, expr) = flow
         .flow_instructions
         .get_key_value(&InstructionScope::FunctionScope {
             name,
             args: Vec::new(),
-        })? 
+        })?
     {
-       return Some((args.to_owned() , expr.to_owned(), flow))
+        return Some((args.to_owned(), expr.to_owned(), flow));
     }
     None
 }
@@ -139,15 +147,15 @@ pub fn search_function<'a>(
 ) -> Result<(Vec<String>, Expr, &'a Flow), ErrorInfo> {
     match &import.from_flow {
         Some(flow_name) => match bot.get(flow_name) {
-            Some(flow) => get_function(flow, &import.name, &import.original_name).ok_or(
-                ErrorInfo{
+            Some(flow) => {
+                get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
                     position: import.position.clone(),
-                    message: format!("function '{}' not found in bot", import.name)
-                }
-            ),
-            None => Err(ErrorInfo{
+                    message: format!("function '{}' not found in bot", import.name),
+                })
+            }
+            None => Err(ErrorInfo {
                 position: import.position.clone(),
-                message: format!("function '{}' not found in bot", import.name)
+                message: format!("function '{}' not found in bot", import.name),
             }),
         },
         None => {
@@ -157,12 +165,10 @@ pub fn search_function<'a>(
                 }
             }
 
-            Err(
-                ErrorInfo{
-                    position: import.position.clone(),
-                    message: format!("function '{}' not found in bot", import.name)
-                }
-            )
+            Err(ErrorInfo {
+                position: import.position.clone(),
+                message: format!("function '{}' not found in bot", import.name),
+            })
         }
     }
 }
@@ -193,7 +199,7 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
         }
     }
 
-    let warnings =  Warnings::get();
+    let warnings = Warnings::get();
     lint_flow(&bot, &mut errors);
     validate_imports(&flows, imports, &mut errors);
 
@@ -253,20 +259,28 @@ pub fn interpret(
             Some(result) => result.to_owned(),
             None => {
                 return MessageData::error_to_message(
-                    Err(ErrorInfo{
-                        position: Position{
+                    Err(ErrorInfo {
+                        position: Position {
                             flow: flow.clone(),
                             step: "start".to_owned(),
                             interval: Interval::default(),
                         },
-                        message: format!("flow '{}' dose not exist in this bot", flow)
+                        message: format!("flow '{}' dose not exist in this bot", flow),
                     }),
-                    &sender
+                    &sender,
                 );
             }
         };
 
-        let mut data = Data::new(&flows, &ast, &mut context, &event, step_vars, &custom, &native);
+        let mut data = Data::new(
+            &flows,
+            &ast,
+            &mut context,
+            &event,
+            step_vars,
+            &custom,
+            &native,
+        );
 
         msg_data = msg_data + execute_step(&step, &ast, &mut data, &instruction_index, &sender);
 

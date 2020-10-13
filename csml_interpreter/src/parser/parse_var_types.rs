@@ -2,8 +2,8 @@ use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_RIGHT_BRACKET};
 use crate::parser::{
     operator::parse_operator,
-    parse_comments::comment,
     parse_built_in::parse_built_in,
+    parse_comments::comment,
     parse_idents::{parse_idents_as, parse_idents_assignation, parse_idents_usage},
     parse_literal::parse_literal_expr,
     parse_object::parse_object,

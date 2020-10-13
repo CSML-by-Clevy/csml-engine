@@ -42,10 +42,7 @@ impl Eq for ImportScope {}
 #[derive(Debug, Clone)]
 pub enum InstructionScope {
     StepScope(String),
-    FunctionScope {
-        name: String,
-        args: Vec<String>,
-    },
+    FunctionScope { name: String, args: Vec<String> },
     ImportScope(ImportScope),
 }
 
@@ -54,7 +51,7 @@ impl Hash for InstructionScope {
         match self {
             InstructionScope::StepScope(name) => name.hash(state),
             InstructionScope::FunctionScope { name, .. } => name.hash(state),
-            InstructionScope::ImportScope(import_scope) => import_scope.hash(state)
+            InstructionScope::ImportScope(import_scope) => import_scope.hash(state),
         }
     }
 }
@@ -86,8 +83,11 @@ impl Display for InstructionScope {
             InstructionScope::StepScope(ref idents) => write!(f, "{}", idents),
             InstructionScope::FunctionScope { name, .. } => write!(f, "{}", name),
             InstructionScope::ImportScope(ImportScope {
-                name, original_name: _, from_flow, ..
-            }) => write!(f, "import {} from {:?} ", name,from_flow),
+                name,
+                original_name: _,
+                from_flow,
+                ..
+            }) => write!(f, "import {} from {:?} ", name, from_flow),
         }
     }
 }

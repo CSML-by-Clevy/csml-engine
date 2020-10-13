@@ -31,11 +31,11 @@ fn get_var_info<'a>(
             get_var_info(literal, Some(path), data, msg_data, sender)
         }
         Expr::IdentExpr(var) => match search_in_memory_type(var, data) {
-            Ok(_) => get_var_from_mem(var.to_owned(), path, data, msg_data, sender),
+            Ok(_) => get_var_from_mem(var.to_owned(), false, path, data, msg_data, sender),
             Err(_) => {
                 let lit = PrimitiveNull::get_literal(var.interval.to_owned());
                 data.step_vars.insert(var.ident.to_owned(), lit);
-                get_var_from_mem(var.to_owned(), path, data, msg_data, sender)
+                get_var_from_mem(var.to_owned(), false, path, data, msg_data, sender)
             }
         },
         e => Err(gen_error_info(
@@ -74,6 +74,7 @@ pub fn match_actions(
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
             exec_path_actions(
                 lit,
+                false,
                 Some(new_value),
                 &path,
                 &ContentType::get(&lit),
