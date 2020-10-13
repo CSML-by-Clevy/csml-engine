@@ -1,5 +1,4 @@
 start:
-
-    say "Hello World 😆"
-
+    say event
+    say "is int? {{event.is_int()}}"
     goto end
