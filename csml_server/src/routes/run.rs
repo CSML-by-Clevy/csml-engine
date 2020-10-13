@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{post, web, HttpResponse};
 use csml_engine::start_conversation;
 use csml_engine::data::CsmlRequest;
 use csml_interpreter::data::{csml_bot::CsmlBot};
@@ -13,6 +13,7 @@ pub struct RequestRun {
 }
 
 
+#[post("/run")]
 pub async fn handler(body: web::Json<RequestRun>) -> HttpResponse {
   let bot = body.bot.to_owned();
   let mut request = body.event.to_owned();

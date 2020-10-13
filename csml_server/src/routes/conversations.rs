@@ -1,6 +1,7 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{post, web, HttpResponse};
 use csml_engine::{user_close_all_conversations, get_open_conversation, Client};
 
+#[post("/conversations/open")]
 pub async fn get_open(body: web::Json<Client>) -> HttpResponse {
 
   let res = std::thread::spawn(move || {
@@ -18,6 +19,7 @@ pub async fn get_open(body: web::Json<Client>) -> HttpResponse {
 
 }
 
+#[post("/conversations/close")]
 pub async fn close_user_conversations(body: web::Json<Client>) -> HttpResponse {
 
   let res = std::thread::spawn(move || {
