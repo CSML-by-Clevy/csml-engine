@@ -34,9 +34,9 @@ fn main() {
 
     // Create an Event
     let event = Event {
-        content_type: "text".to_owned(),
+        content_type: "payload".to_owned(), // text
         content_value: "4".to_owned(),
-        content: serde_json::json!({"text":"4"}),
+        content: serde_json::json!({"payload":"4"}),
     };
 
     // Create context
