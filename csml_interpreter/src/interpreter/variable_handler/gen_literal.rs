@@ -20,6 +20,7 @@ use std::sync::mpsc;
 
 pub fn gen_literal_from_event(
     interval: Interval,
+    condition: bool,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     msg_data: &mut MessageData,
@@ -27,7 +28,7 @@ pub fn gen_literal_from_event(
 ) -> Result<Literal, ErrorInfo> {
     match path {
         Some(path) => {
-            let path = resolve_path(path, data, msg_data, sender)?;
+            let path = resolve_path(path, condition, data, msg_data, sender)?;
             let mut lit = json_to_literal(&data.event.content, interval.to_owned())?;
 
             lit.set_content_type("event");
@@ -42,8 +43,15 @@ pub fn gen_literal_from_event(
                 }
             };
 
-            let (lit, _tmp_mem_update) =
-                exec_path_actions(&mut lit, None, &Some(path), &content_type, msg_data, sender)?;
+            let (lit, _tmp_mem_update) = exec_path_actions(
+                &mut lit,
+                condition,
+                None,
+                &Some(path),
+                &content_type,
+                msg_data,
+                sender,
+            )?;
 
             Ok(lit)
         }
@@ -63,7 +71,7 @@ pub fn gen_literal_from_component(
 ) -> Result<Literal, ErrorInfo> {
     match path {
         Some(path) => {
-            let mut path = resolve_path(path, data, msg_data, sender)?;
+            let mut path = resolve_path(path, false, data, msg_data, sender)?;
 
             if let Some((_interval, function_name)) = path.first() {
                 if let PathLiteral::Func {
@@ -79,6 +87,7 @@ pub fn gen_literal_from_component(
 
                         let (lit, _tmp_mem_update) = exec_path_actions(
                             &mut lit,
+                            false,
                             None,
                             &Some(path),
                             &ContentType::Primitive,

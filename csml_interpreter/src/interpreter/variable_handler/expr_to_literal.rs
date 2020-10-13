@@ -22,15 +22,17 @@ use crate::search_function;
 
 fn exec_path_literal(
     literal: &mut Literal,
+    condition: bool,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
-        let path = resolve_path(path, data, msg_data, sender)?;
+        let path = resolve_path(path, condition, data, msg_data, sender)?;
         let (mut new_literal, ..) = exec_path_actions(
             literal,
+            condition,
             None,
             &Some(path),
             &ContentType::get(&literal),
@@ -236,12 +238,12 @@ pub fn expr_to_literal(
 ) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::ObjectExpr(ObjectType::As(name, var)) => {
-            let value = expr_to_literal(var, false, None, data, msg_data, sender)?;
+            let value = expr_to_literal(var, condition, None, data, msg_data, sender)?;
             data.step_vars.insert(name.ident.to_owned(), value.clone());
             Ok(value)
         }
         Expr::PathExpr { literal, path } => {
-            expr_to_literal(literal, false, Some(path), data, msg_data, sender)
+            expr_to_literal(literal, condition, Some(path), data, msg_data, sender)
         }
         Expr::ObjectExpr(ObjectType::Normal(Function {
             name,
@@ -251,7 +253,7 @@ pub fn expr_to_literal(
             let mut literal =
                 normal_object_to_literal(&name, args, *interval, data, msg_data, sender)?;
 
-            exec_path_literal(&mut literal, path, data, msg_data, sender)
+            exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::MapExpr(map, RangeInterval { start, .. }) => {
             let mut object = HashMap::new();
@@ -259,31 +261,38 @@ pub fn expr_to_literal(
             for (key, value) in map.iter() {
                 object.insert(
                     key.to_owned(),
-                    expr_to_literal(&value, false, None, data, msg_data, sender)?,
+                    expr_to_literal(&value, condition, None, data, msg_data, sender)?,
                 );
             }
             let mut literal = PrimitiveObject::get_literal(&object, start.to_owned());
-            exec_path_literal(&mut literal, path, data, msg_data, sender)
+            exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => {
             let mut string =
                 get_string_from_complex_string(vec, start.to_owned(), data, msg_data, sender)?;
-            exec_path_literal(&mut string, path, data, msg_data, sender)
+            exec_path_literal(&mut string, condition, path, data, msg_data, sender)
         }
         Expr::VecExpr(vec, range) => {
             let mut array = vec![];
             for value in vec.iter() {
-                array.push(expr_to_literal(value, false, None, data, msg_data, sender)?)
+                array.push(expr_to_literal(
+                    value, condition, None, data, msg_data, sender,
+                )?)
             }
             let mut literal = PrimitiveArray::get_literal(&array, range.start.to_owned());
-            exec_path_literal(&mut literal, path, data, msg_data, sender)
+            exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::InfixExpr(infix, exp_1, exp_2) => {
             evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)
         }
-        Expr::LitExpr(literal) => {
-            exec_path_literal(&mut literal.clone(), path, data, msg_data, sender)
-        }
+        Expr::LitExpr(literal) => exec_path_literal(
+            &mut literal.clone(),
+            condition,
+            path,
+            data,
+            msg_data,
+            sender,
+        ),
         Expr::IdentExpr(var, ..) => Ok(get_var(
             var.to_owned(),
             condition,
