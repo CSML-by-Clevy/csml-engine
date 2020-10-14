@@ -39,6 +39,8 @@ async fn main() -> std::io::Result<()> {
       .service(routes::index::home)
       .service(routes::validate::handler)
       .service(routes::run::handler)
+      .service(routes::sns::handler)
+
       .service(routes::conversations::get_open)
       .service(routes::conversations::close_user_conversations)
 

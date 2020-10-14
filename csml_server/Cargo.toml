@@ -5,7 +5,7 @@ authors = ["François Falala-Sechet <francois@clevy.io>"]
 edition = "2018"
 
 [dependencies]
-actix-web = "2.0"
+actix-web = { version = "2.0.0", features = ["rustls"] }
 actix-rt = "1.0.0"
 actix-service = "1.0.0"
 actix-cors = "0.2.0"
