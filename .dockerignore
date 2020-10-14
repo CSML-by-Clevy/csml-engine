@@ -1,0 +1,8 @@
+.git/
+target/
+**/target/
+Dockerfile
+.dockerignore
+
+!target/release/csml_server
+

@@ -1,4 +1,4 @@
-name: Publish crates.io
+name: Publish CSML Engine to crates.io
 
 on:
   release:
