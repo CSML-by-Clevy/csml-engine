@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{post, web, HttpResponse};
 use csml_engine::start_conversation;
 use csml_engine::data::CsmlRequest;
 use csml_interpreter::data::{csml_bot::CsmlBot};
@@ -7,13 +7,13 @@ use serde_json::{Value, json};
 use std::thread;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RequestRun {
+pub struct RunRequest {
   bot: CsmlBot,
   event: CsmlRequest,
 }
 
-
-pub async fn handler(body: web::Json<RequestRun>) -> HttpResponse {
+#[post("/run")]
+pub async fn handler(body: web::Json<RunRequest>) -> HttpResponse {
   let bot = body.bot.to_owned();
   let mut request = body.event.to_owned();
 
