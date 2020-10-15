@@ -112,6 +112,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # using ${{ github.ref }} returns /refs/tags/TAGNAME instead of just TAGNAME
+      - name: Get release version
+        id: release_version
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -119,6 +124,6 @@ jobs:
           push: true
           tags: |
             clevy/csml-engine:latest
-            clevy/csml-engine:${{ github.ref }}
+            clevy/csml-engine:${{ steps.release_version.outputs.tag }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
