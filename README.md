@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://github.com/CSML-by-Clevy/csml-engine/workflows/Rust/badge.svg" alt="Rust">
   <a href="https://github.com/CSML-by-Clevy/csml-engine/releases/latest"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/csml-by-clevy/csml-engine?label=latest%20release&logo=Latest%20release"></a>
-  <a href="https://hub.docker.com/r/clevy/csml-engine"><img alt="Docker Image Version (latest semver)" src="https://img.shields.io/docker/v/clevy/csml-engine?sort=semver"></a>
+  <a href="https://hub.docker.com/r/clevy/csml-engine"><a href="https://hub.docker.com/r/clevy/csml-engine"><img alt="Docker Image Version (latest semver)" src="https://img.shields.io/docker/v/clevy/csml-engine?label=docker&sort=semver"></a></a>
   <a href="https://join.slack.com/t/csml-by-clevy/shared_invite/enQtODAxMzY2MDQ4Mjk0LWZjOTZlODI0YTMxZTg4ZGIwZDEzYTRlYmU1NmZjYWM2MjAwZTU5MmU2NDdhNmU2N2Q5ZTU2ZTcxZDYzNTBhNTc"><img src="https://img.shields.io/badge/slack-CSML-blue.svg?logo=slack" alt="Slack"></a>  
 </p>
 
