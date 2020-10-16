@@ -22,7 +22,7 @@ where
     E: ParseError<Span<'a>>,
 {
     if reserved.contains(&&(*var.to_ascii_lowercase())) {
-        return Err(gen_nom_failure(s, ERROR_RESERVED));
+        return Err(gen_nom_error(s, ERROR_RESERVED));
     }
 
     if var.len() > std::u8::MAX as usize {
