@@ -22,7 +22,7 @@ pub mod tools;
 
 use crate::linter::data::Linter;
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExecutionState, ExitCondition, StateContext};
+pub use state_context::{ExecutionState, ExitCondition, StateContext, ScopeState};
 
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
@@ -150,7 +150,9 @@ where
     };
 
     let (s, start) = get_interval(s)?;
+    StateContext::set_scope(ScopeState::Function);
     let (s, actions) = preceded(comment, parse_fn_root)(s)?;
+    StateContext::set_scope(ScopeState::Normal);
     let (s, end) = get_interval(s)?;
 
     Ok((

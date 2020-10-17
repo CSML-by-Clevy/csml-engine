@@ -2,6 +2,7 @@ use lazy_static::*;
 use std::collections::*;
 use std::sync::*;
 use std::thread::*;
+use crate::data::Literal;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -18,6 +19,7 @@ pub enum ExitCondition {
     Error,
     Break,
     Hold,
+    Return(Literal)
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -32,10 +34,17 @@ pub enum StringState {
     Expand,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum ScopeState {
+    Normal,
+    Function,
+}
+
 #[derive(Debug)]
 pub struct StateContext {
     state: Vec<ExecutionState>,
     string_state: StringState,
+    scope_state: ScopeState,
     rip: usize,
 }
 
@@ -48,6 +57,7 @@ impl Default for StateContext {
         Self {
             state: Vec::new(),
             string_state: StringState::Normal,
+            scope_state: ScopeState::Normal,
             rip: 0,
         }
     }
@@ -172,6 +182,38 @@ impl StateContext {
 
         if let Some(state_context) = hashmap.get(&thread_id) {
             return state_context.string_state;
+        }
+
+        unreachable!();
+    }
+}
+
+
+
+impl StateContext {
+    pub fn set_scope(state: ScopeState) {
+        let thread_id = current().id();
+        let mut hashmap = CONTEXT.lock().unwrap();
+
+        hashmap
+            .entry(thread_id)
+            .or_insert_with(StateContext::default);
+
+        if let Some(state_context) = hashmap.get_mut(&thread_id) {
+            state_context.scope_state = state;
+        }
+    }
+
+    pub fn get_scope() -> ScopeState {
+        let thread_id = current().id();
+        let mut hashmap = CONTEXT.lock().unwrap();
+
+        hashmap
+        .entry(thread_id)
+        .or_insert_with(StateContext::default);
+
+        if let Some(state_context) = hashmap.get(&thread_id) {
+            return state_context.scope_state;
         }
 
         unreachable!();
