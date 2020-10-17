@@ -6,9 +6,9 @@ use crate::parser::operator::parse_operator;
 use crate::parser::parse_idents::parse_idents_assignation;
 use crate::parser::{
     parse_comments::comment,
-    parse_scope::parse_scope,
+    parse_scope::{parse_scope, parse_fn_scope},
     tools::{get_interval, get_string, get_tag},
-    ExecutionState, StateContext,
+    ExecutionState, StateContext, ScopeState,
 };
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 
@@ -52,7 +52,12 @@ where
     StateContext::inc_rip();
 
     StateContext::set_state(ExecutionState::Loop);
-    let (s, block) = parse_scope(s)?;
+
+    let scope_type = StateContext::get_scope();
+    let (s, block) = match scope_type {
+        ScopeState::Normal => parse_scope(s)?,
+        ScopeState::Function => parse_fn_scope(s)?,
+    };
     StateContext::set_state(ExecutionState::Normal);
 
     let (s, end) = get_interval(s)?;

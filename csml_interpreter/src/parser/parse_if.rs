@@ -4,10 +4,8 @@ use crate::parser::parse_parenthesis::parse_l_parentheses;
 use crate::parser::parse_parenthesis::parse_r_parentheses;
 use crate::parser::{
     parse_comments::comment,
-    parse_scope::{parse_implicit_scope, parse_scope},
-    tools::*,
-    StateContext,
-    // ExecutionConditon,
+    parse_scope::{parse_implicit_scope, parse_scope, parse_fn_scope, parse_fn_implicit_scope},
+    tools::*, StateContext, ScopeState,
 };
 use nom::{
     branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::delimited,
@@ -38,14 +36,17 @@ where
 
     let index = StateContext::get_rip();
 
-    // StateContext::set_execution_condition(ExecutionConditon::ELSEIF);
     StateContext::inc_rip();
 
     let (s, condition) = parse_strict_condition_group(s)?;
-    let (s, block) = alt((parse_scope, parse_implicit_scope))(s)?;
-    let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
 
-    // StateContext::set_execution_condition(ExecutionConditon::DEFAULT);
+    let scope_type = StateContext::get_scope();
+    let (s, block) = match scope_type {
+        ScopeState::Normal => alt((parse_scope, parse_implicit_scope))(s)?,
+        ScopeState::Function => alt((parse_fn_scope, parse_fn_implicit_scope))(s)?,
+    };
+
+    let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
 
     let new_index = StateContext::get_rip() - 1;
     let instruction_info = InstructionInfo {
@@ -75,13 +76,15 @@ where
 
     let index = StateContext::get_rip();
 
-    // StateContext::set_execution_condition(ExecutionConditon::ELSE);
     StateContext::inc_rip();
 
-    let (s, block) = alt((parse_scope, parse_implicit_scope))(s)?;
-    let (s, end) = get_interval(s)?;
+    let scope_type = StateContext::get_scope();
+    let (s, block) = match scope_type {
+        ScopeState::Normal => alt((parse_scope, parse_implicit_scope))(s)?,
+        ScopeState::Function => alt((parse_fn_scope, parse_fn_implicit_scope))(s)?,
+    };
 
-    // StateContext::set_execution_condition(ExecutionConditon::DEFAULT);
+    let (s, end) = get_interval(s)?;
 
     let new_index = StateContext::get_rip() - 1;
     let instruction_info = InstructionInfo {
@@ -111,13 +114,15 @@ where
 
     let index = StateContext::get_rip();
 
-    // StateContext::set_execution_condition(ExecutionConditon::IF);
     StateContext::inc_rip();
 
-    let (s, block) = alt((parse_scope, parse_implicit_scope))(s)?;
-    let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
+    let scope_type = StateContext::get_scope();
+    let (s, block) = match scope_type {
+        ScopeState::Normal => alt((parse_scope, parse_implicit_scope))(s)?,
+        ScopeState::Function => alt((parse_fn_scope, parse_fn_implicit_scope))(s)?,
+    };
 
-    // StateContext::set_execution_condition(ExecutionConditon::DEFAULT);
+    let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
 
     let new_index = StateContext::get_rip() - 1;
     let instruction_info = InstructionInfo {

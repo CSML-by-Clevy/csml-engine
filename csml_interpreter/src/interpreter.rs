@@ -60,6 +60,12 @@ pub fn interpret_scope(
         }
 
         match action {
+            Expr::ObjectExpr(ObjectType::Return(var)) => {
+                let lit = expr_to_literal(var, false, None, data, &mut message_data, &None)?;
+                message_data.exit_condition = Some(ExitCondition::Return(lit));
+
+                return Ok(message_data);
+            }
             Expr::ObjectExpr(ObjectType::Break(..)) => {
                 message_data.exit_condition = Some(ExitCondition::Break);
 
@@ -163,6 +169,10 @@ pub fn interpret_function_scope(
                 ));
             }
         };
+
+        if let Some(ExitCondition::Return(lit)) = message_data.exit_condition {
+            return Ok(lit);
+        }
     }
 
     Ok(PrimitiveNull::get_literal(interval))

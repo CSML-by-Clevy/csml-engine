@@ -51,6 +51,16 @@ where
     Ok((s, acc))
 }
 
+pub fn parse_fn_implicit_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let mut acc = Block::default();
+    let (s, (item, instruction_info)) = parse_fn_root_functions(s)?;
+    acc.commands.push((item, instruction_info));
+    Ok((s, acc))
+}
+
 pub fn parse_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
 where
     E: ParseError<Span<'a>>,
@@ -58,6 +68,17 @@ where
     delimited(
         preceded(comment, tag(L_BRACE)),
         parse_root,
+        preceded(comment, parse_r_brace),
+    )(s)
+}
+
+pub fn parse_fn_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    delimited(
+        preceded(comment, tag(L_BRACE)),
+        parse_fn_root,
         preceded(comment, parse_r_brace),
     )(s)
 }
