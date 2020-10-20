@@ -200,7 +200,9 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     }
 
     let warnings = Warnings::get();
-    lint_flow(&bot, &mut errors);
+    if errors.is_empty() {
+        lint_flow(&bot, &mut errors);
+    }
     validate_imports(&flows, imports, &mut errors);
 
     Warnings::clear();
