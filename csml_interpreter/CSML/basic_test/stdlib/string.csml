@@ -36,3 +36,11 @@ step_2:
 step_3:
     say "Hello".contains("H")
     goto end
+
+step_4:
+    say "{{\"Hello\".split(\"A\")}}"
+    say "{{\"Hello\".split(\"H\")}}"
+    say "{{\"Hello\".split(\"l\")}}"
+    say "{{\"Hello\".split(\"ll\")}}"
+    say "{{\"Hello\".split(\"o\")}}"
+    goto end

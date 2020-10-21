@@ -359,7 +359,7 @@ impl PrimitiveArray {
         args: &HashMap<String, Literal>,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "join(separater: string) => string";
+        let usage = "join(separator: string) => string";
 
         if args.len() != 1 {
             return Err(gen_error_info(
