@@ -22,7 +22,7 @@ pub mod tools;
 
 use crate::linter::data::Linter;
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExecutionState, ExitCondition, StateContext, ScopeState};
+pub use state_context::{ExecutionState, ExitCondition, ScopeState, StateContext};
 
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
@@ -33,7 +33,7 @@ use parse_scope::{parse_fn_root, parse_root};
 use parse_var_types::parse_fn_args;
 use tools::*;
 
-use nom::error::ParseError;
+use nom::error::{ParseError, VerboseError, VerboseErrorKind};
 use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
@@ -70,7 +70,8 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
-    match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
+    // match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
+    match start_parsing::<VerboseError<Span<'a>> >(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => {
             let flow_instructions =
                 instructions
@@ -84,17 +85,142 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                 flow_type,
             })
         }
-        Err(e) => match e {
-            Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
-                Position::new(Interval::new_as_u32(
-                    err.input.location_line(),
-                    err.input.get_column() as u32,
-                )),
-                err.error,
-            )),
-            Err::Incomplete(_err) => unreachable!(),
+        Err(e) => {
+            match e {
+                Err::Error(err) | Err::Failure(err) => {
+
+                    // let mut errors = Vec::new();
+                    // for (value, error_kind) in err.errors.iter() {
+                    //     errors.push((*value.fragment(), error_kind.to_owned()));
+                    // }
+                    // let verbose_error = VerboseError{errors};
+                    // println!("=> {}", convert_error(slice, verbose_error));
+
+                    println!("=> {}", convert_error_2(Span::new(slice), err));
+
+                    unimplemented!();
+
+                    // Err(gen_error_info(
+                    //         Position::new(Interval::new_as_u32(
+                    //             err.input.location_line(),
+                    //             err.input.get_column() as u32,
+                    //         )),
+                    //         err.error,
+                    //     )),
+                },
+                Err::Incomplete(_err) => unreachable!(),
+            }
         },
     }
+}
+
+fn convert_error_2<'a>(input: Span<'a>, e: VerboseError<Span<'a>>)
+  -> String {
+  use std::fmt::Write;
+
+  let mut result = String::new();
+
+  for (i, (substring, kind)) in e.errors.iter().enumerate() {
+    let offset = substring.location_offset();
+
+    if input.fragment().is_empty() {
+        match kind {
+            VerboseErrorKind::Char(c) => {
+            write!(&mut result, "{}: expected '{}', got empty input\n\n", i, c)
+            }
+            VerboseErrorKind::Context(s) => write!(&mut result, "{}: in {}, got empty input\n\n", i, s),
+            VerboseErrorKind::Nom(e) => write!(&mut result, "{}: in {:?}, got empty input\n\n", i, e),
+      }
+    } else {
+      let prefix = &input.fragment().as_bytes()[..offset];
+
+      // Count the number of newlines in the first `offset` bytes of input
+      let line_number = substring.location_line();
+
+      // Find the line that includes the subslice:
+      // Find the *last* newline before the substring starts
+      let line_begin = prefix
+        .iter()
+        .rev()
+        .position(|&b| b == b'\n')
+        .map(|pos| offset - pos)
+        .unwrap_or(0);
+
+      // Find the full line after that newline
+      let line = input.fragment()[line_begin..]
+        .lines()
+        .next()
+        .unwrap_or(&input.fragment()[line_begin..])
+        .trim_end();
+
+      // The (1-indexed) column number is the offset of our substring into that line
+      let column_number = substring.get_column();
+
+      match kind {
+        VerboseErrorKind::Char(c) => {
+          if let Some(actual) = substring.fragment().chars().next() {
+            write!(
+              &mut result,
+              "{i}: at line {line_number}:\n\
+               {line}\n\
+               {caret:>column$}\n\
+               expected '{expected}', found {actual}\n\n",
+              i = i,
+              line_number = line_number,
+              line = line,
+              caret = '^',
+              column = column_number,
+              expected = c,
+              actual = actual,
+            )
+          } else {
+            write!(
+              &mut result,
+              "{i}: at line {line_number}:\n\
+               {line}\n\
+               {caret:>column$}\n\
+               expected '{expected}', got end of input\n\n",
+              i = i,
+              line_number = line_number,
+              line = line,
+              caret = '^',
+              column = column_number,
+              expected = c,
+            )
+          }
+        }
+        VerboseErrorKind::Context(s) => write!(
+          &mut result,
+          "{i}: at line {line_number},\n\
+            {line}\n\
+             {caret:>column$}\n\
+             {context}\n\n",
+          i = i,
+          line_number = line_number,
+          context = s,
+          line = line,
+          caret = '^',
+          column = column_number,
+        ),
+        VerboseErrorKind::Nom(e) => write!(
+          &mut result,
+          "{i}: at line {line_number}, {nom_err:?}:\n\
+             {line}\n\
+             {caret:>column$}\n\n",
+          i = i,
+          line_number = line_number,
+          nom_err = e,
+          line = line,
+          caret = '^',
+          column = column_number,
+        ),
+      }
+    }
+    // Because `write!` to a `String` is infallible, this `unwrap` is fine.
+    .unwrap();
+  }
+
+  result
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,8 +268,8 @@ where
 
     let (s, _) = match preceded(comment, tag(COLON))(s) {
         Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
-        Ok((s, _)) => return Err(gen_nom_failure(s, ERROR_FN_COLON)),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+        Ok(_) => return Err(gen_nom_failure(s, ERROR_FN_COLON)),
+        Err(Err::Error((_s, _err))) | Err(Err::Failure((_s, _err))) => {
             return Err(gen_nom_failure(s, ERROR_FN_COLON))
         }
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),

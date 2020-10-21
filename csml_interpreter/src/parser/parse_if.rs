@@ -4,8 +4,9 @@ use crate::parser::parse_parenthesis::parse_l_parentheses;
 use crate::parser::parse_parenthesis::parse_r_parentheses;
 use crate::parser::{
     parse_comments::comment,
-    parse_scope::{parse_implicit_scope, parse_scope, parse_fn_scope, parse_fn_implicit_scope},
-    tools::*, StateContext, ScopeState,
+    parse_scope::{parse_fn_implicit_scope, parse_fn_scope, parse_implicit_scope, parse_scope},
+    tools::*,
+    ScopeState, StateContext,
 };
 use nom::{
     branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::delimited,

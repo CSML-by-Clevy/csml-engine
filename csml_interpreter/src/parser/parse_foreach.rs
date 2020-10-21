@@ -6,9 +6,9 @@ use crate::parser::operator::parse_operator;
 use crate::parser::parse_idents::parse_idents_assignation;
 use crate::parser::{
     parse_comments::comment,
-    parse_scope::{parse_scope, parse_fn_scope},
+    parse_scope::{parse_fn_scope, parse_scope},
     tools::{get_interval, get_string, get_tag},
-    ExecutionState, StateContext, ScopeState,
+    ExecutionState, ScopeState, StateContext,
 };
 use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
 

@@ -1,9 +1,14 @@
-fn test() 
-    return 4
 
+
+fn toto():
+    return 4
 
 start:
 
-    say "Hello World 😆"
+    return 4
+
+    sey "hola"
+
+    say start
 
     goto end

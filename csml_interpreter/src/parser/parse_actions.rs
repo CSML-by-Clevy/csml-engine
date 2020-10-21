@@ -286,13 +286,13 @@ fn catch_scope_common_mistakes<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, I
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s2, name) = preceded(comment, get_string)(s)?;
 
     if SCOPE_REJECTED.contains(&name.as_ref()) {
         return Err(gen_nom_failure(s, ERROR_SCOPE));
     }
 
-    Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+    Err(Err::Error(E::from_error_kind(s2, ErrorKind::Tag)))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

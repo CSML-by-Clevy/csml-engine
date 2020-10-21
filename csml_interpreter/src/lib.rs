@@ -1,6 +1,7 @@
 pub mod data;
 pub mod error_format;
 pub mod interpreter;
+pub mod imports;
 pub mod linter;
 pub mod parser;
 
@@ -9,7 +10,7 @@ pub use interpreter::components::load_components;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use data::ast::{Expr, Flow, ImportScope, InstructionScope, Interval};
+use data::ast::{Expr, Flow, InstructionScope, Interval};
 use data::context::get_hashmap_from_mem;
 use data::csml_bot::CsmlBot;
 use data::csml_result::CsmlResult;
@@ -18,9 +19,8 @@ use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
 use data::warnings::Warnings;
-use data::ContextJson;
-use data::Data;
-use data::Position;
+use data::{Data, ContextJson, Position};
+use imports::validate_imports;
 use error_format::*;
 use linter::data::Linter;
 use linter::linter::lint_flow;
@@ -103,77 +103,6 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
 
     result
 }
-
-// ###################################################################
-
-fn validate_imports(
-    bot: &HashMap<String, Flow>,
-    imports: Vec<ImportScope>,
-    errors: &mut Vec<ErrorInfo>,
-) {
-    for import in imports.iter() {
-        match search_function(bot, import) {
-            Ok(_) => {}
-            Err(err) => errors.push(err),
-        }
-    }
-}
-
-fn get_function<'a>(
-    flow: &'a Flow,
-    fn_name: &str,
-    original_name: &Option<String>,
-) -> Option<(Vec<String>, Expr, &'a Flow)> {
-    let name = match original_name {
-        Some(original_name) => original_name.to_owned(),
-        None => fn_name.to_owned(),
-    };
-
-    if let (InstructionScope::FunctionScope { name: _, args }, expr) = flow
-        .flow_instructions
-        .get_key_value(&InstructionScope::FunctionScope {
-            name,
-            args: Vec::new(),
-        })?
-    {
-        return Some((args.to_owned(), expr.to_owned(), flow));
-    }
-    None
-}
-
-pub fn search_function<'a>(
-    bot: &'a HashMap<String, Flow>,
-    import: &ImportScope,
-) -> Result<(Vec<String>, Expr, &'a Flow), ErrorInfo> {
-    match &import.from_flow {
-        Some(flow_name) => match bot.get(flow_name) {
-            Some(flow) => {
-                get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
-                    position: import.position.clone(),
-                    message: format!("function '{}' not found in {}", import.name, flow_name),
-                })
-            }
-            None => Err(ErrorInfo {
-                position: import.position.clone(),
-                message: format!("function '{}' not found in {}", import.name, flow_name),
-            }),
-        },
-        None => {
-            for (_name, flow) in bot.iter() {
-                if let Some(values) = get_function(flow, &import.name, &import.original_name) {
-                    return Ok(values);
-                }
-            }
-
-            Err(ErrorInfo {
-                position: import.position.clone(),
-                message: format!("function '{}' not found in bot", import.name),
-            })
-        }
-    }
-}
-
-// ###################################################################
 
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();

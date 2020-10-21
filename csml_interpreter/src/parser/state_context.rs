@@ -1,8 +1,8 @@
+use crate::data::Literal;
 use lazy_static::*;
 use std::collections::*;
 use std::sync::*;
 use std::thread::*;
-use crate::data::Literal;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -19,7 +19,7 @@ pub enum ExitCondition {
     Error,
     Break,
     Hold,
-    Return(Literal)
+    Return(Literal),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -188,8 +188,6 @@ impl StateContext {
     }
 }
 
-
-
 impl StateContext {
     pub fn set_scope(state: ScopeState) {
         let thread_id = current().id();
@@ -209,8 +207,8 @@ impl StateContext {
         let mut hashmap = CONTEXT.lock().unwrap();
 
         hashmap
-        .entry(thread_id)
-        .or_insert_with(StateContext::default);
+            .entry(thread_id)
+            .or_insert_with(StateContext::default);
 
         if let Some(state_context) = hashmap.get(&thread_id) {
             return state_context.scope_state;
