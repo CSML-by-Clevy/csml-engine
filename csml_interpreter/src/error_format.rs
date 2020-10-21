@@ -153,26 +153,27 @@ pub const ERROR_NULL_UNKNOWN_METHOD: &str = "is not a method of Null";
 
 // #### String
 pub const ERROR_STRING_DO_MATCH: &str =
-    "[do_match] takes one parameter of type String usage: string.do_match(\"tag\")";
+    "[do_match] takes one parameter of type String. Usage: string.do_match(\"tag\")";
 pub const ERROR_STRING_APPEND: &str =
-    "[append] takes one parameter of type String usage: string.append(\"text to append\")";
+    "[append] takes one parameter of type String. Usage: string.append(\"text to append\")";
 pub const ERROR_STRING_CONTAINS: &str =
-    "[contains] takes one parameter of type String usage: string.contains(\"word\")";
+    "[contains] takes one parameter of type String. Usage: string.contains(\"word\")";
 pub const ERROR_STRING_CONTAINS_REGEX: &str =
-    "[contains_regex] takes one parameter of type String usage: string.contains_regex(\"regex\")";
+    "[contains_regex] takes one parameter of type String. Usage: string.contains_regex(\"regex\")";
 pub const ERROR_STRING_VALID_REGEX: &str = "parameter must be a valid regex expression"; // link to docs
 pub const ERROR_STRING_START_WITH: &str =
-    "[starts_with] takes one parameter of type String usage: string.starts_with(\"tag\")";
-pub const ERROR_STRING_START_WITH_REGEX: &str = "[starts_with_regex] takes one parameter of type String usage: string.start_with_regex(\"regex\")";
+    "[starts_with] takes one parameter of type String. Usage: string.starts_with(\"tag\")";
+pub const ERROR_STRING_START_WITH_REGEX: &str = "[starts_with_regex] takes one parameter of type String. Usage: string.start_with_regex(\"regex\")";
 pub const ERROR_STRING_END_WITH: &str =
-    "[ends_with] takes one parameter of type String usage: string.ends_with(\"tag\")";
+    "[ends_with] takes one parameter of type String. Usage: string.ends_with(\"tag\")";
 pub const ERROR_STRING_END_WITH_REGEX: &str =
-    "[ends_with_regex] takes one parameter of type String usage: string.ends_with_regex(\"regex\")";
+    "[ends_with_regex] takes one parameter of type String. Usage: string.ends_with_regex(\"regex\")";
 pub const ERROR_STRING_FROM_JSON: &str = "[from_json] [!] string to object failed]";
+pub const ERROR_STRING_SPLIT: &str = "[split] takes one paramater of type String. Usage: string.split(\"separator\")";
 pub const ERROR_STRING_MATCH_REGEX: &str =
-    "[match_regex] takes one parameter of type String usage: string.match_regex(\"regex\")";
+    "[match_regex] takes one parameter of type String. Usage: string.match_regex(\"regex\")";
 pub const ERROR_STRING_POW: &str =
-    "[pow] takes one parameter of type Float or Int usage: string.pow(number)";
+    "[pow] takes one parameter of type Float or Int. Usage: string.pow(number)";
 pub const ERROR_STRING_COS: &str = "[cos] the string must be of numeric type in order to use cos. Verify first with 'string.is_number() == true' ";
 pub const ERROR_STRING_NUMERIC: &str = "the string must be of numeric type in order to use this method. Verify first with 'string.is_number() == true' to check it";
 pub const ERROR_STRING_RHS: &str = "rhs must be of type string";

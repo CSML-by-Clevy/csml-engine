@@ -100,3 +100,59 @@ fn string_step_2() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn string_step_3() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {"content":{"text": "true"}, "content_type":"text"}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_3",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn string_step_4() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {"content_type":"text", "content":{"text": "[\"Hello\"]"}},
+            {"content_type":"text", "content":{"text": "[\"\",\"ello\"]"}},
+            {"content_type":"text", "content":{"text": "[\"He\",\"\",\"o\"]"}},
+            {"content_type":"text", "content":{"text": "[\"He\",\"o\"]"}},
+            {"content_type":"text", "content":{"text": "[\"Hell\",\"\"]"}}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_4",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
