@@ -133,8 +133,8 @@ fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), En
             let hold = serde_json::to_value(string)?;
             let mut hash = Md5::new();
 
-            hash.input(flow.content.as_bytes());
-            let new_hash = format!("{:x}", hash.result());
+            hash.update(flow.content.as_bytes());
+            let new_hash = format!("{:x}", hash.finalize());
 
             // cleanup the current hold and restart flow
             if new_hash != hold["hash"] {

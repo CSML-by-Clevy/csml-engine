@@ -1,3 +1,7 @@
+fn test() 
+    return 4
+
+
 start:
 
     say "Hello World 😆"

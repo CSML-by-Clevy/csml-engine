@@ -50,12 +50,12 @@ pub fn interpret_step(
             }) => {
                 let mut hash = Md5::new();
 
-                hash.input(current_flow.content.as_bytes());
+                hash.update(current_flow.content.as_bytes());
 
                 let state_hold: Value = serde_json::json!({
                     "index": new_index,
                     "step_vars": step_vars,
-                    "hash": format!("{:x}", hash.result())
+                    "hash": format!("{:x}", hash.finalize())
                 });
                 set_state_items(data, "hold", vec![("position", &state_hold)])?;
                 data.context.hold = Some(Hold {

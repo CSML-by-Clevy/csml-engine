@@ -150,12 +150,12 @@ pub fn search_function<'a>(
             Some(flow) => {
                 get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
                     position: import.position.clone(),
-                    message: format!("function '{}' not found in bot", import.name),
+                    message: format!("function '{}' not found in {}", import.name, flow_name),
                 })
             }
             None => Err(ErrorInfo {
                 position: import.position.clone(),
-                message: format!("function '{}' not found in bot", import.name),
+                message: format!("function '{}' not found in {}", import.name, flow_name),
             }),
         },
         None => {
@@ -200,10 +200,11 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     }
 
     let warnings = Warnings::get();
+    // only use the linter if there is no error in the paring otherwise the linter will catch false errors
     if errors.is_empty() {
         lint_flow(&bot, &mut errors);
+        validate_imports(&flows, imports, &mut errors);
     }
-    validate_imports(&flows, imports, &mut errors);
 
     Warnings::clear();
     Linter::clear();
@@ -246,7 +247,7 @@ pub fn interpret(
         _ => serde_json::Map::new(),
     };
 
-    // TMP #####################
+    // ######################## TODO: this is temporary as long as we do not receive the ast
     let bot = validate_bot(bot);
     let flows = match bot.flows {
         Some(flows) => flows,
