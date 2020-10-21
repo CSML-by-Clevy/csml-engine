@@ -104,11 +104,9 @@ fn string_step_2() {
 #[test]
 fn string_step_3() {
     let data = r#"{
-        "memories":[
-            {"key":"s", "value":"Hello"}
-        ],
+        "memories":[],
         "messages":[
-            {"content":{"text": "true"}, "content_type":"text"},
+            {"content":{"text": "true"}, "content_type":"text"}
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
