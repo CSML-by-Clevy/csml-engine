@@ -128,6 +128,10 @@ lazy_static! {
                 Right::Read,
             ),
         );
+        map.insert(
+            "split",
+            (PrimitiveString::split as PrimitiveMethod, Right::Read),
+        );
 
         map.insert(
             "abs",
@@ -777,6 +781,41 @@ impl PrimitiveString {
         s.make_ascii_uppercase();
 
         Ok(PrimitiveString::get_literal(&s, interval))
+    }
+
+    fn split(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "string(separator: string) => array";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let separator = match args.get("arg0") {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                Literal::get_value::<String>(&res.primitive, interval, ERROR_STRING_SPLIT.to_owned())?
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_ARRAY_JOIN.to_owned(),
+                ));
+            }
+        };
+
+        let mut vector: Vec<Literal> = Vec::new();
+
+        for result in string.value.split(separator) {
+            vector.push(PrimitiveString::get_literal(result, interval));
+        }
+
+        Ok(PrimitiveArray::get_literal(&vector, interval))
     }
 }
 
