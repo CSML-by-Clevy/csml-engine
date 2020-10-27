@@ -1,14 +1,14 @@
 
 
-fn toto():
+fn toto()
     return 4
 
-start:
+start 
+    // return 4
 
-    return 4
-
-    sey "hola"
-
+    // sey "hola"
+    do start = 2
     say start
 
     goto end
+
