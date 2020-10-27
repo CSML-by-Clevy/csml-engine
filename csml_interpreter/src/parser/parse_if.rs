@@ -24,7 +24,7 @@ where
     delimited(
         preceded(comment, parse_l_parentheses),
         parse_operator,
-        preceded(comment, parse_r_parentheses),
+        parse_r_parentheses,
     )(s)
 }
 

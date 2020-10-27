@@ -33,7 +33,7 @@ use parse_scope::{parse_fn_root, parse_root};
 use parse_var_types::parse_fn_args;
 use tools::*;
 
-use nom::error::{ParseError};
+use nom::error::ParseError;
 use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
@@ -88,23 +88,22 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                 flow_type,
             })
         }
-        Err(e) => {
-            match e {
-                Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
+        Err(e) => match e {
+            Err::Error(err) | Err::Failure(err) => {
+                Err(gen_error_info(
                     Position::new(Interval::new_as_u32(
                         err.input.location_line(),
                         err.input.get_column() as u32,
                     )),
                     convert_error_2(Span::new(slice), err),
-                )),
-                Err::Incomplete(_err) => unreachable!(),
+                ))
             }
+            Err::Incomplete(_err) => unreachable!(),
         },
     }
 }
 
-fn convert_error_2<'a>(input: Span<'a>, e: CustomError<Span<'a>>)
-  -> String {
+fn convert_error_2<'a>(input: Span<'a>, e: CustomError<Span<'a>>) -> String {
     use std::fmt::Write;
 
     let mut result = String::new();
@@ -118,18 +117,18 @@ fn convert_error_2<'a>(input: Span<'a>, e: CustomError<Span<'a>>)
     // Find the line that includes the subslice:
     // Find the *last* newline before the substring starts
     let line_begin = prefix
-    .iter()
-    .rev()
-    .position(|&b| b == b'\n')
-    .map(|pos| offset - pos)
-    .unwrap_or(0);
+        .iter()
+        .rev()
+        .position(|&b| b == b'\n')
+        .map(|pos| offset - pos)
+        .unwrap_or(0);
 
     // Find the full line after that newline
     let line = input.fragment()[line_begin..]
-    .lines()
-    .next()
-    .unwrap_or(&input.fragment()[line_begin..])
-    .trim_end();
+        .lines()
+        .next()
+        .unwrap_or(&input.fragment()[line_begin..])
+        .trim_end();
 
     // The (1-indexed) column number is the offset of our substring into that line
     let column_number = e.input.get_column();
@@ -149,7 +148,7 @@ fn convert_error_2<'a>(input: Span<'a>, e: CustomError<Span<'a>>)
     // Because `write!` to a `String` is infallible, this `unwrap` is fine.
     .unwrap();
 
-  result
+    result
 }
 
 ////////////////////////////////////////////////////////////////////////////////

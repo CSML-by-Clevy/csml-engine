@@ -10,7 +10,7 @@ use crate::parser::{
     tools::{get_interval, get_string, get_tag},
     ExecutionState, ScopeState, StateContext,
 };
-use nom::{bytes::complete::tag, combinator::opt, error::ParseError, sequence::preceded, *};
+use nom::{bytes::complete::tag, combinator::{opt, cut}, error::ParseError, sequence::preceded, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTION
@@ -43,7 +43,7 @@ where
     let (s, _) = preceded(comment, tag(R_PAREN))(s)?;
 
     let (s, value) = preceded(comment, get_string)(s)?;
-    let (s, ..) = get_tag(value, IN)(s)?;
+    let (s, ..) = cut(get_tag(value, IN))(s)?;
 
     let (s, expr) = parse_operator(s)?;
 

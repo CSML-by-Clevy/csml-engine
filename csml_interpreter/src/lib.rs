@@ -1,7 +1,7 @@
 pub mod data;
 pub mod error_format;
-pub mod interpreter;
 pub mod imports;
+pub mod interpreter;
 pub mod linter;
 pub mod parser;
 
@@ -19,9 +19,9 @@ use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
 use data::warnings::Warnings;
-use data::{Data, ContextJson, Position};
-use imports::validate_imports;
+use data::{ContextJson, Data, Position};
 use error_format::*;
+use imports::validate_imports;
 use linter::data::Linter;
 use linter::linter::lint_flow;
 use parser::ExitCondition;

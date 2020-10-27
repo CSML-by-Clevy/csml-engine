@@ -1,14 +1,14 @@
-
-
-fn toto()
+fn test():
     return 4
 
-start 
+start:
     // return 4
 
     // sey "hola"
-    do start = 2
-    say start
+    // do 4 as say
+    // do say
+    // say 3
 
+    foreach(elem 
     goto end
 

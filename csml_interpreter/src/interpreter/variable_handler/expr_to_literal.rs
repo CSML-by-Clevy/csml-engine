@@ -5,8 +5,8 @@ use crate::data::Position;
 use crate::data::{
     ast::*, tokens::*, ArgsType, Context, Data, Literal, MemoryType, MessageData, MSG,
 };
-use crate::imports::search_function;
 use crate::error_format::*;
+use crate::imports::search_function;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
     builtins::{match_builtin, match_native_builtin},

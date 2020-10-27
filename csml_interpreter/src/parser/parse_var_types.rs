@@ -50,7 +50,7 @@ where
     delimited(
         preceded(comment, tag(L_PAREN)),
         parse_operator,
-        preceded(comment, parse_r_parentheses),
+        parse_r_parentheses,
     )(s)
 }
 
@@ -96,7 +96,7 @@ where
                 separated_list(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
                 opt(preceded(comment, tag(COMMA))),
             )),
-            preceded(comment, parse_r_parentheses),
+            parse_r_parentheses,
         )),
     )(s)?;
     // let (s, end) = get_interval(s)?;
@@ -119,7 +119,7 @@ where
                 ),
                 opt(preceded(comment, tag(COMMA))),
             )),
-            preceded(comment, parse_r_parentheses),
+            parse_r_parentheses,
         )),
     )(s)?;
     let (s, end) = get_interval(s)?;

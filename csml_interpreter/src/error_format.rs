@@ -39,8 +39,10 @@ pub const ERROR_DOUBLE_CLOSE_BRACE: &str = "expecting '}}' to end expandable str
 pub const ERROR_UNREACHABLE: &str = "unreachable";
 pub const ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING: &str =
     "wrong argument(s) given to expandable string";
-pub const ERROR_FN_SCOPE: &str = "invalid action. Use a valid action for this type of scope [do, if, return, ...]"; //\ndoc: https://docs.csml.dev/language/native-csml-functions
-pub const ERROR_SCOPE: &str = "invalid action. Use a valid action for this type of scope [say, do, if, ...]"; //\ndoc: https://docs.csml.dev/language/standard-library/keywords
+pub const ERROR_FN_SCOPE: &str =
+    "invalid action. Use a valid action for this type of scope [do, if, return, ...]"; //\ndoc: https://docs.csml.dev/language/native-csml-functions
+pub const ERROR_SCOPE: &str =
+    "invalid action. Use a valid action for this type of scope [say, do, if, ...]"; //\ndoc: https://docs.csml.dev/language/standard-library/keywords
 
 // Linter Errors
 pub const ERROR_NO_FLOW: &str = "bot must have at least one flow";
@@ -169,7 +171,8 @@ pub const ERROR_STRING_END_WITH: &str =
 pub const ERROR_STRING_END_WITH_REGEX: &str =
     "[ends_with_regex] takes one parameter of type String. Usage: string.ends_with_regex(\"regex\")";
 pub const ERROR_STRING_FROM_JSON: &str = "[from_json] [!] string to object failed]";
-pub const ERROR_STRING_SPLIT: &str = "[split] takes one paramater of type String. Usage: string.split(\"separator\")";
+pub const ERROR_STRING_SPLIT: &str =
+    "[split] takes one paramater of type String. Usage: string.split(\"separator\")";
 pub const ERROR_STRING_MATCH_REGEX: &str =
     "[match_regex] takes one parameter of type String. Usage: string.match_regex(\"regex\")";
 pub const ERROR_STRING_POW: &str =

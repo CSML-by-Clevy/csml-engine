@@ -20,7 +20,9 @@ use crate::parser::{
     tools::{get_interval, get_string, get_tag},
     ExecutionState, StateContext,
 };
-use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, *};
+use nom::{
+    branch::alt, bytes::complete::tag, combinator::cut, error::*, sequence::preceded, Err, IResult,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
@@ -80,7 +82,10 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, DO)(s)?;
 
-    let (s, expr) = preceded(comment, alt((parse_assignation_with_path, parse_operator)))(s)?;
+    let (s, expr) = preceded(
+        comment,
+        cut(alt((parse_assignation_with_path, parse_operator))),
+    )(s)?;
 
     let (s, do_type) = match expr {
         Expr::ObjectExpr(ObjectType::As(ident, expr)) => {
@@ -110,7 +115,7 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, REMEMBER)(s)?;
 
-    let (s, (idents, expr)) = preceded(comment, alt((parse_assignation, parse_remember_as)))(s)?;
+    let (s, (idents, expr)) = preceded(comment, cut(alt((parse_assignation, parse_remember_as))))(s)?;
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -135,7 +140,7 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, SAY)(s)?;
 
-    let (s, expr) = preceded(comment, parse_operator)(s)?;
+    let (s, expr) = preceded(comment, cut(parse_operator))(s)?;
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),

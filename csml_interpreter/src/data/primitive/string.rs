@@ -799,7 +799,11 @@ impl PrimitiveString {
 
         let separator = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive, interval, ERROR_STRING_SPLIT.to_owned())?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    interval,
+                    ERROR_STRING_SPLIT.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(

@@ -1,5 +1,5 @@
-use crate::data::error_info::ErrorInfo;
 use crate::data::ast::{Expr, Flow, ImportScope, InstructionScope};
+use crate::data::error_info::ErrorInfo;
 
 use std::collections::HashMap;
 
@@ -55,12 +55,18 @@ pub fn search_function<'a>(
             Some(flow) => {
                 get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
                     position: import.position.clone(),
-                    message: format!("function '{}' not found in '{}' flow", import.name, flow_name),
+                    message: format!(
+                        "function '{}' not found in '{}' flow",
+                        import.name, flow_name
+                    ),
                 })
             }
             None => Err(ErrorInfo {
                 position: import.position.clone(),
-                message: format!("function '{}' not found in '{}' flow", import.name, flow_name),
+                message: format!(
+                    "function '{}' not found in '{}' flow",
+                    import.name, flow_name
+                ),
             }),
         },
         None => {
