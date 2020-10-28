@@ -75,7 +75,7 @@ known:
 
 The full documentation of the project is available on https://docs.csml.dev/language.
 
-## Using CSML Studio
+# Getting Started
 
 The simplest way to get started with CSML is to use CSML Studio, a free online development environment with everything already setup to start creating bots right away, directly in your browser.
 
