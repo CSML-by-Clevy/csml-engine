@@ -1,6 +1,6 @@
 [package]
 name = "csml_engine_node"
-version = "1.3.4"
+version = "1.3.5"
 authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
 license = "MIT"
 build = "build.rs"
