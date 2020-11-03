@@ -5,7 +5,6 @@ pub mod parse_built_in;
 pub mod parse_comments;
 pub mod parse_expand_string;
 pub mod parse_foreach;
-// pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;
 pub mod parse_if;
@@ -89,14 +88,12 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
         }
         Err(e) => match e {
             Err::Error(err) | Err::Failure(err) => {
-                println!("=> {}", convert_error_2(Span::new(slice), err.clone()));
-
                 Err(gen_error_info(
                     Position::new(Interval::new_as_u32(
                         err.input.location_line(),
                         err.input.get_column() as u32,
                     )),
-                    convert_error_2(Span::new(slice), err),
+                    convert_error(Span::new(slice), err),
                 ))
             }
             Err::Incomplete(_err) => unreachable!(),
@@ -104,7 +101,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
     }
 }
 
-fn convert_error_2<'a>(input: Span<'a>, e: CustomError<Span<'a>>) -> String {
+fn convert_error<'a>(input: Span<'a>, e: CustomError<Span<'a>>) -> String {
     use std::fmt::Write;
 
     let mut result = String::new();
