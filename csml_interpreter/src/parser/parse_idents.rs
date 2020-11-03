@@ -7,7 +7,7 @@ use crate::parser::{
     tools::get_interval,
     tools::{get_string, get_tag},
 };
-use nom::{error::ParseError, sequence::preceded, Err::*, *};
+use nom::{combinator::cut, error::ParseError, sequence::preceded, Err::*, IResult};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -44,20 +44,20 @@ pub fn parse_string_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, var) = get_string(s)?;
-    let (s, ..) = validate_string(s, UTILISATION_RESERVED, &var)?;
+    let (span, var) = get_string(s)?;
+    let (_, ..) = validate_string(s, UTILISATION_RESERVED, &var)?;
 
-    Ok((s, var))
+    Ok((span, var))
 }
 
 pub fn parse_string_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, var) = get_string(s)?;
-    let (s, ..) = validate_string(s, ASSIGNATION_RESERVED, &var)?;
+    let (span, var) = get_string(s)?;
+    let (_, ..) = validate_string(s, ASSIGNATION_RESERVED, &var)?;
 
-    Ok((s, var))
+    Ok((span, var))
 }
 
 pub fn parse_idents_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
@@ -65,7 +65,6 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, position) = preceded(comment, get_interval)(s)?;
-
     let (s, var) = parse_string_usage(s)?;
 
     Ok((s, form_idents(var.to_owned(), position)))
@@ -76,7 +75,6 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, position) = preceded(comment, get_interval)(s)?;
-
     let (s, var) = parse_string_assignation(s)?;
 
     Ok((s, form_idents(var.to_owned(), position)))
@@ -90,7 +88,7 @@ where
 
     match arg {
         Err(_) => Ok((s, expr)),
-        Ok((s2, tmp)) => match preceded(get_tag(tmp, AS), parse_idents_assignation)(s2) {
+        Ok((s2, tmp)) => match preceded(get_tag(tmp, AS), cut(parse_idents_assignation))(s2) {
             Ok((s, name)) => Ok((s, Expr::ObjectExpr(ObjectType::As(name, Box::new(expr))))),
             Err(err) => match err {
                 Failure(err) => Err(Failure(err)),

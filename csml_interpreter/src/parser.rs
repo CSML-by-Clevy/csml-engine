@@ -5,7 +5,6 @@ pub mod parse_built_in;
 pub mod parse_comments;
 pub mod parse_expand_string;
 pub mod parse_foreach;
-// pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;
 pub mod parse_if;
@@ -22,7 +21,7 @@ pub mod tools;
 
 use crate::linter::data::Linter;
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExecutionState, ExitCondition, StateContext, ScopeState};
+pub use state_context::{ExecutionState, ExitCondition, ScopeState, StateContext};
 
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
@@ -45,8 +44,11 @@ pub fn parse_step_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, ident) = match parse_idents_assignation(s) {
-        Ok((s, ident)) => (s, ident),
+    // this will save the location of teh key word in order to display the error correctly
+    let (command_span, _) = comment(s)?;
+
+    let (s2, ident) = match parse_idents_assignation(command_span) {
+        Ok((s2, ident)) => (s2, ident),
         Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
             return match s.fragment().is_empty() {
                 true => Err(gen_nom_error(s, ERROR_PARSING)),
@@ -56,10 +58,10 @@ where
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };
 
-    match tag(COLON)(s) {
+    match tag(COLON)(s2) {
         Ok((rest, _)) => Ok((rest, ident)),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
-            Err(gen_nom_failure(s, ERROR_PARSING))
+        Err(Err::Error((_, _err))) | Err(Err::Failure((_, _err))) => {
+            Err(gen_nom_failure(command_span, ERROR_PARSING))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
@@ -90,11 +92,59 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                     err.input.location_line(),
                     err.input.get_column() as u32,
                 )),
-                err.error,
+                convert_error(Span::new(slice), err),
             )),
             Err::Incomplete(_err) => unreachable!(),
         },
     }
+}
+
+fn convert_error<'a>(input: Span<'a>, e: CustomError<Span<'a>>) -> String {
+    use std::fmt::Write;
+
+    let mut result = String::new();
+
+    let offset = e.input.location_offset();
+    let prefix = &input.fragment().as_bytes()[..offset];
+
+    // Count the number of newlines in the first `offset` bytes of input
+    let line_number = e.input.location_line();
+
+    // Find the line that includes the subslice:
+    // Find the *last* newline before the substring starts
+    let line_begin = prefix
+        .iter()
+        .rev()
+        .position(|&b| b == b'\n')
+        .map(|pos| offset - pos)
+        .unwrap_or(0);
+
+    // Find the full line after that newline
+    let line = input.fragment()[line_begin..]
+        .lines()
+        .next()
+        .unwrap_or(&input.fragment()[line_begin..])
+        .trim_end();
+
+    // The (1-indexed) column number is the offset of our substring into that line
+    let column_number = e.input.get_column();
+
+    write!(
+        &mut result,
+        "at line {line_number},\n\
+            {line}\n\
+            {caret:>column$}\n\
+            {context}\n\n",
+        line_number = line_number,
+        context = e.error,
+        line = line,
+        caret = '^',
+        column = column_number,
+    )
+    // Because `write!` to a `String` is infallible, this `unwrap` is fine.
+    .unwrap();
+
+    result
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,8 +192,8 @@ where
 
     let (s, _) = match preceded(comment, tag(COLON))(s) {
         Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
-        Ok((s, _)) => return Err(gen_nom_failure(s, ERROR_FN_COLON)),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+        Ok(_) => return Err(gen_nom_failure(s, ERROR_FN_COLON)),
+        Err(Err::Error((_s, _err))) | Err(Err::Failure((_s, _err))) => {
             return Err(gen_nom_failure(s, ERROR_FN_COLON))
         }
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),

@@ -12,9 +12,9 @@ pub mod video;
 pub mod wait;
 
 use crate::data::error_info::ErrorInfo;
-use std::{env, fs};
 use std::io::prelude::*;
 use std::path::Path;
+use std::{env, fs};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTION
@@ -24,7 +24,6 @@ fn read_components_dir(
     dir: &Path,
     map: &mut serde_json::Map<String, serde_json::Value>,
 ) -> Result<(), ErrorInfo> {
-
     if dir.is_dir() {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
@@ -46,8 +45,7 @@ fn read_components_dir(
                 }
             }
         }
-    }
-    else {
+    } else {
         eprintln!("{} is not a directory!", dir.to_str().unwrap());
     }
 

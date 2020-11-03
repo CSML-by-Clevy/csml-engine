@@ -112,12 +112,13 @@ where
 
     let (rest, expr) = match parse_operator(s) {
         Ok((rest, val)) => (rest, val),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+        Err(Err::Error(_e)) => {
             let (_, interval) = get_interval(s)?;
             let expr = Expr::LitExpr(PrimitiveString::get_literal("", interval));
 
             (s, expr)
         }
+        Err(Err::Failure(e)) => return Err(Err::Failure(e)),
         Err(Err::Incomplete(needed)) => {
             return Err(Err::Incomplete(needed));
         }

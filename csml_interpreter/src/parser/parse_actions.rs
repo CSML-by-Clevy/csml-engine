@@ -5,8 +5,8 @@ use crate::data::{
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
 use crate::error_format::{
-    gen_nom_failure, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_HOLD, ERROR_REMEMBER, ERROR_RETURN,
-    ERROR_SCOPE, ERROR_USE,
+    gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_HOLD,
+    ERROR_REMEMBER, ERROR_RETURN, ERROR_SCOPE, ERROR_USE,
 };
 // use crate::linter::Linter;
 use crate::parser::{
@@ -20,7 +20,7 @@ use crate::parser::{
     tools::{get_interval, get_string, get_tag},
     ExecutionState, StateContext,
 };
-use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, *};
+use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, Err, IResult};
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
@@ -69,6 +69,21 @@ where
     }
 }
 
+fn parse_action_argument<'a, E, F, G>(s: Span<'a>, func: F) -> IResult<Span<'a>, G, E>
+where
+    E: ParseError<Span<'a>>,
+    F: Fn(Span<'a>) -> IResult<Span<'a>, G, E>,
+{
+    match preceded(comment, func)(s) {
+        Ok(value) => Ok(value),
+        Err(Err::Error(e)) => {
+            return Err(Err::Failure(E::add_context(s, ERROR_ACTION_ARGUMENT, e)))
+        }
+        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +95,7 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, DO)(s)?;
 
-    let (s, expr) = preceded(comment, alt((parse_assignation_with_path, parse_operator)))(s)?;
+    let (s, expr) = parse_action_argument(s, alt((parse_assignation_with_path, parse_operator)))?;
 
     let (s, do_type) = match expr {
         Expr::ObjectExpr(ObjectType::As(ident, expr)) => {
@@ -110,7 +125,8 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, REMEMBER)(s)?;
 
-    let (s, (idents, expr)) = preceded(comment, alt((parse_assignation, parse_remember_as)))(s)?;
+    let (s, (idents, expr)) =
+        parse_action_argument(s, alt((parse_assignation, parse_remember_as)))?;
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -135,7 +151,7 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, SAY)(s)?;
 
-    let (s, expr) = preceded(comment, parse_operator)(s)?;
+    let (s, expr) = parse_action_argument(s, parse_operator)?;
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -245,7 +261,10 @@ where
     let (s, ..) = get_tag(name, RETURN)(s)?;
 
     let (s, expr) = match preceded(comment, parse_operator)(s) {
-        Ok(value) => value,
+        Ok(value) => {
+            println!("test => {:?}", value.1);
+            value
+        }
         Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_RETURN, e))),
         Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
@@ -286,13 +305,14 @@ fn catch_scope_common_mistakes<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, I
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s2, ..) = comment(s)?;
+    let (_, name) = get_string(s)?;
 
     if SCOPE_REJECTED.contains(&name.as_ref()) {
         return Err(gen_nom_failure(s, ERROR_SCOPE));
     }
 
-    Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+    Err(Err::Error(E::from_error_kind(s2, ErrorKind::Tag)))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

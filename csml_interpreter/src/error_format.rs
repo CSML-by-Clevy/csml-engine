@@ -10,6 +10,8 @@ use nom::{
 pub use crate::data::error_info::ErrorInfo;
 pub use data::CustomError;
 
+// TODO: add link to docs
+
 // Parsing Errors
 pub const ERROR_PARENTHESES: &str = "list elem type ( ... ) not found";
 pub const ERROR_PARENTHESES_END: &str =
@@ -18,11 +20,15 @@ pub const ERROR_NUMBER_AS_IDENT: &str = "Int/Float can't be used as identifier";
 pub const ERROR_FLOW_STEP: &str = "syntax error.";
 pub const ERROR_RESERVED: &str = "reserved keyword can't be used as identifier";
 pub const ERROR_PARSING: &str =
-    "invalid argument. Use one of the action keywords [say, do, if, ...]";
+    "invalid argument. One of the action keywords [say, do, if, ...] is missing";
 pub const ERROR_REMEMBER: &str =
     "remember must be assigning to a variable via '='. Example: 'remember key = value'";
 pub const ERROR_USE: &str =
     "'use' must be assigning a variable with keyword 'as'. Example: 'use value as key'";
+pub const ERROR_ACTION_ARGUMENT: &str =
+    "expect valid argument after action keywords. Example: say value";
+pub const ERROR_IMPORT_ARGUMENT: &str =
+    "import expect valid function name. Example: import function from flow";
 pub const ERROR_BREAK: &str = "break can only be used inside foreach";
 pub const ERROR_RETURN: &str = "return expects a value to return";
 pub const ERROR_HOLD: &str = "hold cannot be used inside foreach";
@@ -37,9 +43,10 @@ pub const ERROR_DOUBLE_CLOSE_BRACE: &str = "expecting '}}' to end expandable str
 pub const ERROR_UNREACHABLE: &str = "unreachable";
 pub const ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING: &str =
     "wrong argument(s) given to expandable string";
-// TODO: add link to doc
-pub const ERROR_FN_SCOPE: &str = "use valid actions";
-pub const ERROR_SCOPE: &str = "use valid actions";
+pub const ERROR_FN_SCOPE: &str =
+    "invalid action. Use a valid action for this type of scope [do, if, return, ...]"; //\ndoc: https://docs.csml.dev/language/native-csml-functions
+pub const ERROR_SCOPE: &str =
+    "invalid action. Use a valid action for this type of scope [say, do, if, ...]"; //\ndoc: https://docs.csml.dev/language/standard-library/keywords
 
 // Linter Errors
 pub const ERROR_NO_FLOW: &str = "bot must have at least one flow";
@@ -168,7 +175,8 @@ pub const ERROR_STRING_END_WITH: &str =
 pub const ERROR_STRING_END_WITH_REGEX: &str =
     "[ends_with_regex] takes one parameter of type String. Usage: string.ends_with_regex(\"regex\")";
 pub const ERROR_STRING_FROM_JSON: &str = "[from_json] [!] string to object failed]";
-pub const ERROR_STRING_SPLIT: &str = "[split] takes one paramater of type String. Usage: string.split(\"separator\")";
+pub const ERROR_STRING_SPLIT: &str =
+    "[split] takes one paramater of type String. Usage: string.split(\"separator\")";
 pub const ERROR_STRING_MATCH_REGEX: &str =
     "[match_regex] takes one parameter of type String. Usage: string.match_regex(\"regex\")";
 pub const ERROR_STRING_POW: &str =
