@@ -1,4 +1,7 @@
 use crate::data::{ast::*, primitive::PrimitiveNull, tokens::*, Position};
+use crate::error_format::{
+    ERROR_IMPORT_ARGUMENT
+};
 use crate::parser::{
     get_interval, get_string, get_tag,
     parse_comments::comment,
@@ -8,15 +11,12 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{map, opt},
-    error::ParseError,
+    error::{ParseError, ErrorKind},
     multi::separated_list,
     sequence::{preceded, terminated, tuple},
     IResult,
+    Err
 };
-
-////////////////////////////////////////////////////////////////////////////////
-//// TOOL FUNCTION
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 //// PRIVATE FUNCTIONS
@@ -65,7 +65,14 @@ fn parse_import_params<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    alt((parse_group, parse_fn_name_as_vec))(s)
+    match alt((parse_group, parse_fn_name_as_vec))(s) {
+        Ok(value) => Ok(value),
+        Err(Err::Error(e)) => {
+            return Err(Err::Failure(E::add_context(s, ERROR_IMPORT_ARGUMENT, e)))
+        }
+        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+    }
 }
 
 fn parse_from<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>

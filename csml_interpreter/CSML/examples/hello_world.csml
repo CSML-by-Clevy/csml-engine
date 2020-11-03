@@ -1,7 +1,5 @@
 start:
 
-    // say "Hello World 😆"
-    // say myfunc(1, 2
-    say "hello {{ myfunc(1, 2 }}"
+    say "Hello World 😆"
 
     goto end
