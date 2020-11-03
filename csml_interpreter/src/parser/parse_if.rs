@@ -9,7 +9,7 @@ use crate::parser::{
     ScopeState, StateContext,
 };
 use nom::{
-    branch::alt, bytes::complete::tag, combinator::opt , error::ParseError, sequence::delimited,
+    branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::delimited,
     sequence::preceded, *,
 };
 
@@ -21,11 +21,7 @@ fn parse_strict_condition_group<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E
 where
     E: ParseError<Span<'a>>,
 {
-    delimited(
-        parse_l_parentheses,
-        parse_operator,
-        parse_r_parentheses,
-    )(s)
+    delimited(parse_l_parentheses, parse_operator, parse_r_parentheses)(s)
 }
 
 fn parse_else_if<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Box<IfStatement>, InstructionInfo), E>

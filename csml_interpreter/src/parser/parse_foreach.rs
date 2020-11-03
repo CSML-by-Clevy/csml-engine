@@ -10,7 +10,13 @@ use crate::parser::{
     tools::{get_interval, get_string, get_tag},
     ExecutionState, ScopeState, StateContext,
 };
-use nom::{bytes::complete::tag, combinator::{opt, cut}, error::ParseError, sequence::preceded, *};
+use nom::{
+    bytes::complete::tag,
+    combinator::{cut, opt},
+    error::ParseError,
+    sequence::preceded,
+    *,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTION

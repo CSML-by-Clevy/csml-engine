@@ -5,8 +5,8 @@ use crate::data::{
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
 use crate::error_format::{
-    gen_nom_failure, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_HOLD, ERROR_REMEMBER, ERROR_RETURN,
-    ERROR_ACTION_ARGUMENT, ERROR_SCOPE, ERROR_USE,
+    gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_HOLD,
+    ERROR_REMEMBER, ERROR_RETURN, ERROR_SCOPE, ERROR_USE,
 };
 // use crate::linter::Linter;
 use crate::parser::{
@@ -20,9 +20,7 @@ use crate::parser::{
     tools::{get_interval, get_string, get_tag},
     ExecutionState, StateContext,
 };
-use nom::{
-    branch::alt, bytes::complete::tag, error::*, sequence::preceded, Err, IResult,
-};
+use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, Err, IResult};
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
@@ -74,14 +72,13 @@ where
 fn parse_action_argument<'a, E, F, G>(s: Span<'a>, func: F) -> IResult<Span<'a>, G, E>
 where
     E: ParseError<Span<'a>>,
-    F: Fn(Span<'a>) -> IResult<Span<'a>, G, E>
+    F: Fn(Span<'a>) -> IResult<Span<'a>, G, E>,
 {
-    match preceded(
-        comment,
-        func,
-    )(s) {
+    match preceded(comment, func)(s) {
         Ok(value) => Ok(value),
-        Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_ACTION_ARGUMENT, e))),
+        Err(Err::Error(e)) => {
+            return Err(Err::Failure(E::add_context(s, ERROR_ACTION_ARGUMENT, e)))
+        }
         Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     }
@@ -128,7 +125,8 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, REMEMBER)(s)?;
 
-    let (s, (idents, expr)) = parse_action_argument(s, alt((parse_assignation, parse_remember_as)))?;
+    let (s, (idents, expr)) =
+        parse_action_argument(s, alt((parse_assignation, parse_remember_as)))?;
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -154,7 +152,6 @@ where
     let (s, ..) = get_tag(name, SAY)(s)?;
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;
-
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -267,7 +264,7 @@ where
         Ok(value) => {
             println!("test => {:?}", value.1);
             value
-        },
+        }
         Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_RETURN, e))),
         Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
