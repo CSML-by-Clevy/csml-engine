@@ -27,7 +27,8 @@ pub const ERROR_USE: &str =
     "'use' must be assigning a variable with keyword 'as'. Example: 'use value as key'";
 pub const ERROR_ACTION_ARGUMENT: &str =
     "expect valid argument after action keywords. Example: say value";
-pub const ERROR_IMPORT_ARGUMENT: &str = "import expect valid function name. Example: import function from flow";
+pub const ERROR_IMPORT_ARGUMENT: &str =
+    "import expect valid function name. Example: import function from flow";
 pub const ERROR_BREAK: &str = "break can only be used inside foreach";
 pub const ERROR_RETURN: &str = "return expects a value to return";
 pub const ERROR_HOLD: &str = "hold cannot be used inside foreach";

@@ -1,7 +1,5 @@
 use crate::data::{ast::*, primitive::PrimitiveNull, tokens::*, Position};
-use crate::error_format::{
-    ERROR_IMPORT_ARGUMENT
-};
+use crate::error_format::ERROR_IMPORT_ARGUMENT;
 use crate::parser::{
     get_interval, get_string, get_tag,
     parse_comments::comment,
@@ -11,11 +9,10 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{map, opt},
-    error::{ParseError, ErrorKind},
+    error::{ErrorKind, ParseError},
     multi::separated_list,
     sequence::{preceded, terminated, tuple},
-    IResult,
-    Err
+    Err, IResult,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

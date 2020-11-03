@@ -9,7 +9,6 @@ use crate::parser::tools::{get_distance_brace, get_interval, get_range_interval}
 use nom::{
     bytes::complete::tag,
     error::ParseError,
-    combinator::cut,
     sequence::{delimited, preceded},
     *,
 };
@@ -111,7 +110,19 @@ where
 {
     StateContext::set_string(StringState::Expand);
 
-    let (rest, expr) = parse_operator(s)?;
+    let (rest, expr) = match parse_operator(s) {
+        Ok((rest, val)) => (rest, val),
+        Err(Err::Error(_e)) => {
+            let (_, interval) = get_interval(s)?;
+            let expr = Expr::LitExpr(PrimitiveString::get_literal("", interval));
+
+            (s, expr)
+        }
+        Err(Err::Failure(e)) => return Err(Err::Failure(e)),
+        Err(Err::Incomplete(needed)) => {
+            return Err(Err::Incomplete(needed));
+        }
+    };
 
     StateContext::set_string(StringState::Normal);
 
@@ -136,12 +147,10 @@ where
                     get_distance_brace(&string, '}'),
                 ) {
                     (Some(lhs_distance), Some(rhs_distance)) if lhs_distance < rhs_distance => {
-
                         let (rest, _) =
                             add_to_vector(string, lhs_distance, &mut vector, &mut interval)?;
                         let (rest, expression) =
-                            delimited(tag("{{"), cut(parse_complex_string), parse_close_bracket)(rest)?;
-
+                            delimited(tag("{{"), parse_complex_string, parse_close_bracket)(rest)?;
                         vector.push(expression);
 
                         string = rest;

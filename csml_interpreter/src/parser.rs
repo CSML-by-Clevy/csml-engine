@@ -87,15 +87,13 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
             })
         }
         Err(e) => match e {
-            Err::Error(err) | Err::Failure(err) => {
-                Err(gen_error_info(
-                    Position::new(Interval::new_as_u32(
-                        err.input.location_line(),
-                        err.input.get_column() as u32,
-                    )),
-                    convert_error(Span::new(slice), err),
-                ))
-            }
+            Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
+                Position::new(Interval::new_as_u32(
+                    err.input.location_line(),
+                    err.input.get_column() as u32,
+                )),
+                convert_error(Span::new(slice), err),
+            )),
             Err::Incomplete(_err) => unreachable!(),
         },
     }
