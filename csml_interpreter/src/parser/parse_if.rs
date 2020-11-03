@@ -9,7 +9,7 @@ use crate::parser::{
     ScopeState, StateContext,
 };
 use nom::{
-    branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::delimited,
+    branch::alt, bytes::complete::tag, combinator::opt , error::ParseError, sequence::delimited,
     sequence::preceded, *,
 };
 
@@ -22,7 +22,7 @@ where
     E: ParseError<Span<'a>>,
 {
     delimited(
-        preceded(comment, parse_l_parentheses),
+        parse_l_parentheses,
         parse_operator,
         parse_r_parentheses,
     )(s)

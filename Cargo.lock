@@ -1934,9 +1934,9 @@ dependencies = [
 
 [[package]]
 name = "nom_locate"
-version = "2.0.0"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e4726500a3d0297dd38edc169d919ad997a9931b4645b59ce0231e88536e213"
+checksum = "a67484adf5711f94f2f28b653bf231bff8e438be33bf5b0f35935a0db4f618a2"
 dependencies = [
  "bytecount",
  "memchr",

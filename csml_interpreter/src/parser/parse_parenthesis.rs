@@ -12,9 +12,11 @@ pub fn parse_l_parentheses<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    match tag(L_PAREN)(s) {
+    let (s2, _) = comment(s)?;
+
+    match tag(L_PAREN)(s2) {
         Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+        Err(Err::Error((_, _err))) | Err(Err::Failure((_, _err))) => {
             Err(gen_nom_failure(s, ERROR_PARENTHESES))
         }
         Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),

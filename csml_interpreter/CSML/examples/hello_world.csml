@@ -1,14 +1,23 @@
-fn test():
-    return 4
+// fn test():
+//     return 
+//     say test 
 
 start:
     // return 4
+
+    // do 
+    // say 
+    // remember 
+
+    // foreach
+    if
 
     // sey "hola"
     // do 4 as say
     // do say
     // say 3
 
-    foreach(elem 
-    goto end
+
+// foreach(elem 
+//     goto end
 

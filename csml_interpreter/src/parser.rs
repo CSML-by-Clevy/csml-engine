@@ -73,7 +73,6 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
-    // match start_parsing::<VerboseError<Span<'a>> >(Span::new(slice)) {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => {
             let flow_instructions =
@@ -90,6 +89,8 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
         }
         Err(e) => match e {
             Err::Error(err) | Err::Failure(err) => {
+                println!("=> {}", convert_error_2(Span::new(slice), err.clone()));
+
                 Err(gen_error_info(
                     Position::new(Interval::new_as_u32(
                         err.input.location_line(),
