@@ -1,0 +1,19 @@
+[package]
+name = "aws_lambda"
+version = "0.1.0"
+authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
+edition = "2018"
+
+[[bin]]
+name = "aws_lambda"
+path = "src/main.rs"
+
+[dependencies]
+lambda_runtime = "0.2.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+ring = "0.16.15"
+
+csml_engine = { path = "../../csml_engine"}
+csml_interpreter = { path = "../../csml_interpreter" }
