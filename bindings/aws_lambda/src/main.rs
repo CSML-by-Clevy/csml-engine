@@ -34,13 +34,8 @@ struct LambdaRequest {
     is_base64_encoded: bool,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct LambdaResponse {
-    lambda_request: serde_json::Value,
-}
 
-fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<LambdaResponse, HandlerError> {
+fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Value, HandlerError> {
     match request {
         LambdaRequest {
             path,
@@ -68,8 +63,6 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<LambdaResponse,
             body: Some(body),
             ..
         } if path == "/conversations/close" && http_method == "POST" => {
-            let json: serde_json::Value = serde_json::from_str(&body).unwrap();
-            println!("=> {}", json);
             let body: Client = serde_json::from_str(&body).unwrap();
 
             close_user_conversations(body)
@@ -80,7 +73,6 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<LambdaResponse,
             body: Some(body),
             ..
         } if path == "/validate" && http_method == "POST" => {
-
             let body: CsmlBot = serde_json::from_str(&body).unwrap();
 
             validate::handler(body)

@@ -4,9 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use lambda_runtime::{error::HandlerError};
 
-use crate::{LambdaResponse};
-
-
 #[derive(Debug, Serialize, Deserialize)]
 struct ValidateBotResponse {
     valid: bool,
@@ -31,7 +28,7 @@ struct ValidationError {
     message: String,
 }
 
-pub fn handler(body: CsmlBot) -> Result<LambdaResponse, HandlerError> {
+pub fn handler(body: CsmlBot) -> Result<serde_json::Value, HandlerError> {
     let response = match validate_bot(body.clone()) {
         CsmlResult {
             flows: _,
@@ -63,7 +60,5 @@ pub fn handler(body: CsmlBot) -> Result<LambdaResponse, HandlerError> {
         }
     };
 
-    Ok(LambdaResponse {
-        lambda_request: serde_json::json!(response),
-    })
+    Ok(serde_json::json!(response))
 }

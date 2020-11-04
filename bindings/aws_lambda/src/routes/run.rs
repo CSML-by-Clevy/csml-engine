@@ -3,9 +3,9 @@ use serde_json::{json, Value};
 
 use lambda_runtime::{error::HandlerError};
 
-use crate::{LambdaResponse, routes::RunRequest};
+use crate::{routes::RunRequest};
 
-pub fn handler(body: RunRequest) -> Result<LambdaResponse, HandlerError> {
+pub fn handler(body: RunRequest) -> Result<serde_json::Value, HandlerError> {
     let bot = body.bot.to_owned();
     let mut request = body.event.to_owned();
 
@@ -18,9 +18,7 @@ pub fn handler(body: RunRequest) -> Result<LambdaResponse, HandlerError> {
     let res = start_conversation(request, bot);
 
     match res {
-        Ok(data) => Ok(LambdaResponse {
-            lambda_request: serde_json::json!(data),
-        }),
+        Ok(data) => Ok(serde_json::json!(data)),
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
             eprintln!("{}", error);
