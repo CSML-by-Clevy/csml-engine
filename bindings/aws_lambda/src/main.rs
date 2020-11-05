@@ -28,7 +28,7 @@ struct LambdaRequest {
     multi_value_headers: serde_json::Value,
     query_string_parameters: Option<serde_json::Value>,
     multi_value_query_string_parameters: Option<serde_json::Value>,
-    path_parameters: Option<serde_json::Value,
+    path_parameters: Option<serde_json::Value>,
     stage_variables: Option<serde_json::Value>,
     body: Option<String>,
     is_base64_encoded: bool,
