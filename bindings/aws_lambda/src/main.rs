@@ -42,7 +42,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             body: Some(body),
             ..
-        } if path == "/run" && http_method == "POST" => {
+        } if path.ends_with("/run") && http_method == "POST" => {
             let body: RunRequest = serde_json::from_str(&body).unwrap();
 
             run::handler(body)
@@ -52,7 +52,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             body: Some(body),
             ..
-        } if path == "/conversations/open" && http_method == "POST" => {
+        } if path.ends_with("/conversations/open") && http_method == "POST" => {
             let body: Client = serde_json::from_str(&body).unwrap();
 
             get_open(body)
@@ -62,7 +62,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             body: Some(body),
             ..
-        } if path == "/conversations/close" && http_method == "POST" => {
+        } if path.ends_with("/conversations/close") && http_method == "POST" => {
             let body: Client = serde_json::from_str(&body).unwrap();
 
             close_user_conversations(body)
@@ -72,7 +72,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             body: Some(body),
             ..
-        } if path == "/validate" && http_method == "POST" => {
+        } if path.ends_with("/validate") && http_method == "POST" => {
             let body: CsmlBot = serde_json::from_str(&body).unwrap();
 
             validate::handler(body)

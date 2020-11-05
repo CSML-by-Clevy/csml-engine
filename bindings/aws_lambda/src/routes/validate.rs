@@ -60,5 +60,12 @@ pub fn handler(body: CsmlBot) -> Result<serde_json::Value, HandlerError> {
         }
     };
 
-    Ok(serde_json::json!(response))
+    Ok(serde_json::json!(
+        {
+            "isBase64Encoded": false,
+            "statusCode": 200,
+            "headers": { "Content-Type": "application/json" },
+            "body": serde_json::json!(response).to_string()
+        }
+    ))
 }

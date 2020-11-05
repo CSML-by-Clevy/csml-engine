@@ -18,7 +18,14 @@ pub fn handler(body: RunRequest) -> Result<serde_json::Value, HandlerError> {
     let res = start_conversation(request, bot);
 
     match res {
-        Ok(data) => Ok(serde_json::json!(data)),
+        Ok(data) => Ok(serde_json::json!(
+            {
+                "isBase64Encoded": false,
+                "statusCode": 200,
+                "headers": { "Content-Type": "application/json" },
+                "body": serde_json::json!(data).to_string()
+            }
+        )),
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
             eprintln!("{}", error);
