@@ -1,7 +1,7 @@
 mod routes;
 
 use routes::{
-    run, validate, RunRequest,
+    run, validate, RunRequest, sns,
     conversations::{close_user_conversations, get_open}
 };
 
@@ -33,7 +33,6 @@ struct LambdaRequest {
     body: Option<String>,
     is_base64_encoded: bool,
 }
-
 
 fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Value, HandlerError> {
     match request {
@@ -76,6 +75,17 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             let body: CsmlBot = serde_json::from_str(&body).unwrap();
 
             validate::handler(body)
+        }
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            headers,
+            ..
+        } if path.ends_with("/sns") && http_method == "POST" => {
+            // let body: String = serde_json::from_str(&body).unwrap();
+
+            OK(sns::handler(body))
         }
         _ => Err(HandlerError::from("Bad request")),
     }
