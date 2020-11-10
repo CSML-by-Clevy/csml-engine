@@ -1,3 +1,4 @@
+use crate::format_response;
 use csml_engine::start_conversation;
 use csml_engine::data::CsmlRequest;
 use csml_interpreter::data::{csml_bot::CsmlBot};
@@ -5,17 +6,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 // use ureq::json;
 
-
-fn format_response(status_code: i32, body: serde_json::Value) -> serde_json::Value {
-    serde_json::json!(
-        {
-            "isBase64Encoded": false,
-            "statusCode": status_code,
-            "headers": { "Content-Type": "application/json" },
-            "body": body
-        }
-    )
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct SnsConfirmationRequest {
