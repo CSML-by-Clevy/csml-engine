@@ -261,10 +261,7 @@ where
     let (s, ..) = get_tag(name, RETURN)(s)?;
 
     let (s, expr) = match preceded(comment, parse_operator)(s) {
-        Ok(value) => {
-            println!("test => {:?}", value.1);
-            value
-        }
+        Ok(value) => value,
         Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_RETURN, e))),
         Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
