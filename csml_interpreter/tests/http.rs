@@ -19,7 +19,8 @@ fn http_http_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -35,7 +36,8 @@ fn http_http_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -74,7 +76,8 @@ fn http_get_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -90,7 +93,8 @@ fn http_get_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -103,7 +107,8 @@ fn http_get_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -141,7 +146,8 @@ fn http_set_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -158,6 +164,7 @@ fn http_set_0() {
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json",
+                        "User-Agent": "csml/v1",
                         "hello":"world"
                     },
                     "method":"get",
@@ -171,7 +178,8 @@ fn http_set_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -210,7 +218,8 @@ fn http_query_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -226,7 +235,8 @@ fn http_query_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{
@@ -241,7 +251,8 @@ fn http_query_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -280,7 +291,8 @@ fn http_delete_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -298,7 +310,8 @@ fn http_delete_0() {
                     },
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"delete",
                     "query":{},
@@ -311,7 +324,8 @@ fn http_delete_0() {
                     "body":{},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -349,7 +363,8 @@ fn http_put_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -367,7 +382,8 @@ fn http_put_0() {
                     },
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"put",
                     "query":{},
@@ -380,7 +396,8 @@ fn http_put_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -419,7 +436,8 @@ fn http_patch_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -437,7 +455,8 @@ fn http_patch_0() {
                     },
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"patch",
                     "query":{},
@@ -450,7 +469,8 @@ fn http_patch_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},
@@ -488,7 +508,8 @@ fn http_post_0() {
                         "body":{},
                         "header":{
                             "accept":"application/json,text/*",
-                            "content-type":"application/json"
+                            "content-type":"application/json",
+                            "User-Agent": "csml/v1"
                         },
                         "method":"get",
                         "query":{},
@@ -506,7 +527,8 @@ fn http_post_0() {
                     },
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"post",
                     "query":{},
@@ -519,7 +541,8 @@ fn http_post_0() {
                     "body": {},
                     "header":{
                         "accept":"application/json,text/*",
-                        "content-type":"application/json"
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1"
                     },
                     "method":"get",
                     "query":{},

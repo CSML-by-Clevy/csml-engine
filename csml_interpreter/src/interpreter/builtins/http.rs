@@ -71,11 +71,9 @@ pub fn http_request(
     interval: Interval,
 ) -> Result<serde_json::Value, ErrorInfo> {
     let url = get_url(object, interval)?;
+
     let header =
         get_value::<HashMap<String, Literal>>("header", object, interval, ERROR_HTTP_GET_VALUE)?;
-
-    let body =
-        get_value::<HashMap<String, Literal>>("body", object, interval, ERROR_HTTP_GET_VALUE)?;
 
     let mut request = function(&url);
 
@@ -85,7 +83,19 @@ pub fn http_request(
         request.set(key, value);
     }
 
-    let response = request.send_json(serialize(body));
+    let response = match request.get_method() {
+        no_body if ["DELETE", "GET"].contains(&no_body) => request.call(),
+        _ => {
+            let body = get_value::<HashMap<String, Literal>>(
+                "body",
+                object,
+                interval,
+                ERROR_HTTP_GET_VALUE,
+            )?;
+            request.send_json(serialize(body))
+        }
+    };
+
     if let Some(err) = response.synthetic_error() {
         if let Ok(var) = env::var("DEBUG") {
             if var == "true" {
