@@ -7,11 +7,11 @@ pub struct CustomError<I> {
 }
 
 impl<I> ParseError<I> for CustomError<I> {
-    //TODO: String?
-    fn from_error_kind(input: I, kind: ErrorKind) -> Self {
+    //TODO: update this in nom 6
+    fn from_error_kind(input: I, _kind: ErrorKind) -> Self {
         CustomError {
             input,
-            error: kind.description().to_owned(),
+            error: "".to_owned(),
         }
     }
 
@@ -20,8 +20,15 @@ impl<I> ParseError<I> for CustomError<I> {
     }
 
     fn add_context(input: I, ctx: &'static str, mut other: Self) -> Self {
-        other.input = input;
-        other.error = ctx.to_owned();
-        other
+        match other.error {
+            error  if "" == error =>{
+                other.input = input;
+                other.error = ctx.to_owned();
+                other
+            }
+            _ => {
+                other
+            }
+        }
     }
 }
