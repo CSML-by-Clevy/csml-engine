@@ -1,4 +1,5 @@
 start:
-    // do 
-    // do say
-    // test
+
+    say "Hello World 😆"
+
+    goto end

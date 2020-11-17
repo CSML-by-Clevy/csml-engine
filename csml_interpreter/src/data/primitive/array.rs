@@ -252,7 +252,7 @@ impl PrimitiveArray {
             return Ok(PrimitiveArray::get_literal(&vector, interval));
         }
 
-        Ok(PrimitiveNull::get_literal(interval))
+        Ok(PrimitiveArray::get_literal( &[], interval))
     }
 
     fn is_empty(
