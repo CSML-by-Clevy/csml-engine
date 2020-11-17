@@ -93,14 +93,6 @@ fn handle_notification(body: &str) -> serde_json::Value {
  */
 pub fn handler(headers: serde_json::Value, body: String) -> serde_json::Value {
 
-    // let body_string = match std::str::from_utf8(&body) {
-    //     Ok(res) => res,
-    //     Err(_) => {
-    //         result["body"] = serde_json::json!("Request body can not be properly parsed");
-    //         return result
-    //     },
-    // };
-
     // See AWS SNS docs for specification of how this endpoint is called for http/https notification event types:
     // https://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.prepare.html#http-subscription-confirmation-json
     match headers.get("x-amz-sns-message-type") {

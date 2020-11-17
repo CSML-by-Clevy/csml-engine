@@ -94,11 +94,6 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             headers,
             ..
         } if path.ends_with("/sns") && http_method == "POST" => {
-            // let body: String = serde_json::from_str(&body).unwrap();
-            // let body_string = match std::str::from_utf8(&body) {
-            //     Ok(res) => res,
-            //     Err(_) => return HttpResponse::BadRequest().body("Request body can not be properly parsed"),
-            // };
 
             Ok(sns::handler(headers, body))
         }
