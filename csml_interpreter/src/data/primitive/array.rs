@@ -13,6 +13,7 @@ use lazy_static::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde_json::json;
+use serde::{Serialize, Deserialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::usize;
@@ -101,7 +102,7 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveArray {
     pub value: Vec<Literal>,
 }

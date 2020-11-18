@@ -15,7 +15,7 @@ use lazy_static::*;
 use regex::Regex;
 use std::cmp::Ordering;
 use std::collections::HashMap;
-// use serde_json::{Result, Value};
+use serde::{Serialize, Deserialize};
 use crate::data::position::Position;
 use crate::interpreter::json_to_literal;
 
@@ -182,7 +182,7 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveString {
     pub value: String,
 }
