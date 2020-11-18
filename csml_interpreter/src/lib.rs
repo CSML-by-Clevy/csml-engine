@@ -120,7 +120,16 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
                         imports.push(import_scope.clone());
                     }
                 }
-                flows.insert(flow.name.to_owned(), ast_flow);
+                let encoded: Vec<u8> = bincode::serialize(&ast_flow).unwrap();
+                println!("flow {} encode => {:?}", flow.name, encoded.len());
+                let base64encode = base64::encode(&encoded);
+                println!("base64encode => {:?}", base64encode);
+                let base64decoded = base64::decode(&base64encode).unwrap();
+
+                // let decoded: Flow = bincode::deserialize(&encoded[..]).unwrap();
+                let decoded: Flow = bincode::deserialize(&base64decoded[..]).unwrap();
+
+                flows.insert(flow.name.to_owned(), decoded);
             }
             Err(error) => {
                 errors.push(error);

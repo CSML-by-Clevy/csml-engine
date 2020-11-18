@@ -19,6 +19,7 @@ use crate::interpreter::{
 use lazy_static::*;
 use regex::Regex;
 use std::cmp::Ordering;
+use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +180,7 @@ type PrimitiveMethod = fn(
     content_type: &str,
 ) -> Result<Literal, ErrorInfo>;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveObject {
     pub value: HashMap<String, Literal>,
 }

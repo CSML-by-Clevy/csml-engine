@@ -13,7 +13,9 @@ lazy_static! {
 // STRUCTURE
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, PartialEq)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     pub flow: String,
     pub step: String,

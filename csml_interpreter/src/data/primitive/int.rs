@@ -13,6 +13,7 @@ use crate::error_format::*;
 use lazy_static::*;
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -77,7 +78,7 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveInt {
     pub value: i64,
 }
