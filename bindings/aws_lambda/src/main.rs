@@ -53,7 +53,10 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             body: Some(body),
             ..
         } if path.ends_with("/run") && http_method == "POST" => {
-            let body: RunRequest = serde_json::from_str(&body).unwrap();
+            let body: RunRequest = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
 
             run::handler(body)
         }
@@ -63,7 +66,10 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             body: Some(body),
             ..
         } if path.ends_with("/conversations/open") && http_method == "POST" => {
-            let body: Client = serde_json::from_str(&body).unwrap();
+            let body: Client = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
 
             get_open(body)
         }
@@ -73,7 +79,10 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             body: Some(body),
             ..
         } if path.ends_with("/conversations/close") && http_method == "POST" => {
-            let body: Client = serde_json::from_str(&body).unwrap();
+            let body: Client =  match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
 
             close_user_conversations(body)
         }
@@ -83,7 +92,10 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             body: Some(body),
             ..
         } if path.ends_with("/validate") && http_method == "POST" => {
-            let body: CsmlBot = serde_json::from_str(&body).unwrap();
+            let body: CsmlBot = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
 
             validate::handler(body)
         }
