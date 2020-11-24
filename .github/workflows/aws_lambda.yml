@@ -1,0 +1,59 @@
+name: AWS_Lambda
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: 10.11
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        include:
+          - os: ubuntu-latest
+            asset_name: csml-server-lambda
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # for some reason cache does not work properly with macos builds
+    - name: Cache Cargo
+      if: matrix.os != 'macos-latest'
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Rust Stable
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        target: x86_64-unknown-linux-gnu
+        override: true
+
+    - name: Build Server
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: true
+        command: build
+        args: --verbose --manifest-path=bindings/aws_lambda/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target x86_64-unknown-linux-gnu --release --bin aws_lambda
+
+
+    - name: Tar files
+      run: |
+        cd target/x86_64-unknown-linux-gnu/release/
+        chmod 755 aws_lambda
+        mv aws_lambda bootstrap
+        tar -cvf bootstrap.tar.gz bootstrap
+        cd ../../..
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: bootstrap
+        path: target/x86_64-unknown-linux-gnu/release/bootstrap.tar.gz

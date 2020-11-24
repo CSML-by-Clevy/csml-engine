@@ -4,6 +4,7 @@ members = [
     "csml_engine",
     "csml_server",
     "bindings/node/native",
+    "bindings/aws_lambda",
 ]
 
 [profile.test]
