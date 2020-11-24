@@ -338,7 +338,7 @@ fn array_index_of_2() {
 
 #[test]
 fn array_find_0() {
-    let data = r#"{"memories":[], "messages":[{"content":{"text":null}, "content_type":"text"}]}"#;
+    let data = r#"{"memories":[], "messages":[{"content":[], "content_type":"array"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         ContextJson::new(

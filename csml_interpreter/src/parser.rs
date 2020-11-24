@@ -201,8 +201,10 @@ where
 
     let (s, start) = get_interval(s)?;
     StateContext::set_scope(ScopeState::Function);
-    let (s, actions) = preceded(comment, parse_fn_root)(s)?;
+    let result = preceded(comment, parse_fn_root)(s);
     StateContext::set_scope(ScopeState::Normal);
+    let (s, actions) = result?;
+
     let (s, end) = get_interval(s)?;
 
     Ok((

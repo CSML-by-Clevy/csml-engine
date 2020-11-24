@@ -31,6 +31,10 @@ pub fn http(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
                 "accept".to_owned(),
                 PrimitiveString::get_literal("application/json,text/*", interval),
             );
+            header.insert(
+                "User-Agent".to_owned(),
+                PrimitiveString::get_literal("csml/v1", interval),
+            );
 
             http.insert("url".to_owned(), literal.to_owned());
             http.insert(
