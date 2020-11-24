@@ -1,9 +1,8 @@
 name: AWS_Lambda
 
 on:
-  push:
-    branches: [ feat/aws_lambda ]
-
+  release:
+    types: [published]
 
 jobs:
   build:
