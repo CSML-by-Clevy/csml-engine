@@ -1,7 +1,8 @@
-use crate::{db_connectors::DbBot, encrypt::encrypt_data, Client, EngineError, CsmlFlow};
+use crate::{db_connectors::DbBot, encrypt::encrypt_data, Client, EngineError};
+use csml_interpreter::data::ast::Flow;
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
-
+use std::collections::HashMap;
 
 fn format_bot_struct(
     conversation: bson::ordered::OrderedDocument,
@@ -32,7 +33,6 @@ pub fn save_bot_state(
 ) -> Result<String, EngineError> {
     let collection = db.collection("ast");
     let time = Bson::UtcDatetime(chrono::Utc::now());
-    // let metadata = encrypt_data(&metadata)?;
 
     let bot = doc! {
         "bot_id": bot_id,
@@ -54,7 +54,7 @@ pub fn save_bot_state(
 pub fn get_bot_ast(
     id: &str,
     db: &mongodb::Database,
-) -> Result<Option<Vec<CsmlFlow>>, EngineError> {
+) -> Result<Option<HashMap<String, Flow>>, EngineError> {
     let collection = db.collection("ast");
 
     let filter = doc! {
@@ -70,7 +70,7 @@ pub fn get_bot_ast(
         Some(conv) => {
             let conversation = format_bot_struct(conv)?;
 
-            let base64decoded = base64::decode(&conversation.bot).unwrap();
+            let base64decoded = base64::decode(&conversation.ast).unwrap();
             let csml_bot = bincode::deserialize(&base64decoded[..]).unwrap();
 
             Ok(Some(csml_bot))
