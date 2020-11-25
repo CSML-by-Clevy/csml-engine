@@ -93,12 +93,6 @@ pub fn save_bot(
 ) -> Result<String, EngineError>  {
     let bot_id = csml_bot.id.clone();
     let bot = base64::encode(bincode::serialize(&csml_bot.flows).unwrap());
-
-    println!("=> {:?}", bot);
-    let base64decoded = base64::decode(&bot).unwrap();
-    let csml_bot2: Vec<CsmlFlow> = bincode::deserialize(&base64decoded[..]).unwrap();
-    println!("=> {:?}", csml_bot2);
-
     let mut db = init_db()?;
 
     match validate_bot(csml_bot) {
