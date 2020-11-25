@@ -44,6 +44,7 @@ pub mod memories;
 pub mod messages;
 pub mod nodes;
 pub mod state;
+pub mod bot;
 
 use crate::Client;
 
@@ -134,6 +135,19 @@ pub struct DbState {
     pub _type: String,
     pub value: serde_json::Value,
     pub expires_at: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DbBot {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String,
+    pub build_nbr: i32,
+    pub bot_id: String,
+    pub bot: String,
+    pub ast: String,
+    pub engine_version: String,
+    pub updated_at: String,
     pub created_at: String,
 }
 

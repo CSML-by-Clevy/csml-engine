@@ -17,6 +17,7 @@ pub struct CsmlBot {
     pub native_components: Option<serde_json::Map<String, serde_json::Value>>,
     pub custom_components: Option<serde_json::Value>,
     pub default_flow: String,
+    // pub bot_ast: Option<String> // ???
 }
 
 ////////////////////////////////////////////////////////////////////////////////

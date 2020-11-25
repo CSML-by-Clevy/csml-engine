@@ -14,7 +14,7 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation};
+use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation, bot::{save_bot_state, get_bot_ast}};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
@@ -86,6 +86,45 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
     let mut db = init_db()?;
 
     get_latest_open(client, &mut db)
+}
+
+pub fn save_bot(
+    csml_bot: CsmlBot
+) -> Result<String, EngineError>  {
+    let bot_id = csml_bot.id.clone();
+    let bot = base64::encode(bincode::serialize(&csml_bot.flows).unwrap());
+
+    println!("=> {:?}", bot);
+    let base64decoded = base64::decode(&bot).unwrap();
+    let csml_bot2: Vec<CsmlFlow> = bincode::deserialize(&base64decoded[..]).unwrap();
+    println!("=> {:?}", csml_bot2);
+
+    let mut db = init_db()?;
+
+    match validate_bot(csml_bot) {
+        CsmlResult{flows:Some(ast), ..} => {
+            let ast = base64::encode(bincode::serialize(&ast).unwrap());
+
+            save_bot_state(bot_id, bot, ast, &mut db)
+        },
+        _ => panic!("")
+    }
+
+    // let encoded: Vec<u8> = bincode::serialize(&flows).unwrap();
+    // let base64encode = base64::encode(&encoded);
+    // println!("base64encode => {:?}", base64encode);
+    // let base64decoded = base64::decode(&base64encode).unwrap();
+    // let decoded = bincode::deserialize(&base64decoded[..]).unwrap();
+}
+
+pub fn get_bot(
+    bot_id: &str
+) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+    let tmp = get_bot_ast(bot_id, &mut db).unwrap();
+
+    println!("=> {:?}", tmp);
+    Ok(())
 }
 
 /**
