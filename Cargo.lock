@@ -866,6 +866,7 @@ name = "csml_engine"
 version = "1.3.6"
 dependencies = [
  "base64 0.13.0",
+ "bincode",
  "bson",
  "chrono",
  "csml_interpreter",
