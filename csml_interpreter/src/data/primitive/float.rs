@@ -451,6 +451,7 @@ impl PrimitiveFloat {
 // TRAIT FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+#[typetag::serde]
 impl Primitive for PrimitiveFloat {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {

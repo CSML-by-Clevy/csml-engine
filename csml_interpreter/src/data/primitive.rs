@@ -45,7 +45,8 @@ pub enum PrimitiveType {
     PrimitiveString,
 }
 
-pub trait Primitive: serde_traitobject::Serialize + serde_traitobject::Deserialize {
+#[typetag::serde(tag = "primitive")]
+pub trait Primitive {
     fn is_eq(&self, other: &dyn Primitive) -> bool;
     fn is_cmp(&self, other: &dyn Primitive) -> Option<Ordering>;
     fn do_add(&self, other: &dyn Primitive) -> Result<Box<dyn Primitive>, String>;

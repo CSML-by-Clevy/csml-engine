@@ -57,24 +57,31 @@ pub fn get_bot_ast(
 ) -> Result<Option<CsmlBot>, EngineError> { //HashMap<String, Flow>
     let collection = db.collection("ast");
 
+    // "_id": bson::oid::ObjectId::with_string(id).unwrap()
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(id).unwrap()
+        "bot_id": id
     };
 
     let find_options = mongodb::options::FindOneOptions::builder()
         .sort(doc! { "$natural": -1 })
         .build();
-    let result = collection.find_one(filter, find_options)?;
 
-    match result {
-        Some(bot) => {
-            let bot = format_bot_struct(bot)?;
+    let result = collection.find(filter, find_options)?;
 
-            let base64decoded = base64::decode(&bot.bot).unwrap();
-            let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
-
-            Ok(Some(csml_bot.to_bot()))
-        }
-        None => Ok(None),
+    for doc in cursor {
+        println!("{}", doc?)
     }
+    panic!("");
+
+    // match result {
+    //     Some(bot) => {
+    //         let bot = format_bot_struct(bot)?;
+
+    //         let base64decoded = base64::decode(&bot.bot).unwrap();
+    //         let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+
+    //         Ok(Some(csml_bot.to_bot()))
+    //     }
+    //     None => Ok(None),
+    // }
 }

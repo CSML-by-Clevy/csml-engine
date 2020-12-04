@@ -218,14 +218,17 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 }
 
 register_module!(mut cx, {
-    // cx.export_function("validFlow", is_valid)?;
     cx.export_function("getOpenConversation", get_open_conversation)?;
+
     cx.export_function("validateBot", validate_bot)?;
-    // cx.export_function("validateBot", validate_bot)?; validate and save 
-    cx.export_function("getBotSteps", get_bot_steps)?;
+    // saveBot ??
+
     // get_bot_by_id -> return flows of this id
+    // get_bot_by_versions -> return flows of this id  time_stamps
     // get_bot_by_bot_id -> return last version of bot_id flows
-    cx.export_function("run", run_bot)?; // 
+    cx.export_function("run", run_bot)?; // enum -> bot_id and bot
+
     cx.export_function("closeAllConversations", close_conversations)?;
+    cx.export_function("getBotSteps", get_bot_steps)?;
     Ok(())
 });

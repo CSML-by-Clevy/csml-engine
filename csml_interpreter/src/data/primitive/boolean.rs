@@ -171,6 +171,7 @@ impl PrimitiveBoolean {
 // TRAIT FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+#[typetag::serde]
 impl Primitive for PrimitiveBoolean {
     fn do_exec(
         &mut self,
