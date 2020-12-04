@@ -20,7 +20,7 @@ use interpreter_actions::interpret_step;
 use utils::*;
 
 use csml_interpreter::{
-    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memory},
+    data::{csml_bot::{CsmlBot, SerializeCsmlBot}, csml_flow::CsmlFlow, ContextJson, Hold, Memory},
     load_components,
 };
 use md5::{Digest, Md5};
@@ -92,7 +92,9 @@ pub fn save_bot(
     csml_bot: CsmlBot
 ) -> Result<String, EngineError>  {
     let bot_id = csml_bot.id.clone();
-    let bot = base64::encode(bincode::serialize(&csml_bot.flows).unwrap());
+    let serializable_bot = csml_bot.to_serializable_bot();
+    let bot = base64::encode(bincode::serialize(&serializable_bot).unwrap());
+
     let mut db = init_db()?;
 
     match validate_bot(csml_bot) {

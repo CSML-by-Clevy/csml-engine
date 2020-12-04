@@ -1,24 +1,24 @@
-use crate::{db_connectors::DbBot, encrypt::encrypt_data, Client, EngineError};
+use crate::{db_connectors::DbBot, encrypt::encrypt_data, Client, EngineError, CsmlBot, SerializeCsmlBot};
 use csml_interpreter::data::ast::Flow;
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 use std::collections::HashMap;
 
 fn format_bot_struct(
-    conversation: bson::ordered::OrderedDocument,
+    bot: bson::ordered::OrderedDocument,
 ) -> Result<DbBot, EngineError> {
     Ok(DbBot {
-        id: conversation.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
-        bot_id: conversation.get_str("bot_id").unwrap().to_owned(),
-        build_nbr: conversation.get_i32("build_nbr").unwrap(),
-        bot: conversation.get_str("bot").unwrap().to_owned(),
-        ast: conversation.get_str("ast").unwrap().to_owned(),
-        engine_version: conversation.get_str("engine_version").unwrap().to_owned(),
-        updated_at: conversation
+        id: bot.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
+        bot_id: bot.get_str("bot_id").unwrap().to_owned(),
+        build_nbr: bot.get_i32("build_nbr").unwrap(),
+        bot: bot.get_str("bot").unwrap().to_owned(),
+        ast: bot.get_str("ast").unwrap().to_owned(),
+        engine_version: bot.get_str("engine_version").unwrap().to_owned(),
+        updated_at: bot
             .get_utc_datetime("updated_at")
             .unwrap()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
-        created_at: conversation
+        created_at: bot
             .get_utc_datetime("created_at")
             .unwrap()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
@@ -54,7 +54,7 @@ pub fn save_bot_state(
 pub fn get_bot_ast(
     id: &str,
     db: &mongodb::Database,
-) -> Result<Option<HashMap<String, Flow>>, EngineError> {
+) -> Result<Option<CsmlBot>, EngineError> { //HashMap<String, Flow>
     let collection = db.collection("ast");
 
     let filter = doc! {
@@ -67,13 +67,13 @@ pub fn get_bot_ast(
     let result = collection.find_one(filter, find_options)?;
 
     match result {
-        Some(conv) => {
-            let conversation = format_bot_struct(conv)?;
+        Some(bot) => {
+            let bot = format_bot_struct(bot)?;
 
-            let base64decoded = base64::decode(&conversation.ast).unwrap();
-            let csml_bot = bincode::deserialize(&base64decoded[..]).unwrap();
+            let base64decoded = base64::decode(&bot.bot).unwrap();
+            let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            Ok(Some(csml_bot))
+            Ok(Some(csml_bot.to_bot()))
         }
         None => Ok(None),
     }
