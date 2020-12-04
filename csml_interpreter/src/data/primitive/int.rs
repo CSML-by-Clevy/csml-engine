@@ -482,6 +482,7 @@ impl PrimitiveInt {
 /// TRAIT FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+#[typetag::serde]
 impl Primitive for PrimitiveInt {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {

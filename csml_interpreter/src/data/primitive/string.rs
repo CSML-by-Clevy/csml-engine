@@ -1156,6 +1156,7 @@ impl PrimitiveString {
     }
 }
 
+#[typetag::serde]
 impl Primitive for PrimitiveString {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {

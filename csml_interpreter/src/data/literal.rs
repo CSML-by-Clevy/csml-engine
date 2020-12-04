@@ -15,7 +15,6 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Literal {
     pub content_type: String,
-    #[serde(with = "serde_traitobject")]
     pub primitive: Box<dyn Primitive>,
     pub interval: Interval,
 }

@@ -105,12 +105,6 @@ pub fn save_bot(
         },
         _ => panic!("")
     }
-
-    // let encoded: Vec<u8> = bincode::serialize(&flows).unwrap();
-    // let base64encode = base64::encode(&encoded);
-    // println!("base64encode => {:?}", base64encode);
-    // let base64decoded = base64::decode(&base64encode).unwrap();
-    // let decoded = bincode::deserialize(&base64decoded[..]).unwrap();
 }
 
 pub fn get_bot(

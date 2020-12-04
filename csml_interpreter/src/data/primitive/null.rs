@@ -166,6 +166,7 @@ impl PrimitiveNull {
     }
 }
 
+#[typetag::serde]
 impl Primitive for PrimitiveNull {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(_other) = other.as_any().downcast_ref::<Self>() {
