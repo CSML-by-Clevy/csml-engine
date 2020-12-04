@@ -221,8 +221,11 @@ register_module!(mut cx, {
     // cx.export_function("validFlow", is_valid)?;
     cx.export_function("getOpenConversation", get_open_conversation)?;
     cx.export_function("validateBot", validate_bot)?;
+    // cx.export_function("validateBot", validate_bot)?; validate and save 
     cx.export_function("getBotSteps", get_bot_steps)?;
-    cx.export_function("run", run_bot)?;
+    // get_bot_by_id -> return flows of this id
+    // get_bot_by_bot_id -> return last version of bot_id flows
+    cx.export_function("run", run_bot)?; // 
     cx.export_function("closeAllConversations", close_conversations)?;
     Ok(())
 });

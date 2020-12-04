@@ -3,7 +3,7 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::error_messages::ERROR_DB_SETUP;
-use crate::{Client, ConversationInfo, Database, DbConversation, EngineError};
+use crate::{Client, ConversationInfo, Database, DbConversation, EngineError, CsmlBot};
 use csml_interpreter::data::ast::Flow;
 
 use std::collections::HashMap;
@@ -36,7 +36,7 @@ pub fn save_bot_state(
 pub fn get_bot_ast(
     bot_id: &str,
     db: &mut Database,
-) -> Result<Option< HashMap<String, Flow> >, EngineError> {
+) -> Result<Option< CsmlBot >, EngineError> { //HashMap<String, Flow>
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
