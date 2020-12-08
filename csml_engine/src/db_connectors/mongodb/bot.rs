@@ -1,7 +1,8 @@
 use crate::{db_connectors::DbBot, encrypt::encrypt_data, Client, EngineError, CsmlBot, SerializeCsmlBot};
 use csml_interpreter::data::ast::Flow;
 use bson::{doc, Bson};
-use chrono::SecondsFormat;
+use mongodb::options::Hint;
+use chrono::{SecondsFormat, DateTime, Utc};
 use std::collections::HashMap;
 
 fn format_bot_struct(
@@ -12,7 +13,7 @@ fn format_bot_struct(
         bot_id: bot.get_str("bot_id").unwrap().to_owned(),
         build_nbr: bot.get_i32("build_nbr").unwrap(),
         bot: bot.get_str("bot").unwrap().to_owned(),
-        ast: bot.get_str("ast").unwrap().to_owned(),
+        // ast: bot.get_str("ast").unwrap().to_owned(),
         engine_version: bot.get_str("engine_version").unwrap().to_owned(),
         updated_at: bot
             .get_utc_datetime("updated_at")
@@ -28,7 +29,6 @@ fn format_bot_struct(
 pub fn save_bot_state(
     bot_id: String,
     bot: String,
-    ast: String,
     db: &mongodb::Database,
 ) -> Result<String, EngineError> {
     let collection = db.collection("ast");
@@ -38,7 +38,7 @@ pub fn save_bot_state(
         "bot_id": bot_id,
         "build_nbr": 0,
         "bot": bot,
-        "ast": ast,
+        // "ast": ast,
         "engine_version": "1.3",
         "updated_at": &time,
         "created_at": &time
@@ -51,37 +51,108 @@ pub fn save_bot_state(
     Ok(id.to_hex())
 }
 
-pub fn get_bot_ast(
+pub fn get_bot_list(
+    bot_id: &str,
+    db: &mongodb::Database,
+) -> Result<Vec<serde_json::Value> , EngineError> {
+    let collection = db.collection("ast"); // bot_version
+
+    let filter = doc! {
+        "bot_id": bot_id,
+    };
+
+    // "created_at": Bson::UtcDatetime(time)
+    // .hint(Hint::Keys(doc!{ "created_at": "2020-12-08 12:32:50.660 UTC" })  )
+
+    let find_options = mongodb::options::FindOptions::builder()
+        .sort(doc! { "$natural": -1,  })
+        // .projection(doc! { "$gt": {"_id":  bson::oid::ObjectId::with_string("5fcf72720090befb00aa1eca").unwrap() }  })
+        .batch_size(10)
+        .limit(10)
+        .build();
+
+    let cursor = collection.find(filter, find_options)?; // list 
+    let mut bots =  vec!();
+
+    for doc in cursor {
+
+        match doc {
+            Ok(bot) => {
+                let bot = format_bot_struct(bot)?;
+
+                let base64decoded = base64::decode(&bot.bot).unwrap();
+                let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+
+                let json = serde_json::json!({
+                    "id": bot.id,
+                    "bot": csml_bot.to_bot(),
+                    "engine_version": bot.engine_version,
+                    "created_at": bot.created_at
+                });
+
+                bots.push(json);
+            }
+            Err(_) => (),
+        };
+    }
+
+    Ok(bots)
+}
+
+pub fn get_bot_by_id(
     id: &str,
     db: &mongodb::Database,
-) -> Result<Option<CsmlBot>, EngineError> { //HashMap<String, Flow>
+) -> Result<Option<CsmlBot>, EngineError> {
     let collection = db.collection("ast");
 
-    // "_id": bson::oid::ObjectId::with_string(id).unwrap()
     let filter = doc! {
-        "bot_id": id
+        "_id": bson::oid::ObjectId::with_string(id).unwrap()
     };
 
     let find_options = mongodb::options::FindOneOptions::builder()
-        .sort(doc! { "$natural": -1 })
+        .sort(doc! { "$natural": -1,  })
         .build();
 
-    let result = collection.find(filter, find_options)?;
+    let result = collection.find_one(filter, find_options)?;
 
-    for doc in cursor {
-        println!("{}", doc?)
+    match result {
+        Some(bot) => {
+            let bot = format_bot_struct(bot)?;
+
+            let base64decoded = base64::decode(&bot.bot).unwrap();
+            let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+
+            Ok(Some(csml_bot.to_bot()))
+        }
+        None => Ok(None),
     }
-    panic!("");
+}
 
-    // match result {
-    //     Some(bot) => {
-    //         let bot = format_bot_struct(bot)?;
+pub fn get_last_bot_version(
+    bot_id: &str,
+    db: &mongodb::Database,
+) -> Result<Option<CsmlBot>, EngineError> {
+    let collection = db.collection("ast");
 
-    //         let base64decoded = base64::decode(&bot.bot).unwrap();
-    //         let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+    let filter = doc! {
+        "bot_id": bot_id,
+    };
 
-    //         Ok(Some(csml_bot.to_bot()))
-    //     }
-    //     None => Ok(None),
-    // }
+    let find_options = mongodb::options::FindOneOptions::builder()
+        .sort(doc! { "$natural": -1,  })
+        .build();
+
+    let result = collection.find_one(filter, find_options)?;
+
+    match result {
+        Some(bot) => {
+            let bot = format_bot_struct(bot)?;
+
+            let base64decoded = base64::decode(&bot.bot).unwrap();
+            let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+
+            Ok(Some(csml_bot.to_bot()))
+        }
+        None => Ok(None),
+    }
 }
