@@ -142,12 +142,12 @@ pub struct DbState {
 pub struct DbBot {
     #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
-    pub build_nbr: i32,
+    pub build_nbr: i32, // rm
     pub bot_id: String,
     pub bot: String,
-    pub ast: String,
+    // pub ast: String,
     pub engine_version: String,
-    pub updated_at: String,
+    pub updated_at: String, // rm
     pub created_at: String,
 }
 

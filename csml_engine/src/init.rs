@@ -30,9 +30,8 @@ pub fn init_conversation_info<'a>(
     event: &Event,
     request: &'a CsmlRequest,
     bot: &'a CsmlBot,
+    mut db: Database
 ) -> Result<ConversationInfo, EngineError> {
-    let mut db = init_db()?;
-
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
     let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;

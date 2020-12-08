@@ -1,4 +1,4 @@
-use csml_engine::{data::CsmlRequest, start_conversation};
+use csml_engine::{data::CsmlRequest, start_conversation, RunOpt};
 use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
     load_components,
@@ -63,7 +63,9 @@ fn main() {
     let mut line: String = String::new();
     // let mut context = init_context();
     loop {
-        let data = init_bot();
+        // let data = init_bot();
+        let run_opt = RunOpt::Id("5fcf727f0064f13a00bf5a3b".to_owned());
+
         stdin()
             .read_line(&mut line)
             .ok()
@@ -75,7 +77,7 @@ fn main() {
         if input == "exit" {
             break;
         }
-        match start_conversation(init_request(&input), data) {
+        match start_conversation(init_request(&input), run_opt) {
             Ok(obj) => {
                 if obj["conversation_end"].as_bool().unwrap() {
                     break;

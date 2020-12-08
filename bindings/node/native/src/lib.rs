@@ -170,6 +170,7 @@ fn format_request(json_request: Value) -> Result<CsmlRequest, serde_json::error:
         },
     })
 }
+
 fn format_bot(data: Value) -> Result<CsmlBot, serde_json::error::Error> {
     Ok(CsmlBot {
         id: data["id"].as_str().unwrap().to_owned(),
