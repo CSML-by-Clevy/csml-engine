@@ -1,6 +1,6 @@
 use crate::format_response;
-use csml_engine::start_conversation;
-use csml_engine::data::CsmlRequest;
+use csml_engine::{start_conversation};
+use csml_engine::data::{CsmlRequest, BotOpt};
 use csml_interpreter::data::{csml_bot::CsmlBot};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -72,7 +72,7 @@ fn handle_notification(body: &str) -> serde_json::Value {
         val => val,
     };
 
-    let res = start_conversation(request, bot);
+    let res = start_conversation(request, BotOpt::CsmlBot(bot) );
 
     match res {
         Ok(data) => format_response(200, serde_json::json!(data)),

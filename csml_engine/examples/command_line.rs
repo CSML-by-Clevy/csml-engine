@@ -1,4 +1,4 @@
-use csml_engine::{data::CsmlRequest, start_conversation, RunOpt};
+use csml_engine::{data::{CsmlRequest, BotOpt}, start_conversation };
 use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
     load_components,
@@ -63,8 +63,8 @@ fn main() {
     let mut line: String = String::new();
     // let mut context = init_context();
     loop {
-        // let data = init_bot();
-        let run_opt = RunOpt::Id("5fcf727f0064f13a00bf5a3b".to_owned());
+        let run_opt = BotOpt::CsmlBot(init_bot());
+        // let run_opt = BotOpt::Id("5fcf727f0064f13a00bf5a3b".to_owned());
 
         stdin()
             .read_line(&mut line)

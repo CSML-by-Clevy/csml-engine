@@ -10,15 +10,12 @@ fn format_bot_struct(
 ) -> Result<DbBot, EngineError> {
     Ok(DbBot {
         id: bot.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
+        // user_id: bot.get_str("user_id").unwrap().to_owned(),
         bot_id: bot.get_str("bot_id").unwrap().to_owned(),
         build_nbr: bot.get_i32("build_nbr").unwrap(),
         bot: bot.get_str("bot").unwrap().to_owned(),
         // ast: bot.get_str("ast").unwrap().to_owned(),
         engine_version: bot.get_str("engine_version").unwrap().to_owned(),
-        updated_at: bot
-            .get_utc_datetime("updated_at")
-            .unwrap()
-            .to_rfc3339_opts(SecondsFormat::Millis, true),
         created_at: bot
             .get_utc_datetime("created_at")
             .unwrap()
@@ -26,7 +23,7 @@ fn format_bot_struct(
     })
 }
 
-pub fn save_bot_state(
+pub fn create_bot_state(
     bot_id: String,
     bot: String,
     db: &mongodb::Database,
@@ -36,11 +33,9 @@ pub fn save_bot_state(
 
     let bot = doc! {
         "bot_id": bot_id,
-        "build_nbr": 0,
         "bot": bot,
-        // "ast": ast,
-        "engine_version": "1.3",
-        "updated_at": &time,
+        "build_nbr": 0,
+        "engine_version": env!("CARGO_PKG_VERSION").to_owned(),
         "created_at": &time
     };
 
@@ -59,14 +54,11 @@ pub fn get_bot_list(
 
     let filter = doc! {
         "bot_id": bot_id,
+        // "_id": {"$gt": bson::oid::ObjectId::with_string("5fd0ea4200aca41f005c82af").unwrap() }
     };
 
-    // "created_at": Bson::UtcDatetime(time)
-    // .hint(Hint::Keys(doc!{ "created_at": "2020-12-08 12:32:50.660 UTC" })  )
-
     let find_options = mongodb::options::FindOptions::builder()
-        .sort(doc! { "$natural": -1,  })
-        // .projection(doc! { "$gt": {"_id":  bson::oid::ObjectId::with_string("5fcf72720090befb00aa1eca").unwrap() }  })
+        .sort(doc! { "$natural": -1, })
         .batch_size(10)
         .limit(10)
         .build();
@@ -82,6 +74,7 @@ pub fn get_bot_list(
 
                 let base64decoded = base64::decode(&bot.bot).unwrap();
                 let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+
 
                 let json = serde_json::json!({
                     "id": bot.id,
@@ -110,7 +103,7 @@ pub fn get_bot_by_id(
     };
 
     let find_options = mongodb::options::FindOneOptions::builder()
-        .sort(doc! { "$natural": -1,  })
+        .sort(doc! { "$natural": -1, })
         .build();
 
     let result = collection.find_one(filter, find_options)?;

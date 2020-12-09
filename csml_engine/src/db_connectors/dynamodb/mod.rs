@@ -3,6 +3,7 @@ use crate::{Client, Database, EngineError};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub mod bot;
 pub mod conversations;
 pub mod interactions;
 pub mod memories;
@@ -56,11 +57,63 @@ pub struct DynamoDbKey {
     hash: String,
     range: String,
 }
+
 impl DynamoDbKey {
     pub fn new(hash: &str, range: &str) -> Self {
         Self {
             hash: hash.to_owned(),
             range: range.to_owned(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Bot {
+    pub hash: String,
+    pub range: String,
+    pub range_time: String,
+    pub class: String,
+
+    pub id: String,
+    pub bot_id: String,
+    // pub build_nbr: i32,
+    pub bot: String,
+    pub engine_version: String,
+    pub created_at: String,
+}
+
+impl Bot {
+
+    pub fn get_hash(bot_id: &str) -> String {
+        format!("bot_id:{}", bot_id)
+    }
+
+    pub fn get_range(id: &str) -> String {
+        make_range(&["bot", id])
+    }
+
+    pub fn get_key(bot_id: &str, status: &str, id: &str) -> DynamoDbKey {
+        let hash = Self::get_hash(bot_id);
+        let range = Self::get_range(id);
+        DynamoDbKey::new(&hash, &range)
+    }
+
+    pub fn new(bot_id: String, bot: String) -> Self {
+        let id = Uuid::new_v4().to_string();
+        let now = get_date_time();
+        let version = env!("CARGO_PKG_VERSION");
+        let class_name = "bot";
+
+        Self {
+            hash: Self::get_hash(&bot_id),
+            range: Self::get_range(&id),
+            range_time: make_range(&[&class_name, &now, &id]),
+            class: class_name.to_owned(),
+            id,
+            bot_id,
+            bot,
+            engine_version: version.to_owned(),
+            created_at: now
         }
     }
 }

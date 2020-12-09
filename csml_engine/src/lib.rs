@@ -14,7 +14,7 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation, bot::{save_bot_state, get_last_bot_version, get_bot_list, get_by_id}};
+use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation, bot};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
@@ -27,28 +27,6 @@ use md5::{Digest, Md5};
 use std::{collections::HashMap, env, time::SystemTime};
 
 // ##################
-use serde::{Deserialize, Serialize};
-#[derive(Serialize, Deserialize)]
-pub enum RunOpt {
-    #[serde(rename = "csml_bot")]
-    CsmlBot(CsmlBot),
-    #[serde(rename = "id")]
-    Id(String),
-    #[serde(rename = "bot_id")]
-    BotId(String)
-}
-
-fn search_bot(opt: RunOpt, db: &mut Database) -> CsmlBot {
-    match opt {
-        RunOpt::CsmlBot(csml_bot) => csml_bot.to_owned(),
-        RunOpt::BotId(bot_id) => {
-            get_last_bot_version(&bot_id, db).unwrap().unwrap()
-        },
-        RunOpt::Id(id) => {
-            get_by_id(&id, db).unwrap().unwrap()
-        }
-    }
-}
 
 // ##################
 
@@ -67,13 +45,13 @@ fn search_bot(opt: RunOpt, db: &mut Database) -> CsmlBot {
  */
 pub fn start_conversation(
     request: CsmlRequest,
-    run_opt: RunOpt,
+    run_opt: BotOpt,
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     let now = SystemTime::now();
 
     let formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
-    let mut bot= search_bot(run_opt, &mut db);
+    let mut bot= run_opt.search_bot(&mut db);
 
     // load native components into the bot
     bot.native_components = match load_components() {
@@ -117,7 +95,7 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
     get_latest_open(client, &mut db)
 }
 
-pub fn save_bot(
+pub fn create_bot(
     csml_bot: CsmlBot
 ) -> Result<String, EngineError>  {
     let bot_id = csml_bot.id.clone();
@@ -129,7 +107,7 @@ pub fn save_bot(
     match validate_bot(csml_bot) {
         CsmlResult{..} => { //flows:Some(bot_ast),
             // let bot_ast = base64::encode(bincode::serialize(&ast));
-            save_bot_state(bot_id, bot, &mut db)
+            bot::create_bot_state(bot_id, bot, &mut db)
         },
         _ => panic!("")
     }
@@ -139,17 +117,18 @@ pub fn get_bot(
     bot_id: &str
 ) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    let tmp = get_last_bot_version(bot_id, &mut db).unwrap();
+    let tmp = bot::get_last_bot_version(bot_id, &mut db).unwrap();
 
     println!("=> {:?}", tmp);
     Ok(())
 }
 
 pub fn get_bot_by_id(
-    id: &str
+    id: &str,
+    bot_id: &str
 ) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    let tmp = get_by_id(id, &mut db).unwrap();
+    let tmp = bot::get_by_id(id, bot_id, &mut db).unwrap();
 
     println!("=> {:?}", tmp);
     Ok(())
@@ -157,11 +136,10 @@ pub fn get_bot_by_id(
 
 pub fn get_bot_versions(
     bot_id: &str
-) -> Result<(), EngineError> {
+) -> Result< Vec< serde_json::Value > , EngineError> {
     let mut db = init_db()?;
-    let tmp = get_bot_list(bot_id, &mut db).unwrap();
 
-    Ok(())
+    Ok(bot::get_bot_versions(bot_id, &mut db).unwrap())
 }
 
 /**
