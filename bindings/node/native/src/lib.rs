@@ -1,7 +1,7 @@
 use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_engine::{
-    data::CsmlRequest, start_conversation, user_close_all_conversations, Client, CsmlResult,
-    ErrorInfo, Warnings,
+    data::{CsmlRequest, BotOpt}, start_conversation, user_close_all_conversations, Client, CsmlResult,
+    ErrorInfo, Warnings
 };
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value};
@@ -171,7 +171,12 @@ fn format_request(json_request: Value) -> Result<CsmlRequest, serde_json::error:
     })
 }
 
-fn format_bot(data: Value) -> Result<CsmlBot, serde_json::error::Error> {
+fn format_bot(data: Value) -> Result<BotOpt, serde_json::error::Error> {
+    
+    // match data["l"] {
+
+    // }
+
     Ok(CsmlBot {
         id: data["id"].as_str().unwrap().to_owned(),
         name: data["name"].as_str().unwrap().to_owned(),
@@ -198,7 +203,7 @@ fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
         Ok(value) => value,
     };
 
-    let bot: CsmlBot = match format_bot(json_bot) {
+    let bot: BotOpt = match format_bot(json_bot) {
         Err(err) => panic!("Bad request: bot format {:?}", err),
         Ok(value) => value,
     };

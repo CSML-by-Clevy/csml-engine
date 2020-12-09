@@ -1,4 +1,4 @@
-use csml_engine::start_conversation;
+use csml_engine::{start_conversation, data::BotOpt};
 use serde_json::{json, Value};
 
 use lambda_runtime::{error::HandlerError};
@@ -15,7 +15,7 @@ pub fn handler(body: RunRequest) -> Result<serde_json::Value, HandlerError> {
         val => val,
     };
 
-    let res = start_conversation(request, bot);
+    let res = start_conversation(request, BotOpt::CsmlBot(bot));
 
     match res {
         Ok(data) => Ok(serde_json::json!(

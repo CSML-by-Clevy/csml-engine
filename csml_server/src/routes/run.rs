@@ -1,6 +1,6 @@
 use actix_web::{post, web, HttpResponse};
-use csml_engine::start_conversation;
-use csml_engine::data::CsmlRequest;
+use csml_engine::{start_conversation};
+use csml_engine::data::{CsmlRequest, BotOpt};
 use csml_interpreter::data::{csml_bot::CsmlBot};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -8,7 +8,7 @@ use std::thread;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RunRequest {
-  bot: CsmlBot,
+  bot: BotOpt,
   event: CsmlRequest,
 }
 
