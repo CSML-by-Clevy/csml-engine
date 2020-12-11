@@ -14,13 +14,17 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation, bot};
+use db_connectors::{bot, conversations::*, init_db, messages::*, state::*, DbConversation};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
 
 use csml_interpreter::{
-    data::{csml_bot::{CsmlBot, SerializeCsmlBot}, csml_flow::CsmlFlow, ContextJson, Hold, Memory},
+    data::{
+        csml_bot::{CsmlBot, SerializeCsmlBot},
+        csml_flow::CsmlFlow,
+        ContextJson, Hold, Memory,
+    },
     load_components,
 };
 use md5::{Digest, Md5};
@@ -47,7 +51,7 @@ pub fn start_conversation(
 
     let formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
-    let mut bot= run_opt.search_bot(&mut db);
+    let mut bot = run_opt.search_bot(&mut db);
 
     // load native components into the bot
     bot.native_components = match load_components() {
@@ -60,7 +64,7 @@ pub fn start_conversation(
         &formatted_event,
         &request,
         &bot,
-        db
+        db,
     )?;
 
     // save event in db as message RECEIVE
@@ -94,9 +98,7 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
 /**
  * create bot state
  */
-pub fn create_bot(
-    csml_bot: CsmlBot
-) -> Result<String, EngineError> {
+pub fn create_bot(csml_bot: CsmlBot) -> Result<String, EngineError> {
     let bot_id = csml_bot.id.clone();
     let serializable_bot = csml_bot.to_serializable_bot();
     let bot = base64::encode(bincode::serialize(&serializable_bot).unwrap());
@@ -104,94 +106,71 @@ pub fn create_bot(
     let mut db = init_db()?;
 
     match validate_bot(csml_bot) {
-        CsmlResult{ errors: Some(errors), ..} => {
-            Ok(
-                serde_json::json!({
-                    "statusCode": 400,
-                    "body": errors
-                }).to_string()
-            )
-        }
-        CsmlResult{..} => {
-            bot::create_bot_state(bot_id, bot, &mut db)
-        },
+        CsmlResult {
+            errors: Some(errors),
+            ..
+        } => Ok(serde_json::json!({
+            "statusCode": 400,
+            "body": errors
+        })
+        .to_string()),
+        CsmlResult { .. } => bot::create_bot_state(bot_id, bot, &mut db),
     }
 }
 
 /**
  * get by bot_id
  */
-pub fn get_last_bot_version(
-    bot_id: &str
-) -> Result<String, EngineError> {
+pub fn get_last_bot_version(bot_id: &str) -> Result<String, EngineError> {
     let mut db = init_db()?;
     let bot = bot::get_last_bot_version(bot_id, &mut db)?;
 
     match bot {
-        Some(bot) => {
-            Ok(serde_json::json!({"statusCode": 200, "body": bot}).to_string())
-        }
-        None => {
-            Ok(
-                serde_json::json!({
-                    "statusCode": 404,
-                    "body": "bot not found"
-                }).to_string()
-            )
-        }
+        Some(bot) => Ok(serde_json::json!({"statusCode": 200, "body": bot}).to_string()),
+        None => Ok(serde_json::json!({
+            "statusCode": 404,
+            "body": "bot not found"
+        })
+        .to_string()),
     }
 }
 
 /**
  * get by id
  */
-pub fn get_bot_by_id(
-    id: &str,
-    bot_id: &str
-) -> Result<String, EngineError> {
+pub fn get_bot_by_id(id: &str, bot_id: &str) -> Result<String, EngineError> {
     let mut db = init_db()?;
     let bot = bot::get_by_id(id, bot_id, &mut db)?;
 
     match bot {
-        Some(bot) => {
-            Ok(serde_json::json!({"statusCode": 200, "bot": bot}).to_string())
-        }
-        None => {
-            Ok(
-                serde_json::json!({
-                    "statusCode": 404,
-                    "body": "bot not found"
-                }).to_string()
-            )
-        }
+        Some(bot) => Ok(serde_json::json!({"statusCode": 200, "bot": bot}).to_string()),
+        None => Ok(serde_json::json!({
+            "statusCode": 404,
+            "body": "bot not found"
+        })
+        .to_string()),
     }
 }
 
 /**
  * List the last 10 versions of the bot
  */
-pub fn get_bot_versions(
-    bot_id: &str
-) -> Result<String , EngineError> {
+pub fn get_bot_versions(bot_id: &str) -> Result<String, EngineError> {
     let mut db = init_db()?;
 
     match bot::get_bot_versions(bot_id, &mut db) {
-        Ok(value) => {
-            Ok(
-                serde_json::json!({
-                    "statusCode": 200,
-                    "body": value
-                }).to_string()
-            )
-        },
+        Ok(value) => Ok(serde_json::json!({
+            "statusCode": 200,
+            "body": value
+        })
+        .to_string()),
         Err(err) => {
             let error = format!("{:?}", err);
-            Ok(
-                serde_json::json!({
-                    "statusCode": 404,
-                    "body": error
-                }).to_string()
-            )
+            Ok(serde_json::json!({
+                "statusCode": 404,
+                "body": error
+            })
+            .to_string())
         }
     }
 }

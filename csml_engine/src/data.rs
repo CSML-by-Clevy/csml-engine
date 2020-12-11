@@ -1,5 +1,5 @@
-use crate::{Client, ContextJson, db_connectors};
-use csml_interpreter::data::{Message, csml_bot::{CsmlBot}};
+use crate::{db_connectors, Client, ContextJson};
+use csml_interpreter::data::{csml_bot::CsmlBot, Message};
 use curl::easy::Easy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -14,19 +14,19 @@ pub enum BotOpt {
     #[serde(rename = "id")]
     Id(String, String),
     #[serde(rename = "bot_id")]
-    BotId(String)
+    BotId(String),
 }
 
 impl BotOpt {
     pub fn search_bot(&self, db: &mut Database) -> CsmlBot {
         match self {
             BotOpt::CsmlBot(csml_bot) => csml_bot.to_owned(),
-            BotOpt::BotId(bot_id) => {
-                db_connectors::bot::get_last_bot_version(&bot_id, db).unwrap().unwrap()
-            },
-            BotOpt::Id(id, bot_id) => {
-                db_connectors::bot::get_by_id(&id, &bot_id, db).unwrap().unwrap()
-            }
+            BotOpt::BotId(bot_id) => db_connectors::bot::get_last_bot_version(&bot_id, db)
+                .unwrap()
+                .unwrap(),
+            BotOpt::Id(id, bot_id) => db_connectors::bot::get_by_id(&id, &bot_id, db)
+                .unwrap()
+                .unwrap(),
         }
     }
 }

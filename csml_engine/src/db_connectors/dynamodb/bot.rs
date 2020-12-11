@@ -1,8 +1,6 @@
 use crate::data::DynamoDbClient;
 use crate::db_connectors::dynamodb::{Bot, DynamoDbKey};
-use crate::{
-    EngineError, CsmlBot , SerializeCsmlBot
-};
+use crate::{CsmlBot, EngineError, SerializeCsmlBot};
 use rusoto_dynamodb::*;
 
 use crate::db_connectors::dynamodb::utils::*;
@@ -30,7 +28,7 @@ pub fn create_bot_state(
 pub fn get_bot_list(
     bot_id: &str,
     db: &mut DynamoDbClient,
-) -> Result<Vec<serde_json::Value> , EngineError> {
+) -> Result<Vec<serde_json::Value>, EngineError> {
     let hash = Bot::get_hash(bot_id);
 
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
@@ -70,6 +68,7 @@ pub fn get_bot_list(
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(10),
         select: Some(String::from("ALL_ATTRIBUTES")),
+        scan_index_forward: None,
         ..Default::default()
     };
 
@@ -84,10 +83,9 @@ pub fn get_bot_list(
         Some(items) => items.clone(),
     };
 
-    let mut bots =  vec!();
+    let mut bots = vec![];
 
     for item in items.iter() {
-
         let bot: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
 
         let base64decoded = base64::decode(&bot.bot).unwrap();

@@ -1,10 +1,10 @@
+pub mod bot;
 pub mod conversations;
 pub mod interactions;
 pub mod memories;
 pub mod messages;
 pub mod nodes;
 pub mod state;
-pub mod bot;
 
 use crate::{Database, EngineError};
 

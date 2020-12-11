@@ -1,10 +1,8 @@
-use crate::{db_connectors::DbBot, EngineError, CsmlBot, SerializeCsmlBot};
+use crate::{db_connectors::DbBot, CsmlBot, EngineError, SerializeCsmlBot};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
-fn format_bot_struct(
-    bot: bson::ordered::OrderedDocument,
-) -> Result<DbBot, EngineError> {
+fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, EngineError> {
     Ok(DbBot {
         id: bot.get_object_id("_id").unwrap().to_hex(),
         bot_id: bot.get_str("bot_id").unwrap().to_owned(),
@@ -42,7 +40,7 @@ pub fn create_bot_state(
 pub fn get_bot_list(
     bot_id: &str,
     db: &mongodb::Database,
-) -> Result<Vec<serde_json::Value> , EngineError> {
+) -> Result<Vec<serde_json::Value>, EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {
@@ -57,17 +55,15 @@ pub fn get_bot_list(
         .build();
 
     let cursor = collection.find(filter, find_options)?;
-    let mut bots =  vec!();
+    let mut bots = vec![];
 
     for doc in cursor {
-
         match doc {
             Ok(bot) => {
                 let bot = format_bot_struct(bot)?;
 
                 let base64decoded = base64::decode(&bot.bot).unwrap();
                 let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
-
 
                 let json = serde_json::json!({
                     "id": bot.id,
@@ -85,10 +81,7 @@ pub fn get_bot_list(
     Ok(bots)
 }
 
-pub fn get_bot_by_id(
-    id: &str,
-    db: &mongodb::Database,
-) -> Result<Option<CsmlBot>, EngineError> {
+pub fn get_bot_by_id(id: &str, db: &mongodb::Database) -> Result<Option<CsmlBot>, EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {

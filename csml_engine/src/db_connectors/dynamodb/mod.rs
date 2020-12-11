@@ -83,7 +83,6 @@ pub struct Bot {
 }
 
 impl Bot {
-
     pub fn get_hash(bot_id: &str) -> String {
         format!("bot_id:{}", bot_id)
     }
@@ -107,7 +106,7 @@ impl Bot {
             bot_id,
             bot,
             engine_version: version.to_owned(),
-            created_at: now
+            created_at: now,
         }
     }
 }
