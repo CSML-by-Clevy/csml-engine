@@ -1,4 +1,4 @@
-use crate::db_connectors::{conversations::*, init_db, interactions::*, memories::*};
+use crate::db_connectors::{conversations::*, interactions::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
     utils::{get_default_flow, get_flow_by_id, search_flow},

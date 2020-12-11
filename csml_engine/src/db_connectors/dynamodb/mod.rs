@@ -92,12 +92,6 @@ impl Bot {
         make_range(&["bot", id])
     }
 
-    pub fn get_key(bot_id: &str, status: &str, id: &str) -> DynamoDbKey {
-        let hash = Self::get_hash(bot_id);
-        let range = Self::get_range(id);
-        DynamoDbKey::new(&hash, &range)
-    }
-
     pub fn new(bot_id: String, bot: String) -> Self {
         let id = Uuid::new_v4().to_string();
         let now = get_date_time();

@@ -50,7 +50,7 @@ pub fn get_last_bot_version(
 
 pub fn get_by_id(
     id: &str,
-    bot_id: &str,
+    _bot_id: &str,
     db: &mut Database,
 ) -> Result<Option< CsmlBot >, EngineError> { //HashMap<String, Flow>
     #[cfg(feature = "mongo")]
@@ -62,7 +62,7 @@ pub fn get_by_id(
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::get_bot_by_id(&id, &bot_id, db);
+        return dynamodb_connector::bot::get_bot_by_id(&id, &_bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
