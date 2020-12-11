@@ -38,13 +38,13 @@ use self::dynamodb as dynamodb_connector;
 #[cfg(feature = "mongo")]
 use self::mongodb as mongodb_connector;
 
+pub mod bot;
 pub mod conversations;
 pub mod interactions;
 pub mod memories;
 pub mod messages;
 pub mod nodes;
 pub mod state;
-pub mod bot;
 
 use crate::Client;
 

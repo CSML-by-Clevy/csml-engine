@@ -40,6 +40,10 @@ async fn main() -> std::io::Result<()> {
       .service(routes::validate::handler)
       .service(routes::run::handler)
       .service(routes::sns::handler)
+      .service(routes::create_bot::handler)
+      .service(routes::get_bot_by_id::handler)
+      .service(routes::get_last_bot::handler)
+      .service(routes::get_bot_versions::handler)
 
       .service(routes::conversations::get_open)
       .service(routes::conversations::close_user_conversations)

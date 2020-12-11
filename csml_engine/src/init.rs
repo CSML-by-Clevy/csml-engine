@@ -30,7 +30,7 @@ pub fn init_conversation_info<'a>(
     event: &Event,
     request: &'a CsmlRequest,
     bot: &'a CsmlBot,
-    mut db: Database
+    mut db: Database,
 ) -> Result<ConversationInfo, EngineError> {
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
