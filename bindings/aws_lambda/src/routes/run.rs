@@ -1,5 +1,6 @@
 use csml_engine::{start_conversation, data::BotOpt};
 use serde_json::{json, Value};
+use crate::format_response;
 
 use lambda_runtime::{error::HandlerError};
 
@@ -28,8 +29,7 @@ pub fn handler(body: RunRequest) -> Result<serde_json::Value, HandlerError> {
         )),
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
-            eprintln!("{}", error);
-            Err(HandlerError::from(error.as_str()))
+            return format_response(400, serde_json::json!(error))
         }
     }
 }

@@ -2,6 +2,10 @@ pub mod run;
 pub mod conversations;
 pub mod validate;
 pub mod sns;
+pub mod create_bot;
+pub mod get_bot_by_id;
+pub mod get_bot_versions;
+pub mod get_last_bot;
 
 use csml_engine::data::CsmlRequest;
 use csml_interpreter::data::csml_bot::CsmlBot;
@@ -14,4 +18,14 @@ pub struct RunRequest {
     event: CsmlRequest,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetByIdRequest {
+    id: String,
+    bot_id: String,
+}
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetVersionsRequest {
+    bot_id: String,
+    last_key: Option<String>,
+}
