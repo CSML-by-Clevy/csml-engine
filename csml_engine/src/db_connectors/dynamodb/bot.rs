@@ -1,12 +1,9 @@
 use crate::data::DynamoDbClient;
 use crate::db_connectors::dynamodb::{Bot, DynamoDbKey};
-use crate::db_connectors::DbConversation;
 use crate::{
-    encrypt::{decrypt_data, encrypt_data},
-    Client, EngineError, CsmlBot , SerializeCsmlBot
+    EngineError, CsmlBot , SerializeCsmlBot
 };
 use rusoto_dynamodb::*;
-use std::collections::HashMap;
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -115,64 +112,6 @@ pub fn get_bot_by_id(
     bot_id: &str,
     db: &mut DynamoDbClient,
 ) -> Result<Option<CsmlBot>, EngineError> {
-    // let hash = Bot::get_hash(bot_id);
-
-    // let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
-    // let expr_attr_names = [
-    //     (String::from("#hashKey"), String::from("hash")),
-    //     (String::from("#rangeKey"), String::from("range_time")), // time index
-    // ]
-    // .iter()
-    // .cloned()
-    // .collect();
-
-    // let expr_attr_values = [
-    //     (
-    //         String::from(":hashVal"),
-    //         AttributeValue {
-    //             s: Some(hash.to_string()),
-    //             ..Default::default()
-    //         },
-    //     ),
-    //     (
-    //         String::from(":rangePrefix"),
-    //         AttributeValue {
-    //             s: Some(format!("bot#{}", id)), //String::from("bot#")
-    //             ..Default::default()
-    //         },
-    //     ),
-    // ]
-    // .iter()
-    // .cloned()
-    // .collect();
-
-    // let input = QueryInput {
-    //     table_name: get_table_name()?,
-    //     index_name: Some(String::from("TimeIndex")),
-    //     key_condition_expression: Some(key_cond_expr),
-    //     expression_attribute_names: Some(expr_attr_names),
-    //     expression_attribute_values: Some(expr_attr_values),
-    //     limit: Some(1),
-    //     select: Some(String::from("ALL_ATTRIBUTES")),
-    //     ..Default::default()
-    // };
-
-    // let query = db.client.query(input);
-    // let data = db.runtime.block_on(query)?;
-
-    // // The query returns an array of items (max 1, based on the limit param above).
-    // // If 0 item is returned it means that there is no open conversation, so simply return None
-    // let item = match data.items {
-    //     None => return Ok(None),
-    //     Some(items) if items.len() == 0 => return Ok(None),
-    //     Some(items) => items[0].clone(),
-    // };
-
-    // let bot: Bot = serde_dynamodb::from_hashmap(item)?;
-    // let base64decoded = base64::decode(&bot.bot).unwrap();
-    // let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
-
-    // Ok(Some(csml_bot.to_bot()))
     let item_key = DynamoDbKey {
         hash: Bot::get_hash(bot_id),
         range: Bot::get_range(id),
