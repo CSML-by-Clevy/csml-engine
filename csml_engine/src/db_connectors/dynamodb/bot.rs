@@ -27,8 +27,9 @@ pub fn create_bot_state(
 
 pub fn get_bot_list(
     bot_id: &str,
+    last_key: Option<String>,
     db: &mut DynamoDbClient,
-) -> Result<Vec<serde_json::Value>, EngineError> {
+) -> Result<serde_json::Value, EngineError> {
     let hash = Bot::get_hash(bot_id);
 
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
@@ -60,6 +61,11 @@ pub fn get_bot_list(
     .cloned()
     .collect();
 
+    let exclusive = match last_key {
+        Some(key) => serde_json::from_str(&key).unwrap(),
+        None => None,
+    };
+
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name: Some(String::from("TimeIndex")),
@@ -68,7 +74,7 @@ pub fn get_bot_list(
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(10),
         select: Some(String::from("ALL_ATTRIBUTES")),
-        scan_index_forward: None,
+        exclusive_start_key: exclusive,
         ..Default::default()
     };
 
@@ -77,9 +83,10 @@ pub fn get_bot_list(
 
     // The query returns an array of items (max 10, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
+    // , "last_key": :
     let items = match data.items {
-        None => return Ok(vec![]),
-        Some(items) if items.len() == 0 => return Ok(vec![]),
+        None => return Ok(serde_json::json!({"bots": []})),
+        Some(items) if items.len() == 0 => return Ok(serde_json::json!({"bots": []})),
         Some(items) => items.clone(),
     };
 
@@ -102,7 +109,9 @@ pub fn get_bot_list(
         bots.push(json);
     }
 
-    Ok(bots)
+    let last_key = serde_json::json!(data.last_evaluated_key).to_string();
+
+    Ok(serde_json::json!({"bots": bots, "last_key": last_key}))
 }
 
 pub fn get_bot_by_id(

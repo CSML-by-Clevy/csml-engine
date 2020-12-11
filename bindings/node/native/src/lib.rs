@@ -230,7 +230,7 @@ fn get_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let bot_id = cx.argument::<JsString>(1)?.value();
+    let bot_id = cx.argument::<JsString>(0)?.value();
 
     match csml_engine::get_last_bot_version(&bot_id) {
         Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
@@ -239,9 +239,13 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 fn get_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let bot_id = cx.argument::<JsString>(1)?.value();
+    let bot_id = cx.argument::<JsString>(0)?.value();
+    let last_key = match cx.argument::<JsString>(1) {
+        Ok(key) => Some(key.value()),
+        Err(_) => None
+    };
 
-    match csml_engine::get_bot_versions(&bot_id) {
+    match csml_engine::get_bot_versions(&bot_id, last_key) {
         Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => panic!(err),
     }

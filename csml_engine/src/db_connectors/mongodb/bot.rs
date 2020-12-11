@@ -39,13 +39,19 @@ pub fn create_bot_state(
 
 pub fn get_bot_list(
     bot_id: &str,
+    last_key: Option<String>,
     db: &mongodb::Database,
-) -> Result<Vec<serde_json::Value>, EngineError> {
+) -> Result<serde_json::Value, EngineError> {
     let collection = db.collection("bot");
 
-    let filter = doc! {
-        "bot_id": bot_id,
-        // "_id": {"$gt": bson::oid::ObjectId::with_string("5fd0ea4200aca41f005c82af").unwrap() }
+    let filter = match last_key {
+        Some(key) => {
+            doc! {
+                "bot_id": bot_id,
+                "_id": {"$gt": bson::oid::ObjectId::with_string(key).unwrap() }
+            }
+        }
+        None => doc! {"bot_id": bot_id },
     };
 
     let find_options = mongodb::options::FindOptions::builder()
@@ -56,6 +62,7 @@ pub fn get_bot_list(
 
     let cursor = collection.find(filter, find_options)?;
     let mut bots = vec![];
+    let mut last_key = None;
 
     for doc in cursor {
         match doc {
@@ -64,6 +71,8 @@ pub fn get_bot_list(
 
                 let base64decoded = base64::decode(&bot.bot).unwrap();
                 let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+
+                last_key = Some(bot.id.clone());
 
                 let json = serde_json::json!({
                     "id": bot.id,
@@ -78,7 +87,7 @@ pub fn get_bot_list(
         };
     }
 
-    Ok(bots)
+    Ok(serde_json::json!({"bots": bots, "last_key": last_key}))
 }
 
 pub fn get_bot_by_id(id: &str, db: &mongodb::Database) -> Result<Option<CsmlBot>, EngineError> {

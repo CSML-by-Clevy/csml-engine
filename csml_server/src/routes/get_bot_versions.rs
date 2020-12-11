@@ -7,14 +7,16 @@ use std::thread;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetBotVersionsRequest {
   bot_id: String,
+  last_key: Option<String>,
 }
 
 #[post("/get_bot_versions")]
 pub async fn handler(body: web::Json<GetBotVersionsRequest>) -> HttpResponse {
   let bot_id = body.bot_id.to_owned();
+  let last_key = body.last_key.to_owned();
 
   let res = thread::spawn(move || {
-    get_bot_versions(&bot_id)
+    get_bot_versions(&bot_id, last_key)
   }).join().unwrap();
 
   match res {

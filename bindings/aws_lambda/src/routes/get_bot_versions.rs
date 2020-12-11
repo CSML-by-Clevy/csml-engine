@@ -1,0 +1,27 @@
+use csml_engine::{get_bot_versions };
+use csml_interpreter::data::csml_bot::CsmlBot;
+use crate::format_response;
+
+use lambda_runtime::error::HandlerError;
+use crate::{routes::GetVersionsRequest};
+
+
+pub fn handler(body: GetVersionsRequest) -> Result<serde_json::Value, HandlerError> {
+
+  let res = get_bot_versions(body.bot_id, body.last_key);
+
+  match res {
+    Ok(data) => Ok(serde_json::json!(
+      {
+        "isBase64Encoded": false,
+        "statusCode": 200,
+        "headers": { "Content-Type": "application/json" },
+        "body": serde_json::json!(data).to_string()
+      }
+    )),
+    Err(err) => {
+        let error = format!("EngineError: {:?}", err);
+        return format_response(400, serde_json::json!(error))
+    }
+  }
+}

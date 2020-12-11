@@ -155,10 +155,10 @@ pub fn get_bot_by_id(id: &str, bot_id: &str) -> Result<String, EngineError> {
 /**
  * List the last 10 versions of the bot
  */
-pub fn get_bot_versions(bot_id: &str) -> Result<String, EngineError> {
+pub fn get_bot_versions(bot_id: &str, last_key: Option<String>) -> Result<String, EngineError> {
     let mut db = init_db()?;
 
-    match bot::get_bot_versions(bot_id, &mut db) {
+    match bot::get_bot_versions(bot_id, last_key, &mut db) {
         Ok(value) => Ok(serde_json::json!({
             "statusCode": 200,
             "body": value
