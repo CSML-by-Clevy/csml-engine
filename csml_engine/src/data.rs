@@ -1,4 +1,4 @@
-use crate::{db_connectors, Client, ContextJson};
+use crate::{db_connectors, Client, Context};
 use csml_interpreter::data::{csml_bot::CsmlBot, Message};
 use curl::easy::Easy;
 use serde::{Deserialize, Serialize};
@@ -75,7 +75,7 @@ pub struct ConversationInfo {
     pub conversation_id: String,
     pub interaction_id: String,
     pub client: Client,
-    pub context: ContextJson,
+    pub context: Context,
     pub metadata: Value,
     pub messages: Vec<Message>,
     pub db: Database,

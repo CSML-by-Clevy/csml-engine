@@ -42,7 +42,7 @@ async fn main() -> std::io::Result<()> {
       .service(routes::sns::handler)
       .service(routes::create_bot::handler)
       .service(routes::get_bot_by_id::handler)
-      .service(routes::get_last_bot::handler)
+      .service(routes::get_last_bot_version::handler)
       .service(routes::get_bot_versions::handler)
 
       .service(routes::conversations::get_open)

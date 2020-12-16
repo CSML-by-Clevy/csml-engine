@@ -23,7 +23,7 @@ use csml_interpreter::{
     data::{
         csml_bot::{CsmlBot, SerializeCsmlBot},
         csml_flow::CsmlFlow,
-        ContextJson, Hold, Memory,
+        Context, Hold, Memory,
     },
     load_components,
 };
@@ -98,12 +98,13 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
 /**
  * create bot state
  */
-pub fn create_bot(csml_bot: CsmlBot) -> Result<String, EngineError> {
+pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
+    let mut db = init_db()?;
+
     let bot_id = csml_bot.id.clone();
+
     let serializable_bot = csml_bot.to_serializable_bot();
     let bot = base64::encode(bincode::serialize(&serializable_bot).unwrap());
-
-    let mut db = init_db()?;
 
     match validate_bot(csml_bot) {
         CsmlResult {
@@ -114,7 +115,7 @@ pub fn create_bot(csml_bot: CsmlBot) -> Result<String, EngineError> {
             "body": errors
         })
         .to_string()),
-        CsmlResult { .. } => bot::create_bot_state(bot_id, bot, &mut db),
+        CsmlResult { .. } => bot::create_bot_version(bot_id, bot, &mut db),
     }
 }
 

@@ -2,10 +2,11 @@ use crate::db_connectors::{conversations::*, interactions::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
     utils::{get_default_flow, get_flow_by_id, search_flow},
-    ContextJson, CsmlBot, CsmlFlow,
+    Context, CsmlBot, CsmlFlow,
 };
 
-use csml_interpreter::data::{ApiInfo, Client, Event};
+use std::collections::HashMap;
+use csml_interpreter::data::{ApiInfo, Client, Event, context::{get_hashmap_from_json, get_hashmap_from_mem}};
 use curl::{
     easy::{Easy, List},
     Error as CurlError,
@@ -67,8 +68,8 @@ pub fn init_conversation_info<'a>(
         &mut db,
     )?;
 
-    context.metadata = request.metadata.clone();
-    context.current = get_memories(&request.client, &mut db)?;
+    context.metadata = get_hashmap_from_json(&request.metadata);
+    context.current = get_hashmap_from_mem(&get_memories(&request.client, &mut db)?);
 
     let mut data = ConversationInfo {
         conversation_id,
@@ -95,7 +96,7 @@ pub fn init_conversation_info<'a>(
 /**
  * Initialize the context object for incoming requests
  */
-pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) -> ContextJson {
+pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) -> Context {
     let api_info = match fn_endpoint {
         Some(value) => Some(ApiInfo {
             client,
@@ -104,9 +105,9 @@ pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) 
         None => None,
     };
 
-    ContextJson {
-        current: serde_json::json!({}),
-        metadata: serde_json::json!({}),
+    Context {
+        current:  HashMap::new(),
+        metadata: HashMap::new(),
         api_info,
         hold: None,
         step: "start".to_owned(),
@@ -134,7 +135,7 @@ pub fn init_curl(url: &str) -> Result<Easy, CurlError> {
  * Retrieve the current conversation, or create one if none exists.
  */
 fn get_or_create_conversation<'a>(
-    context: &mut ContextJson,
+    context: &mut Context,
     bot: &'a CsmlBot,
     flow_found: Option<&'a CsmlFlow>,
     metadata: serde_json::Value,
@@ -176,7 +177,7 @@ fn get_or_create_conversation<'a>(
  * Create and save a new conversation in DB
  */
 fn create_new_conversation<'a>(
-    context: &mut ContextJson,
+    context: &mut Context,
     bot: &'a CsmlBot,
     flow_found: Option<&'a CsmlFlow>,
     client: &Client,

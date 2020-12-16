@@ -19,7 +19,7 @@ use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
 use data::warnings::Warnings;
-use data::{ContextJson, Data, Position};
+use data::{Context, Data, Position};
 use error_format::*;
 use imports::validate_imports;
 use linter::data::Linter;
@@ -144,12 +144,11 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 //TODO: received ast instead of bot
 pub fn interpret(
     bot: CsmlBot,
-    context: ContextJson,
+    mut context: Context,
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let mut msg_data = MessageData::default();
-    let mut context = context.to_literal();
 
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();

@@ -21,7 +21,7 @@ pub mod warnings;
 
 pub use ast::Interval;
 pub use client::Client;
-pub use context::{ApiInfo, Context, ContextJson};
+pub use context::{ApiInfo, Context};
 pub use data::Data;
 pub use event::Event;
 pub use fn_args_type::ArgsType;

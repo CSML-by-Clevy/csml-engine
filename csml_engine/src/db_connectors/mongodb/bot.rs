@@ -15,7 +15,7 @@ fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, Engin
     })
 }
 
-pub fn create_bot_state(
+pub fn create_bot_version(
     bot_id: String,
     bot: String,
     db: &mongodb::Database,
@@ -37,7 +37,7 @@ pub fn create_bot_state(
     Ok(id.to_hex())
 }
 
-pub fn get_bot_list(
+pub fn get_bot_versions(
     bot_id: &str,
     last_key: Option<String>,
     db: &mongodb::Database,
@@ -48,7 +48,7 @@ pub fn get_bot_list(
         Some(key) => {
             doc! {
                 "bot_id": bot_id,
-                "_id": {"$gt": bson::oid::ObjectId::with_string(key).unwrap() }
+                "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
             }
         }
         None => doc! {"bot_id": bot_id },

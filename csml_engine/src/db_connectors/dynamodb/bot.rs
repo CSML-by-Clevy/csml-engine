@@ -5,7 +5,7 @@ use rusoto_dynamodb::*;
 
 use crate::db_connectors::dynamodb::utils::*;
 
-pub fn create_bot_state(
+pub fn create_bot_version(
     bot_id: String,
     bot: String,
     db: &mut DynamoDbClient,
@@ -25,7 +25,7 @@ pub fn create_bot_state(
     Ok(data.id.to_owned())
 }
 
-pub fn get_bot_list(
+pub fn get_bot_versions(
     bot_id: &str,
     last_key: Option<String>,
     db: &mut DynamoDbClient,

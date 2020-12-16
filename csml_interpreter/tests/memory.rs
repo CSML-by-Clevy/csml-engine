@@ -1,11 +1,12 @@
 mod support;
 
-use csml_interpreter::data::context::ContextJson;
+use csml_interpreter::data::context::Context;
 use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::MessageData;
 use csml_interpreter::interpret;
+use std::collections::HashMap;
 
 use crate::support::tools::message_to_json_value;
 use crate::support::tools::read_file;
@@ -17,7 +18,7 @@ const DEFAULT_FLOW_NAME: &str = "default";
 const DEFAULT_STEP_NAME: &str = "start";
 const DEFAULT_BOT_NAME: &str = "my_bot";
 
-fn format_message(event: Event, context: ContextJson, vector: &[&str]) -> MessageData {
+fn format_message(event: Event, context: Context, vector: &[&str]) -> MessageData {
     let default_content = read_file(vector[0].to_string()).unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 
@@ -57,9 +58,9 @@ fn memory() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             DEFAULT_STEP_NAME,

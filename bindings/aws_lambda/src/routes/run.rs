@@ -29,7 +29,7 @@ pub fn handler(body: RunRequest) -> Result<serde_json::Value, HandlerError> {
         )),
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
-            return format_response(400, serde_json::json!(error))
+            return Ok(format_response(400, serde_json::json!(error)))
         }
     }
 }

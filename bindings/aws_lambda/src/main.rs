@@ -1,7 +1,8 @@
 mod routes;
 
 use routes::{
-    run, validate, RunRequest, sns,
+    run, validate, RunRequest, GetByIdRequest, GetVersionsRequest , sns,
+    create_bot_version, get_last_bot_version, get_bot_versions, get_bot_by_id,
     conversations::{close_user_conversations, get_open}
 };
 
@@ -99,6 +100,65 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             validate::handler(body)
         }
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            ..
+        } if path.ends_with("/create_bot_version") && http_method == "POST" => {
+            let body: CsmlBot = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            create_bot_version::handler(body)
+        }
+
+        // GetByIdRequest 
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            ..
+        } if path.ends_with("/get_bot_by_id") && http_method == "POST" => {
+            let body: GetByIdRequest = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            get_bot_by_id::handler(body)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            ..
+        } if path.ends_with("/get_last_bot_version") && http_method == "POST" => {
+            let body: String = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            get_last_bot_version::handler(body)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            ..
+        } if path.ends_with("/get_bot_versions") && http_method == "POST" => {
+            let body: GetVersionsRequest = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            get_bot_versions::handler(body)
+        }
+
         LambdaRequest {
             path,
             http_method,
