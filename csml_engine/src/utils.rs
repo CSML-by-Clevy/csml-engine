@@ -209,6 +209,7 @@ pub fn get_default_flow<'a>(bot: &'a CsmlBot) -> Result<&'a CsmlFlow, EngineErro
     }
 }
 
+use rand::seq::SliceRandom;
 /**
  * Find a flow in a bot based on the user's input.
  * - flow_trigger events must will match a flow's id or name and reset the hold position
@@ -226,18 +227,29 @@ pub fn search_flow<'a>(
             get_flow_by_id(&event.content_value, &bot.flows)
         }
         event => {
+            let mut random_flows = vec![];
+
             for flow in bot.flows.iter() {
-                for command in flow.commands.iter() {
-                    if &command.to_lowercase() == &event.content_value.to_lowercase() {
-                        delete_state_key(&client, "hold", "position", db)?;
-                        return Ok(flow);
-                    }
+                let contains_command = flow
+                    .commands
+                    .iter()
+                    .any(|cmd| &cmd.as_str().to_lowercase() == &event.content_value.to_lowercase());
+
+                if contains_command {
+                    random_flows.push(flow)
                 }
             }
-            Err(EngineError::Interpreter(format!(
-                "Flow '{}' does not exist",
-                event.content_value
-            )))
+
+            match random_flows.choose(&mut rand::thread_rng()) {
+                Some(flow) => {
+                    delete_state_key(&client, "hold", "position", db)?;
+                    Ok(flow)
+                },
+                None => Err(EngineError::Interpreter(format!(
+                    "Flow '{}' does not exist",
+                    event.content_value
+                )))
+            }
         }
     }
 }

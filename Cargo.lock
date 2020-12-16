@@ -840,6 +840,7 @@ dependencies = [
  "mongodb",
  "multimap",
  "openssl",
+ "rand 0.7.3",
  "rusoto_core",
  "rusoto_dynamodb",
  "serde",
