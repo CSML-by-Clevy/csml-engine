@@ -3,7 +3,7 @@ use csml_engine::{
     Client, CsmlResult, ErrorInfo, Warnings
 };
 use csml_interpreter::data::csml_bot::CsmlBot;
-use neon::{context::Context, prelude::*, register_module,};
+use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value};
 
 fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
@@ -203,23 +203,23 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     }
 }
 
-fn create_bot_state(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
     let raw_bot = cx.argument::<JsValue>(0)?;
 
     let json_bot: Value = neon_serde::from_value(&mut cx, raw_bot)?;
 
     let bot: CsmlBot = match serde_json::from_value(json_bot) {
-        Err(err) => panic!("Bad request: bot format {:?}", err),
+        Err(err) => panic!("Bad bot format: {:?}", err),
         Ok(bot) => bot,
     };
 
-    match csml_engine::create_bot(bot) {
+    match csml_engine::create_bot_version(bot) {
         Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => panic!(err),
     }
 }
 
-fn get_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn get_bot_by_id(mut cx: FunctionContext) -> JsResult<JsValue> {
     let id = cx.argument::<JsString>(0)?.value();
     let bot_id = cx.argument::<JsString>(1)?.value();
 
@@ -256,8 +256,8 @@ register_module!(mut cx, {
 
     cx.export_function("validateBot", validate_bot)?;
 
-    cx.export_function("createBotState", create_bot_state)?;
-    cx.export_function("getBot", get_bot)?;
+    cx.export_function("createBotVersion", create_bot_version)?;
+    cx.export_function("getBotById", get_bot_by_id)?;
     cx.export_function("getLastBotVersion", get_last_bot_version)?;
     cx.export_function("getBotVersions", get_bot_versions)?;
 

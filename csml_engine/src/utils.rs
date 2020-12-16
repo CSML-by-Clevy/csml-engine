@@ -18,9 +18,10 @@ use std::env;
  */
 pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memory]) {
     for elem in mem.iter() {
-        if let Value::Object(ref mut obj) = data.context.current {
-            obj.insert(elem.key.to_owned(), elem.value.clone());
-        }
+
+        let lit  = serde_json::from_value(elem.value.clone()).unwrap();
+
+        data.context.current.insert(elem.key.to_owned(), lit);
     }
 }
 

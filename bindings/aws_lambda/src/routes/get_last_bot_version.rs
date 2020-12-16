@@ -1,12 +1,11 @@
-use csml_engine::{create_bot };
-use csml_interpreter::data::csml_bot::CsmlBot;
+use csml_engine::{get_last_bot_version};
 use crate::format_response;
 
 use lambda_runtime::error::HandlerError;
 
-pub fn handler(bot: CsmlBot) -> Result<serde_json::Value, HandlerError> {
+pub fn handler(bot_id: String) -> Result<serde_json::Value, HandlerError> {
 
-  let res = create_bot(bot);
+  let res = get_last_bot_version(&bot_id);
 
   match res {
     Ok(data) => Ok(serde_json::json!(
@@ -19,7 +18,7 @@ pub fn handler(bot: CsmlBot) -> Result<serde_json::Value, HandlerError> {
     )),
     Err(err) => {
         let error = format!("EngineError: {:?}", err);
-        return format_response(400, serde_json::json!(error))
+        return Ok(format_response(400, serde_json::json!(error)))
     }
   }
 }

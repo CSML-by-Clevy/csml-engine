@@ -1,7 +1,8 @@
 mod support;
 
-use csml_interpreter::data::context::ContextJson;
+use csml_interpreter::data::context::Context;
 use csml_interpreter::data::event::Event;
+use::std::collections::HashMap;
 
 use crate::support::tools::format_message;
 use crate::support::tools::message_to_json_value;
@@ -12,9 +13,9 @@ use serde_json::Value;
 fn object_step_0() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_0",
@@ -39,9 +40,9 @@ fn object_step_1() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_1",
@@ -70,9 +71,9 @@ fn object_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_2",
@@ -105,9 +106,9 @@ fn object_step_3() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_3",
@@ -134,9 +135,9 @@ fn object_step_4() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_4",
@@ -172,9 +173,9 @@ fn object_step_5() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_5",
@@ -206,9 +207,9 @@ fn object_step_6() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_6",
@@ -240,9 +241,9 @@ fn object_step_7() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_7",
@@ -268,9 +269,9 @@ fn object_step_8() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_8",

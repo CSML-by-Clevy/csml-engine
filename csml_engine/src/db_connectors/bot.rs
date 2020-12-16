@@ -5,7 +5,7 @@ use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{CsmlBot, Database, EngineError};
 
-pub fn create_bot_state(
+pub fn create_bot_version(
     bot_id: String,
     bot: String,
     db: &mut Database,
@@ -13,13 +13,13 @@ pub fn create_bot_state(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::bot::create_bot_state(bot_id, bot, db);
+        return mongodb_connector::bot::create_bot_version(bot_id, bot, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::create_bot_state(bot_id, bot, db);
+        return dynamodb_connector::bot::create_bot_version(bot_id, bot, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -74,13 +74,13 @@ pub fn get_bot_versions(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::bot::get_bot_list(&bot_id, last_key, db);
+        return mongodb_connector::bot::get_bot_versions(&bot_id, last_key, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::get_bot_list(&bot_id, last_key, db);
+        return dynamodb_connector::bot::get_bot_versions(&bot_id, last_key, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

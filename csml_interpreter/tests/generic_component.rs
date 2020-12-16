@@ -1,11 +1,12 @@
 mod support;
 
-use csml_interpreter::data::context::ContextJson;
+use csml_interpreter::data::context::Context;
 use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::MessageData;
 use csml_interpreter::interpret;
+use std::collections::HashMap;
 
 use crate::support::tools::message_to_json_value;
 use crate::support::tools::read_file;
@@ -22,7 +23,7 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 
 fn format_message(
     event: Event,
-    context: ContextJson,
+    context: Context,
     vector: &[&str],
     custom_components: serde_json::Value,
 ) -> MessageData {
@@ -63,9 +64,9 @@ fn empty() {
 	]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -91,9 +92,9 @@ fn default() {
 	]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -149,9 +150,9 @@ fn test_all() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "with_argument",
@@ -216,9 +217,9 @@ fn default_set() {
 	]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -261,9 +262,9 @@ fn default_get() {
 	]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -318,9 +319,9 @@ fn default_multiple_get() {
 	]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -372,9 +373,9 @@ fn default_add_value() {
 	]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -420,9 +421,9 @@ fn default_add_value_empty() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -471,9 +472,9 @@ fn parameter() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "with_argument",
@@ -535,9 +536,9 @@ fn parameter_multiple() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "with_argument",
@@ -596,9 +597,9 @@ fn parameter_multiple() {
 fn unknown_component() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "unknown_component",
@@ -633,9 +634,9 @@ fn unknown_component() {
 fn missing_type() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "unknown_component",
@@ -669,9 +670,9 @@ fn missing_type() {
 fn illegal_operation_default() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "unknown_component",
@@ -707,9 +708,9 @@ fn illegal_operation_default() {
 fn illegal_operation_add() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "unknown_component",
@@ -745,9 +746,9 @@ fn illegal_operation_add() {
 fn illegal_operation_parameter() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "unknown_component",
@@ -783,9 +784,9 @@ fn illegal_operation_parameter() {
 fn circular_dependencie_on_other_key_default() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -831,9 +832,9 @@ fn circular_dependencie_on_other_key_default() {
 fn circular_dependencie_on_self_default() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -869,9 +870,9 @@ fn circular_dependencie_on_self_default() {
 fn circular_dependencie_on_other_key_add() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "with_argument",
@@ -917,9 +918,9 @@ fn circular_dependencie_on_other_key_add() {
 fn circular_dependencie_on_self_add() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",
@@ -955,9 +956,9 @@ fn circular_dependencie_on_self_add() {
 fn missing_parameter() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "without_argument",

@@ -1,7 +1,8 @@
 mod support;
 
-use csml_interpreter::data::context::ContextJson;
+use csml_interpreter::data::context::Context;
 use csml_interpreter::data::event::Event;
+use std::collections::HashMap;
 
 use crate::support::tools::format_message;
 use crate::support::tools::message_to_json_value;
@@ -19,9 +20,9 @@ fn int_step_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "int_0",
@@ -47,9 +48,9 @@ fn int_step_1() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "int_1",
@@ -75,9 +76,9 @@ fn int_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "int_2",
@@ -103,9 +104,9 @@ fn float_step_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "float_0",
@@ -131,9 +132,9 @@ fn float_step_1() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "float_1",
@@ -159,9 +160,9 @@ fn string_step_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "string_0",
@@ -187,9 +188,9 @@ fn string_step_1() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "string_1",
