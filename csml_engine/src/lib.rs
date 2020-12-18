@@ -21,7 +21,7 @@ use utils::*;
 
 use csml_interpreter::{
     data::{
-        csml_bot::{CsmlBot, SerializeCsmlBot},
+        csml_bot::{CsmlBot},
         csml_flow::CsmlFlow,
         Context, Hold, Memory,
     },
@@ -103,10 +103,7 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
 
     let bot_id = csml_bot.id.clone();
 
-    let serializable_bot = csml_bot.to_serializable_bot();
-    let bot = base64::encode(bincode::serialize(&serializable_bot).unwrap());
-
-    match validate_bot(csml_bot) {
+    match validate_bot(csml_bot.clone()) {
         CsmlResult {
             errors: Some(errors),
             ..
@@ -115,7 +112,7 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
             "body": errors
         })
         .to_string()),
-        CsmlResult { .. } => bot::create_bot_version(bot_id, bot, &mut db),
+        CsmlResult { .. } => bot::create_bot_version(bot_id, csml_bot, &mut db),
     }
 }
 

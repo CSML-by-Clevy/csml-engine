@@ -112,6 +112,48 @@ impl Bot {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Flows {
+    pub hash: String,
+    pub range: String,
+    pub range_time: String,
+    pub class: String,
+
+    pub id: String,
+    pub bot_id: String,
+    pub id_bot: String,
+    pub flows: String,
+    pub created_at: String,
+}
+
+impl Flows {
+    pub fn get_hash(bot_id: &str) -> String {
+        format!("bot_id:{}", bot_id)
+    }
+
+    pub fn get_range(id_bot: &str, id: &str) -> String {
+        make_range(&["flows", id_bot, id])
+    }
+
+    pub fn new(bot_id: String, id_bot: String, flows: String) -> Self {
+        let id = Uuid::new_v4().to_string();
+        let now = get_date_time();
+        let class_name = "flows";
+
+        Self {
+            hash: Self::get_hash(&bot_id),
+            range: Self::get_range(&id_bot, &id),
+            range_time: make_range(&[&class_name, &id_bot, &now, &id]),
+            class: class_name.to_owned(),
+            id,
+            bot_id,
+            id_bot,
+            flows,
+            created_at: now,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Conversation {
     pub hash: String,
     pub range: String,
