@@ -64,10 +64,9 @@ fn init_bot() -> CsmlBot {
 
 fn main() {
     let mut line: String = String::new();
-    // let mut context = init_context();
+    
     loop {
         let run_opt = BotOpt::CsmlBot(init_bot());
-        // let run_opt = BotOpt::Id("5fcf727f0064f13a00bf5a3b".to_owned());
 
         stdin()
             .read_line(&mut line)

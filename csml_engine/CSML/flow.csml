@@ -1,6 +1,5 @@
 import {test as plop}
 import {pow} from flow2
-import {amerelo}
 
 fn add(var1, var2):
     return 56

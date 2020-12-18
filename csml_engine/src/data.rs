@@ -12,21 +12,25 @@ pub enum BotOpt {
     #[serde(rename = "csml_bot")]
     CsmlBot(CsmlBot),
     #[serde(rename = "id")]
-    Id(String, String),
+    Id{id: String, bot_id: String, fn_endpoint: Option<String>},
     #[serde(rename = "bot_id")]
-    BotId(String),
+    BotId{bot_id: String, fn_endpoint: Option<String>}
 }
 
 impl BotOpt {
     pub fn search_bot(&self, db: &mut Database) -> CsmlBot {
         match self {
             BotOpt::CsmlBot(csml_bot) => csml_bot.to_owned(),
-            BotOpt::BotId(bot_id) => db_connectors::bot::get_last_bot_version(&bot_id, db)
-                .unwrap()
-                .unwrap(),
-            BotOpt::Id(id, bot_id) => db_connectors::bot::get_by_id(&id, &bot_id, db)
-                .unwrap()
-                .unwrap(),
+            BotOpt::BotId{bot_id, fn_endpoint} => {
+                let mut bot = db_connectors::bot::get_last_bot_version(&bot_id, db).unwrap().unwrap();
+                bot.fn_endpoint = fn_endpoint.to_owned();
+                bot
+            },
+            BotOpt::Id{id, bot_id, fn_endpoint} => {
+                let mut bot = db_connectors::bot::get_by_id(&id, &bot_id, db).unwrap().unwrap();
+                bot.fn_endpoint = fn_endpoint.to_owned();
+                bot
+            }
         }
     }
 }
