@@ -9,10 +9,10 @@ pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum BotOpt {
-    #[serde(rename = "csml_bot")]
+    #[serde(rename = "bot")]
     CsmlBot(CsmlBot),
-    #[serde(rename = "id")]
-    Id{id: String, bot_id: String, fn_endpoint: Option<String>},
+    #[serde(rename = "version_id")]
+    Id{version_id: String, bot_id: String, fn_endpoint: Option<String>},
     #[serde(rename = "bot_id")]
     BotId{bot_id: String, fn_endpoint: Option<String>}
 }
@@ -26,8 +26,8 @@ impl BotOpt {
                 bot.fn_endpoint = fn_endpoint.to_owned();
                 bot
             },
-            BotOpt::Id{id, bot_id, fn_endpoint} => {
-                let mut bot = db_connectors::bot::get_by_id(&id, &bot_id, db).unwrap().unwrap();
+            BotOpt::Id{version_id, bot_id, fn_endpoint} => {
+                let mut bot = db_connectors::bot::get_by_id(&version_id, &bot_id, db).unwrap().unwrap();
                 bot.fn_endpoint = fn_endpoint.to_owned();
                 bot
             }

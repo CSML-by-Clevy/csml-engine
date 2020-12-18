@@ -90,7 +90,7 @@ pub fn get_bot_versions(
     Ok(serde_json::json!({"bots": bots, "last_key": last_key}))
 }
 
-pub fn get_bot_by_id(id: &str, db: &mongodb::Database) -> Result<Option<CsmlBot>, EngineError> {
+pub fn get_bot_by_version_id(id: &str, db: &mongodb::Database) -> Result<Option<CsmlBot>, EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {

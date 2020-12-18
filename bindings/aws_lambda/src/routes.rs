@@ -3,7 +3,7 @@ pub mod conversations;
 pub mod validate;
 pub mod sns;
 pub mod create_bot_version;
-pub mod get_bot_by_id;
+pub mod get_bot_by_version_id;
 pub mod get_bot_versions;
 pub mod get_last_bot_version;
 
