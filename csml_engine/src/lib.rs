@@ -136,7 +136,7 @@ pub fn get_last_bot_version(bot_id: &str) -> Result<String, EngineError> {
 /**
  * get by id
  */
-pub fn get_bot_by_id(id: &str, bot_id: &str) -> Result<String, EngineError> {
+pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<String, EngineError> {
     let mut db = init_db()?;
     let bot = bot::get_by_id(id, bot_id, &mut db)?;
 

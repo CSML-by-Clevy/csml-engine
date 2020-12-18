@@ -76,13 +76,13 @@ pub fn get_by_id(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::bot::get_bot_by_id(&id, db);
+        return mongodb_connector::bot::get_bot_by_version_id(&id, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::get_bot_by_id(&id, &_bot_id, db);
+        return dynamodb_connector::bot::get_bot_by_version_id(&id, &_bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

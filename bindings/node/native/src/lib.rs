@@ -219,11 +219,11 @@ fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
-fn get_bot_by_id(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
     let id = cx.argument::<JsString>(0)?.value();
     let bot_id = cx.argument::<JsString>(1)?.value();
 
-    match csml_engine::get_bot_by_id(&id, &bot_id) {
+    match csml_engine::get_bot_by_version_id(&id, &bot_id) {
         Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => panic!(err),
     }
@@ -257,7 +257,7 @@ register_module!(mut cx, {
     cx.export_function("validateBot", validate_bot)?;
 
     cx.export_function("createBotVersion", create_bot_version)?;
-    cx.export_function("getBotById", get_bot_by_id)?;
+    cx.export_function("getBotByVersionId", get_bot_by_version_id)?;
     cx.export_function("getLastBotVersion", get_last_bot_version)?;
     cx.export_function("getBotVersions", get_bot_versions)?;
 
