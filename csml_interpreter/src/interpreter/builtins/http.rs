@@ -51,16 +51,6 @@ fn get_url(object: &HashMap<String, Literal>, interval: Interval) -> Result<Stri
     Ok(url.to_owned())
 }
 
-fn serialize(object: &HashMap<String, Literal>) -> serde_json::Value {
-    let mut json: serde_json::map::Map<String, serde_json::Value> = serde_json::map::Map::new();
-
-    for (key, literal) in object.iter() {
-        json.insert(key.to_owned(), literal.primitive.to_json());
-    }
-
-    serde_json::Value::Object(json)
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,18 +73,11 @@ pub fn http_request(
         request.set(key, value);
     }
 
-    let response = match request.get_method() {
-        no_body if ["DELETE", "GET"].contains(&no_body) => request.call(),
-        _ => {
-            let body = get_value::<HashMap<String, Literal>>(
-                "body",
-                object,
-                interval,
-                ERROR_HTTP_GET_VALUE,
-            )?;
-            request.send_json(serialize(body))
-        }
+    let response = match object.get("body") {
+        Some(body) => request.send_json(body.primitive.to_json() ),
+        None => request.call()
     };
+
 
     if let Some(err) = response.synthetic_error() {
         if let Ok(var) = env::var("DEBUG") {

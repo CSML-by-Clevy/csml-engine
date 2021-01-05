@@ -212,12 +212,7 @@ pub const ERROR_HTTP_SET: &str =
     "[set] takes one parameter of type Object. Usage: HTTP(...).set( {\"key\": 42} )";
 pub const ERROR_HTTP_QUERY: &str =
     "[query] takes one parameter of type Object. Usage: HTTP(...).query( {\"key\": 42} )";
-pub const ERROR_HTTP_POST: &str =
-    "[post] takes one parameter of type Object. Usage: HTTP(...).post( {\"key\": 42} )";
-pub const ERROR_HTTP_PUT: &str =
-    "[put] takes one parameter of type Object. Usage: HTTP(...).put( {\"key\": 42} )";
-pub const ERROR_HTTP_PATCH: &str =
-    "[patch] takes one parameter of type Object. Usage: HTTP(...).patch( {\"key\": 42} )";
+
 pub const ERROR_HTTP_SEND: &str = "[send] HTTP Object is bad formatted read doc for correct usage";
 pub const ERROR_HTTP_UNKNOWN_METHOD: &str = "is not a method of HTTP";
 
