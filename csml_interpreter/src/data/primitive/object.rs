@@ -221,6 +221,7 @@ impl PrimitiveObject {
             interval,
             ERROR_HTTP_SET.to_owned(),
         )?;
+
         insert_to_object(header, &mut object, "header", literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
@@ -293,6 +294,8 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("get", interval),
         );
 
+        object.value.remove("body");
+
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
         result.set_content_type("http");
@@ -306,23 +309,9 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "post(body: object) => http object";
-
-        if args.len() != 1 {
-            return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            ));
-        }
-
-        let literal = match args.get("arg0") {
-            Some(res) => res,
-            _ => {
-                return Err(gen_error_info(
-                    Position::new(interval),
-                    format!("usage: {}", usage),
-                ));
-            }
+        match args.get("arg0") {
+            Some(body) => object.value.insert("body".to_owned(), body.to_owned()),
+            _ => object.value.remove("body")
         };
 
         let mut object = object.to_owned();
@@ -331,13 +320,6 @@ impl PrimitiveObject {
             "method".to_owned(),
             PrimitiveString::get_literal("post", interval),
         );
-
-        let header = Literal::get_value::<HashMap<String, Literal>>(
-            &literal.primitive,
-            interval,
-            ERROR_HTTP_POST.to_owned(),
-        )?;
-        insert_to_object(header, &mut object, "body", literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -352,23 +334,9 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "put(body: object) => http object";
-
-        if args.len() != 1 {
-            return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            ));
-        }
-
-        let literal = match args.get("arg0") {
-            Some(res) => res,
-            _ => {
-                return Err(gen_error_info(
-                    Position::new(interval),
-                    format!("usage: {}", usage),
-                ));
-            }
+        match args.get("arg0") {
+            Some(body) => object.value.insert("body".to_owned(), body.to_owned()),
+            _ => object.value.remove("body")
         };
 
         let mut object = object.to_owned();
@@ -377,13 +345,6 @@ impl PrimitiveObject {
             "method".to_owned(),
             PrimitiveString::get_literal("put", interval),
         );
-
-        let header = Literal::get_value::<HashMap<String, Literal>>(
-            &literal.primitive,
-            interval,
-            ERROR_HTTP_PUT.to_owned(),
-        )?;
-        insert_to_object(header, &mut object, "body", literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -398,23 +359,9 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "delete(body: object) => http object";
-
-        if args.len() != 1 {
-            return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            ));
-        }
-
-        let literal = match args.get("arg0") {
-            Some(res) => res,
-            _ => {
-                return Err(gen_error_info(
-                    Position::new(interval),
-                    format!("usage: {}", usage),
-                ));
-            }
+        match args.get("arg0") {
+            Some(body) => object.value.insert("body".to_owned(), body.to_owned()),
+            _ => object.value.remove("body")
         };
 
         let mut object = object.to_owned();
@@ -423,13 +370,6 @@ impl PrimitiveObject {
             "method".to_owned(),
             PrimitiveString::get_literal("delete", interval),
         );
-
-        let header = Literal::get_value::<HashMap<String, Literal>>(
-            &literal.primitive,
-            interval,
-            ERROR_HTTP_PUT.to_owned(),
-        )?;
-        insert_to_object(header, &mut object, "body", literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -444,23 +384,9 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "patch(body: object) => http object";
-
-        if args.len() != 1 {
-            return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            ));
-        }
-
-        let literal = match args.get("arg0") {
-            Some(res) => res,
-            _ => {
-                return Err(gen_error_info(
-                    Position::new(interval),
-                    format!("usage: {}", usage),
-                ));
-            }
+        let body = match args.get("arg0") {
+            Some(res) => res.to_owned(),
+            _ => PrimitiveNull::get_literal(Interval::default())
         };
 
         let mut object = object.to_owned();
@@ -470,12 +396,7 @@ impl PrimitiveObject {
             PrimitiveString::get_literal("patch", interval),
         );
 
-        let body = Literal::get_value::<HashMap<String, Literal>>(
-            &literal.primitive,
-            interval,
-            ERROR_HTTP_PATCH.to_owned(),
-        )?;
-        insert_to_object(body, &mut object, "body", literal);
+        object.value.insert("body".to_owned(), body);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
