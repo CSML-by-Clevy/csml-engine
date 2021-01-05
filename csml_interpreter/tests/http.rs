@@ -90,21 +90,6 @@ fn http_get_0() {
         "messages":[
             {
                 "content":{
-                    "body": {},
-                    "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
-                        "User-Agent": "csml/v1"
-                    },
-                    "method":"get",
-                    "query":{},
-                    "url":"https://clevy.io"
-                },
-                "content_type":"http"
-            },
-            {
-                "content":{
-                    "body": {},
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json",
@@ -305,9 +290,6 @@ fn http_delete_0() {
         "messages":[
             {
                 "content":{
-                    "body": {
-                        "hello":"world"
-                    },
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json",
@@ -321,7 +303,6 @@ fn http_delete_0() {
             },
             {
                 "content":{
-                    "body":{},
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json",
@@ -393,7 +374,7 @@ fn http_put_0() {
             },
             {
                 "content":{
-                    "body": {},
+                    "body": {"hello":"world"},
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json",
@@ -538,7 +519,7 @@ fn http_post_0() {
             },
             {
                 "content":{
-                    "body": {},
+                    "body": {"hello":"world"},
                     "header":{
                         "accept":"application/json,text/*",
                         "content-type":"application/json",

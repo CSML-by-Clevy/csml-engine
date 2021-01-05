@@ -12,11 +12,10 @@ get_0:
 
 	say http.get()
 
-	say http
 	goto end
 
 get_1:
-	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+	do HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
 	say http.get().send()
 	goto end
@@ -40,13 +39,13 @@ query_0:
 delete_0:
 	remember http = HTTP("https://clevy.io")
 
-	say http.delete({"hello":"world"})
+	say http.delete()
 
 	say http
 	goto end
 
 delete_1:
-	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+	do HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
 	say http.delete({"hello":"world"}).send()
 	goto end
@@ -60,7 +59,7 @@ put_0:
 	goto end
 
 put_1:
-	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+	do HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
 	say http.put({
 		"id":"1",
@@ -79,7 +78,7 @@ patch_0:
 	goto end
 
 patch_1:
-	use HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
+	do HTTP("https://jsonplaceholder.typicode.com/posts/1") as http
 
 	say http.patch({
 		"title":"foo",
@@ -95,7 +94,7 @@ post_0:
 	goto end
 
 post_1:
-	use HTTP("https://jsonplaceholder.typicode.com/posts") as http
+	do HTTP("https://jsonplaceholder.typicode.com/posts") as http
 
 	say http.post({
 		"title":"foo",
