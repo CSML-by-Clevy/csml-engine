@@ -15,14 +15,7 @@ fn ok_video() {
         r#"{"messages":[ {"content":{ "url": "test" },"content_type":"video"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/built-in/video.csml",
     );
 
@@ -37,14 +30,7 @@ fn ok_video_step2() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "service": "youtube" },"content_type":"video"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "video1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "video1", "flow"),
         "CSML/basic_test/built-in/video.csml",
     );
 
@@ -59,14 +45,7 @@ fn ok_video_step3() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "service": "youtube" },"content_type":"video"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "video2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "video2", "flow"),
         "CSML/basic_test/built-in/video.csml",
     );
 

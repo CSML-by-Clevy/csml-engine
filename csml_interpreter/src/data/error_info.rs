@@ -1,5 +1,5 @@
 use crate::data::position::Position;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE

@@ -20,14 +20,7 @@ fn int_step_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "int_0",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "int_0", "flow"),
         "CSML/basic_test/stdlib/number.csml",
     );
 
@@ -48,14 +41,7 @@ fn int_step_1() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "int_1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "int_1", "flow"),
         "CSML/basic_test/stdlib/number.csml",
     );
 
@@ -76,14 +62,7 @@ fn int_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "int_2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "int_2", "flow"),
         "CSML/basic_test/stdlib/number.csml",
     );
 

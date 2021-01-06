@@ -14,14 +14,7 @@ fn wait_0() {
     // let data = r#"{"messages":[ {"content":{"error": "Builtin Wait expect one argument of type int or float | example: Wait(3) at line 5, column 6 in step [wait_0] from flow [flow]"},"content_type":"error"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "wait_0",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "wait_0", "flow"),
         "CSML/basic_test/built-in/wait.csml",
     );
 
@@ -43,14 +36,7 @@ fn wait_1() {
         r#"{"messages":[ {"content":{"duration": 10},"content_type":"wait"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "wait_1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "wait_1", "flow"),
         "CSML/basic_test/built-in/wait.csml",
     );
 

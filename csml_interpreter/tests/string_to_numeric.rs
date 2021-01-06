@@ -14,14 +14,7 @@ fn ok_string_to_numeric() {
     let data = r#"{"messages":[ {"content":{"text":"2.5"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/numerical_operation/string_to_numeric.csml",
     );
 

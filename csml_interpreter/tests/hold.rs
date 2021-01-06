@@ -24,14 +24,7 @@ fn hold_test_none() {
     "#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/hold.csml",
     );
 

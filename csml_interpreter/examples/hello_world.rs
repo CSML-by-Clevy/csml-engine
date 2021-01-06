@@ -17,12 +17,6 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 ////////////////////////////////////////////////////////////////////////////////
 
 fn main() {
-    // let var = match (std::env::var("CARGO_PKG_VERSION_MAJOR"), std::env::var("CARGO_PKG_VERSION_MINOR"), std::env::var("CARGO_PKG_VERSION_PATCH")) {
-    //     (Ok(major), Ok(minor), Ok(patch)) => format!("{}.{}.{}", major, minor, patch),
-    //     _ => panic!("error getting crate version")
-    // };
-    // println!("version => {:?}", var);
-
     let default_content = std::fs::read_to_string("CSML/examples/hello_world.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 

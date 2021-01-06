@@ -15,14 +15,7 @@ fn ok_text() {
         r#"{"messages":[ {"content":{"text": "Hola"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/built-in/text.csml",
     );
 
@@ -38,14 +31,7 @@ fn ok_text_step1() {
         r#"{"messages":[ {"content":{"text": "Hola"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "text1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "text1", "flow"),
         "CSML/basic_test/built-in/text.csml",
     );
 
@@ -60,14 +46,7 @@ fn ok_text_step2() {
     let data = r#"{"messages":[ {"content":{"text": ""},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "text2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "text2", "flow"),
         "CSML/basic_test/built-in/text.csml",
     );
 
@@ -82,14 +61,7 @@ fn ok_text_step3() {
     let data = r#"{"messages":[ {"content":{"text": null},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "text3",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "text3", "flow"),
         "CSML/basic_test/built-in/text.csml",
     );
 
@@ -111,14 +83,7 @@ fn ok_text_step4() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "text4",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "text4", "flow"),
         "CSML/basic_test/built-in/text.csml",
     );
 

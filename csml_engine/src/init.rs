@@ -5,12 +5,15 @@ use crate::{
     Context, CsmlBot, CsmlFlow,
 };
 
-use std::collections::HashMap;
-use csml_interpreter::data::{ApiInfo, Client, Event, context::{get_hashmap_from_json, get_hashmap_from_mem}};
+use csml_interpreter::data::{
+    context::{get_hashmap_from_json, get_hashmap_from_mem},
+    ApiInfo, Client, Event,
+};
 use curl::{
     easy::{Easy, List},
     Error as CurlError,
 };
+use std::collections::HashMap;
 
 /**
  * Initialize a new ConversationInfo data, usually upon new chat request.
@@ -106,7 +109,7 @@ pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) 
     };
 
     Context {
-        current:  HashMap::new(),
+        current: HashMap::new(),
         metadata: HashMap::new(),
         api_info,
         hold: None,

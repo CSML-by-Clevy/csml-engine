@@ -7,7 +7,7 @@ use crate::error_format::*;
 
 use std::collections::{hash_map::Iter, HashMap};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ArgsType {

@@ -15,14 +15,7 @@ fn ok_find() {
         r#"{"messages":[ {"content":{ "text": "true"  },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/built-in/find.csml",
     );
 
@@ -38,14 +31,7 @@ fn ok_find_step1() {
         r#"{"messages":[ {"content":{ "text": "false" },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "find1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "find1", "flow"),
         "CSML/basic_test/built-in/find.csml",
     );
 

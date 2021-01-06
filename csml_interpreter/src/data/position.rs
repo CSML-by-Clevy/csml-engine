@@ -13,7 +13,7 @@ lazy_static! {
 // STRUCTURE
 ////////////////////////////////////////////////////////////////////////////////
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {

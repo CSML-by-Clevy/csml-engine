@@ -7,7 +7,7 @@ use crate::{routes::GetVersionsRequest};
 
 pub fn handler(body: GetVersionsRequest) -> Result<serde_json::Value, HandlerError> {
 
-  let res = get_bot_versions(&body.bot_id, body.last_key);
+  let res = get_bot_versions(&body.bot_id, body.limit, body.last_key);
 
   match res {
     Ok(data) => Ok(serde_json::json!(

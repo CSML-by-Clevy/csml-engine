@@ -13,14 +13,7 @@ fn ok_multiplication() {
     let data = r#"{"messages":[ {"content":{"text":"8"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
 

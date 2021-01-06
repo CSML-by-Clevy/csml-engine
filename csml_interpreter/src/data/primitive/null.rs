@@ -7,9 +7,9 @@ use crate::data::primitive::{
 use crate::data::{ast::Interval, literal::ContentType, message::Message, tokens::NULL, Literal};
 use crate::error_format::*;
 use lazy_static::*;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES

@@ -10,7 +10,7 @@ use std::ops::Add;
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Literal {

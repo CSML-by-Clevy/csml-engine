@@ -32,17 +32,17 @@ pub fn create_bot_version(
             name: csml_bot.name.to_owned(),
             custom_components: match csml_bot.custom_components.to_owned() {
                 Some(value) => Some(value.to_string()),
-                None => None
+                None => None,
             },
-            default_flow: csml_bot.default_flow.to_owned()
+            default_flow: csml_bot.default_flow.to_owned(),
         };
 
         let bot = base64::encode(bincode::serialize(&dynamo_bot).unwrap());
 
-        let id_bot = dynamodb_connector::bot::create_bot_version(bot_id.clone(), bot, db)?;
-        dynamodb_connector::bot::create_flows_batches(bot_id, id_bot.clone(), flows, db)?;
+        let version_id = dynamodb_connector::bot::create_bot_version(bot_id.clone(), bot, db)?;
+        dynamodb_connector::bot::create_flows_batches(bot_id, version_id.clone(), flows, db)?;
 
-        return Ok(id_bot)
+        return Ok(version_id);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -90,19 +90,20 @@ pub fn get_by_id(
 
 pub fn get_bot_versions(
     bot_id: &str,
+    limit: Option<i64>,
     last_key: Option<String>,
     db: &mut Database,
 ) -> Result<serde_json::Value, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::bot::get_bot_versions(&bot_id, last_key, db);
+        return mongodb_connector::bot::get_bot_versions(&bot_id, limit, last_key, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::get_bot_versions(&bot_id, last_key, db);
+        return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, last_key, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
