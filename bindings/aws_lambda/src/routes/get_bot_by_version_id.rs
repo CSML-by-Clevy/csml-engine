@@ -1,11 +1,12 @@
-use csml_engine::{get_last_bot_version};
+use csml_engine::{get_bot_by_version_id };
 use crate::format_response;
 
+use crate::{routes::GetByIdRequest};
 use lambda_runtime::error::HandlerError;
 
-pub fn handler(bot_id: String) -> Result<serde_json::Value, HandlerError> {
+pub fn handler(body: GetByIdRequest) -> Result<serde_json::Value, HandlerError> {
 
-  let res = get_last_bot_version(&bot_id);
+  let res = get_bot_by_version_id(&body.id, &body.bot_id);
 
   match res {
     Ok(data) => {
@@ -29,7 +30,6 @@ pub fn handler(bot_id: String) -> Result<serde_json::Value, HandlerError> {
           }))
         }
       }
-        
     },
     Err(err) => {
         let error = format!("EngineError: {:?}", err);

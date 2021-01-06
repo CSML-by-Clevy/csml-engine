@@ -10,13 +10,12 @@ pub fn handler(bot: CsmlBot) -> Result<serde_json::Value, HandlerError> {
 
   match res {
     Ok(data) => {
-      
         Ok(serde_json::json!(
         {
           "isBase64Encoded": false,
           "statusCode": 200,
           "headers": { "Content-Type": "application/json" },
-          "body": serde_json::json!(data).to_string(),
+          "body": data,
         }
       ))
     },

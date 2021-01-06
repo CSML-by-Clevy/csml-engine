@@ -214,8 +214,22 @@ fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
     };
 
     match csml_engine::create_bot_version(bot) {
-        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
-        Err(err) => panic!(err),
+        Ok(version_id) => {
+            let value = serde_json::json!({
+                "statusCode": 200,
+                "body": version_id
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "statusCode": 400,
+                "body": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
     }
 }
 
@@ -224,8 +238,32 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
     let bot_id = cx.argument::<JsString>(1)?.value();
 
     match csml_engine::get_bot_by_version_id(&id, &bot_id) {
-        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
-        Err(err) => panic!(err),
+        Ok(bot) => {
+            let value = match bot {
+                Some(bot) => {
+                    serde_json::json!({
+                        "statusCode": 200,
+                        "body": bot
+                    })
+                }
+                None => {
+                    serde_json::json!({
+                        "statusCode": 400,
+                        "body": "Not found"
+                    })
+                }
+            };
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        }
+        Err(err) => {
+            let value = serde_json::json!({
+                "statusCode": 400,
+                "body": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
     }
 }
 
@@ -233,8 +271,32 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
     let bot_id = cx.argument::<JsString>(0)?.value();
 
     match csml_engine::get_last_bot_version(&bot_id) {
-        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
-        Err(err) => panic!(err),
+        Ok(bot) => {
+            let value = match bot {
+                Some(bot) => {
+                    serde_json::json!({
+                        "statusCode": 200,
+                        "body": bot
+                    })
+                }
+                None => {
+                    serde_json::json!({
+                        "statusCode": 400,
+                        "body": "Not found"
+                    })
+                }
+            };
+        
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "statusCode": 400,
+                "body": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
     }
 }
 
@@ -251,8 +313,22 @@ fn get_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
     };
 
     match csml_engine::get_bot_versions(&bot_id, limit, last_key) {
-        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
-        Err(err) => panic!(err),
+        Ok(value) => {
+            let value= serde_json::json!({
+                "statusCode": 200,
+                "body": value
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "statusCode": 400,
+                "body": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
     }
 }
 

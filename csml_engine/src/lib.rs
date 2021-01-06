@@ -105,21 +105,8 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
         CsmlResult {
             errors: Some(errors),
             ..
-        } => Ok(serde_json::json!({
-            "statusCode": 400,
-            "body": errors
-        })
-        .to_string()),
-        CsmlResult { .. } => match bot::create_bot_version(bot_id, csml_bot, &mut db) {
-            Ok(version_id) => Ok(serde_json::json!({
-                "statusCode": 200,
-                "body": version_id
-            }).to_string()),
-            Err(error) => Ok(serde_json::json!({
-                "statusCode": 400,
-                "body": format!("{:?}", error)
-            }).to_string()),
-        },
+        } => Err(EngineError::Interpreter(format!("{:?}", errors))),
+        CsmlResult { .. } => bot::create_bot_version(bot_id, csml_bot, &mut db),
     }
 }
 
@@ -136,18 +123,10 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
  *   default_flow: String,
  * }
  */
-pub fn get_last_bot_version(bot_id: &str) -> Result<String, EngineError> {
+pub fn get_last_bot_version(bot_id: &str) -> Result<Option<CsmlBot>, EngineError>{
     let mut db = init_db()?;
-    let bot = bot::get_last_bot_version(bot_id, &mut db)?;
 
-    match bot {
-        Some(bot) => Ok(serde_json::json!({"statusCode": 200, "body": bot}).to_string()),
-        None => Ok(serde_json::json!({
-            "statusCode": 404,
-            "body": "bot not found"
-        })
-        .to_string()),
-    }
+    bot::get_last_bot_version(bot_id, &mut db)
 }
 
 /**
@@ -163,18 +142,10 @@ pub fn get_last_bot_version(bot_id: &str) -> Result<String, EngineError> {
  *   default_flow: String,
  * }
  */
-pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<String, EngineError> {
+pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<Option<CsmlBot>, EngineError> {
     let mut db = init_db()?;
-    let bot = bot::get_by_id(id, bot_id, &mut db)?;
 
-    match bot {
-        Some(bot) => Ok(serde_json::json!({"statusCode": 200, "body": bot}).to_string()),
-        None => Ok(serde_json::json!({
-            "statusCode": 404,
-            "body": "bot not found"
-        })
-        .to_string()),
-    }
+    bot::get_by_id(id, bot_id, &mut db)
 }
 
 /**
@@ -200,24 +171,25 @@ pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
     last_key: Option<String>,
-) -> Result<String, EngineError> {
+) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
 
-    match bot::get_bot_versions(bot_id, limit, last_key, &mut db) {
-        Ok(value) => Ok(serde_json::json!({
-            "statusCode": 200,
-            "body": value
-        })
-        .to_string()),
-        Err(err) => {
-            let error = format!("{:?}", err);
-            Ok(serde_json::json!({
-                "statusCode": 404,
-                "body": error
-            })
-            .to_string())
-        }
-    }
+    bot::get_bot_versions(bot_id, limit, last_key, &mut db)
+    // {
+    //     Ok(value) => Ok(serde_json::json!({
+    //         "statusCode": 200,
+    //         "body": value
+    //     })
+    //     .to_string()),
+    //     Err(err) => {
+    //         let error = format!("{:?}", err);
+    //         Ok(serde_json::json!({
+    //             "statusCode": 404,
+    //             "body": error
+    //         })
+    //         .to_string())
+    //     }
+    // }
 }
 
 /**

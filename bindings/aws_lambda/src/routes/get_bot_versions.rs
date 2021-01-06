@@ -15,7 +15,7 @@ pub fn handler(body: GetVersionsRequest) -> Result<serde_json::Value, HandlerErr
         "isBase64Encoded": false,
         "statusCode": 200,
         "headers": { "Content-Type": "application/json" },
-        "body": serde_json::json!(data).to_string()
+        "body": data
       }
     )),
     Err(err) => {

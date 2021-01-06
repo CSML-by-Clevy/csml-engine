@@ -7,6 +7,7 @@ use std::thread;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetBotVersionsRequest {
   bot_id: String,
+  limit: Option<i64>,
   last_key: Option<String>,
 }
 
