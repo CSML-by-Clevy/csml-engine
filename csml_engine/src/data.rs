@@ -32,22 +32,22 @@ impl BotOpt {
                 bot_id,
                 fn_endpoint,
             } => {
-                let mut bot = db_connectors::bot::get_last_bot_version(&bot_id, db)
+                let mut bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)
                     .unwrap()
                     .unwrap();
-                bot.fn_endpoint = fn_endpoint.to_owned();
-                bot
+                bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
+                bot_version.bot
             }
             BotOpt::Id {
                 version_id,
                 bot_id,
                 fn_endpoint,
             } => {
-                let mut bot = db_connectors::bot::get_by_id(&version_id, &bot_id, db)
+                let mut bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
                     .unwrap()
                     .unwrap();
-                bot.fn_endpoint = fn_endpoint.to_owned();
-                bot
+                bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
+                bot_version.bot
             }
         }
     }

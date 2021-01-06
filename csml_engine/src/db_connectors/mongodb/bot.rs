@@ -1,4 +1,4 @@
-use crate::{db_connectors::DbBot, CsmlBot, EngineError};
+use crate::{db_connectors::{DbBot, BotVersion}, EngineError};
 use csml_interpreter::data::csml_bot::SerializeCsmlBot;
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
@@ -48,7 +48,7 @@ pub fn get_bot_versions(
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit,
-        Some(limit) => 20,
+        Some(_limit) => 20,
         None => 20,
     };
 
@@ -74,19 +74,22 @@ pub fn get_bot_versions(
 
     for doc in cursor {
         match doc {
-            Ok(bot) => {
-                let bot = format_bot_struct(bot)?;
+            Ok(bot_doc) => {
+                let bot_version = format_bot_struct(bot_doc)?;
 
-                let base64decoded = base64::decode(&bot.bot).unwrap();
+                let base64decoded = base64::decode(&bot_version.bot).unwrap();
                 let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-                last_key = Some(bot.id.clone());
+                last_key = Some(bot_version.id.clone());
 
                 let json = serde_json::json!({
-                    "version_id": bot.id,
-                    "bot": csml_bot.info(),
-                    "engine_version": bot.engine_version,
-                    "created_at": bot.created_at
+                    "version_id": bot_version.id,
+                    "id": csml_bot.id,
+                    "name": csml_bot.name,
+                    "custom_components": csml_bot.custom_components,
+                    "default_flow": csml_bot.default_flow,
+                    "engine_version": bot_version.engine_version,
+                    "created_at": bot_version.created_at
                 });
 
                 bots.push(json);
@@ -101,7 +104,7 @@ pub fn get_bot_versions(
 pub fn get_bot_by_version_id(
     id: &str,
     db: &mongodb::Database,
-) -> Result<Option<CsmlBot>, EngineError> {
+) -> Result<Option<BotVersion>, EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {
@@ -121,7 +124,8 @@ pub fn get_bot_by_version_id(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            Ok(Some(csml_bot.to_bot()))
+            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id}))
+
         }
         None => Ok(None),
     }
@@ -130,7 +134,7 @@ pub fn get_bot_by_version_id(
 pub fn get_last_bot_version(
     bot_id: &str,
     db: &mongodb::Database,
-) -> Result<Option<CsmlBot>, EngineError> {
+) -> Result<Option<BotVersion>, EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {
@@ -150,7 +154,7 @@ pub fn get_last_bot_version(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            Ok(Some(csml_bot.to_bot()))
+            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id}))
         }
         None => Ok(None),
     }

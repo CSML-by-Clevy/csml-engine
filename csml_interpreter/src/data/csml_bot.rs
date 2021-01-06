@@ -131,15 +131,6 @@ impl SerializeCsmlBot {
             default_flow: self.default_flow.to_owned(),
         }
     }
-
-    pub fn info(self) -> serde_json::Value {
-        serde_json::json!({
-            "id": self.id,
-            "name": self.name,
-            "custom_components": self.custom_components,
-            "default_flow": self.default_flow
-        })
-    }
 }
 
 impl DynamoBot {

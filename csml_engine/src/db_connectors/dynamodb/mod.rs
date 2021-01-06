@@ -75,35 +75,35 @@ pub struct Bot {
     pub range_time: String,
     pub class: String,
 
+    pub version_id: String,
     pub id: String,
-    pub bot_id: String,
     pub bot: String,
     pub engine_version: String,
     pub created_at: String,
 }
 
 impl Bot {
-    pub fn get_hash(bot_id: &str) -> String {
-        format!("bot_id:{}", bot_id)
+    pub fn get_hash(id: &str) -> String {
+        format!("bot#{}", id)
     }
 
-    pub fn get_range(id: &str) -> String {
-        make_range(&["version_id", id])
+    pub fn get_range(version_id: &str) -> String {
+        make_range(&["version", version_id])
     }
 
-    pub fn new(bot_id: String, bot: String) -> Self {
-        let id = Uuid::new_v4().to_string();
+    pub fn new(id: String, bot: String) -> Self {
+        let version_id = Uuid::new_v4().to_string();
         let now = get_date_time();
         let version = env!("CARGO_PKG_VERSION");
         let class_name = "bot";
 
         Self {
-            hash: Self::get_hash(&bot_id),
-            range: Self::get_range(&id),
-            range_time: make_range(&[&class_name, &now, &id]),
+            hash: Self::get_hash(&id),
+            range: Self::get_range(&version_id),
+            range_time: make_range(&[&class_name, &now, &version_id]),
             class: class_name.to_owned(),
+            version_id,
             id,
-            bot_id,
             bot,
             engine_version: version.to_owned(),
             created_at: now,
@@ -127,7 +127,7 @@ pub struct DynamoFlow {
 
 impl DynamoFlow {
     pub fn get_hash(bot_id: &str) -> String {
-        format!("bot_id:{}", bot_id)
+        format!("bot#{}", bot_id)
     }
 
     pub fn get_range(version_id: &str, id: &str) -> String {
