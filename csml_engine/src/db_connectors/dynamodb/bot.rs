@@ -245,7 +245,7 @@ pub fn get_bot_versions(
         let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
         let json = serde_json::json!({
-            "id": data.id,
+            "version_id": data.id,
             "bot": csml_bot,
             "engine_version": data.engine_version,
             "created_at": data.created_at
