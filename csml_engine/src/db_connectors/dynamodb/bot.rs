@@ -1,6 +1,6 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::dynamodb::{Bot, DynamoDbKey, DynamoFlow};
-use crate::{CsmlBot, EngineError};
+use crate::db_connectors::{dynamodb::{Bot, DynamoDbKey, DynamoFlow}, BotVersion};
+use crate::{EngineError};
 use csml_interpreter::data::{csml_bot::DynamoBot, csml_flow::CsmlFlow};
 
 use rusoto_dynamodb::*;
@@ -40,12 +40,12 @@ pub fn create_flows_batches(
         let mut request_items = HashMap::new();
 
         let mut items_to_write = vec![];
-        for data in chunk {
-            let flows: DynamoFlow = DynamoFlow::new(bot_id.clone(), version_id.clone(), data);
+        for flow in chunk {
+            let dynamo_flow: DynamoFlow = DynamoFlow::new(bot_id.clone(), version_id.clone(), flow);
 
             items_to_write.push(WriteRequest {
                 put_request: Some(PutRequest {
-                    item: serde_dynamodb::to_hashmap(&flows)?,
+                    item: serde_dynamodb::to_hashmap(&dynamo_flow)?,
                 }),
                 ..Default::default()
             });
@@ -174,7 +174,7 @@ pub fn get_bot_versions(
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit,
-        Some(limit) => 20,
+        Some(_limit) => 20,
         None => 20,
     };
 
@@ -246,7 +246,10 @@ pub fn get_bot_versions(
 
         let json = serde_json::json!({
             "version_id": data.id,
-            "bot": csml_bot,
+            "id": csml_bot.id,
+            "name": csml_bot.name,
+            "custom_components": csml_bot.custom_components,
+            "default_flow": csml_bot.default_flow,
             "engine_version": data.engine_version,
             "created_at": data.created_at
         });
@@ -263,7 +266,7 @@ pub fn get_bot_by_version_id(
     id: &str,
     bot_id: &str,
     db: &mut DynamoDbClient,
-) -> Result<Option<CsmlBot>, EngineError> {
+) -> Result<Option<BotVersion>, EngineError> {
     let item_key = DynamoDbKey {
         hash: Bot::get_hash(bot_id),
         range: Bot::get_range(id),
@@ -286,8 +289,7 @@ pub fn get_bot_by_version_id(
 
             let flows = get_flows(&csml_bot.id, &bot.id, db)?;
 
-            Ok(Some(csml_bot.to_bot(flows)))
-        }
+            Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id}))        }
         _ => Ok(None),
     }
 }
@@ -295,7 +297,7 @@ pub fn get_bot_by_version_id(
 pub fn get_last_bot_version(
     bot_id: &str,
     db: &mut DynamoDbClient,
-) -> Result<Option<CsmlBot>, EngineError> {
+) -> Result<Option<BotVersion>, EngineError> {
     let hash = Bot::get_hash(bot_id);
 
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
@@ -355,5 +357,5 @@ pub fn get_last_bot_version(
 
     let flows = get_flows(&csml_bot.id, &bot.id, db)?;
 
-    Ok(Some(csml_bot.to_bot(flows)))
+    Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id}))
 }

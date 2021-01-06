@@ -32,6 +32,7 @@
 use crate::data::{Database, EngineError};
 use crate::error_messages::ERROR_DB_SETUP;
 use serde::{Deserialize, Serialize};
+use csml_interpreter::data::csml_bot::CsmlBot;
 
 #[cfg(feature = "dynamo")]
 use self::dynamodb as dynamodb_connector;
@@ -146,6 +147,12 @@ pub struct DbBot {
     pub bot: String,
     pub engine_version: String,
     pub created_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BotVersion {
+    pub bot: CsmlBot,
+    pub version_id: String,
 }
 
 #[cfg(feature = "mongo")]

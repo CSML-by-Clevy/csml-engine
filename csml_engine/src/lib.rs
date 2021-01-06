@@ -14,7 +14,7 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{bot, conversations::*, init_db, messages::*, state::*, DbConversation};
+use db_connectors::{bot, conversations::*, init_db, messages::*, state::*, DbConversation, BotVersion};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
@@ -112,7 +112,7 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
 
 /**
  * get by bot_id
- * {"statusCode": i32, "body": bot}
+ * {"statusCode": i32, "body": {"bot": bot, "version_id": String}}
  *
  * bot: {
  *   id: String,
@@ -123,7 +123,7 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
  *   default_flow: String,
  * }
  */
-pub fn get_last_bot_version(bot_id: &str) -> Result<Option<CsmlBot>, EngineError>{
+pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineError>{
     let mut db = init_db()?;
 
     bot::get_last_bot_version(bot_id, &mut db)
@@ -131,7 +131,7 @@ pub fn get_last_bot_version(bot_id: &str) -> Result<Option<CsmlBot>, EngineError
 
 /**
  * get bot by id
- * {"statusCode": i32, "body": bot}
+ * {"statusCode": i32, "body": {"bot": bot, "version_id": String}}
  *
  * bot: {
  *   id: String,
@@ -142,30 +142,26 @@ pub fn get_last_bot_version(bot_id: &str) -> Result<Option<CsmlBot>, EngineError
  *   default_flow: String,
  * }
  */
-pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<Option<CsmlBot>, EngineError> {
+pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<Option<BotVersion>, EngineError> {
     let mut db = init_db()?;
 
-    bot::get_by_id(id, bot_id, &mut db)
+    bot::get_by_version_id(id, bot_id, &mut db)
 }
 
 /**
  * List the last 20 versions of the bot if no limit is set
  *
- * "body": {"bots": Vec<bot_info>, "last_key": String}
+ * "body": {"bots": Vec<BOT>, "last_key": String}
  * 
- * bot_info = {
+ * BOT = {
  *  "version_id": String,
- *  "bot": bot,
- *  "engine_version": String
- *  "created_at": String
- * }
- * 
- * bot: {
  *  "id": String,
  *  "name": String,
  *  "custom_components": Option<String>,
  *  "default_flow": String
- * } 
+ *  "engine_version": String
+ *  "created_at": String
+ * }
  */
 pub fn get_bot_versions(
     bot_id: &str,
@@ -175,21 +171,6 @@ pub fn get_bot_versions(
     let mut db = init_db()?;
 
     bot::get_bot_versions(bot_id, limit, last_key, &mut db)
-    // {
-    //     Ok(value) => Ok(serde_json::json!({
-    //         "statusCode": 200,
-    //         "body": value
-    //     })
-    //     .to_string()),
-    //     Err(err) => {
-    //         let error = format!("{:?}", err);
-    //         Ok(serde_json::json!({
-    //             "statusCode": 404,
-    //             "body": error
-    //         })
-    //         .to_string())
-    //     }
-    // }
 }
 
 /**

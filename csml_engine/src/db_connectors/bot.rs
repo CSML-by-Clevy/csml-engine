@@ -4,7 +4,7 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use csml_interpreter::data::csml_bot::DynamoBot;
 
 #[cfg(feature = "mongo")]
-use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
+use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector, BotVersion};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{CsmlBot, Database, EngineError};
 
@@ -51,7 +51,7 @@ pub fn create_bot_version(
 pub fn get_last_bot_version(
     bot_id: &str,
     db: &mut Database,
-) -> Result<Option<CsmlBot>, EngineError> {
+) -> Result<Option<BotVersion>, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -67,11 +67,11 @@ pub fn get_last_bot_version(
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn get_by_id(
+pub fn get_by_version_id(
     id: &str,
     _bot_id: &str,
     db: &mut Database,
-) -> Result<Option<CsmlBot>, EngineError> {
+) -> Result<Option<BotVersion>, EngineError> {
     //HashMap<String, Flow>
     #[cfg(feature = "mongo")]
     if is_mongodb() {
