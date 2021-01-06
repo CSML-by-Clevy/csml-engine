@@ -93,6 +93,8 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
 
 /**
  * create bot state
+ * 
+ * { "statusCode": i32, "body": version_id }
  */
 pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
     let mut db = init_db()?;
@@ -108,12 +110,31 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
             "body": errors
         })
         .to_string()),
-        CsmlResult { .. } => bot::create_bot_version(bot_id, csml_bot, &mut db),
+        CsmlResult { .. } => match bot::create_bot_version(bot_id, csml_bot, &mut db) {
+            Ok(version_id) => Ok(serde_json::json!({
+                "statusCode": 200,
+                "body": version_id
+            }).to_string()),
+            Err(error) => Ok(serde_json::json!({
+                "statusCode": 400,
+                "body": format!("{:?}", error)
+            }).to_string()),
+        },
     }
 }
 
 /**
  * get by bot_id
+ * {"statusCode": i32, "body": bot}
+ *
+ * bot: {
+ *   id: String,
+ *   name: String,
+ *   fn_endpoint: Option<String>,
+ *   flows: Vec<CsmlFlow>,
+ *   custom_components: Option<>,
+ *   default_flow: String,
+ * }
  */
 pub fn get_last_bot_version(bot_id: &str) -> Result<String, EngineError> {
     let mut db = init_db()?;
@@ -130,14 +151,24 @@ pub fn get_last_bot_version(bot_id: &str) -> Result<String, EngineError> {
 }
 
 /**
- * get by id
+ * get bot by id
+ * {"statusCode": i32, "body": bot}
+ *
+ * bot: {
+ *   id: String,
+ *   name: String,
+ *   fn_endpoint: Option<String>,
+ *   flows: Vec<CsmlFlow>,
+ *   custom_components: Option<>,
+ *   default_flow: String,
+ * }
  */
 pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<String, EngineError> {
     let mut db = init_db()?;
     let bot = bot::get_by_id(id, bot_id, &mut db)?;
 
     match bot {
-        Some(bot) => Ok(serde_json::json!({"statusCode": 200, "bot": bot}).to_string()),
+        Some(bot) => Ok(serde_json::json!({"statusCode": 200, "body": bot}).to_string()),
         None => Ok(serde_json::json!({
             "statusCode": 404,
             "body": "bot not found"
@@ -147,7 +178,23 @@ pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<String, EngineErr
 }
 
 /**
- * List the last 10 versions of the bot
+ * List the last 20 versions of the bot if no limit is set
+ *
+ * "body": {"bots": Vec<bot_info>, "last_key": String}
+ * 
+ * bot_info = {
+ *  "version_id": String,
+ *  "bot": bot,
+ *  "engine_version": String
+ *  "created_at": String
+ * }
+ * 
+ * bot: {
+ *  "id": String,
+ *  "name": String,
+ *  "custom_components": Option<String>,
+ *  "default_flow": String
+ * } 
  */
 pub fn get_bot_versions(
     bot_id: &str,

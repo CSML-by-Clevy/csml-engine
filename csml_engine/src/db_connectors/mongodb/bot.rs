@@ -82,8 +82,8 @@ pub fn get_bot_versions(
                 last_key = Some(bot.id.clone());
 
                 let json = serde_json::json!({
-                    "id": bot.id,
-                    "bot": csml_bot.to_bot(),
+                    "version_id": bot.id,
+                    "bot": csml_bot.info(),
                     "engine_version": bot.engine_version,
                     "created_at": bot.created_at
                 });
