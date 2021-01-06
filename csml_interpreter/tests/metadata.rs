@@ -18,18 +18,14 @@ fn metadata() {
         ]
     }"#;
     let mut metadata = HashMap::new();
-    metadata.insert("var".to_owned(), PrimitiveInt::get_literal(42, Interval::default()));
+    metadata.insert(
+        "var".to_owned(),
+        PrimitiveInt::get_literal(42, Interval::default()),
+    );
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            metadata,
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), metadata, None, None, "start", "flow"),
         "CSML/basic_test/metadata.csml",
     );
 
@@ -48,18 +44,14 @@ fn metadata_step1() {
     }"#;
 
     let mut metadata = HashMap::new();
-    metadata.insert("var".to_owned(), PrimitiveInt::get_literal(42, Interval::default()));
+    metadata.insert(
+        "var".to_owned(),
+        PrimitiveInt::get_literal(42, Interval::default()),
+    );
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            metadata,
-            None,
-            None,
-            "step1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), metadata, None, None, "step1", "flow"),
         "CSML/basic_test/metadata.csml",
     );
 
@@ -78,18 +70,14 @@ fn metadata_step2() {
         ]
     }"#;
     let mut metadata = HashMap::new();
-    metadata.insert("var".to_owned(), PrimitiveInt::get_literal(42, Interval::default()));
+    metadata.insert(
+        "var".to_owned(),
+        PrimitiveInt::get_literal(42, Interval::default()),
+    );
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            metadata,
-            None,
-            None,
-            "step2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), metadata, None, None, "step2", "flow"),
         "CSML/basic_test/metadata.csml",
     );
 

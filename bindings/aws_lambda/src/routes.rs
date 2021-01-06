@@ -27,5 +27,6 @@ pub struct GetByIdRequest {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetVersionsRequest {
     bot_id: String,
+    limit: Option<i64>,
     last_key: Option<String>,
 }

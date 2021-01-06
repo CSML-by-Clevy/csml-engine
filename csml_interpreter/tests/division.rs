@@ -14,14 +14,7 @@ fn ok_division() {
     let data = r#"{"messages":[ {"content":{"text":"2"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/numerical_operation/division.csml",
     );
 
@@ -36,14 +29,7 @@ fn ok_division_2() {
     let data = r#"{"messages":[ {"content":{"text":"21.333333333333332"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "div2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "div2", "flow"),
         "CSML/basic_test/numerical_operation/division.csml",
     );
 

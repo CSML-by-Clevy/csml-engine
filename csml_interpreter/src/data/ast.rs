@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Flow {

@@ -1,10 +1,10 @@
 use crate::data::DynamoDbClient;
-use csml_interpreter::data::{csml_bot::DynamoBot, csml_flow::CsmlFlow,};
-use crate::db_connectors::dynamodb::{Bot, DynamoDbKey, Flows};
+use crate::db_connectors::dynamodb::{Bot, DynamoDbKey, DynamoFlow};
 use crate::{CsmlBot, EngineError};
+use csml_interpreter::data::{csml_bot::DynamoBot, csml_flow::CsmlFlow};
 
-use std::collections::HashMap;
 use rusoto_dynamodb::*;
+use std::collections::HashMap;
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -27,44 +27,38 @@ pub fn create_bot_version(
     Ok(data.id.to_owned())
 }
 
-fn create_flows_baches(mut flows: Vec<CsmlFlow>,) -> Vec<String> {
-    let mut flows_vec = vec!();
-    let mut max_range = flows.len();
-
-    while max_range > 0 {
-        let range = match max_range {
-            max_range if max_range > 10 => 9,
-            max_range => max_range
-        };
-
-        let tmp: Vec<CsmlFlow> = flows.drain(0..range).collect();
-
-        let serialize_flows = base64::encode(bincode::serialize(&tmp).unwrap());
-        flows_vec.push(serialize_flows);
-        max_range = max_range - range;
-
-    }
-
-    flows_vec
-}
-
 pub fn create_flows_batches(
     bot_id: String,
-    id_bot: String,
+    version_id: String,
     flows: Vec<CsmlFlow>,
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
-    let flows_vec = create_flows_baches(flows);
+    // We can only use BatchWriteItem on up to 25 items at once,
+    // so we need to split the messages to write into chunks of max
+    // 25 items.
+    for chunk in flows.chunks(25) {
+        let mut request_items = HashMap::new();
 
-    for flows in flows_vec {
-        let data: Flows = Flows::new(bot_id.clone(), id_bot.clone(), flows);
-        let input = PutItemInput {
-            item: serde_dynamodb::to_hashmap(&data)?,
-            table_name: get_table_name()?,
+        let mut items_to_write = vec![];
+        for data in chunk {
+            let flows: DynamoFlow = DynamoFlow::new(bot_id.clone(), version_id.clone(), data);
+
+            items_to_write.push(WriteRequest {
+                put_request: Some(PutRequest {
+                    item: serde_dynamodb::to_hashmap(&flows)?,
+                }),
+                ..Default::default()
+            });
+        }
+
+        request_items.insert(get_table_name()?, items_to_write);
+
+        let input = BatchWriteItemInput {
+            request_items,
             ..Default::default()
         };
-        let client = db.client.to_owned();
-        let future = client.put_item(input);
+
+        let future = db.client.batch_write_item(input);
 
         db.runtime.block_on(future)?;
     }
@@ -73,7 +67,7 @@ pub fn create_flows_batches(
 
 pub fn get_flows(
     bot_id: &str,
-    id_bot: &str,
+    version_id: &str,
     db: &mut DynamoDbClient,
 ) -> Result<Vec<CsmlFlow>, EngineError> {
     let mut flows = vec![];
@@ -81,7 +75,7 @@ pub fn get_flows(
 
     // recursively retrieve all memories from dynamodb
     loop {
-        let tmp = query_flows(bot_id, id_bot, db, last_evaluated_key)?;
+        let tmp = query_flows(bot_id, version_id, db, last_evaluated_key)?;
         let mut items = tmp.items.to_owned();
         flows.append(&mut items);
         if let None = tmp.last_evaluated_key {
@@ -100,11 +94,11 @@ struct QueryResult {
 
 fn query_flows(
     bot_id: &str,
-    id_bot: &str,
+    version_id: &str,
     db: &mut DynamoDbClient,
     last_evaluated_key: Option<HashMap<String, AttributeValue>>,
 ) -> Result<QueryResult, EngineError> {
-    let hash = Flows::get_hash(&bot_id);
+    let hash = DynamoFlow::get_hash(&bot_id);
 
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
@@ -126,7 +120,7 @@ fn query_flows(
         (
             String::from(":rangePrefix"),
             AttributeValue {
-                s: Some(format!("flows#{}", id_bot)),
+                s: Some(format!("flow#{}", version_id)),
                 ..Default::default()
             },
         ),
@@ -154,11 +148,11 @@ fn query_flows(
     match data.items {
         Some(val) => {
             for item in val.iter() {
-                let data: Flows = serde_dynamodb::from_hashmap(item.to_owned())?;
+                let data: DynamoFlow = serde_dynamodb::from_hashmap(item.to_owned())?;
 
-                let base64decoded = base64::decode(&data.flows).unwrap();
-                let mut flows: Vec<CsmlFlow> = bincode::deserialize(&base64decoded[..]).unwrap();
-                items.append(&mut flows);
+                let base64decoded = base64::decode(&data.flow).unwrap();
+                let flow: CsmlFlow = bincode::deserialize(&base64decoded[..]).unwrap();
+                items.push(flow);
             }
         }
         _ => (),
@@ -172,10 +166,17 @@ fn query_flows(
 
 pub fn get_bot_versions(
     bot_id: &str,
+    limit: Option<i64>,
     last_key: Option<String>,
     db: &mut DynamoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
     let hash = Bot::get_hash(bot_id);
+
+    let limit = match limit {
+        Some(limit) if limit >= 1 => limit,
+        Some(limit) => 20,
+        None => 20,
+    };
 
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
@@ -217,7 +218,7 @@ pub fn get_bot_versions(
         key_condition_expression: Some(key_cond_expr),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
-        limit: Some(1),
+        limit: Some(limit),
         select: Some(String::from("ALL_ATTRIBUTES")),
         exclusive_start_key: last_evaluated_key,
         ..Default::default()

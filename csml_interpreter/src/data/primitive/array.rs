@@ -12,8 +12,8 @@ use crate::error_format::*;
 use lazy_static::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-use serde::{Serialize, Deserialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::usize;
@@ -253,7 +253,7 @@ impl PrimitiveArray {
             return Ok(PrimitiveArray::get_literal(&vector, interval));
         }
 
-        Ok(PrimitiveArray::get_literal( &[], interval))
+        Ok(PrimitiveArray::get_literal(&[], interval))
     }
 
     fn is_empty(

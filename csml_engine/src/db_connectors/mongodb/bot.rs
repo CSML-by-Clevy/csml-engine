@@ -39,10 +39,17 @@ pub fn create_bot_version(
 
 pub fn get_bot_versions(
     bot_id: &str,
+    limit: Option<i64>,
     last_key: Option<String>,
     db: &mongodb::Database,
 ) -> Result<serde_json::Value, EngineError> {
     let collection = db.collection("bot");
+
+    let limit = match limit {
+        Some(limit) if limit >= 1 => limit,
+        Some(limit) => 20,
+        None => 20,
+    };
 
     let filter = match last_key {
         Some(key) => {
@@ -56,8 +63,8 @@ pub fn get_bot_versions(
 
     let find_options = mongodb::options::FindOptions::builder()
         .sort(doc! { "$natural": -1, })
-        .batch_size(10)
-        .limit(10)
+        .batch_size(20)
+        .limit(limit)
         .build();
 
     let cursor = collection.find(filter, find_options)?;
@@ -90,7 +97,10 @@ pub fn get_bot_versions(
     Ok(serde_json::json!({"bots": bots, "last_key": last_key}))
 }
 
-pub fn get_bot_by_version_id(id: &str, db: &mongodb::Database) -> Result<Option<CsmlBot>, EngineError> {
+pub fn get_bot_by_version_id(
+    id: &str,
+    db: &mongodb::Database,
+) -> Result<Option<CsmlBot>, EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {

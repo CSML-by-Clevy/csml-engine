@@ -11,9 +11,9 @@ use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::*;
 use lazy_static::*;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES

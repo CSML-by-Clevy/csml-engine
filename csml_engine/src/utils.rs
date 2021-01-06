@@ -18,8 +18,7 @@ use std::env;
  */
 pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memory]) {
     for elem in mem.iter() {
-
-        let lit  = serde_json::from_value(elem.value.clone()).unwrap();
+        let lit = serde_json::from_value(elem.value.clone()).unwrap();
 
         data.context.current.insert(elem.key.to_owned(), lit);
     }
@@ -245,11 +244,11 @@ pub fn search_flow<'a>(
                 Some(flow) => {
                     delete_state_key(&client, "hold", "position", db)?;
                     Ok(flow)
-                },
+                }
                 None => Err(EngineError::Interpreter(format!(
                     "Flow '{}' does not exist",
                     event.content_value
-                )))
+                ))),
             }
         }
     }

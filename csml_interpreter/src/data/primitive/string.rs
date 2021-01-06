@@ -1,5 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
+use crate::data::position::Position;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::float::PrimitiveFloat;
@@ -11,13 +12,12 @@ use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::*;
+use crate::interpreter::json_to_literal;
 use lazy_static::*;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
-use crate::data::position::Position;
-use crate::interpreter::json_to_literal;
 
 ////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES

@@ -23,14 +23,7 @@ fn string_step_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step_0",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_0", "flow"),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -53,14 +46,7 @@ fn string_step_1() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step_1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_1", "flow"),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -85,14 +71,7 @@ fn string_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step_2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_2", "flow"),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -111,14 +90,7 @@ fn string_step_3() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step_3",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_3", "flow"),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -141,14 +113,7 @@ fn string_step_4() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step_4",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_4", "flow"),
         "CSML/basic_test/stdlib/string.csml",
     );
 

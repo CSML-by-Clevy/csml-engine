@@ -14,14 +14,7 @@ fn ok_json_object_step1() {
     let data = r#"{"messages":[ {"content":{"text":"1"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step1", "flow"),
         "CSML/basic_test/json_object.csml",
     );
 
@@ -36,14 +29,7 @@ fn ok_json_object_step2() {
     let data = r#"{"messages":[ {"content":{"text":"4"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step2", "flow"),
         "CSML/basic_test/json_object.csml",
     );
 
@@ -59,14 +45,7 @@ fn ok_json_object_step3() {
         r#"{"messages":[ {"content":{"text":"true"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step3",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step3", "flow"),
         "CSML/basic_test/json_object.csml",
     );
 

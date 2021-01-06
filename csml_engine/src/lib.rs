@@ -20,11 +20,7 @@ use interpreter_actions::interpret_step;
 use utils::*;
 
 use csml_interpreter::{
-    data::{
-        csml_bot::{CsmlBot},
-        csml_flow::CsmlFlow,
-        Context, Hold, Memory,
-    },
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, Memory},
     load_components,
 };
 use md5::{Digest, Md5};
@@ -153,10 +149,14 @@ pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<String, EngineErr
 /**
  * List the last 10 versions of the bot
  */
-pub fn get_bot_versions(bot_id: &str, last_key: Option<String>) -> Result<String, EngineError> {
+pub fn get_bot_versions(
+    bot_id: &str,
+    limit: Option<i64>,
+    last_key: Option<String>,
+) -> Result<String, EngineError> {
     let mut db = init_db()?;
 
-    match bot::get_bot_versions(bot_id, last_key, &mut db) {
+    match bot::get_bot_versions(bot_id, limit, last_key, &mut db) {
         Ok(value) => Ok(serde_json::json!({
             "statusCode": 200,
             "body": value

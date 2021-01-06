@@ -16,7 +16,6 @@ pub struct SerializeCsmlBot {
     pub native_components: Option<String>, // serde_json::Map<String, serde_json::Value>
     pub custom_components: Option<String>, // serde_json::Value
     pub default_flow: String,
-    // pub bot_ast: Option<String> // ???
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,10 +24,9 @@ pub struct CsmlBot {
     pub name: String,
     pub fn_endpoint: Option<String>,
     pub flows: Vec<CsmlFlow>,
-    pub native_components: Option<serde_json::Map<String, serde_json::Value>>, // 
-    pub custom_components: Option<serde_json::Value>, // serde_json::Value
+    pub native_components: Option<serde_json::Map<String, serde_json::Value>>, //
+    pub custom_components: Option<serde_json::Value>,                          // serde_json::Value
     pub default_flow: String,
-    // pub bot_ast: Option<String> // ???
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,20 +82,20 @@ impl CsmlBot {
     }
 
     pub fn to_serializable_bot(&self) -> SerializeCsmlBot {
-        SerializeCsmlBot{
+        SerializeCsmlBot {
             id: self.id.to_owned(),
             name: self.name.to_owned(),
             flows: self.flows.to_owned(),
             native_components: {
                 match self.native_components.to_owned() {
                     Some(value) => Some(serde_json::Value::Object(value).to_string()),
-                    None => None
+                    None => None,
                 }
             },
             custom_components: {
                 match self.custom_components.to_owned() {
                     Some(value) => Some(value.to_string()),
-                    None => None
+                    None => None,
                 }
             },
             default_flow: self.default_flow.to_owned(),
@@ -114,24 +112,20 @@ impl SerializeCsmlBot {
             flows: self.flows.to_owned(),
             native_components: {
                 match self.native_components.to_owned() {
-                    Some(value) => {
-                        match serde_json::from_str(&value) {
-                            Ok(serde_json::Value::Object(map)) => Some(map),
-                            _ => unreachable!()
-                        }
+                    Some(value) => match serde_json::from_str(&value) {
+                        Ok(serde_json::Value::Object(map)) => Some(map),
+                        _ => unreachable!(),
                     },
-                    None => None
+                    None => None,
                 }
             },
             custom_components: {
                 match self.custom_components.to_owned() {
-                    Some(value) => {
-                        match serde_json::from_str(&value) {
-                            Ok(value) => Some(value),
-                            Err(_e) => unreachable!()
-                        }
+                    Some(value) => match serde_json::from_str(&value) {
+                        Ok(value) => Some(value),
+                        Err(_e) => unreachable!(),
                     },
-                    None => None
+                    None => None,
                 }
             },
             default_flow: self.default_flow.to_owned(),
@@ -149,13 +143,11 @@ impl DynamoBot {
             native_components: None,
             custom_components: {
                 match self.custom_components.to_owned() {
-                    Some(value) => {
-                        match serde_json::from_str(&value) {
-                            Ok(value) => Some(value),
-                            Err(_e) => unreachable!()
-                        }
+                    Some(value) => match serde_json::from_str(&value) {
+                        Ok(value) => Some(value),
+                        Err(_e) => unreachable!(),
                     },
-                    None => None
+                    None => None,
                 }
             },
             default_flow: self.default_flow.to_owned(),

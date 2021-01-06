@@ -14,14 +14,7 @@ fn ok_addition() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"5"},"content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
 

@@ -1,7 +1,7 @@
 use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
-use csml_interpreter::data::{Context, primitive::PrimitiveString, Interval};
+use csml_interpreter::data::{primitive::PrimitiveString, Context, Interval};
 use csml_interpreter::validate_bot;
 use csml_interpreter::{interpret, load_components};
 use std::collections::HashMap;
@@ -35,11 +35,17 @@ fn main() {
     let event = Event::default();
 
     // Create a Metadata
-    
+
     let mut metadata = HashMap::new();
 
-    metadata.insert("firstname".to_owned(),  PrimitiveString::get_literal("Toto", Interval::default()));
-    metadata.insert("email".to_owned(),  PrimitiveString::get_literal("toto@clevy.io", Interval::default()));
+    metadata.insert(
+        "firstname".to_owned(),
+        PrimitiveString::get_literal("Toto", Interval::default()),
+    );
+    metadata.insert(
+        "email".to_owned(),
+        PrimitiveString::get_literal("toto@clevy.io", Interval::default()),
+    );
 
     // Create context
     let context = Context::new(
