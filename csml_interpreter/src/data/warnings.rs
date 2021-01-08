@@ -4,6 +4,7 @@ use lazy_static::*;
 use std::collections::*;
 use std::sync::*;
 use std::thread::*;
+use serde::{Serialize, Deserialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -17,7 +18,7 @@ lazy_static! {
     static ref HASHMAP: Mutex<HashMap<ThreadId, Vec<Warnings>>> = Mutex::new(HashMap::default());
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Warnings {
     pub message: &'static str,
     pub position: Position,

@@ -11,6 +11,21 @@ pub struct GetBotVersionsRequest {
   last_key: Option<String>,
 }
 
+/*
+* Get the last 20 versions of the bot if no limit is set
+*
+* {"statusCode": 200,"body": Vec<Bot>}
+*
+* BOT = {
+*  "version_id": String,
+*  "id": String,
+*  "name": String,
+*  "custom_components": Option<String>,
+*  "default_flow": String
+*  "engine_version": String
+*  "created_at": String
+* }
+*/
 #[post("/get_bot_versions")]
 pub async fn handler(body: web::Json<GetBotVersionsRequest>) -> HttpResponse {
   let bot_id = body.bot_id.to_owned();

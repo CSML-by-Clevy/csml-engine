@@ -9,6 +9,13 @@ pub struct CreateRequest {
   bot: CsmlBot,
 }
 
+
+/*
+* create bot version
+*
+*{"statusCode": 200,"body": {"version_id": String} }
+*
+*/
 #[post("/create_bot_version")]
 pub async fn handler(body: web::Json<CreateRequest>) -> HttpResponse {
   let bot = body.bot.to_owned();
@@ -18,12 +25,10 @@ pub async fn handler(body: web::Json<CreateRequest>) -> HttpResponse {
   }).join().unwrap();
 
   match res {
-    Ok(data) => HttpResponse::Ok().json(data),
+    Ok(data) => HttpResponse::Created().json(serde_json::json!({"version_id": data})),
     Err(err) => {
       eprintln!("EngineError: {:?}", err);
       HttpResponse::InternalServerError().finish()
     }
   }
 }
-
-

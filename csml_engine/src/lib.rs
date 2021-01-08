@@ -92,9 +92,7 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
 }
 
 /**
- * create bot state
- * 
- * { "statusCode": i32, "body": version_id }
+ * create bot version
  */
 pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
     let mut db = init_db()?;
@@ -112,16 +110,6 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
 
 /**
  * get by bot_id
- * {"statusCode": i32, "body": {"bot": bot, "version_id": String}}
- *
- * bot: {
- *   id: String,
- *   name: String,
- *   fn_endpoint: Option<String>,
- *   flows: Vec<CsmlFlow>,
- *   custom_components: Option<>,
- *   default_flow: String,
- * }
  */
 pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineError>{
     let mut db = init_db()?;
@@ -130,17 +118,7 @@ pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineEr
 }
 
 /**
- * get bot by id
- * {"statusCode": i32, "body": {"bot": bot, "version_id": String}}
- *
- * bot: {
- *   id: String,
- *   name: String,
- *   fn_endpoint: Option<String>,
- *   flows: Vec<CsmlFlow>,
- *   custom_components: Option<>,
- *   default_flow: String,
- * }
+ * get bot by version_id
  */
 pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<Option<BotVersion>, EngineError> {
     let mut db = init_db()?;
@@ -151,8 +129,6 @@ pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<Option<BotVersion
 /**
  * List the last 20 versions of the bot if no limit is set
  *
- * "body": {"bots": Vec<BOT>, "last_key": String}
- * 
  * BOT = {
  *  "version_id": String,
  *  "id": String,
