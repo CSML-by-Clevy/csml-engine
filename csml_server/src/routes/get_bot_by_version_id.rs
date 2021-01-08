@@ -9,6 +9,21 @@ pub struct GetByIdRequest {
   bot_id: String,
 }
 
+/*
+* get bot by version
+*
+* {"statusCode": 200,"body": Bot}
+*
+* BOT = {
+*  "version_id": String,
+*  "id": String,
+*  "name": String,
+*  "custom_components": Option<String>,
+*  "default_flow": String
+*  "engine_version": String
+*  "created_at": String
+* }
+*/
 #[post("/get_bot_by_version_id")]
 pub async fn handler(body: web::Json<GetByIdRequest>) -> HttpResponse {
   let id = body.id.to_owned();
@@ -19,7 +34,8 @@ pub async fn handler(body: web::Json<GetByIdRequest>) -> HttpResponse {
   }).join().unwrap();
 
   match res {
-    Ok(data) => HttpResponse::Ok().json(data),
+    Ok(Some(bot_version)) => HttpResponse::Ok().json(bot_version.flatten()),
+    Ok(None) => HttpResponse::NotFound().finish(),
     Err(err) => {
       eprintln!("EngineError: {:?}", err);
       HttpResponse::InternalServerError().finish()

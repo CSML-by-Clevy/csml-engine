@@ -4,9 +4,9 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use csml_interpreter::data::csml_bot::DynamoBot;
 
 #[cfg(feature = "mongo")]
-use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector, BotVersion};
+use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::error_messages::ERROR_DB_SETUP;
-use crate::{CsmlBot, Database, EngineError};
+use crate::{CsmlBot, Database, EngineError, BotVersion};
 
 pub fn create_bot_version(
     bot_id: String,

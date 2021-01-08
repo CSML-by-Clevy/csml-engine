@@ -13,7 +13,7 @@ pub fn handler(bot: CsmlBot) -> Result<serde_json::Value, HandlerError> {
         Ok(serde_json::json!(
         {
           "isBase64Encoded": false,
-          "statusCode": 200,
+          "statusCode": 201,
           "headers": { "Content-Type": "application/json" },
           "body": data,
         }

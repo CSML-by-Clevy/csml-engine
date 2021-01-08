@@ -155,6 +155,22 @@ pub struct BotVersion {
     pub version_id: String,
 }
 
+impl BotVersion {
+    pub fn flatten(&self) -> serde_json::Value {
+        serde_json::json!(
+            {
+                "version_id": self.version_id,
+                "id": self.bot.id,
+                "name": self.bot.name,
+                "fn_endpoint": self.bot.fn_endpoint,
+                "flows": self.bot.flows,
+                "custom_components": self.bot.custom_components,
+                "default_flow": self.bot.default_flow,
+            }
+        )
+    }
+}
+
 #[cfg(feature = "mongo")]
 pub fn is_mongodb() -> bool {
     // If the env var is not set at all, use mongodb by default

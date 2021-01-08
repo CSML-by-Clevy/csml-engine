@@ -8,6 +8,21 @@ pub struct GetLastBotRequest {
   bot_id: String,
 }
 
+/*
+* get last bot version
+*
+* {"statusCode": 200,"body": Bot}
+*
+* BOT = {
+*  "version_id": String,
+*  "id": String,
+*  "name": String,
+*  "custom_components": Option<String>,
+*  "default_flow": String
+*  "engine_version": String
+*  "created_at": String
+* }
+*/
 #[post("/get_last_bot_version")]
 pub async fn handler(body: web::Json<GetLastBotRequest>) -> HttpResponse {
   let bot_id = body.bot_id.to_owned();
@@ -18,7 +33,8 @@ pub async fn handler(body: web::Json<GetLastBotRequest>) -> HttpResponse {
   }).join().unwrap();
 
   match res {
-    Ok(data) => HttpResponse::Ok().json(data),
+    Ok(Some(bot_version)) => HttpResponse::Ok().json(bot_version.flatten()),
+    Ok(None) => HttpResponse::NotFound().finish(),
     Err(err) => {
       eprintln!("EngineError: {:?}", err);
       HttpResponse::InternalServerError().finish()

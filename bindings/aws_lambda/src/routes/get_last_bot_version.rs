@@ -16,7 +16,7 @@ pub fn handler(bot_id: String) -> Result<serde_json::Value, HandlerError> {
               "isBase64Encoded": false,
               "statusCode": 200,
               "headers": { "Content-Type": "application/json" },
-              "body": data
+              "body": data.flatten()
             }
           ))
         }
