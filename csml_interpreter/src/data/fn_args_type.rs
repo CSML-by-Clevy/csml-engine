@@ -19,16 +19,19 @@ impl ArgsType {
             Self::Named(map) | Self::Normal(map) => {
                 let mut obj = HashMap::new();
 
-                let value = map
-                    .iter()
-                    .map(|(_k, lit)| {
-                        PrimitiveString::get_literal(&lit.primitive.to_string(), lit.interval)
-                    })
-                    .collect::<Vec<_>>();
+                let mut args = vec![];
+                let size = map.len();
+                let mut index = 0;
+                while index < size {
+                    let lit = map[&format!("arg{}", index)].clone();
+                    let value = PrimitiveString::get_literal(&lit.primitive.to_string(), lit.interval);
+                    args.push(value);
+                    index = index + 1;
+                }
 
                 obj.insert(
                     "args".to_owned(),
-                    PrimitiveArray::get_literal(&value, interval),
+                    PrimitiveArray::get_literal(&args, interval),
                 );
 
                 let mut lit = PrimitiveObject::get_literal(&obj, interval);
