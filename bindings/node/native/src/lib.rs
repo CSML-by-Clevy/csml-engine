@@ -1,6 +1,6 @@
 use csml_engine::{
     data::{CsmlRequest, BotOpt}, start_conversation, user_close_all_conversations, 
-    Client, CsmlResult,
+    Client, CsmlResult, ErrorInfo, Warnings
 };
 use csml_interpreter::data::csml_bot::CsmlBot;
 use neon::{context::Context, prelude::*, register_module};
@@ -55,9 +55,57 @@ fn get_bot_steps(mut cx: FunctionContext) -> JsResult<JsObject> {
     Ok(js_object)
 }
 
-fn validate_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn format_warnings<'a, C: Context<'a>>(
+    cx: &mut C,
+    array: &mut Handle<JsArray>,
+    warnings: Vec<Warnings>,
+) {
+    for (index, warning) in warnings.iter().enumerate() {
+        let object = JsObject::new(cx);
+        let flow = cx.string(warning.position.flow.clone());
+        let step = cx.string(warning.position.step.clone());
+        let line = cx.number(warning.position.interval.line as f64);
+        let column = cx.number(warning.position.interval.column as f64);
+        let message = cx.string(&warning.message);
+
+        object.set(cx, "flow", flow).unwrap();
+        object.set(cx, "step", step).unwrap();
+        object.set(cx, "line", line).unwrap();
+        object.set(cx, "column", column).unwrap();
+        object.set(cx, "message", message).unwrap();
+
+        array.set(cx, index as u32, object).unwrap();
+    }
+}
+
+fn format_errors<'a, C: Context<'a>>(
+    cx: &mut C,
+    array: &mut Handle<JsArray>,
+    errors: Vec<ErrorInfo>,
+) {
+    for (index, err) in errors.iter().enumerate() {
+        let object = JsObject::new(cx);
+        let flow = cx.string(err.position.flow.clone());
+        let step = cx.string(err.position.step.clone());
+        let line = cx.number(err.position.interval.line as f64);
+        let column = cx.number(err.position.interval.column as f64);
+        let message = cx.string(&err.message);
+
+        object.set(cx, "flow", flow).unwrap();
+        object.set(cx, "step", step).unwrap();
+        object.set(cx, "line", line).unwrap();
+        object.set(cx, "column", column).unwrap();
+        object.set(cx, "message", message).unwrap();
+
+        array.set(cx, index as u32, object).unwrap();
+    }
+}
+
+fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     let jsbot = cx.argument::<JsValue>(0)?;
     let jsonbot: Value = neon_serde::from_value(&mut cx, jsbot)?;
+
+    let object = JsObject::new(&mut cx);
 
     match csml_engine::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
         CsmlResult {
@@ -65,33 +113,40 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
             warnings,
             errors: None,
         } => {
-            let mut value = serde_json::json!({
-                "statusCode": 200,
-                "valid": true,
-            });
+            let valid = cx.boolean(true);
+            object.set(&mut cx, "valid", valid).unwrap();
 
             if let Some(warnings) = warnings {
-                value["warnings"] = serde_json::json!(warnings);
+                let mut js_warnings = JsArray::new(&mut cx, warnings.len() as u32);
+                format_warnings(&mut cx, &mut js_warnings, warnings);
+
+                object.set(&mut cx, "warnings", js_warnings).unwrap();
             }
 
-            Ok(neon_serde::to_value(&mut cx, &value)?)
+            Ok(object)
         }
         CsmlResult {
             flows: _,
             warnings,
             errors: Some(errors),
         } => {
-            let mut value = serde_json::json!({
-                "statusCode": 400,
-                "valid": false,
-                "errors": errors,
-            });
+            let valid = cx.boolean(false);
+
+            object.set(&mut cx, "valid", valid).unwrap();
 
             if let Some(warnings) = warnings {
-                value["warnings"] = serde_json::json!(warnings);
+                let mut js_warnings = JsArray::new(&mut cx, warnings.len() as u32);
+                format_warnings(&mut cx, &mut js_warnings, warnings);
+
+                object.set(&mut cx, "warnings", js_warnings).unwrap();
             }
 
-            Ok(neon_serde::to_value(&mut cx, &value)?)
+            let mut js_errors = JsArray::new(&mut cx, errors.len() as u32);
+            format_errors(&mut cx, &mut js_errors, errors);
+
+            object.set(&mut cx, "errors", js_errors).unwrap();
+
+            Ok(object)
         }
     }
 }
@@ -134,51 +189,24 @@ fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
     };
 
     match start_conversation(request, bot) {
-        Ok(obj) => {
-            let value = serde_json::json!({
-                "statusCode": 201,
-                "body": obj
-            });
-
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
-        Err(err) => {
-            let value = serde_json::json!({
-                "statusCode": 400,
-                "body": format!("{:?}", err),
-            });
-
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        Err(err) => panic!("{:?}", err),
+        Ok(obj) => Ok(neon_serde::to_value(&mut cx, &obj)?),
     }
 }
 
-fn close_conversations(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     let json_client = cx.argument::<JsValue>(0)?;
 
     match user_close_all_conversations(neon_serde::from_value(&mut cx, json_client)?) {
-        Ok(_) => {
-            let value = serde_json::json!({
-                "statusCode": 200,
-            });
-
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
-        Err(err) => {
-            let value = serde_json::json!({
-                "statusCode": 400,
-                "body": format!("{:?}", err),
-            });
-
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        }
+        Ok(_) => Ok(cx.boolean(true)),
+        Err(err) => panic!(err),
     }
 }
 
 /*
 * create bot version
 *
-*{"statusCode": 200,"body": {"version_id": String} }
+* {"version_id": String}
 *
 */
 fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
@@ -194,16 +222,14 @@ fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
     match csml_engine::create_bot_version(bot) {
         Ok(version_id) => {
             let value = serde_json::json!({
-                "statusCode": 201,
-                "body": {"version_id": version_id}
+                "version_id": version_id
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
         },
         Err(err) => {
             let value = serde_json::json!({
-                "statusCode": 400,
-                "body": format!("{:?}", err),
+                "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
@@ -214,9 +240,7 @@ fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
 /*
 * get bot by version
 *
-* {"statusCode": 200,"body": Bot}
-*
-* BOT = {
+* {
 *  "version_id": String,
 *  "id": String,
 *  "name": String,
@@ -234,15 +258,13 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
         Ok(bot) => {
             let value = match bot {
                 Some(bot) => {
-                    serde_json::json!({
-                        "statusCode": 200,
-                        "body": bot.flatten()
-                    })
+                    serde_json::json!(
+                        bot.flatten()
+                    )
                 }
                 None => {
                     serde_json::json!({
-                        "statusCode": 400,
-                        "body": "Not found"
+                        "error": "Not found"
                     })
                 }
             };
@@ -251,8 +273,7 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
         }
         Err(err) => {
             let value = serde_json::json!({
-                "statusCode": 400,
-                "body": format!("{:?}", err),
+                "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
@@ -263,7 +284,7 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
 /* 
 * get last bot version
 *
-* bot: {
+* {
 *   id: String,
 *   name: String,
 *   fn_endpoint: Option<String>,
@@ -279,15 +300,13 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
         Ok(bot) => {
             let value = match bot {
                 Some(bot) => {
-                    serde_json::json!({
-                        "statusCode": 200,
-                        "body": bot.flatten()
-                    })
+                    serde_json::json!(
+                        bot.flatten()
+                    )
                 }
                 None => {
                     serde_json::json!({
-                        "statusCode": 400,
-                        "body": "Not found"
+                        "error": "Not found"
                     })
                 }
             };
@@ -296,8 +315,7 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
         },
         Err(err) => {
             let value = serde_json::json!({
-                "statusCode": 400,
-                "body": format!("{:?}", err),
+                "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
@@ -308,9 +326,7 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
 /*
 * Get the last 20 versions of the bot if no limit is set
 *
-* {"statusCode": 200,"body": Vec<Bot>}
-*
-* BOT = {
+* {
 *  "version_id": String,
 *  "id": String,
 *  "name": String,
@@ -334,17 +350,15 @@ fn get_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::get_bot_versions(&bot_id, limit, last_key) {
         Ok(value) => {
-            let value= serde_json::json!({
-                "statusCode": 200,
-                "body": value
-            });
+            let value= serde_json::json!(
+                value
+            );
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
         },
         Err(err) => {
             let value = serde_json::json!({
-                "statusCode": 400,
-                "body": format!("{:?}", err),
+                "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
