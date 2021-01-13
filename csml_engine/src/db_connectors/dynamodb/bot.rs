@@ -24,7 +24,7 @@ pub fn create_bot_version(
     let client = db.client.to_owned();
     let future = client.put_item(input);
     db.runtime.block_on(future)?;
-    Ok(data.id.to_owned())
+    Ok(data.version_id.to_owned())
 }
 
 pub fn create_flows_batches(
@@ -287,7 +287,7 @@ pub fn get_bot_by_version_id(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            let flows = get_flows(&csml_bot.id, &bot.id, db)?;
+            let flows = get_flows(&csml_bot.id, &bot.version_id, db)?;
 
             Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id}))        }
         _ => Ok(None),
@@ -355,7 +355,7 @@ pub fn get_last_bot_version(
     let base64decoded = base64::decode(&bot.bot).unwrap();
     let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-    let flows = get_flows(&csml_bot.id, &bot.id, db)?;
+    let flows = get_flows(&csml_bot.id, &bot.version_id, db)?;
 
     Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id}))
 }
