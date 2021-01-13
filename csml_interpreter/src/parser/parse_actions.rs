@@ -342,6 +342,7 @@ where
         parse_do,
         parse_if,
         parse_foreach,
+        parse_break,
         parse_return,
         catch_scope_fn_common_mistakes,
     ))(s)
