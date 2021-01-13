@@ -34,7 +34,6 @@ step_6:
     } else {
         say false
     }
-
     goto end
 
 step_7:
@@ -54,6 +53,16 @@ step_8:
         say false
     }
     goto end
+
+step_9:
+    do array = [Button("a"), Button("b")]
+    if (event.match_array(array) ){
+        say true
+    } else {
+        say false
+    }
+    goto end
+
 
 // only event type text && payload can be use as normal strings and use the string methos
 event_types:

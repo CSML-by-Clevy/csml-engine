@@ -310,6 +310,38 @@ fn event_step_8() {
 }
 
 #[test]
+fn event_step_9() {
+    let data = r#"{
+        "memories":[
+        ],
+        "messages":[
+            {"content":{"text":"true"}, "content_type":"text"}
+        ]}"#;
+
+    let mut map = serde_json::Map::new();
+
+    map.insert("text".to_owned(), serde_json::Value::String("a".to_owned()));
+
+    let msg = format_message(
+        Event::new("content_type", "content", serde_json::Value::Object(map)),
+        ContextJson::new(
+            serde_json::json!({}),
+            serde_json::json!({}),
+            None,
+            None,
+            "step_9",
+            "flow",
+        ),
+        "CSML/basic_test/event.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
 fn event_types() {
     let context = ContextJson::new(
         serde_json::json!({}),
