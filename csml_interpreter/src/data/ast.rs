@@ -140,6 +140,7 @@ pub enum ObjectType {
     },
     Normal(Function),
     Break(Interval),
+    Continue(Interval),
 }
 
 #[derive(PartialEq, Debug, Clone)]

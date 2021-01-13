@@ -39,11 +39,14 @@ pub fn for_loop(
         };
 
         msg_data = msg_data + interpret_scope(block, data, instruction_index, sender)?;
-        if let Some(ExitCondition::Break) = msg_data.exit_condition {
-            msg_data.exit_condition = None;
-            break;
-        } else if msg_data.exit_condition.is_some() {
-            break;
+        match msg_data.exit_condition {
+            Some(ExitCondition::Break) => {
+                msg_data.exit_condition = None;
+                break;
+            }
+            Some(ExitCondition::Continue) => msg_data.exit_condition = None,
+            Some(_)  => break,
+            None => {}
         }
     }
     data.step_vars.remove(&ident.ident);

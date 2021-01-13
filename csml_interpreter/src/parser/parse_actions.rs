@@ -253,6 +253,31 @@ where
     }
 }
 
+fn parse_continue<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, inter) = preceded(comment, get_interval)(s)?;
+    let (s, name) = get_string(s)?;
+
+    let (s, ..) = get_tag(name, CONTINUE)(s)?;
+
+    match StateContext::get_state() {
+        ExecutionState::Loop => {
+            let instruction_info = InstructionInfo {
+                index: StateContext::get_rip(),
+                total: 0,
+            };
+            StateContext::inc_rip();
+            Ok((
+                s,
+                (Expr::ObjectExpr(ObjectType::Continue(inter)), instruction_info),
+            ))
+        }
+        ExecutionState::Normal => Err(gen_nom_failure(s, ERROR_BREAK)),
+    }
+}
+
 fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
@@ -328,6 +353,7 @@ where
         parse_use,
         parse_hold,
         parse_break,
+        parse_continue,
         parse_if,
         parse_foreach,
         catch_scope_common_mistakes,
@@ -343,6 +369,7 @@ where
         parse_if,
         parse_foreach,
         parse_break,
+        parse_continue,
         parse_return,
         catch_scope_fn_common_mistakes,
     ))(s)

@@ -18,6 +18,7 @@ pub enum ExitCondition {
     End,
     Error,
     Break,
+    Continue,
     Hold,
     Return(Literal),
 }

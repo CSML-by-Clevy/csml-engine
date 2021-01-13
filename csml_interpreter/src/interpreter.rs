@@ -72,6 +72,11 @@ pub fn interpret_scope(
 
                 return Ok(message_data);
             }
+            Expr::ObjectExpr(ObjectType::Continue(..)) => {
+                message_data.exit_condition = Some(ExitCondition::Continue);
+
+                return Ok(message_data);
+            }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
                 message_data.exit_condition = Some(ExitCondition::Hold);
 
