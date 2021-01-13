@@ -69,6 +69,7 @@ pub const DEFAULT: &str = "default";
 pub const REMEMBER: &str = "remember";
 pub const _METADATA: &str = "_metadata";
 pub const BREAK: &str = "break";
+pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
 pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, USE, IMPORT, HOLD, BREAK];

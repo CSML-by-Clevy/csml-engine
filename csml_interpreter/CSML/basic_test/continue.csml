@@ -1,0 +1,21 @@
+start:
+    foreach (val) in [1, 2 , 3] {
+        if (val <= 2) {
+            continue
+        }
+        say val
+    }
+
+
+fn test():
+    do result = 0
+    foreach (val) in [1, 2 , 3] {
+        if (val < 2) {
+            continue
+        }
+        do result = result + val
+    }
+    return result
+
+fn_continue:
+    say test()
