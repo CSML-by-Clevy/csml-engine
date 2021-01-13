@@ -86,6 +86,10 @@ lazy_static! {
             "match",
             (PrimitiveObject::match_args as PrimitiveMethod, Right::Read),
         );
+        map.insert(
+            "match_array",
+            (PrimitiveObject::match_array as PrimitiveMethod, Right::Read),
+        );
 
         map
     };
@@ -545,6 +549,41 @@ impl PrimitiveObject {
 
         match is_match {
             Some((_, lit)) => Ok(lit.to_owned()),
+            None => Ok(PrimitiveNull::get_literal(interval)),
+        }
+    }
+
+    fn match_array(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "match_array([a,b,c]) => a";
+
+        let lit = match (object.value.get("text"), object.value.get("payload")) {
+            (Some(lit), _) | (_, Some(lit)) if lit.content_type == "string" => lit,
+            _ => return Ok(PrimitiveNull::get_literal(interval)),
+        };
+
+        let array = match args.get("arg0") {
+            Some(lit) => {
+                Literal::get_value::<Vec<Literal>>(
+                    &lit.primitive,
+                    interval,
+                    format!("expect Array value as argument usage: {}", usage),
+                )?
+            }
+            None => return Err(gen_error_info(
+                Position::new(interval),
+                format!("expect Array value as argument usage: {}", usage),
+            ))
+        };
+
+        let is_match = array.iter().find(| &arg| match_obj(lit, arg));
+
+        match is_match {
+            Some(lit) => Ok(lit.to_owned()),
             None => Ok(PrimitiveNull::get_literal(interval)),
         }
     }
