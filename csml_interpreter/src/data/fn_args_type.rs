@@ -24,7 +24,8 @@ impl ArgsType {
                 let mut index = 0;
                 while index < size {
                     let lit = map[&format!("arg{}", index)].clone();
-                    let value = PrimitiveString::get_literal(&lit.primitive.to_string(), lit.interval);
+                    let value =
+                        PrimitiveString::get_literal(&lit.primitive.to_string(), lit.interval);
                     args.push(value);
                     index = index + 1;
                 }

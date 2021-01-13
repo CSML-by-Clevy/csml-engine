@@ -311,7 +311,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         match args.get("arg0") {
             Some(body) => object.value.insert("body".to_owned(), body.to_owned()),
-            _ => object.value.remove("body")
+            _ => object.value.remove("body"),
         };
 
         let mut object = object.to_owned();
@@ -336,7 +336,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         match args.get("arg0") {
             Some(body) => object.value.insert("body".to_owned(), body.to_owned()),
-            _ => object.value.remove("body")
+            _ => object.value.remove("body"),
         };
 
         let mut object = object.to_owned();
@@ -361,7 +361,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         match args.get("arg0") {
             Some(body) => object.value.insert("body".to_owned(), body.to_owned()),
-            _ => object.value.remove("body")
+            _ => object.value.remove("body"),
         };
 
         let mut object = object.to_owned();
@@ -386,7 +386,7 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let body = match args.get("arg0") {
             Some(res) => res.to_owned(),
-            _ => PrimitiveNull::get_literal(Interval::default())
+            _ => PrimitiveNull::get_literal(Interval::default()),
         };
 
         let mut object = object.to_owned();

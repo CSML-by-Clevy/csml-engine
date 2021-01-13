@@ -74,10 +74,9 @@ pub fn http_request(
     }
 
     let response = match object.get("body") {
-        Some(body) => request.send_json(body.primitive.to_json() ),
-        None => request.call()
+        Some(body) => request.send_json(body.primitive.to_json()),
+        None => request.call(),
     };
-
 
     if let Some(err) = response.synthetic_error() {
         if let Ok(var) = env::var("DEBUG") {

@@ -21,14 +21,12 @@ impl<I> ParseError<I> for CustomError<I> {
 
     fn add_context(input: I, ctx: &'static str, mut other: Self) -> Self {
         match other.error {
-            error  if "" == error =>{
+            error if "" == error => {
                 other.input = input;
                 other.error = ctx.to_owned();
                 other
             }
-            _ => {
-                other
-            }
+            _ => other,
         }
     }
 }
