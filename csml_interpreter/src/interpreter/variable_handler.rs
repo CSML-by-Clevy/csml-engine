@@ -5,6 +5,7 @@ pub mod interval;
 pub mod match_literals;
 pub mod memory;
 pub mod operations;
+pub mod resolve_csml_object;
 
 use crate::data::literal::ContentType;
 pub use expr_to_literal::{expr_to_literal, resolve_fn_args};
@@ -27,6 +28,141 @@ use crate::interpreter::variable_handler::{
 };
 use std::slice::Iter;
 use std::{collections::HashMap, sync::mpsc};
+
+
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn get_var_from_step_var<'a>(
+    name: &Identifier,
+    data: &'a mut Data,
+) -> Result<&'a mut Literal, ErrorInfo> {
+    match data.step_vars.get_mut(&name.ident) {
+        Some(var) => Ok(var),
+        None => Err(gen_error_info(
+            Position::new(name.interval),
+            format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
+        )),
+    }
+}
+
+fn loop_path(
+    mut lit: &mut Literal,
+    condition: bool,
+    new: Option<Literal>,
+    path: &mut Iter<(Interval, PathLiteral)>,
+    content_type: &ContentType,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<(Literal, bool), ErrorInfo> {
+    let mut tmp_update_var = false;
+    while let Some((interval, action)) = path.next() {
+        match action {
+            PathLiteral::VecIndex(index) => match get_at_index(lit, *index) {
+                Some(new_lit) => lit = new_lit,
+                None => {
+                    let err = gen_error_info(
+                        Position::new(*interval),
+                        format!("[{}] {}", index, ERROR_ARRAY_INDEX),
+                    );
+                    let null = match condition {
+                        true => PrimitiveNull::get_literal(err.position.interval),
+                        false => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                    };
+                    return Ok((null, tmp_update_var));
+                }
+            },
+            PathLiteral::MapIndex(key) => {
+                if let (Some(ref new), 0) = (&new, path.len()) {
+                    let mut args = HashMap::new();
+
+                    args.insert(
+                        "arg0".to_owned(),
+                        PrimitiveString::get_literal(key, interval.to_owned()),
+                    );
+                    args.insert("arg1".to_owned(), new.to_owned());
+
+                    lit.primitive.exec(
+                        "insert",
+                        &args,
+                        interval.to_owned(),
+                        content_type,
+                        &mut false,
+                    )?;
+                    return Ok((lit.to_owned(), true));
+                } else {
+                    match get_value_from_key(lit, key) {
+                        Some(new_lit) => lit = new_lit,
+                        None => {
+                            let err = gen_error_info(
+                                Position::new(*interval),
+                                format!("[{}] {}", key, ERROR_OBJECT_GET),
+                            );
+                            let null = match condition {
+                                true => PrimitiveNull::get_literal(err.position.interval),
+                                false => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                            };
+                            return Ok((null, tmp_update_var));
+                        }
+                    }
+                };
+            }
+            PathLiteral::Func {
+                name,
+                interval,
+                args,
+            } => {
+                let args = match args {
+                    ArgsType::Normal(args) => args,
+                    ArgsType::Named(_) => {
+                        let err = gen_error_info(
+                            Position::new(*interval),
+                            format!("{}", ERROR_METHOD_NAMED_ARGS),
+                        );
+                        return Ok((
+                            MSG::send_error_msg(&sender, msg_data, Err(err)),
+                            tmp_update_var,
+                        ));
+                    }
+                };
+
+                let mut return_lit = match lit.primitive.exec(
+                    name,
+                    args,
+                    *interval,
+                    content_type,
+                    &mut tmp_update_var,
+                ) {
+                    Ok(lit) => lit,
+                    Err(err) => MSG::send_error_msg(sender, msg_data, Err(err)),
+                };
+
+                let content_type = ContentType::get(&return_lit);
+                let (lit_new, ..) = loop_path(
+                    &mut return_lit,
+                    false,
+                    None,
+                    path,
+                    &content_type,
+                    msg_data,
+                    sender,
+                )?;
+
+                return Ok((lit_new, tmp_update_var));
+            }
+        }
+    }
+    if let Some(new) = new {
+        *lit = new;
+        tmp_update_var = true;
+    }
+    Ok((lit.to_owned(), tmp_update_var))
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
 
 //TODO: return Warning or Error Component
 pub fn get_literal(
@@ -63,19 +199,6 @@ pub fn get_literal(
         (_, Some(_)) => Err(gen_error_info(
             Position::new(interval),
             ERROR_ARRAY_TYPE.to_owned(),
-        )),
-    }
-}
-
-fn get_var_from_step_var<'a>(
-    name: &Identifier,
-    data: &'a mut Data,
-) -> Result<&'a mut Literal, ErrorInfo> {
-    match data.step_vars.get_mut(&name.ident) {
-        Some(var) => Ok(var),
-        None => Err(gen_error_info(
-            Position::new(name.interval),
-            format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
         )),
     }
 }
@@ -150,120 +273,6 @@ pub fn resolve_path(
         }
     }
     Ok(new_path)
-}
-
-fn loop_path(
-    mut lit: &mut Literal,
-    condition: bool,
-    new: Option<Literal>,
-    path: &mut Iter<(Interval, PathLiteral)>,
-    content_type: &ContentType,
-    msg_data: &mut MessageData,
-    sender: &Option<mpsc::Sender<MSG>>,
-) -> Result<(Literal, bool), ErrorInfo> {
-    let mut tmp_update_var = false;
-    while let Some((interval, action)) = path.next() {
-        match action {
-            PathLiteral::VecIndex(index) => match get_at_index(lit, *index) {
-                Some(new_lit) => lit = new_lit,
-                None => {
-                    let err = gen_error_info(
-                        Position::new(*interval),
-                        format!("[{}] {}", index, ERROR_ARRAY_INDEX),
-                    );
-                    let null = match condition {
-                        true => PrimitiveNull::get_literal(err.position.interval),
-                        false => MSG::send_error_msg(&sender, msg_data, Err(err)),
-                    };
-                    return Ok((null, tmp_update_var));
-                }
-            },
-            PathLiteral::MapIndex(key) => {
-                if let (Some(ref new), 0) = (&new, path.len()) {
-                    let mut args = HashMap::new();
-
-                    args.insert(
-                        "arg0".to_owned(),
-                        PrimitiveString::get_literal(key, interval.to_owned()),
-                    );
-                    args.insert("arg1".to_owned(), new.to_owned());
-
-                    lit.primitive.exec(
-                        "insert",
-                        &args,
-                        interval.to_owned(),
-                        content_type,
-                        &mut false,
-                    )?;
-                    return Ok((lit.to_owned(), true));
-                } else {
-                    match get_value_from_key(lit, key) {
-                        Some(new_lit) => lit = new_lit,
-                        None => {
-                            let err = gen_error_info(
-                                Position::new(*interval),
-                                format!("[{}] {}", key, ERROR_OBJECT_GET),
-                            );
-                            let null = match condition {
-                                true => PrimitiveNull::get_literal(err.position.interval),
-                                false => MSG::send_error_msg(&sender, msg_data, Err(err)),
-                            };
-                            return Ok((null, tmp_update_var));
-                        }
-                    }
-                };
-            }
-            PathLiteral::Func {
-                name,
-                interval,
-                args,
-            } => {
-                // TODO: Warning msg element is not mutable ?
-                let args = match args {
-                    ArgsType::Normal(args) => args,
-                    ArgsType::Named(_) => {
-                        let err = gen_error_info(
-                            Position::new(*interval),
-                            format!("{}", ERROR_METHOD_NAMED_ARGS),
-                        );
-                        return Ok((
-                            MSG::send_error_msg(&sender, msg_data, Err(err)),
-                            tmp_update_var,
-                        ));
-                    }
-                };
-
-                let mut return_lit = match lit.primitive.exec(
-                    name,
-                    args,
-                    *interval,
-                    content_type,
-                    &mut tmp_update_var,
-                ) {
-                    Ok(lit) => lit,
-                    Err(err) => MSG::send_error_msg(sender, msg_data, Err(err)),
-                };
-
-                let content_type = ContentType::get(&return_lit);
-                let (lit_new, ..) = loop_path(
-                    &mut return_lit,
-                    false,
-                    None,
-                    path,
-                    &content_type,
-                    msg_data,
-                    sender,
-                )?;
-
-                return Ok((lit_new, tmp_update_var));
-            }
-        }
-    }
-    if let Some(new) = new {
-        *lit = new;
-        tmp_update_var = true;
-    }
-    Ok((lit.to_owned(), tmp_update_var))
 }
 
 //TODO: Add Warning for nonexisting key
