@@ -14,7 +14,7 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{bot, conversations::*, init_db, messages::*, state::*, DbConversation, BotVersion};
+use db_connectors::{bot, conversations::*, init_db, messages::*, state::*, DbConversation, BotVersion, BotVersionCreated};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
@@ -94,7 +94,7 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
 /**
  * create bot version
  */
-pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
+pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
     let mut db = init_db()?;
 
     let bot_id = csml_bot.id.clone();
@@ -104,7 +104,12 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<String, EngineError> {
             errors: Some(errors),
             ..
         } => Err(EngineError::Interpreter(format!("{:?}", errors))),
-        CsmlResult { .. } => bot::create_bot_version(bot_id, csml_bot, &mut db),
+        CsmlResult { .. } => {
+            let version_id = bot::create_bot_version(bot_id, csml_bot, &mut db)?;
+            let engine_version = env!("CARGO_PKG_VERSION").to_owned();
+
+            Ok(BotVersionCreated{version_id, engine_version })
+        },
     }
 }
 

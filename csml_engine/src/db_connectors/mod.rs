@@ -153,21 +153,23 @@ pub struct DbBot {
 pub struct BotVersion {
     pub bot: CsmlBot,
     pub version_id: String,
+    pub engine_version: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BotVersionCreated {
+    pub version_id: String,
+    pub engine_version: String,
 }
 
 impl BotVersion {
     pub fn flatten(&self) -> serde_json::Value {
-        serde_json::json!(
-            {
-                "version_id": self.version_id,
-                "id": self.bot.id,
-                "name": self.bot.name,
-                "fn_endpoint": self.bot.fn_endpoint,
-                "flows": self.bot.flows,
-                "custom_components": self.bot.custom_components,
-                "default_flow": self.bot.default_flow,
-            }
-        )
+        let mut value = serde_json::json!(self.bot);
+
+        value["version_id"] = serde_json::json!(self.version_id);
+        value["engine_version"] = serde_json::json!(self.engine_version);
+
+        value
     }
 }
 

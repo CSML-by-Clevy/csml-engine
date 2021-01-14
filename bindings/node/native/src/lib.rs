@@ -343,12 +343,12 @@ fn get_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
         Err(_) => None
     };
 
-    let last_key = match cx.argument::<JsString>(2) {
+    let pagination_key = match cx.argument::<JsString>(2) {
         Ok(key) => Some(key.value()),
         Err(_) => None
     };
 
-    match csml_engine::get_bot_versions(&bot_id, limit, last_key) {
+    match csml_engine::get_bot_versions(&bot_id, limit, pagination_key) {
         Ok(value) => {
             let value= serde_json::json!(
                 value
