@@ -41,19 +41,29 @@ pub fn create_bot_version(
 pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
-    last_key: Option<String>,
+    pagination_key: Option<String>,
     db: &mongodb::Database,
 ) -> Result<serde_json::Value, EngineError> {
     let collection = db.collection("bot");
 
     let limit = match limit {
-        Some(limit) if limit >= 1 => limit,
-        Some(_limit) => 20,
-        None => 20,
+        Some(limit) if limit >= 1 => limit + 1,
+        Some(_limit) => 21,
+        None => 21,
     };
 
-    let filter = match last_key {
+    let filter = match pagination_key {
         Some(key) => {
+            let base64decoded = match base64::decode(&key) {
+                Ok(base64decoded) => base64decoded,
+                Err(_) => return Err(EngineError::Manager(format!("bad pagination_key")))
+            };
+
+            let key: String = match serde_json::from_slice(&base64decoded) {
+                Ok(key) => key,
+                Err(_) => return Err(EngineError::Manager(format!("bad pagination_key")))
+            };
+
             doc! {
                 "bot_id": bot_id,
                 "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
@@ -64,13 +74,12 @@ pub fn get_bot_versions(
 
     let find_options = mongodb::options::FindOptions::builder()
         .sort(doc! { "$natural": -1, })
-        .batch_size(20)
+        .batch_size(30)
         .limit(limit)
         .build();
 
     let cursor = collection.find(filter, find_options)?;
     let mut bots = vec![];
-    let mut last_key = None;
 
     for doc in cursor {
         match doc {
@@ -80,25 +89,39 @@ pub fn get_bot_versions(
                 let base64decoded = base64::decode(&bot_version.bot).unwrap();
                 let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-                last_key = Some(bot_version.id.clone());
-
-                let json = serde_json::json!({
+                let mut json = serde_json::json!({
                     "version_id": bot_version.id,
                     "id": csml_bot.id,
                     "name": csml_bot.name,
-                    "custom_components": csml_bot.custom_components,
                     "default_flow": csml_bot.default_flow,
                     "engine_version": bot_version.engine_version,
                     "created_at": bot_version.created_at
                 });
 
+                if let Some(custom_components) = csml_bot.custom_components {
+                    json["custom_components"] = serde_json::json!(custom_components);
+                }
+ 
                 bots.push(json);
             }
             Err(_) => (),
         };
     }
 
-    Ok(serde_json::json!({"bots": bots, "last_key": last_key}))
+    match bots.len() == limit as usize {
+        true => {
+            bots.pop();
+            match bots.last() {
+                Some(last) => {
+                    let pagination_key = base64::encode(last["version_id"].clone().to_string());
+
+                    Ok(serde_json::json!({"bots": bots, "pagination_key": pagination_key}))
+                },
+                None => Ok(serde_json::json!({"bots": bots}))
+            }
+        },
+        false => Ok(serde_json::json!({"bots": bots}))
+    }
 }
 
 pub fn get_bot_by_version_id(
@@ -124,7 +147,7 @@ pub fn get_bot_by_version_id(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id}))
+            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
 
         }
         None => Ok(None),
@@ -154,7 +177,7 @@ pub fn get_last_bot_version(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id}))
+            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
         }
         None => Ok(None),
     }

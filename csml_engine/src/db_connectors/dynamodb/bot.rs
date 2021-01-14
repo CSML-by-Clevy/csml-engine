@@ -167,7 +167,7 @@ fn query_flows(
 pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
-    last_key: Option<String>,
+    pagination_key: Option<String>,
     db: &mut DynamoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
     let hash = Bot::get_hash(bot_id);
@@ -207,8 +207,18 @@ pub fn get_bot_versions(
     .cloned()
     .collect();
 
-    let last_evaluated_key = match last_key {
-        Some(key) => serde_json::from_str(&key).unwrap(),
+    let last_evaluated_key = match pagination_key {
+        Some(key) => {
+            let base64decoded = match base64::decode(&key) {
+                Ok(base64decoded) => base64decoded,
+                Err(_) => return Err(EngineError::Manager(format!("bad pagination_key")))
+            };
+
+            match serde_json::from_slice(&base64decoded) {
+                Ok(key) => Some(key),
+                Err(_) => return Err(EngineError::Manager(format!("bad pagination_key")))
+            }
+        },
         None => None,
     };
 
@@ -244,22 +254,30 @@ pub fn get_bot_versions(
         let base64decoded = base64::decode(&data.bot).unwrap();
         let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-        let json = serde_json::json!({
-            "version_id": data.id,
-            "id": csml_bot.id,
+        let mut json = serde_json::json!({
+            "version_id": data.version_id,
+            "id": data.id,
             "name": csml_bot.name,
-            "custom_components": csml_bot.custom_components,
             "default_flow": csml_bot.default_flow,
             "engine_version": data.engine_version,
             "created_at": data.created_at
         });
 
+        if let Some(custom_components) = csml_bot.custom_components {
+            json["custom_components"] = serde_json::json!(custom_components);
+        }
+
         bots.push(json);
     }
 
-    let last_key = serde_json::json!(data.last_evaluated_key).to_string();
+    match data.last_evaluated_key {
+        Some(pagination_key) => {
+            let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
 
-    Ok(serde_json::json!({"bots": bots, "last_key": last_key}))
+            Ok(serde_json::json!({"bots": bots, "pagination_key": pagination_key}))
+        },
+        None => Ok(serde_json::json!({"bots": bots}))
+    }
 }
 
 pub fn get_bot_by_version_id(
@@ -289,7 +307,7 @@ pub fn get_bot_by_version_id(
 
             let flows = get_flows(&csml_bot.id, &bot.version_id, db)?;
 
-            Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id}))        }
+            Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))}
         _ => Ok(None),
     }
 }
@@ -357,5 +375,5 @@ pub fn get_last_bot_version(
 
     let flows = get_flows(&csml_bot.id, &bot.version_id, db)?;
 
-    Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id}))
+    Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
 }

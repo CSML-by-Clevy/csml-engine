@@ -1,8 +1,8 @@
 mod routes;
 
 use routes::{
-    run, validate, RunRequest, GetByIdRequest, GetVersionsRequest , sns,
-    create_bot_version, get_last_bot_version, get_bot_versions, get_bot_by_version_id,
+    run, validate, RunRequest, GetByIdRequest, GetVersionsRequest, GetVersionsPath, GetLatestVersionRequest , sns,
+    bot_versions::{add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version},
     conversations::{close_user_conversations, get_open}
 };
 
@@ -106,57 +106,68 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             body: Some(body),
             ..
-        } if path.ends_with("/create_bot_version") && http_method == "POST" => {
+        } if path.ends_with("/bots") && http_method == "POST" => {
             let body: CsmlBot = match serde_json::from_str(&body) {
                 Ok(body) => body,
                 Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
             };
 
-            create_bot_version::handler(body)
-        }
-
-        // GetByIdRequest 
-
-        LambdaRequest {
-            path,
-            http_method,
-            body: Some(body),
-            ..
-        } if path.ends_with("/get_bot_by_version_id") && http_method == "POST" => {
-            let body: GetByIdRequest = match serde_json::from_str(&body) {
-                Ok(body) => body,
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
-            };
-
-            get_bot_by_version_id::handler(body)
+            add_bot_version(body)
         }
 
         LambdaRequest {
             path,
             http_method,
-            body: Some(body),
+            path_parameters: Some(path_params),
             ..
-        } if path.ends_with("/get_last_bot_version") && http_method == "POST" => {
-            let body: String = match serde_json::from_str(&body) {
-                Ok(body) => body,
+        } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "GET" => {
+            let path_parameters: GetByIdRequest = match serde_json::from_value(path_params) {
+                Ok(path_parameters) => path_parameters,
                 Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
             };
 
-            get_last_bot_version::handler(body)
+            get_bot_version(path_parameters)
         }
 
         LambdaRequest {
             path,
             http_method,
-            body: Some(body),
+            path_parameters: Some(path_params),
             ..
-        } if path.ends_with("/get_bot_versions") && http_method == "POST" => {
-            let body: GetVersionsRequest = match serde_json::from_str(&body) {
-                Ok(body) => body,
+        } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
+            let path_params: GetLatestVersionRequest = match serde_json::from_value(path_params) {
+                Ok(path_params) => path_params,
                 Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
             };
 
-            get_bot_versions::handler(body)
+            get_bot_latest_version(path_params.bot_id)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
+            let path_params: GetVersionsPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {
+                    path_params
+                },
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            let mut params = GetVersionsRequest{bot_id: path_params.bot_id, limit: None, pagination_key: None };
+
+            if let Some(serde_json::Value::Number(limit))= query_params.get("limit") {
+                params.limit = limit.as_i64();
+            }
+
+            if let Some(serde_json::Value::String(pagination_key)) = query_params.get("pagination_key") {
+                params.pagination_key = Some(pagination_key.to_owned());
+            }
+
+            get_bot_latest_versions(params)
         }
 
         LambdaRequest {

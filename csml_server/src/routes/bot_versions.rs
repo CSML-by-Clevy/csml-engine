@@ -42,7 +42,7 @@ pub struct GetBotPath {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetBotVersionsQuery {
   limit: Option<i64>,
-  last_key: Option<String>,
+  pagination_key: Option<String>,
 }
 
 /*
@@ -98,10 +98,10 @@ pub async fn get_bot_latest_version(path: web::Path<GetBotPath>) -> HttpResponse
 pub async fn get_bot_latest_versions(path: web::Path<GetBotPath>, query: web::Query<GetBotVersionsQuery>) -> HttpResponse {
   let bot_id = path.bot_id.to_owned();
   let limit = query.limit.to_owned();
-  let last_key = query.last_key.to_owned();
+  let pagination_key = query.pagination_key.to_owned();
 
   let res = thread::spawn(move || {
-    get_bot_versions(&bot_id, limit, last_key)
+    get_bot_versions(&bot_id, limit, pagination_key)
   }).join().unwrap();
 
   match res {
