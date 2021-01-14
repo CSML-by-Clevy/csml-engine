@@ -230,6 +230,7 @@ pub fn get_bot_versions(
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(limit),
         select: Some(String::from("ALL_ATTRIBUTES")),
+        scan_index_forward: Some(false),
         exclusive_start_key: last_evaluated_key,
         ..Default::default()
     };
@@ -353,6 +354,7 @@ pub fn get_last_bot_version(
         key_condition_expression: Some(key_cond_expr),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
+        scan_index_forward: Some(false),
         limit: Some(1),
         select: Some(String::from("ALL_ATTRIBUTES")),
         ..Default::default()
