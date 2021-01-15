@@ -302,6 +302,7 @@ pub struct Memory {
     pub expires_at: Option<String>,
     pub created_at: String,
 }
+
 impl Memory {
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)

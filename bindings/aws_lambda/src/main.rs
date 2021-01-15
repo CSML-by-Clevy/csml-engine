@@ -1,8 +1,13 @@
 mod routes;
 
 use routes::{
-    run, validate, RunRequest, GetByIdRequest, GetVersionsRequest, GetVersionsPath, GetLatestVersionRequest , sns,
-    bot_versions::{add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version},
+    run, validate, RunRequest, GetByIdRequest, GetVersionsRequest, DeleteVersionsPath,
+    DeleteVersionPath, GetVersionsPath, GetLatestVersionRequest, sns,
+    bot_versions::{
+        add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
+        delete_bot_versions, delete_bot_version
+
+    },
     conversations::{close_user_conversations, get_open}
 };
 
@@ -169,6 +174,38 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             get_bot_latest_versions(params)
         }
+
+        LambdaRequest {
+            path,
+            http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}") && http_method == "DELETE" => {
+            let path_params: DeleteVersionsPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {
+                    path_params
+                },
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+            delete_bot_versions(path_params.bot_id)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "DELETE" => {
+            let path_params: DeleteVersionPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {
+                    path_params
+                },
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            delete_bot_version(path_params.bot_id, path_params.version_id)
+        }
+
 
         LambdaRequest {
             path,

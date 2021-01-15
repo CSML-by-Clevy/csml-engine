@@ -38,4 +38,13 @@ pub struct GetVersionsRequest {
     pub pagination_key: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeleteVersionsPath {
+    pub bot_id: String,
+}
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DeleteVersionPath {
+    pub bot_id: String,
+    pub version_id: String,
+}

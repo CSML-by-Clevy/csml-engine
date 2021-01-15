@@ -155,6 +155,29 @@ pub fn get_bot_versions(
 }
 
 /**
+ * delete bot by version_id
+*/
+pub fn delete_bot_version_id(
+    id: &str,
+    bot_id: &str,
+) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    bot::delete_bot_version(bot_id, id, &mut db)
+}
+
+/**
+ * delete all bot versions of bot_id
+*/
+pub fn delete_all_bot_versions(
+    bot_id: &str,
+) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    bot::delete_bot_versions(bot_id, &mut db)
+}
+
+/**
  * List all the steps in every flow of a given CSML bot
  */
 pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {

@@ -56,12 +56,12 @@ pub fn get_bot_versions(
         Some(key) => {
             let base64decoded = match base64::decode(&key) {
                 Ok(base64decoded) => base64decoded,
-                Err(_) => return Err(EngineError::Manager(format!("bad pagination_key")))
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key")))
             };
 
             let key: String = match serde_json::from_slice(&base64decoded) {
                 Ok(key) => key,
-                Err(_) => return Err(EngineError::Manager(format!("bad pagination_key")))
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key")))
             };
 
             doc! {
@@ -101,7 +101,7 @@ pub fn get_bot_versions(
                 if let Some(custom_components) = csml_bot.custom_components {
                     json["custom_components"] = serde_json::json!(custom_components);
                 }
- 
+
                 bots.push(json);
             }
             Err(_) => (),
@@ -181,4 +181,34 @@ pub fn get_last_bot_version(
         }
         None => Ok(None),
     }
+}
+
+pub fn delete_bot_version(
+    version_id: &str,
+    db: &mongodb::Database,
+) -> Result<(), EngineError> {
+    let collection = db.collection("bot");
+
+    let filter = doc! {
+        "_id": bson::oid::ObjectId::with_string(version_id).unwrap()
+    };
+
+    collection.delete_one(filter, None)?;
+
+    Ok(())
+}
+
+pub fn delete_bot_versions(
+    bot_id: &str,
+    db: &mongodb::Database,
+) -> Result<(), EngineError> {
+    let collection = db.collection("bot");
+
+    let filter = doc! {
+        "bot_id": bot_id,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
 }

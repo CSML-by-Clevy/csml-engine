@@ -68,21 +68,20 @@ pub fn get_last_bot_version(
 }
 
 pub fn get_by_version_id(
-    id: &str,
+    version_id: &str,
     _bot_id: &str,
     db: &mut Database,
 ) -> Result<Option<BotVersion>, EngineError> {
-    //HashMap<String, Flow>
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::bot::get_bot_by_version_id(&id, db);
+        return mongodb_connector::bot::get_bot_by_version_id(&version_id, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::get_bot_by_version_id(&id, &_bot_id, db);
+        return dynamodb_connector::bot::get_bot_by_version_id(&version_id, &_bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -104,6 +103,45 @@ pub fn get_bot_versions(
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, last_key, db);
+    }
+
+    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
+}
+
+pub fn delete_bot_version(
+    _bot_id: &str,
+    version_id: &str,
+    db: &mut Database,
+) -> Result<(), EngineError> {
+    #[cfg(feature = "mongo")]
+    if is_mongodb() {
+        let db = mongodb_connector::get_db(db)?;
+        return mongodb_connector::bot::delete_bot_version(version_id, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::bot::delete_bot_version(_bot_id, version_id, db);
+    }
+
+    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
+}
+
+pub fn delete_bot_versions(
+    bot_id: &str,
+    db: &mut Database,
+) -> Result<(), EngineError> {
+    #[cfg(feature = "mongo")]
+    if is_mongodb() {
+        let db = mongodb_connector::get_db(db)?;
+        return mongodb_connector::bot::delete_bot_versions(bot_id, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::bot::delete_bot_versions(bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

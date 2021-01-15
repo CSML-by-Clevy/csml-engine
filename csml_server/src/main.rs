@@ -44,6 +44,8 @@ async fn main() -> std::io::Result<()> {
       .service(routes::bot_versions::get_bot_version)
       .service(routes::bot_versions::get_bot_latest_version)
       .service(routes::bot_versions::get_bot_latest_versions)
+      .service(routes::bot_versions::delete_bot_version)
+      .service(routes::bot_versions::delete_bot_versions)
       .service(routes::conversations::get_open)
       .service(routes::conversations::close_user_conversations)
 

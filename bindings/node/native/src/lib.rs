@@ -1,5 +1,5 @@
 use csml_engine::{
-    data::{CsmlRequest, BotOpt}, start_conversation, user_close_all_conversations, 
+    data::{CsmlRequest, BotOpt}, start_conversation, user_close_all_conversations,
     Client, CsmlResult, ErrorInfo, Warnings
 };
 use csml_interpreter::data::csml_bot::CsmlBot;
@@ -324,6 +324,55 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 /*
+* Delete bot version
+*/
+fn delete_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let version_id =  cx.argument::<JsString>(0)?.value();
+    let bot_id = cx.argument::<JsString>(1)?.value();
+
+    match csml_engine::delete_bot_version_id(&version_id, &bot_id) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Delete bot versions
+*/
+fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let bot_id = cx.argument::<JsString>(0)?.value();
+
+    match csml_engine::delete_all_bot_versions(&bot_id) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
 * Get the last 20 versions of the bot if no limit is set
 *
 * {
@@ -373,9 +422,11 @@ register_module!(mut cx, {
     cx.export_function("getBotByVersionId", get_bot_by_version_id)?;
     cx.export_function("getLastBotVersion", get_last_bot_version)?;
     cx.export_function("getBotVersions", get_bot_versions)?;
-    
+    cx.export_function("deleteBotVersion", delete_bot_version)?;
+    cx.export_function("deleteBotVersions", delete_bot_versions)?;
+
     cx.export_function("run", run_bot)?;
-    
+
     cx.export_function("closeAllConversations", close_conversations)?;
     cx.export_function("getBotSteps", get_bot_steps)?;
     cx.export_function("getOpenConversation", get_open_conversation)?;
