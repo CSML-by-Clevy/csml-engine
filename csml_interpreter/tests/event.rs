@@ -262,9 +262,9 @@ fn event_step_9() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             None,
             "step_9",
