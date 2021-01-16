@@ -4,7 +4,7 @@ use csml_engine::{
   delete_all_bot_versions, delete_bot_version_id
 };
 
-use crate::{format_response, routes::{GetVersionsRequest, GetByIdRequest}};
+use crate::{format_response, routes::{GetVersionsRequest, BotIdVersionIdPath}};
 
 use lambda_runtime::error::HandlerError;
 
@@ -29,7 +29,7 @@ pub fn add_bot_version(bot: CsmlBot) -> Result<serde_json::Value, HandlerError> 
   }
 }
 
-pub fn get_bot_version(path: GetByIdRequest) -> Result<serde_json::Value, HandlerError> {
+pub fn get_bot_version(path: BotIdVersionIdPath) -> Result<serde_json::Value, HandlerError> {
   let res = get_bot_by_version_id(&path.version_id, &path.bot_id);
 
   match res {

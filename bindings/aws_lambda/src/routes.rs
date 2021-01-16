@@ -16,18 +16,13 @@ pub struct RunRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GetByIdRequest {
-    version_id: String,
-    bot_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GetLatestVersionRequest {
+pub struct BotIdVersionIdPath {
+    pub version_id: String,
     pub bot_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GetVersionsPath {
+pub struct BotIdPath {
     pub bot_id: String,
 }
 
@@ -36,15 +31,4 @@ pub struct GetVersionsRequest {
     pub bot_id: String,
     pub limit: Option<i64>,
     pub pagination_key: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DeleteVersionsPath {
-    pub bot_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct DeleteVersionPath {
-    pub bot_id: String,
-    pub version_id: String,
 }

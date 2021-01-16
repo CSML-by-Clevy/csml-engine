@@ -125,7 +125,11 @@ pub async fn delete_bot_versions(
 pub async fn get_bot_latest_versions(path: web::Path<BotIdPath>, query: web::Query<GetBotVersionsQuery>) -> HttpResponse {
   let bot_id = path.bot_id.to_owned();
   let limit = query.limit.to_owned();
-  let pagination_key = query.pagination_key.to_owned();
+  let pagination_key = match query.pagination_key.to_owned() {
+    Some(pagination_key) if pagination_key == "" => None,
+    Some(pagination_key) => Some(pagination_key),
+    None => None,
+  };
 
   let res = thread::spawn(move || {
     get_bot_versions(&bot_id, limit, pagination_key)

@@ -1,8 +1,8 @@
 mod routes;
 
 use routes::{
-    run, validate, RunRequest, GetByIdRequest, GetVersionsRequest, DeleteVersionsPath,
-    DeleteVersionPath, GetVersionsPath, GetLatestVersionRequest, sns,
+    run, validate, RunRequest, GetVersionsRequest, BotIdVersionIdPath, BotIdPath,
+    sns,
     bot_versions::{
         add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
         delete_bot_versions, delete_bot_version
@@ -126,7 +126,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             path_parameters: Some(path_params),
             ..
         } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "GET" => {
-            let path_parameters: GetByIdRequest = match serde_json::from_value(path_params) {
+            let path_parameters: BotIdVersionIdPath = match serde_json::from_value(path_params) {
                 Ok(path_parameters) => path_parameters,
                 Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
             };
@@ -140,7 +140,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             path_parameters: Some(path_params),
             ..
         } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
-            let path_params: GetLatestVersionRequest = match serde_json::from_value(path_params) {
+            let path_params: BotIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => path_params,
                 Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
             };
@@ -155,7 +155,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             path_parameters: Some(path_params),
             ..
         } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
-            let path_params: GetVersionsPath = match serde_json::from_value(path_params) {
+            let path_params: BotIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => {
                     path_params
                 },
@@ -181,7 +181,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             path_parameters: Some(path_params),
             ..
         } if path.ends_with("/bots/{bot_id}") && http_method == "DELETE" => {
-            let path_params: DeleteVersionsPath = match serde_json::from_value(path_params) {
+            let path_params: BotIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => {
                     path_params
                 },
@@ -196,7 +196,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             path_parameters: Some(path_params),
             ..
         } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "DELETE" => {
-            let path_params: DeleteVersionPath = match serde_json::from_value(path_params) {
+            let path_params: BotIdVersionIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => {
                     path_params
                 },
