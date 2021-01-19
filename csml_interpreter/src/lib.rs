@@ -1,3 +1,4 @@
+pub mod clean_step;
 pub mod data;
 pub mod error_format;
 pub mod imports;
@@ -12,13 +13,13 @@ use parser::parse_flow;
 
 use data::ast::{Expr, Flow, InstructionScope, Interval};
 use data::context::get_hashmap_from_mem;
-use data::csml_bot::CsmlBot;
-use data::csml_result::CsmlResult;
 use data::error_info::ErrorInfo;
 use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
 use data::warnings::Warnings;
+use data::CsmlBot;
+use data::CsmlResult;
 use data::{Context, Data, Position};
 use error_format::*;
 use imports::validate_imports;
@@ -104,7 +105,7 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
     result
 }
 
-pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
+pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     let mut flows = HashMap::default();
     let mut errors = Vec::new();
     let mut imports = Vec::new();
@@ -141,7 +142,22 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
     CsmlResult::new(flows, warnings, errors)
 }
 
-//TODO: received ast instead of bot
+fn get_flows(bot: &CsmlBot) -> HashMap<String, Flow> {
+    match &bot.bot_ast {
+        Some(bot) => {
+            let base64decoded = base64::decode(&bot).unwrap();
+            bincode::deserialize(&base64decoded[..]).unwrap()
+        }
+        None => {
+            let bot = validate_bot(&bot);
+            match bot.flows {
+                Some(flows) => flows,
+                None => HashMap::new(),
+            }
+        }
+    }
+}
+
 pub fn interpret(
     bot: CsmlBot,
     mut context: Context,
@@ -176,13 +192,7 @@ pub fn interpret(
         _ => serde_json::Map::new(),
     };
 
-    // ######################## TODO: this is temporary as long as we do not receive the ast
-    let bot = validate_bot(bot);
-    let flows = match bot.flows {
-        Some(flows) => flows,
-        None => HashMap::new(),
-    };
-    // ########################
+    let flows = get_flows(&bot);
 
     while msg_data.exit_condition.is_none() {
         Position::set_flow(&flow);

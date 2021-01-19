@@ -1,5 +1,4 @@
-use crate::data::csml_flow::CsmlFlow;
-use crate::data::position::Position;
+use crate::data::{CsmlFlow, Position};
 use crate::error_format::*;
 use crate::Interval;
 use serde::{Deserialize, Serialize};
@@ -27,6 +26,7 @@ pub struct CsmlBot {
     pub native_components: Option<serde_json::Map<String, serde_json::Value>>, //
     pub custom_components: Option<serde_json::Value>,                          // serde_json::Value
     pub default_flow: String,
+    pub bot_ast: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,6 +50,7 @@ impl CsmlBot {
         native_components: Option<serde_json::Map<String, serde_json::Value>>,
         custom_components: Option<serde_json::Value>,
         default_flow: &str,
+        bot_ast: Option<String>,
     ) -> Self {
         Self {
             id: id.to_owned(),
@@ -59,6 +60,7 @@ impl CsmlBot {
             native_components,
             custom_components,
             default_flow: default_flow.to_owned(),
+            bot_ast,
         }
     }
 }
@@ -129,6 +131,7 @@ impl SerializeCsmlBot {
                 }
             },
             default_flow: self.default_flow.to_owned(),
+            bot_ast: None,
         }
     }
 }
@@ -151,6 +154,7 @@ impl DynamoBot {
                 }
             },
             default_flow: self.default_flow.to_owned(),
+            bot_ast: None,
         }
     }
 }

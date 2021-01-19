@@ -1,6 +1,9 @@
 pub mod data;
 pub use csml_interpreter::data::{
-    csml_result::CsmlResult, error_info::ErrorInfo, warnings::Warnings, Client,
+    ast::{Expr, Flow, InstructionScope},
+    error_info::ErrorInfo,
+    warnings::Warnings,
+    Client, CsmlResult,
 };
 use serde_json::json;
 
@@ -48,6 +51,7 @@ pub fn start_conversation(
     let formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
     let mut bot = run_opt.search_bot(&mut db);
+    init_bot(&mut bot)?;
 
     // load native components into the bot
     bot.native_components = match load_components() {
@@ -68,7 +72,7 @@ pub fn start_conversation(
     add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
     let flow = get_flow_by_id(&data.context.flow, &bot.flows)?;
-    check_for_hold(&mut data, flow)?;
+    check_for_hold(&mut data, &bot.bot_ast, flow)?;
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
@@ -190,7 +194,7 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
  * (missing steps or flows, syntax errors, etc.)
  */
 pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
-    csml_interpreter::validate_bot(bot)
+    csml_interpreter::validate_bot(&bot)
 }
 
 /**
@@ -215,23 +219,47 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
  * If the hold is valid, we also need to load the local step memory
  * (context.hold.step_vars) into the conversation context.
  */
-fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), EngineError> {
+fn check_for_hold(
+    data: &mut ConversationInfo,
+    bot_ast: &Option<String>,
+    flow: &CsmlFlow,
+) -> Result<(), EngineError> {
     match get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(string)) => {
             let hold = serde_json::to_value(string)?;
-            let mut hash = Md5::new();
 
-            hash.update(flow.content.as_bytes());
-            let new_hash = format!("{:x}", hash.finalize());
+            let step_hash = match (hold.get("hash"), hold.get("step_hash")) {
+                // this block is only for retro compatibility whit the old method
+                (Some(old_hash), None) => {
+                    let mut hash = Md5::new();
 
-            // cleanup the current hold and restart flow
-            if new_hash != hold["hash"] {
-                data.context.step = "start".to_owned();
-                delete_state_key(&data.client, "hold", "position", &mut data.db)?;
-                data.context.hold = None;
-                return Ok(());
-            }
+                    hash.update(flow.content.as_bytes());
+                    let new_hash = format!("{:x}", hash.finalize());
+
+                    // cleanup the current hold and restart flow
+                    if new_hash != *old_hash {
+                        data.context.step = "start".to_owned();
+                        delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+                        data.context.hold = None;
+                        return Ok(());
+                    }
+                    new_hash
+                }
+                (None, Some(step_hash_value)) => {
+                    // cleanup the current hold and restart flow
+                    let step_hash = match get_current_step_hash(bot_ast, data) {
+                        Ok(step_hash) if step_hash != *step_hash_value => {
+                            return clean_hold_and_restart(data)
+                        }
+                        Ok(step_hash) => step_hash,
+                        Err(_) => return clean_hold_and_restart(data),
+                    };
+
+                    step_hash
+                }
+                _ => return Ok(()),
+            };
 
             // all good, let's load the position and local variables
             data.context.hold = Some(Hold {
@@ -240,6 +268,7 @@ fn check_for_hold(data: &mut ConversationInfo, flow: &CsmlFlow) -> Result<(), En
                     .ok_or(EngineError::Interpreter("hold index bad format".to_owned()))?
                     as usize,
                 step_vars: hold["step_vars"].clone(),
+                step_hash: step_hash,
             });
             delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }

@@ -6,9 +6,18 @@ use crate::{
 };
 
 use chrono::{prelude::Utc, SecondsFormat};
-use csml_interpreter::data::{Client, Event, Memory, Message};
+use csml_interpreter::{
+    clean_step::clean_step_intervals,
+    data::{
+        ast::{Expr, Flow, InstructionScope},
+        Client, Event, Memory, Message,
+    },
+};
 use serde_json::{json, map::Map, Value};
+use std::collections::HashMap;
 use std::env;
+
+use md5::{Digest, Md5};
 
 /**
  * Update current context memories in place.
@@ -252,4 +261,49 @@ pub fn search_flow<'a>(
             }
         }
     }
+}
+
+pub fn get_current_step_hash(
+    bot_ast: &Option<String>,
+    data: &mut ConversationInfo,
+) -> Result<String, EngineError> {
+    let mut hash = Md5::new();
+
+    let ast = match bot_ast {
+        Some(ast) => {
+            let base64decoded = base64::decode(&ast).unwrap();
+            let csml_bot: HashMap<String, Flow> = bincode::deserialize(&base64decoded[..]).unwrap();
+            csml_bot
+        }
+        None => return Err(EngineError::Manager(format!("not valid ast"))),
+    };
+
+    let flow = match ast.get(&data.context.flow) {
+        Some(flow) => flow,
+        _ => return Err(EngineError::Manager(format!("flow doesn't exist"))),
+    };
+
+    match flow
+        .flow_instructions
+        .get(&InstructionScope::StepScope(data.context.step.to_owned()))
+    {
+        Some(Expr::Scope { scope, .. }) => {
+            // need to set all the intervals to 0 in order to avoid new lines conflicts
+            let clean_step = clean_step_intervals(scope.clone());
+
+            hash.update(bincode::serialize(&clean_step).unwrap());
+            Ok(format!("{:x}", hash.finalize()))
+        }
+        _ => {
+            data.context.step = "start".to_owned();
+            Err(EngineError::Manager(format!("step doesn't exist")))
+        }
+    }
+}
+
+
+pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineError> {
+    delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+    data.context.hold = None;
+    return Ok(());
 }

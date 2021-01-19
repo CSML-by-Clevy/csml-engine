@@ -7,6 +7,7 @@ pub mod variable_handler;
 
 pub use json_to_rust::{json_to_literal, memory_to_literal};
 
+use crate::clean_step::clean_step_intervals;
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
@@ -17,6 +18,7 @@ use crate::interpreter::{
 };
 use crate::parser::ExitCondition;
 
+use md5::{Digest, Md5};
 use nom::lib::std::collections::HashMap;
 use std::sync::mpsc;
 
@@ -78,11 +80,19 @@ pub fn interpret_scope(
                 return Ok(message_data);
             }
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
+                let mut step_hash = Md5::new();
+
+                // need to set all the intervals to 0 in order to avoid new lines conflicts
+                let clean_step = clean_step_intervals(actions.clone());
+                step_hash.update(bincode::serialize(&clean_step).unwrap());
+
                 message_data.exit_condition = Some(ExitCondition::Hold);
 
+                let step_hash = format!("{:x}", step_hash.finalize());
                 let index = instruction_info.index;
                 let map = data.step_vars.to_owned();
-                let hold = Hold::new(index, step_vars_to_json(map));
+
+                let hold = Hold::new(index, step_vars_to_json(map), step_hash);
 
                 message_data.hold = Some(hold.to_owned());
 

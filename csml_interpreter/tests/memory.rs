@@ -33,6 +33,7 @@ fn format_message(event: Event, context: Context, vector: &[&str]) -> MessageDat
         None,
         None,
         DEFAULT_FLOW_NAME,
+        None,
     );
 
     interpret(bot, context, event, None)
