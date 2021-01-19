@@ -1,7 +1,13 @@
 mod routes;
 
 use routes::{
-    run, validate, RunRequest, sns,
+    run, validate, RunRequest, GetVersionsRequest, BotIdVersionIdPath, BotIdPath,
+    sns,
+    bot_versions::{
+        add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
+        delete_bot_versions, delete_bot_version
+
+    },
     conversations::{close_user_conversations, get_open}
 };
 
@@ -99,6 +105,108 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             validate::handler(body)
         }
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            ..
+        } if path.ends_with("/bots") && http_method == "POST" => {
+            let body: CsmlBot = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            add_bot_version(body)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "GET" => {
+            let path_parameters: BotIdVersionIdPath = match serde_json::from_value(path_params) {
+                Ok(path_parameters) => path_parameters,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            get_bot_version(path_parameters)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
+            let path_params: BotIdPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => path_params,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            get_bot_latest_version(path_params.bot_id)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
+            let path_params: BotIdPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {
+                    path_params
+                },
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            let mut params = GetVersionsRequest{bot_id: path_params.bot_id, limit: None, pagination_key: None };
+
+            if let Some(serde_json::Value::Number(limit))= query_params.get("limit") {
+                params.limit = limit.as_i64();
+            }
+
+            if let Some(serde_json::Value::String(pagination_key)) = query_params.get("pagination_key") {
+                params.pagination_key = Some(pagination_key.to_owned());
+            }
+
+            get_bot_latest_versions(params)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}") && http_method == "DELETE" => {
+            let path_params: BotIdPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {
+                    path_params
+                },
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+            delete_bot_versions(path_params.bot_id)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "DELETE" => {
+            let path_params: BotIdVersionIdPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {
+                    path_params
+                },
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            delete_bot_version(path_params.bot_id, path_params.version_id)
+        }
+
+
         LambdaRequest {
             path,
             http_method,

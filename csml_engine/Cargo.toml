@@ -1,6 +1,6 @@
 [package]
 name = "csml_engine"
-version = "1.3.7"
+version = "1.4.0-beta.3"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "François Falala-Sechet <francois@clevy.io>",
@@ -50,19 +50,21 @@ features = ["rustls"]
 optional = true
 
 [dependencies]
-csml_interpreter = { version = "1.3.7", path = "../csml_interpreter" }
-multimap = "0.8.1"
+csml_interpreter = { version = "1.4.0-beta.3", path = "../csml_interpreter" }
+multimap = "0.8.2"
 md-5 = "0.9.1"
 chrono = "0.4"
 rand = "0.7.3"
 uuid = { version = "0.8.1", features = ["serde", "v4"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-openssl = { version = "0.10.30", features = ["vendored"] }
+serde = { version = "1.0.118", features = ["derive"] }
+serde_json = "1.0.60"
+openssl = { version = "0.10.31", features = ["vendored"] }
 base64 = "0.13.0"
 hex = "0.4.2"
-curl = { version = "0.4.31", default-features = false, features = ["mesalink"] }
+curl = { version = "0.4.34", default-features = false, features = ["mesalink"] }
 tokio = "0.2.22"
+
+bincode = "1.3.1"
 
 [[example]]
 name = "command_line"

@@ -1,8 +1,9 @@
 mod support;
 
-use csml_interpreter::data::context::ContextJson;
+use csml_interpreter::data::context::Context;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::message_data::MessageData;
+use std::collections::HashMap;
 
 use crate::support::tools::format_message;
 use crate::support::tools::message_to_json_value;
@@ -19,14 +20,7 @@ fn ok_object_step1() {
     let data = r#"{"messages":[ {"content":{"text":"1"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
-            None,
-            None,
-            "step1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step1", "flow"),
         "CSML/basic_test/object.csml",
     );
 
@@ -41,14 +35,7 @@ fn ok_object_step2() {
     let data = r#"{"messages":[ {"content":{"text":"4"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
-            None,
-            None,
-            "step2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step2", "flow"),
         "CSML/basic_test/object.csml",
     );
 
@@ -64,14 +51,7 @@ fn ok_object_step3() {
         r#"{"messages":[ {"content":{"text":"true"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
-            None,
-            None,
-            "step3",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step3", "flow"),
         "CSML/basic_test/object.csml",
     );
 
@@ -85,14 +65,7 @@ fn ok_object_step3() {
 fn ok_object_step4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
-            None,
-            None,
-            "step4",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step4", "flow"),
         "CSML/basic_test/object.csml",
     );
     let res = check_error_component(&msg);
@@ -104,14 +77,7 @@ fn ok_object_step4() {
 fn ok_object_step5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
-            None,
-            None,
-            "step5",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step5", "flow"),
         "CSML/basic_test/object.csml",
     );
     let v: Value = message_to_json_value(msg);

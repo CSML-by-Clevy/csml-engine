@@ -1,9 +1,10 @@
 use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
-use csml_interpreter::data::ContextJson;
+use csml_interpreter::data::Context;
 use csml_interpreter::validate_bot;
 use csml_interpreter::{interpret, load_components};
+use std::collections::HashMap;
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "default";
@@ -34,9 +35,9 @@ fn main() {
     let event = Event::default();
 
     // Create context
-    let context = ContextJson::new(
-        serde_json::json!({}),
-        serde_json::json!({}),
+    let context = Context::new(
+        HashMap::new(),
+        HashMap::new(),
         None,
         None,
         DEFAULT_STEP_NAME,

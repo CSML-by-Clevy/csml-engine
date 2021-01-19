@@ -6,18 +6,20 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Flow {
     pub flow_instructions: HashMap<InstructionScope, Expr>,
     pub flow_type: FlowType,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum FlowType {
     Normal,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportScope {
     pub name: String,
     pub original_name: Option<String>,
@@ -39,7 +41,7 @@ impl PartialEq for ImportScope {
 
 impl Eq for ImportScope {}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InstructionScope {
     StepScope(String),
     FunctionScope { name: String, args: Vec<String> },
@@ -92,26 +94,26 @@ impl Display for InstructionScope {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Instruction {
     pub instruction_type: InstructionScope,
     pub actions: Expr,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum GotoType {
     Step(String),
     Flow(String),
     StepFlow { step: String, flow: String },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DoType {
     Update(Box<Expr>, Box<Expr>),
     Exec(Box<Expr>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Function {
     pub name: String,
     pub interval: Interval,
@@ -119,7 +121,7 @@ pub struct Function {
     pub args: Box<Expr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObjectType {
     Goto(GotoType, Interval),
     Hold(Interval),
@@ -143,19 +145,19 @@ pub enum ObjectType {
     Continue(Interval),
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct InstructionInfo {
     pub index: usize,
     pub total: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block {
     pub commands: Vec<(Expr, InstructionInfo)>,
     pub hooks: Vec<Hook>,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct Hook {
     pub index: i64,
     pub name: String,
@@ -171,7 +173,7 @@ impl Default for Block {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum BlockType {
     LoopBlock,
     Block,
@@ -180,7 +182,7 @@ pub enum BlockType {
     Function,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IfStatement {
     IfStmt {
         cond: Box<Expr>,
@@ -190,7 +192,7 @@ pub enum IfStatement {
     ElseStmt(Block, RangeInterval),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Expr {
     Scope {
         block_type: BlockType,
@@ -226,7 +228,7 @@ impl Expr {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum Infix {
     Addition,
     Subtraction,
@@ -249,7 +251,7 @@ pub enum Infix {
     Or,
 }
 
-#[derive(PartialEq, Debug, Clone, Eq, Hash)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Eq, Hash)]
 pub struct RangeInterval {
     pub start: Interval,
     pub end: Interval,
@@ -261,7 +263,7 @@ impl RangeInterval {
     }
 }
 
-#[derive(PartialEq, Debug, Clone, Eq, Hash, Copy)]
+#[derive(PartialEq, Debug, Clone, Eq, Hash, Copy, Serialize, Deserialize)]
 pub struct Interval {
     pub line: u32,
     pub column: u32,
@@ -286,14 +288,14 @@ impl Interval {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PathState {
     ExprIndex(Expr),
     StringIndex(String),
     Func(Function),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PathLiteral {
     VecIndex(usize),
     MapIndex(String),
@@ -304,7 +306,7 @@ pub enum PathLiteral {
     },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Identifier {
     pub ident: String,
     pub interval: Interval,

@@ -18,16 +18,6 @@ pub struct ApiInfo {
 }
 
 #[derive(Debug, Clone)]
-pub struct ContextJson {
-    pub current: serde_json::Value,
-    pub metadata: serde_json::Value,
-    pub api_info: Option<ApiInfo>,
-    pub hold: Option<Hold>,
-    pub step: String,
-    pub flow: String,
-}
-
-#[derive(Debug, Clone)]
 pub struct Context {
     pub current: HashMap<String, Literal>,
     pub metadata: HashMap<String, Literal>,
@@ -65,10 +55,10 @@ pub fn get_hashmap_from_json(lit: &serde_json::Value) -> HashMap<String, Literal
     }
 }
 
-impl ContextJson {
+impl Context {
     pub fn new(
-        current: serde_json::Value,
-        metadata: serde_json::Value,
+        current: HashMap<String, Literal>,
+        metadata: HashMap<String, Literal>,
         api_info: Option<ApiInfo>,
         hold: Option<Hold>,
         step: &str,
@@ -82,46 +72,6 @@ impl ContextJson {
             step: step.to_owned(),
             flow: flow.to_owned(),
         }
-    }
-}
-
-impl Context {
-    pub fn new(
-        current: HashMap<String, Literal>,
-        metadata: HashMap<String, Literal>,
-        api_info: Option<ApiInfo>,
-        hold: Option<Hold>,
-        step: String,
-        flow: String,
-    ) -> Self {
-        Self {
-            current,
-            metadata,
-            api_info,
-            hold,
-            step,
-            flow,
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// METHOD FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-impl ContextJson {
-    pub fn to_literal(&self) -> Context {
-        let current = get_hashmap_from_mem(&self.current);
-        let metadata = get_hashmap_from_json(&self.metadata);
-
-        Context::new(
-            current,
-            metadata,
-            self.api_info.to_owned(),
-            self.hold.to_owned(),
-            self.step.to_owned(),
-            self.flow.to_owned(),
-        )
     }
 }
 

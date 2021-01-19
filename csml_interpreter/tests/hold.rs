@@ -2,7 +2,8 @@ mod support;
 
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::hold::Hold;
-use csml_interpreter::data::ContextJson;
+use csml_interpreter::data::Context;
+use std::collections::HashMap;
 
 use crate::support::tools::format_message;
 use crate::support::tools::message_to_json_value;
@@ -23,14 +24,7 @@ fn hold_test_none() {
     "#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
         "CSML/basic_test/hold.csml",
     );
 
@@ -55,9 +49,9 @@ fn hold_test_some_0() {
     "#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             Some(Hold::new(0, serde_json::json!({}))),
             "start",
@@ -77,9 +71,9 @@ fn hold_test_some_5() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"4"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             Some(Hold::new(5, serde_json::json!({}))),
             "start",
@@ -99,9 +93,9 @@ fn hold_test_some_12() {
     let data = r#"{"memories":[], "messages":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             Some(Hold::new(12, serde_json::json!({}))),
             "start",
@@ -121,9 +115,9 @@ fn hold_test_some_14() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"3"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             Some(Hold::new(14, serde_json::json!({}))),
             "start",
@@ -143,9 +137,9 @@ fn hold_test_some_17() {
     let data = r#"{"memories":[], "messages":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({}),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
             None,
             Some(Hold::new(17, serde_json::json!({}))),
             "start",

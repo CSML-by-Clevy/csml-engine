@@ -1,8 +1,10 @@
 use crate::data::DynamoDbClient;
 use crate::{Client, Database, EngineError};
+use csml_interpreter::data::csml_flow::CsmlFlow;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub mod bot;
 pub mod conversations;
 pub mod interactions;
 pub mod memories;
@@ -56,11 +58,99 @@ pub struct DynamoDbKey {
     hash: String,
     range: String,
 }
+
 impl DynamoDbKey {
     pub fn new(hash: &str, range: &str) -> Self {
         Self {
             hash: hash.to_owned(),
             range: range.to_owned(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Bot {
+    pub hash: String,
+    pub range: String,
+    pub range_time: String,
+    pub class: String,
+
+    pub version_id: String,
+    pub id: String,
+    pub bot: String,
+    pub engine_version: String,
+    pub created_at: String,
+}
+
+impl Bot {
+    pub fn get_hash(id: &str) -> String {
+        format!("bot#{}", id)
+    }
+
+    pub fn get_range(version_id: &str) -> String {
+        make_range(&["version", version_id])
+    }
+
+    pub fn new(id: String, bot: String) -> Self {
+        let version_id = Uuid::new_v4().to_string();
+        let now = get_date_time();
+        let version = env!("CARGO_PKG_VERSION");
+        let class_name = "bot";
+
+        Self {
+            hash: Self::get_hash(&id),
+            range: Self::get_range(&version_id),
+            range_time: make_range(&[&class_name, &now, &version_id]),
+            class: class_name.to_owned(),
+            version_id,
+            id,
+            bot,
+            engine_version: version.to_owned(),
+            created_at: now,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DynamoFlow {
+    pub hash: String,
+    pub range: String,
+    pub range_time: String,
+    pub class: String,
+
+    pub id: String,
+    pub bot_id: String,
+    pub version_id: String,
+    pub flow: String,
+    pub created_at: String,
+}
+
+impl DynamoFlow {
+    pub fn get_hash(bot_id: &str) -> String {
+        format!("bot#{}", bot_id)
+    }
+
+    pub fn get_range(version_id: &str, id: &str) -> String {
+        make_range(&["flow", version_id, id])
+    }
+
+    pub fn new(bot_id: String, version_id: String, flow: &CsmlFlow) -> Self {
+        let id = Uuid::new_v4().to_string();
+        let now = get_date_time();
+        let class_name = "flow";
+
+        let flow = base64::encode(bincode::serialize(flow).unwrap());
+
+        Self {
+            hash: Self::get_hash(&bot_id),
+            range: Self::get_range(&version_id, &id),
+            range_time: make_range(&[&class_name, &version_id, &now, &id]),
+            class: class_name.to_owned(),
+            id,
+            bot_id,
+            version_id,
+            flow,
+            created_at: now,
         }
     }
 }
@@ -212,6 +302,7 @@ pub struct Memory {
     pub expires_at: Option<String>,
     pub created_at: String,
 }
+
 impl Memory {
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)

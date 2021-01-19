@@ -12,6 +12,7 @@ use crate::error_format::*;
 use lazy_static::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -101,7 +102,7 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveArray {
     pub value: Vec<Literal>,
 }
@@ -579,6 +580,7 @@ impl PrimitiveArray {
 // TRAIT FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+#[typetag::serde]
 impl Primitive for PrimitiveArray {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {

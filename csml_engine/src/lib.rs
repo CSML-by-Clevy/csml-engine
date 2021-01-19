@@ -14,13 +14,13 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{conversations::*, init_db, messages::*, state::*, DbConversation};
+use db_connectors::{bot, conversations::*, init_db, messages::*, state::*, DbConversation, BotVersion, BotVersionCreated};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
 
 use csml_interpreter::{
-    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, ContextJson, Hold, Memory},
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, Memory},
     load_components,
 };
 use md5::{Digest, Md5};
@@ -41,11 +41,13 @@ use std::{collections::HashMap, env, time::SystemTime};
  */
 pub fn start_conversation(
     request: CsmlRequest,
-    mut bot: CsmlBot,
+    run_opt: BotOpt,
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     let now = SystemTime::now();
 
     let formatted_event = format_event(json!(request))?;
+    let mut db = init_db()?;
+    let mut bot = run_opt.search_bot(&mut db);
 
     // load native components into the bot
     bot.native_components = match load_components() {
@@ -58,6 +60,7 @@ pub fn start_conversation(
         &formatted_event,
         &request,
         &bot,
+        db,
     )?;
 
     // save event in db as message RECEIVE
@@ -86,6 +89,92 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
     let mut db = init_db()?;
 
     get_latest_open(client, &mut db)
+}
+
+/**
+ * create bot version
+ */
+pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
+    let mut db = init_db()?;
+
+    let bot_id = csml_bot.id.clone();
+
+    match validate_bot(csml_bot.clone()) {
+        CsmlResult {
+            errors: Some(errors),
+            ..
+        } => Err(EngineError::Interpreter(format!("{:?}", errors))),
+        CsmlResult { .. } => {
+            let version_id = bot::create_bot_version(bot_id, csml_bot, &mut db)?;
+            let engine_version = env!("CARGO_PKG_VERSION").to_owned();
+
+            Ok(BotVersionCreated{version_id, engine_version })
+        },
+    }
+}
+
+/**
+ * get by bot_id
+ */
+pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineError>{
+    let mut db = init_db()?;
+
+    bot::get_last_bot_version(bot_id, &mut db)
+}
+
+/**
+ * get bot by version_id
+ */
+pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<Option<BotVersion>, EngineError> {
+    let mut db = init_db()?;
+
+    bot::get_by_version_id(id, bot_id, &mut db)
+}
+
+/**
+ * List the last 20 versions of the bot if no limit is set
+ *
+ * BOT = {
+ *  "version_id": String,
+ *  "id": String,
+ *  "name": String,
+ *  "custom_components": Option<String>,
+ *  "default_flow": String
+ *  "engine_version": String
+ *  "created_at": String
+ * }
+ */
+pub fn get_bot_versions(
+    bot_id: &str,
+    limit: Option<i64>,
+    last_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+
+    bot::get_bot_versions(bot_id, limit, last_key, &mut db)
+}
+
+/**
+ * delete bot by version_id
+*/
+pub fn delete_bot_version_id(
+    id: &str,
+    bot_id: &str,
+) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    bot::delete_bot_version(bot_id, id, &mut db)
+}
+
+/**
+ * delete all bot versions of bot_id
+*/
+pub fn delete_all_bot_versions(
+    bot_id: &str,
+) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    bot::delete_bot_versions(bot_id, &mut db)
 }
 
 /**

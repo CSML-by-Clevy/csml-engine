@@ -1,5 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
+use crate::data::position::Position;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::float::PrimitiveFloat;
@@ -11,13 +12,12 @@ use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::*;
+use crate::interpreter::json_to_literal;
 use lazy_static::*;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
-// use serde_json::{Result, Value};
-use crate::data::position::Position;
-use crate::interpreter::json_to_literal;
 
 ////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -182,7 +182,7 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveString {
     pub value: String,
 }
@@ -1156,6 +1156,7 @@ impl PrimitiveString {
     }
 }
 
+#[typetag::serde]
 impl Primitive for PrimitiveString {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(rhs) = other.as_any().downcast_ref::<PrimitiveString>() {

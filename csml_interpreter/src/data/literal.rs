@@ -10,7 +10,9 @@ use std::ops::Add;
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Literal {
     pub content_type: String,
     pub primitive: Box<dyn Primitive>,

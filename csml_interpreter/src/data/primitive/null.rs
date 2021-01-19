@@ -7,6 +7,7 @@ use crate::data::primitive::{
 use crate::data::{ast::Interval, literal::ContentType, message::Message, tokens::NULL, Literal};
 use crate::error_format::*;
 use lazy_static::*;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
@@ -49,7 +50,7 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveNull {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +166,7 @@ impl PrimitiveNull {
     }
 }
 
+#[typetag::serde]
 impl Primitive for PrimitiveNull {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(_other) = other.as_any().downcast_ref::<Self>() {

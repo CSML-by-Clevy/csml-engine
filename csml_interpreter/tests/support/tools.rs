@@ -2,7 +2,7 @@ use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::message_data::MessageData;
-use csml_interpreter::data::ContextJson;
+use csml_interpreter::data::Context;
 use csml_interpreter::{interpret, load_components};
 use serde_json::{json, map::Map, Value};
 
@@ -23,7 +23,7 @@ pub fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 }
 
 #[allow(dead_code)]
-pub fn format_message(event: Event, context: ContextJson, filepath: &str) -> MessageData {
+pub fn format_message(event: Event, context: Context, filepath: &str) -> MessageData {
     let content = read_file(filepath.to_string()).unwrap();
 
     let flow = CsmlFlow::new("id", "flow", &content, Vec::default());

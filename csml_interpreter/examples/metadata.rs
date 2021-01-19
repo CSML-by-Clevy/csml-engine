@@ -1,9 +1,10 @@
 use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
-use csml_interpreter::data::ContextJson;
+use csml_interpreter::data::{primitive::PrimitiveString, Context, Interval};
 use csml_interpreter::validate_bot;
 use csml_interpreter::{interpret, load_components};
+use std::collections::HashMap;
 
 const DEFAULT_ID_NAME: &str = "id";
 const DEFAULT_FLOW_NAME: &str = "default";
@@ -34,14 +35,21 @@ fn main() {
     let event = Event::default();
 
     // Create a Metadata
-    let metadata = serde_json::json!({
-        "firstname":"Toto",
-        "email":"toto@clevy.io"
-    });
+
+    let mut metadata = HashMap::new();
+
+    metadata.insert(
+        "firstname".to_owned(),
+        PrimitiveString::get_literal("Toto", Interval::default()),
+    );
+    metadata.insert(
+        "email".to_owned(),
+        PrimitiveString::get_literal("toto@clevy.io", Interval::default()),
+    );
 
     // Create context
-    let context = ContextJson::new(
-        serde_json::json!({}),
+    let context = Context::new(
+        HashMap::new(),
         metadata,
         None,
         None,

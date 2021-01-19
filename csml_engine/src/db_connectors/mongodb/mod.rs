@@ -1,3 +1,4 @@
+pub mod bot;
 pub mod conversations;
 pub mod interactions;
 pub mod memories;

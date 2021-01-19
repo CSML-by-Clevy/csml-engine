@@ -1,11 +1,57 @@
-use crate::{Client, ContextJson};
-use csml_interpreter::data::message::Message; //ApiInfo, Hold
+use crate::{db_connectors, Client, Context};
+use csml_interpreter::data::{csml_bot::CsmlBot, Message};
 use curl::easy::Easy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum BotOpt {
+    #[serde(rename = "bot")]
+    CsmlBot(CsmlBot),
+    #[serde(rename = "version_id")]
+    Id {
+        version_id: String,
+        bot_id: String,
+        fn_endpoint: Option<String>,
+    },
+    #[serde(rename = "bot_id")]
+    BotId {
+        bot_id: String,
+        fn_endpoint: Option<String>,
+    },
+}
+
+impl BotOpt {
+    pub fn search_bot(&self, db: &mut Database) -> CsmlBot {
+        match self {
+            BotOpt::CsmlBot(csml_bot) => csml_bot.to_owned(),
+            BotOpt::BotId {
+                bot_id,
+                fn_endpoint,
+            } => {
+                let mut bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)
+                    .unwrap()
+                    .unwrap();
+                bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
+                bot_version.bot
+            }
+            BotOpt::Id {
+                version_id,
+                bot_id,
+                fn_endpoint,
+            } => {
+                let mut bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
+                    .unwrap()
+                    .unwrap();
+                bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
+                bot_version.bot
+            }
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CsmlRequest {
@@ -51,7 +97,7 @@ pub struct ConversationInfo {
     pub conversation_id: String,
     pub interaction_id: String,
     pub client: Client,
-    pub context: ContextJson,
+    pub context: Context,
     pub metadata: Value,
     pub messages: Vec<Message>,
     pub db: Database,

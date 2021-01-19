@@ -11,6 +11,7 @@ use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Literal};
 use crate::error_format::*;
 use lazy_static::*;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
@@ -83,7 +84,7 @@ lazy_static! {
     };
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveFloat {
     pub value: f64,
 }
@@ -450,6 +451,7 @@ impl PrimitiveFloat {
 // TRAIT FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+#[typetag::serde]
 impl Primitive for PrimitiveFloat {
     fn is_eq(&self, other: &dyn Primitive) -> bool {
         if let Some(other) = other.as_any().downcast_ref::<Self>() {

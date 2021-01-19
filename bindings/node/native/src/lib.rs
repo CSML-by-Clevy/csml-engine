@@ -1,8 +1,8 @@
-use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_engine::{
-    data::CsmlRequest, start_conversation, user_close_all_conversations, Client, CsmlResult,
-    ErrorInfo, Warnings,
+    data::{CsmlRequest, BotOpt}, start_conversation, user_close_all_conversations,
+    Client, CsmlResult, ErrorInfo, Warnings
 };
+use csml_interpreter::data::csml_bot::CsmlBot;
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{json, Value};
 
@@ -170,20 +170,6 @@ fn format_request(json_request: Value) -> Result<CsmlRequest, serde_json::error:
         },
     })
 }
-fn format_bot(data: Value) -> Result<CsmlBot, serde_json::error::Error> {
-    Ok(CsmlBot {
-        id: data["id"].as_str().unwrap().to_owned(),
-        name: data["name"].as_str().unwrap().to_owned(),
-        default_flow: data["default_flow"].as_str().unwrap().to_owned(),
-        fn_endpoint: match data["fn_endpoint"].to_owned() {
-            serde_json::Value::Null => None,
-            val => Some(val.as_str().unwrap().to_owned()),
-        },
-        flows: serde_json::from_value(data["flows"].to_owned()).unwrap(),
-        custom_components: serde_json::from_value(data["custom_components"].to_owned()).unwrap(),
-        native_components: serde_json::from_value(data["native_components"].to_owned()).unwrap(),
-    })
-}
 
 fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
     let raw_request = cx.argument::<JsValue>(0)?;
@@ -197,7 +183,7 @@ fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
         Ok(value) => value,
     };
 
-    let bot: CsmlBot = match format_bot(json_bot) {
+    let bot: BotOpt = match serde_json::from_value(json_bot) {
         Err(err) => panic!("Bad request: bot format {:?}", err),
         Ok(value) => value,
     };
@@ -217,12 +203,232 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
     }
 }
 
+/*
+* create bot version
+*
+* {"version_id": String}
+*
+*/
+fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let raw_bot = cx.argument::<JsValue>(0)?;
+
+    let json_bot: Value = neon_serde::from_value(&mut cx, raw_bot)?;
+
+    let bot: CsmlBot = match serde_json::from_value(json_bot) {
+        Err(err) => panic!("Bad bot format: {:?}", err),
+        Ok(bot) => bot,
+    };
+
+    match csml_engine::create_bot_version(bot) {
+        Ok(version_id) => {
+            let value = serde_json::json!({
+                "version_id": version_id
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* get bot by version
+*
+* {
+*  "version_id": String,
+*  "id": String,
+*  "name": String,
+*  "custom_components": Option<String>,
+*  "default_flow": String
+*  "engine_version": String
+*  "created_at": String
+* }
+*/
+fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let id = cx.argument::<JsString>(0)?.value();
+    let bot_id = cx.argument::<JsString>(1)?.value();
+
+    match csml_engine::get_bot_by_version_id(&id, &bot_id) {
+        Ok(bot) => {
+            let value = match bot {
+                Some(bot) => {
+                    serde_json::json!(
+                        bot.flatten()
+                    )
+                }
+                None => {
+                    serde_json::json!({
+                        "error": "Not found"
+                    })
+                }
+            };
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        }
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/* 
+* get last bot version
+*
+* {
+*   id: String,
+*   name: String,
+*   fn_endpoint: Option<String>,
+*   flows: Vec<CsmlFlow>,
+*   custom_components: Option<>,
+*   default_flow: String,
+* }
+*/
+fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let bot_id = cx.argument::<JsString>(0)?.value();
+
+    match csml_engine::get_last_bot_version(&bot_id) {
+        Ok(bot) => {
+            let value = match bot {
+                Some(bot) => {
+                    serde_json::json!(
+                        bot.flatten()
+                    )
+                }
+                None => {
+                    serde_json::json!({
+                        "error": "Not found"
+                    })
+                }
+            };
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Delete bot version
+*/
+fn delete_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let version_id =  cx.argument::<JsString>(0)?.value();
+    let bot_id = cx.argument::<JsString>(1)?.value();
+
+    match csml_engine::delete_bot_version_id(&version_id, &bot_id) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Delete bot versions
+*/
+fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let bot_id = cx.argument::<JsString>(0)?.value();
+
+    match csml_engine::delete_all_bot_versions(&bot_id) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Get the last 20 versions of the bot if no limit is set
+*
+* {
+*  "version_id": String,
+*  "id": String,
+*  "name": String,
+*  "custom_components": Option<String>,
+*  "default_flow": String
+*  "engine_version": String
+*  "created_at": String
+* }
+*/
+fn get_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let bot_id = cx.argument::<JsString>(0)?.value();
+    let limit = match cx.argument::<JsNumber>(1) {
+        Ok(key) => Some(key.value() as i64),
+        Err(_) => None
+    };
+
+    let pagination_key = match cx.argument::<JsString>(2) {
+        Ok(key) => Some(key.value()),
+        Err(_) => None
+    };
+
+    match csml_engine::get_bot_versions(&bot_id, limit, pagination_key) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
 register_module!(mut cx, {
-    // cx.export_function("validFlow", is_valid)?;
-    cx.export_function("getOpenConversation", get_open_conversation)?;
     cx.export_function("validateBot", validate_bot)?;
-    cx.export_function("getBotSteps", get_bot_steps)?;
+
+    cx.export_function("createBotVersion", create_bot_version)?;
+    cx.export_function("getBotByVersionId", get_bot_by_version_id)?;
+    cx.export_function("getLastBotVersion", get_last_bot_version)?;
+    cx.export_function("getBotVersions", get_bot_versions)?;
+    cx.export_function("deleteBotVersion", delete_bot_version)?;
+    cx.export_function("deleteBotVersions", delete_bot_versions)?;
+
     cx.export_function("run", run_bot)?;
+
     cx.export_function("closeAllConversations", close_conversations)?;
+    cx.export_function("getBotSteps", get_bot_steps)?;
+    cx.export_function("getOpenConversation", get_open_conversation)?;
     Ok(())
 });

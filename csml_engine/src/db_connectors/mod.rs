@@ -32,12 +32,14 @@
 use crate::data::{Database, EngineError};
 use crate::error_messages::ERROR_DB_SETUP;
 use serde::{Deserialize, Serialize};
+use csml_interpreter::data::csml_bot::CsmlBot;
 
 #[cfg(feature = "dynamo")]
 use self::dynamodb as dynamodb_connector;
 #[cfg(feature = "mongo")]
 use self::mongodb as mongodb_connector;
 
+pub mod bot;
 pub mod conversations;
 pub mod interactions;
 pub mod memories;
@@ -135,6 +137,40 @@ pub struct DbState {
     pub value: serde_json::Value,
     pub expires_at: Option<String>,
     pub created_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DbBot {
+    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
+    pub id: String,
+    pub bot_id: String,
+    pub bot: String,
+    pub engine_version: String,
+    pub created_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BotVersion {
+    pub bot: CsmlBot,
+    pub version_id: String,
+    pub engine_version: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BotVersionCreated {
+    pub version_id: String,
+    pub engine_version: String,
+}
+
+impl BotVersion {
+    pub fn flatten(&self) -> serde_json::Value {
+        let mut value = serde_json::json!(self.bot);
+
+        value["version_id"] = serde_json::json!(self.version_id);
+        value["engine_version"] = serde_json::json!(self.engine_version);
+
+        value
+    }
 }
 
 #[cfg(feature = "mongo")]

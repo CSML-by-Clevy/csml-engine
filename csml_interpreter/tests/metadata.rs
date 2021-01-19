@@ -1,7 +1,8 @@
 mod support;
 
-use csml_interpreter::data::context::ContextJson;
-use csml_interpreter::data::event::Event;
+use csml_interpreter::data::context::Context;
+use csml_interpreter::data::{event::Event, primitive::PrimitiveInt, Interval};
+use std::collections::HashMap;
 
 use crate::support::tools::format_message;
 use crate::support::tools::message_to_json_value;
@@ -16,16 +17,15 @@ fn metadata() {
             {"content":{"var": 42}, "content_type":"object"}
         ]
     }"#;
+    let mut metadata = HashMap::new();
+    metadata.insert(
+        "var".to_owned(),
+        PrimitiveInt::get_literal(42, Interval::default()),
+    );
+
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({"var": 42}),
-            None,
-            None,
-            "start",
-            "flow",
-        ),
+        Context::new(HashMap::new(), metadata, None, None, "start", "flow"),
         "CSML/basic_test/metadata.csml",
     );
 
@@ -42,16 +42,16 @@ fn metadata_step1() {
             {"content": {"text": "42" }, "content_type":"text"}
         ]
     }"#;
+
+    let mut metadata = HashMap::new();
+    metadata.insert(
+        "var".to_owned(),
+        PrimitiveInt::get_literal(42, Interval::default()),
+    );
+
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({"var": 42}),
-            None,
-            None,
-            "step1",
-            "flow",
-        ),
+        Context::new(HashMap::new(), metadata, None, None, "step1", "flow"),
         "CSML/basic_test/metadata.csml",
     );
 
@@ -69,16 +69,15 @@ fn metadata_step2() {
             {"content": {"text": "42" }, "content_type":"text"}
         ]
     }"#;
+    let mut metadata = HashMap::new();
+    metadata.insert(
+        "var".to_owned(),
+        PrimitiveInt::get_literal(42, Interval::default()),
+    );
+
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        ContextJson::new(
-            serde_json::json!({}),
-            serde_json::json!({"var": 42}),
-            None,
-            None,
-            "step2",
-            "flow",
-        ),
+        Context::new(HashMap::new(), metadata, None, None, "step2", "flow"),
         "CSML/basic_test/metadata.csml",
     );
 
