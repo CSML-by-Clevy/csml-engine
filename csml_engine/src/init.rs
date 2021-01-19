@@ -2,12 +2,15 @@ use crate::db_connectors::{conversations::*, interactions::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
     utils::{get_default_flow, get_flow_by_id, search_flow},
-    Context, CsmlBot, CsmlFlow,
+    Context, CsmlBot, CsmlFlow, CsmlResult
 };
 
-use csml_interpreter::data::{
-    context::{get_hashmap_from_json, get_hashmap_from_mem},
-    ApiInfo, Client, Event,
+use csml_interpreter::{
+    data::{
+        context::{get_hashmap_from_json, get_hashmap_from_mem},
+        ApiInfo, Client, Event,
+    },
+    validate_bot, load_components
 };
 use curl::{
     easy::{Easy, List},
@@ -94,6 +97,36 @@ pub fn init_conversation_info<'a>(
     update_conversation(&mut data, Some(flow), Some(step))?;
 
     Ok(data)
+}
+
+/**
+ * Initialize the bot
+ */
+pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
+    // load native components into the bot
+    bot.native_components = match load_components() {
+        Ok(components) => Some(components),
+        Err(err) => return Err(EngineError::Interpreter(err.format_error())),
+    };
+
+    match validate_bot(&bot) {
+        CsmlResult {
+            flows: Some(flows),
+            errors: None,
+            ..
+        } => {
+            bot.bot_ast = Some(base64::encode(bincode::serialize(&flows).unwrap()));
+            Ok(())
+        }
+        CsmlResult {
+            errors: Some(errors),
+            ..
+        } => Err(EngineError::Interpreter(format!(
+            "invalid bot {:?}",
+            errors
+        ))),
+        _ => Err(EngineError::Interpreter(format!("empty bot"))),
+    }
 }
 
 /**

@@ -59,6 +59,7 @@ fn init_bot() -> CsmlBot {
         native_components: Some(load_components().unwrap()),
         custom_components: None,
         default_flow: "flowid".to_owned(),
+        bot_ast: None,
     }
 }
 

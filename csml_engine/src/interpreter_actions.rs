@@ -8,7 +8,6 @@ use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Event, Hold, MSG},
     interpret,
 };
-use md5::{Digest, Md5};
 use serde_json::{map::Map, Value};
 use std::{env, sync::mpsc, thread, time::SystemTime};
 
@@ -47,20 +46,19 @@ pub fn interpret_step(
             MSG::Hold(Hold {
                 index: new_index,
                 step_vars,
+                step_hash,
             }) => {
-                let mut hash = Md5::new();
-
-                hash.update(current_flow.content.as_bytes());
-
                 let state_hold: Value = serde_json::json!({
                     "index": new_index,
                     "step_vars": step_vars,
-                    "hash": format!("{:x}", hash.finalize())
+                    "step_hash": serde_json::to_value(&step_hash)?
                 });
+
                 set_state_items(data, "hold", vec![("position", &state_hold)])?;
                 data.context.hold = Some(Hold {
                     index: new_index,
                     step_vars,
+                    step_hash,
                 });
             }
             MSG::Next { flow, step } => match (flow, step) {

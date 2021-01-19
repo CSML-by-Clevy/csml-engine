@@ -37,6 +37,7 @@ pub fn format_message(event: Event, context: Context, filepath: &str) -> Message
         Some(native_component),
         None,
         "flow",
+        None,
     );
 
     interpret(bot, context, event, None)
