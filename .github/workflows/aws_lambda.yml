@@ -11,9 +11,9 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-18.04]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             asset_name: csml-server-lambda
 
     steps:
@@ -21,7 +21,7 @@ jobs:
 
     # for some reason cache does not work properly with macos builds
     - name: Cache Cargo
-      if: matrix.os != 'macos-latest'
+      if: matrix.os != 'macos-10.15'
       uses: actions/cache@v2
       with:
         path: |

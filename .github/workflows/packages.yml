@@ -11,11 +11,11 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-18.04, macos-10.15]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             asset_name: csml-server-linux-amd64
-          - os: macos-latest
+          - os: macos-10.15
             asset_name: csml-server-macos-amd64
 
     steps:
@@ -23,7 +23,7 @@ jobs:
 
     # for some reason cache does not work properly with macos builds
     - name: Cache Cargo
-      if: matrix.os != 'macos-latest'
+      if: matrix.os != 'macos-10.15'
       uses: actions/cache@v2
       with:
         path: |
@@ -59,11 +59,11 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-18.04, macos-10.15]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             asset_name: csml-server-linux-amd64
-          - os: macos-latest
+          - os: macos-10.15
             asset_name: csml-server-macos-amd64
 
     steps:
@@ -85,7 +85,7 @@ jobs:
 
 
   publish-docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     needs: build
     steps:
       - uses: actions/checkout@v2
