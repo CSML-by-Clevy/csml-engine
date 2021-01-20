@@ -10,8 +10,9 @@ use csml_interpreter::{
     clean_step::clean_step_intervals,
     data::{
         ast::{Expr, Flow, InstructionScope},
-        Client, Event, Memory, Message,
+        Client, Event, Memory, Message, Interval
     },
+    interpreter::json_to_literal,
 };
 use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
@@ -27,7 +28,7 @@ use md5::{Digest, Md5};
  */
 pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memory]) {
     for elem in mem.iter() {
-        let lit = serde_json::from_value(elem.value.clone()).unwrap();
+        let lit = json_to_literal(&elem.value, Interval::default()).unwrap();
 
         data.context.current.insert(elem.key.to_owned(), lit);
     }
