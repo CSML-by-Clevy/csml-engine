@@ -5,6 +5,7 @@ use crate::data::{
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
+    resolve_fn_args,
 };
 use crate::parser::ExitCondition;
 // use crate::interpreter::interpret_scope;
@@ -62,6 +63,13 @@ pub fn match_actions(
                 &mut msg_data,
                 sender,
             )?)?;
+            MSG::send(&sender, MSG::Message(msg.clone()));
+            Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+        }
+        ObjectType::Debug(args, interval) => {
+            let args = resolve_fn_args(args, data, &mut msg_data, sender)?;
+
+            let msg = Message::new(args.args_to_debug(interval.to_owned()))?;
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }

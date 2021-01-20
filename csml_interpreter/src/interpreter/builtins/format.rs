@@ -8,7 +8,7 @@ pub fn debug(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
     Ok(args.args_to_debug(interval))
 }
 
-// TODO: old builtin need to rm this whene no one use itold built in need to rm this when no one use it
+// TODO: old builtin need to be rm when no one use it
 pub fn object(object: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut map = HashMap::new();
 

@@ -11,6 +11,7 @@ use crate::error_format::{
 // use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,
+    parse_var_types::parse_expr_list,
     parse_comments::comment,
     parse_foreach::parse_foreach,
     parse_goto::parse_goto,
@@ -164,6 +165,32 @@ where
         s,
         (
             Expr::ObjectExpr(ObjectType::Say(Box::new(expr))),
+            instruction_info,
+        ),
+    ))
+}
+
+fn parse_debug<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, interval) = get_interval(s)?;
+    let (s, ..) = get_tag(name, DEBUG_ACTION)(s)?;
+
+    let (s, expr) = parse_expr_list(s)?;
+
+    let instruction_info = InstructionInfo {
+        index: StateContext::get_rip(),
+        total: 0,
+    };
+
+    StateContext::inc_rip();
+
+    Ok((
+        s,
+        (
+            Expr::ObjectExpr(ObjectType::Debug(Box::new(expr), interval)),
             instruction_info,
         ),
     ))
@@ -350,6 +377,7 @@ where
         parse_goto,
         parse_remember,
         parse_say,
+        parse_debug,
         parse_use,
         parse_hold,
         parse_break,
@@ -366,6 +394,7 @@ where
 {
     alt((
         parse_do,
+        parse_debug,
         parse_if,
         parse_foreach,
         parse_break,
