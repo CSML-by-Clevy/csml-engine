@@ -8,6 +8,38 @@ pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RunRequest {
+    pub bot: Option<CsmlBot>,
+    pub bot_id: Option<String>,
+    pub version_id: Option<String>,
+    pub fn_endpoint: Option<String>,
+    pub event: CsmlRequest,
+}
+
+impl RunRequest {
+    pub fn get_bot_opt(&self) -> Result<BotOpt, EngineError> {
+        match self.clone() {
+            RunRequest{
+                bot: Some(csml_bot),
+                ..
+            } => Ok(BotOpt::CsmlBot(csml_bot)),
+            RunRequest{
+                version_id: Some(version_id),
+                bot_id: Some(bot_id),
+                fn_endpoint,
+                ..
+            } => Ok(BotOpt::Id{ version_id, bot_id, fn_endpoint}),
+            RunRequest{
+                bot_id: Some(bot_id),
+                fn_endpoint,
+                ..
+            } => Ok(BotOpt::BotId{bot_id, fn_endpoint}),
+            _ => Err(EngineError::Format("bot bad format".to_owned()))
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum BotOpt {
     #[serde(rename = "bot")]
     CsmlBot(CsmlBot),
@@ -117,6 +149,7 @@ pub enum EngineError {
     Serde(serde_json::Error),
     Io(std::io::Error),
     Manager(String),
+    Format(String),
     Interpreter(String),
     Time(std::time::SystemTimeError),
     Openssl(openssl::error::ErrorStack),

@@ -4,16 +4,9 @@ pub mod validate;
 pub mod sns;
 pub mod bot_versions;
 
-use csml_engine::data::CsmlRequest;
-use csml_interpreter::data::csml_bot::CsmlBot;
+use csml_engine::data::{RunRequest};
 use serde::{Deserialize, Serialize};
 
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RunRequest {
-    bot: CsmlBot,
-    event: CsmlRequest,
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BotIdVersionIdPath {

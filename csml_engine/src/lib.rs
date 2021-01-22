@@ -24,7 +24,6 @@ use utils::*;
 
 use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, Memory},
-    load_components,
 };
 use md5::{Digest, Md5};
 use std::{collections::HashMap, env, time::SystemTime};
@@ -44,20 +43,15 @@ use std::{collections::HashMap, env, time::SystemTime};
  */
 pub fn start_conversation(
     request: CsmlRequest,
-    run_opt: BotOpt,
+    bot_opt: BotOpt,
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     let now = SystemTime::now();
 
     let formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
-    let mut bot = run_opt.search_bot(&mut db);
-    init_bot(&mut bot)?;
 
-    // load native components into the bot
-    bot.native_components = match load_components() {
-        Ok(components) => Some(components),
-        Err(err) => return Err(EngineError::Interpreter(err.format_error())),
-    };
+    let mut bot = bot_opt.search_bot(&mut db);
+    init_bot(&mut bot)?;
 
     let mut data = init_conversation_info(
         get_default_flow(&bot)?.name.to_owned(),
