@@ -1,20 +1,20 @@
 use actix_web::{post, web, HttpResponse};
 use csml_engine::{start_conversation};
-use csml_engine::data::{CsmlRequest, BotOpt};
-use serde::{Deserialize, Serialize};
+use csml_engine::data::{RunRequest};
 use serde_json::{Value, json};
 use std::thread;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct RunRequest {
-  bot: BotOpt,
-  event: CsmlRequest,
-}
-
 #[post("/run")]
 pub async fn handler(body: web::Json<RunRequest>) -> HttpResponse {
-  let bot = body.bot.to_owned();
   let mut request = body.event.to_owned();
+
+  let bot_opt = match body.get_bot_opt() {
+    Ok(bot_opt) => bot_opt,
+    Err(err) => {
+      eprintln!("EngineError: {:?}", err);
+      return HttpResponse::BadRequest().finish()
+    }
+  };
 
   // request metadata should be an empty object by default
   request.metadata = match request.metadata {
@@ -23,7 +23,7 @@ pub async fn handler(body: web::Json<RunRequest>) -> HttpResponse {
   };
 
   let res = thread::spawn(move || {
-    start_conversation(request, bot)
+    start_conversation(request, bot_opt)
   }).join().unwrap();
 
   match res {

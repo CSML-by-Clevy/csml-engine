@@ -1,10 +1,10 @@
 use csml_engine::{
-    data::{CsmlRequest, BotOpt}, start_conversation, user_close_all_conversations,
+    data::{RunRequest}, start_conversation, user_close_all_conversations,
     Client, CsmlResult, ErrorInfo, Warnings
 };
 use csml_interpreter::data::csml_bot::CsmlBot;
 use neon::{context::Context, prelude::*, register_module};
-use serde_json::{json, Value};
+use serde_json::{Value};
 
 fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
@@ -151,44 +151,18 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     }
 }
 
-fn format_request(json_request: Value) -> Result<CsmlRequest, serde_json::error::Error> {
-    Ok(CsmlRequest {
-        request_id: json_request["request_id"].as_str().unwrap().to_owned(),
-        client: serde_json::from_value(json_request["client"].clone())?,
-        callback_url: {
-            match json_request["callback_url"].clone() {
-                Value::Null => None,
-                val => Some(val.as_str().unwrap().to_owned()),
-            }
-        },
-        payload: serde_json::from_value(json_request["payload"].clone())?,
-        metadata: {
-            match json_request["metadata"].clone() {
-                Value::Null => json!({}),
-                val => val,
-            }
-        },
-    })
-}
-
 fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let raw_request = cx.argument::<JsValue>(0)?;
-    let raw_bot = cx.argument::<JsValue>(1)?;
+    let raw_run_request = cx.argument::<JsValue>(0)?;
 
-    let json_request: Value = neon_serde::from_value(&mut cx, raw_request)?;
-    let json_bot: Value = neon_serde::from_value(&mut cx, raw_bot)?;
+    let run_request: RunRequest = neon_serde::from_value(&mut cx, raw_run_request)?;
 
-    let request = match format_request(json_request) {
-        Err(err) => panic!("Bad request: event format {:?}", err),
-        Ok(value) => value,
+    let bot_opt = match run_request.get_bot_opt() {
+        Ok(bot_opt) => bot_opt,
+        Err(err) => panic!(err),
     };
+    let request = run_request.event;
 
-    let bot: BotOpt = match serde_json::from_value(json_bot) {
-        Err(err) => panic!("Bad request: bot format {:?}", err),
-        Ok(value) => value,
-    };
-
-    match start_conversation(request, bot) {
+    match start_conversation(request, bot_opt) {
         Err(err) => panic!("{:?}", err),
         Ok(obj) => Ok(neon_serde::to_value(&mut cx, &obj)?),
     }
