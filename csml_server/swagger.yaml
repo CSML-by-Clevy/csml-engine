@@ -26,7 +26,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RunRequest'
+              oneOf:
+                - $ref: '#/components/schemas/RunRequestBot'
+                - $ref: '#/components/schemas/RunRequestLatestVersion'
+                - $ref: '#/components/schemas/RunRequestSpecificVersion'
       responses:
         '200':
           description: Success Response
@@ -294,6 +297,16 @@ paths:
 
 components:
   schemas:
+    FnEndpoint:
+      type: string
+      description: optional endpoint to call for external Fn() calls
+      format: url
+
+    EngineVersion:
+      type: string
+      description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
+      example: '1.4.0'
+
     BotModel:
       type: object
       required:
@@ -312,9 +325,7 @@ components:
           type: string
           example: Default
         fn_endpoint:
-          type: string
-          description: optional endpoint to call for external Fn() calls
-          example: ""
+          $ref: '#/components/schemas/FnEndpoint'
         flows:
           type: array
           items:
@@ -456,8 +467,7 @@ components:
             version_id:
               type: string
             engine_version:
-              type: string
-              example: '1.4.0'
+              $ref: '#/components/schemas/EngineVersion'
 
     BotVersionsResponse:
       type: object
@@ -478,8 +488,7 @@ components:
               version_id:
                 type: string
               engine_version:
-                type: string
-                example: '1.4.0'
+                $ref: '#/components/schemas/EngineVersion'
               name:
                 type: string
               default_flow:
@@ -503,11 +512,47 @@ components:
           type: string
           example: "An explicit error message"
 
-    RunRequest:
+    RunRequestBot:
       type: object
+      description: Handle chat requests with the full target bot specified in the body
+      required:
+        - bot
+        - event
       properties:
         bot:
           $ref: '#/components/schemas/BotModel'
+        event:
+          $ref: '#/components/schemas/EventModel'
+    RunRequestLatestVersion:
+      type: object
+      description: Handle chat requests with the latest saved version of a given bot_id
+      required:
+        - bot_id
+        - event
+      properties:
+        bot_id:
+          type: string
+          example: MyBotID
+        fn_endpoint:
+          $ref: '#/components/schemas/FnEndpoint'
+        event:
+          $ref: '#/components/schemas/EventModel'
+    RunRequestSpecificVersion:
+      type: object
+      description: Handle chat requests with a specific saved version of a given bot_id
+      required:
+        - bot_id
+        - version_id
+        - event
+      properties:
+        bot_id:
+          type: string
+          example: MyBotID
+        version_id:
+          type: string
+          example: '86ba492a-b6fe-4c22-95ec-55be4e1c83f0'
+        fn_endpoint:
+          $ref: '#/components/schemas/FnEndpoint'
         event:
           $ref: '#/components/schemas/EventModel'
 
@@ -551,9 +596,7 @@ components:
           type: string
           example: 'c3001dfb-8a10-4815-bb4e-6cd98b0ef5e7'
         engine_version:
-          type: string
-          description: The version of the engine this version was created with. Can be used for compatibility checks later on.
-          example: '1.4.0'
+          $ref: '#/components/schemas/EngineVersion'
 
     Error:
       type: object

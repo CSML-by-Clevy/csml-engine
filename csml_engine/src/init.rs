@@ -103,12 +103,6 @@ pub fn init_conversation_info<'a>(
  * Initialize the bot
  */
 pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
-    // load native components into the bot
-    bot.native_components = match load_components() {
-        Ok(components) => Some(components),
-        Err(err) => return Err(EngineError::Interpreter(err.format_error())),
-    };
-
     match validate_bot(&bot) {
         CsmlResult {
             flows: Some(flows),
@@ -116,17 +110,24 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
             ..
         } => {
             bot.bot_ast = Some(base64::encode(bincode::serialize(&flows).unwrap()));
-            Ok(())
         }
         CsmlResult {
             errors: Some(errors),
             ..
-        } => Err(EngineError::Interpreter(format!(
+        } => return Err(EngineError::Interpreter(format!(
             "invalid bot {:?}",
             errors
         ))),
-        _ => Err(EngineError::Interpreter(format!("empty bot"))),
+        _ => return Err(EngineError::Interpreter(format!("empty bot"))),
     }
+
+    // load native components into the bot
+    bot.native_components = match load_components() {
+        Ok(components) => Some(components),
+        Err(err) => return Err(EngineError::Interpreter(err.format_error())),
+    };
+
+    Ok(())
 }
 
 /**
