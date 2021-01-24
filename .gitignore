@@ -1,11 +1,12 @@
 **/.env
+**/.env.*
+!**/.env.example
 **/target
 **/*.rs.bk
 **/artifacts.json
 **/*.node
 **/node_modules
 **/.DS_Store
-**/.env.local
 **/*.sh
 **/*~
 **/.webpack
