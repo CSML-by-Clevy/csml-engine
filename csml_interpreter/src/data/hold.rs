@@ -7,6 +7,7 @@ pub struct Hold {
     pub index: usize,
     pub step_vars: serde_json::Value,
     pub step_hash: String,
+    pub loop_info: Option<Vec<usize>>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -14,11 +15,12 @@ pub struct Hold {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Hold {
-    pub fn new(index: usize, step_vars: serde_json::Value, step_hash: String) -> Self {
+    pub fn new(index: usize, step_vars: serde_json::Value, step_hash: String, loop_info: Option<Vec<usize>>) -> Self {
         Self {
             index,
             step_vars,
             step_hash,
+            loop_info,
         }
     }
 
@@ -27,6 +29,7 @@ impl Hold {
             index: 0,
             step_vars: serde_json::json!({}),
             step_hash: "".to_owned(),
+            loop_info: None
         }
     }
 }
