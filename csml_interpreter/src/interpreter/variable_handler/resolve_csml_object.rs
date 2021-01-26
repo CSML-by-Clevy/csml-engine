@@ -153,7 +153,7 @@ pub fn resolve_object(
 
             insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
 
-            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data)
+            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data, sender)
         }
 
         (.., Some((fn_args, expr, new_flow))) => {
@@ -178,7 +178,7 @@ pub fn resolve_object(
 
             insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
 
-            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data)
+            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data, sender)
         }
 
         _ => {
