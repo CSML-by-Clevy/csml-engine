@@ -1,0 +1,5 @@
+start:
+    debug 42
+
+debug_formater:
+    say Debug(1, 2, 3)

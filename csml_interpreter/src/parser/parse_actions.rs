@@ -11,7 +11,6 @@ use crate::error_format::{
 // use crate::linter::Linter;
 use crate::parser::{
     operator::parse_operator,
-    parse_var_types::parse_expr_list,
     parse_comments::comment,
     parse_foreach::parse_foreach,
     parse_goto::parse_goto,
@@ -178,7 +177,9 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, DEBUG_ACTION)(s)?;
 
-    let (s, expr) = parse_expr_list(s)?;
+    let (s, expr) = parse_action_argument(s, parse_operator)?;
+    // this vec is temporary until a solution for multiple arguments in debug is found
+    let vec = Expr::VecExpr(vec!(expr), RangeInterval { start: interval.to_owned(), end:interval.to_owned() });
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -190,7 +191,7 @@ where
     Ok((
         s,
         (
-            Expr::ObjectExpr(ObjectType::Debug(Box::new(expr), interval)),
+            Expr::ObjectExpr(ObjectType::Debug(Box::new(vec), interval)),
             instruction_info,
         ),
     ))
