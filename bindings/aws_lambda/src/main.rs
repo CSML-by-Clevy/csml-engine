@@ -1,7 +1,7 @@
 mod routes;
 
 use routes::{
-    run, validate, RunRequest, GetVersionsRequest, BotIdVersionIdPath, BotIdPath,
+    run, validate, GetVersionsRequest, BotIdVersionIdPath, BotIdPath,
     sns,
     bot_versions::{
         add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
@@ -11,7 +11,7 @@ use routes::{
     conversations::{close_user_conversations, get_open}
 };
 
-use csml_engine::Client;
+use csml_engine::{data::RunRequest, Client};
 use csml_interpreter::data::csml_bot::CsmlBot;
 
 use lambda_runtime::{error::HandlerError, lambda, Context};

@@ -1,10 +1,8 @@
 use crate::format_response;
 use csml_engine::{start_conversation};
-use csml_engine::data::{CsmlRequest, BotOpt};
-use csml_interpreter::data::{csml_bot::CsmlBot};
+use csml_engine::data::{RunRequest};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-// use ureq::json;
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,12 +27,6 @@ fn confirm_subscription(body: &str) -> serde_json::Value {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct RunRequest {
-    bot: CsmlBot,
-    event: CsmlRequest,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 struct SnsMessage {
     #[serde(rename = "Message")]
     message: String,
@@ -42,7 +34,7 @@ struct SnsMessage {
 
 fn handle_notification(body: &str) -> serde_json::Value {
 
-    // All requests with an invalid should return a 200 code,
+    // All requests with an invalid payload should return a 200 code,
     // as we don't want the SNS event to be retried (same result).
     // Ideally, it should however raise an error on some logging/monitoring system
     let sns: SnsMessage = match serde_json::from_str(body) {
@@ -53,7 +45,7 @@ fn handle_notification(body: &str) -> serde_json::Value {
         },
     };
 
-    // sns message is itself a JSON encoded string containing the actual CSML request
+    // SNS message is itself a JSON encoded string containing the actual CSML request
     let csml_request: RunRequest = match serde_json::from_str(&sns.message) {
         Ok(res) => res,
         Err(err) => {
@@ -63,16 +55,22 @@ fn handle_notification(body: &str) -> serde_json::Value {
     };
 
     // same behavior as /run requests
-    let bot = csml_request.bot.to_owned();
-    let mut request = csml_request.event.to_owned();
+    let bot_opt = match csml_request.get_bot_opt() {
+        Ok(bot_opt) => bot_opt,
+        Err(err) => {
+        eprintln!("SNS bot_opt parse error: {:?}", err);
+        return format_response(400, serde_json::json!("Request body is not a valid CSML request"))
+        }
+    };
+    let mut event = csml_request.event.to_owned();
 
     // request metadata should be an empty object by default
-    request.metadata = match request.metadata {
+    event.metadata = match event.metadata {
         Value::Null => json!({}),
         val => val,
     };
 
-    let res = start_conversation(request, BotOpt::CsmlBot(bot) );
+    let res = start_conversation(event, bot_opt);
 
     match res {
         Ok(data) => format_response(200, serde_json::json!(data)),

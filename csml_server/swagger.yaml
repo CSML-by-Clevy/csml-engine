@@ -1,0 +1,611 @@
+openapi: "3.0.0"
+info:
+  version: 1.4.0
+  title: CSML Engine
+  description: CSML Engine Server API specifications
+  termsOfService: http://csml.dev/terms/
+  contact:
+    name: CSML dev team
+    email: contact@csml.dev
+    url: https://csml.dev
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://localhost:5000
+
+paths:
+  /run:
+    post:
+      description: Process an incoming client chat request
+      operationId: run
+      tags:
+        - chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/RunRequestBot'
+                - $ref: '#/components/schemas/RunRequestLatestVersion'
+                - $ref: '#/components/schemas/RunRequestSpecificVersion'
+      responses:
+        '200':
+          description: Success Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResponse'
+        default:
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /validate:
+    post:
+      description: Validate a CSML bot
+      operationId: validate
+      tags:
+        - lint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotModel'
+      responses:
+        '200':
+          description: Success Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResponse'
+        default:
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /conversations/open:
+    post:
+      description: Get the currently open conversation for the given client, or an empty response if there is none
+      operationId: getOpenConversation
+      tags:
+        - conversations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientModel'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /conversations/close:
+    post:
+      description: Close any open conversation for the given client
+      operationId: closeOpenConversations
+      tags:
+        - conversations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientModel'
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bots:
+    post:
+      description: Save a new version of a bot
+      operationId: createBotVersion
+      tags:
+        - bots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotModel'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewBotVersionResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bots/{bot_id}:
+    get:
+      description: Get the latest version of a bot
+      operationId: getLatestBotVersion
+      tags:
+        - bots
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BotVersionModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      description: Delete all saved versions of a bot
+      operationId: deleteBot
+      tags:
+        - bots
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bots/{bot_id}/versions:
+    get:
+      description: Get the last few versions of a bot
+      operationId: getLastBotVersions
+      tags:
+        - bots
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot to retrieve
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: max number of versions to retrieve
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: pagination_key
+          in: query
+          description: pagination key (if the previous request had susequent results)
+          required: false
+          schema:
+            type: string
+            default: none
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BotVersionsResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bots/{bot_id}/versions/{version_id}:
+    get:
+      description: Get the requested version
+      operationId: getBotVersion
+      tags:
+        - bots
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot
+          required: true
+          schema:
+            type: string
+        - name: version_id
+          in: path
+          description: ID of version
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BotVersionModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      description: Delete the requested version
+      operationId: deleteBotVersion
+      tags:
+        - bots
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot
+          required: true
+          schema:
+            type: string
+        - name: version_id
+          in: path
+          description: ID of version
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+components:
+  schemas:
+    FnEndpoint:
+      type: string
+      description: optional endpoint to call for external Fn() calls
+      format: url
+
+    EngineVersion:
+      type: string
+      description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
+      example: '1.4.0'
+
+    BotModel:
+      type: object
+      required:
+        - id
+        - name
+        - default_flow
+        - flows
+      properties:
+        id:
+          type: string
+          example: MyBotId
+        name:
+          type: string
+          example: MyBot
+        default_flow:
+          type: string
+          example: Default
+        fn_endpoint:
+          $ref: '#/components/schemas/FnEndpoint'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowModel'
+
+    FlowModel:
+      type: object
+      required:
+        - id
+        - content
+        - commands
+      properties:
+        id:
+          type: string
+          example: '94c6d714-7cab-4164-9e50-ee80ec866471'
+        name:
+          type: string
+          example: Default
+        content:
+          type: string
+          example: 'start:\n  say "Hello"\n  goto end'
+        commands:
+          type: array
+          items:
+            type: string
+            example: 'trigger keyword'
+
+    EventModel:
+      type: object
+      required:
+        - client
+        - payload
+      properties:
+        request_id:
+          type: string
+          description: 'Unique identifier for the incoming request. Will be generated if not provided.'
+          example: 'f5a727c5-a702-4896-bd0d-a45acbae0e22'
+        client:
+          $ref: '#/components/schemas/ClientModel'
+        payload:
+          $ref: '#/components/schemas/PayloadModel'
+        metadata:
+          type: object
+          description: Additional metadata about the context of the request. Will be available under the '_metadata' variable in the actual conversation.
+          example: '{"username": "johndoe", "email": "johndoe@company.com"}'
+        callback_url:
+          type: string
+          example: ""
+          description: if defined, all messages will be POSTed to this URL as they are emitted by the CSML engine
+
+    PayloadModel:
+      type: object
+      description: The actual payload of the request made by the user
+      required:
+        - content_type
+        - content
+      properties:
+        content_type:
+          type: string
+          example: "text"
+        content:
+          type: object
+          example: '{"text": "Hi from the user!"}'
+
+
+    ConversationModel:
+      type: object
+      description: A Conversation definition
+      required:
+        - client
+        - flow_id
+        - step_id
+        - status
+      properties:
+        id:
+          type: string
+          example: '7db5c125-e150-4df4-8cf7-b605c4f4fdcd'
+        client:
+          $ref: '#/components/schemas/ClientModel'
+        flow_id:
+          type: string
+          example: 'Default'
+        step_id:
+          type: string
+          example: 'start'
+        metadata:
+          type: object
+        last_interaction_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+
+    ClientModel:
+      type: object
+      description: The Client object
+      required:
+        - bot_id
+        - channel_id
+        - user_id
+      properties:
+        bot_id:
+          type: string
+          example: 'MyBotId'
+        channel_id:
+          type: string
+          example: '4d0341db-1a13-4470-8c26-c15a03cce502'
+        user_id:
+          type: string
+          example: '2fc4648b-a3f9-42db-a799-1f5b6852b1e3'
+
+    MessageModel:
+      type: object
+      required:
+        - payload
+      properties:
+        payload:
+          $ref: '#/components/schemas/PayloadModel'
+        interaction_order:
+          type: integer
+        conversation_id:
+          type: string
+        direction:
+          type: string
+          enum:
+            - SEND
+            - RECEIVE
+
+    BotVersionModel:
+      allOf:
+        - $ref: '#/components/schemas/BotModel'
+        - type: object
+          properties:
+            version_id:
+              type: string
+            engine_version:
+              $ref: '#/components/schemas/EngineVersion'
+
+    BotVersionsResponse:
+      type: object
+      required:
+        - bots
+      properties:
+        pagination_key:
+          type: string
+          default: null
+          description: Only set if there are more results. You can add this query param to a subsequent request to get the next batch of versions.
+        bots:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              version_id:
+                type: string
+              engine_version:
+                $ref: '#/components/schemas/EngineVersion'
+              name:
+                type: string
+              default_flow:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+
+    LintErrorModel:
+      type: object
+      properties:
+        flow:
+          type: string
+        step:
+          type: string
+        line:
+          type: integer
+        column:
+          type: integer
+        message:
+          type: string
+          example: "An explicit error message"
+
+    RunRequestBot:
+      type: object
+      description: Handle chat requests with the full target bot specified in the body
+      required:
+        - bot
+        - event
+      properties:
+        bot:
+          $ref: '#/components/schemas/BotModel'
+        event:
+          $ref: '#/components/schemas/EventModel'
+    RunRequestLatestVersion:
+      type: object
+      description: Handle chat requests with the latest saved version of a given bot_id
+      required:
+        - bot_id
+        - event
+      properties:
+        bot_id:
+          type: string
+          example: MyBotID
+        fn_endpoint:
+          $ref: '#/components/schemas/FnEndpoint'
+        event:
+          $ref: '#/components/schemas/EventModel'
+    RunRequestSpecificVersion:
+      type: object
+      description: Handle chat requests with a specific saved version of a given bot_id
+      required:
+        - bot_id
+        - version_id
+        - event
+      properties:
+        bot_id:
+          type: string
+          example: MyBotID
+        version_id:
+          type: string
+          example: '86ba492a-b6fe-4c22-95ec-55be4e1c83f0'
+        fn_endpoint:
+          $ref: '#/components/schemas/FnEndpoint'
+        event:
+          $ref: '#/components/schemas/EventModel'
+
+    RunResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageModel'
+        conversation_end:
+          type: boolean
+          description: Whether the conversation ends after this (either it continues to a new flow or a goto end is found)
+        request_id:
+          type: string
+          example: 'cc3ecb87-68f9-4e2b-86e0-d6483210c69e'
+        received_at:
+          type: string
+          format: date-time
+        interaction_id:
+          type: string
+          example: '08d620f3-c2b9-4814-b228-56e7810e8e23'
+        client:
+          $ref: '#/components/schemas/ClientModel'
+
+    ValidateResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          example: false
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/LintErrorModel'
+
+    NewBotVersionResponse:
+      type: object
+      properties:
+        version_id:
+          type: string
+          example: 'c3001dfb-8a10-4815-bb4e-6cd98b0ef5e7'
+        engine_version:
+          $ref: '#/components/schemas/EngineVersion'
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string

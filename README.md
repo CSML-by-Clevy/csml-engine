@@ -172,6 +172,10 @@ This method will output this native file: `csml/bindings/node/native/index.node`
 
 Please note that if you plan to deploy your project on a different architecture, you will need to recompile the project on that architecture. We recommend using git submodules if you need to integrate CSML Engine in your own Node.js projects.
 
+## REST API documentation
+
+CSML Server's HTTP REST API documentation is available in OpenAPIv3 format: [swagger.yaml](./csml_server/swagger.yaml). To read this file easily, you can open it in [Swagger Editor](https://editor.swagger.io).
+
 ## Additional Information
 
 ### Play with the language

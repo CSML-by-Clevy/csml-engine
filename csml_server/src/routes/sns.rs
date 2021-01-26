@@ -1,6 +1,6 @@
 use actix_web::{post, web, HttpResponse, HttpRequest, client};
 use csml_engine::{start_conversation};
-use csml_engine::data::{CsmlRequest, BotOpt};
+use csml_engine::data::{RunRequest};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::thread;
@@ -32,12 +32,6 @@ async fn confirm_subscription(body: &str) -> HttpResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct RunRequest {
-  bot: BotOpt,
-  event: CsmlRequest,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 struct SnsMessage {
   #[serde(rename = "Message")]
   message: String,
@@ -66,17 +60,23 @@ async fn handle_notification(body: &str) -> HttpResponse {
   };
 
   // same behavior as /run requests
-  let bot = csml_request.bot.to_owned();
-  let mut request = csml_request.event.to_owned();
+  let bot_opt = match csml_request.get_bot_opt() {
+    Ok(bot_opt) => bot_opt,
+    Err(err) => {
+      eprintln!("SNS bot_opt parse error: {:?}", err);
+      return HttpResponse::Ok().body("Request body is not a valid CSML request");
+    }
+  };
+  let mut event = csml_request.event.to_owned();
 
-  // request metadata should be an empty object by default
-  request.metadata = match request.metadata {
+  // event metadata should be an empty object by default
+  event.metadata = match event.metadata {
     Value::Null => json!({}),
     val => val,
   };
 
   let res = thread::spawn(move || {
-    start_conversation(request, bot)
+    start_conversation(event, bot_opt)
   }).join().unwrap();
 
   match res {
