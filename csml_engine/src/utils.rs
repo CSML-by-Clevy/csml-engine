@@ -266,7 +266,8 @@ pub fn search_flow<'a>(
 
 pub fn get_current_step_hash(
     bot_ast: &Option<String>,
-    data: &mut ConversationInfo,
+    step_name: &str,
+    flow_name: &str,
 ) -> Result<String, EngineError> {
     let mut hash = Md5::new();
 
@@ -279,29 +280,27 @@ pub fn get_current_step_hash(
         None => return Err(EngineError::Manager(format!("not valid ast"))),
     };
 
-    let flow = match ast.get(&data.context.flow) {
+    let flow = match ast.get(flow_name) {
         Some(flow) => flow,
         _ => return Err(EngineError::Manager(format!("flow doesn't exist"))),
     };
 
     match flow
         .flow_instructions
-        .get(&InstructionScope::StepScope(data.context.step.to_owned()))
+        .get(&InstructionScope::StepScope(step_name.to_owned()))
     {
         Some(Expr::Scope { scope, .. }) => {
             // need to set all the intervals to 0 in order to avoid new lines conflicts
             let clean_step = clean_step_intervals(scope.clone());
 
-            hash.update(bincode::serialize(&clean_step).unwrap());
+            hash.update(serde_json::json!(&clean_step).to_string().as_bytes());
             Ok(format!("{:x}", hash.finalize()))
         }
         _ => {
-            data.context.step = "start".to_owned();
             Err(EngineError::Manager(format!("step doesn't exist")))
         }
     }
 }
-
 
 pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineError> {
     delete_state_key(&data.client, "hold", "position", &mut data.db)?;
