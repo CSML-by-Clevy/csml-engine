@@ -16,7 +16,8 @@ pub struct Hold {
     pub command_index: usize,
     pub loop_index: Vec<usize>,
     pub step_vars: serde_json::Value,
-    pub step_hash: String,
+    pub step_name: String,
+    pub flow_name: String,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,12 +25,13 @@ pub struct Hold {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Hold {
-    pub fn new(command_index: usize, loop_index: Vec<usize>, step_vars: serde_json::Value, step_hash: String) -> Self {
+    pub fn new(command_index: usize, loop_index: Vec<usize>, step_vars: serde_json::Value, step_name: String, flow_name: String) -> Self {
         Self {
             command_index,
             loop_index,
             step_vars,
-            step_hash,
+            step_name,
+            flow_name,
         }
     }
 
@@ -38,7 +40,8 @@ impl Hold {
             command_index: 0,
             loop_index: vec![],
             step_vars: serde_json::json!({}),
-            step_hash: "".to_owned(),
+            step_name: "".to_owned(),
+            flow_name: "".to_owned(),
         }
     }
 }
