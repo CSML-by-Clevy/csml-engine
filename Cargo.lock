@@ -882,7 +882,6 @@ dependencies = [
  "bincode",
  "lazy_static",
  "libc",
- "md-5 0.9.1",
  "nom 5.1.2",
  "nom_locate",
  "rand 0.7.3",
