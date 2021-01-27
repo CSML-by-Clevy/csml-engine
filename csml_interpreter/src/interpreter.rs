@@ -7,7 +7,7 @@ pub mod variable_handler;
 
 pub use json_to_rust::{json_to_literal, memory_to_literal};
 
-use crate::clean_step::clean_step_intervals;
+use crate::{clean_step::clean_step_intervals};
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
@@ -44,16 +44,24 @@ fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
 pub fn interpret_scope(
     actions: &Block,
     data: &mut Data,
-    instruction_index: &Option<usize>,
+    mut instruction_index: Option<(usize, Vec<usize>)>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let mut message_data = MessageData::default();
 
+    // let commands = match &mut instruction_index {
+    //     Some((index, _loop_index)) if !index.is_empty() => {
+    //         let i = index.drain(1..).as_slice()[0];
+    //         &actions.commands[i..]
+    //     },
+    //     _ => &actions.commands,
+    // };
+
     for (action, instruction_info) in actions.commands.iter() {
         let instruction_total = instruction_info.index + instruction_info.total;
 
-        if let Some(instruction_index) = instruction_index {
-            if *instruction_index >= instruction_total {
+        if let Some((instruction_index, _)) = instruction_index {
+            if instruction_index >= instruction_total {
                 continue;
             }
         }
@@ -92,7 +100,7 @@ pub fn interpret_scope(
                 let index = instruction_info.index;
                 let map = data.step_vars.to_owned();
 
-                let hold = Hold::new(index, step_vars_to_json(map), step_hash);
+                let hold = Hold::new(index, vec!(0), step_vars_to_json(map), step_hash);
 
                 message_data.hold = Some(hold.to_owned());
 
@@ -101,28 +109,28 @@ pub fn interpret_scope(
                 return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, *instruction_index, &sender)?
+                message_data = match_actions(fun, message_data, data, instruction_index.clone(), &sender)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
                     if_statement,
                     message_data,
                     data,
-                    instruction_index,
+                    instruction_index.clone(),
                     instruction_info,
                     &sender,
                 )?;
             }
-            Expr::ForEachExpr(ident, i, expr, block, range) => {
+            Expr::ForEachExpr(ident, index, expr, block, range) => {
                 message_data = for_loop(
                     ident,
-                    i,
+                    index,
                     expr,
                     block,
                     range,
                     message_data,
                     data,
-                    instruction_index,
+                    instruction_index.clone(),
                     &sender,
                 )?
             }

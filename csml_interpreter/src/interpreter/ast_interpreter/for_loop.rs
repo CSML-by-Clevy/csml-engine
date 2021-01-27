@@ -12,13 +12,13 @@ use std::sync::mpsc;
 
 pub fn for_loop(
     ident: &Identifier,
-    i: &Option<Identifier>,
+    index: &Option<Identifier>,
     expr: &Expr,
     block: &Block,
     range: &RangeInterval,
     mut msg_data: MessageData,
     data: &mut Data,
-    instruction_index: &Option<usize>,
+    mut instruction_index: Option<(usize, Vec<usize>)>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let literal = expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
@@ -31,14 +31,14 @@ pub fn for_loop(
     for (value, elem) in array.iter().enumerate() {
         data.step_vars
             .insert(ident.ident.to_owned(), elem.to_owned());
-        if let Some(index) = i {
+        if let Some(index) = index {
             data.step_vars.insert(
                 index.ident.to_owned(),
                 PrimitiveInt::get_literal(value as i64, elem.interval.to_owned()),
             );
         };
 
-        msg_data = msg_data + interpret_scope(block, data, instruction_index, sender)?;
+        msg_data = msg_data + interpret_scope(block, data, instruction_index.clone(), sender)?;
         match msg_data.exit_condition {
             Some(ExitCondition::Break) => {
                 msg_data.exit_condition = None;
@@ -50,7 +50,7 @@ pub fn for_loop(
         }
     }
     data.step_vars.remove(&ident.ident);
-    if let Some(index) = i {
+    if let Some(index) = index {
         data.step_vars.remove(&index.ident);
     };
     Ok(msg_data)

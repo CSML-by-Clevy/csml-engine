@@ -11,7 +11,7 @@ pub use interpreter::components::load_components;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use data::ast::{Expr, Flow, InstructionScope, Interval};
+use data::{ast::{Expr, Flow, InstructionScope, Interval}};
 use data::context::get_hashmap_from_mem;
 use data::error_info::ErrorInfo;
 use data::event::Event;
@@ -38,7 +38,7 @@ fn execute_step(
     step: &str,
     flow: &Flow,
     mut data: &mut Data,
-    instruction_index: &Option<usize>,
+    mut instruction_index: Option<(usize, Vec<usize>)>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     let mut msg_data = match flow
@@ -48,7 +48,7 @@ fn execute_step(
         Some(Expr::Scope { scope, .. }) => {
             Position::set_step(&step);
 
-            interpret_scope(scope, &mut data, &instruction_index, &sender)
+            interpret_scope(scope, &mut data, instruction_index, &sender)
         }
         _ => Err(gen_error_info(
             Position::new(Interval::new_as_u32(0, 0)),
@@ -177,9 +177,9 @@ pub fn interpret(
     let mut instruction_index = match context.hold {
         Some(result) => {
             context.hold = None;
-            Some(result.index)
+            Some((result.command_index, result.loop_index))
         }
-        None => None,
+        None => None
     };
 
     let native = match bot.native_components {
@@ -224,10 +224,10 @@ pub fn interpret(
             &native,
         );
 
-        msg_data = msg_data + execute_step(&step, &ast, &mut data, &instruction_index, &sender);
-
+        msg_data = msg_data + execute_step(&step, &ast, &mut data, instruction_index, &sender);
         flow = data.context.flow.to_string();
         step = data.context.step.to_string();
+        // add reset loops index
         step_vars = HashMap::new();
         instruction_index = None;
     }

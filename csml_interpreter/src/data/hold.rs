@@ -3,11 +3,20 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone)]
+pub struct IndexInfo<'a> {
+    pub current_command_index: Vec<usize>,
+    pub current_loop_index: Vec<usize>,
+
+    pub command_index: &'a [usize],
+    pub loop_index: &'a [usize]
+}
+
+#[derive(Debug, Clone)]
 pub struct Hold {
-    pub index: usize,
+    pub command_index: usize,
+    pub loop_index: Vec<usize>,
     pub step_vars: serde_json::Value,
     pub step_hash: String,
-    pub loop_info: Option<Vec<usize>>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,21 +24,21 @@ pub struct Hold {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Hold {
-    pub fn new(index: usize, step_vars: serde_json::Value, step_hash: String, loop_info: Option<Vec<usize>>) -> Self {
+    pub fn new(command_index: usize, loop_index: Vec<usize>, step_vars: serde_json::Value, step_hash: String) -> Self {
         Self {
-            index,
+            command_index,
+            loop_index,
             step_vars,
             step_hash,
-            loop_info,
         }
     }
 
     pub fn default() -> Self {
         Self {
-            index: 0,
+            command_index: 0,
+            loop_index: vec![],
             step_vars: serde_json::json!({}),
             step_hash: "".to_owned(),
-            loop_info: None
         }
     }
 }

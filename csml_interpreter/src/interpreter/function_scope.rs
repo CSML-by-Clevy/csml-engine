@@ -32,7 +32,7 @@ fn interpret_function_scope(actions: &Block, data: &mut Data) -> Result<MessageD
                     if_statement,
                     message_data,
                     data,
-                    &None,
+                    None,
                     instruction_info,
                     &None,
                 )?;
@@ -46,7 +46,7 @@ fn interpret_function_scope(actions: &Block, data: &mut Data) -> Result<MessageD
                     range,
                     message_data,
                     data,
-                    &None,
+                    None,
                     &None,
                 )?
             }

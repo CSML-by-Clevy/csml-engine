@@ -52,7 +52,7 @@ fn evaluate_if_condition(
     mut msg_data: MessageData,
     data: &mut Data,
     consequence: &Block,
-    instruction_index: &Option<usize>,
+    mut instruction_index: Option<(usize, Vec<usize>)>,
     instruction_info: &InstructionInfo,
     sender: &Option<mpsc::Sender<MSG>>,
     then_branch: &Option<(Box<IfStatement>, InstructionInfo)>,
@@ -120,7 +120,7 @@ pub fn solve_if_statement(
     statement: &IfStatement,
     mut msg_data: MessageData,
     data: &mut Data,
-    instruction_index: &Option<usize>,
+    mut instruction_index: Option<(usize, Vec<usize>)>,
     instruction_info: &InstructionInfo,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
@@ -130,8 +130,8 @@ pub fn solve_if_statement(
             consequence,
             then_branch,
         } => {
-            match instruction_index {
-                Some(index) if *index <= instruction_info.index => {
+            match &instruction_index {
+                Some((index, _loop_index)) if *index <= instruction_info.index => {
                     return evaluate_if_condition(
                         cond,
                         msg_data,
@@ -143,7 +143,7 @@ pub fn solve_if_statement(
                         then_branch,
                     );
                 }
-                Some(index) => {
+                Some((index, loop_index)) => {
                     if let Some((then_branch, then_index)) = then_branch {
                         if *index < then_index.index {
                             msg_data = msg_data

@@ -49,7 +49,7 @@ pub fn match_actions(
     function: &ObjectType,
     mut msg_data: MessageData,
     data: &mut Data,
-    _instruction_index: Option<usize>,
+    _instruction_index: Option<(usize, Vec<usize>)>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match function {
