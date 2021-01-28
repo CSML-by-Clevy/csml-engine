@@ -40,6 +40,7 @@ pub fn interpret_step(
         match received {
             MSG::Memory(mem) => memories.push(mem),
             MSG::Message(msg) => {
+                println!("=> {:?}", msg);
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -49,11 +50,11 @@ pub fn interpret_step(
                 step_name,
                 flow_name,
             }) => {
-                let step_hash = get_current_step_hash(&bot.bot_ast, &step_name, &flow_name)?;
+                let hash = get_current_flow_hash(&current_flow.content);
                 let state_hold: Value = serde_json::json!({
                     "index": new_index,
                     "step_vars": step_vars,
-                    "step_hash": serde_json::to_value(&step_hash)?
+                    "hash": hash
                 });
 
                 set_state_items(data, "hold", vec![("position", &state_hold)])?;
