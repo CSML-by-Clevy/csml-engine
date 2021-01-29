@@ -64,7 +64,8 @@ pub fn start_conversation(
     let msgs = vec![request.payload.to_owned()];
     add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
-    check_for_hold(&mut data, &bot.bot_ast)?;
+    let flow = get_flow_by_id(&data.context.flow, &bot.flows)?;
+    check_for_hold(&mut data, &flow.content)?;
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
@@ -213,28 +214,23 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
  */
 fn check_for_hold(
     data: &mut ConversationInfo,
-    bot_ast: &Option<String>,
+    flow: &str,
 ) -> Result<(), EngineError> {
     match get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(string)) => {
             let hold = serde_json::to_value(string)?;
 
-            match hold.get("step_hash") {
-                Some(step_hash_value) => {
+            match hold.get("hash") {
+                Some(hash_value) => {
+
+                    let flow_hash = get_current_flow_hash(flow);
                     // cleanup the current hold and restart flow
-                    let step_hash = match get_current_step_hash(bot_ast, &data.context.step, &data.context.flow) {
-                        Ok(step_hash) if step_hash != *step_hash_value => {
-                            return clean_hold_and_restart(data)
-                        }
-                        Ok(step_hash) => step_hash,
-                        Err(_) => {
-                            // step doesn't exist restart form the 'start' step
-                            data.context.step = "start".to_owned();
-                            return clean_hold_and_restart(data)
-                        },
-                    };
-                    step_hash
+                    if flow_hash != *hash_value {
+                        data.context.step = "start".to_owned();
+                        return clean_hold_and_restart(data)
+                    }
+                    flow_hash
                 }
                 _ => return Ok(()),
             };

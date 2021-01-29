@@ -49,11 +49,11 @@ pub fn interpret_step(
                 step_name,
                 flow_name,
             }) => {
-                let step_hash = get_current_step_hash(&bot.bot_ast, &step_name, &flow_name)?;
+                let hash = get_current_flow_hash(&current_flow.content);
                 let state_hold: Value = serde_json::json!({
                     "index": new_index,
                     "step_vars": step_vars,
-                    "step_hash": serde_json::to_value(&step_hash)?
+                    "hash": hash
                 });
 
                 set_state_items(data, "hold", vec![("position", &state_hold)])?;
