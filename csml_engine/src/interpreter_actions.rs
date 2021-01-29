@@ -46,8 +46,10 @@ pub fn interpret_step(
             MSG::Hold(Hold {
                 index: new_index,
                 step_vars,
-                step_hash,
+                step_name,
+                flow_name,
             }) => {
+                let step_hash = get_current_step_hash(&bot.bot_ast, &step_name, &flow_name)?;
                 let state_hold: Value = serde_json::json!({
                     "index": new_index,
                     "step_vars": step_vars,
@@ -58,7 +60,8 @@ pub fn interpret_step(
                 data.context.hold = Some(Hold {
                     index: new_index,
                     step_vars,
-                    step_hash,
+                    step_name,
+                    flow_name
                 });
             }
             MSG::Next { flow, step } => match (flow, step) {

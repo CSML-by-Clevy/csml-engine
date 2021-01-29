@@ -4,6 +4,7 @@ use lazy_static::*;
 use std::collections::*;
 use std::sync::*;
 use std::thread::*;
+use std::hash::{Hash};
 
 lazy_static! {
     static ref HASHMAP: Mutex<HashMap<ThreadId, Position>> = Mutex::new(HashMap::default());
@@ -15,7 +16,7 @@ lazy_static! {
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Hash)]
 pub struct Position {
     pub flow: String,
     pub step: String,

@@ -25,7 +25,6 @@ use utils::*;
 use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, Memory},
 };
-use md5::{Digest, Md5};
 use std::{collections::HashMap, env, time::SystemTime};
 
 /**
@@ -65,8 +64,7 @@ pub fn start_conversation(
     let msgs = vec![request.payload.to_owned()];
     add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
-    let flow = get_flow_by_id(&data.context.flow, &bot.flows)?;
-    check_for_hold(&mut data, &bot.bot_ast, flow)?;
+    check_for_hold(&mut data, &bot.bot_ast)?;
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
@@ -216,40 +214,26 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
 fn check_for_hold(
     data: &mut ConversationInfo,
     bot_ast: &Option<String>,
-    flow: &CsmlFlow,
 ) -> Result<(), EngineError> {
     match get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(string)) => {
             let hold = serde_json::to_value(string)?;
 
-            let step_hash = match (hold.get("hash"), hold.get("step_hash")) {
-                // this block is only for retro compatibility whit the old method
-                (Some(old_hash), None) => {
-                    let mut hash = Md5::new();
-
-                    hash.update(flow.content.as_bytes());
-                    let new_hash = format!("{:x}", hash.finalize());
-
+            match hold.get("step_hash") {
+                Some(step_hash_value) => {
                     // cleanup the current hold and restart flow
-                    if new_hash != *old_hash {
-                        data.context.step = "start".to_owned();
-                        delete_state_key(&data.client, "hold", "position", &mut data.db)?;
-                        data.context.hold = None;
-                        return Ok(());
-                    }
-                    new_hash
-                }
-                (None, Some(step_hash_value)) => {
-                    // cleanup the current hold and restart flow
-                    let step_hash = match get_current_step_hash(bot_ast, data) {
+                    let step_hash = match get_current_step_hash(bot_ast, &data.context.step, &data.context.flow) {
                         Ok(step_hash) if step_hash != *step_hash_value => {
                             return clean_hold_and_restart(data)
                         }
                         Ok(step_hash) => step_hash,
-                        Err(_) => return clean_hold_and_restart(data),
+                        Err(_) => {
+                            // step doesn't exist restart form the 'start' step
+                            data.context.step = "start".to_owned();
+                            return clean_hold_and_restart(data)
+                        },
                     };
-
                     step_hash
                 }
                 _ => return Ok(()),
@@ -262,7 +246,8 @@ fn check_for_hold(
                     .ok_or(EngineError::Interpreter("hold index bad format".to_owned()))?
                     as usize,
                 step_vars: hold["step_vars"].clone(),
-                step_hash: step_hash,
+                step_name: data.context.step.to_owned(),
+                flow_name: data.context.flow.to_owned()
             });
             delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }
