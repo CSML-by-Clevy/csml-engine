@@ -1,31 +1,36 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::{ast::*, primitive::PrimitiveNull, Data, Literal, MessageData};
+use crate::data::{ast::*, primitive::PrimitiveNull, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statement},
     variable_handler::{expr_to_literal, interval::interval_from_expr},
 };
 use crate::parser::ExitCondition;
+use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn interpret_function_scope(actions: &Block, data: &mut Data) -> Result<MessageData, ErrorInfo> {
+fn interpret_function_scope(
+    actions: &Block,
+    data: &mut Data,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<MessageData, ErrorInfo> {
     let mut message_data = MessageData::default();
 
     for (action, instruction_info) in actions.commands.iter() {
         match action {
             Expr::ObjectExpr(ObjectType::Return(var)) => {
-                let lit = expr_to_literal(var, false, None, data, &mut message_data, &None)?;
+                let lit = expr_to_literal(var, false, None, data, &mut message_data, sender)?;
 
                 // return Ok(lit);
                 message_data.exit_condition = Some(ExitCondition::Return(lit));
                 return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, None, &None)?
+                message_data = match_actions(fun, message_data, data, None, sender)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
@@ -34,7 +39,7 @@ fn interpret_function_scope(actions: &Block, data: &mut Data) -> Result<MessageD
                     data,
                     &None,
                     instruction_info,
-                    &None,
+                    sender,
                 )?;
             }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
@@ -47,7 +52,7 @@ fn interpret_function_scope(actions: &Block, data: &mut Data) -> Result<MessageD
                     message_data,
                     data,
                     &None,
-                    &None,
+                    sender,
                 )?
             }
             e => {
@@ -76,6 +81,7 @@ pub fn exec_fn_in_new_scope(
     expr: Expr,
     new_scope_data: &mut Data,
     msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match expr {
         Expr::Scope {
@@ -83,7 +89,7 @@ pub fn exec_fn_in_new_scope(
             scope,
             range: RangeInterval { start, .. },
         } => {
-            let fn_msg_data = interpret_function_scope(&scope, new_scope_data)?;
+            let fn_msg_data = interpret_function_scope(&scope, new_scope_data, sender)?;
 
             let mut return_value = PrimitiveNull::get_literal(start);
             if let Some(ExitCondition::Return(lit)) = fn_msg_data.exit_condition {

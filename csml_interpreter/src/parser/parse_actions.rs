@@ -169,6 +169,34 @@ where
     ))
 }
 
+fn parse_debug<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, interval) = get_interval(s)?;
+    let (s, ..) = get_tag(name, DEBUG_ACTION)(s)?;
+
+    let (s, expr) = parse_action_argument(s, parse_operator)?;
+    // this vec is temporary until a solution for multiple arguments in debug is found
+    let vec = Expr::VecExpr(vec!(expr), RangeInterval { start: interval.to_owned(), end:interval.to_owned() });
+
+    let instruction_info = InstructionInfo {
+        index: StateContext::get_rip(),
+        total: 0,
+    };
+
+    StateContext::inc_rip();
+
+    Ok((
+        s,
+        (
+            Expr::ObjectExpr(ObjectType::Debug(Box::new(vec), interval)),
+            instruction_info,
+        ),
+    ))
+}
+
 //TODO: deprecate use
 fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
@@ -350,6 +378,7 @@ where
         parse_goto,
         parse_remember,
         parse_say,
+        parse_debug,
         parse_use,
         parse_hold,
         parse_break,
@@ -366,6 +395,7 @@ where
 {
     alt((
         parse_do,
+        parse_debug,
         parse_if,
         parse_foreach,
         parse_break,

@@ -40,6 +40,10 @@ fn clean_objects(object_type: &mut ObjectType) {
         | ObjectType::Continue(interval)
         | ObjectType::Hold(interval) => clean_interval(interval),
 
+        ObjectType::Debug(expr, _interval) => {
+            clean_expr_intervals(expr)
+        }
+
         ObjectType::Say(expr) | ObjectType::Return(expr) | ObjectType::Use(expr) => {
             clean_expr_intervals(expr)
         }
