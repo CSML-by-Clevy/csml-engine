@@ -159,7 +159,7 @@ fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     let bot_opt = match run_request.get_bot_opt() {
         Ok(bot_opt) => bot_opt,
-        Err(err) => panic!(err),
+        Err(err) => panic!("{:?}", err),
     };
     let request = run_request.event;
 
