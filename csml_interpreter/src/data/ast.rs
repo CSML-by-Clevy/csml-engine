@@ -268,23 +268,33 @@ impl RangeInterval {
 pub struct Interval {
     pub line: u32,
     pub column: u32,
+    pub offset: usize,
 }
 
 impl Default for Interval {
     fn default() -> Self {
-        Self { line: 0, column: 0 }
+        Self {
+            line: 0,
+            column: 0,
+            offset: 0,
+        }
     }
 }
 
 impl Interval {
-    pub fn new_as_u32(line: u32, column: u32) -> Self {
-        Self { line, column }
+    pub fn new_as_u32(line: u32, column: u32, offset: usize) -> Self {
+        Self {
+            line,
+            column,
+            offset,
+        }
     }
 
     pub fn new_as_span(span: Span) -> Self {
         Self {
             line: span.location_line(),
             column: span.get_column() as u32,
+            offset: span.location_offset(),
         }
     }
 }

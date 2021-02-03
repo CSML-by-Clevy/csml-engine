@@ -87,18 +87,29 @@ where
 //// PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
+pub fn parse_import_prototype<'a, E>(
+    s: Span<'a>,
+) -> IResult<Span<'a>, (Interval, Vec<Expr>, Option<String>), E>
 where
     E: ParseError<Span<'a>>,
 {
+    let (s, start) = get_interval(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
 
     let (s, ..) = get_tag(name, IMPORT)(s)?;
 
-    let (s, start) = get_interval(s)?;
     let (s, fn_names) = preceded(comment, parse_import_params)(s)?;
 
     let (s, from_flow) = opt(parse_from)(s)?;
+
+    Ok((s, (start, fn_names, from_flow)))
+}
+
+pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, (start, fn_names, from_flow)) = parse_import_prototype(s)?;
 
     let instructions = fn_names
         .iter()
@@ -126,89 +137,3 @@ where
 
     Ok((s, instructions))
 }
-
-////////////////////////////////////////////////////////////////////////////////
-//// TEST FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use nom::error::ErrorKind;
-
-//     pub fn test_import(s: Span) -> IResult<Span, ()> {
-//         let var = parse_import(s);
-//         if let Ok((s, v)) = var {
-//             if s.fragment().len() != 0 {
-//                 Err(Err::Error((s, ErrorKind::Tag)))
-//             } else {
-//                 Ok((s, ()))
-//             }
-//         } else {
-//             var
-//         }
-//     }
-
-//     #[test]
-//     fn ok_step_import() {
-//         let string = Span::new("import step hola");
-//         match test_import(string) {
-//             Ok(..) => {}
-//             Err(e) => panic!("{:?}", e),
-//         }
-//     }
-
-//     #[test]
-//     fn ok_step_import_as() {
-//         let string = Span::new("import step hola as test");
-//         match test_import(string) {
-//             Ok(..) => {}
-//             Err(e) => panic!("{:?}", e),
-//         }
-//     }
-
-//     #[test]
-//     fn ok_step_import_as_from_file() {
-//         let string = Span::new("import step hola as test FromFile filetest");
-//         match test_import(string) {
-//             Ok(..) => {}
-//             Err(e) => panic!("{:?}", e),
-//         }
-//     }
-
-//     #[test]
-//     fn err_step_import1() {
-//         let string = Span::new("import hola");
-//         match test_import(string) {
-//             Ok(..) => panic!("need to fail"),
-//             Err(..) => {}
-//         }
-//     }
-
-//     #[test]
-//     fn err_step_import2() {
-//         let string = Span::new("import step");
-//         match test_import(string) {
-//             Ok(..) => panic!("need to fail"),
-//             Err(..) => {}
-//         }
-//     }
-
-//     #[test]
-//     fn err_step_import_as() {
-//         let string = Span::new("import step hola as");
-//         match test_import(string) {
-//             Ok(..) => panic!("need to fail"),
-//             Err(..) => {}
-//         }
-//     }
-
-//     #[test]
-//     fn err_step_import_as_from_file() {
-//         let string = Span::new("import step hola as");
-//         match test_import(string) {
-//             Ok(..) => panic!("need to fail"),
-//             Err(..) => {}
-//         }
-//     }
-// }

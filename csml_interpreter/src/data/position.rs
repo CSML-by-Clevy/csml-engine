@@ -2,9 +2,9 @@ use crate::data::ast::Interval;
 
 use lazy_static::*;
 use std::collections::*;
+use std::hash::Hash;
 use std::sync::*;
 use std::thread::*;
-use std::hash::{Hash};
 
 lazy_static! {
     static ref HASHMAP: Mutex<HashMap<ThreadId, Position>> = Mutex::new(HashMap::default());

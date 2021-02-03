@@ -31,8 +31,8 @@
  */
 use crate::data::{Database, EngineError};
 use crate::error_messages::ERROR_DB_SETUP;
-use serde::{Deserialize, Serialize};
 use csml_interpreter::data::csml_bot::CsmlBot;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "dynamo")]
 use self::dynamodb as dynamodb_connector;

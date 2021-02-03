@@ -17,14 +17,15 @@ mod send;
 mod utils;
 
 use data::*;
-use db_connectors::{bot, conversations::*, init_db, messages::*, state::*, DbConversation, BotVersion, BotVersionCreated};
+use db_connectors::{
+    bot, conversations::*, init_db, messages::*, state::*, BotVersion, BotVersionCreated,
+    DbConversation,
+};
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
 
-use csml_interpreter::{
-    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, Memory},
-};
+use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, Memory};
 use std::{collections::HashMap, env, time::SystemTime};
 
 /**
@@ -64,8 +65,7 @@ pub fn start_conversation(
     let msgs = vec![request.payload.to_owned()];
     add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
-    let flow = get_flow_by_id(&data.context.flow, &bot.flows)?;
-    check_for_hold(&mut data, &flow.content)?;
+    check_for_hold(&mut data, &bot)?;
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
@@ -105,15 +105,18 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, Engine
             let version_id = bot::create_bot_version(bot_id, csml_bot, &mut db)?;
             let engine_version = env!("CARGO_PKG_VERSION").to_owned();
 
-            Ok(BotVersionCreated{version_id, engine_version })
-        },
+            Ok(BotVersionCreated {
+                version_id,
+                engine_version,
+            })
+        }
     }
 }
 
 /**
  * get by bot_id
  */
-pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineError>{
+pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineError> {
     let mut db = init_db()?;
 
     bot::get_last_bot_version(bot_id, &mut db)
@@ -154,10 +157,7 @@ pub fn get_bot_versions(
 /**
  * delete bot by version_id
 */
-pub fn delete_bot_version_id(
-    id: &str,
-    bot_id: &str,
-) -> Result<(), EngineError> {
+pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
     bot::delete_bot_version(bot_id, id, &mut db)
@@ -166,9 +166,7 @@ pub fn delete_bot_version_id(
 /**
  * delete all bot versions of bot_id
 */
-pub fn delete_all_bot_versions(
-    bot_id: &str,
-) -> Result<(), EngineError> {
+pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
     bot::delete_bot_versions(bot_id, &mut db)
@@ -212,10 +210,7 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
  * If the hold is valid, we also need to load the local step memory
  * (context.hold.step_vars) into the conversation context.
  */
-fn check_for_hold(
-    data: &mut ConversationInfo,
-    flow: &str,
-) -> Result<(), EngineError> {
+fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), EngineError> {
     match get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(string)) => {
@@ -223,12 +218,11 @@ fn check_for_hold(
 
             match hold.get("hash") {
                 Some(hash_value) => {
-
-                    let flow_hash = get_current_flow_hash(flow);
+                    let flow_hash = get_current_step_hash(&data, bot)?;
                     // cleanup the current hold and restart flow
                     if flow_hash != *hash_value {
                         data.context.step = "start".to_owned();
-                        return clean_hold_and_restart(data)
+                        return clean_hold_and_restart(data);
                     }
                     flow_hash
                 }
@@ -243,7 +237,7 @@ fn check_for_hold(
                     as usize,
                 step_vars: hold["step_vars"].clone(),
                 step_name: data.context.step.to_owned(),
-                flow_name: data.context.flow.to_owned()
+                flow_name: data.context.flow.to_owned(),
             });
             delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }

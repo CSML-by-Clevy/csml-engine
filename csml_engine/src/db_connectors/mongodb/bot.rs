@@ -1,7 +1,10 @@
-use crate::{db_connectors::{DbBot, BotVersion}, EngineError};
-use csml_interpreter::data::csml_bot::SerializeCsmlBot;
+use crate::{
+    db_connectors::{BotVersion, DbBot},
+    EngineError,
+};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
+use csml_interpreter::data::csml_bot::SerializeCsmlBot;
 
 fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, EngineError> {
     Ok(DbBot {
@@ -56,12 +59,12 @@ pub fn get_bot_versions(
         Some(key) => {
             let base64decoded = match base64::decode(&key) {
                 Ok(base64decoded) => base64decoded,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key")))
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
             };
 
             let key: String = match serde_json::from_slice(&base64decoded) {
                 Ok(key) => key,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key")))
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
             };
 
             doc! {
@@ -116,11 +119,11 @@ pub fn get_bot_versions(
                     let pagination_key = base64::encode(last["version_id"].clone().to_string());
 
                     Ok(serde_json::json!({"bots": bots, "pagination_key": pagination_key}))
-                },
-                None => Ok(serde_json::json!({"bots": bots}))
+                }
+                None => Ok(serde_json::json!({ "bots": bots })),
             }
-        },
-        false => Ok(serde_json::json!({"bots": bots}))
+        }
+        false => Ok(serde_json::json!({ "bots": bots })),
     }
 }
 
@@ -147,8 +150,11 @@ pub fn get_bot_by_version_id(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
-
+            Ok(Some(BotVersion {
+                bot: csml_bot.to_bot(),
+                version_id: bot.id,
+                engine_version: env!("CARGO_PKG_VERSION").to_owned(),
+            }))
         }
         None => Ok(None),
     }
@@ -177,16 +183,17 @@ pub fn get_last_bot_version(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            Ok(Some(BotVersion{bot: csml_bot.to_bot(), version_id: bot.id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
+            Ok(Some(BotVersion {
+                bot: csml_bot.to_bot(),
+                version_id: bot.id,
+                engine_version: env!("CARGO_PKG_VERSION").to_owned(),
+            }))
         }
         None => Ok(None),
     }
 }
 
-pub fn delete_bot_version(
-    version_id: &str,
-    db: &mongodb::Database,
-) -> Result<(), EngineError> {
+pub fn delete_bot_version(version_id: &str, db: &mongodb::Database) -> Result<(), EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {
@@ -198,10 +205,7 @@ pub fn delete_bot_version(
     Ok(())
 }
 
-pub fn delete_bot_versions(
-    bot_id: &str,
-    db: &mongodb::Database,
-) -> Result<(), EngineError> {
+pub fn delete_bot_versions(bot_id: &str, db: &mongodb::Database) -> Result<(), EngineError> {
     let collection = db.collection("bot");
 
     let filter = doc! {

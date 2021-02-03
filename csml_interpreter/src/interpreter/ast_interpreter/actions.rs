@@ -4,8 +4,7 @@ use crate::data::{
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
-    exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
-    resolve_fn_args,
+    exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*, resolve_fn_args,
 };
 use crate::parser::ExitCondition;
 // use crate::interpreter::interpret_scope;

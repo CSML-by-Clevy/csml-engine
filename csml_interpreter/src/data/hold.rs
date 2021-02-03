@@ -15,7 +15,12 @@ pub struct Hold {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Hold {
-    pub fn new(index: usize, step_vars: serde_json::Value, step_name: String, flow_name: String) -> Self {
+    pub fn new(
+        index: usize,
+        step_vars: serde_json::Value,
+        step_name: String,
+        flow_name: String,
+    ) -> Self {
         Self {
             index,
             step_vars,

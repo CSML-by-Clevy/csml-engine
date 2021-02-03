@@ -32,7 +32,14 @@ pub struct Context {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn get_hashmap_from_mem(lit: &serde_json::Value) -> HashMap<String, Literal> {
-    match memory_to_literal(lit, Interval { line: 0, column: 0 }) {
+    match memory_to_literal(
+        lit,
+        Interval {
+            line: 0,
+            column: 0,
+            offset: 0,
+        },
+    ) {
         Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
             match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
                 Some(map) => map.value.clone(),
@@ -44,7 +51,14 @@ pub fn get_hashmap_from_mem(lit: &serde_json::Value) -> HashMap<String, Literal>
 }
 
 pub fn get_hashmap_from_json(lit: &serde_json::Value) -> HashMap<String, Literal> {
-    match json_to_literal(lit, Interval { line: 0, column: 0 }) {
+    match json_to_literal(
+        lit,
+        Interval {
+            line: 0,
+            column: 0,
+            offset: 0,
+        },
+    ) {
         Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
             match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
                 Some(map) => map.value.clone(),
@@ -80,7 +94,14 @@ impl Context {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn get_hashmap(lit: &serde_json::Value) -> HashMap<String, Literal> {
-    match json_to_literal(lit, Interval { line: 0, column: 0 }) {
+    match json_to_literal(
+        lit,
+        Interval {
+            line: 0,
+            column: 0,
+            offset: 0,
+        },
+    ) {
         Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
             match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
                 Some(map) => map.value.clone(),

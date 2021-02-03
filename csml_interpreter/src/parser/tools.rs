@@ -86,8 +86,8 @@ where
 }
 
 pub fn get_range_interval(vector_interval: &[Interval]) -> (Interval, Interval) {
-    let mut start = Interval::new_as_u32(0, 0);
-    let mut end = Interval::new_as_u32(0, 0);
+    let mut start = Interval::new_as_u32(0, 0, 0);
+    let mut end = Interval::new_as_u32(0, 0, 0);
 
     for (index, interval) in vector_interval.iter().enumerate() {
         if index == 0 {

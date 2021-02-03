@@ -19,22 +19,29 @@ pub struct RunRequest {
 impl RunRequest {
     pub fn get_bot_opt(&self) -> Result<BotOpt, EngineError> {
         match self.clone() {
-            RunRequest{
+            RunRequest {
                 bot: Some(csml_bot),
                 ..
             } => Ok(BotOpt::CsmlBot(csml_bot)),
-            RunRequest{
+            RunRequest {
                 version_id: Some(version_id),
                 bot_id: Some(bot_id),
                 fn_endpoint,
                 ..
-            } => Ok(BotOpt::Id{ version_id, bot_id, fn_endpoint}),
-            RunRequest{
+            } => Ok(BotOpt::Id {
+                version_id,
+                bot_id,
+                fn_endpoint,
+            }),
+            RunRequest {
                 bot_id: Some(bot_id),
                 fn_endpoint,
                 ..
-            } => Ok(BotOpt::BotId{bot_id, fn_endpoint}),
-            _ => Err(EngineError::Format("bot bad format".to_owned()))
+            } => Ok(BotOpt::BotId {
+                bot_id,
+                fn_endpoint,
+            }),
+            _ => Err(EngineError::Format("bot bad format".to_owned())),
         }
     }
 }
@@ -75,9 +82,10 @@ impl BotOpt {
                 bot_id,
                 fn_endpoint,
             } => {
-                let mut bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
-                    .unwrap()
-                    .unwrap();
+                let mut bot_version =
+                    db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
+                        .unwrap()
+                        .unwrap();
                 bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
                 bot_version.bot
             }

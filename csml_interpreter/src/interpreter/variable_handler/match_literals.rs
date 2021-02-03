@@ -76,7 +76,11 @@ mod tests {
     use std::collections::HashMap;
 
     fn gen_inter() -> Interval {
-        Interval { line: 0, column: 0 }
+        Interval {
+            line: 0,
+            column: 0,
+            offset: 0,
+        }
     }
 
     fn gen_button(name: &str) -> Literal {

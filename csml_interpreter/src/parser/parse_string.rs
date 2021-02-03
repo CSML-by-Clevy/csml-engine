@@ -212,6 +212,7 @@ pub fn interpolate_string(
                     Position::new(Interval::new_as_u32(
                         span.location_line(),
                         span.get_column() as u32,
+                        span.location_offset(),
                     )),
                     ERROR_PARSING.to_owned(),
                 ))
@@ -224,6 +225,7 @@ pub fn interpolate_string(
                 Position::new(Interval::new_as_u32(
                     err.input.location_line(),
                     err.input.get_column() as u32,
+                    span.location_offset(),
                 )),
                 err.error,
             )),

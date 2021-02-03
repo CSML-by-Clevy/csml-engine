@@ -6,7 +6,7 @@ use csml_interpreter::data::csml_bot::DynamoBot;
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::error_messages::ERROR_DB_SETUP;
-use crate::{CsmlBot, Database, EngineError, BotVersion};
+use crate::{BotVersion, CsmlBot, Database, EngineError};
 
 pub fn create_bot_version(
     bot_id: String,
@@ -128,10 +128,7 @@ pub fn delete_bot_version(
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn delete_bot_versions(
-    bot_id: &str,
-    db: &mut Database,
-) -> Result<(), EngineError> {
+pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
