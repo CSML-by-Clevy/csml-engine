@@ -111,7 +111,7 @@ fn query_flows(
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
+        (String::from("#rangeKey"), String::from("range")),
     ]
     .iter()
     .cloned()
@@ -139,12 +139,10 @@ fn query_flows(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        index_name: Some(String::from("TimeIndex")),
         key_condition_expression: Some(key_cond_expr),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         scan_index_forward: Some(false),
-        limit: Some(25),
         select: Some(String::from("ALL_ATTRIBUTES")),
         exclusive_start_key: last_evaluated_key,
         ..Default::default()
