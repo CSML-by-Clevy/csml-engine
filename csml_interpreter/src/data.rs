@@ -28,7 +28,7 @@ pub use csml_result::CsmlResult;
 pub use data::Data;
 pub use event::Event;
 pub use fn_args_type::ArgsType;
-pub use hold::Hold;
+pub use hold::{Hold, IndexInfo};
 pub use literal::Literal;
 pub use memories::{Memory, MemoryType};
 pub use message::Message;

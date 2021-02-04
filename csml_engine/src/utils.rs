@@ -7,15 +7,12 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    clean_step::clean_step_intervals,
     data::{
-        ast::{Expr, Flow, InstructionScope},
         Client, Event, Memory, Message, Interval
     },
     interpreter::json_to_literal,
 };
 use serde_json::{json, map::Map, Value};
-use std::collections::HashMap;
 use std::env;
 
 use md5::{Digest, Md5};
@@ -264,42 +261,12 @@ pub fn search_flow<'a>(
     }
 }
 
-pub fn get_current_step_hash(
-    bot_ast: &Option<String>,
-    step_name: &str,
-    flow_name: &str,
-) -> Result<String, EngineError> {
+pub fn get_current_flow_hash(flow: &str) -> String {
     let mut hash = Md5::new();
 
-    let ast = match bot_ast {
-        Some(ast) => {
-            let base64decoded = base64::decode(&ast).unwrap();
-            let csml_bot: HashMap<String, Flow> = bincode::deserialize(&base64decoded[..]).unwrap();
-            csml_bot
-        }
-        None => return Err(EngineError::Manager(format!("not valid ast"))),
-    };
+    hash.update(flow.as_bytes());
 
-    let flow = match ast.get(flow_name) {
-        Some(flow) => flow,
-        _ => return Err(EngineError::Manager(format!("flow doesn't exist"))),
-    };
-
-    match flow
-        .flow_instructions
-        .get(&InstructionScope::StepScope(step_name.to_owned()))
-    {
-        Some(Expr::Scope { scope, .. }) => {
-            // need to set all the intervals to 0 in order to avoid new lines conflicts
-            let clean_step = clean_step_intervals(scope.clone());
-
-            hash.update(serde_json::json!(&clean_step).to_string().as_bytes());
-            Ok(format!("{:x}", hash.finalize()))
-        }
-        _ => {
-            Err(EngineError::Manager(format!("step doesn't exist")))
-        }
-    }
+    format!("{:x}", hash.finalize())
 }
 
 pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineError> {

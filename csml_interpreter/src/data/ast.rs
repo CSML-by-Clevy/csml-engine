@@ -126,6 +126,7 @@ pub enum ObjectType {
     Goto(GotoType, Interval),
     Hold(Interval),
     Say(Box<Expr>),
+    Debug(Box<Expr>, Interval),
     Return(Box<Expr>),
     Do(DoType),
     Use(Box<Expr>),

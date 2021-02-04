@@ -5,6 +5,7 @@ use csml_engine::{
 use csml_interpreter::data::csml_bot::CsmlBot;
 use neon::{context::Context, prelude::*, register_module};
 use serde_json::{Value};
+use serde::Deserialize;
 
 fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
@@ -158,7 +159,7 @@ fn run_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     let bot_opt = match run_request.get_bot_opt() {
         Ok(bot_opt) => bot_opt,
-        Err(err) => panic!(err),
+        Err(err) => panic!("{:?}", err),
     };
     let request = run_request.event;
 
@@ -194,10 +195,8 @@ fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
     };
 
     match csml_engine::create_bot_version(bot) {
-        Ok(version_id) => {
-            let value = serde_json::json!({
-                "version_id": version_id
-            });
+        Ok(version_data) => {
+            let value = serde_json::json!(version_data);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
         },
@@ -225,10 +224,10 @@ fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
 * }
 */
 fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let id = cx.argument::<JsString>(0)?.value();
-    let bot_id = cx.argument::<JsString>(1)?.value();
+    let bot_id = cx.argument::<JsString>(0)?.value();
+    let version_id = cx.argument::<JsString>(1)?.value();
 
-    match csml_engine::get_bot_by_version_id(&id, &bot_id) {
+    match csml_engine::get_bot_by_version_id(&version_id, &bot_id) {
         Ok(bot) => {
             let value = match bot {
                 Some(bot) => {
@@ -255,7 +254,7 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
-/* 
+/*
 * get last bot version
 *
 * {
@@ -301,8 +300,8 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
 * Delete bot version
 */
 fn delete_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let version_id =  cx.argument::<JsString>(0)?.value();
-    let bot_id = cx.argument::<JsString>(1)?.value();
+    let bot_id = cx.argument::<JsString>(0)?.value();
+    let version_id =  cx.argument::<JsString>(1)?.value();
 
     match csml_engine::delete_bot_version_id(&version_id, &bot_id) {
         Ok(value) => {
@@ -359,24 +358,22 @@ fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 *  "created_at": String
 * }
 */
-fn get_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
+
+#[derive(Debug, Deserialize)]
+pub struct BotVersionsQueryParams {
+  limit: Option<i64>,
+  pagination_key: Option<String>,
+}
+
+fn get_bot_versions_limit(mut cx: FunctionContext) -> JsResult<JsValue> {
     let bot_id = cx.argument::<JsString>(0)?.value();
-    let limit = match cx.argument::<JsNumber>(1) {
-        Ok(key) => Some(key.value() as i64),
-        Err(_) => None
-    };
 
-    let pagination_key = match cx.argument::<JsString>(2) {
-        Ok(key) => Some(key.value()),
-        Err(_) => None
-    };
+    let jsparams = cx.argument::<JsValue>(1)?;
+    let jsonparams: Value = neon_serde::from_value(&mut cx, jsparams)?;
+    let params: BotVersionsQueryParams = serde_json::from_value(jsonparams).unwrap();
 
-    match csml_engine::get_bot_versions(&bot_id, limit, pagination_key) {
+    match csml_engine::get_bot_versions(&bot_id, params.limit, params.pagination_key) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
-
             Ok(neon_serde::to_value(&mut cx, &value)?)
         },
         Err(err) => {
@@ -395,7 +392,7 @@ register_module!(mut cx, {
     cx.export_function("createBotVersion", create_bot_version)?;
     cx.export_function("getBotByVersionId", get_bot_by_version_id)?;
     cx.export_function("getLastBotVersion", get_last_bot_version)?;
-    cx.export_function("getBotVersions", get_bot_versions)?;
+    cx.export_function("getBotVersionsLimit", get_bot_versions_limit)?;
     cx.export_function("deleteBotVersion", delete_bot_version)?;
     cx.export_function("deleteBotVersions", delete_bot_versions)?;
 

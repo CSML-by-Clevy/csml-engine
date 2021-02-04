@@ -5,6 +5,7 @@ use crate::data::{
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*,
+    resolve_fn_args,
 };
 use crate::parser::ExitCondition;
 // use crate::interpreter::interpret_scope;
@@ -49,7 +50,6 @@ pub fn match_actions(
     function: &ObjectType,
     mut msg_data: MessageData,
     data: &mut Data,
-    _instruction_index: Option<(usize, Vec<usize>)>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     match function {
@@ -62,6 +62,13 @@ pub fn match_actions(
                 &mut msg_data,
                 sender,
             )?)?;
+            MSG::send(&sender, MSG::Message(msg.clone()));
+            Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+        }
+        ObjectType::Debug(args, interval) => {
+            let args = resolve_fn_args(args, data, &mut msg_data, sender)?;
+
+            let msg = Message::new(args.args_to_debug(interval.to_owned()))?;
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
@@ -108,7 +115,6 @@ pub fn match_actions(
 
             data.context.step = step.to_owned();
             msg_data.exit_condition = Some(ExitCondition::Goto);
-            data.context.hold = None;
 
             if step == "end" {
                 msg_data.exit_condition = Some(ExitCondition::End);
@@ -128,7 +134,6 @@ pub fn match_actions(
             data.context.step = "start".to_string();
             data.context.flow = flow.to_owned();
             msg_data.exit_condition = Some(ExitCondition::Goto);
-            data.context.hold = None;
 
             Ok(msg_data)
         }
@@ -151,7 +156,7 @@ pub fn match_actions(
 
             data.context.step = step.to_owned();
             data.context.flow = flow.to_owned();
-            data.context.hold = None;
+
             Ok(msg_data)
         }
         ObjectType::Remember(name, variable) => {
@@ -166,28 +171,6 @@ pub fn match_actions(
             data.context.current.insert(name.ident.to_owned(), lit);
             Ok(msg_data)
         }
-        // ObjectType::Import {
-        //     step_name: name, ..
-        // } => {
-        //     if let Some(Expr::Scope { scope: actions, .. }) = data
-        //         .flow
-        //         .flow_instructions
-        //         .get(&InstructionScope::NormalStep(name.ident.to_owned()))
-        //     {
-        //         match interpret_scope(actions, data, instruction_index, sender) {
-        //             Ok(root2) => Ok(root +msg_data2),
-        //             Err(err) => Err(gen_error_info(
-        //                 interval_from_reserved_fn(function),
-        //                 format!("{} {:?}", ERROR_IMPORT_FAIL, err),
-        //             )),
-        //         }
-        //     } else {
-        //         Err(gen_error_info(
-        //             interval_from_reserved_fn(function),
-        //             format!("{} {}", name.ident, ERROR_IMPORT_STEP_FLOW),
-        //         ))
-        //     }
-        // }
         reserved => Err(gen_error_info(
             Position::new(interval_from_reserved_fn(reserved)),
             ERROR_START_INSTRUCTIONS.to_owned(),

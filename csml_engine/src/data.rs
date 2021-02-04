@@ -34,7 +34,7 @@ impl RunRequest {
                 fn_endpoint,
                 ..
             } => Ok(BotOpt::BotId{bot_id, fn_endpoint}),
-            _ => Err(EngineError::Format("bot bad format".to_owned()))
+            _ => Err(EngineError::Format("Invalid bot_opt format".to_owned()))
         }
     }
 }

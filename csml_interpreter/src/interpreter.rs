@@ -9,7 +9,7 @@ pub use json_to_rust::{json_to_literal, memory_to_literal};
 
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
+use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG, IndexInfo};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statement},
@@ -42,25 +42,18 @@ fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
 pub fn interpret_scope(
     actions: &Block,
     data: &mut Data,
-    mut instruction_index: Option<(usize, Vec<usize>)>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let mut message_data = MessageData::default();
 
-    // let commands = match &mut instruction_index {
-    //     Some((index, _loop_index)) if !index.is_empty() => {
-    //         let i = index.drain(1..).as_slice()[0];
-    //         &actions.commands[i..]
-    //     },
-    //     _ => &actions.commands,
-    // };
-
     for (action, instruction_info) in actions.commands.iter() {
         let instruction_total = instruction_info.index + instruction_info.total;
 
-        if let Some((instruction_index, _)) = instruction_index {
-            if instruction_index >= instruction_total {
+        if let Some(hold) = &mut data.context.hold {
+            if hold.index.command_index >= instruction_total {
                 continue;
+            } else if hold.index.command_index + 1 == instruction_info.index {
+                data.context.hold = None;
             }
         }
 
@@ -88,31 +81,28 @@ pub fn interpret_scope(
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
                 let index = instruction_info.index;
                 let map = data.step_vars.to_owned();
-                
+
                 let hold = Hold::new(
-                    index,
-                    vec!(0),
+                    IndexInfo{command_index:index, loop_index:data.loop_indexs.clone()},
                     step_vars_to_json(map),
                     data.context.step.clone(),
                     data.context.flow.clone()
                 );
-                
+
                 message_data.hold = Some(hold.to_owned());
 
                 MSG::send(&sender, MSG::Hold(hold));
-                
                 message_data.exit_condition = Some(ExitCondition::Hold);
                 return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, instruction_index.clone(), &sender)?
+                message_data = match_actions(fun, message_data, data, &sender)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
                     if_statement,
                     message_data,
                     data,
-                    instruction_index.clone(),
                     instruction_info,
                     &sender,
                 )?;
@@ -126,7 +116,6 @@ pub fn interpret_scope(
                     range,
                     message_data,
                     data,
-                    instruction_index.clone(),
                     &sender,
                 )?
             }

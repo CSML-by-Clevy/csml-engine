@@ -60,6 +60,7 @@ pub const COMPONENT: &str = "Component";
 pub const FLOW: &str = "flow";
 pub const STEP: &str = "step";
 pub const SAY: &str = "say";
+pub const DEBUG_ACTION: &str = "debug";
 pub const USE: &str = "use";
 pub const HOLD: &str = "hold";
 pub const GOTO: &str = "goto";
@@ -72,7 +73,7 @@ pub const BREAK: &str = "break";
 pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
-pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, USE, IMPORT, HOLD, BREAK];
+pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, DEBUG_ACTION, GOTO, REMEMBER, USE, IMPORT, HOLD, BREAK];
 
 pub const SCOPE_REJECTED: &[&str] = &[RETURN];
 
@@ -99,20 +100,18 @@ pub const TYPES: &[&str] = &[
     NULL,
 ];
 
-// COMPONENT,FILE
 pub const RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
+    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, DEBUG_ACTION, USE, HOLD, GOTO,
     MATCH, _METADATA, DEFAULT, REMEMBER, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
-// TODO: at some point (when function does not have a key like find(in)) ut back in inside reserved
 pub const UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, DEBUG_ACTION, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
     COMPONENT,
 ];
 
 pub const ASSIGNATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, DEBUG_ACTION, USE, HOLD, GOTO, MATCH, REMEMBER,
     _METADATA, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 

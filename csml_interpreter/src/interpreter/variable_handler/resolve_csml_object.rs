@@ -23,6 +23,8 @@ fn init_new_scope<'a>(data: &'a Data, context: &'a mut Context) -> Data<'a> {
         &data.flow,
         context,
         &data.event,
+        data.loop_indexs.clone(),
+        data.loop_index,
         HashMap::new(),
         &data.custom_component,
         &data.native_component,
@@ -153,7 +155,7 @@ pub fn resolve_object(
 
             insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
 
-            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data)
+            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data, sender)
         }
 
         (.., Some((fn_args, expr, new_flow))) => {
@@ -178,7 +180,7 @@ pub fn resolve_object(
 
             insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
 
-            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data)
+            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data, sender)
         }
 
         _ => {
