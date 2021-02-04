@@ -11,49 +11,6 @@ start:
 
 toto:
     do vec = [1, 2]
-
-    foreach (value0) in vec {
-        say "start of [0]foreach {{value0}}"
-        foreach (value1) in vec {
-            say "start of [1]foreach {{value1}}"
-            foreach (value2) in vec {
-                say "start of [2]foreach {{value2}}"
-                hold
-                say "end of [2]foreach {{value2}}"
-            }
-            say "end of [1]foreach {{value1}}"
-        }
-        say "end of [0]foreach {{value0}}"
-    }
     say plop(1, 2)
 
     goto end
-
-// foreach (value0) in vec {
-//     say "start of [0]foreach {{value0}}"
-//     foreach (value1) in vec {
-//         say "start of [1]foreach {{value1}}"
-//         foreach (value2) in vec {
-//             say "start of [2]foreach {{value2}}"
-//             foreach (value3) in vec {
-//                 say "start of [3]foreach {{value3}}"
-//                 foreach (value4) in vec {
-//                     say "start of [4]foreach {{value4}}"
-//                     foreach (value5) in vec {
-//                         say "start of [5]foreach {{value5}}"
-//                         foreach (value6) in vec {
-//                             say "start of [6]foreach {{value6}}"
-//                             say "end of [6]foreach {{value6}}"
-//                         }
-//                         say "end of [5]foreach {{value5}}"
-//                     }
-//                     say "end of [4]foreach {{value4}}"
-//                 }
-//                 say "end of [3]foreach {{value3}}"
-//             }
-//             say "end of [2]foreach {{value2}}"
-//         }
-//         say "end of [1]foreach {{value1}}"
-//     }
-//     say "end of [0]foreach {{value0}}"
-// }
