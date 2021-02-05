@@ -1,11 +1,46 @@
 use crate::data::{ast::*, tokens::*};
 use crate::interpreter::variable_handler::interval::interval_from_expr;
+use crate::parser::{
+    parse_comments::comment,
+};
+use crate::error_format::*;
 
-use nom::InputTake;
+use nom::{
+    bytes::complete::take_while1,
+    error::{ ParseError },
+    InputTake, IResult, Err,
+    multi::fold_many0, sequence::preceded,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+fn get_text<'a, E>(s: Span<'a>) -> IResult<Span<'a>, &'a str, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (rest, string) = take_while1(|c: char| !WHITE_SPACE.contains(c))(s)?;
+
+    Ok((rest, (*string.fragment())))
+}
+
+fn clean_text<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
+where
+    E: ParseError<Span<'a>>,
+{
+     let (span, vec) = fold_many0(
+        preceded(comment,get_text),
+        Vec::new(),
+        |mut acc, item| {
+            acc.push(item);
+            acc
+        },
+    )(s)?;
+
+    let s: String = vec.into_iter().collect();
+    Ok((span, s))
+}
 
 fn get_step_offset(
     name: &str,
@@ -101,6 +136,12 @@ pub fn get_step<'a>(step_name: &'a str, flow: &'a str, ast: &'a Flow) -> String 
             let (_, old) = new.take_split(skip_offset - offset);
             old.fragment().to_string()
         }
-        None => new.fragment().to_string(),
+        None => match clean_text::<CustomError<Span<'a>>>(new) {
+            Ok((_s, string)) => string,
+            Err(e) => match e {
+                Err::Error(_) | Err::Failure(_) => unreachable!(),
+                Err::Incomplete(_err) => unreachable!(),
+            },
+        },
     }
 }
