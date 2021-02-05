@@ -27,7 +27,7 @@ pub fn create_bot_version(
     let future = client.put_item(input);
     db.runtime.block_on(future)?;
 
-    let key = format!("bots/{}/versions/{}", &data.id, &data.version_id);
+    let key = format!("bots/{}/versions/{}/flows.json", &data.id, &data.version_id);
     aws_s3::put_object(&bucket, &key, &flows)?;
 
     Ok(data.version_id.to_owned())
@@ -195,7 +195,7 @@ pub fn get_bot_by_version_id(
             let base64decoded = base64::decode(&bot.bot).unwrap();
             let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-            let key = format!("bots/{}/versions/{}", bot_id, version_id);
+            let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
             let flows = get_flows(bucket, &key)?;
 
             Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))}
@@ -266,7 +266,7 @@ pub fn get_last_bot_version(
     let base64decoded = base64::decode(&bot.bot).unwrap();
     let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
-    let key = format!("bots/{}/versions/{}", bot_id, bot.version_id);
+    let key = format!("bots/{}/versions/{}/flows.json", bot_id, bot.version_id);
     let flows = get_flows(bucket, &key)?;
 
     Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
@@ -279,7 +279,7 @@ pub fn delete_bot_version(
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
 
-    let key = format!("bots/{}/versions/{}", bot_id, version_id);
+    let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
     aws_s3::delete_object(bucket, &key)?;
 
     let item_key = DynamoDbKey {
@@ -324,7 +324,7 @@ fn get_bot_version_batches_and_delete_flows(
         for item in items {
             let data: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
 
-            let key = format!("bots/{}/versions/{}", bot_id, data.version_id);
+            let key = format!("bots/{}/versions/{}/flows.json", bot_id, data.version_id);
             aws_s3::delete_object(bucket, &key)?;
 
             let key = serde_dynamodb::to_hashmap(&
