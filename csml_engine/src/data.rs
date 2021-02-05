@@ -148,6 +148,7 @@ pub enum Next {
 pub enum EngineError {
     Serde(serde_json::Error),
     Io(std::io::Error),
+    Utf8(std::str::Utf8Error),
     Manager(String),
     Format(String),
     Interpreter(String),
@@ -166,6 +167,10 @@ pub enum EngineError {
     Rusoto(String),
     #[cfg(any(feature = "dynamo"))]
     SerdeDynamodb(serde_dynamodb::Error),
+    #[cfg(any(feature = "dynamo"))]
+    S3(s3::S3Error),
+    #[cfg(any(feature = "dynamo"))]
+    S3ErrorCode(u16),
 }
 
 impl From<serde_json::Error> for EngineError {
@@ -177,6 +182,12 @@ impl From<serde_json::Error> for EngineError {
 impl From<std::io::Error> for EngineError {
     fn from(e: std::io::Error) -> Self {
         EngineError::Io(e)
+    }
+}
+
+impl From<std::str::Utf8Error>  for EngineError {
+    fn from(e: std::str::Utf8Error) -> Self {
+        EngineError::Utf8(e)
     }
 }
 
@@ -230,5 +241,12 @@ impl<E: std::error::Error + 'static> From<rusoto_core::RusotoError<E>> for Engin
 impl From<serde_dynamodb::Error> for EngineError {
     fn from(e: serde_dynamodb::Error) -> Self {
         EngineError::SerdeDynamodb(e)
+    }
+}
+
+#[cfg(any(feature = "dynamo"))]
+impl From<s3::S3Error> for EngineError {
+    fn from(e: s3::S3Error) -> Self {
+        EngineError::S3(e)
     }
 }
