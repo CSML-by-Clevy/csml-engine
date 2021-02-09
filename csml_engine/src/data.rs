@@ -110,14 +110,16 @@ pub enum Database {
 #[cfg(feature = "dynamo")]
 pub struct DynamoDbClient {
     pub client: rusoto_dynamodb::DynamoDbClient,
+    pub s3_client: rusoto_s3::S3Client,
     pub runtime: tokio::runtime::Runtime,
 }
 
 #[cfg(feature = "dynamo")]
 impl DynamoDbClient {
-    pub fn new(region: rusoto_core::Region) -> Self {
+    pub fn new(dynamo_region: rusoto_core::Region, s3_region: rusoto_core::Region) -> Self {
         Self {
-            client: rusoto_dynamodb::DynamoDbClient::new(region),
+            client: rusoto_dynamodb::DynamoDbClient::new(dynamo_region),
+            s3_client: rusoto_s3::S3Client::new(s3_region),
             runtime: { tokio::runtime::Runtime::new().unwrap() },
         }
     }
@@ -167,8 +169,6 @@ pub enum EngineError {
     Rusoto(String),
     #[cfg(any(feature = "dynamo"))]
     SerdeDynamodb(serde_dynamodb::Error),
-    #[cfg(any(feature = "dynamo"))]
-    S3(s3::S3Error),
     #[cfg(any(feature = "dynamo"))]
     S3ErrorCode(u16),
 }
@@ -244,9 +244,9 @@ impl From<serde_dynamodb::Error> for EngineError {
     }
 }
 
-#[cfg(any(feature = "dynamo"))]
-impl From<s3::S3Error> for EngineError {
-    fn from(e: s3::S3Error) -> Self {
-        EngineError::S3(e)
-    }
-}
+// #[cfg(any(feature = "dynamo"))]
+// impl From<s3::S3Error> for EngineError {
+//     fn from(e: s3::S3Error) -> Self {
+//         EngineError::S3(e)
+//     }
+// }

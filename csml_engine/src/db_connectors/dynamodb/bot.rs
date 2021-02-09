@@ -4,15 +4,13 @@ use crate::{EngineError};
 use csml_interpreter::data::{csml_bot::DynamoBot, csml_flow::CsmlFlow};
 
 use rusoto_dynamodb::*;
-use s3::Bucket;
 
 use crate::db_connectors::dynamodb::utils::*;
 
 pub fn create_bot_version(
     bot_id: String,
     bot: String,
-    flows: &[u8],
-    bucket: &Bucket,
+    flows: String,
     db: &mut DynamoDbClient,
 ) -> Result<String, EngineError> {
     let data: Bot = Bot::new(bot_id, bot);
@@ -28,17 +26,17 @@ pub fn create_bot_version(
     db.runtime.block_on(future)?;
 
     let key = format!("bots/{}/versions/{}/flows.json", &data.id, &data.version_id);
-    aws_s3::put_object(&bucket, &key, &flows)?;
+    aws_s3::put_object(db, &key, flows)?;
 
     Ok(data.version_id.to_owned())
 }
 
 pub fn get_flows(
-    bucket: &Bucket,
     key: &str,
+    db: &mut DynamoDbClient,
 ) -> Result<Vec<CsmlFlow>, EngineError> {
-    let object = aws_s3::get_object(bucket, key)?;
-    let flows: Vec<CsmlFlow> = serde_json::from_str(std::str::from_utf8(&object)?).unwrap();
+    let object = aws_s3::get_object(db, key)?;
+    let flows: Vec<CsmlFlow> = serde_json::from_str(&object).unwrap();
 
     Ok(flows)
 }
@@ -172,7 +170,6 @@ pub fn get_bot_versions(
 pub fn get_bot_by_version_id(
     version_id: &str,
     bot_id: &str,
-    bucket: &Bucket,
     db: &mut DynamoDbClient,
 ) -> Result<Option<BotVersion>, EngineError> {
     let item_key = DynamoDbKey {
@@ -196,7 +193,7 @@ pub fn get_bot_by_version_id(
             let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
-            let flows = get_flows(bucket, &key)?;
+            let flows = get_flows(&key, db)?;
 
             Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))}
         _ => Ok(None),
@@ -205,7 +202,6 @@ pub fn get_bot_by_version_id(
 
 pub fn get_last_bot_version(
     bot_id: &str,
-    bucket: &Bucket,
     db: &mut DynamoDbClient,
 ) -> Result<Option<BotVersion>, EngineError> {
     let hash = Bot::get_hash(bot_id);
@@ -267,7 +263,7 @@ pub fn get_last_bot_version(
     let csml_bot: DynamoBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
     let key = format!("bots/{}/versions/{}/flows.json", bot_id, bot.version_id);
-    let flows = get_flows(bucket, &key)?;
+    let flows = get_flows(&key, db)?;
 
     Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
 }
@@ -275,12 +271,11 @@ pub fn get_last_bot_version(
 pub fn delete_bot_version(
     bot_id: &str,
     version_id: &str,
-    bucket: &Bucket,
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
 
     let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
-    aws_s3::delete_object(bucket, &key)?;
+    aws_s3::delete_object(db, &key)?;
 
     let item_key = DynamoDbKey {
         hash: Bot::get_hash(bot_id),
@@ -301,7 +296,6 @@ pub fn delete_bot_version(
 
 fn get_bot_version_batches_and_delete_flows(
     bot_id: &str,
-    bucket: &Bucket,
     db: &mut DynamoDbClient,
 ) -> Result<Vec<Vec<WriteRequest>>, EngineError>{
     let mut batches = vec!();
@@ -325,7 +319,7 @@ fn get_bot_version_batches_and_delete_flows(
             let data: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
 
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, data.version_id);
-            aws_s3::delete_object(bucket, &key)?;
+            aws_s3::delete_object(db, &key)?;
 
             let key = serde_dynamodb::to_hashmap(&
                 DynamoDbKey {
@@ -358,10 +352,9 @@ fn get_bot_version_batches_and_delete_flows(
 
 pub fn delete_bot_versions(
     bot_id: &str,
-    bucket: &Bucket,
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
-    let batches = get_bot_version_batches_and_delete_flows(bot_id, bucket, db)?;
+    let batches = get_bot_version_batches_and_delete_flows(bot_id, db)?;
 
     for write_requests in batches {
         let request_items = [

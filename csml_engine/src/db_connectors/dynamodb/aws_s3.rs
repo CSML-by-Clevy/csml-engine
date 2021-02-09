@@ -1,70 +1,75 @@
-extern crate s3;
+extern crate rusoto_s3;
 
 use crate::EngineError;
-use s3::bucket::Bucket;
-use s3::creds::Credentials;
-use s3::region::Region;
-use s3::S3Error;
+use crate::data::DynamoDbClient;
+use std::{io::Read};
+use rusoto_s3::{S3, GetObjectRequest, DeleteObjectRequest, PutObjectRequest};
 
-fn get_region(region: &str) -> Result<Region, S3Error> {
-    let region = region.parse::<Region>()?;
-
-    Ok(region)
-}
-
-pub fn get_bucket() -> Result<Bucket, EngineError> {
-    let region_name = match std::env::var("AWS_REGION") {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    };
-    let s3_endpoint = match std::env::var("AWS_S3_ENDPOINT") {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    };
-
-    let region = match (region_name, s3_endpoint) {
-        (Some(region_name), None) => get_region(&region_name)?,
-        (Some(region_name), Some(s3_endpoint)) => Region::Custom {
-            region: region_name,
-            endpoint: s3_endpoint,
-        },
-        _ => return Err(EngineError::Manager("Invalid AWS_S3 environment setup".to_owned()))
-    };
-
-    let credentials = Credentials::default().unwrap();
-
+pub fn put_object(db: &mut DynamoDbClient, key: &str, content: String) -> Result<(), EngineError> {
     let bucket  = match std::env::var("AWS_S3_BUCKET") {
         Ok(bucket) => bucket,
         Err(_) => return Err(EngineError::Manager("Missing AWS_S3_BUCKET env var".to_owned())),
     };
 
-    // Create Bucket in REGION
-    Ok(Bucket::new(&bucket, region, credentials)?)
+    let request = PutObjectRequest{
+        bucket,
+        key: key.to_owned(),
+        content_type: Some("application/json".to_owned()),
+        body: Some(content.into_bytes().into()),
+        ..Default::default()
+    };
+
+    let future = db.s3_client.put_object(request);
+
+    let _value = db.runtime.block_on(future)?;
+
+    Ok(())
 }
 
-pub fn put_object(bucket: &Bucket, key: &str, content: &[u8]) -> Result<(), EngineError> {
-    let (_, code) = bucket.put_object_with_content_type_blocking(key, content, "application/json")?;
+pub fn get_object(db: &mut DynamoDbClient, key: &str) -> Result<String, EngineError> {
+    let bucket  = match std::env::var("AWS_S3_BUCKET") {
+        Ok(bucket) => bucket,
+        Err(_) => return Err(EngineError::Manager("Missing AWS_S3_BUCKET env var".to_owned())),
+    };
 
-    match code {
-        code  if code == 200 => Ok(()),
-        code => Err(EngineError::S3ErrorCode(code))
+    let request =  GetObjectRequest{
+        bucket,
+        key: key.to_owned(),
+        ..Default::default()
+    };
+
+    let future = db.s3_client.get_object(request);
+
+    let value = db.runtime.block_on(future)?;
+
+    match value.body{
+        Some(value) => {
+            let mut value = value.into_blocking_read();
+            let mut buffer = String::new();
+
+            value.read_to_string(&mut buffer)?;
+
+            Ok(buffer)
+        },
+        None => return Err(EngineError::Manager("empty object".to_owned())),
     }
 }
 
-pub fn get_object(bucket: &Bucket, key: &str) -> Result<Vec<u8>, EngineError> {
-    let (value, code) = bucket.get_object_blocking(key)?;
+pub fn delete_object(db: &mut DynamoDbClient, key: &str) -> Result<(), EngineError> {
+    let bucket  = match std::env::var("AWS_S3_BUCKET") {
+        Ok(bucket) => bucket,
+        Err(_) => return Err(EngineError::Manager("Missing AWS_S3_BUCKET env var".to_owned())),
+    };
+    
+    let request =  DeleteObjectRequest{
+        bucket,
+        key: key.to_owned(),
+        ..Default::default()
+    };
 
-    match code {
-        code if code == 200 => Ok(value),
-        code => Err(EngineError::S3ErrorCode(code))
-    }
-}
+    let future = db.s3_client.delete_object(request);
 
-pub fn delete_object(bucket: &Bucket, key: &str) -> Result<(), EngineError> {
-    let (_, code) = bucket.delete_object_blocking(key)?;
+    db.runtime.block_on(future)?;
 
-    match code {
-        code if code == 204 => Ok(()),
-        code => Err(EngineError::S3ErrorCode(code))
-    }
+    Ok(())
 }

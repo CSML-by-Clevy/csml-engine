@@ -18,18 +18,21 @@ use crate::db_connectors::dynamodb::utils::*;
 use rusoto_core::Region;
 
 pub fn init() -> Result<Database, EngineError> {
-    let region_name = match std::env::var("AWS_REGION") {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    };
-    let dynamodb_endpoint = match std::env::var("AWS_DYNAMODB_ENDPOINT") {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    };
+    let region_name = std::env::var("AWS_REGION").ok();
+    let dynamodb_endpoint = std::env::var("AWS_DYNAMODB_ENDPOINT").ok();
+    let s3_endpoint = std::env::var("AWS_S3_ENDPOINT").ok();
 
     let mut dynamodb_region = Region::default();
-    if let (Some(region_name), Some(dynamodb_endpoint)) = (region_name, dynamodb_endpoint) {
+    if let (Some(region_name), Some(dynamodb_endpoint)) = (region_name.clone(), dynamodb_endpoint) {
         dynamodb_region = Region::Custom {
+            name: region_name,
+            endpoint: dynamodb_endpoint,
+        };
+    }
+
+    let mut s3_region = Region::default();
+    if let (Some(region_name), Some(dynamodb_endpoint)) = (region_name, s3_endpoint) {
+        s3_region = Region::Custom {
             name: region_name,
             endpoint: dynamodb_endpoint,
         };
@@ -38,7 +41,7 @@ pub fn init() -> Result<Database, EngineError> {
     // check that the table name is set in env
     get_table_name()?;
 
-    let client = DynamoDbClient::new(dynamodb_region);
+    let client = DynamoDbClient::new(dynamodb_region, s3_region);
 
     Ok(Database::Dynamodb(client))
 }
