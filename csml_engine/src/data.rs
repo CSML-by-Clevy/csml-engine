@@ -19,22 +19,29 @@ pub struct RunRequest {
 impl RunRequest {
     pub fn get_bot_opt(&self) -> Result<BotOpt, EngineError> {
         match self.clone() {
-            RunRequest{
+            RunRequest {
                 bot: Some(csml_bot),
                 ..
             } => Ok(BotOpt::CsmlBot(csml_bot)),
-            RunRequest{
+            RunRequest {
                 version_id: Some(version_id),
                 bot_id: Some(bot_id),
                 fn_endpoint,
                 ..
-            } => Ok(BotOpt::Id{ version_id, bot_id, fn_endpoint}),
-            RunRequest{
+            } => Ok(BotOpt::Id {
+                version_id,
+                bot_id,
+                fn_endpoint,
+            }),
+            RunRequest {
                 bot_id: Some(bot_id),
                 fn_endpoint,
                 ..
-            } => Ok(BotOpt::BotId{bot_id, fn_endpoint}),
-            _ => Err(EngineError::Format("Invalid bot_opt format".to_owned()))
+            } => Ok(BotOpt::BotId {
+                bot_id,
+                fn_endpoint,
+            }),
+            _ => Err(EngineError::Format("Invalid bot_opt format".to_owned())),
         }
     }
 }
@@ -75,9 +82,10 @@ impl BotOpt {
                 bot_id,
                 fn_endpoint,
             } => {
-                let mut bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
-                    .unwrap()
-                    .unwrap();
+                let mut bot_version =
+                    db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
+                        .unwrap()
+                        .unwrap();
                 bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
                 bot_version.bot
             }
@@ -110,14 +118,16 @@ pub enum Database {
 #[cfg(feature = "dynamo")]
 pub struct DynamoDbClient {
     pub client: rusoto_dynamodb::DynamoDbClient,
+    pub s3_client: rusoto_s3::S3Client,
     pub runtime: tokio::runtime::Runtime,
 }
 
 #[cfg(feature = "dynamo")]
 impl DynamoDbClient {
-    pub fn new(region: rusoto_core::Region) -> Self {
+    pub fn new(dynamo_region: rusoto_core::Region, s3_region: rusoto_core::Region) -> Self {
         Self {
-            client: rusoto_dynamodb::DynamoDbClient::new(region),
+            client: rusoto_dynamodb::DynamoDbClient::new(dynamo_region),
+            s3_client: rusoto_s3::S3Client::new(s3_region),
             runtime: { tokio::runtime::Runtime::new().unwrap() },
         }
     }
@@ -148,6 +158,7 @@ pub enum Next {
 pub enum EngineError {
     Serde(serde_json::Error),
     Io(std::io::Error),
+    Utf8(std::str::Utf8Error),
     Manager(String),
     Format(String),
     Interpreter(String),
@@ -166,6 +177,8 @@ pub enum EngineError {
     Rusoto(String),
     #[cfg(any(feature = "dynamo"))]
     SerdeDynamodb(serde_dynamodb::Error),
+    #[cfg(any(feature = "dynamo"))]
+    S3ErrorCode(u16),
 }
 
 impl From<serde_json::Error> for EngineError {
@@ -177,6 +190,12 @@ impl From<serde_json::Error> for EngineError {
 impl From<std::io::Error> for EngineError {
     fn from(e: std::io::Error) -> Self {
         EngineError::Io(e)
+    }
+}
+
+impl From<std::str::Utf8Error>  for EngineError {
+    fn from(e: std::str::Utf8Error) -> Self {
+        EngineError::Utf8(e)
     }
 }
 
@@ -232,3 +251,10 @@ impl From<serde_dynamodb::Error> for EngineError {
         EngineError::SerdeDynamodb(e)
     }
 }
+
+// #[cfg(any(feature = "dynamo"))]
+// impl From<s3::S3Error> for EngineError {
+//     fn from(e: s3::S3Error) -> Self {
+//         EngineError::S3(e)
+//     }
+// }

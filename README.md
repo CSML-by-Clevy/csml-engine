@@ -108,6 +108,8 @@ AWS_SECRET_ACCESS_KEY= # or use an IAM role
 AWS_REGION=
 AWS_DYNAMODB_ENDPOINT= # optional, defaults to the default dynamodb endpoint for the given region.
 AWS_DYNAMODB_TABLE=
+AWS_S3_ENDPOINT= # optional, defaults to the default S3 endpoint for the given region
+AWS_S3_BUCKET=
 
 ENGINE_SERVER_PORT=5000
 

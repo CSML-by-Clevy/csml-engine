@@ -6,6 +6,7 @@ pub mod linter;
 pub mod parser;
 
 pub use interpreter::components::load_components;
+pub use parser::step_checksum::get_step;
 
 use interpreter::interpret_scope;
 use parser::parse_flow;
@@ -49,7 +50,7 @@ fn execute_step(
             interpret_scope(scope, &mut data, &sender)
         }
         _ => Err(gen_error_info(
-            Position::new(Interval::new_as_u32(0, 0)),
+            Position::new(Interval::new_as_u32(0, 0, 0)),
             format!("[{}] {}", step, ERROR_STEP_EXIST),
         )),
     };

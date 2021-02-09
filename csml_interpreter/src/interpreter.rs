@@ -86,7 +86,7 @@ pub fn interpret_scope(
                     IndexInfo{command_index:index, loop_index:data.loop_indexs.clone()},
                     step_vars_to_json(map),
                     data.context.step.clone(),
-                    data.context.flow.clone()
+                    data.context.flow.clone(),
                 );
 
                 message_data.hold = Some(hold.to_owned());

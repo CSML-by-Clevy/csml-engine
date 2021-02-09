@@ -27,11 +27,17 @@ fn ok_debug() {
 
 #[test]
 fn ok_debug_step1() {
-    let data =
-        r#"{"messages":[ {"content":{ "args": ["1", "2", "3"] },"content_type":"debug"} ],"memories":[]}"#;
+    let data = r#"{"messages":[ {"content":{ "args": ["1", "2", "3"] },"content_type":"debug"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "debug_formater", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "debug_formater",
+            "flow",
+        ),
         "CSML/basic_test/syntax/debug.csml",
     );
 

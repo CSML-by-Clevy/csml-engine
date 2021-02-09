@@ -49,7 +49,7 @@ pub fn interpret_step(
                 step_name,
                 flow_name,
             }) => {
-                let hash = get_current_flow_hash(&current_flow.content);
+                let hash = get_current_step_hash(&data, bot)?;
                 let state_hold: Value = serde_json::json!({
                     "index": index,
                     "step_vars": step_vars,
@@ -61,7 +61,7 @@ pub fn interpret_step(
                     index,
                     step_vars,
                     step_name,
-                    flow_name
+                    flow_name,
                 });
             }
             MSG::Next { flow, step } => match (flow, step) {

@@ -7,12 +7,12 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    data::{
-        Client, Event, Memory, Message, Interval
-    },
+    data::{ast::Flow, Client, Event, Interval, Memory, Message},
+    get_step,
     interpreter::json_to_literal,
 };
 use serde_json::{json, map::Map, Value};
+use std::collections::HashMap;
 use std::env;
 
 use md5::{Digest, Md5};
@@ -261,12 +261,33 @@ pub fn search_flow<'a>(
     }
 }
 
-pub fn get_current_flow_hash(flow: &str) -> String {
+pub fn get_current_step_hash(
+    data: &ConversationInfo,
+    bot: &CsmlBot,
+) -> Result<String, EngineError> {
     let mut hash = Md5::new();
 
-    hash.update(flow.as_bytes());
+    let flow = &get_flow_by_id(&data.context.flow, &bot.flows)?.content;
 
-    format!("{:x}", hash.finalize())
+    let ast = match &bot.bot_ast {
+        Some(ast) => {
+            let base64decoded = base64::decode(&ast).unwrap();
+            let csml_bot: HashMap<String, Flow> = bincode::deserialize(&base64decoded[..]).unwrap();
+            match csml_bot.get(&data.context.flow) {
+                Some(flow) => flow.to_owned(),
+                None => csml_bot
+                    .get(&get_default_flow(&bot)?.name)
+                    .unwrap()
+                    .to_owned(),
+            }
+        }
+        None => return Err(EngineError::Manager(format!("not valid ast"))),
+    };
+
+    let step = get_step(&data.context.step, &flow, &ast);
+    hash.update(step.as_bytes());
+
+    Ok(format!("{:x}", hash.finalize()))
 }
 
 pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineError> {

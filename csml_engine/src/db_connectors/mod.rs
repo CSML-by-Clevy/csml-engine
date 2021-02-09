@@ -14,13 +14,15 @@
  *   - MONGODB_PASSWORD
  *
  * - `dynamodb`: requires a DynamoDB-compatible database (on AWS, or dynamodb-local
- * for dev purposes). The following env vars are required (alternatively if deploying on AWS,
- * use IAM roles)
+ * for dev purposes). A S3-compatible storage is also needed for storing bots in the engine.
+ * The following env vars are required (alternatively if deploying on AWS, prefer using IAM roles)
  *   - AWS_REGION
  *   - AWS_ACCESS_KEY_ID
  *   - AWS_SECRET_ACCESS_KEY
  *   - AWS_DYNAMODB_TABLE
  *   - AWS_DYNAMODB_ENDPOINT optional, defaults to the default dynamodb endpoint for the given region.
+ *   - AWS_S3_BUCKET
+ *   - AWS_S3_ENDPOINT optional, defaults to the default S3 endpoint for the given region
  * Both AWS_REGION AND AWS_DYNAMODB_ENDPOINT must be set to use a custom dynamodb-compatible DB.
  *
  * If the ENGINE_DB_TYPE env var is not set, mongodb is used by default.
@@ -31,8 +33,8 @@
  */
 use crate::data::{Database, EngineError};
 use crate::error_messages::ERROR_DB_SETUP;
-use serde::{Deserialize, Serialize};
 use csml_interpreter::data::csml_bot::CsmlBot;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "dynamo")]
 use self::dynamodb as dynamodb_connector;
