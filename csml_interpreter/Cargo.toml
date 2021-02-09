@@ -1,6 +1,6 @@
 [package]
 name = "csml_interpreter"
-version = "1.4.0"
+version = "1.4.1"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "François Falala-Sechet <francois@clevy.io>",
@@ -29,7 +29,7 @@ rand = "0.7.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 libc = "0.2.79"
-lazy_static = "1.4.0"
+lazy_static = "1.4.1"
 regex = "1.4.1"
 ureq = { version = "1.5.1", features = ["json"] }
 

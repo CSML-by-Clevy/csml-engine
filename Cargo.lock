@@ -838,7 +838,7 @@ checksum = "697c714f50560202b1f4e2e09cd50a421881c83e9025db75d15f276616f04f40"
 
 [[package]]
 name = "csml_engine"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -864,7 +864,7 @@ dependencies = [
 
 [[package]]
 name = "csml_engine_node"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "csml_engine",
  "csml_interpreter",
@@ -877,7 +877,7 @@ dependencies = [
 
 [[package]]
 name = "csml_interpreter"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -896,7 +896,7 @@ dependencies = [
 
 [[package]]
 name = "csml_server"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1848,7 +1848,7 @@ checksum = "a91d884b6667cd606bb5a69aa0c99ba811a115fc68915e7056ec08a46e93199a"
 
 [[package]]
 name = "lazy_static"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
