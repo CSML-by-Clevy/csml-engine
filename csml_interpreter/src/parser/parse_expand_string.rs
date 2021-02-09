@@ -19,7 +19,7 @@ where
                 rest,
                 Expr::LitExpr(PrimitiveString::get_literal(
                     string.fragment(),
-                    Interval::new_as_u32(0, 0),
+                    Interval::new_as_u32(0, 0, 0),
                 )),
             ))
         }

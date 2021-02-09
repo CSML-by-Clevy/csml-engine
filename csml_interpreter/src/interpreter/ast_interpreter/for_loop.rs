@@ -45,7 +45,7 @@ pub fn for_loop(
                 break;
             }
             Some(ExitCondition::Continue) => msg_data.exit_condition = None,
-            Some(_)  => break,
+            Some(_) => break,
             None => {}
         }
     }

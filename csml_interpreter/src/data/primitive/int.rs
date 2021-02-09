@@ -653,11 +653,22 @@ impl Primitive for PrimitiveInt {
             Literal {
                 content_type: "int".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.to_string())),
-                interval: Interval { column: 0, line: 0 },
+                interval: Interval {
+                    column: 0,
+                    line: 0,
+                    offset: 0,
+                },
             },
         );
 
-        let mut result = PrimitiveObject::get_literal(&hashmap, Interval { column: 0, line: 0 });
+        let mut result = PrimitiveObject::get_literal(
+            &hashmap,
+            Interval {
+                column: 0,
+                line: 0,
+                offset: 0,
+            },
+        );
         result.set_content_type("text");
 
         Message {

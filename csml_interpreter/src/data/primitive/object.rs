@@ -568,20 +568,20 @@ impl PrimitiveObject {
         };
 
         let array = match args.get("arg0") {
-            Some(lit) => {
-                Literal::get_value::<Vec<Literal>>(
-                    &lit.primitive,
-                    interval,
-                    format!("expect Array value as argument usage: {}", usage),
-                )?
-            }
-            None => return Err(gen_error_info(
-                Position::new(interval),
+            Some(lit) => Literal::get_value::<Vec<Literal>>(
+                &lit.primitive,
+                interval,
                 format!("expect Array value as argument usage: {}", usage),
-            ))
+            )?,
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("expect Array value as argument usage: {}", usage),
+                ))
+            }
         };
 
-        let is_match = array.iter().find(| &arg| match_obj(lit, arg));
+        let is_match = array.iter().find(|&arg| match_obj(lit, arg));
 
         match is_match {
             Some(lit) => Ok(lit.to_owned()),

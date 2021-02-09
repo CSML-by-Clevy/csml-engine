@@ -1,5 +1,3 @@
-extern crate rusoto_s3;
-
 use crate::EngineError;
 use crate::data::DynamoDbClient;
 use std::{io::Read};

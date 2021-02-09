@@ -1,10 +1,10 @@
 use crate::data::ast::Interval;
 use crate::data::position::Position;
 use lazy_static::*;
+use serde::{Deserialize, Serialize};
 use std::collections::*;
 use std::sync::*;
 use std::thread::*;
-use serde::{Serialize, Deserialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES

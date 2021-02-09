@@ -81,14 +81,14 @@ fn query_bot_version(
         Some(key) => {
             let base64decoded = match base64::decode(&key) {
                 Ok(base64decoded) => base64decoded,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key")))
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
             };
 
             match serde_json::from_slice(&base64decoded) {
                 Ok(key) => Some(key),
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key")))
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
             }
-        },
+        }
         None => None,
     };
 
@@ -162,8 +162,8 @@ pub fn get_bot_versions(
             let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
 
             Ok(serde_json::json!({"bots": bots, "pagination_key": pagination_key}))
-        },
-        None => Ok(serde_json::json!({"bots": bots}))
+        }
+        None => Ok(serde_json::json!({ "bots": bots })),
     }
 }
 
@@ -195,7 +195,12 @@ pub fn get_bot_by_version_id(
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
             let flows = get_flows(&key, db)?;
 
-            Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))}
+            Ok(Some(BotVersion {
+                bot: csml_bot.to_bot(flows),
+                version_id: bot.version_id,
+                engine_version: env!("CARGO_PKG_VERSION").to_owned(),
+            }))
+        }
         _ => Ok(None),
     }
 }
@@ -265,7 +270,11 @@ pub fn get_last_bot_version(
     let key = format!("bots/{}/versions/{}/flows.json", bot_id, bot.version_id);
     let flows = get_flows(&key, db)?;
 
-    Ok(Some(BotVersion{bot: csml_bot.to_bot(flows), version_id: bot.version_id, engine_version: env!("CARGO_PKG_VERSION").to_owned()}))
+    Ok(Some(BotVersion {
+        bot: csml_bot.to_bot(flows),
+        version_id: bot.version_id,
+        engine_version: env!("CARGO_PKG_VERSION").to_owned(),
+    }))
 }
 
 pub fn delete_bot_version(
@@ -297,8 +306,8 @@ pub fn delete_bot_version(
 fn get_bot_version_batches_and_delete_flows(
     bot_id: &str,
     db: &mut DynamoDbClient,
-) -> Result<Vec<Vec<WriteRequest>>, EngineError>{
-    let mut batches = vec!();
+) -> Result<Vec<Vec<WriteRequest>>, EngineError> {
+    let mut batches = vec![];
     let mut pagination_key = None;
 
     loop {
@@ -321,50 +330,35 @@ fn get_bot_version_batches_and_delete_flows(
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, data.version_id);
             aws_s3::delete_object(db, &key)?;
 
-            let key = serde_dynamodb::to_hashmap(&
-                DynamoDbKey {
-                    hash: Bot::get_hash(bot_id),
-                    range: Bot::get_range(&data.version_id),
-                }
-            )?;
+            let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+                hash: Bot::get_hash(bot_id),
+                range: Bot::get_range(&data.version_id),
+            })?;
 
-            write_requests.push(
-                WriteRequest{
-                    delete_request: Some(
-                        DeleteRequest{
-                            key
-                        }
-                    ),
-                    put_request: None
-                }
-            );
+            write_requests.push(WriteRequest {
+                delete_request: Some(DeleteRequest { key }),
+                put_request: None,
+            });
         }
         batches.push(write_requests);
 
         pagination_key = match data.last_evaluated_key {
-            Some(pagination_key) => {
-                Some(base64::encode(serde_json::json!(pagination_key).to_string()))
-            },
-            None => return Ok(batches)
+            Some(pagination_key) => Some(base64::encode(
+                serde_json::json!(pagination_key).to_string(),
+            )),
+            None => return Ok(batches),
         };
     }
 }
 
-pub fn delete_bot_versions(
-    bot_id: &str,
-    db: &mut DynamoDbClient,
-) -> Result<(), EngineError> {
+pub fn delete_bot_versions(bot_id: &str, db: &mut DynamoDbClient) -> Result<(), EngineError> {
     let batches = get_bot_version_batches_and_delete_flows(bot_id, db)?;
 
     for write_requests in batches {
-        let request_items = [
-            (
-                get_table_name()?,
-                write_requests
-            )
-        ].iter()
-        .cloned()
-        .collect();
+        let request_items = [(get_table_name()?, write_requests)]
+            .iter()
+            .cloned()
+            .collect();
 
         let input = BatchWriteItemInput {
             request_items,

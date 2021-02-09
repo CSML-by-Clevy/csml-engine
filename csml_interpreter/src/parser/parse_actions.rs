@@ -179,7 +179,13 @@ where
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;
     // this vec is temporary until a solution for multiple arguments in debug is found
-    let vec = Expr::VecExpr(vec!(expr), RangeInterval { start: interval.to_owned(), end:interval.to_owned() });
+    let vec = Expr::VecExpr(
+        vec![expr],
+        RangeInterval {
+            start: interval.to_owned(),
+            end: interval.to_owned(),
+        },
+    );
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -299,7 +305,10 @@ where
             StateContext::inc_rip();
             Ok((
                 s,
-                (Expr::ObjectExpr(ObjectType::Continue(inter)), instruction_info),
+                (
+                    Expr::ObjectExpr(ObjectType::Continue(inter)),
+                    instruction_info,
+                ),
             ))
         }
         ExecutionState::Normal => Err(gen_nom_failure(s, ERROR_BREAK)),

@@ -2,7 +2,7 @@ use crate::db_connectors::{conversations::*, interactions::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
     utils::{get_default_flow, get_flow_by_id, search_flow},
-    Context, CsmlBot, CsmlFlow, CsmlResult
+    Context, CsmlBot, CsmlFlow, CsmlResult,
 };
 
 use csml_interpreter::{
@@ -10,7 +10,7 @@ use csml_interpreter::{
         context::{get_hashmap_from_json, get_hashmap_from_mem},
         ApiInfo, Client, Event,
     },
-    validate_bot, load_components
+    load_components, validate_bot,
 };
 use curl::{
     easy::{Easy, List},
@@ -114,10 +114,12 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
         CsmlResult {
             errors: Some(errors),
             ..
-        } => return Err(EngineError::Interpreter(format!(
-            "invalid bot {:?}",
-            errors
-        ))),
+        } => {
+            return Err(EngineError::Interpreter(format!(
+                "invalid bot {:?}",
+                errors
+            )))
+        }
         _ => return Err(EngineError::Interpreter(format!("empty bot"))),
     }
 

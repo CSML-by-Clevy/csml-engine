@@ -262,14 +262,7 @@ fn event_step_9() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        Context::new(
-            HashMap::new(),
-            HashMap::new(),
-            None,
-            None,
-            "step_9",
-            "flow",
-        ),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_9", "flow"),
         "CSML/basic_test/event.csml",
     );
 

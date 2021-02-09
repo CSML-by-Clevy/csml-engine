@@ -5,6 +5,7 @@ pub mod parse_built_in;
 pub mod parse_comments;
 pub mod parse_expand_string;
 pub mod parse_foreach;
+pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;
 pub mod parse_if;
@@ -17,6 +18,7 @@ pub mod parse_scope;
 pub mod parse_string;
 pub mod parse_var_types;
 pub mod state_context;
+pub mod step_checksum;
 pub mod tools;
 
 use crate::linter::data::Linter;
@@ -27,9 +29,9 @@ use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use parse_comments::comment;
+use parse_functions::parse_function;
 use parse_import::parse_import;
-use parse_scope::{parse_fn_root, parse_root};
-use parse_var_types::parse_fn_args;
+use parse_scope::parse_root;
 use tools::*;
 
 use nom::error::ParseError;
@@ -91,6 +93,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                 Position::new(Interval::new_as_u32(
                     err.input.location_line(),
                     err.input.get_column() as u32,
+                    err.input.location_offset(),
                 )),
                 convert_error(Span::new(slice), err),
             )),
@@ -155,15 +158,13 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec
 where
     E: ParseError<Span<'a>>,
 {
+    let (s, start) = preceded(comment, get_interval)(s)?;
     let (s, ident) = preceded(comment, parse_step_name)(s)?;
 
-    let (s, interval) = get_interval(s)?;
-
     Position::set_step(&ident.ident);
-    Linter::add_step(&Position::get_flow(), &ident.ident, interval);
+    Linter::add_step(&Position::get_flow(), &ident.ident, start.clone());
     StateContext::clear_rip();
 
-    let (s, start) = get_interval(s)?;
     let (s, actions) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;
 
@@ -173,49 +174,6 @@ where
             instruction_type: InstructionScope::StepScope(ident.ident),
             actions: Expr::Scope {
                 block_type: BlockType::Step,
-                scope: actions,
-                range: RangeInterval { start, end },
-            },
-        }],
-    ))
-}
-
-fn parse_function<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, Vec<Instruction>, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    let (s, _) = preceded(comment, tag("fn"))(s)?;
-    let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
-    let (s, args) = parse_fn_args(s)?;
-
-    let (s, _) = match preceded(comment, tag(COLON))(s) {
-        Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
-        Ok(_) => return Err(gen_nom_failure(s, ERROR_FN_COLON)),
-        Err(Err::Error((_s, _err))) | Err(Err::Failure((_s, _err))) => {
-            return Err(gen_nom_failure(s, ERROR_FN_COLON))
-        }
-        Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
-    };
-
-    let (s, start) = get_interval(s)?;
-    StateContext::set_scope(ScopeState::Function);
-    let result = preceded(comment, parse_fn_root)(s);
-    StateContext::set_scope(ScopeState::Normal);
-    let (s, actions) = result?;
-
-    let (s, end) = get_interval(s)?;
-
-    Ok((
-        s,
-        vec![Instruction {
-            instruction_type: InstructionScope::FunctionScope {
-                name: ident.ident,
-                args,
-            },
-            actions: Expr::Scope {
-                block_type: BlockType::Function,
                 scope: actions,
                 range: RangeInterval { start, end },
             },

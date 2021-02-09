@@ -86,8 +86,8 @@ where
 }
 
 pub fn get_range_interval(vector_interval: &[Interval]) -> (Interval, Interval) {
-    let mut start = Interval::new_as_u32(0, 0);
-    let mut end = Interval::new_as_u32(0, 0);
+    let mut start = Interval::new_as_u32(0, 0, 0);
+    let mut end = Interval::new_as_u32(0, 0, 0);
 
     for (index, interval) in vector_interval.iter().enumerate() {
         if index == 0 {
@@ -107,7 +107,7 @@ where
     let (rest, string) = take_while1(|c: char| c == '_' || c == '\\' || c.is_alphanumeric())(s)?;
     // let (rest, string) = take_till1(|c: char| c != UNDERSCORE && !c.is_alphanumeric())(s)?;
 
-    // TODO: see if return String can be &str ?
+    // TODO: see if return can be &str ?
     Ok((rest, (*string.fragment()).to_string()))
 }
 

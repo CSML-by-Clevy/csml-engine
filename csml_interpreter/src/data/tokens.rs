@@ -73,7 +73,7 @@ pub const BREAK: &str = "break";
 pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
-pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, DEBUG_ACTION, GOTO, REMEMBER, USE, IMPORT, HOLD, BREAK];
+pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, DEBUG_ACTION, GOTO, REMEMBER, USE, HOLD, BREAK];
 
 pub const SCOPE_REJECTED: &[&str] = &[RETURN];
 
@@ -101,18 +101,77 @@ pub const TYPES: &[&str] = &[
 ];
 
 pub const RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, DEBUG_ACTION, USE, HOLD, GOTO,
-    MATCH, _METADATA, DEFAULT, REMEMBER, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    FOREACH,
+    IF,
+    ELSE,
+    IMPORT,
+    AS,
+    IN,
+    DO,
+    FROM,
+    EVENT,
+    FLOW,
+    FILE,
+    STEP,
+    SAY,
+    DEBUG_ACTION,
+    USE,
+    HOLD,
+    GOTO,
+    MATCH,
+    _METADATA,
+    DEFAULT,
+    REMEMBER,
+    TRUE,
+    FALSE,
+    NULL,
+    BREAK,
+    COMPONENT,
 ];
 
 pub const UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, DEBUG_ACTION, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
+    FOREACH,
+    IF,
+    ELSE,
+    IMPORT,
+    AS,
+    DO,
+    FLOW,
+    STEP,
+    SAY,
+    DEBUG_ACTION,
+    USE,
+    HOLD,
+    GOTO,
+    MATCH,
+    REMEMBER,
+    BREAK,
     COMPONENT,
 ];
 
 pub const ASSIGNATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, DEBUG_ACTION, USE, HOLD, GOTO, MATCH, REMEMBER,
-    _METADATA, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    FOREACH,
+    IF,
+    ELSE,
+    IMPORT,
+    AS,
+    DO,
+    EVENT,
+    FLOW,
+    STEP,
+    SAY,
+    DEBUG_ACTION,
+    USE,
+    HOLD,
+    GOTO,
+    MATCH,
+    REMEMBER,
+    _METADATA,
+    TRUE,
+    FALSE,
+    NULL,
+    BREAK,
+    COMPONENT,
 ];
 
 pub const TYPING: &str = "Typing";

@@ -80,18 +80,18 @@ pub fn interpret_scope(
             Expr::ObjectExpr(ObjectType::Hold(..)) => {
                 let index = instruction_info.index;
                 let map = data.step_vars.to_owned();
-                
+
                 let hold = Hold::new(
                     index,
                     step_vars_to_json(map),
                     data.context.step.clone(),
-                    data.context.flow.clone()
+                    data.context.flow.clone(),
                 );
-                
+
                 message_data.hold = Some(hold.to_owned());
 
                 MSG::send(&sender, MSG::Hold(hold));
-                
+
                 message_data.exit_condition = Some(ExitCondition::Hold);
                 return Ok(message_data);
             }
