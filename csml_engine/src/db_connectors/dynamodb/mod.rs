@@ -1,6 +1,5 @@
-use crate::data::DynamoDbClient;
+use crate::data::{DynamoDbClient};
 use crate::{Client, Database, EngineError};
-use csml_interpreter::data::csml_flow::CsmlFlow;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,35 +10,38 @@ pub mod memories;
 pub mod messages;
 pub mod nodes;
 pub mod state;
-
 pub mod utils;
+pub mod aws_s3;
 
 use crate::db_connectors::dynamodb::utils::*;
 
 use rusoto_core::Region;
 
 pub fn init() -> Result<Database, EngineError> {
-    let region_name = match std::env::var("AWS_REGION") {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    };
-    let endpoint = match std::env::var("AWS_DYNAMODB_ENDPOINT") {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    };
+    let region_name = std::env::var("AWS_REGION").ok();
+    let dynamodb_endpoint = std::env::var("AWS_DYNAMODB_ENDPOINT").ok();
+    let s3_endpoint = std::env::var("AWS_S3_ENDPOINT").ok();
 
-    let mut region = Region::default();
-    if let (Some(region_name), Some(endpoint)) = (region_name, endpoint) {
-        region = Region::Custom {
+    let mut dynamodb_region = Region::default();
+    if let (Some(region_name), Some(dynamodb_endpoint)) = (region_name.clone(), dynamodb_endpoint) {
+        dynamodb_region = Region::Custom {
             name: region_name,
-            endpoint,
+            endpoint: dynamodb_endpoint,
+        };
+    }
+
+    let mut s3_region = Region::default();
+    if let (Some(region_name), Some(dynamodb_endpoint)) = (region_name, s3_endpoint) {
+        s3_region = Region::Custom {
+            name: region_name,
+            endpoint: dynamodb_endpoint,
         };
     }
 
     // check that the table name is set in env
     get_table_name()?;
 
-    let client = DynamoDbClient::new(region);
+    let client = DynamoDbClient::new(dynamodb_region, s3_region);
 
     Ok(Database::Dynamodb(client))
 }
@@ -111,49 +113,49 @@ impl Bot {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct DynamoFlow {
-    pub hash: String,
-    pub range: String,
-    pub range_time: String,
-    pub class: String,
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct DynamoFlow {
+//     pub hash: String,
+//     pub range: String,
+//     pub range_time: String,
+//     pub class: String,
 
-    pub id: String,
-    pub bot_id: String,
-    pub version_id: String,
-    pub flow: String,
-    pub created_at: String,
-}
+//     pub id: String,
+//     pub bot_id: String,
+//     pub version_id: String,
+//     pub flow: String,
+//     pub created_at: String,
+// }
 
-impl DynamoFlow {
-    pub fn get_hash(bot_id: &str) -> String {
-        format!("bot#{}", bot_id)
-    }
+// impl DynamoFlow {
+//     pub fn get_hash(bot_id: &str) -> String {
+//         format!("bot#{}", bot_id)
+//     }
 
-    pub fn get_range(version_id: &str, id: &str) -> String {
-        make_range(&["flow", version_id, id])
-    }
+//     pub fn get_range(version_id: &str, id: &str) -> String {
+//         make_range(&["flow", version_id, id])
+//     }
 
-    pub fn new(bot_id: String, version_id: String, flow: &CsmlFlow) -> Self {
-        let id = Uuid::new_v4().to_string();
-        let now = get_date_time();
-        let class_name = "flow";
+//     pub fn new(bot_id: String, version_id: String, flow: &CsmlFlow) -> Self {
+//         let id = Uuid::new_v4().to_string();
+//         let now = get_date_time();
+//         let class_name = "flow";
 
-        let flow = base64::encode(bincode::serialize(flow).unwrap());
+//         let flow = base64::encode(bincode::serialize(flow).unwrap());
 
-        Self {
-            hash: Self::get_hash(&bot_id),
-            range: Self::get_range(&version_id, &id),
-            range_time: make_range(&[&class_name, &version_id, &now, &id]),
-            class: class_name.to_owned(),
-            id,
-            bot_id,
-            version_id,
-            flow,
-            created_at: now,
-        }
-    }
-}
+//         Self {
+//             hash: Self::get_hash(&bot_id),
+//             range: Self::get_range(&version_id, &id),
+//             range_time: make_range(&[&class_name, &version_id, &now, &id]),
+//             class: class_name.to_owned(),
+//             id,
+//             bot_id,
+//             version_id,
+//             flow,
+//             created_at: now,
+//         }
+//     }
+// }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Conversation {

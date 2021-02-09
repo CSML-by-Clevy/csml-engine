@@ -56,8 +56,10 @@ MONGODB_PASSWORD=root
 AWS_REGION=eu-west-3
 AWS_ACCESS_KEY_ID=foo
 AWS_SECRET_ACCESS_KEY=bar
-AWS_DYNAMODB_ENDPOINT=http://localhost:8000 # optional
+AWS_DYNAMODB_ENDPOINT=http://localhost:8000 # optional, defaults to the default dynamodb endpoint for the given region
 AWS_DYNAMODB_TABLE=my-csml-engine-table
+AWS_S3_ENDPOINT= # optional, defaults to the default S3 endpoint for the given region
+AWS_S3_BUCKET=my-csml-engine-bucket
 
 ENGINE_SERVER_PORT=5000 # optional, defaults to 5000
 
