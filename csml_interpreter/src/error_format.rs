@@ -119,6 +119,8 @@ pub const ERROR_LENGTH: &str =
 pub const ERROR_FIND: &str = "Find builtin expects 'in' param to be of type String. Example: Find(value, in = \"hola\", case_sensitive = true)";
 pub const ERROR_FLOOR: &str =
     "Floor builtin expects one argument of type float. Example: Floor(4.2)";
+pub const ERROR_UUID: &str =
+    "UUID builtin expects one optional argument of type String. Example: UUID(\"v4\") or UUID(\"v1\")";
 pub const ERROR_IMAGE: &str =
     "Image component expects one argument of type string. Example: Image(\"hola\")";
 pub const ERROR_URL: &str = "Url component expects one argument of type string and 2 optional string arguments: text, title. Example: Url(\"hola\", text = \"text\", title = \"title\")";
