@@ -755,11 +755,8 @@ impl PrimitiveString {
             ));
         }
 
-        let mut s = string.value.to_owned();
-
-        s.make_ascii_lowercase();
-
-        Ok(PrimitiveString::get_literal(&s, interval))
+        let s = &string.value;
+        Ok(PrimitiveString::get_literal(&s.to_lowercase(), interval))
     }
 
     fn to_uppercase(
@@ -776,11 +773,8 @@ impl PrimitiveString {
             ));
         }
 
-        let mut s = string.value.to_owned();
-
-        s.make_ascii_uppercase();
-
-        Ok(PrimitiveString::get_literal(&s, interval))
+        let s = &string.value;
+        Ok(PrimitiveString::get_literal(&s.to_uppercase(), interval))
     }
 
     fn split(
