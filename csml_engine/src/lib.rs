@@ -231,10 +231,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
 
             // all good, let's load the position and local variables
             data.context.hold = Some(Hold {
-                index: hold["index"]
-                    .as_u64()
-                    .ok_or(EngineError::Interpreter("hold index bad format".to_owned()))?
-                    as usize,
+                index: serde_json::from_value(hold["index"].clone())?,
                 step_vars: hold["step_vars"].clone(),
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),

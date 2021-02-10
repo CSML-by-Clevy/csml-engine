@@ -44,21 +44,21 @@ pub fn interpret_step(
                 data.messages.push(msg);
             }
             MSG::Hold(Hold {
-                index: new_index,
+                index,
                 step_vars,
                 step_name,
                 flow_name,
             }) => {
                 let hash = get_current_step_hash(&data, bot)?;
                 let state_hold: Value = serde_json::json!({
-                    "index": new_index,
+                    "index": index,
                     "step_vars": step_vars,
                     "hash": hash
                 });
 
                 set_state_items(data, "hold", vec![("position", &state_hold)])?;
                 data.context.hold = Some(Hold {
-                    index: new_index,
+                    index,
                     step_vars,
                     step_name,
                     flow_name,

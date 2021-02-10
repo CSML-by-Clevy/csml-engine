@@ -10,9 +10,7 @@ start:
     goto toto
 
 toto:
-    do value = "value = {{ pow(2, 5) }}"
-    say value
-    hold
+    do vec = [1, 2]
     say plop(1, 2)
 
     goto end

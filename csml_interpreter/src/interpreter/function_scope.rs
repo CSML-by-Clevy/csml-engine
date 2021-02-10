@@ -25,19 +25,17 @@ fn interpret_function_scope(
             Expr::ObjectExpr(ObjectType::Return(var)) => {
                 let lit = expr_to_literal(var, false, None, data, &mut message_data, sender)?;
 
-                // return Ok(lit);
                 message_data.exit_condition = Some(ExitCondition::Return(lit));
                 return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, None, sender)?
+                message_data = match_actions(fun, message_data, data, sender)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
                     if_statement,
                     message_data,
                     data,
-                    &None,
                     instruction_info,
                     sender,
                 )?;
@@ -51,7 +49,6 @@ fn interpret_function_scope(
                     range,
                     message_data,
                     data,
-                    &None,
                     sender,
                 )?
             }
@@ -63,13 +60,11 @@ fn interpret_function_scope(
             }
         };
 
-        // dbg!(&message_data);
         if let Some(ExitCondition::Return(_)) = &message_data.exit_condition {
             return Ok(message_data);
         }
     }
 
-    // Ok(PrimitiveNull::get_literal(interval))
     Ok(message_data)
 }
 

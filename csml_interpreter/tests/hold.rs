@@ -1,7 +1,7 @@
 mod support;
 
 use csml_interpreter::data::event::Event;
-use csml_interpreter::data::hold::Hold;
+use csml_interpreter::data::hold::{Hold, IndexInfo};
 use csml_interpreter::data::Context;
 use std::collections::HashMap;
 
@@ -53,12 +53,7 @@ fn hold_test_some_0() {
             HashMap::new(),
             HashMap::new(),
             None,
-            Some(Hold::new(
-                0,
-                serde_json::json!({}),
-                "".to_owned(),
-                "".to_owned(),
-            )),
+            Some(Hold::new(IndexInfo{command_index: 0 , loop_index: vec!()}, serde_json::json!({}), "".to_owned(), "".to_owned())),
             "start",
             "flow",
         ),
@@ -80,12 +75,7 @@ fn hold_test_some_5() {
             HashMap::new(),
             HashMap::new(),
             None,
-            Some(Hold::new(
-                5,
-                serde_json::json!({}),
-                "".to_owned(),
-                "".to_owned(),
-            )),
+            Some(Hold::new(IndexInfo{command_index: 5 , loop_index: vec!()}, serde_json::json!({}), "".to_owned(), "".to_owned())),
             "start",
             "flow",
         ),
@@ -107,12 +97,7 @@ fn hold_test_some_12() {
             HashMap::new(),
             HashMap::new(),
             None,
-            Some(Hold::new(
-                12,
-                serde_json::json!({}),
-                "".to_owned(),
-                "".to_owned(),
-            )),
+            Some(Hold::new(IndexInfo{command_index: 12 , loop_index: vec!()}, serde_json::json!({}), "".to_owned(), "".to_owned())),
             "start",
             "flow",
         ),
@@ -134,12 +119,7 @@ fn hold_test_some_14() {
             HashMap::new(),
             HashMap::new(),
             None,
-            Some(Hold::new(
-                14,
-                serde_json::json!({}),
-                "".to_owned(),
-                "".to_owned(),
-            )),
+            Some(Hold::new(IndexInfo{command_index: 14 , loop_index: vec!()}, serde_json::json!({}), "".to_owned(), "".to_owned())),
             "start",
             "flow",
         ),
@@ -161,12 +141,7 @@ fn hold_test_some_17() {
             HashMap::new(),
             HashMap::new(),
             None,
-            Some(Hold::new(
-                17,
-                serde_json::json!({}),
-                "".to_owned(),
-                "".to_owned(),
-            )),
+            Some(Hold::new(IndexInfo{command_index: 17 , loop_index: vec!()}, serde_json::json!({}), "".to_owned(), "".to_owned())),
             "start",
             "flow",
         ),

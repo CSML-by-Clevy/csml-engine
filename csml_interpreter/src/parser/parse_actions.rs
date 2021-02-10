@@ -5,7 +5,7 @@ use crate::data::{
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
 use crate::error_format::{
-    gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_HOLD,
+    gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_BREAK, ERROR_FN_SCOPE,
     ERROR_REMEMBER, ERROR_RETURN, ERROR_SCOPE, ERROR_USE,
 };
 // use crate::linter::Linter;
@@ -246,20 +246,15 @@ where
 
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
-    match StateContext::get_state() {
-        ExecutionState::Loop => Err(gen_nom_failure(s, ERROR_HOLD)),
-        ExecutionState::Normal => {
-            let instruction_info = InstructionInfo {
-                index: StateContext::get_rip(),
-                total: 0,
-            };
-            StateContext::inc_rip();
-            Ok((
-                s,
-                (Expr::ObjectExpr(ObjectType::Hold(inter)), instruction_info),
-            ))
-        }
-    }
+    let instruction_info = InstructionInfo {
+        index: StateContext::get_rip(),
+        total: 0,
+    };
+    StateContext::inc_rip();
+    Ok((
+        s,
+        (Expr::ObjectExpr(ObjectType::Hold(inter)), instruction_info),
+    ))
 }
 
 fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>

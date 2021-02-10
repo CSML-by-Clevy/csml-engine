@@ -31,7 +31,6 @@ pub const ERROR_IMPORT_ARGUMENT: &str =
     "import expect valid function name. Example: import function from flow";
 pub const ERROR_BREAK: &str = "break can only be used inside foreach";
 pub const ERROR_RETURN: &str = "return expects a value to return";
-pub const ERROR_HOLD: &str = "hold cannot be used inside foreach";
 pub const ERROR_LEFT_BRACE: &str = "expecting '('";
 pub const ERROR_RIGHT_BRACE: &str = "expecting ')'";
 pub const ERROR_RIGHT_BRACKET: &str = "expecting ']'";

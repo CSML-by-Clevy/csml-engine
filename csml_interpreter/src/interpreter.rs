@@ -9,7 +9,7 @@ pub use json_to_rust::{json_to_literal, memory_to_literal};
 
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG};
+use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG, IndexInfo};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statement},
@@ -42,7 +42,6 @@ fn step_vars_to_json(map: HashMap<String, Literal>) -> serde_json::Value {
 pub fn interpret_scope(
     actions: &Block,
     data: &mut Data,
-    instruction_index: &Option<usize>,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let mut message_data = MessageData::default();
@@ -50,9 +49,11 @@ pub fn interpret_scope(
     for (action, instruction_info) in actions.commands.iter() {
         let instruction_total = instruction_info.index + instruction_info.total;
 
-        if let Some(instruction_index) = instruction_index {
-            if *instruction_index >= instruction_total {
+        if let Some(hold) = &mut data.context.hold {
+            if hold.index.command_index >= instruction_total {
                 continue;
+            } else if hold.index.command_index + 1 == instruction_info.index {
+                data.context.hold = None;
             }
         }
 
@@ -82,7 +83,7 @@ pub fn interpret_scope(
                 let map = data.step_vars.to_owned();
 
                 let hold = Hold::new(
-                    index,
+                    IndexInfo{command_index:index, loop_index:data.loop_indexs.clone()},
                     step_vars_to_json(map),
                     data.context.step.clone(),
                     data.context.flow.clone(),
@@ -91,33 +92,30 @@ pub fn interpret_scope(
                 message_data.hold = Some(hold.to_owned());
 
                 MSG::send(&sender, MSG::Hold(hold));
-
                 message_data.exit_condition = Some(ExitCondition::Hold);
                 return Ok(message_data);
             }
             Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, *instruction_index, &sender)?
+                message_data = match_actions(fun, message_data, data, &sender)?
             }
             Expr::IfExpr(ref if_statement) => {
                 message_data = solve_if_statement(
                     if_statement,
                     message_data,
                     data,
-                    instruction_index,
                     instruction_info,
                     &sender,
                 )?;
             }
-            Expr::ForEachExpr(ident, i, expr, block, range) => {
+            Expr::ForEachExpr(ident, index, expr, block, range) => {
                 message_data = for_loop(
                     ident,
-                    i,
+                    index,
                     expr,
                     block,
                     range,
                     message_data,
                     data,
-                    instruction_index,
                     &sender,
                 )?
             }

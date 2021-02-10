@@ -23,6 +23,8 @@ fn init_new_scope<'a>(data: &'a Data, context: &'a mut Context) -> Data<'a> {
         &data.flow,
         context,
         &data.event,
+        data.loop_indexs.clone(),
+        data.loop_index,
         HashMap::new(),
         &data.custom_component,
         &data.native_component,
