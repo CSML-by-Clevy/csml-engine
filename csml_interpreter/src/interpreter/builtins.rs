@@ -49,6 +49,7 @@ pub fn match_builtin(
         RANDOM => random(interval),
         DEBUG => debug(args, interval),
         FLOOR => floor(args, interval),
+        UUID => uuid_command(args, interval),
 
         //old builtin
         _object => object(args, interval),

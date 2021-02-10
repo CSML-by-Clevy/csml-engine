@@ -31,10 +31,10 @@ pub fn init() -> Result<Database, EngineError> {
     }
 
     let mut s3_region = Region::default();
-    if let (Some(region_name), Some(dynamodb_endpoint)) = (region_name, s3_endpoint) {
+    if let (Some(region_name), Some(s3_endpoint)) = (region_name, s3_endpoint) {
         s3_region = Region::Custom {
             name: region_name,
-            endpoint: dynamodb_endpoint,
+            endpoint: s3_endpoint,
         };
     }
 
