@@ -1,0 +1,12 @@
+start:
+    goto end
+
+v1:
+    say UUID("v1")
+
+v4:
+    say UUID("v4")
+
+
+v4_no_arg:
+    say UUID()

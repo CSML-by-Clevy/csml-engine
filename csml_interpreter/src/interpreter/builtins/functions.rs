@@ -1,9 +1,15 @@
 use crate::data::position::Position;
 use crate::data::primitive::{
-    array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
+    PrimitiveArray, PrimitiveBoolean, PrimitiveFloat, PrimitiveInt,
+    PrimitiveString
 };
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
+use uuid::Uuid;
+use uuid::v1::{Timestamp, Context};
+
 use rand::seq::SliceRandom;
 use rand::Rng;
 
@@ -153,6 +159,44 @@ pub fn floor(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
         _ => Err(gen_error_info(
             Position::new(interval),
             ERROR_FLOOR.to_owned(),
+        )),
+    }
+}
+
+pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+
+    if args.len() == 0 {
+        return Ok(PrimitiveString::get_literal(&Uuid::new_v4().to_string(), interval))
+    }
+    
+    match args.get("value", 0) {
+        Some(literal) => {
+            let arg =
+                Literal::get_value::<String>(&literal.primitive, interval, ERROR_FLOOR.to_owned())?;
+
+            match arg {
+                arg if arg == "v1" => {
+                    let time = SystemTime::now().duration_since(UNIX_EPOCH)?;
+                    let context = Context::new(rand::thread_rng().gen());
+                    let ts = Timestamp::from_unix(&context, time.as_secs(), time.subsec_nanos());
+
+                    let node_id = &[
+                        rand::thread_rng().gen(), rand::thread_rng().gen(),
+                        rand::thread_rng().gen(), rand::thread_rng().gen(),
+                        rand::thread_rng().gen(), rand::thread_rng().gen(),
+                    ];
+                    Ok(PrimitiveString::get_literal(&Uuid::new_v1(ts, node_id)?.to_string(), interval))
+                },
+                arg if arg == "v4" => Ok(PrimitiveString::get_literal(&Uuid::new_v4().to_string(), interval)),
+                _ => Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_UUID.to_owned(),
+                ))
+            }
+        }
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_UUID.to_owned(),
         )),
     }
 }

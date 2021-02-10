@@ -1,8 +1,8 @@
 start:
     goto init_obj
 
-init_obj:
-    do Object(
+fn ini_obj():
+    return Object(
         value = "val",
         toto = Object( 
             plop = 4,
@@ -14,10 +14,10 @@ init_obj:
         test = Object(pui = 7),
         vec = [ Object(test = 1) , 2, 3, 4, 5]
 
-    ) as var
+    )
 
 step1:
-    import step init_obj
+    do var = ini_obj()
 
     say var.vec[0].test
     do var.vec[0].test = 4
@@ -26,7 +26,7 @@ step1:
     goto end
 
 step2:
-    import step init_obj
+    do var = ini_obj()
 
     say var.vec
     do var.vec[0] = 1

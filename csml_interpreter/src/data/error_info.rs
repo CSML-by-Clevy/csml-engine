@@ -57,3 +57,21 @@ impl From<serde_json::Error> for ErrorInfo {
         }
     }
 }
+
+impl From<uuid::Error> for ErrorInfo {
+    fn from(e: uuid::Error) -> Self {
+        Self {
+            position: Position::default(),
+            message: e.to_string(),
+        }
+    }
+}
+
+impl From<std::time::SystemTimeError> for ErrorInfo {
+    fn from(e: std::time::SystemTimeError) -> Self {
+        Self {
+            position: Position::default(),
+            message: e.to_string(),
+        }
+    }
+}
