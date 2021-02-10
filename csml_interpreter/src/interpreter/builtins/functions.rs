@@ -3,9 +3,13 @@ use crate::data::primitive::{
     PrimitiveArray, PrimitiveBoolean, PrimitiveFloat, PrimitiveInt,
     PrimitiveString
 };
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
 use uuid::Uuid;
+use uuid::v1::{Timestamp, Context};
+
 use rand::seq::SliceRandom;
 use rand::Rng;
 
@@ -159,8 +163,6 @@ pub fn floor(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
     }
 }
 
-use uuid::v1::{Timestamp, Context};
-
 pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
 
     if args.len() == 0 {
@@ -174,8 +176,10 @@ pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, Error
 
             match arg {
                 arg if arg == "v1" => {
-                    let context = Context::new(42);
-                    let ts = Timestamp::from_unix(&context, 1497624119, 1234);
+                    let time = SystemTime::now().duration_since(UNIX_EPOCH)?;
+                    let context = Context::new(rand::thread_rng().gen());
+                    let ts = Timestamp::from_unix(&context, time.as_secs(), time.subsec_nanos());
+
                     let node_id = &[
                         rand::thread_rng().gen(), rand::thread_rng().gen(),
                         rand::thread_rng().gen(), rand::thread_rng().gen(),
