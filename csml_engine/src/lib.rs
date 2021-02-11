@@ -25,7 +25,7 @@ use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
 
-use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, Memory};
+use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory};
 use std::{collections::HashMap, env, time::SystemTime};
 
 /**
@@ -229,9 +229,17 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 _ => return Ok(()),
             };
 
+            let index = match serde_json::from_value::<IndexInfo>(hold["index"].clone()) {
+                Ok(index) => index,
+                Err(_) => {
+                    delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+                    return Ok(())
+                }
+            };
+
             // all good, let's load the position and local variables
             data.context.hold = Some(Hold {
-                index: serde_json::from_value(hold["index"].clone())?,
+                index,
                 step_vars: hold["step_vars"].clone(),
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),
