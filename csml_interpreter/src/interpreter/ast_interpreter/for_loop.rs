@@ -33,7 +33,7 @@ pub fn for_loop(
         ERROR_FOREACH.to_owned(),
     )?;
     let mut skip_value = 0;
-    hold_index_start_loop(data, &mut array, &mut skip_value);
+    let array = hold_index_start_loop(data, &mut array, &mut skip_value);
 
     for (for_loop_index, elem) in array.iter().enumerate() {
         data.step_vars

@@ -53,17 +53,23 @@ impl Hold {
 ////////////////////////////////////////////////////////////////////////////////
 
 
-pub fn hold_index_start_loop<'a>(data: &mut Data, mut _array: &'a [Literal], skip_value: &mut usize) {
+pub fn hold_index_start_loop<'a>(
+    data: &mut Data,
+    mut array: &'a [Literal],
+    skip_value: &mut usize
+) ->  &'a [Literal]{
     // add the new loop index in stack
     data.loop_indexs.push(0);
 
     if let Some(hold) = &mut data.context.hold {
         let loop_index = &mut hold.index.loop_index;
         if data.loop_index < loop_index.len() {
-            _array = &_array[loop_index[data.loop_index]..];
+            array = &array[loop_index[data.loop_index]..];
             *skip_value = loop_index[data.loop_index];
         }
     }
+
+    array
 }
 
 
