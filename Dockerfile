@@ -1,4 +1,7 @@
-FROM ubuntu:19.04
+FROM ubuntu:18.04
+
+RUN apt update && apt install -y ca-certificates && apt clean
+RUN update-ca-certificates
 
 WORKDIR /usr/src/csml
 
