@@ -213,12 +213,10 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
 fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), EngineError> {
     match get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
-        Ok(Some(string)) => {
-            let hold = serde_json::to_value(string)?;
-
+        Ok(Some(hold)) => {
             match hold.get("hash") {
                 Some(hash_value) => {
-                    let flow_hash = get_current_step_hash(&data, bot)?;
+                    let flow_hash = get_current_step_hash(&data.context, bot)?;
                     // cleanup the current hold and restart flow
                     if flow_hash != *hash_value {
                         data.context.step = "start".to_owned();

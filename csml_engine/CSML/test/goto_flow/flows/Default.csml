@@ -1,0 +1,13 @@
+start:
+	if (event == "goto flow3")
+		goto flow flow3
+
+	say "{{event}}"
+	goto step2
+
+step2:
+	hold
+	remember var = event
+	say "{{var}}"
+	goto flow flow2
+

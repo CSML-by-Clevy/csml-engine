@@ -1,0 +1,3 @@
+start:
+    say "flow4"
+    goto end

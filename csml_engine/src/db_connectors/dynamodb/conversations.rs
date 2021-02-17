@@ -57,6 +57,7 @@ pub fn close_conversation(
     };
 
     let future = db.client.get_item(get_input);
+
     let res = db.runtime.block_on(future)?;
 
     // If no conversation matches the request, we assume it's already closed and move on
