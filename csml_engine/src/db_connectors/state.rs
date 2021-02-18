@@ -78,12 +78,19 @@ mod tests {
 
     #[test]
     fn ok_hold() {
-        let client = Client{bot_id:"bot_id".to_owned(), channel_id: "channel_id".to_owned(), user_id: "test".to_owned()};
+        let client = Client {
+            bot_id: "bot_id".to_owned(),
+            channel_id: "channel_id".to_owned(),
+            user_id: "test".to_owned(),
+        };
         let mut db = init_db().unwrap();
 
         let hash = "Hash".to_owned();
         let index_info = Hold {
-            index: IndexInfo { command_index: 42, loop_index: vec!()},
+            index: IndexInfo {
+                command_index: 42,
+                loop_index: vec![],
+            },
             step_vars: serde_json::json!({}),
             step_name: "step_name".to_owned(),
             flow_name: "flow_name".to_owned(),
@@ -97,22 +104,28 @@ mod tests {
 
         set_state_items(&client, "hold", vec![("position", &state_hold)], &mut db).unwrap();
 
-        let hold  = get_state_key(&client, "hold", "position", &mut db).unwrap().unwrap();
+        let hold = get_state_key(&client, "hold", "position", &mut db)
+            .unwrap()
+            .unwrap();
 
         let index_result = match serde_json::from_value::<IndexInfo>(hold["index"].clone()) {
             Ok(index) => index,
-            Err(_) => panic!("value not found in db")
+            Err(_) => panic!("value not found in db"),
         };
 
-        if index_result.loop_index != index_info.index.loop_index && index_result.command_index != index_info.index.command_index {
+        if index_result.loop_index != index_info.index.loop_index
+            && index_result.command_index != index_info.index.command_index
+        {
             panic!("db get hodl got the wrong value")
         }
 
         delete_state_key(&client, "hold", "position", &mut db).unwrap();
 
         match get_state_key(&client, "hold", "position", &mut db).unwrap() {
-            Some(_value) => panic!("get_state_key should not have found a hold because it has deleted just before"),
-            None => {},
+            Some(_value) => panic!(
+                "get_state_key should not have found a hold because it has deleted just before"
+            ),
+            None => {}
         }
     }
 }

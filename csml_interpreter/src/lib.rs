@@ -11,7 +11,7 @@ pub use parser::step_checksum::get_step;
 use interpreter::interpret_scope;
 use parser::parse_flow;
 
-use data::{ast::{Expr, Flow, InstructionScope, Interval}};
+use data::ast::{Expr, Flow, InstructionScope, Interval};
 use data::context::get_hashmap_from_mem;
 use data::error_info::ErrorInfo;
 use data::event::Event;
@@ -172,14 +172,6 @@ pub fn interpret(
         Some(hold) => get_hashmap_from_mem(&hold.step_vars),
         None => HashMap::new(),
     };
-
-    // let mut instruction_index = match context.hold {
-    //     Some(result) => {
-    //         context.hold = None;
-    //         Some((result.command_index, result.loop_index))
-    //     }
-    //     None => None
-    // };
 
     let native = match bot.native_components {
         Some(ref obj) => obj.to_owned(),

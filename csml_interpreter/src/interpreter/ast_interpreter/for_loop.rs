@@ -1,10 +1,10 @@
 use crate::data::primitive::int::PrimitiveInt;
 use crate::data::{
-    ast::*, Data, Literal, MessageData, MSG, 
+    ast::*,
     hold::{
-        hold_index_start_loop, hold_index_end_loop,
-        hold_loop_incrs_index, hold_loop_decrs_index
-    }
+        hold_index_end_loop, hold_index_start_loop, hold_loop_decrs_index, hold_loop_incrs_index,
+    },
+    Data, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::interpret_scope;

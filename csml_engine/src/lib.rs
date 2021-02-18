@@ -25,7 +25,9 @@ use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
 
-use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory};
+use csml_interpreter::data::{
+    csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory,
+};
 use std::{collections::HashMap, env, time::SystemTime};
 
 /**
@@ -231,7 +233,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 Ok(index) => index,
                 Err(_) => {
                     delete_state_key(&data.client, "hold", "position", &mut data.db)?;
-                    return Ok(())
+                    return Ok(());
                 }
             };
 

@@ -1,0 +1,10 @@
+start:
+    say "flow5 start"
+    do var_step = "step1"
+    goto $var_step
+
+step1:
+    say "flow5 step1"
+    do var_flow = "flow4"
+    do var_step = "start"
+    goto $var_step@$var_flow

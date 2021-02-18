@@ -1,3 +1,4 @@
+use crate::data::position::Position;
 use crate::data::{
     ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data, Literal,
     Memory, MemoryType, MessageData, MSG,
@@ -5,10 +6,9 @@ use crate::data::{
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*, resolve_fn_args,
-    search_goto_var_memory
+    search_goto_var_memory,
 };
 use crate::parser::ExitCondition;
-use crate::data::position::Position;
 use std::sync::mpsc;
 
 fn get_var_info<'a>(
@@ -142,7 +142,8 @@ pub fn match_actions(
         }
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
             let step = search_goto_var_memory(&step, &mut msg_data, data)?;
-            let mut flow_opt = Some(search_goto_var_memory(&flow, &mut msg_data, data)?);
+            let flow = search_goto_var_memory(&flow, &mut msg_data, data)?;
+            let mut flow_opt = Some(flow.clone());
 
             msg_data.exit_condition = Some(ExitCondition::Goto);
 

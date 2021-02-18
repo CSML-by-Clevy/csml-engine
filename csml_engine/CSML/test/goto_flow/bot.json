@@ -20,6 +20,14 @@
     {
       "name": "flow4",
       "commands": ["/flow4"]
+    },
+    {
+      "name": "flow5",
+      "commands": ["/flow5"]
+    },
+    {
+      "name": "flow6",
+      "commands": ["/flow6"]
     }
   ],
   "files": [],

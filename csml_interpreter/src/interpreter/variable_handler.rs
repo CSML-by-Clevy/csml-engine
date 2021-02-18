@@ -16,7 +16,7 @@ use crate::data::primitive::{
     null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString, PrimitiveType,
 };
 use crate::data::{
-    ast::{Expr, Function, Identifier, Interval, PathLiteral, PathState, GotoValueType},
+    ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
     tokens::{COMPONENT, EVENT, _METADATA},
     ArgsType, Data, Literal, MemoryType, MessageData, MSG,
 };
@@ -467,21 +467,16 @@ pub fn search_goto_var_memory<'a>(
     match var {
         GotoValueType::Name(ident) => Ok(ident.ident.clone()),
         GotoValueType::Variable(ident) => {
-            let (literal, ..) = get_var_from_mem(
-                ident.clone(),
-                false,
-                None,
-                data,
-                msg_data,
-                &None
-            )?;
+            let (literal, ..) =
+                get_var_from_mem(ident.clone(), false, None, data, msg_data, &None)?;
 
             Ok(Literal::get_value::<String>(
                 &literal.primitive,
                 literal.interval,
                 format!("< {} > {}", ident.ident, ERROR_FIND_MEMORY),
-            )?.to_owned())
-        },
+            )?
+            .to_owned())
+        }
     }
 }
 

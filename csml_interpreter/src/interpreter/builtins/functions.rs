@@ -1,14 +1,13 @@
 use crate::data::position::Position;
 use crate::data::primitive::{
-    PrimitiveArray, PrimitiveBoolean, PrimitiveFloat, PrimitiveInt,
-    PrimitiveString
+    PrimitiveArray, PrimitiveBoolean, PrimitiveFloat, PrimitiveInt, PrimitiveString,
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
+use uuid::v1::{Context, Timestamp};
 use uuid::Uuid;
-use uuid::v1::{Timestamp, Context};
 
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -164,11 +163,13 @@ pub fn floor(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
 }
 
 pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
-
     if args.len() == 0 {
-        return Ok(PrimitiveString::get_literal(&Uuid::new_v4().to_string(), interval))
+        return Ok(PrimitiveString::get_literal(
+            &Uuid::new_v4().to_string(),
+            interval,
+        ));
     }
-    
+
     match args.get("value", 0) {
         Some(literal) => {
             let arg =
@@ -181,17 +182,26 @@ pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, Error
                     let ts = Timestamp::from_unix(&context, time.as_secs(), time.subsec_nanos());
 
                     let node_id = &[
-                        rand::thread_rng().gen(), rand::thread_rng().gen(),
-                        rand::thread_rng().gen(), rand::thread_rng().gen(),
-                        rand::thread_rng().gen(), rand::thread_rng().gen(),
+                        rand::thread_rng().gen(),
+                        rand::thread_rng().gen(),
+                        rand::thread_rng().gen(),
+                        rand::thread_rng().gen(),
+                        rand::thread_rng().gen(),
+                        rand::thread_rng().gen(),
                     ];
-                    Ok(PrimitiveString::get_literal(&Uuid::new_v1(ts, node_id)?.to_string(), interval))
-                },
-                arg if arg == "v4" => Ok(PrimitiveString::get_literal(&Uuid::new_v4().to_string(), interval)),
+                    Ok(PrimitiveString::get_literal(
+                        &Uuid::new_v1(ts, node_id)?.to_string(),
+                        interval,
+                    ))
+                }
+                arg if arg == "v4" => Ok(PrimitiveString::get_literal(
+                    &Uuid::new_v4().to_string(),
+                    interval,
+                )),
                 _ => Err(gen_error_info(
                     Position::new(interval),
                     ERROR_UUID.to_owned(),
-                ))
+                )),
             }
         }
         _ => Err(gen_error_info(

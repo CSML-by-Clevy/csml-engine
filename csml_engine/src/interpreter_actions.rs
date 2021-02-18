@@ -56,7 +56,12 @@ pub fn interpret_step(
                     "hash": hash
                 });
 
-                set_state_items(&data.client, "hold", vec![("position", &state_hold)], &mut data.db)?;
+                set_state_items(
+                    &data.client,
+                    "hold",
+                    vec![("position", &state_hold)],
+                    &mut data.db,
+                )?;
                 data.context.hold = Some(Hold {
                     index,
                     step_vars,

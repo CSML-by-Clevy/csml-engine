@@ -5,8 +5,8 @@ use crate::data::{
     warnings::{WARNING_REMEMBER_AS, WARNING_USE},
 };
 use crate::error_format::{
-    gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_BREAK, ERROR_FN_SCOPE,
-    ERROR_REMEMBER, ERROR_RETURN, ERROR_SCOPE, ERROR_USE,
+    gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_BREAK, ERROR_FN_SCOPE, ERROR_REMEMBER,
+    ERROR_RETURN, ERROR_SCOPE, ERROR_USE,
 };
 // use crate::linter::Linter;
 use crate::parser::{

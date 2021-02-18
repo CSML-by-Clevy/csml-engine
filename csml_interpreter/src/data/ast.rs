@@ -103,15 +103,12 @@ pub struct Instruction {
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum GotoValueType {
     Variable(Identifier),
-    Name(Identifier)
+    Name(Identifier),
 }
 impl GotoValueType {
     pub fn to_string(&self) -> String {
         match self {
-            GotoValueType::Variable(value)
-            |GotoValueType::Name(value) => {
-                value.ident.to_string()
-            }
+            GotoValueType::Variable(value) | GotoValueType::Name(value) => value.ident.to_string(),
         }
     }
 }
@@ -120,7 +117,10 @@ impl GotoValueType {
 pub enum GotoType {
     Step(GotoValueType),
     Flow(GotoValueType),
-    StepFlow { step: GotoValueType, flow: GotoValueType },
+    StepFlow {
+        step: GotoValueType,
+        flow: GotoValueType,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

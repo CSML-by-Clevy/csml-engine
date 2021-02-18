@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use crate::data::{Data, Literal};
+use serde::{Deserialize, Serialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -40,7 +40,10 @@ impl Hold {
 
     pub fn default() -> Self {
         Self {
-            index: IndexInfo{command_index: 0 , loop_index: vec![]},
+            index: IndexInfo {
+                command_index: 0,
+                loop_index: vec![],
+            },
             step_vars: serde_json::json!({}),
             step_name: "".to_owned(),
             flow_name: "".to_owned(),
@@ -52,12 +55,11 @@ impl Hold {
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-
 pub fn hold_index_start_loop<'a>(
     data: &mut Data,
     mut array: &'a [Literal],
-    skip_value: &mut usize
-) ->  &'a [Literal]{
+    skip_value: &mut usize,
+) -> &'a [Literal] {
     // add the new loop index in stack
     data.loop_indexs.push(0);
 
@@ -71,7 +73,6 @@ pub fn hold_index_start_loop<'a>(
 
     array
 }
-
 
 // remove the loop index of the stack
 pub fn hold_index_end_loop(data: &mut Data) {

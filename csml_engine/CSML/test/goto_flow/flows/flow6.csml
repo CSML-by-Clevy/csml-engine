@@ -1,0 +1,15 @@
+start:
+    say "flow6 start"
+    remember object = {"val": 1}
+    remember message = "message"
+    remember int = 4
+    remember float = 4.2
+    remember vec = [21, 42, 84]
+    goto step step1
+
+step1:
+    say object.to_string()
+    say message
+    say int.to_string()
+    say float.to_string()
+    say vec.to_string()

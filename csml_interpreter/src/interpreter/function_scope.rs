@@ -28,29 +28,13 @@ fn interpret_function_scope(
                 message_data.exit_condition = Some(ExitCondition::Return(lit));
                 return Ok(message_data);
             }
-            Expr::ObjectExpr(fun) => {
-                message_data = match_actions(fun, message_data, data, sender)?
-            }
+            Expr::ObjectExpr(fun) => message_data = match_actions(fun, message_data, data, sender)?,
             Expr::IfExpr(ref if_statement) => {
-                message_data = solve_if_statement(
-                    if_statement,
-                    message_data,
-                    data,
-                    instruction_info,
-                    sender,
-                )?;
+                message_data =
+                    solve_if_statement(if_statement, message_data, data, instruction_info, sender)?;
             }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
-                message_data = for_loop(
-                    ident,
-                    i,
-                    expr,
-                    block,
-                    range,
-                    message_data,
-                    data,
-                    sender,
-                )?
+                message_data = for_loop(ident, i, expr, block, range, message_data, data, sender)?
             }
             e => {
                 return Err(gen_error_info(
