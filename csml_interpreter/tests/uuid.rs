@@ -26,7 +26,6 @@ fn ok_v1() {
         .unwrap();
 }
 
-
 #[test]
 fn ok_v4() {
     let msg = format_message(
@@ -48,7 +47,14 @@ fn ok_v4() {
 fn ok_v4_no_arg() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "v4_no_arg", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "v4_no_arg",
+            "flow",
+        ),
         "CSML/basic_test/built-in/uuid.csml",
     );
 

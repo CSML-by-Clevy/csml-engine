@@ -9,7 +9,7 @@ pub use json_to_rust::{json_to_literal, memory_to_literal};
 
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::{ast::*, Data, Hold, Literal, MessageData, MSG, IndexInfo};
+use crate::data::{ast::*, Data, Hold, IndexInfo, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::{for_loop, match_actions, solve_if_statement},
@@ -83,7 +83,10 @@ pub fn interpret_scope(
                 let map = data.step_vars.to_owned();
 
                 let hold = Hold::new(
-                    IndexInfo{command_index:index, loop_index:data.loop_indexs.clone()},
+                    IndexInfo {
+                        command_index: index,
+                        loop_index: data.loop_indexs.clone(),
+                    },
                     step_vars_to_json(map),
                     data.context.step.clone(),
                     data.context.flow.clone(),

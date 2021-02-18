@@ -1,8 +1,9 @@
-use crate::data::{DynamoDbClient};
+use crate::data::DynamoDbClient;
 use crate::{Client, Database, EngineError};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub mod aws_s3;
 pub mod bot;
 pub mod conversations;
 pub mod interactions;
@@ -11,7 +12,6 @@ pub mod messages;
 pub mod nodes;
 pub mod state;
 pub mod utils;
-pub mod aws_s3;
 
 use crate::db_connectors::dynamodb::utils::*;
 

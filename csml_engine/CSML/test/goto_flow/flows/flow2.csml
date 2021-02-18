@@ -1,0 +1,10 @@
+start:
+	foreach (value) in [1, 2, 3] {
+		say "start[{{value}}]"
+		hold
+		say "end[{{value}}]:{{event}}"
+	}
+	goto end
+
+fn my_fn():
+	return "hello from fn"

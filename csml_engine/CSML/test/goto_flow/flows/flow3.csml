@@ -1,0 +1,5 @@
+import my_fn from flow2
+
+start:
+	say my_fn()
+	goto end

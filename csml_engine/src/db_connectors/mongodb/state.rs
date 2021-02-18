@@ -1,7 +1,6 @@
-use crate::db_connectors::mongodb as mongodb_connector;
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
-    ConversationInfo, EngineError,
+    EngineError,
 };
 use bson::{doc, Bson, Document};
 use csml_interpreter::data::Client;
@@ -73,16 +72,16 @@ pub fn get_state_key(
 }
 
 pub fn set_state_items(
-    data: &ConversationInfo,
+    client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
+    db: &mongodb::Database,
 ) -> Result<(), EngineError> {
     if keys_values.len() == 0 {
         return Ok(());
     }
 
-    let state_data = format_state_data(&data.client, _type, keys_values)?;
-    let db = mongodb_connector::get_db(&data.db)?;
+    let state_data = format_state_data(client, _type, keys_values)?;
     let state = db.collection("state");
     state.insert_many(state_data, None)?;
 

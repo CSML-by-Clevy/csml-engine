@@ -1,6 +1,9 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::{dynamodb::{Bot, DynamoDbKey, aws_s3}, BotVersion,};
-use crate::{EngineError};
+use crate::db_connectors::{
+    dynamodb::{aws_s3, Bot, DynamoDbKey},
+    BotVersion,
+};
+use crate::EngineError;
 use csml_interpreter::data::{csml_bot::DynamoBot, csml_flow::CsmlFlow};
 
 use rusoto_dynamodb::*;
@@ -31,10 +34,7 @@ pub fn create_bot_version(
     Ok(data.version_id.to_owned())
 }
 
-pub fn get_flows(
-    key: &str,
-    db: &mut DynamoDbClient,
-) -> Result<Vec<CsmlFlow>, EngineError> {
+pub fn get_flows(key: &str, db: &mut DynamoDbClient) -> Result<Vec<CsmlFlow>, EngineError> {
     let object = aws_s3::get_object(db, key)?;
     let flows: Vec<CsmlFlow> = serde_json::from_str(&object).unwrap();
 
@@ -282,7 +282,6 @@ pub fn delete_bot_version(
     version_id: &str,
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
-
     let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
     aws_s3::delete_object(db, &key)?;
 

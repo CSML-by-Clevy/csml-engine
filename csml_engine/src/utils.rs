@@ -7,10 +7,11 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    data::{ast::Flow, Client, Event, Interval, Memory, Message},
+    data::{ast::Flow, Client, Context, Event, Interval, Memory, Message},
     get_step,
     interpreter::json_to_literal,
 };
+use rand::seq::SliceRandom;
 use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::env;
@@ -216,7 +217,6 @@ pub fn get_default_flow<'a>(bot: &'a CsmlBot) -> Result<&'a CsmlFlow, EngineErro
     }
 }
 
-use rand::seq::SliceRandom;
 /**
  * Find a flow in a bot based on the user's input.
  * - flow_trigger events must will match a flow's id or name and reset the hold position
@@ -261,19 +261,16 @@ pub fn search_flow<'a>(
     }
 }
 
-pub fn get_current_step_hash(
-    data: &ConversationInfo,
-    bot: &CsmlBot,
-) -> Result<String, EngineError> {
+pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String, EngineError> {
     let mut hash = Md5::new();
 
-    let flow = &get_flow_by_id(&data.context.flow, &bot.flows)?.content;
+    let flow = &get_flow_by_id(&context.flow, &bot.flows)?.content;
 
     let ast = match &bot.bot_ast {
         Some(ast) => {
             let base64decoded = base64::decode(&ast).unwrap();
             let csml_bot: HashMap<String, Flow> = bincode::deserialize(&base64decoded[..]).unwrap();
-            match csml_bot.get(&data.context.flow) {
+            match csml_bot.get(&context.flow) {
                 Some(flow) => flow.to_owned(),
                 None => csml_bot
                     .get(&get_default_flow(&bot)?.name)
@@ -284,7 +281,7 @@ pub fn get_current_step_hash(
         None => return Err(EngineError::Manager(format!("not valid ast"))),
     };
 
-    let step = get_step(&data.context.step, &flow, &ast);
+    let step = get_step(&context.step, &flow, &ast);
     hash.update(step.as_bytes());
 
     Ok(format!("{:x}", hash.finalize()))

@@ -1,15 +1,19 @@
-use crate::EngineError;
 use crate::data::DynamoDbClient;
-use std::{io::Read};
-use rusoto_s3::{S3, GetObjectRequest, DeleteObjectRequest, PutObjectRequest};
+use crate::EngineError;
+use rusoto_s3::{DeleteObjectRequest, GetObjectRequest, PutObjectRequest, S3};
+use std::io::Read;
 
 pub fn put_object(db: &mut DynamoDbClient, key: &str, content: String) -> Result<(), EngineError> {
-    let bucket  = match std::env::var("AWS_S3_BUCKET") {
+    let bucket = match std::env::var("AWS_S3_BUCKET") {
         Ok(bucket) => bucket,
-        Err(_) => return Err(EngineError::Manager("Missing AWS_S3_BUCKET env var".to_owned())),
+        Err(_) => {
+            return Err(EngineError::Manager(
+                "Missing AWS_S3_BUCKET env var".to_owned(),
+            ))
+        }
     };
 
-    let request = PutObjectRequest{
+    let request = PutObjectRequest {
         bucket,
         key: key.to_owned(),
         content_type: Some("application/json".to_owned()),
@@ -25,12 +29,16 @@ pub fn put_object(db: &mut DynamoDbClient, key: &str, content: String) -> Result
 }
 
 pub fn get_object(db: &mut DynamoDbClient, key: &str) -> Result<String, EngineError> {
-    let bucket  = match std::env::var("AWS_S3_BUCKET") {
+    let bucket = match std::env::var("AWS_S3_BUCKET") {
         Ok(bucket) => bucket,
-        Err(_) => return Err(EngineError::Manager("Missing AWS_S3_BUCKET env var".to_owned())),
+        Err(_) => {
+            return Err(EngineError::Manager(
+                "Missing AWS_S3_BUCKET env var".to_owned(),
+            ))
+        }
     };
 
-    let request =  GetObjectRequest{
+    let request = GetObjectRequest {
         bucket,
         key: key.to_owned(),
         ..Default::default()
@@ -40,7 +48,7 @@ pub fn get_object(db: &mut DynamoDbClient, key: &str) -> Result<String, EngineEr
 
     let value = db.runtime.block_on(future)?;
 
-    match value.body{
+    match value.body {
         Some(value) => {
             let mut value = value.into_blocking_read();
             let mut buffer = String::new();
@@ -48,18 +56,22 @@ pub fn get_object(db: &mut DynamoDbClient, key: &str) -> Result<String, EngineEr
             value.read_to_string(&mut buffer)?;
 
             Ok(buffer)
-        },
+        }
         None => return Err(EngineError::Manager("empty object".to_owned())),
     }
 }
 
 pub fn delete_object(db: &mut DynamoDbClient, key: &str) -> Result<(), EngineError> {
-    let bucket  = match std::env::var("AWS_S3_BUCKET") {
+    let bucket = match std::env::var("AWS_S3_BUCKET") {
         Ok(bucket) => bucket,
-        Err(_) => return Err(EngineError::Manager("Missing AWS_S3_BUCKET env var".to_owned())),
+        Err(_) => {
+            return Err(EngineError::Manager(
+                "Missing AWS_S3_BUCKET env var".to_owned(),
+            ))
+        }
     };
-    
-    let request =  DeleteObjectRequest{
+
+    let request = DeleteObjectRequest {
         bucket,
         key: key.to_owned(),
         ..Default::default()

@@ -1,0 +1,36 @@
+{
+  "id": "ab366c5d-582e-4801-beb6-c8e0125b181a",
+  "name": "test_recursive_flow",
+  "description": null,
+  "default_flow": "Default",
+  "flows": [
+    {
+      "name": "Default",
+      "description": "Default custom flow",
+      "commands": []
+    },
+    {
+      "name": "flow2",
+      "commands": []
+    },
+    {
+      "name": "flow3",
+      "commands": []
+    },
+    {
+      "name": "flow4",
+      "commands": ["/flow4"]
+    },
+    {
+      "name": "flow5",
+      "commands": ["/flow5"]
+    },
+    {
+      "name": "flow6",
+      "commands": ["/flow6"]
+    }
+  ],
+  "files": [],
+  "functions": [],
+  "apps": []
+}

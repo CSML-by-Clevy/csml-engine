@@ -61,13 +61,7 @@ fn evaluate_if_condition(
         return Ok(msg_data);
     }
     if let Some((then, _)) = then_branch {
-        solve_if_statement(
-            then,
-            msg_data,
-            data,
-            instruction_info,
-            sender,
-        )
+        solve_if_statement(then, msg_data, data, instruction_info, sender)
     } else {
         Ok(msg_data)
     }
@@ -142,8 +136,7 @@ pub fn solve_if_statement(
                 Some(hold) => {
                     if let Some((then_branch, then_index)) = then_branch {
                         if hold.index.command_index < then_index.index {
-                            msg_data = msg_data
-                                + interpret_scope(consequence, data, sender)?;
+                            msg_data = msg_data + interpret_scope(consequence, data, sender)?;
                             return Ok(msg_data);
                         } else {
                             return solve_if_statement(
@@ -157,8 +150,7 @@ pub fn solve_if_statement(
                     }
 
                     if hold.index.command_index != instruction_info.index {
-                        msg_data = msg_data
-                            + interpret_scope(consequence, data, sender)?;
+                        msg_data = msg_data + interpret_scope(consequence, data, sender)?;
                     }
                 }
                 None => {

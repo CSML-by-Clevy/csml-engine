@@ -193,7 +193,7 @@ impl From<std::io::Error> for EngineError {
     }
 }
 
-impl From<std::str::Utf8Error>  for EngineError {
+impl From<std::str::Utf8Error> for EngineError {
     fn from(e: std::str::Utf8Error) -> Self {
         EngineError::Utf8(e)
     }

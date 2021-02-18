@@ -1,15 +1,11 @@
 use crate::data::{ast::*, tokens::*};
-use crate::interpreter::variable_handler::interval::interval_from_expr;
-use crate::parser::{
-    parse_comments::comment,
-};
 use crate::error_format::*;
+use crate::interpreter::variable_handler::interval::interval_from_expr;
+use crate::parser::parse_comments::comment;
 
 use nom::{
-    bytes::complete::take_while1,
-    error::{ ParseError },
-    InputTake, IResult, Err,
-    multi::fold_many0, sequence::preceded,
+    bytes::complete::take_while1, error::ParseError, multi::fold_many0, sequence::preceded, Err,
+    IResult, InputTake,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,14 +25,10 @@ fn clean_text<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
     E: ParseError<Span<'a>>,
 {
-     let (span, vec) = fold_many0(
-        preceded(comment,get_text),
-        Vec::new(),
-        |mut acc, item| {
-            acc.push(item);
-            acc
-        },
-    )(s)?;
+    let (span, vec) = fold_many0(preceded(comment, get_text), Vec::new(), |mut acc, item| {
+        acc.push(item);
+        acc
+    })(s)?;
 
     let s: String = vec.into_iter().collect();
     Ok((span, s))

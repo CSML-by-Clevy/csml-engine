@@ -1,8 +1,8 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::dynamodb::{get_db, DynamoDbKey, State};
+use crate::db_connectors::dynamodb::{DynamoDbKey, State};
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
-    Client, ConversationInfo, EngineError,
+    Client, EngineError,
 };
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
@@ -65,24 +65,25 @@ pub fn get_state_key(
 }
 
 fn format_state_data(
-    data: &mut ConversationInfo,
+    client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
 ) -> Result<Vec<State>, EngineError> {
     let mut vec = vec![];
     for (key, value) in keys_values.iter() {
         let encrypted_value = encrypt_data(value)?;
-        vec.push(State::new(&data.client, _type, *key, &encrypted_value));
+        vec.push(State::new(client, _type, *key, &encrypted_value));
     }
     Ok(vec)
 }
 
 pub fn set_state_items(
-    data: &mut ConversationInfo,
+    client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
+    db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
-    let states = format_state_data(data, _type, keys_values)?;
+    let states = format_state_data(&client, _type, keys_values)?;
 
     // We can only use BatchWriteItem on up to 25 items at once,
     // so we need to split the memories to write into chunks of max
@@ -107,7 +108,6 @@ pub fn set_state_items(
             ..Default::default()
         };
 
-        let db = get_db(&mut data.db)?;
         let future = db.client.batch_write_item(input);
 
         db.runtime.block_on(future)?;
