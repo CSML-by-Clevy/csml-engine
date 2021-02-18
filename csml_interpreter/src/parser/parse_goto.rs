@@ -4,7 +4,7 @@ use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
 use crate::linter::data::Linter;
 use crate::parser::{
     get_interval, parse_comments::comment, parse_idents::parse_string_assignation,
-    tools::get_string, tools::get_tag, GotoType, StateContext,
+    tools::get_string, tools::get_tag, GotoType, GotoValueType, StateContext,
 };
 
 use nom::{branch::alt, bytes::complete::tag, combinator::opt, error::*, sequence::preceded, *};
@@ -12,6 +12,37 @@ use nom::{branch::alt, bytes::complete::tag, combinator::opt, error::*, sequence
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+fn get_variable<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, position) = get_interval(s)?;
+    let (s, ..) = tag(DOLLAR)(s)?;
+    let (s, name) = parse_string_assignation(s)?;
+    Ok((s, GotoValueType::Variable(Expr::new_idents(name, position))))
+}
+
+fn get_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, position) = get_interval(s)?;
+    let (s, name) = parse_string_assignation(s)?;
+
+    Ok((s, GotoValueType::Name(Expr::new_idents(name, position))))
+}
+
+fn get_goto_value_type<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    alt((
+        get_variable,
+        get_name
+    ))(s)
+}
+
 
 fn get_step<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E>
 where
@@ -21,16 +52,19 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, STEP)(s)?;
 
-    let (s, step) = preceded(comment, parse_string_assignation)(s)?;
+    let (s, step) = preceded(comment,get_goto_value_type)(s)?;
+
     let flow = Position::get_flow();
 
-    Linter::add_goto(
-        &Position::get_flow(),
-        &Position::get_step(),
-        &flow,
-        &step,
-        interval,
-    );
+    if let GotoValueType::Name(_) = &step {
+        Linter::add_goto(
+            &Position::get_flow(),
+            &Position::get_step(),
+            &flow.to_string(),
+            &step.to_string(),
+            interval,
+        );
+    }
 
     Ok((s, GotoType::Step(step)))
 }
@@ -43,15 +77,17 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, FLOW)(s)?;
 
-    let (s, flow) = preceded(comment, parse_string_assignation)(s)?;
+    let (s, flow) = preceded(comment,get_goto_value_type)(s)?;
 
-    Linter::add_goto(
-        &Position::get_flow(),
-        &Position::get_step(),
-        &flow,
-        "start",
-        interval,
-    );
+    if let GotoValueType::Name(_) = &flow {
+        Linter::add_goto(
+            &Position::get_flow(),
+            &Position::get_step(),
+            &flow.to_string(),
+            "start",
+            interval,
+        );
+    }
 
     Ok((s, GotoType::Flow(flow)))
 }
@@ -63,26 +99,28 @@ where
     let (s, ..) = comment(s)?;
     let (s, interval) = get_interval(s)?;
 
-    let (s, step) = opt(parse_string_assignation)(s)?;
+    let (s, step) = opt(get_goto_value_type)(s)?;
     let (s, at) = opt(tag("@"))(s)?;
-    let (s, flow) = opt(parse_string_assignation)(s)?;
+    let (s, flow) = opt(get_goto_value_type)(s)?;
 
     let (step, flow) = match (step, at, flow) {
         (Some(step), Some(..), Some(flow)) => (step, flow),
-        (None, Some(..), Some(flow)) => ("start".to_owned(), flow),
-        (Some(step), Some(..), None) => (step, Position::get_flow()),
-        (Some(step), None, None) => (step, Position::get_flow()),
-        (None, Some(..), None) => ("start".to_owned(), Position::get_flow()),
+        (None, Some(..), Some(flow)) => (GotoValueType::Name(Expr::new_idents("start".to_owned(), interval)), flow),
+        (Some(step), Some(..), None) => (step, GotoValueType::Name( Expr::new_idents(Position::get_flow(), interval))),
+        (Some(step), None, None) => (step, GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval))),
+        (None, Some(..), None) => (GotoValueType::Name( Expr::new_idents("start".to_owned(), interval)), GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval))),
         _ => return Err(gen_nom_failure(s, ERROR_GOTO_STEP)),
     };
 
-    Linter::add_goto(
-        &Position::get_flow(),
-        &Position::get_step(),
-        &flow,
-        &step,
-        interval,
-    );
+    if let (GotoValueType::Name(_) ,GotoValueType::Name(_)) = (&step, &flow) {
+        Linter::add_goto(
+            &Position::get_flow(),
+            &Position::get_step(),
+            &flow.to_string(),
+            &step.to_string(),
+            interval,
+        );
+    }
 
     Ok((s, GotoType::StepFlow { step, flow }))
 }

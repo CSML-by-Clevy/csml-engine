@@ -13,3 +13,15 @@ step2:
 step3:
     // pass
     goto step_name@flow_name
+
+step4:
+    // pass
+    goto @$flow_var
+
+step5:
+    // pass
+    goto $step_var
+
+step6:
+    // pass
+    goto $step_var@$flow_var

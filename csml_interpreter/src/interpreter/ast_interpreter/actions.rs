@@ -5,9 +5,9 @@ use crate::data::{
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*, resolve_fn_args,
+    search_goto_var_memory
 };
 use crate::parser::ExitCondition;
-// use crate::interpreter::interpret_scope;
 use crate::data::position::Position;
 use std::sync::mpsc;
 
@@ -104,15 +104,17 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::Step(step), ..) => {
+            let step = search_goto_var_memory(step, &mut msg_data, data)?;
+
             MSG::send(
                 &sender,
                 MSG::Next {
                     flow: None,
-                    step: Some(step.clone()),
+                    step: Some(step.to_string()),
                 },
             );
 
-            data.context.step = step.to_owned();
+            data.context.step = step.to_string();
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
             if step == "end" {
@@ -122,22 +124,26 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::Flow(flow), ..) => {
+            let flow = search_goto_var_memory(&flow, &mut msg_data, data)?;
+
             MSG::send(
                 &sender,
                 MSG::Next {
-                    flow: Some(flow.clone()),
+                    flow: Some(flow.to_string()),
                     step: None,
                 },
             );
 
             data.context.step = "start".to_string();
-            data.context.flow = flow.to_owned();
+            data.context.flow = flow.to_string();
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
-            let mut flow_opt = Some(flow.to_owned());
+            let step = search_goto_var_memory(&step, &mut msg_data, data)?;
+            let mut flow_opt = Some(search_goto_var_memory(&flow, &mut msg_data, data)?);
+
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
             if step == "end" {
@@ -149,12 +155,12 @@ pub fn match_actions(
                 &sender,
                 MSG::Next {
                     flow: flow_opt,
-                    step: Some(step.clone()),
+                    step: Some(step.to_string()),
                 },
             );
 
-            data.context.step = step.to_owned();
-            data.context.flow = flow.to_owned();
+            data.context.step = step.to_string();
+            data.context.flow = flow.to_string();
 
             Ok(msg_data)
         }
