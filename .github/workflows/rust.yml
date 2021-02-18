@@ -46,7 +46,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --verbose --manifest-path=csml_engine/Cargo.toml --features "dynamo"
+        args: --verbose --manifest-path=csml_interpreter/Cargo.toml
 
     # Warning: only one live test can run at once!
     - name: Test with Live DB
@@ -54,7 +54,7 @@ jobs:
       if: matrix.os == 'ubuntu-18.04'
       with:
         command: test
-        args: --verbose --manifest-path=csml_interpreter/Cargo.toml
+        args: --verbose --manifest-path=csml_engine/Cargo.toml --features "dynamo"
       env:
         ENGINE_DB_TYPE: dynamodb
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
