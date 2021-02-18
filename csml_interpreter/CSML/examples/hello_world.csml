@@ -1,5 +1,11 @@
 start:
 
     say "Hello World 😆"
+    do test = "toto"
 
+    goto $test
+
+
+toto: 
+    say "hola from toto"
     goto end

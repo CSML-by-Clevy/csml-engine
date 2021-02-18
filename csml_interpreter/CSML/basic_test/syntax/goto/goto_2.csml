@@ -1,3 +1,7 @@
 start:
     // pass
     goto flow key
+
+step1:
+    // pass
+    goto flow $flow_var
