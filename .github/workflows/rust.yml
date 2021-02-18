@@ -54,7 +54,7 @@ jobs:
       if: matrix.os == 'ubuntu-18.04'
       with:
         command: test
-        args: --verbose --manifest-path=csml_engine/Cargo.toml --features "dynamo"
+        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "dynamo" -- --test-threads=1
       env:
         ENGINE_DB_TYPE: dynamodb
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
