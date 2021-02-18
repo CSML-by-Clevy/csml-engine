@@ -1,3 +1,8 @@
 start:
     // pass
     goto step key
+
+
+step1:
+    // pass
+    goto step $step_var

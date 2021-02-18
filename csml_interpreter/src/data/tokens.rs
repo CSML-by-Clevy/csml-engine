@@ -10,6 +10,8 @@ pub const INLINE_COMMENT: &str = "//";
 pub const START_COMMENT: &str = "/*";
 pub const END_COMMENT: &str = "*/";
 
+pub const DOLLAR: &str = "$";
+
 pub const ADDITION: &str = "+";
 pub const SUBTRACTION: &str = "-";
 pub const DIVIDE: &str = "/";
