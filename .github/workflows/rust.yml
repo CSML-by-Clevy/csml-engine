@@ -46,7 +46,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --verbose --manifest-path=csml_engine/Cargo.toml
+        args: --verbose --manifest-path=csml_engine/Cargo.toml --features "dynamo"
 
     # Warning: only one live test can run at once!
     - name: Test with Live DB
