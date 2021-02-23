@@ -63,3 +63,41 @@ pub fn http(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
         )),
     }
 }
+
+pub fn base64(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get("string", 0) {
+        Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
+            let mut object: HashMap<String, Literal> = HashMap::new();
+            object.insert("string".to_owned(), literal.to_owned());
+
+            let mut result = PrimitiveObject::get_literal(&object, interval);
+
+            result.set_content_type("base64");
+
+            Ok(result)
+        }
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_HTTP.to_owned(),
+        )),
+    }
+}
+
+pub fn hex(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match args.get("string", 0) {
+        Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
+            let mut object: HashMap<String, Literal> = HashMap::new();
+            object.insert("string".to_owned(), literal.to_owned());
+
+            let mut result = PrimitiveObject::get_literal(&object, interval);
+
+            result.set_content_type("hex");
+
+            Ok(result)
+        }
+        _ => Err(gen_error_info(
+            Position::new(interval),
+            ERROR_HTTP.to_owned(),
+        )),
+    }
+}

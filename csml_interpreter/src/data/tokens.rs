@@ -196,6 +196,8 @@ pub const CAROUSEL: &str = "Carousel";
 pub const CARD: &str = "Card";
 pub const FN: &str = "Fn";
 pub const HTTP: &str = "HTTP";
+pub const BASE64: &str = "Base64";
+pub const HEX: &str = "Hex";
 pub const FILE: &str = "File";
 pub const DEBUG: &str = "Debug";
 pub const UUID: &str = "UUID";
@@ -204,6 +206,7 @@ pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT, DEBUG, UUID,
+    BASE64, HEX
 ];
 
 pub const FROM_FILE: &str = "FromFile";

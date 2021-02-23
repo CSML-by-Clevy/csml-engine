@@ -880,6 +880,7 @@ version = "1.4.4"
 dependencies = [
  "base64 0.13.0",
  "bincode",
+ "hex 0.4.2",
  "lazy_static",
  "libc",
  "nom 5.1.2",

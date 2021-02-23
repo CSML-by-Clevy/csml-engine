@@ -41,6 +41,8 @@ pub fn match_builtin(
 ) -> Result<Literal, ErrorInfo> {
     match name {
         HTTP => http(args, interval),
+        BASE64 => base64(args, interval),
+        HEX => hex(args, interval),
         FN => api(args, interval, data, msg_data, sender),
         ONE_OF => one_of(args, interval),
         SHUFFLE => shuffle(args, interval),

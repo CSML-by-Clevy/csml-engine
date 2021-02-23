@@ -68,6 +68,38 @@ lazy_static! {
 }
 
 lazy_static! {
+    static ref FUNCTIONS_BASE64: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+
+        map.insert(
+            "encode",
+            (PrimitiveObject::base64_encode as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "decode",
+            (PrimitiveObject::base64_decode as PrimitiveMethod, Right::Read),
+        );
+        map
+    };
+}
+
+lazy_static! {
+    static ref FUNCTIONS_HEX: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+
+        map.insert(
+            "encode",
+            (PrimitiveObject::hex_encode as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "decode",
+            (PrimitiveObject::hex_decode as PrimitiveMethod, Right::Read),
+        );
+        map
+    };
+}
+
+lazy_static! {
     static ref FUNCTIONS_EVENT: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
 
@@ -452,6 +484,106 @@ impl PrimitiveObject {
             Position::new(interval),
             ERROR_HTTP_SEND.to_owned(),
         ))
+    }
+}
+
+impl PrimitiveObject {
+    fn base64_encode(
+        object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "Base64(\"...\").encode() => String";
+
+        let string = match object.value.get("string") {
+            Some(lit) => lit.primitive.to_string(),
+            _ => return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        };
+
+        let result = base64::encode(string.as_bytes());
+
+        Ok(PrimitiveString::get_literal(&result, interval))
+    }
+
+    fn base64_decode(
+        object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "Base64(\"...\").decode() => String";
+
+        let string = match object.value.get("string") {
+            Some(lit) => lit.primitive.to_string(),
+            _ => return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        };
+
+        let result = match base64::decode(string.as_bytes()) {
+            Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
+            Err(_) =>  return Err(gen_error_info(
+                Position::new(interval),
+                format!("Base64 invalid value: {}, can't be decode", string),
+            )),
+        };
+
+        Ok(PrimitiveString::get_literal(&result, interval))
+    }
+}
+
+impl PrimitiveObject {
+    fn hex_encode(
+        object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "Hex(\"...\").encode() => String";
+
+        let string = match object.value.get("string") {
+            Some(lit) => lit.primitive.to_string(),
+            _ => return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        };
+
+        let result = hex::encode(string.as_bytes());
+
+        Ok(PrimitiveString::get_literal(&result, interval))
+    }
+
+    fn hex_decode(
+        object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "Hex(\"...\").decode() => String";
+
+        let string = match object.value.get("string") {
+            Some(lit) => lit.primitive.to_string(),
+            _ => return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        };
+
+        let result = match hex::decode(string.as_bytes()) {
+            Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
+            Err(_) =>  return Err(gen_error_info(
+                Position::new(interval),
+                format!("Hex invalid value: {}, can't be decode", string),
+            )),
+        };
+
+        Ok(PrimitiveString::get_literal(&result, interval))
     }
 }
 
@@ -1179,6 +1311,8 @@ impl Primitive for PrimitiveObject {
             FUNCTIONS_READ.clone(),
             FUNCTIONS_WRITE.clone(),
         ];
+        let base64 = vec![FUNCTIONS_BASE64.clone()];
+        let hex = vec![FUNCTIONS_HEX.clone()];
         let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
 
         let mut is_event = false;
@@ -1190,6 +1324,8 @@ impl Primitive for PrimitiveObject {
                 (event_type.as_ref(), event)
             }
             ContentType::Http => ("", http),
+            ContentType::Base64 => ("", base64),
+            ContentType::Hex => ("", hex),
             ContentType::Primitive => ("", generics),
         };
 

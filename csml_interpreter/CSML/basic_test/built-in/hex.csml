@@ -1,0 +1,9 @@
+start:
+    do hex = Hex("Hello World").encode()
+
+    if (hex != "48656c6c6f20576f726c64") {
+        say "hex error encode"
+    }
+
+    say Hex(hex).decode()
+    goto end

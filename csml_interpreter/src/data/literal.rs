@@ -23,6 +23,8 @@ pub struct Literal {
 pub enum ContentType {
     Event(String),
     Http,
+    Base64,
+    Hex,
     Primitive,
 }
 
@@ -62,6 +64,8 @@ impl ContentType {
     pub fn get(literal: &Literal) -> ContentType {
         match literal.content_type.as_ref() {
             "http" => ContentType::Http,
+            "base64" => ContentType::Base64,
+            "hex" => ContentType::Hex,
             "event" => ContentType::Event(String::from("")),
             _ => ContentType::Primitive,
         }
