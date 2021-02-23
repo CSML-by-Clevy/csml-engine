@@ -1,0 +1,7 @@
+start:
+    do base64 = Base64("Hello World").encode()
+    if (base64 != "SGVsbG8gV29ybGQ=") {
+        say "hex error encode"
+    }
+    say Base64(base64).decode()
+    goto end
