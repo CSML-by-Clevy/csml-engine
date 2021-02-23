@@ -21,7 +21,7 @@ pub fn for_loop(
     index: &Option<Identifier>,
     expr: &Expr,
     block: &Block,
-    range: &RangeInterval,
+    range_interval: &Interval,
     mut msg_data: MessageData,
     data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
@@ -29,7 +29,7 @@ pub fn for_loop(
     let literal = expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
     let mut array: &[Literal] = Literal::get_value::<Vec<Literal>>(
         &literal.primitive,
-        range.start.to_owned(),
+        range_interval.to_owned(),
         ERROR_FOREACH.to_owned(),
     )?;
     let mut skip_value = 0;

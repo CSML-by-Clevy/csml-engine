@@ -1,5 +1,5 @@
 use crate::data::{
-    ast::{Expr, Identifier, InstructionInfo, RangeInterval},
+    ast::{Expr, Identifier, InstructionInfo},
     tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
 };
 use crate::parser::operator::parse_operator;
@@ -36,22 +36,30 @@ where
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
+// let (s, _) = match preceded(comment, tag(COLON))(s) {
+//     Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
+//     Err(Err::Error((_s, _err))) | Err(Err::Failure((_s, _err))) => {
+//         return Err(gen_nom_failure(s, ERROR_FN_COLON))
+//     }
+//     Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
+// };
+
 pub fn parse_foreach<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(FOREACH))(s)?;
-    let (s, start) = get_interval(s)?;
+    let (s, mut interval) = get_interval(s)?;
 
-    let (s, _) = preceded(comment, tag(L_PAREN))(s)?;
-    let (s, idents) = parse_idents_assignation(s)?;
+    let (s, _) = cut(preceded(comment, tag(L_PAREN)))(s)?;
+    let (s, idents) = cut(parse_idents_assignation)(s)?;
     let (s, opt) = opt(pars_args)(s)?;
-    let (s, _) = preceded(comment, tag(R_PAREN))(s)?;
+    let (s, _) = cut(preceded(comment, tag(R_PAREN)))(s)?;
 
-    let (s, value) = preceded(comment, get_string)(s)?;
+    let (s, value) = cut(preceded(comment, get_string))(s)?;
     let (s, ..) = cut(get_tag(value, IN))(s)?;
 
-    let (s, expr) = parse_operator(s)?;
+    let (s, expr) = cut(parse_operator)(s)?;
 
     let index = StateContext::get_rip();
 
@@ -67,6 +75,7 @@ where
     StateContext::set_state(ExecutionState::Normal);
 
     let (s, end) = get_interval(s)?;
+    interval.add_end(end);
 
     let new_index = StateContext::get_rip() - 1;
     let instruction_info = InstructionInfo {
@@ -82,7 +91,7 @@ where
                 opt,
                 Box::new(expr),
                 block,
-                RangeInterval { start, end },
+                interval,
             ),
             instruction_info,
         ),

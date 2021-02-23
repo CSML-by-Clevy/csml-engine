@@ -42,7 +42,7 @@ pub fn parse_function<'a, E: ParseError<Span<'a>>>(
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, start) = preceded(comment, get_interval)(s)?;
+    let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, (ident, args)) = parse_function_prototype(s)?;
 
     StateContext::set_scope(ScopeState::Function);
@@ -51,6 +51,7 @@ where
     let (s, actions) = result?;
 
     let (s, end) = get_interval(s)?;
+    interval.add_end(end);
 
     Ok((
         s,
@@ -62,7 +63,7 @@ where
             actions: Expr::Scope {
                 block_type: BlockType::Function,
                 scope: actions,
-                range: RangeInterval { start, end },
+                range: interval,
             },
         }],
     ))

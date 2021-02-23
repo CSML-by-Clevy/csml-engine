@@ -174,17 +174,17 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, interval) = get_interval(s)?;
+    let (s, mut interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, DEBUG_ACTION)(s)?;
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;
+    let (s, end) = get_interval(s)?;
+    interval.add_end(end);
+
     // this vec is temporary until a solution for multiple arguments in debug is found
     let vec = Expr::VecExpr(
         vec![expr],
-        RangeInterval {
-            start: interval.to_owned(),
-            end: interval.to_owned(),
-        },
+        interval
     );
 
     let instruction_info = InstructionInfo {

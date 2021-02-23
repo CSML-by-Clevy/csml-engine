@@ -66,11 +66,11 @@ pub fn exec_fn_in_new_scope(
         Expr::Scope {
             block_type: BlockType::Function,
             scope,
-            range: RangeInterval { start, .. },
+            range: interal,
         } => {
             let fn_msg_data = interpret_function_scope(&scope, new_scope_data, sender)?;
 
-            let mut return_value = PrimitiveNull::get_literal(start);
+            let mut return_value = PrimitiveNull::get_literal(interal);
             if let Some(ExitCondition::Return(lit)) = fn_msg_data.exit_condition {
                 return_value = lit;
             }

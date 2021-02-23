@@ -69,7 +69,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(ELSE))(s)?;
-    let (s, start) = get_interval(s)?;
+    let (s, mut interval) = get_interval(s)?;
 
     let index = StateContext::get_rip();
 
@@ -82,6 +82,7 @@ where
     };
 
     let (s, end) = get_interval(s)?;
+    interval.add_end(end);
 
     let new_index = StateContext::get_rip() - 1;
     let instruction_info = InstructionInfo {
@@ -92,7 +93,7 @@ where
     Ok((
         s,
         (
-            Box::new(IfStatement::ElseStmt(block, RangeInterval { start, end })),
+            Box::new(IfStatement::ElseStmt(block, interval)),
             instruction_info,
         ),
     ))

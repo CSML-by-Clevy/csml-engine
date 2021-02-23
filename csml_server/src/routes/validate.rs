@@ -23,8 +23,10 @@ impl ValidateBotResponse {
 struct ValidationError {
   flow: String,
   step: String,
-  line: u32,
-  column: u32,
+  start_line: u32,
+  start_column: u32,
+  end_line: Option<u32>,
+  end_column: Option<u32>,
   message: String,
 }
 
@@ -50,8 +52,10 @@ pub async fn handler(body: web::Json<CsmlBot>) -> HttpResponse {
         errors_array.push(ValidationError {
           flow: error_info.position.flow.clone(),
           step: error_info.position.step.clone(),
-          line: error_info.position.interval.line,
-          column: error_info.position.interval.column,
+          start_line: error_info.position.interval.start_line,
+          start_column: error_info.position.interval.start_column,
+          end_line: error_info.position.interval.end_line,
+          end_column: error_info.position.interval.end_column,
           message: error_info.message.clone(),
         })
       }

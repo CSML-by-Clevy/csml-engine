@@ -88,64 +88,80 @@ pub fn parse_fn_args<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<String>, E>
 where
     E: ParseError<Span<'a>>,
 {
-    // let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, (vec, _)) = preceded(
-        tag(L_PAREN),
-        cut(terminated(
-            tuple((
-                separated_list(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
-                opt(preceded(comment, tag(COMMA))),
-            )),
-            parse_r_parentheses,
-        )),
-    )(s)?;
-    // let (s, end) = get_interval(s)?;
+    let (start, _) = preceded(comment, get_interval)(s)?;
+    let (s, (vec, _)) = 
+    parse_error(
+        start,
+        s,
+        preceded(
+            tag(L_PAREN),
+            terminated(
+                tuple((
+                    separated_list(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
+                    opt(preceded(comment, tag(COMMA))),
+                )),
+                cut(parse_r_parentheses),
+            ),
+    ))?;
 
-    Ok((s, vec)) // , RangeInterval { start, end }
+    Ok((s, vec))
 }
 
 pub fn parse_expr_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, start) = preceded(comment, get_interval)(s)?;
-    let (s, (vec, _)) = preceded(
-        tag(L_PAREN),
-        cut(terminated(
-            tuple((
-                separated_list(
-                    preceded(comment, tag(COMMA)),
-                    alt((parse_assignation_without_path, parse_operator)),
-                ),
-                opt(preceded(comment, tag(COMMA))),
-            )),
-            parse_r_parentheses,
-        )),
-    )(s)?;
+    let (start, mut interval) = preceded(comment, get_interval)(s)?;
+    let (s, (vec, _)) = 
+    parse_error(
+        start,
+        s,
+        preceded(
+            tag(L_PAREN),
+            terminated(
+                tuple((
+                    separated_list(
+                        preceded(comment, tag(COMMA)),
+                        alt((parse_assignation_without_path, parse_operator)),
+                    ),
+                    opt(preceded(comment, tag(COMMA))),
+                )),
+                cut(parse_r_parentheses),
+            ),
+    ))?;
     let (s, end) = get_interval(s)?;
+    interval.add_end(end);
 
-    Ok((s, Expr::VecExpr(vec, RangeInterval { start, end })))
+    Ok((s, Expr::VecExpr(vec, interval)))
 }
 
 pub fn parse_expr_array<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, start) = preceded(comment, get_interval)(s)?;
+    let (start, mut interval) = preceded(comment, get_interval)(s)?;
 
-    let (s, (vec, _)) = preceded(
-        tag(L_BRACKET),
-        cut(terminated(
-            tuple((
-                separated_list(preceded(comment, tag(COMMA)), parse_operator), //parse_basic_expr
-                opt(preceded(comment, tag(COMMA))),
-            )),
-            preceded(comment, parse_r_bracket),
-        )),
-    )(s)?;
+    let (s, (vec, _)) = 
+    parse_error(
+        start,
+        s,
+        preceded(
+            tag(L_BRACKET),
+            terminated(
+                tuple((
+                    separated_list(
+                        preceded(comment, tag(COMMA)),
+                        parse_operator
+                    ), //parse_basic_expr
+                    opt(preceded(comment, tag(COMMA))),
+                )),
+                preceded(comment, parse_r_bracket),
+            ),
+    ))?;
     let (s, end) = get_interval(s)?;
+    interval.add_end(end);
 
-    Ok((s, Expr::VecExpr(vec, RangeInterval { start, end })))
+    Ok((s, Expr::VecExpr(vec, interval)))
 }
 
 pub fn parse_basic_expr<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>

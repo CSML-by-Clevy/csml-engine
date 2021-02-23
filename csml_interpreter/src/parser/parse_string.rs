@@ -174,11 +174,11 @@ where
                 }
             }
 
-            let (start, end) = get_range_interval(&interval);
+            let interval = get_range_interval(&interval);
 
             Ok((
                 rest,
-                Expr::ComplexLiteral(vector, RangeInterval::new(start, end)),
+                Expr::ComplexLiteral(vector, interval),
             ))
         }
         None => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
@@ -213,6 +213,8 @@ pub fn interpolate_string(
                         span.location_line(),
                         span.get_column() as u32,
                         span.location_offset(),
+                        None,
+                        None,
                     )),
                     ERROR_PARSING.to_owned(),
                 ))
@@ -226,6 +228,8 @@ pub fn interpolate_string(
                     err.input.location_line(),
                     err.input.get_column() as u32,
                     span.location_offset(),
+                    None,
+                    None,
                 )),
                 err.error,
             )),

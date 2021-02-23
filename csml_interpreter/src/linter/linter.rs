@@ -33,7 +33,7 @@ lazy_static! {
 fn check_missing_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>) {
     if linter.flow.is_empty() {
         error.push(gen_error_info(
-            Position::new(Interval::new_as_u32(0, 0, 0)),
+            Position::new(Interval::new_as_u32(0, 0, 0, None, None)),
             "LINTER: Need to have at least one Flow".to_owned(),
         ));
     }
@@ -54,7 +54,7 @@ fn check_valid_flow(_bot: &CsmlBot, linter: &Linter, error: &mut Vec<ErrorInfo>)
 
             if !result {
                 error.push(gen_error_info(
-                    Position::new(Interval::new_as_u32(0, 0, 0)),
+                    Position::new(Interval::new_as_u32(0, 0, 0, None, None)),
                     format!("LINTER: Flow '{}' need to have a 'start' step", flow),
                 ));
             }

@@ -1,18 +1,18 @@
-use crate::data::ast::{DoType, Expr, Function, IfStatement, Interval, ObjectType, RangeInterval};
+use crate::data::ast::{DoType, Expr, Function, IfStatement, Interval, ObjectType};
 
 pub fn interval_from_expr(expr: &Expr) -> Interval {
     match expr {
         Expr::Scope {
-            range: RangeInterval { start, .. },
+            range: range_interval,
             ..
-        } => *start,
-        Expr::ComplexLiteral(_e, RangeInterval { start, .. }) => *start,
-        Expr::MapExpr(_e, RangeInterval { start, .. }) => *start,
-        Expr::VecExpr(_e, RangeInterval { start, .. }) => *start,
+        } => *range_interval,
+        Expr::ComplexLiteral(_e, range_interval) => *range_interval,
+        Expr::MapExpr(_e, range_interval) => *range_interval,
+        Expr::VecExpr(_e, range_interval) => *range_interval,
         Expr::ObjectExpr(fnexpr) => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
         Expr::PathExpr { literal, .. } => interval_from_expr(literal),
-        Expr::ForEachExpr(_, _, _, _, RangeInterval { start, .. }) => *start,
+        Expr::ForEachExpr(_, _, _, _, range_interval) => *range_interval,
         Expr::IdentExpr(ident) => ident.interval.to_owned(),
         Expr::LitExpr(literal) => literal.interval.to_owned(),
         Expr::IfExpr(ifstmt) => interval_from_if_stmt(ifstmt),
@@ -22,7 +22,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
 pub fn interval_from_if_stmt(ifstmt: &IfStatement) -> Interval {
     match ifstmt {
         IfStatement::IfStmt { ref cond, .. } => interval_from_expr(cond),
-        IfStatement::ElseStmt(_e, range) => range.start,
+        IfStatement::ElseStmt(_e, range_interval) => *range_interval,
     }
 }
 

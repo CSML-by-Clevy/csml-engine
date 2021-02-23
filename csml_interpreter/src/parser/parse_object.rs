@@ -62,7 +62,7 @@ pub fn parse_object<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, start) = preceded(comment, get_interval)(s)?;
+    let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, (object, _)) = preceded(
         tag(L_BRACE),
         terminated(
@@ -82,6 +82,7 @@ where
         ),
     )(s)?;
     let (s, end) = preceded(comment, get_interval)(s)?;
+    interval.add_end(end);
 
-    Ok((s, Expr::MapExpr(object, RangeInterval { start, end })))
+    Ok((s, Expr::MapExpr(object, interval)))
 }

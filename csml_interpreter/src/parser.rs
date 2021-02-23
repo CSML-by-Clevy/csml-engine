@@ -89,14 +89,23 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
             })
         }
         Err(e) => match e {
-            Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
-                Position::new(Interval::new_as_u32(
-                    err.input.location_line(),
-                    err.input.get_column() as u32,
-                    err.input.location_offset(),
-                )),
-                convert_error(Span::new(slice), err),
-            )),
+            Err::Error(err) | Err::Failure(err) => {
+                let (end_line, end_column) = match err.end {
+                    Some(end) => (Some(end.location_line()), Some(end.get_column() as u32)),
+                    None => (None, None)
+                };
+
+                Err(gen_error_info(
+                    Position::new(Interval::new_as_u32(
+                        err.input.location_line(),
+                        err.input.get_column() as u32,
+                        err.input.location_offset(),
+                        end_line,
+                        end_column,
+                    )),
+                    convert_error(Span::new(slice), err),
+                ))
+            },
             Err::Incomplete(_err) => unreachable!(),
         },
     }
@@ -158,15 +167,16 @@ fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, start) = preceded(comment, get_interval)(s)?;
+    let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, ident) = preceded(comment, parse_step_name)(s)?;
 
     Position::set_step(&ident.ident);
-    Linter::add_step(&Position::get_flow(), &ident.ident, start.clone());
+    Linter::add_step(&Position::get_flow(), &ident.ident, interval.clone());
     StateContext::clear_rip();
 
     let (s, actions) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;
+    interval.add_end(end);
 
     Ok((
         s,
@@ -175,7 +185,7 @@ where
             actions: Expr::Scope {
                 block_type: BlockType::Step,
                 scope: actions,
-                range: RangeInterval { start, end },
+                range: interval
             },
         }],
     ))
