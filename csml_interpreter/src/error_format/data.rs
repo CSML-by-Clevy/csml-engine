@@ -7,7 +7,7 @@ pub struct CustomError<I> {
     pub error: String,
 }
 
-impl<I> ParseError<I> for CustomError<I> {
+impl<I: std::fmt::Display> ParseError<I> for CustomError<I> {
     //TODO: update this in nom 6
     fn from_error_kind(input: I, _kind: ErrorKind) -> Self {
         CustomError {

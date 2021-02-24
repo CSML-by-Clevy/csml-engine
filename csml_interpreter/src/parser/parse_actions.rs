@@ -79,7 +79,7 @@ where
         Err(Err::Error(e)) => {
             return Err(Err::Failure(E::add_context(s, ERROR_ACTION_ARGUMENT, e)))
         }
-        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Failure(e)) => return Err(Err::Failure(e)),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     }
 }
@@ -320,7 +320,7 @@ where
     let (s, expr) = match preceded(comment, parse_operator)(s) {
         Ok(value) => value,
         Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_RETURN, e))),
-        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Failure(e)) => return Err(Err::Failure(e)),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };
 

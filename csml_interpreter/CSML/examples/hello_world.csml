@@ -2,13 +2,4 @@ start:
 
     say "Hello World 😆"
 
-    say [
-        1
-        ,
-    
-
-    foreach (val) in [1, 3] {
-
-    }
-
     goto end
