@@ -122,3 +122,42 @@ fn string_step_4() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn string_step_5() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {"content_type":"text", "content":{"text": "Hello World"}},
+            {"content_type":"text", "content":{"text": "Hello"}}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_5", "flow"),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn string_step_6() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {"content_type":"text", "content":{"text": "Hello World"}}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step_6", "flow"),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

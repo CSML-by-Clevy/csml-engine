@@ -177,7 +177,7 @@ pub const ERROR_STRING_END_WITH_REGEX: &str =
     "[ends_with_regex] takes one parameter of type String. Usage: string.ends_with_regex(\"regex\")";
 pub const ERROR_STRING_FROM_JSON: &str = "[from_json] [!] string to object failed]";
 pub const ERROR_STRING_SPLIT: &str =
-    "[split] takes one paramater of type String. Usage: string.split(\"separator\")";
+    "[split] takes one parameter of type String. Usage: string.split(\"separator\")";
 pub const ERROR_STRING_MATCH_REGEX: &str =
     "[match_regex] takes one parameter of type String. Usage: string.match_regex(\"regex\")";
 pub const ERROR_STRING_POW: &str =
@@ -185,6 +185,12 @@ pub const ERROR_STRING_POW: &str =
 pub const ERROR_STRING_COS: &str = "[cos] the string must be of numeric type in order to use cos. Verify first with 'string.is_number() == true' ";
 pub const ERROR_STRING_NUMERIC: &str = "the string must be of numeric type in order to use this method. Verify first with 'string.is_number() == true' to check it";
 pub const ERROR_STRING_RHS: &str = "rhs must be of type string";
+
+pub const ERROR_SLICE_ARG_INT: &str = ".slice(arg, optional_arg) args need to be of type Integer";
+pub const ERROR_SLICE_ARG_POSITIVE: &str = ".slice(arg, optional_arg) args need to be positive";
+pub const ERROR_SLICE_ARG_LEN: &str = ".slice(arg, optional_arg) args need to be inferior to the string sliced";
+pub const ERROR_SLICE_ARG2: &str = ".slice(arg, optional_arg) optional_arg need to be superior to arg in value ex: .slice(2, 5)";
+
 pub const ERROR_STRING_UNKNOWN_METHOD: &str = "is not a method of String";
 
 // #### Array

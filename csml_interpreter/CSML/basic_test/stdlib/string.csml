@@ -44,3 +44,12 @@ step_4:
     say "{{\"Hello\".split(\"ll\")}}"
     say "{{\"Hello\".split(\"o\")}}"
     goto end
+
+step_5:
+    say "😃Hello World".slice(1)
+    say "😃Hello World".slice(1, 6)
+    goto end
+
+step_6:
+    say "hello World".capitalize()
+    goto end
