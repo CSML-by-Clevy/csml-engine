@@ -53,3 +53,35 @@ step_5:
 step_6:
     say "hello World".capitalize()
     goto end
+
+step_7:
+    foreach (char) in "😆Hello" {
+        say char
+    }
+    goto end
+
+step_8:
+    say "😆Hello World 😆"[0]
+    goto end
+
+step_9:
+    do toto = "😆Hello World 😆"
+    say toto[0]
+    say toto
+
+    goto end
+
+step_10:
+    do toto = "😆Hello World 😆"
+    do toto[0] = "test "
+    say toto
+
+    goto end
+
+
+step_11:
+    do toto = "Hello World"
+    say toto[0].is_number()
+    say toto
+
+    goto end

@@ -1,4 +1,8 @@
 use crate::error_format::*;
+use crate::data::primitive::{PrimitiveString, PrimitiveType};
+use crate::data::{
+    Literal, Position
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -20,6 +24,61 @@ pub fn get_integer(text: &str) -> Result<Integer, String> {
         (..) => Err(ERROR_OPS.to_owned()),
     }
 }
+
+pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>, ErrorInfo>  {
+    match literal.primitive.get_type() {
+        PrimitiveType::PrimitiveString => {
+            let string = Literal::get_value::<String>(
+                &literal.primitive,
+                literal.interval.to_owned(),
+                error_message,
+            )?;
+
+            Ok(PrimitiveString::get_array_char(string.to_owned(), literal.interval))
+        },
+        PrimitiveType::PrimitiveArray => {
+            Ok(Literal::get_value::<Vec<Literal>>(
+                &literal.primitive,
+                literal.interval.to_owned(),
+                error_message,
+            )?.to_owned())
+        },
+        _ => Err(
+            gen_error_info(
+                Position::new(literal.interval),
+                error_message
+            )
+        )
+    }
+}
+
+// pub fn get_array(literal: &mut Literal, error_message: String) -> Result<&mut Vec<Literal>, ErrorInfo>  {
+//     match literal.primitive.get_type() {
+//         PrimitiveType::PrimitiveString => {
+//             let string = Literal::get_mut_value::<String>(
+//                 &mut literal.primitive,
+//                 literal.interval.to_owned(),
+//                 error_message,
+//             )?;
+
+//             Ok(PrimitiveString::get_array_char(string, literal.interval))
+//             unimplemented!()
+//         },
+//         PrimitiveType::PrimitiveArray => {
+//             Literal::get_mut_value::<Vec<Literal>>(
+//                 &mut literal.primitive,
+//                 literal.interval.to_owned(),
+//                 error_message,
+//             )
+//         },
+//         _ => Err(
+//             gen_error_info(
+//                 Position::new(literal.interval),
+//                 error_message
+//             )
+//         )
+//     }
+// }
 
 pub fn check_division_by_zero_i64(lhs: i64, rhs: i64) -> Result<i64, String> {
     if lhs == 0 || rhs == 0 {

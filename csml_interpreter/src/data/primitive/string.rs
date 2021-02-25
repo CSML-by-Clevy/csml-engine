@@ -1273,6 +1273,15 @@ impl PrimitiveString {
             interval,
         }
     }
+
+    pub fn get_array_char(string: String, interval: Interval) -> Vec<Literal> {
+        let array = string.chars().map(|c| {
+            let interval = interval.clone();
+            PrimitiveString::get_literal(&c.to_string(), interval)
+        }).collect::<Vec<Literal>>();
+
+        array
+    }
 }
 
 #[typetag::serde]
