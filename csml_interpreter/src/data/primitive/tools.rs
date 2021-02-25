@@ -52,34 +52,6 @@ pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>
     }
 }
 
-// pub fn get_array(literal: &mut Literal, error_message: String) -> Result<&mut Vec<Literal>, ErrorInfo>  {
-//     match literal.primitive.get_type() {
-//         PrimitiveType::PrimitiveString => {
-//             let string = Literal::get_mut_value::<String>(
-//                 &mut literal.primitive,
-//                 literal.interval.to_owned(),
-//                 error_message,
-//             )?;
-
-//             Ok(PrimitiveString::get_array_char(string, literal.interval))
-//             unimplemented!()
-//         },
-//         PrimitiveType::PrimitiveArray => {
-//             Literal::get_mut_value::<Vec<Literal>>(
-//                 &mut literal.primitive,
-//                 literal.interval.to_owned(),
-//                 error_message,
-//             )
-//         },
-//         _ => Err(
-//             gen_error_info(
-//                 Position::new(literal.interval),
-//                 error_message
-//             )
-//         )
-//     }
-// }
-
 pub fn check_division_by_zero_i64(lhs: i64, rhs: i64) -> Result<i64, String> {
     if lhs == 0 || rhs == 0 {
         return Err(ERROR_OPS_DIV_INT.to_owned());
