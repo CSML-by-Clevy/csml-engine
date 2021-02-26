@@ -94,6 +94,10 @@ lazy_static! {
             (PrimitiveArray::remove_at as PrimitiveMethod, Right::Write),
         );
         map.insert(
+            "slice",
+            (PrimitiveArray::slice as PrimitiveMethod, Right::Read)
+        );
+        map.insert(
             "shuffle",
             (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
         );
@@ -552,6 +556,105 @@ impl PrimitiveArray {
 
         Ok(PrimitiveArray::get_literal(&vector, interval))
     }
+
+    fn slice(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "slice(start: Integer, end: Optional<Integer>) => [Literal]";
+        let len = array.value.len();
+
+        match args.len() {
+            1 => match args.get("arg0") {
+                Some(literal) => {
+                    let mut int_start = Literal::get_value::<i64>(
+                        &literal.primitive,
+                        literal.interval,
+                        ERROR_SLICE_ARG_INT.to_owned(),
+                    )?.to_owned();
+
+                    if int_start.is_negative() {
+                        int_start = len as i64 + int_start;
+                    }
+
+                    let start = match int_start {
+                        value if value.is_positive() && (value as usize) < len => value as usize,
+                        _ => {
+                            return Err(gen_error_info(
+                                Position::new(interval),
+                                ERROR_SLICE_ARG_LEN.to_owned(),
+                            ))
+                        }
+                    };
+
+                    let value = array.value[start..].iter().cloned().collect::<Vec<Literal>>();
+
+                    Ok(PrimitiveArray::get_literal(&value, interval))
+                }
+                _ => Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_SLICE_ARG_INT.to_owned(),
+                )),
+            },
+            2 => match (args.get("arg0"), args.get("arg1")) {
+                (Some(literal_start), Some(literal_end)) => {
+                    let mut int_start = Literal::get_value::<i64>(
+                        &literal_start.primitive,
+                        literal_start.interval,
+                        ERROR_SLICE_ARG_INT.to_owned(),
+                    )?.to_owned();
+                    let mut int_end = Literal::get_value::<i64>(
+                        &literal_end.primitive,
+                        literal_end.interval,
+                        ERROR_SLICE_ARG_INT.to_owned(),
+                    )?.to_owned();
+
+                    if int_start.is_negative() {
+                        int_start = len as i64 + int_start;
+                    }
+
+                    if int_end.is_negative() {
+                        int_end = len as i64 + int_end;
+                    }
+                    if int_end < int_start {
+                        return Err(gen_error_info(
+                            Position::new(interval),
+                            ERROR_SLICE_ARG2.to_owned(),
+                        ))
+                    }
+
+                    let (start, end) = match (int_start, int_end) {
+                        (start, end)
+                            if start.is_positive() && end.is_positive()
+                                && (start as usize) < len
+                                && (end as usize) <= len =>
+                        {
+                            (start as usize, end as usize)
+                        }
+                        _ => {
+                            return Err(gen_error_info(
+                                Position::new(interval),
+                                ERROR_SLICE_ARG_LEN.to_owned(),
+                            ))
+                        }
+                    };
+                    let value = array.value[start..end].iter().cloned().collect::<Vec<Literal>>();
+
+                    Ok(PrimitiveArray::get_literal(&value, interval))
+                }
+                _ => Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_SLICE_ARG_INT.to_owned(),
+                )),
+            },
+            _ => Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        }
+    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

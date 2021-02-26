@@ -810,10 +810,6 @@ impl PrimitiveString {
         Ok(PrimitiveString::get_literal(&string, interval))
     }
 
-    // ERROR_SLICE_ARG_INT
-    // ERROR_SLICE_ARG_POSITIVE
-    // ERROR_SLICE_ARG_LEN
-    // ERROR_SLICE_ARG2
     fn slice(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
@@ -826,18 +822,22 @@ impl PrimitiveString {
         match args.len() {
             1 => match args.get("arg0") {
                 Some(literal) => {
-                    let int_start = Literal::get_value::<i64>(
+                    let mut int_start = Literal::get_value::<i64>(
                         &literal.primitive,
                         literal.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
-                    )?;
+                    )?.to_owned();
+
+                    if int_start.is_negative() {
+                        int_start = len as i64 + int_start;
+                    }
 
                     let start = match int_start {
-                        value if value.is_positive() && (*value as usize) < len => *value as usize,
+                        value if value.is_positive() && (value as usize) < len => value as usize,
                         _ => {
                             return Err(gen_error_info(
                                 Position::new(interval),
-                                ERROR_SLICE_ARG_POSITIVE.to_owned(),
+                                ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
                     };
@@ -853,31 +853,43 @@ impl PrimitiveString {
             },
             2 => match (args.get("arg0"), args.get("arg1")) {
                 (Some(literal_start), Some(literal_end)) => {
-                    let int_start = Literal::get_value::<i64>(
+                    let mut int_start = Literal::get_value::<i64>(
                         &literal_start.primitive,
                         literal_start.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
-                    )?;
-                    let int_end = Literal::get_value::<i64>(
+                    )?.to_owned();
+                    let mut int_end = Literal::get_value::<i64>(
                         &literal_end.primitive,
                         literal_end.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
-                    )?;
+                    )?.to_owned();
+
+                    if int_start.is_negative() {
+                        int_start = len as i64 + int_start;
+                    }
+
+                    if int_end.is_negative() {
+                        int_end = len as i64 + int_end;
+                    }
+                    if int_end < int_start {
+                        return Err(gen_error_info(
+                            Position::new(interval),
+                            ERROR_SLICE_ARG2.to_owned(),
+                        ))
+                    }
 
                     let (start, end) = match (int_start, int_end) {
                         (start, end)
-                            if start.is_positive()
-                                && (*start as usize) < len
-                                && (*end) > (*start)
-                                && end.is_positive()
-                                && (*end as usize) < len =>
+                            if start.is_positive() && end.is_positive()
+                                && (start as usize) < len
+                                && (end as usize) <= len =>
                         {
-                            (*start as usize, *end as usize)
+                            (start as usize, end as usize)
                         }
                         _ => {
                             return Err(gen_error_info(
                                 Position::new(interval),
-                                ERROR_SLICE_ARG_POSITIVE.to_owned(),
+                                ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
                     };
