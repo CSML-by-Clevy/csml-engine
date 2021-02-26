@@ -73,11 +73,17 @@ lazy_static! {
 
         map.insert(
             "encode",
-            (PrimitiveObject::base64_encode as PrimitiveMethod, Right::Read),
+            (
+                PrimitiveObject::base64_encode as PrimitiveMethod,
+                Right::Read,
+            ),
         );
         map.insert(
             "decode",
-            (PrimitiveObject::base64_decode as PrimitiveMethod, Right::Read),
+            (
+                PrimitiveObject::base64_decode as PrimitiveMethod,
+                Right::Read,
+            ),
         );
         map
     };
@@ -498,10 +504,12 @@ impl PrimitiveObject {
 
         let string = match object.value.get("string") {
             Some(lit) => lit.primitive.to_string(),
-            _ => return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            )),
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ))
+            }
         };
 
         let result = base64::encode(string.as_bytes());
@@ -519,18 +527,22 @@ impl PrimitiveObject {
 
         let string = match object.value.get("string") {
             Some(lit) => lit.primitive.to_string(),
-            _ => return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            )),
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ))
+            }
         };
 
         let result = match base64::decode(string.as_bytes()) {
             Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
-            Err(_) =>  return Err(gen_error_info(
-                Position::new(interval),
-                format!("Base64 invalid value: {}, can't be decode", string),
-            )),
+            Err(_) => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("Base64 invalid value: {}, can't be decode", string),
+                ))
+            }
         };
 
         Ok(PrimitiveString::get_literal(&result, interval))
@@ -548,10 +560,12 @@ impl PrimitiveObject {
 
         let string = match object.value.get("string") {
             Some(lit) => lit.primitive.to_string(),
-            _ => return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            )),
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ))
+            }
         };
 
         let result = hex::encode(string.as_bytes());
@@ -569,18 +583,22 @@ impl PrimitiveObject {
 
         let string = match object.value.get("string") {
             Some(lit) => lit.primitive.to_string(),
-            _ => return Err(gen_error_info(
-                Position::new(interval),
-                format!("usage: {}", usage),
-            )),
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("usage: {}", usage),
+                ))
+            }
         };
 
         let result = match hex::decode(string.as_bytes()) {
             Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
-            Err(_) =>  return Err(gen_error_info(
-                Position::new(interval),
-                format!("Hex invalid value: {}, can't be decode", string),
-            )),
+            Err(_) => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("Hex invalid value: {}, can't be decode", string),
+                ))
+            }
         };
 
         Ok(PrimitiveString::get_literal(&result, interval))

@@ -102,20 +102,16 @@ pub fn get_range_interval(vector_interval: &[Interval]) -> Interval {
 }
 
 // generate range error
-pub fn parse_error<'a, O, E, F>(start: Span<'a>, span: Span<'a>, func: F ) -> IResult<Span<'a>, O, E>
+pub fn parse_error<'a, O, E, F>(start: Span<'a>, span: Span<'a>, func: F) -> IResult<Span<'a>, O, E>
 where
     E: ParseError<Span<'a>>,
     F: Fn(Span<'a>) -> IResult<Span<'a>, O, E>,
 {
     match func(span) {
-        Ok(value)=> Ok(value),
+        Ok(value) => Ok(value),
         Err(Err::Error(e)) => Err(Err::Error(e)),
-        Err(Err::Failure(e)) => {
-            return Err(Err::Failure(E::append(start, ErrorKind::Tag, e)))
-        }
-        Err(Err::Incomplete(needed)) => {
-            return Err(Err::Incomplete(needed))
-        },
+        Err(Err::Failure(e)) => Err(Err::Failure(E::append(start, ErrorKind::Tag, e))),
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
     }
 }
 

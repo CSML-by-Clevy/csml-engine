@@ -130,17 +130,11 @@ lazy_static! {
         );
         map.insert(
             "capitalize",
-            (
-                PrimitiveString::capitalize as PrimitiveMethod,
-                Right::Read,
-            ),
+            (PrimitiveString::capitalize as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "slice",
-            (
-                PrimitiveString::slice as PrimitiveMethod,
-                Right::Read,
-            ),
+            (PrimitiveString::slice as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "split",
@@ -816,10 +810,10 @@ impl PrimitiveString {
         Ok(PrimitiveString::get_literal(&string, interval))
     }
 
-// ERROR_SLICE_ARG_INT
-// ERROR_SLICE_ARG_POSITIVE
-// ERROR_SLICE_ARG_LEN
-// ERROR_SLICE_ARG2
+    // ERROR_SLICE_ARG_INT
+    // ERROR_SLICE_ARG_POSITIVE
+    // ERROR_SLICE_ARG_LEN
+    // ERROR_SLICE_ARG2
     fn slice(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
@@ -830,75 +824,76 @@ impl PrimitiveString {
         let len = text_vec.len();
 
         match args.len() {
-            1 => {
-                match args.get("arg0") {
-                    Some(literal) => {
-                        let int_start = Literal::get_value::<i64>(
-                            &literal.primitive,
-                            literal.interval,
-                            ERROR_SLICE_ARG_INT.to_owned(),
-                        )?;
+            1 => match args.get("arg0") {
+                Some(literal) => {
+                    let int_start = Literal::get_value::<i64>(
+                        &literal.primitive,
+                        literal.interval,
+                        ERROR_SLICE_ARG_INT.to_owned(),
+                    )?;
 
-                        let start = match int_start {
-                            value if value.is_positive() && (*value as usize) < len => {
-                                *value as usize
-                            }
-                            _ => return Err(gen_error_info(
+                    let start = match int_start {
+                        value if value.is_positive() && (*value as usize) < len => *value as usize,
+                        _ => {
+                            return Err(gen_error_info(
                                 Position::new(interval),
                                 ERROR_SLICE_ARG_POSITIVE.to_owned(),
                             ))
-                        };
+                        }
+                    };
 
-                        let value = text_vec[start..].iter().cloned().collect::<String>();
+                    let value = text_vec[start..].iter().cloned().collect::<String>();
 
-                        Ok(PrimitiveString::get_literal(&value, interval))
-                    }
-                    _ => Err(gen_error_info(
-                        Position::new(interval),
-                        ERROR_SLICE_ARG_INT.to_owned(),
-                    ))
+                    Ok(PrimitiveString::get_literal(&value, interval))
                 }
+                _ => Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_SLICE_ARG_INT.to_owned(),
+                )),
             },
-            2 => {
-                match (args.get("arg0"), args.get("arg1")) {
-                    (Some(literal_start), Some(literal_end)) => {
-                        let int_start = Literal::get_value::<i64>(
-                            &literal_start.primitive,
-                            literal_start.interval,
-                            ERROR_SLICE_ARG_INT.to_owned(),
-                        )?;
-                        let int_end = Literal::get_value::<i64>(
-                            &literal_end.primitive,
-                            literal_end.interval,
-                            ERROR_SLICE_ARG_INT.to_owned(),
-                        )?;
+            2 => match (args.get("arg0"), args.get("arg1")) {
+                (Some(literal_start), Some(literal_end)) => {
+                    let int_start = Literal::get_value::<i64>(
+                        &literal_start.primitive,
+                        literal_start.interval,
+                        ERROR_SLICE_ARG_INT.to_owned(),
+                    )?;
+                    let int_end = Literal::get_value::<i64>(
+                        &literal_end.primitive,
+                        literal_end.interval,
+                        ERROR_SLICE_ARG_INT.to_owned(),
+                    )?;
 
-                        let (start, end) = match (int_start, int_end) {
-                            (start, end) if 
-                                start.is_positive() && (*start as usize) < len &&
-                                (*end) > (*start) && end.is_positive() && (*end as usize) < len
-                            => {
-                                (*start as usize, *end as usize)
-                            }
-                            _ => return Err(gen_error_info(
+                    let (start, end) = match (int_start, int_end) {
+                        (start, end)
+                            if start.is_positive()
+                                && (*start as usize) < len
+                                && (*end) > (*start)
+                                && end.is_positive()
+                                && (*end as usize) < len =>
+                        {
+                            (*start as usize, *end as usize)
+                        }
+                        _ => {
+                            return Err(gen_error_info(
                                 Position::new(interval),
                                 ERROR_SLICE_ARG_POSITIVE.to_owned(),
                             ))
-                        };
-                        let value = text_vec[start..end].iter().cloned().collect::<String>();
+                        }
+                    };
+                    let value = text_vec[start..end].iter().cloned().collect::<String>();
 
-                        Ok(PrimitiveString::get_literal(&value, interval))
-                    }
-                    _ => Err(gen_error_info(
-                        Position::new(interval),
-                        ERROR_SLICE_ARG_INT.to_owned(),
-                    ))
+                    Ok(PrimitiveString::get_literal(&value, interval))
                 }
-            }
+                _ => Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_SLICE_ARG_INT.to_owned(),
+                )),
+            },
             _ => Err(gen_error_info(
                 Position::new(interval),
                 format!("usage: {}", usage),
-            ))
+            )),
         }
     }
 
@@ -1275,10 +1270,13 @@ impl PrimitiveString {
     }
 
     pub fn get_array_char(string: String, interval: Interval) -> Vec<Literal> {
-        let array = string.chars().map(|c| {
-            let interval = interval.clone();
-            PrimitiveString::get_literal(&c.to_string(), interval)
-        }).collect::<Vec<Literal>>();
+        let array = string
+            .chars()
+            .map(|c| {
+                let interval = interval.clone();
+                PrimitiveString::get_literal(&c.to_string(), interval)
+            })
+            .collect::<Vec<Literal>>();
 
         array
     }

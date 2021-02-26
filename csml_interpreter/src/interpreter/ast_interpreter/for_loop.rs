@@ -1,11 +1,11 @@
-use crate::data::primitive::{PrimitiveInt,};
+use crate::data::primitive::PrimitiveInt;
 use crate::data::{
     ast::*,
-    Data, MessageData, MSG,
     hold::{
         hold_index_end_loop, hold_index_start_loop, hold_loop_decrs_index, hold_loop_incrs_index,
     },
-    primitive::tools::get_array
+    primitive::tools::get_array,
+    Data, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::interpret_scope;

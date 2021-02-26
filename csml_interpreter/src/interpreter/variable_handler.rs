@@ -7,14 +7,13 @@ pub mod memory;
 pub mod operations;
 pub mod resolve_csml_object;
 
-use crate::data::{literal::ContentType};
+use crate::data::literal::ContentType;
 pub use expr_to_literal::{expr_to_literal, resolve_fn_args};
 
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::{
-    PrimitiveNull, PrimitiveObject, PrimitiveString, PrimitiveType,
-    tools::get_array,
+    tools::get_array, PrimitiveNull, PrimitiveObject, PrimitiveString, PrimitiveType,
 };
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
@@ -57,31 +56,33 @@ fn loop_path(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<(Literal, bool), ErrorInfo> {
     let mut tmp_update_var = false;
-    // this is temporary until we find a better way, it helps restore the string in 
+    // this is temporary until we find a better way, it helps restore the string in
     // string index searching otherwise the string will be replace by the char at index
     let mut old_string = None;
 
     while let Some((interval, action)) = path.next() {
         match action {
-            PathLiteral::VecIndex(index) 
-                if lit.primitive.get_type() == PrimitiveType::PrimitiveString 
-            => match get_string_index(lit.clone(), *index)? {
-                Some(new_lit) => {
-                    old_string = Some((lit.clone(), *index));
-                    *lit = new_lit
-                },
-                None => {
-                    let err = gen_error_info(
-                        Position::new(*interval),
-                        format!("[{}] {}", index, ERROR_ARRAY_INDEX),
-                    );
-                    let null = match condition {
-                        true => PrimitiveNull::get_literal(err.position.interval),
-                        false => MSG::send_error_msg(&sender, msg_data, Err(err)),
-                    };
-                    return Ok((null, tmp_update_var));
+            PathLiteral::VecIndex(index)
+                if lit.primitive.get_type() == PrimitiveType::PrimitiveString =>
+            {
+                match get_string_index(lit.clone(), *index)? {
+                    Some(new_lit) => {
+                        old_string = Some((lit.clone(), *index));
+                        *lit = new_lit
+                    }
+                    None => {
+                        let err = gen_error_info(
+                            Position::new(*interval),
+                            format!("[{}] {}", index, ERROR_ARRAY_INDEX),
+                        );
+                        let null = match condition {
+                            true => PrimitiveNull::get_literal(err.position.interval),
+                            false => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                        };
+                        return Ok((null, tmp_update_var));
+                    }
                 }
-            },
+            }
             PathLiteral::VecIndex(index) => match get_at_index(lit, *index) {
                 Some(new_lit) => lit = new_lit,
                 None => {
@@ -189,20 +190,22 @@ fn loop_path(
         (None, Some((old_string, _index))) => {
             let return_value = lit.clone();
             *lit = old_string;
-            return Ok((return_value, tmp_update_var))
-        },
+            return Ok((return_value, tmp_update_var));
+        }
         (Some(new), Some((old_string, index))) => {
             let interval = old_string.interval.to_owned();
             let old_string = Literal::get_value::<String>(
                 &old_string.primitive,
                 old_string.interval.to_owned(),
                 ERROR_INDEXING.to_owned(),
-            )?.to_owned();
+            )?
+            .to_owned();
             let add_string = new.primitive.to_string();
 
-            let new_string: String = old_string.chars()
+            let new_string: String = old_string
+                .chars()
                 .enumerate()
-                .fold( vec!(), |mut acc, (index_1, value)| {
+                .fold(vec![], |mut acc, (index_1, value)| {
                     if index == index_1 {
                         for val in add_string.chars() {
                             acc.push(val);
@@ -211,8 +214,8 @@ fn loop_path(
                         acc.push(value);
                     }
                     acc
-                }
-                ).into_iter()
+                })
+                .into_iter()
                 .collect();
 
             *lit = PrimitiveString::get_literal(&new_string, interval);
@@ -267,12 +270,12 @@ pub fn get_literal(
     }
 }
 
-pub fn get_string_index(lit: Literal, index: usize) -> Result<Option<Literal> , ErrorInfo> {
+pub fn get_string_index(lit: Literal, index: usize) -> Result<Option<Literal>, ErrorInfo> {
     let array = get_array(lit, ERROR_INDEXING.to_owned())?;
 
-    match array.get(index){
+    match array.get(index) {
         Some(value) => Ok(Some(value.to_owned())),
-        None => Ok(None)
+        None => Ok(None),
     }
 }
 

@@ -205,8 +205,7 @@ pub const UUID: &str = "UUID";
 pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
-    ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT, DEBUG, UUID,
-    BASE64, HEX
+    ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, HTTP, OBJECT, DEBUG, UUID, BASE64, HEX,
 ];
 
 pub const FROM_FILE: &str = "FromFile";

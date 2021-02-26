@@ -93,8 +93,13 @@ pub fn expr_to_literal(
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::ComplexLiteral(vec, range_interval) => {
-            let mut string =
-                get_string_from_complex_string(vec, range_interval.to_owned(), data, msg_data, sender)?;
+            let mut string = get_string_from_complex_string(
+                vec,
+                range_interval.to_owned(),
+                data,
+                msg_data,
+                sender,
+            )?;
             exec_path_literal(&mut string, condition, path, data, msg_data, sender)
         }
         Expr::VecExpr(vec, range_interval) => {

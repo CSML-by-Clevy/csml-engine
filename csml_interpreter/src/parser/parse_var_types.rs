@@ -89,8 +89,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (start, _) = preceded(comment, get_interval)(s)?;
-    let (s, (vec, _)) = 
-    parse_error(
+    let (s, (vec, _)) = parse_error(
         start,
         s,
         preceded(
@@ -102,7 +101,8 @@ where
                 )),
                 cut(parse_r_parentheses),
             ),
-    ))?;
+        ),
+    )?;
 
     Ok((s, vec))
 }
@@ -112,8 +112,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (start, mut interval) = preceded(comment, get_interval)(s)?;
-    let (s, (vec, _)) = 
-    parse_error(
+    let (s, (vec, _)) = parse_error(
         start,
         s,
         preceded(
@@ -128,7 +127,8 @@ where
                 )),
                 cut(parse_r_parentheses),
             ),
-    ))?;
+        ),
+    )?;
     let (s, end) = get_interval(s)?;
     interval.add_end(end);
 
@@ -141,23 +141,20 @@ where
 {
     let (start, mut interval) = preceded(comment, get_interval)(s)?;
 
-    let (s, (vec, _)) = 
-    parse_error(
+    let (s, (vec, _)) = parse_error(
         start,
         s,
         preceded(
             tag(L_BRACKET),
             terminated(
                 tuple((
-                    separated_list(
-                        preceded(comment, tag(COMMA)),
-                        parse_operator
-                    ), //parse_basic_expr
+                    separated_list(preceded(comment, tag(COMMA)), parse_operator), //parse_basic_expr
                     opt(preceded(comment, tag(COMMA))),
                 )),
                 preceded(comment, parse_r_bracket),
             ),
-    ))?;
+        ),
+    )?;
     let (s, end) = get_interval(s)?;
     interval.add_end(end);
 

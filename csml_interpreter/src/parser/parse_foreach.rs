@@ -36,14 +36,6 @@ where
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-// let (s, _) = match preceded(comment, tag(COLON))(s) {
-//     Ok((s, colon)) if *colon.fragment() == COLON => (s, colon),
-//     Err(Err::Error((_s, _err))) | Err(Err::Failure((_s, _err))) => {
-//         return Err(gen_nom_failure(s, ERROR_FN_COLON))
-//     }
-//     Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
-// };
-
 pub fn parse_foreach<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
 where
     E: ParseError<Span<'a>>,
@@ -86,13 +78,7 @@ where
     Ok((
         s,
         (
-            Expr::ForEachExpr(
-                idents,
-                opt,
-                Box::new(expr),
-                block,
-                interval,
-            ),
+            Expr::ForEachExpr(idents, opt, Box::new(expr), block, interval),
             instruction_info,
         ),
     ))

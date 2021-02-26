@@ -21,7 +21,7 @@ impl<I: std::fmt::Display> ParseError<I> for CustomError<I> {
         Self {
             input: input,
             end: Some(other.input),
-            error: other.error
+            error: other.error,
         }
     }
 
@@ -32,9 +32,7 @@ impl<I: std::fmt::Display> ParseError<I> for CustomError<I> {
                 other.error = ctx.to_owned();
                 other
             }
-            _ => {
-                other
-            },
+            _ => other,
         }
     }
 }

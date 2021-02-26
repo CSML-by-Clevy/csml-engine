@@ -3,10 +3,10 @@ use crate::parser::parse_braces::parse_r_brace;
 use crate::parser::{
     parse_actions::{parse_fn_root_functions, parse_root_functions},
     parse_comments::comment,
-    tools::{get_interval, parse_error}
+    tools::{get_interval, parse_error},
 };
 use nom::{
-    bytes::complete::tag, error::{ParseError}, multi::fold_many0, sequence::delimited,
+    bytes::complete::tag, error::ParseError, multi::fold_many0, sequence::delimited,
     sequence::preceded, *,
 };
 
@@ -75,7 +75,7 @@ where
             preceded(comment, tag(L_BRACE)),
             parse_root,
             preceded(comment, parse_r_brace),
-        )
+        ),
     )
 }
 
@@ -92,6 +92,6 @@ where
             preceded(comment, tag(L_BRACE)),
             parse_fn_root,
             preceded(comment, parse_r_brace),
-        )
+        ),
     )
 }

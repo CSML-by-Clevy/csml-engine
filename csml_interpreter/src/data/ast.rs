@@ -215,13 +215,7 @@ pub enum Expr {
         scope: Block,
         range: Interval,
     },
-    ForEachExpr(
-        Identifier,
-        Option<Identifier>,
-        Box<Expr>,
-        Block,
-        Interval,
-    ),
+    ForEachExpr(Identifier, Option<Identifier>, Box<Expr>, Block, Interval),
     ComplexLiteral(Vec<Expr>, Interval),
     MapExpr(HashMap<String, Expr>, Interval),
     VecExpr(Vec<Expr>, Interval),
@@ -294,8 +288,8 @@ impl Interval {
         start_column: u32,
         offset: usize,
         end_line: Option<u32>,
-        end_column: Option<u32>
-) -> Self {
+        end_column: Option<u32>,
+    ) -> Self {
         Self {
             start_line,
             start_column,

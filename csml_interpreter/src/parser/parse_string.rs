@@ -8,9 +8,9 @@ use crate::parser::state_context::{StateContext, StringState};
 use crate::parser::tools::{get_distance_brace, get_interval, get_range_interval, parse_error};
 use nom::{
     bytes::complete::tag,
+    combinator::cut,
     error::ParseError,
     sequence::{delimited, preceded},
-    combinator::{cut},
     *,
 };
 use std::sync::mpsc;
@@ -183,10 +183,7 @@ where
 
             let interval = get_range_interval(&interval);
 
-            Ok((
-                rest,
-                Expr::ComplexLiteral(vector, interval),
-            ))
+            Ok((rest, Expr::ComplexLiteral(vector, interval)))
         }
         (s, None) => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
     }
@@ -204,11 +201,7 @@ where
     parse_error(
         start,
         s,
-        delimited(
-            tag(DOUBLE_QUOTE),
-            do_parse_string,
-            cut(tag(DOUBLE_QUOTE))
-        )
+        delimited(tag(DOUBLE_QUOTE), do_parse_string, cut(tag(DOUBLE_QUOTE))),
     )
 }
 

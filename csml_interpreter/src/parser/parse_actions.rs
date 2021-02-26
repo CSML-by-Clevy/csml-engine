@@ -182,10 +182,7 @@ where
     interval.add_end(end);
 
     // this vec is temporary until a solution for multiple arguments in debug is found
-    let vec = Expr::VecExpr(
-        vec![expr],
-        interval
-    );
+    let vec = Expr::VecExpr(vec![expr], interval);
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),

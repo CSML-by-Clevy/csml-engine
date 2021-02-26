@@ -234,7 +234,14 @@ fn string_step_10() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_10", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_10",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -254,7 +261,14 @@ fn string_step_11() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_11", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_11",
+            "flow",
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 

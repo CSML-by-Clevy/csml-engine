@@ -92,7 +92,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
             Err::Error(err) | Err::Failure(err) => {
                 let (end_line, end_column) = match err.end {
                     Some(end) => (Some(end.location_line()), Some(end.get_column() as u32)),
-                    None => (None, None)
+                    None => (None, None),
                 };
 
                 Err(gen_error_info(
@@ -105,7 +105,7 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
                     )),
                     convert_error(Span::new(slice), err),
                 ))
-            },
+            }
             Err::Incomplete(_err) => unreachable!(),
         },
     }
@@ -185,7 +185,7 @@ where
             actions: Expr::Scope {
                 block_type: BlockType::Step,
                 scope: actions,
-                range: interval
+                range: interval,
             },
         }],
     ))
