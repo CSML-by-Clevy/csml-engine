@@ -11,8 +11,7 @@ use serde_json::Value;
 
 #[test]
 fn hex_0() {
-    let data =
-        r#"{"memories":[], "messages":[ {"content":{"text": "Hello World"},"content_type":"text"}  ]}"#;
+    let data = r#"{"memories":[], "messages":[ {"content":{"text": "Hello World"},"content_type":"text"}  ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),

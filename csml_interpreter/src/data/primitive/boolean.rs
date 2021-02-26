@@ -302,9 +302,11 @@ impl Primitive for PrimitiveBoolean {
                 content_type: "boolean".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.to_string())),
                 interval: Interval {
-                    column: 0,
-                    line: 0,
+                    start_column: 0,
+                    start_line: 0,
                     offset: 0,
+                    end_line: None,
+                    end_column: None,
                 },
             },
         );
@@ -312,9 +314,11 @@ impl Primitive for PrimitiveBoolean {
         let mut result = PrimitiveObject::get_literal(
             &hashmap,
             Interval {
-                column: 0,
-                line: 0,
+                start_column: 0,
+                start_line: 0,
                 offset: 0,
+                end_line: None,
+                end_column: None,
             },
         );
         result.set_content_type("text");

@@ -77,8 +77,10 @@ mod tests {
 
     fn gen_inter() -> Interval {
         Interval {
-            line: 0,
-            column: 0,
+            start_line: 0,
+            start_column: 0,
+            end_line: None,
+            end_column: None,
             offset: 0,
         }
     }

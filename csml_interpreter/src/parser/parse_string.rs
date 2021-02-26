@@ -5,9 +5,10 @@ use crate::interpreter::variable_handler::expr_to_literal;
 use crate::parser::operator::parse_operator;
 use crate::parser::parse_comments::comment;
 use crate::parser::state_context::{StateContext, StringState};
-use crate::parser::tools::{get_distance_brace, get_interval, get_range_interval};
+use crate::parser::tools::{get_distance_brace, get_interval, get_range_interval, parse_error};
 use nom::{
     bytes::complete::tag,
+    combinator::cut,
     error::ParseError,
     sequence::{delimited, preceded},
     *,
@@ -79,12 +80,16 @@ where
     }
 }
 
-fn get_distance_quote(s: &Span) -> Option<usize> {
+fn get_distance_quote<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Option<usize>, E>
+where
+    E: ParseError<Span<'a>>,
+{
     let mut escape = false;
+    let mut index = 0;
 
-    for (result, c) in s.as_bytes().iter().enumerate() {
+    for (i_bytes, c) in s.as_bytes().iter().enumerate() {
         if *c as char == '\"' && !escape {
-            return Some(result);
+            return Ok((s, Some(i_bytes)));
         }
 
         if *c as char == '\\' {
@@ -95,9 +100,11 @@ fn get_distance_quote(s: &Span) -> Option<usize> {
         } else {
             escape = false;
         }
+        index = i_bytes;
     }
 
-    None
+    let (s, _) = nom::bytes::complete::take(index)(s)?;
+    Ok((s, None))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,8 +140,8 @@ fn do_parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    match get_distance_quote(&s) {
-        Some(distance) => {
+    match get_distance_quote(s)? {
+        (_, Some(distance)) => {
             let (rest, string) = s.take_split(distance);
 
             let mut vector = vec![];
@@ -174,14 +181,11 @@ where
                 }
             }
 
-            let (start, end) = get_range_interval(&interval);
+            let interval = get_range_interval(&interval);
 
-            Ok((
-                rest,
-                Expr::ComplexLiteral(vector, RangeInterval::new(start, end)),
-            ))
+            Ok((rest, Expr::ComplexLiteral(vector, interval)))
         }
-        None => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
+        (s, None) => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
     }
 }
 
@@ -193,7 +197,12 @@ pub fn parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    delimited(tag(DOUBLE_QUOTE), do_parse_string, tag(DOUBLE_QUOTE))(s)
+    let (start, _) = get_interval(s)?;
+    parse_error(
+        start,
+        s,
+        delimited(tag(DOUBLE_QUOTE), do_parse_string, cut(tag(DOUBLE_QUOTE))),
+    )
 }
 
 pub fn interpolate_string(
@@ -213,6 +222,8 @@ pub fn interpolate_string(
                         span.location_line(),
                         span.get_column() as u32,
                         span.location_offset(),
+                        None,
+                        None,
                     )),
                     ERROR_PARSING.to_owned(),
                 ))
@@ -226,6 +237,8 @@ pub fn interpolate_string(
                     err.input.location_line(),
                     err.input.get_column() as u32,
                     span.location_offset(),
+                    None,
+                    None,
                 )),
                 err.error,
             )),

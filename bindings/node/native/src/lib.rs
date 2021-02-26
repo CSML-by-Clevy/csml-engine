@@ -65,14 +65,23 @@ fn format_warnings<'a, C: Context<'a>>(
         let object = JsObject::new(cx);
         let flow = cx.string(warning.position.flow.clone());
         let step = cx.string(warning.position.step.clone());
-        let line = cx.number(warning.position.interval.line as f64);
-        let column = cx.number(warning.position.interval.column as f64);
+        let line = cx.number(warning.position.interval.start_line as f64);
+        let column = cx.number(warning.position.interval.start_column as f64);
+
         let message = cx.string(&warning.message);
 
         object.set(cx, "flow", flow).unwrap();
         object.set(cx, "step", step).unwrap();
-        object.set(cx, "line", line).unwrap();
-        object.set(cx, "column", column).unwrap();
+        object.set(cx, "start_line", line).unwrap();
+        object.set(cx, "start_column", column).unwrap();
+        if let (Some(end_line),Some(end_column)) = (warning.position.interval.end_line, warning.position.interval.end_column) {
+            let end_line = cx.number(end_line as f64);
+            let end_column = cx.number(end_column as f64);
+
+            object.set(cx, "end_line", end_line).unwrap();
+            object.set(cx, "end_column", end_column).unwrap();
+        }
+
         object.set(cx, "message", message).unwrap();
 
         array.set(cx, index as u32, object).unwrap();
@@ -88,14 +97,21 @@ fn format_errors<'a, C: Context<'a>>(
         let object = JsObject::new(cx);
         let flow = cx.string(err.position.flow.clone());
         let step = cx.string(err.position.step.clone());
-        let line = cx.number(err.position.interval.line as f64);
-        let column = cx.number(err.position.interval.column as f64);
+        let line = cx.number(err.position.interval.start_line as f64);
+        let column = cx.number(err.position.interval.start_column as f64);
         let message = cx.string(&err.message);
 
         object.set(cx, "flow", flow).unwrap();
         object.set(cx, "step", step).unwrap();
-        object.set(cx, "line", line).unwrap();
-        object.set(cx, "column", column).unwrap();
+        object.set(cx, "start_line", line).unwrap();
+        object.set(cx, "start_column", column).unwrap();
+        if let (Some(end_line),Some(end_column)) = (err.position.interval.end_line, err.position.interval.end_column) {
+            let end_line = cx.number(end_line as f64);
+            let end_column = cx.number(end_column as f64);
+
+            object.set(cx, "end_line", end_line).unwrap();
+            object.set(cx, "end_column", end_column).unwrap();
+        }
         object.set(cx, "message", message).unwrap();
 
         array.set(cx, index as u32, object).unwrap();

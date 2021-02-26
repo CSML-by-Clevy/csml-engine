@@ -30,8 +30,8 @@ impl ErrorInfo {
         format!(
             "{} at line {}, column {} in step [{}] from flow [{}]",
             self.message,
-            self.position.interval.line,
-            self.position.interval.column,
+            self.position.interval.start_line,
+            self.position.interval.start_column,
             self.position.step,
             self.position.flow,
         )

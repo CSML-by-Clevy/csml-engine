@@ -148,7 +148,6 @@ pub enum ObjectType {
     Use(Box<Expr>),
 
     Remember(Identifier, Box<Expr>),
-    // Assign{old: Box<Expr>, new: Box<Expr>},
     Assign(Box<Expr>, Box<Expr>),
 
     As(Identifier, Box<Expr>),
@@ -206,7 +205,7 @@ pub enum IfStatement {
         consequence: Block,
         then_branch: Option<(Box<IfStatement>, InstructionInfo)>,
     },
-    ElseStmt(Block, RangeInterval),
+    ElseStmt(Block, Interval),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -214,20 +213,14 @@ pub enum Expr {
     Scope {
         block_type: BlockType,
         scope: Block,
-        range: RangeInterval,
+        range: Interval,
     },
-    ForEachExpr(
-        Identifier,
-        Option<Identifier>,
-        Box<Expr>,
-        Block,
-        RangeInterval,
-    ),
-    ComplexLiteral(Vec<Expr>, RangeInterval),
-    MapExpr(HashMap<String, Expr>, RangeInterval),
-    VecExpr(Vec<Expr>, RangeInterval),
-    InfixExpr(Infix, Box<Expr>, Box<Expr>), // RangeInterval ?
-    ObjectExpr(ObjectType),                 // RangeInterval ?
+    ForEachExpr(Identifier, Option<Identifier>, Box<Expr>, Block, Interval),
+    ComplexLiteral(Vec<Expr>, Interval),
+    MapExpr(HashMap<String, Expr>, Interval),
+    VecExpr(Vec<Expr>, Interval),
+    InfixExpr(Infix, Box<Expr>, Box<Expr>), // range Interval ?
+    ObjectExpr(ObjectType),                 // renge Interval ?
     IfExpr(IfStatement),
 
     PathExpr {
@@ -268,50 +261,57 @@ pub enum Infix {
     Or,
 }
 
-#[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Eq, Hash)]
-pub struct RangeInterval {
-    pub start: Interval,
-    pub end: Interval,
-}
-
-impl RangeInterval {
-    pub fn new(start: Interval, end: Interval) -> Self {
-        Self { start, end }
-    }
-}
-
 #[derive(PartialEq, Debug, Clone, Eq, Hash, Copy, Serialize, Deserialize)]
 pub struct Interval {
-    pub line: u32,
-    pub column: u32,
+    pub start_line: u32,
+    pub start_column: u32,
+    pub end_line: Option<u32>,
+    pub end_column: Option<u32>,
     pub offset: usize,
 }
 
 impl Default for Interval {
     fn default() -> Self {
         Self {
-            line: 0,
-            column: 0,
+            start_line: 0,
+            start_column: 0,
+            end_line: None,
+            end_column: None,
             offset: 0,
         }
     }
 }
 
 impl Interval {
-    pub fn new_as_u32(line: u32, column: u32, offset: usize) -> Self {
+    pub fn new_as_u32(
+        start_line: u32,
+        start_column: u32,
+        offset: usize,
+        end_line: Option<u32>,
+        end_column: Option<u32>,
+    ) -> Self {
         Self {
-            line,
-            column,
+            start_line,
+            start_column,
+            end_line,
+            end_column,
             offset,
         }
     }
 
     pub fn new_as_span(span: Span) -> Self {
         Self {
-            line: span.location_line(),
-            column: span.get_column() as u32,
+            start_line: span.location_line(),
+            start_column: span.get_column() as u32,
+            end_line: None,
+            end_column: None,
             offset: span.location_offset(),
         }
+    }
+
+    pub fn add_end(&mut self, end: Self) {
+        self.end_line = Some(end.start_line);
+        self.end_column = Some(end.start_column)
     }
 }
 

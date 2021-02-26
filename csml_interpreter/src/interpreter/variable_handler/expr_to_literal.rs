@@ -80,7 +80,7 @@ pub fn expr_to_literal(
 
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
-        Expr::MapExpr(map, RangeInterval { start, .. }) => {
+        Expr::MapExpr(map, range_interval) => {
             let mut object = HashMap::new();
 
             for (key, value) in map.iter() {
@@ -89,22 +89,27 @@ pub fn expr_to_literal(
                     expr_to_literal(&value, condition, None, data, msg_data, sender)?,
                 );
             }
-            let mut literal = PrimitiveObject::get_literal(&object, start.to_owned());
+            let mut literal = PrimitiveObject::get_literal(&object, range_interval.to_owned());
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
-        Expr::ComplexLiteral(vec, RangeInterval { start, .. }) => {
-            let mut string =
-                get_string_from_complex_string(vec, start.to_owned(), data, msg_data, sender)?;
+        Expr::ComplexLiteral(vec, range_interval) => {
+            let mut string = get_string_from_complex_string(
+                vec,
+                range_interval.to_owned(),
+                data,
+                msg_data,
+                sender,
+            )?;
             exec_path_literal(&mut string, condition, path, data, msg_data, sender)
         }
-        Expr::VecExpr(vec, range) => {
+        Expr::VecExpr(vec, range_interval) => {
             let mut array = vec![];
             for value in vec.iter() {
                 array.push(expr_to_literal(
                     value, condition, None, data, msg_data, sender,
                 )?)
             }
-            let mut literal = PrimitiveArray::get_literal(&array, range.start.to_owned());
+            let mut literal = PrimitiveArray::get_literal(&array, range_interval.to_owned());
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::InfixExpr(infix, exp_1, exp_2) => {

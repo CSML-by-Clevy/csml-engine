@@ -1,8 +1,6 @@
-use crate::error_format::*;
 use crate::data::primitive::{PrimitiveString, PrimitiveType};
-use crate::data::{
-    Literal, Position
-};
+use crate::data::{Literal, Position};
+use crate::error_format::*;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -25,7 +23,7 @@ pub fn get_integer(text: &str) -> Result<Integer, String> {
     }
 }
 
-pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>, ErrorInfo>  {
+pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>, ErrorInfo> {
     match literal.primitive.get_type() {
         PrimitiveType::PrimitiveString => {
             let string = Literal::get_value::<String>(
@@ -34,21 +32,21 @@ pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>
                 error_message,
             )?;
 
-            Ok(PrimitiveString::get_array_char(string.to_owned(), literal.interval))
-        },
-        PrimitiveType::PrimitiveArray => {
-            Ok(Literal::get_value::<Vec<Literal>>(
-                &literal.primitive,
-                literal.interval.to_owned(),
-                error_message,
-            )?.to_owned())
-        },
-        _ => Err(
-            gen_error_info(
-                Position::new(literal.interval),
-                error_message
-            )
-        )
+            Ok(PrimitiveString::get_array_char(
+                string.to_owned(),
+                literal.interval,
+            ))
+        }
+        PrimitiveType::PrimitiveArray => Ok(Literal::get_value::<Vec<Literal>>(
+            &literal.primitive,
+            literal.interval.to_owned(),
+            error_message,
+        )?
+        .to_owned()),
+        _ => Err(gen_error_info(
+            Position::new(literal.interval),
+            error_message,
+        )),
     }
 }
 

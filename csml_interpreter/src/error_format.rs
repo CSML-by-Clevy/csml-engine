@@ -31,8 +31,8 @@ pub const ERROR_IMPORT_ARGUMENT: &str =
     "import expect valid function name. Example: import function from flow";
 pub const ERROR_BREAK: &str = "break can only be used inside foreach";
 pub const ERROR_RETURN: &str = "return expects a value to return";
-pub const ERROR_LEFT_BRACE: &str = "expecting '('";
-pub const ERROR_RIGHT_BRACE: &str = "expecting ')'";
+pub const ERROR_LEFT_BRACE: &str = "expecting '{'";
+pub const ERROR_RIGHT_BRACE: &str = "expecting '}'";
 pub const ERROR_RIGHT_BRACKET: &str = "expecting ']'";
 pub const ERROR_GOTO_STEP: &str = "missing step name after goto";
 pub const ERROR_IMPORT_STEP: &str = "missing step name after import";
@@ -191,8 +191,10 @@ pub const ERROR_STRING_RHS: &str = "rhs must be of type string";
 
 pub const ERROR_SLICE_ARG_INT: &str = ".slice(arg, optional_arg) args need to be of type Integer";
 pub const ERROR_SLICE_ARG_POSITIVE: &str = ".slice(arg, optional_arg) args need to be positive";
-pub const ERROR_SLICE_ARG_LEN: &str = ".slice(arg, optional_arg) args need to be inferior to the string sliced";
-pub const ERROR_SLICE_ARG2: &str = ".slice(arg, optional_arg) optional_arg need to be superior to arg in value ex: .slice(2, 5)";
+pub const ERROR_SLICE_ARG_LEN: &str =
+    ".slice(arg, optional_arg) args need to be inferior to the string sliced";
+pub const ERROR_SLICE_ARG2: &str =
+    ".slice(arg, optional_arg) optional_arg need to be superior to arg in value ex: .slice(2, 5)";
 
 pub const ERROR_STRING_UNKNOWN_METHOD: &str = "is not a method of String";
 

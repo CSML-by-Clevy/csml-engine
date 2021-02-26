@@ -35,8 +35,10 @@ pub fn get_hashmap_from_mem(lit: &serde_json::Value) -> HashMap<String, Literal>
     match memory_to_literal(
         lit,
         Interval {
-            line: 0,
-            column: 0,
+            start_line: 0,
+            start_column: 0,
+            end_line: None,
+            end_column: None,
             offset: 0,
         },
     ) {
@@ -54,8 +56,10 @@ pub fn get_hashmap_from_json(lit: &serde_json::Value) -> HashMap<String, Literal
     match json_to_literal(
         lit,
         Interval {
-            line: 0,
-            column: 0,
+            start_line: 0,
+            start_column: 0,
+            end_line: None,
+            end_column: None,
             offset: 0,
         },
     ) {
@@ -97,8 +101,10 @@ pub fn get_hashmap(lit: &serde_json::Value) -> HashMap<String, Literal> {
     match json_to_literal(
         lit,
         Interval {
-            line: 0,
-            column: 0,
+            start_line: 0,
+            start_column: 0,
+            end_line: None,
+            end_column: None,
             offset: 0,
         },
     ) {

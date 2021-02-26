@@ -79,7 +79,7 @@ where
         Err(Err::Error(e)) => {
             return Err(Err::Failure(E::add_context(s, ERROR_ACTION_ARGUMENT, e)))
         }
-        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Failure(e)) => return Err(Err::Failure(e)),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     }
 }
@@ -174,18 +174,15 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, interval) = get_interval(s)?;
+    let (s, mut interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, DEBUG_ACTION)(s)?;
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;
+    let (s, end) = get_interval(s)?;
+    interval.add_end(end);
+
     // this vec is temporary until a solution for multiple arguments in debug is found
-    let vec = Expr::VecExpr(
-        vec![expr],
-        RangeInterval {
-            start: interval.to_owned(),
-            end: interval.to_owned(),
-        },
-    );
+    let vec = Expr::VecExpr(vec![expr], interval);
 
     let instruction_info = InstructionInfo {
         index: StateContext::get_rip(),
@@ -320,7 +317,7 @@ where
     let (s, expr) = match preceded(comment, parse_operator)(s) {
         Ok(value) => value,
         Err(Err::Error(e)) => return Err(Err::Failure(E::add_context(s, ERROR_RETURN, e))),
-        Err(Err::Failure(e)) => return Err(Err::Failure(E::append(s, ErrorKind::Tag, e))),
+        Err(Err::Failure(e)) => return Err(Err::Failure(e)),
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };
 

@@ -85,9 +85,9 @@ where
     Ok((s, Interval::new_as_span(pos)))
 }
 
-pub fn get_range_interval(vector_interval: &[Interval]) -> (Interval, Interval) {
-    let mut start = Interval::new_as_u32(0, 0, 0);
-    let mut end = Interval::new_as_u32(0, 0, 0);
+pub fn get_range_interval(vector_interval: &[Interval]) -> Interval {
+    let mut start = Interval::new_as_u32(0, 0, 0, None, None);
+    let mut end = Interval::new_as_u32(0, 0, 0, None, None);
 
     for (index, interval) in vector_interval.iter().enumerate() {
         if index == 0 {
@@ -97,7 +97,22 @@ pub fn get_range_interval(vector_interval: &[Interval]) -> (Interval, Interval) 
         end = *interval;
     }
 
-    (start, end)
+    start.add_end(end);
+    start
+}
+
+// generate range error
+pub fn parse_error<'a, O, E, F>(start: Span<'a>, span: Span<'a>, func: F) -> IResult<Span<'a>, O, E>
+where
+    E: ParseError<Span<'a>>,
+    F: Fn(Span<'a>) -> IResult<Span<'a>, O, E>,
+{
+    match func(span) {
+        Ok(value) => Ok(value),
+        Err(Err::Error(e)) => Err(Err::Error(e)),
+        Err(Err::Failure(e)) => Err(Err::Failure(E::append(start, ErrorKind::Tag, e))),
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
 }
 
 pub fn get_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
