@@ -57,7 +57,7 @@ pub const ERROR_INVALID_FLOW: &str = "invalid flow: ";
 pub const ERROR_START_INSTRUCTIONS: &str =
 "to start an action one of the following instructions is expected: [say, do, if, foreach, goto]";
 pub const ERROR_FOREACH: &str =
-    "foreach only accepts array as iterable elements. Example: foreach(elem) in [1, 2, 3]";
+    "foreach only accepts iterable elements like arrays and strings. Example: foreach(elem) in [1, 2, 3]";
 pub const ERROR_FIND_BY_INDEX: &str =
     "index must be of type int or string. Example var.[42] or var.[\"key\"]";
 pub const ERROR_ASSIGN_IDENT: &str = "key must be of type identifier";
@@ -142,6 +142,9 @@ pub const ERROR_HTTP_NOT_DATA: &str = "bad format: no 'data' in HTTP response";
 pub const ERROR_NATIVE_COMPONENT: &str = "native component does not exist";
 
 // ### Primitives
+// #### Indexing
+pub const ERROR_INDEXING: &str =
+    "indexing can only be done in ARRAY, OBJECT or STRING primitive types";
 // #### Boolean
 pub const ERROR_BOOLEAN_UNKNOWN_METHOD: &str = "is not a method of Boolean";
 
