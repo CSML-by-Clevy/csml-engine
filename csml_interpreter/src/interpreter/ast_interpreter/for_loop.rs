@@ -1,10 +1,11 @@
-use crate::data::primitive::int::PrimitiveInt;
+use crate::data::primitive::{PrimitiveInt,};
 use crate::data::{
     ast::*,
+    Data, MessageData, MSG,
     hold::{
         hold_index_end_loop, hold_index_start_loop, hold_loop_decrs_index, hold_loop_incrs_index,
     },
-    Data, Literal, MessageData, MSG,
+    primitive::tools::get_array
 };
 use crate::error_format::*;
 use crate::interpreter::interpret_scope;
@@ -21,17 +22,14 @@ pub fn for_loop(
     index: &Option<Identifier>,
     expr: &Expr,
     block: &Block,
-    range_interval: &Interval,
+    _range_interval: &Interval,
     mut msg_data: MessageData,
     data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let literal = expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
-    let mut array: &[Literal] = Literal::get_value::<Vec<Literal>>(
-        &literal.primitive,
-        range_interval.to_owned(),
-        ERROR_FOREACH.to_owned(),
-    )?;
+    let mut array = get_array(literal, ERROR_FOREACH.to_owned())?;
+
     let mut skip_value = 0;
     let array = hold_index_start_loop(data, &mut array, &mut skip_value);
 

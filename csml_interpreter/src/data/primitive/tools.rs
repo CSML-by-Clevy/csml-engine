@@ -1,4 +1,8 @@
 use crate::error_format::*;
+use crate::data::primitive::{PrimitiveString, PrimitiveType};
+use crate::data::{
+    Literal, Position
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -18,6 +22,33 @@ pub fn get_integer(text: &str) -> Result<Integer, String> {
         (Ok(int), _) => Ok(Integer::Int(int)),
         (_, Ok(float)) => Ok(Integer::Float(float)),
         (..) => Err(ERROR_OPS.to_owned()),
+    }
+}
+
+pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>, ErrorInfo>  {
+    match literal.primitive.get_type() {
+        PrimitiveType::PrimitiveString => {
+            let string = Literal::get_value::<String>(
+                &literal.primitive,
+                literal.interval.to_owned(),
+                error_message,
+            )?;
+
+            Ok(PrimitiveString::get_array_char(string.to_owned(), literal.interval))
+        },
+        PrimitiveType::PrimitiveArray => {
+            Ok(Literal::get_value::<Vec<Literal>>(
+                &literal.primitive,
+                literal.interval.to_owned(),
+                error_message,
+            )?.to_owned())
+        },
+        _ => Err(
+            gen_error_info(
+                Position::new(literal.interval),
+                error_message
+            )
+        )
     }
 }
 
