@@ -1,10 +1,10 @@
-use crate::data::DynamoDbClient;
+use crate::data::{DynamoDbClient, DynamoBot};
 use crate::db_connectors::{
     dynamodb::{aws_s3, Bot, DynamoDbKey},
     BotVersion,
 };
 use crate::EngineError;
-use csml_interpreter::data::{csml_bot::DynamoBot, csml_flow::CsmlFlow};
+use csml_interpreter::data::{csml_flow::CsmlFlow};
 
 use rusoto_dynamodb::*;
 

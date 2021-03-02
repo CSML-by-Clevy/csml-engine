@@ -82,6 +82,12 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
         custom_components: None,
         default_flow: bot_info.default_flow.clone(),
         bot_ast: None,
+        env: Some(
+            serde_json::json!({
+                "random": "value",
+                "toto": "key",
+            })
+        )
     };
 
     Ok(bot)
@@ -371,3 +377,9 @@ fn ok_test_memory() {
         panic!("\noutput {:?}\n messages {:?}", output_message, messages);
     }
 }
+
+
+// #[test]
+// fn ok_test_bot_version() {
+    
+// }

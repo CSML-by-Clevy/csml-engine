@@ -1,10 +1,10 @@
 use crate::{
     db_connectors::{BotVersion, DbBot},
+    data::SerializeCsmlBot,
     EngineError,
 };
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
-use csml_interpreter::data::csml_bot::SerializeCsmlBot;
 
 fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, EngineError> {
     Ok(DbBot {
