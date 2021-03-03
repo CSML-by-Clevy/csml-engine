@@ -1,10 +1,10 @@
 use crate::{
     db_connectors::{BotVersion, DbBot},
+    data::SerializeCsmlBot,
     EngineError,
 };
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
-use csml_interpreter::data::csml_bot::SerializeCsmlBot;
 
 fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, EngineError> {
     Ok(DbBot {
@@ -151,7 +151,7 @@ pub fn get_bot_by_version_id(
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
             Ok(Some(BotVersion {
-                bot: csml_bot.to_bot(),
+                bot: csml_bot.to_bot()?,
                 version_id: bot.id,
                 engine_version: env!("CARGO_PKG_VERSION").to_owned(),
             }))
@@ -184,7 +184,7 @@ pub fn get_last_bot_version(
             let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
 
             Ok(Some(BotVersion {
-                bot: csml_bot.to_bot(),
+                bot: csml_bot.to_bot()?,
                 version_id: bot.id,
                 engine_version: env!("CARGO_PKG_VERSION").to_owned(),
             }))
