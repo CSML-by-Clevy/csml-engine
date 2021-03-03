@@ -1,6 +1,6 @@
 use csml_engine::{
     data::{BotOpt, CsmlRequest},
-    start_conversation,
+    start_conversation
 };
 use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client};
 use serde::{Deserialize, Serialize};
@@ -377,9 +377,3 @@ fn ok_test_memory() {
         panic!("\noutput {:?}\n messages {:?}", output_message, messages);
     }
 }
-
-
-// #[test]
-// fn ok_test_bot_version() {
-    
-// }

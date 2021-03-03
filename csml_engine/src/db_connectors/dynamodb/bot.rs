@@ -196,7 +196,7 @@ pub fn get_bot_by_version_id(
             let flows = get_flows(&key, db)?;
 
             Ok(Some(BotVersion {
-                bot: csml_bot.to_bot(flows),
+                bot: csml_bot.to_bot(flows)?,
                 version_id: bot.version_id,
                 engine_version: env!("CARGO_PKG_VERSION").to_owned(),
             }))
@@ -271,7 +271,7 @@ pub fn get_last_bot_version(
     let flows = get_flows(&key, db)?;
 
     Ok(Some(BotVersion {
-        bot: csml_bot.to_bot(flows),
+        bot: csml_bot.to_bot(flows)?,
         version_id: bot.version_id,
         engine_version: env!("CARGO_PKG_VERSION").to_owned(),
     }))
