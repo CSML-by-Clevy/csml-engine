@@ -11,7 +11,8 @@ use std::thread::*;
 ////////////////////////////////////////////////////////////////////////////////
 
 pub const WARNING_USE: & str = "use will be soon a deprecated keyword please use 'do' instead. https://docs.csml.dev/memory/temporary-and-long-term-variables";
-pub const WARNING_FN: & str = "'Fn()' will soon be deprecated. Please use the 'App()' keyword instead";
+pub const WARNING_FN: &str =
+    "'Fn()' will soon be deprecated. Please use the 'App()' keyword instead";
 pub const WARNING_REMEMBER_AS: & str = "'remember value as key' will be soon a deprecated keyword please use 'remember key = value' instead. https://docs.csml.dev/memory/temporary-and-long-term-variables";
 pub const WARNING_OBJECT: & str = "'Object(key = value)' will be soon a deprecated Macro please use '{key: value}' instead; https://docs.csml.dev/automatic-type-inference/literals-objects-arrays";
 

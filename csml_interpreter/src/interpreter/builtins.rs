@@ -43,7 +43,7 @@ pub fn match_builtin(
         HTTP => http(args, interval),
         BASE64 => base64(args, interval),
         HEX => hex(args, interval),
-        FN| APP => api(args, interval, data, msg_data, sender),
+        FN | APP => api(args, interval, data, msg_data, sender),
         ONE_OF => one_of(args, interval),
         SHUFFLE => shuffle(args, interval),
         LENGTH => length(args, interval),

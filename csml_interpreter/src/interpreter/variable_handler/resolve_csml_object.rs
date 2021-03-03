@@ -145,7 +145,7 @@ pub fn resolve_object(
 
             let mut context = Context {
                 current: HashMap::new(),
-                metadata: HashMap::new(),
+                metadata: data.context.metadata.clone(),
                 api_info: data.context.api_info.clone(),
                 hold: None,
                 step: data.context.step.clone(),

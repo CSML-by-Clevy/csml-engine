@@ -95,7 +95,7 @@ lazy_static! {
         );
         map.insert(
             "slice",
-            (PrimitiveArray::slice as PrimitiveMethod, Right::Read)
+            (PrimitiveArray::slice as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "shuffle",
@@ -572,7 +572,8 @@ impl PrimitiveArray {
                         &literal.primitive,
                         literal.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
-                    )?.to_owned();
+                    )?
+                    .to_owned();
 
                     if int_start.is_negative() {
                         int_start = len as i64 + int_start;
@@ -588,7 +589,10 @@ impl PrimitiveArray {
                         }
                     };
 
-                    let value = array.value[start..].iter().cloned().collect::<Vec<Literal>>();
+                    let value = array.value[start..]
+                        .iter()
+                        .cloned()
+                        .collect::<Vec<Literal>>();
 
                     Ok(PrimitiveArray::get_literal(&value, interval))
                 }
@@ -603,12 +607,14 @@ impl PrimitiveArray {
                         &literal_start.primitive,
                         literal_start.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
-                    )?.to_owned();
+                    )?
+                    .to_owned();
                     let mut int_end = Literal::get_value::<i64>(
                         &literal_end.primitive,
                         literal_end.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
-                    )?.to_owned();
+                    )?
+                    .to_owned();
 
                     if int_start.is_negative() {
                         int_start = len as i64 + int_start;
@@ -621,12 +627,13 @@ impl PrimitiveArray {
                         return Err(gen_error_info(
                             Position::new(interval),
                             ERROR_SLICE_ARG2.to_owned(),
-                        ))
+                        ));
                     }
 
                     let (start, end) = match (int_start, int_end) {
                         (start, end)
-                            if start.is_positive() && end.is_positive()
+                            if start.is_positive()
+                                && end.is_positive()
                                 && (start as usize) < len
                                 && (end as usize) <= len =>
                         {
@@ -639,7 +646,10 @@ impl PrimitiveArray {
                             ))
                         }
                     };
-                    let value = array.value[start..end].iter().cloned().collect::<Vec<Literal>>();
+                    let value = array.value[start..end]
+                        .iter()
+                        .cloned()
+                        .collect::<Vec<Literal>>();
 
                     Ok(PrimitiveArray::get_literal(&value, interval))
                 }
@@ -654,7 +664,6 @@ impl PrimitiveArray {
             )),
         }
     }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

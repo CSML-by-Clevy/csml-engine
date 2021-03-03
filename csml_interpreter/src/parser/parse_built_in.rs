@@ -1,4 +1,8 @@
-use crate::data::{ast::*, tokens::*, warnings::{WARNING_OBJECT, WARNING_FN}};
+use crate::data::{
+    ast::*,
+    tokens::*,
+    warnings::{WARNING_FN, WARNING_OBJECT},
+};
 // use crate::linter::Linter;
 use crate::data::warnings::Warnings;
 use crate::parser::tools::get_string;
