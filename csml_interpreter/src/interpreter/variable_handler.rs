@@ -17,7 +17,7 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
-    tokens::{COMPONENT, EVENT, _METADATA, _ENV},
+    tokens::{COMPONENT, EVENT, _ENV, _METADATA},
     ArgsType, Data, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;

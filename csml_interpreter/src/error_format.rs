@@ -189,7 +189,8 @@ pub const ERROR_STRING_COS: &str = "[cos] the string must be of numeric type in 
 pub const ERROR_STRING_NUMERIC: &str = "the string must be of numeric type in order to use this method. Verify first with 'string.is_number() == true' to check it";
 pub const ERROR_STRING_RHS: &str = "rhs must be of type string";
 
-pub const ERROR_SLICE_ARG_INT: &str = ".slice(start, optional<end>) args need to be of type Integer";
+pub const ERROR_SLICE_ARG_INT: &str =
+    ".slice(start, optional<end>) args need to be of type Integer";
 pub const ERROR_SLICE_ARG_LEN: &str =
     ".slice(start, optional<end>) args need to be inferior to the string length";
 pub const ERROR_SLICE_ARG2: &str =
