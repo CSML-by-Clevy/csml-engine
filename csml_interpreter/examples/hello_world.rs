@@ -32,7 +32,7 @@ fn main() {
         None,
         DEFAULT_FLOW_NAME,
         None,
-        None
+        None,
     );
 
     // Create an Event

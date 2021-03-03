@@ -187,9 +187,7 @@ pub fn interpret(
 
     let env = match bot.env {
         Some(env) => json_to_literal(&env, Interval::default()).unwrap(),
-        None => data::primitive::PrimitiveNull::get_literal(
-            Interval::default(),
-        )
+        None => data::primitive::PrimitiveNull::get_literal(Interval::default()),
     };
 
     while msg_data.exit_condition.is_none() {
