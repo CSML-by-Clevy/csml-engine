@@ -1,4 +1,4 @@
-use crate::data::{ast::*, tokens::*, warnings::WARNING_OBJECT};
+use crate::data::{ast::*, tokens::*, warnings::{WARNING_OBJECT, WARNING_FN}};
 // use crate::linter::Linter;
 use crate::data::warnings::Warnings;
 use crate::parser::tools::get_string;
@@ -18,6 +18,9 @@ where
 
     if name == "Object" {
         Warnings::add(WARNING_OBJECT, interval);
+    }
+    if name == FN {
+        Warnings::add(WARNING_FN, interval);
     }
 
     let (s, expr) = parse_expr_list(s)?;
