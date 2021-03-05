@@ -46,6 +46,10 @@ lazy_static! {
             (PrimitiveString::is_float as PrimitiveMethod, Right::Read),
         );
         map.insert(
+            "is_email",
+            (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
             "type_of",
             (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
         );
@@ -262,6 +266,30 @@ impl PrimitiveString {
         }
     }
 
+    fn is_email(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "is_email() => boolean";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let email_regex = Regex::new(
+            r"^([a-zA-Z0-9_+]([a-zA-Z0-9_+.]*[a-zA-Z0-9_+])?)@([a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,6})",
+        )
+        .unwrap();
+
+        let result = email_regex.is_match(&string.value);
+
+        Ok(PrimitiveBoolean::get_literal(result, interval))
+    }
+
     fn type_of(
         _string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
@@ -295,6 +323,7 @@ impl PrimitiveString {
 
         Ok(PrimitiveString::get_literal(&string.to_string(), interval))
     }
+
 }
 
 impl PrimitiveString {
