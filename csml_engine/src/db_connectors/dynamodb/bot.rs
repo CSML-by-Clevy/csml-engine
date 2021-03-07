@@ -1,10 +1,10 @@
-use crate::data::{DynamoDbClient, DynamoBot};
+use crate::data::DynamoDbClient;
 use crate::db_connectors::{
     dynamodb::{aws_s3, Bot, DynamoDbKey},
     BotVersion,
 };
 use crate::EngineError;
-use csml_interpreter::data::{csml_flow::CsmlFlow};
+use csml_interpreter::data::{csml_bot::DynamoBot, csml_flow::CsmlFlow};
 
 use rusoto_dynamodb::*;
 
@@ -196,7 +196,7 @@ pub fn get_bot_by_version_id(
             let flows = get_flows(&key, db)?;
 
             Ok(Some(BotVersion {
-                bot: csml_bot.to_bot(flows)?,
+                bot: csml_bot.to_bot(flows),
                 version_id: bot.version_id,
                 engine_version: env!("CARGO_PKG_VERSION").to_owned(),
             }))
@@ -271,7 +271,7 @@ pub fn get_last_bot_version(
     let flows = get_flows(&key, db)?;
 
     Ok(Some(BotVersion {
-        bot: csml_bot.to_bot(flows)?,
+        bot: csml_bot.to_bot(flows),
         version_id: bot.version_id,
         engine_version: env!("CARGO_PKG_VERSION").to_owned(),
     }))

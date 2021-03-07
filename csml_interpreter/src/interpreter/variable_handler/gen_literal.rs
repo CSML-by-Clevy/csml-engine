@@ -1,7 +1,8 @@
+use crate::data::ast::PathLiteral;
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
 use crate::data::primitive::string::PrimitiveString;
-use crate::data::{ast::PathLiteral, primitive::PrimitiveNull};
+use crate::data::{primitive::PrimitiveNull};
 use crate::data::{
     ast::{Interval, PathState},
     Data, Literal, MessageData, MSG,
@@ -62,49 +63,6 @@ pub fn gen_literal_from_event(
     }
 }
 
-// pub fn gen_literal_from_env(
-//     interval: Interval,
-//     condition: bool,
-//     path: Option<&[(Interval, PathState)]>,
-//     data: &mut Data,
-//     msg_data: &mut MessageData,
-//     sender: &Option<mpsc::Sender<MSG>>,
-// ) -> Result<Literal, ErrorInfo> {
-//     match path {
-//         Some(path) => {
-//             let path = resolve_path(path, condition, data, msg_data, sender)?;
-//             let mut lit = json_to_literal(&data.event.content, interval.to_owned())?;
-
-//             lit.set_content_type("event");
-
-//             let content_type = match ContentType::get(&lit) {
-//                 ContentType::Event(_) => ContentType::Event(data.event.content_type.to_owned()),
-//                 _ => {
-//                     return Err(gen_error_info(
-//                         Position::new(interval),
-//                         ERROR_EVENT_CONTENT_TYPE.to_owned(),
-//                     ))
-//                 }
-//             };
-
-//             let (lit, _tmp_mem_update) = exec_path_actions(
-//                 &mut lit,
-//                 condition,
-//                 None,
-//                 &Some(path),
-//                 &content_type,
-//                 msg_data,
-//                 sender,
-//             )?;
-
-//             Ok(lit)
-//         }
-//         None => Ok(PrimitiveNull::get_literal(
-//             interval.to_owned(),
-//         )),
-//     }
-// }
-
 pub fn gen_literal_from_component(
     interval: Interval,
     path: Option<&[(Interval, PathState)]>,
@@ -155,7 +113,7 @@ pub fn gen_literal_from_component(
     }
 }
 
-pub fn get_literal_form_metadata(
+pub fn get_literal_from_metadata(
     path: &[(Interval, PathLiteral)],
     condition: bool,
     data: &mut Data,

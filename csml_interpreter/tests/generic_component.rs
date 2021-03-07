@@ -42,7 +42,6 @@ fn format_message(
             .to_owned())),
         DEFAULT_FLOW_NAME,
         None,
-        None,
     );
 
     interpret(bot, context, event, None)

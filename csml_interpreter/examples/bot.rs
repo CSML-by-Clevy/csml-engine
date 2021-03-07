@@ -93,7 +93,6 @@ fn main() {
         Some(serde_json::json!(custom_components)),
         DEFAULT_FLOW_NAME,
         None,
-        None,
     );
 
     // Create an Event

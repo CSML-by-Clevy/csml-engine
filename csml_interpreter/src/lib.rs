@@ -8,7 +8,7 @@ pub mod parser;
 pub use interpreter::components::load_components;
 pub use parser::step_checksum::get_step;
 
-use interpreter::{interpret_scope, json_to_literal};
+use interpreter::interpret_scope;
 use parser::parse_flow;
 
 use data::ast::{Expr, Flow, InstructionScope, Interval};
@@ -185,11 +185,6 @@ pub fn interpret(
 
     let flows = get_flows(&bot);
 
-    let env = match bot.env {
-        Some(env) => json_to_literal(&env, Interval::default()).unwrap(),
-        None => data::primitive::PrimitiveNull::get_literal(Interval::default()),
-    };
-
     while msg_data.exit_condition.is_none() {
         Position::set_flow(&flow);
 
@@ -215,7 +210,6 @@ pub fn interpret(
             &ast,
             &mut context,
             &event,
-            &env,
             vec![],
             0,
             step_vars,
