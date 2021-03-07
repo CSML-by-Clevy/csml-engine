@@ -60,7 +60,6 @@ fn init_bot() -> CsmlBot {
         custom_components: None,
         default_flow: "flowid".to_owned(),
         bot_ast: None,
-        env: None
     }
 }
 

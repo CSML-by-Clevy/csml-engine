@@ -71,7 +71,6 @@ pub const NOT_MATCH: &str = "!match";
 pub const DEFAULT: &str = "default";
 pub const REMEMBER: &str = "remember";
 pub const _METADATA: &str = "_metadata";
-pub const _ENV: &str = "_env";
 pub const BREAK: &str = "break";
 pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
@@ -123,7 +122,6 @@ pub const RESERVED: &[&str] = &[
     GOTO,
     MATCH,
     _METADATA,
-    _ENV,
     DEFAULT,
     REMEMBER,
     TRUE,
@@ -171,7 +169,6 @@ pub const ASSIGNATION_RESERVED: &[&str] = &[
     MATCH,
     REMEMBER,
     _METADATA,
-    _ENV,
     TRUE,
     FALSE,
     NULL,

@@ -17,12 +17,13 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
-    tokens::{COMPONENT, EVENT, _ENV, _METADATA},
+    tokens::{COMPONENT, EVENT, _METADATA},
     ArgsType, Data, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
-    gen_literal::{gen_literal_from_component, gen_literal_from_event, get_literal_form_metadata},
+    gen_literal::gen_literal_from_component,
+    gen_literal::gen_literal_from_event,
     memory::{save_literal_in_mem, search_in_memory_type, search_var_memory},
 };
 use std::slice::Iter;
@@ -383,6 +384,40 @@ pub fn exec_path_actions(
     }
 }
 
+pub fn get_literal_from_metadata(
+    path: &[(Interval, PathLiteral)],
+    condition: bool,
+    data: &mut Data,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    let mut lit = match path.get(0) {
+        Some((interval, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
+            Some(lit) => lit.to_owned(),
+            None => PrimitiveNull::get_literal(interval.to_owned()),
+        },
+        Some((interval, _)) => {
+            return Err(gen_error_info(
+                Position::new(*interval),
+                ERROR_FIND_BY_INDEX.to_owned(),
+            ));
+        }
+        None => unreachable!(),
+    };
+
+    let content_type = ContentType::get(&lit);
+    let (lit, _tmp_mem_update) = exec_path_actions(
+        &mut lit,
+        condition,
+        None,
+        &Some(path[1..].to_owned()),
+        &content_type,
+        msg_data,
+        sender,
+    )?;
+    Ok(lit)
+}
+
 pub fn get_var(
     var: Identifier,
     condition: bool, // TODO: find better method than this
@@ -400,28 +435,10 @@ pub fn get_var(
         name if name == EVENT => {
             gen_literal_from_event(*interval, condition, path, data, msg_data, sender)
         }
-        name if name == _ENV => match path {
-            Some(path) => {
-                let path = resolve_path(path, condition, data, msg_data, sender)?;
-
-                let content_type = ContentType::get(&data.env);
-                let (lit, _tmp_mem_update) = exec_path_actions(
-                    &mut data.env.clone(),
-                    condition,
-                    None,
-                    &Some(path.to_owned()),
-                    &content_type,
-                    msg_data,
-                    sender,
-                )?;
-                Ok(lit)
-            }
-            None => Ok(data.env.clone()),
-        },
         name if name == _METADATA => match path {
             Some(path) => {
                 let path = resolve_path(path, condition, data, msg_data, sender)?;
-                get_literal_form_metadata(&path, condition, data, msg_data, *interval, sender)
+                get_literal_from_metadata(&path, condition, data, msg_data, sender)
             }
             None => Ok(PrimitiveObject::get_literal(
                 &data.context.metadata,

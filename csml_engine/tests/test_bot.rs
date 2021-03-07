@@ -1,6 +1,6 @@
 use csml_engine::{
     data::{BotOpt, CsmlRequest},
-    start_conversation
+    start_conversation,
 };
 use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client};
 use serde::{Deserialize, Serialize};
@@ -82,12 +82,6 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
         custom_components: None,
         default_flow: bot_info.default_flow.clone(),
         bot_ast: None,
-        env: Some(
-            serde_json::json!({
-                "random": "value",
-                "toto": "key",
-            })
-        )
     };
 
     Ok(bot)

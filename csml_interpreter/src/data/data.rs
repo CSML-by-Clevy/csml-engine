@@ -14,7 +14,6 @@ pub struct Data<'a> {
     pub flow: &'a Flow,
     pub context: &'a mut Context,
     pub event: &'a Event,
-    pub env: &'a Literal,
 
     pub loop_indexs: Vec<usize>,
     pub loop_index: usize,
@@ -34,7 +33,6 @@ impl<'a> Data<'a> {
         flow: &'a Flow,
         context: &'a mut Context,
         event: &'a Event,
-        env: &'a Literal,
         loop_indexs: Vec<usize>,
         loop_index: usize,
         step_vars: HashMap<String, Literal>,
@@ -46,7 +44,6 @@ impl<'a> Data<'a> {
             flow,
             context,
             event,
-            env,
             loop_indexs,
             loop_index,
             step_vars,
