@@ -8,12 +8,11 @@ start:
     goto end
 
 carousel1:
-    do button1 = Button("b1", theme = "primary", icon = "info" )
+    do button1 = Button ("b1", theme = "primary", icon = "info" )
     do card1 = Card("c1", buttons = [button1])
 
     say Carousel([card1])
     goto end
-
 
 
 simple_0:
