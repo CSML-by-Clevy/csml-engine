@@ -75,7 +75,7 @@ pub const BREAK: &str = "break";
 pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
-pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, DEBUG_ACTION, GOTO, REMEMBER, USE, HOLD, BREAK];
+pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, USE, HOLD, BREAK];
 
 pub const SCOPE_REJECTED: &[&str] = &[RETURN];
 
@@ -116,7 +116,6 @@ pub const RESERVED: &[&str] = &[
     FILE,
     STEP,
     SAY,
-    DEBUG_ACTION,
     USE,
     HOLD,
     GOTO,
@@ -141,7 +140,6 @@ pub const UTILISATION_RESERVED: &[&str] = &[
     FLOW,
     STEP,
     SAY,
-    DEBUG_ACTION,
     USE,
     HOLD,
     GOTO,
@@ -162,7 +160,6 @@ pub const ASSIGNATION_RESERVED: &[&str] = &[
     FLOW,
     STEP,
     SAY,
-    DEBUG_ACTION,
     USE,
     HOLD,
     GOTO,
