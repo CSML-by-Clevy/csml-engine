@@ -25,6 +25,7 @@ pub enum ContentType {
     Http,
     Base64,
     Hex,
+    Jwt,
     Primitive,
 }
 
@@ -66,6 +67,7 @@ impl ContentType {
             "http" => ContentType::Http,
             "base64" => ContentType::Base64,
             "hex" => ContentType::Hex,
+            "jwt" => ContentType::Jwt,
             "event" => ContentType::Event(String::from("")),
             _ => ContentType::Primitive,
         }

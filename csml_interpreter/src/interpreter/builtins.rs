@@ -3,6 +3,7 @@ pub mod format;
 pub mod functions;
 pub mod http;
 pub mod tools;
+pub mod jwt;
 
 use crate::data::{
     ast::*, position::Position, tokens::*, ArgsType, Data, Literal, MessageData, MSG,
@@ -13,6 +14,8 @@ use std::sync::mpsc;
 
 use api::api;
 use format::*;
+use http::http;
+use jwt::jwt;
 use functions::*;
 
 pub fn match_native_builtin(
@@ -52,6 +55,7 @@ pub fn match_builtin(
         DEBUG => debug(args, interval),
         FLOOR => floor(args, interval),
         UUID => uuid_command(args, interval),
+        JWT => jwt(args, interval),
 
         //old builtin
         _object => object(args, interval),
