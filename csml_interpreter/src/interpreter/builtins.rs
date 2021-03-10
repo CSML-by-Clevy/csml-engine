@@ -2,8 +2,8 @@ pub mod api;
 pub mod format;
 pub mod functions;
 pub mod http;
-pub mod tools;
 pub mod jwt;
+pub mod tools;
 
 use crate::data::{
     ast::*, position::Position, tokens::*, ArgsType, Data, Literal, MessageData, MSG,
@@ -14,9 +14,9 @@ use std::sync::mpsc;
 
 use api::api;
 use format::*;
+use functions::*;
 use http::http;
 use jwt::jwt;
-use functions::*;
 
 pub fn match_native_builtin(
     name: &str,

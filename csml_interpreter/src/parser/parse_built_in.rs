@@ -6,8 +6,10 @@ use crate::data::{
 // use crate::linter::Linter;
 use crate::data::warnings::Warnings;
 use crate::parser::tools::get_string;
-use crate::parser::{parse_var_types::parse_expr_list, tools::get_interval, parse_comments::comment};
-use nom::{error::*, IResult, sequence::preceded};
+use crate::parser::{
+    parse_comments::comment, parse_var_types::parse_expr_list, tools::get_interval,
+};
+use nom::{error::*, sequence::preceded, IResult};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION

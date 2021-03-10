@@ -1,7 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::primitive::{object::PrimitiveObject, string::PrimitiveString, PrimitiveType};
-use crate::data::{ast::Interval, Literal, ArgsType};
+use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
 use std::collections::HashMap;
 use std::env;

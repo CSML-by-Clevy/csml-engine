@@ -1,48 +1,9 @@
-use crate::data::{position::Position, primitive::Primitive};
-use crate::data::primitive::{
-    PrimitiveType, PrimitiveObject, PrimitiveBoolean, PrimitiveFloat, PrimitiveInt, PrimitiveString,
-};
-use std::time::{SystemTime, UNIX_EPOCH};
+use crate::data::position::Position;
+use crate::data::primitive::{PrimitiveObject, PrimitiveString};
 use std::collections::HashMap;
 
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
-
-// use uuid::{Uuid, v1::{Context, Timestamp}};
-// use rand::seq::SliceRandom;
-// use rand::Rng;
-
-fn update_content_type(literal: &mut Literal) -> Result<(), ErrorInfo> {
-    literal.content_type = "jwt".to_owned();
-
-    match literal.primitive.get_type() {
-        PrimitiveType::PrimitiveObject => {
-            let map= Literal::get_mut_value::<HashMap<String, Literal>>(
-                &mut literal.primitive,
-                literal.interval.to_owned(),
-                "error_message".to_owned(),
-            )?;
-
-            for (_, value) in map.iter_mut() {
-                update_content_type(value)?;
-            }
-        },
-        PrimitiveType::PrimitiveArray => {
-            let vec= Literal::get_mut_value::<Vec<Literal>>(
-                &mut literal.primitive,
-                literal.interval.to_owned(),
-                "error_message".to_owned(),
-            )?;
-
-            for value in vec.iter_mut() {
-                update_content_type(value)?;
-            }
-        },
-        _ => {},
-    }
-
-    Ok(())
-}
 
 pub fn jwt(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut jwt_map: HashMap<String, Literal> = HashMap::new();
