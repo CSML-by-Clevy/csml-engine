@@ -3,6 +3,7 @@ pub mod format;
 pub mod functions;
 pub mod http;
 pub mod jwt;
+pub mod crypto;
 pub mod tools;
 
 use crate::data::{
@@ -17,6 +18,7 @@ use format::*;
 use functions::*;
 use http::http;
 use jwt::jwt;
+use crypto::crypto;
 
 pub fn match_native_builtin(
     name: &str,
@@ -56,6 +58,7 @@ pub fn match_builtin(
         FLOOR => floor(args, interval),
         UUID => uuid_command(args, interval),
         JWT => jwt(args, interval),
+        CRYPTO => crypto(args, interval),
 
         //old builtin
         _object => object(args, interval),

@@ -5,7 +5,7 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        tools_jwt, Primitive, PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull,
+        tools_crypto, tools_jwt, Primitive, PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull,
         PrimitiveString, PrimitiveType, Right,
     },
     tokens::TYPES,
@@ -84,6 +84,29 @@ lazy_static! {
             (PrimitiveObject::jwt_verity as PrimitiveMethod, Right::Read),
         );
 
+        map
+    };
+}
+
+lazy_static! {
+    static ref FUNCTIONS_CRYPTO: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+
+        map.insert(
+            "create_hmac",
+            (PrimitiveObject::create_hmac as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "create_hash",
+            (PrimitiveObject::create_hash as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "digest",
+            (PrimitiveObject::digest as PrimitiveMethod, Right::Read),
+        );
+        
         map
     };
 }
@@ -714,6 +737,194 @@ impl PrimitiveObject {
                 ))
             }
         }
+    }
+}
+
+impl PrimitiveObject {
+    fn create_hmac(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let data = match object.value.get("value") {
+            Some(literal) => Literal::get_value::<String>(
+                &literal.primitive,
+                interval,
+                ERROR_HASH.to_owned(),
+            )?,
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_HASH.to_string(),
+                ))
+            }
+        };
+
+        let algo = match args.get("arg0") {
+            Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let algo = Literal::get_value::<String>(
+                    &algo.primitive,
+                    interval,
+                    ERROR_HASH_ALGO.to_owned(),
+                )?;
+                tools_crypto::get_hash_algorithm(algo, interval)?
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_HASH_ALGO.to_string(),
+                ))
+            }
+        };
+
+        let key = match args.get("arg1") {
+            Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let secret = Literal::get_value::<String>(
+                    &algo.primitive,
+                    interval,
+                    ERROR_HMAC_KEY.to_owned(),
+                )?;
+                openssl::pkey::PKey::hmac(secret.as_bytes()).unwrap()
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_HMAC_KEY.to_string(),
+                ))
+            }
+        };
+
+        let sign = openssl::sign::Signer::new(algo, &key);
+        match sign {
+            Ok(mut signer) => {
+                signer.update(data.as_bytes()).unwrap();
+
+                let vec = signer.sign_to_vec().unwrap().iter().map(|val|
+                    PrimitiveInt::get_literal(val.clone() as i64, interval)
+                ).collect::<Vec<Literal>>();
+
+                let mut map = HashMap::new();
+                map.insert("hash".to_string(), PrimitiveArray::get_literal(&vec, interval));
+
+                let mut lit = PrimitiveObject::get_literal(&map, interval);
+                lit.set_content_type("crypto");
+                Ok(lit)
+            },
+            Err(e) => return Err(gen_error_info(
+                Position::new(interval),
+                format!("{}", e),
+            ))
+        }
+    }
+
+    fn create_hash(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let data = match object.value.get("value") {
+            Some(literal) => Literal::get_value::<String>(
+                &literal.primitive,
+                interval,
+                ERROR_HASH.to_owned(),
+            )?,
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_HASH.to_string(),
+                ))
+            }
+        };
+
+        let algo = match args.get("arg0") {
+            Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let algo = Literal::get_value::<String>(
+                    &algo.primitive,
+                    interval,
+                    ERROR_HASH_ALGO.to_owned(),
+                )?;
+                tools_crypto::get_hash_algorithm(algo, interval)?
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_HASH_ALGO.to_string(),
+                ))
+            }
+        };
+
+        match openssl::hash::hash(algo, data.as_bytes()) {
+            Ok(digest_bytes) => {
+                let vec = digest_bytes.to_vec().iter().map(|val|
+                    PrimitiveInt::get_literal(*val as i64, interval)
+                ).collect::<Vec<Literal>>();
+
+                let mut map = HashMap::new();
+                map.insert("hash".to_string(), PrimitiveArray::get_literal(&vec, interval));
+                
+                let mut lit = PrimitiveObject::get_literal(&map, interval);
+                lit.set_content_type("crypto");
+                Ok(lit)
+            },
+            Err(e) => return Err(gen_error_info(
+                Position::new(interval),
+                format!("{}", e),
+            ))
+        }
+    }
+
+    fn digest(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let vec = match object.value.get("hash") {
+            Some(literal) => Literal::get_value::<Vec<Literal>>(
+                &literal.primitive,
+                interval,
+                ERROR_DIGEST.to_owned(),
+            )?,
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_DIGEST.to_string(),
+                ))
+            }
+        };
+
+        let algo = match args.get("arg0") {
+            Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                Literal::get_value::<String>(
+                    &algo.primitive,
+                    interval,
+                    ERROR_DIGEST_ALGO.to_owned(),
+                )?
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_DIGEST_ALGO.to_string(),
+                ))
+            }
+        };
+
+        let mut data = vec!();
+        for value in vec.iter() {
+            data.push(
+                *Literal::get_value::<i64>(
+                    &value.primitive,
+                    interval,
+                    "ERROR_hash_TOKEN".to_owned(),
+                )? as u8
+            );
+        }
+
+        let value = tools_crypto::digest_data(algo, &data, interval)?;
+
+        Ok(PrimitiveString::get_literal(&value, interval))
     }
 }
 
@@ -1556,6 +1767,7 @@ impl Primitive for PrimitiveObject {
         let base64 = vec![FUNCTIONS_BASE64.clone()];
         let hex = vec![FUNCTIONS_HEX.clone()];
         let jwt = vec![FUNCTIONS_JWT.clone()];
+        let crypto = vec![FUNCTIONS_CRYPTO.clone()];
         let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
 
         let mut is_event = false;
@@ -1570,6 +1782,7 @@ impl Primitive for PrimitiveObject {
             ContentType::Base64 => ("", base64),
             ContentType::Hex => ("", hex),
             ContentType::Jwt => ("", jwt),
+            ContentType::Crypto => ("", crypto),
             ContentType::Primitive => ("", generics),
         };
 
