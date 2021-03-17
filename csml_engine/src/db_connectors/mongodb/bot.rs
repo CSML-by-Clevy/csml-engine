@@ -89,10 +89,14 @@ pub fn get_bot_versions(
             Ok(bot_doc) => {
                 let bot_version = format_bot_struct(bot_doc)?;
 
-                let base64decoded = base64::decode(&bot_version.bot).unwrap();
-                let csml_bot: SerializeCsmlBot = match bincode::deserialize(&base64decoded[..]) {
-                    Ok(bot) => bot,
-                    Err(_) =>  serde_json::from_str(&bot_version.bot).unwrap()
+                let csml_bot: SerializeCsmlBot = match base64::decode(&bot_version.bot) {
+                    Ok(base64decoded) =>  {
+                        match bincode::deserialize(&base64decoded[..]) {
+                            Ok(bot) => bot,
+                            Err(_) => serde_json::from_str(&bot_version.bot).unwrap()
+                        }
+                    },
+                    Err(_) => serde_json::from_str(&bot_version.bot).unwrap()
                 };
 
                 let mut json = serde_json::json!({
@@ -150,10 +154,14 @@ pub fn get_bot_by_version_id(
         Some(bot) => {
             let bot = format_bot_struct(bot)?;
 
-            let base64decoded = base64::decode(&bot.bot).unwrap();
-            let csml_bot: SerializeCsmlBot = match bincode::deserialize(&base64decoded[..]) {
-                Ok(bot) => bot,
-                Err(_) =>  serde_json::from_str(&bot.bot).unwrap()
+            let csml_bot: SerializeCsmlBot = match base64::decode(&bot.bot) {
+                Ok(base64decoded) =>  {
+                    match bincode::deserialize(&base64decoded[..]) {
+                        Ok(bot) => bot,
+                        Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                    }
+                },
+                Err(_) => serde_json::from_str(&bot.bot).unwrap()
             };
 
             Ok(Some(BotVersion {
@@ -186,10 +194,14 @@ pub fn get_last_bot_version(
         Some(bot) => {
             let bot = format_bot_struct(bot)?;
 
-            let base64decoded = base64::decode(&bot.bot).unwrap();
-            let csml_bot: SerializeCsmlBot = match bincode::deserialize(&base64decoded[..]) {
-                Ok(bot) => bot,
-                Err(_) =>  serde_json::from_str(&bot.bot).unwrap()
+            let csml_bot: SerializeCsmlBot = match base64::decode(&bot.bot) {
+                Ok(base64decoded) =>  {
+                    match bincode::deserialize(&base64decoded[..]) {
+                        Ok(bot) => bot,
+                        Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                    }
+                },
+                Err(_) => serde_json::from_str(&bot.bot).unwrap()
             };
 
             Ok(Some(BotVersion {
