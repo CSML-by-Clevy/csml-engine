@@ -104,6 +104,30 @@ pub struct SerializeCsmlBot {
     pub env: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TMPSerializeCsmlBot {
+    pub id: String,
+    pub name: String,
+    pub flows: Vec<CsmlFlow>,
+    pub native_components: Option<String>, // serde_json::Map<String, serde_json::Value>
+    pub custom_components: Option<String>, // serde_json::Value
+    pub default_flow: String,
+}
+
+impl TMPSerializeCsmlBot {
+    pub fn to_bot(self) -> SerializeCsmlBot {
+        SerializeCsmlBot {
+            id: self.id,
+            name: self.name,
+            flows: self.flows,
+            native_components: self.native_components,
+            custom_components: self.custom_components,
+            default_flow: self.default_flow,
+            env: None
+        }
+    }
+}
+
 pub fn to_serializable_bot(bot: &CsmlBot) -> SerializeCsmlBot {
     SerializeCsmlBot {
         id: bot.id.to_owned(),
@@ -163,6 +187,7 @@ impl SerializeCsmlBot {
         }
     }
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamoBot {
     pub id: String,
@@ -170,6 +195,26 @@ pub struct DynamoBot {
     pub custom_components: Option<String>,
     pub default_flow: String,
     pub env: Option<String>
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TMPDynamoBot {
+    pub id: String,
+    pub name: String,
+    pub custom_components: Option<String>,
+    pub default_flow: String,
+}
+
+impl TMPDynamoBot {
+    pub fn to_bot(self) -> DynamoBot {
+        DynamoBot {
+            id: self.id,
+            name: self.name,
+            custom_components: self.custom_components,
+            default_flow: self.default_flow,
+            env: None
+        }
+    }
 }
 
 pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
