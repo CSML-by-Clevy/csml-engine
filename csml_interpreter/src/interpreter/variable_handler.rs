@@ -17,7 +17,7 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
-    tokens::{COMPONENT, EVENT, _METADATA},
+    tokens::{COMPONENT, EVENT, _ENV, _METADATA},
     ArgsType, Data, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
@@ -435,6 +435,24 @@ pub fn get_var(
         name if name == EVENT => {
             gen_literal_from_event(*interval, condition, path, data, msg_data, sender)
         }
+        name if name == _ENV => match path {
+            Some(path) => {
+                let path = resolve_path(path, condition, data, msg_data, sender)?;
+
+                let content_type = ContentType::get(&data.env);
+                let (lit, _tmp_mem_update) = exec_path_actions(
+                    &mut data.env.clone(),
+                    condition,
+                    None,
+                    &Some(path.to_owned()),
+                    &content_type,
+                    msg_data,
+                    sender,
+                )?;
+                Ok(lit)
+            }
+            None => Ok(data.env.clone()),
+        },
         name if name == _METADATA => match path {
             Some(path) => {
                 let path = resolve_path(path, condition, data, msg_data, sender)?;

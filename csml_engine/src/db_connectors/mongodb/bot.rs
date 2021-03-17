@@ -1,10 +1,10 @@
 use crate::{
     db_connectors::{BotVersion, DbBot},
+    data::SerializeCsmlBot,
     EngineError,
 };
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
-use csml_interpreter::data::csml_bot::SerializeCsmlBot;
 
 fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, EngineError> {
     Ok(DbBot {
@@ -90,7 +90,10 @@ pub fn get_bot_versions(
                 let bot_version = format_bot_struct(bot_doc)?;
 
                 let base64decoded = base64::decode(&bot_version.bot).unwrap();
-                let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+                let csml_bot: SerializeCsmlBot = match bincode::deserialize(&base64decoded[..]) {
+                    Ok(bot) => bot,
+                    Err(_) =>  serde_json::from_str(&bot_version.bot).unwrap()
+                };
 
                 let mut json = serde_json::json!({
                     "version_id": bot_version.id,
@@ -148,7 +151,10 @@ pub fn get_bot_by_version_id(
             let bot = format_bot_struct(bot)?;
 
             let base64decoded = base64::decode(&bot.bot).unwrap();
-            let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+            let csml_bot: SerializeCsmlBot = match bincode::deserialize(&base64decoded[..]) {
+                Ok(bot) => bot,
+                Err(_) =>  serde_json::from_str(&bot.bot).unwrap()
+            };
 
             Ok(Some(BotVersion {
                 bot: csml_bot.to_bot(),
@@ -181,7 +187,10 @@ pub fn get_last_bot_version(
             let bot = format_bot_struct(bot)?;
 
             let base64decoded = base64::decode(&bot.bot).unwrap();
-            let csml_bot: SerializeCsmlBot = bincode::deserialize(&base64decoded[..]).unwrap();
+            let csml_bot: SerializeCsmlBot = match bincode::deserialize(&base64decoded[..]) {
+                Ok(bot) => bot,
+                Err(_) =>  serde_json::from_str(&bot.bot).unwrap()
+            };
 
             Ok(Some(BotVersion {
                 bot: csml_bot.to_bot(),
