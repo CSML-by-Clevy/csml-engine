@@ -93,50 +93,6 @@ impl BotOpt {
     }
 }
 
-fn encrypt_env(mut env: serde_json::Value) -> Result<String, EngineError> {
-    match env.as_object_mut() {
-        Some(obj) => {
-            for (k, v) in obj.iter_mut() {
-                if !v.is_string() {
-                    return Err(EngineError::Format("env values need to be of type string".to_owned()));
-                }
-                let encrypted_value = match encrypt_data(&v) {
-                    Ok(value) => value,
-                    Err(_) => return Err(EngineError::Format(format!("Invalid [{}] value in env", k)))
-                };
-                *v = serde_json::json!(encrypted_value);
-            };
-
-            Ok(serde_json::json!(obj).to_string())
-        }
-        None => Err(EngineError::Format("Invalid env format".to_owned()))
-    }
-}
-
-fn decrypt_env(encrypted_env: String) -> Result<serde_json::Value, EngineError> {
-    let mut env = match serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(&encrypted_env) {
-        Ok(value) => value,
-        Err(_e) => return Err(EngineError::Format("corrupted encrypted env value".to_owned())),
-    };
-
-    for (k, v) in env.iter_mut() {
-        if !v.is_string() {
-            return Err(EngineError::Format("env values need to be of type string".to_owned()));
-        }
-        match v.as_str() {
-            Some(value) => {
-                *v = match decrypt_data(value.to_owned()) {
-                    Ok(value) => value,
-                    Err(_) => return Err(EngineError::Format(format!("decryption fail for env value [{}]", k)))
-                };
-            }
-            None => return Err(EngineError::Format(format!("Invalid [{}] value in env", k)))
-        }
-    };
-
-    Ok(serde_json::json!(env))
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SerializeCsmlBot {
     pub id: String,
@@ -148,9 +104,34 @@ pub struct SerializeCsmlBot {
     pub env: Option<String>,
 }
 
+pub fn to_serializable_bot(bot: &CsmlBot) -> SerializeCsmlBot {
+    SerializeCsmlBot {
+        id: bot.id.to_owned(),
+        name: bot.name.to_owned(),
+        flows: bot.flows.to_owned(),
+        native_components: {
+            match bot.native_components.to_owned() {
+                Some(value) => Some(serde_json::Value::Object(value).to_string()),
+                None => None,
+            }
+        },
+        custom_components: {
+            match bot.custom_components.to_owned() {
+                Some(value) => Some(value.to_string()),
+                None => None,
+            }
+        },
+        default_flow: bot.default_flow.to_owned(),
+        env: match &bot.env {
+            Some(value) => encrypt_data(value).ok(),
+            None => None,
+        }
+    }
+}
+
 impl SerializeCsmlBot {
-    pub fn to_bot(&self) -> Result<CsmlBot, EngineError> {
-        Ok(CsmlBot {
+    pub fn to_bot(&self) -> CsmlBot {
+        CsmlBot {
             id: self.id.to_owned(),
             name: self.name.to_owned(),
             fn_endpoint: None,
@@ -176,38 +157,12 @@ impl SerializeCsmlBot {
             default_flow: self.default_flow.to_owned(),
             bot_ast: None,
             env: match self.custom_components.to_owned() {
-                Some(value) => Some(decrypt_env(value)?),
+                Some(value) => decrypt_data(value).ok(),
                 None => None,
             }
-        })
-    }
-
-    pub fn serialize_bot(bot: &CsmlBot) -> Result<SerializeCsmlBot, EngineError> {
-        Ok(SerializeCsmlBot {
-            id: bot.id.to_owned(),
-            name: bot.name.to_owned(),
-            flows: bot.flows.to_owned(),
-            native_components: {
-                match bot.native_components.to_owned() {
-                    Some(value) => Some(serde_json::Value::Object(value).to_string()),
-                    None => None,
-                }
-            },
-            custom_components: {
-                match bot.custom_components.to_owned() {
-                    Some(value) => Some(value.to_string()),
-                    None => None,
-                }
-            },
-            default_flow: bot.default_flow.to_owned(),
-            env: match &bot.env {
-                Some(value) => Some(encrypt_env(value.to_owned())?),
-                None => None,
-            }
-        })
+        }
     }
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamoBot {
     pub id: String,
@@ -217,9 +172,25 @@ pub struct DynamoBot {
     pub env: Option<String>
 }
 
+pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
+    DynamoBot {
+        id: csml_bot.id.to_owned(),
+        name: csml_bot.name.to_owned(),
+        custom_components: match csml_bot.custom_components.to_owned() {
+            Some(value) => Some(value.to_string()),
+            None => None,
+        },
+        default_flow: csml_bot.default_flow.to_owned(),
+        env: match &csml_bot.env {
+            Some(value) => encrypt_data(value).ok(),
+            None => None,
+        }
+    }
+}
+
 impl DynamoBot {
-    pub fn to_bot(&self, flows: Vec<CsmlFlow>) -> Result<CsmlBot, EngineError> {
-        Ok(CsmlBot {
+    pub fn to_bot(&self, flows: Vec<CsmlFlow>) -> CsmlBot {
+        CsmlBot {
             id: self.id.to_owned(),
             name: self.name.to_owned(),
             fn_endpoint: None,
@@ -237,26 +208,10 @@ impl DynamoBot {
             default_flow: self.default_flow.to_owned(),
             bot_ast: None,
             env: match self.env.to_owned() {
-                Some(value) => Some(decrypt_env(value.to_owned())?),
+                Some(value) => decrypt_data(value).ok(),
                 None => None,
             },
-        })
-    }
-
-    pub fn serialize_bot(csml_bot: &CsmlBot) -> Result<DynamoBot, EngineError> {
-        Ok(DynamoBot {
-            id: csml_bot.id.to_owned(),
-            name: csml_bot.name.to_owned(),
-            custom_components: match csml_bot.custom_components.to_owned() {
-                Some(value) => Some(value.to_string()),
-                None => None,
-            },
-            default_flow: csml_bot.default_flow.to_owned(),
-            env: match &csml_bot.env {
-                Some(value) => Some(encrypt_env(value.to_owned())?),
-                None => None,
-            }
-        })
+        }
     }
 }
 
@@ -419,22 +374,9 @@ impl From<serde_dynamodb::Error> for EngineError {
     }
 }
 
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn ok_env_encryption() {
-        let env = serde_json::json!({
-            "key": "value",
-            "test": "toto"
-        });
-
-        let encrypted_env = encrypt_env(env.clone()).unwrap();
-
-        let decrypted_env = decrypt_env(encrypted_env).unwrap();
-
-        assert_eq!(env, decrypted_env);
-    }
-}
+// #[cfg(any(feature = "dynamo"))]
+// impl From<s3::S3Error> for EngineError {
+//     fn from(e: s3::S3Error) -> Self {
+//         EngineError::S3(e)
+//     }
+// }

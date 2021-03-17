@@ -1,5 +1,5 @@
 start:
-    say Text("Hola")
+    say Text ("Hola")
     goto end
 
 text1:

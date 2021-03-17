@@ -12,8 +12,8 @@ pub fn create_bot_version(
 ) -> Result<String, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let serializable_bot = crate::data::SerializeCsmlBot::serialize_bot(&csml_bot)?;
-        let bot = base64::encode(bincode::serialize(&serializable_bot).unwrap());
+        let serializable_bot = crate::data::to_serializable_bot(&csml_bot);
+        let bot = serde_json::json!(serializable_bot).to_string();
 
         let db = mongodb_connector::get_db(db)?;
         return mongodb_connector::bot::create_bot_version(bot_id, bot, db);
@@ -22,10 +22,11 @@ pub fn create_bot_version(
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        let dynamo_bot = crate::data::DynamoBot::serialize_bot(&csml_bot)?;
+        let dynamo_bot = crate::data::to_dynamo_bot(&csml_bot);
 
         let flows = serde_json::json!(&csml_bot.flows);
-        let bot = base64::encode(bincode::serialize(&dynamo_bot).unwrap());
+        let bot = serde_json::json!(dynamo_bot).to_string();
+
         let version_id = dynamodb_connector::bot::create_bot_version(
             bot_id.clone(),
             bot,
