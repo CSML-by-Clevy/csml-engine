@@ -219,6 +219,30 @@ pub const ERROR_ARRAY_INDEX_OF: &str =
 pub const ERROR_ARRAY_FIND: &str = "[find] takes one parameter. Usage: array.find(elem)";
 pub const ERROR_ARRAY_UNKNOWN_METHOD: &str = "is not a method of Array";
 
+// #### JWT OBJECT
+pub const ERROR_JWT_ALGO: &str = "Invalid Algorithm, supported Algorithms are HS256, HS384, HS512";
+pub const ERROR_JWT_SECRET: &str = "secret must be of type String";
+
+pub const ERROR_JWT_SIGN_CLAIMS: &str =
+    "JWT(claims) command expect argument 'claims' of type Object";
+pub const ERROR_JWT_SIGN_ALGO: &str =
+    "JWT(claims).sign(algo, secret, Optional<Header>) expect first argument 'algo' of type String";
+pub const ERROR_JWT_SIGN_SECRET: &str = "JWT(claims).sign(algo, secret, Optional<Header>) expect second argument 'claims' of type String";
+
+pub const ERROR_JWT_TOKEN: &str = "JWT(jwt) command expect argument 'jwt' of type String";
+
+pub const ERROR_JWT_DECODE_ALGO: &str =
+    "JWT(jwt).decode(algo, secret) expect first argument 'algo' of type String";
+pub const ERROR_JWT_DECODE_SECRET: &str =
+    "JWT(jwt).decode(algo, secret) expect second argument 'claims' of type String";
+
+pub const ERROR_JWT_VALIDATION_CLAIMS: &str =
+    "JWT(jwt).verify(claims, algo, secret) expect first argument 'claims' of type Object";
+pub const ERROR_JWT_VALIDATION_ALGO: &str =
+    "JWT(jwt).verify(claims, algo, secret) expect second argument 'algo' of type String";
+pub const ERROR_JWT_VALIDATION_SECRETE: &str =
+    "JWT(jwt).verify(claims, algo, secret) expect third argument 'secrete' of type String";
+
 // #### HTTP OBJECT
 pub const ERROR_HTTP_SET: &str =
     "[set] takes one parameter of type Object. Usage: HTTP(...).set( {\"key\": 42} )";

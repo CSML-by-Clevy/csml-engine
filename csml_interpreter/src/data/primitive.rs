@@ -6,6 +6,7 @@ pub mod null;
 pub mod object;
 pub mod string;
 pub mod tools;
+pub mod tools_jwt;
 
 use crate::data::literal::ContentType;
 pub use array::PrimitiveArray;

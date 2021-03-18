@@ -323,7 +323,6 @@ impl PrimitiveString {
 
         Ok(PrimitiveString::get_literal(&string.to_string(), interval))
     }
-
 }
 
 impl PrimitiveString {

@@ -5,8 +5,8 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        Primitive, PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
-        PrimitiveType, Right,
+        tools_jwt, Primitive, PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull,
+        PrimitiveString, PrimitiveType, Right,
     },
     tokens::TYPES,
     Literal,
@@ -61,6 +61,27 @@ lazy_static! {
         map.insert(
             "send",
             (PrimitiveObject::send as PrimitiveMethod, Right::Read),
+        );
+
+        map
+    };
+}
+
+lazy_static! {
+    static ref FUNCTIONS_JWT: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+
+        map.insert(
+            "sign",
+            (PrimitiveObject::jwt_sign as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "decode",
+            (PrimitiveObject::jwt_decode as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "verify",
+            (PrimitiveObject::jwt_verity as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -490,6 +511,209 @@ impl PrimitiveObject {
             Position::new(interval),
             ERROR_HTTP_SEND.to_owned(),
         ))
+    }
+}
+
+impl PrimitiveObject {
+    fn jwt_sign(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let mut headers = jsonwebtoken::Header::default();
+
+        match args.get("arg0") {
+            Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                headers.alg = tools_jwt::get_algorithm(algo, interval)?;
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_SIGN_ALGO.to_string(),
+                ))
+            }
+        }
+
+        let claims = match object.value.get("jwt") {
+            Some(literal) => literal.primitive.to_json(),
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_SIGN_CLAIMS.to_string(),
+                ))
+            }
+        };
+
+        let key = match args.get("arg1") {
+            Some(key) if key.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let key = Literal::get_value::<String>(
+                    &key.primitive,
+                    interval,
+                    ERROR_JWT_SIGN_SECRET.to_string(),
+                )?;
+
+                jsonwebtoken::EncodingKey::from_secret(key.as_ref())
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_ALGO.to_string(),
+                ))
+            }
+        };
+
+        if let Some(lit) = args.get("arg2") {
+            tools_jwt::get_headers(lit, interval, &mut headers)?;
+        }
+
+        match jsonwebtoken::encode(&headers, &claims, &key) {
+            Ok(value) => Ok(PrimitiveString::get_literal(&value, interval)),
+            Err(e) => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("Invalid JWT encode {:?}", e.kind()),
+                ))
+            }
+        }
+    }
+
+    fn jwt_decode(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let token = match object.value.get("jwt") {
+            Some(literal) => Literal::get_value::<String>(
+                &literal.primitive,
+                interval,
+                ERROR_JWT_TOKEN.to_owned(),
+            )?,
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_TOKEN.to_string(),
+                ))
+            }
+        };
+
+        let algo = match args.get("arg0") {
+            Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                tools_jwt::get_algorithm(algo, interval)?
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_DECODE_ALGO.to_string(),
+                ))
+            }
+        };
+
+        let key = match args.get("arg1") {
+            Some(key) if key.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let key = Literal::get_value::<String>(
+                    &key.primitive,
+                    interval,
+                    ERROR_JWT_DECODE_SECRET.to_owned(),
+                )?;
+
+                jsonwebtoken::DecodingKey::from_secret(key.as_ref())
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_DECODE_SECRET.to_string(),
+                ))
+            }
+        };
+
+        match jsonwebtoken::decode::<serde_json::Value>(
+            token,
+            &key,
+            &jsonwebtoken::Validation::new(algo),
+        ) {
+            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, interval),
+            Err(e) => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("Invalid JWT decode {:?}", e.kind()),
+                ))
+            }
+        }
+    }
+
+    fn jwt_verity(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let mut validation = jsonwebtoken::Validation::default();
+
+        let token = match object.value.get("jwt") {
+            Some(literal) => Literal::get_value::<String>(
+                &literal.primitive,
+                interval,
+                ERROR_JWT_TOKEN.to_owned(),
+            )?,
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_TOKEN.to_string(),
+                ))
+            }
+        };
+
+        match args.get("arg0") {
+            Some(lit) => tools_jwt::get_validation(lit, interval, &mut validation)?,
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_VALIDATION_CLAIMS.to_string(),
+                ))
+            }
+        }
+
+        match args.get("arg1") {
+            Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                validation.algorithms = vec![tools_jwt::get_algorithm(algo, interval)?];
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_VALIDATION_ALGO.to_string(),
+                ))
+            }
+        };
+
+        let key = match args.get("arg2") {
+            Some(key) if key.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let key = Literal::get_value::<String>(
+                    &key.primitive,
+                    interval,
+                    ERROR_JWT_SECRET.to_owned(),
+                )?;
+
+                jsonwebtoken::DecodingKey::from_secret(key.as_ref())
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    ERROR_JWT_VALIDATION_SECRETE.to_string(),
+                ))
+            }
+        };
+
+        match jsonwebtoken::decode::<serde_json::Value>(token, &key, &validation) {
+            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, interval),
+            Err(e) => {
+                return Err(gen_error_info(
+                    Position::new(interval),
+                    format!("Invalid JWT verify {:?}", e.kind()),
+                ))
+            }
+        }
     }
 }
 
@@ -1331,6 +1555,7 @@ impl Primitive for PrimitiveObject {
         ];
         let base64 = vec![FUNCTIONS_BASE64.clone()];
         let hex = vec![FUNCTIONS_HEX.clone()];
+        let jwt = vec![FUNCTIONS_JWT.clone()];
         let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
 
         let mut is_event = false;
@@ -1344,6 +1569,7 @@ impl Primitive for PrimitiveObject {
             ContentType::Http => ("", http),
             ContentType::Base64 => ("", base64),
             ContentType::Hex => ("", hex),
+            ContentType::Jwt => ("", jwt),
             ContentType::Primitive => ("", generics),
         };
 
