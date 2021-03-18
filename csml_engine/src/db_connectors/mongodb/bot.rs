@@ -1,6 +1,6 @@
 use crate::{
     db_connectors::{BotVersion, DbBot},
-    data::{SerializeCsmlBot, TMPSerializeCsmlBot},
+    data::{SerializeCsmlBot, CsmlBotBincode},
     EngineError,
 };
 use bson::{doc, Bson};
@@ -91,7 +91,7 @@ pub fn get_bot_versions(
 
                 let csml_bot: SerializeCsmlBot = match base64::decode(&bot_version.bot) {
                     Ok(base64decoded) =>  {
-                        match bincode::deserialize::<TMPSerializeCsmlBot>(&base64decoded[..]) {
+                        match bincode::deserialize::<CsmlBotBincode>(&base64decoded[..]) {
                             Ok(bot) => bot.to_bot(),
                             Err(_) => serde_json::from_str(&bot_version.bot).unwrap()
                         }
@@ -156,7 +156,7 @@ pub fn get_bot_by_version_id(
 
             let csml_bot: SerializeCsmlBot = match base64::decode(&bot.bot) {
                 Ok(base64decoded) =>  {
-                    match bincode::deserialize::<TMPSerializeCsmlBot>(&base64decoded[..]) {
+                    match bincode::deserialize::<CsmlBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
                         Err(_) => serde_json::from_str(&bot.bot).unwrap()
                     }
@@ -196,7 +196,7 @@ pub fn get_last_bot_version(
 
             let csml_bot: SerializeCsmlBot = match base64::decode(&bot.bot) {
                 Ok(base64decoded) =>  {
-                    match bincode::deserialize::<TMPSerializeCsmlBot>(&base64decoded[..]) {
+                    match bincode::deserialize::<CsmlBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
                         Err(_) => serde_json::from_str(&bot.bot).unwrap()
                     }

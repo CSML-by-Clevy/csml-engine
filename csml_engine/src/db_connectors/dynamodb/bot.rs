@@ -1,4 +1,4 @@
-use crate::data::{DynamoDbClient, DynamoBot, TMPDynamoBot};
+use crate::data::{DynamoDbClient, DynamoBot, DynamoBotBincode};
 use crate::db_connectors::{
     dynamodb::{aws_s3, Bot, DynamoDbKey},
     BotVersion,
@@ -140,7 +140,7 @@ pub fn get_bot_versions(
 
         let csml_bot: DynamoBot = match base64::decode(&data.bot) {
             Ok(base64decoded) =>  {
-                match bincode::deserialize::<TMPDynamoBot>(&base64decoded[..]) {
+                match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
                     Ok(bot) => bot.to_bot(),
                     Err(_) => serde_json::from_str(&data.bot).unwrap()
                 }
@@ -199,7 +199,7 @@ pub fn get_bot_by_version_id(
 
             let csml_bot: DynamoBot = match base64::decode(&bot.bot) {
                 Ok(base64decoded) => {
-                    match bincode::deserialize::<TMPDynamoBot>(&base64decoded[..]) {
+                    match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
                         Err(_) => serde_json::from_str(&bot.bot).unwrap()
                     }
@@ -281,7 +281,7 @@ pub fn get_last_bot_version(
     let bot: Bot = serde_dynamodb::from_hashmap(item)?;
     let csml_bot: DynamoBot = match base64::decode(&bot.bot) {
         Ok(base64decoded) =>  {
-            match bincode::deserialize::<TMPDynamoBot>(&base64decoded[..]) {
+            match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
                 Ok(bot) => bot.to_bot(),
                 Err(_) => serde_json::from_str(&bot.bot).unwrap()
             }

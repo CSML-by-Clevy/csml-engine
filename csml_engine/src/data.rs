@@ -104,8 +104,15 @@ pub struct SerializeCsmlBot {
     pub env: Option<String>,
 }
 
+/**
+ * Before CSML v1.5, the Bot struct was encoded with bincode. This does not
+ * allow to easily change the contents of a bot, and would not allow to add
+ * the bot env feature.
+ * We need to keep this for backwards compatibility until CSML v2.
+ * TO BE REMOVED in CSML v2
+ */
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TMPSerializeCsmlBot {
+pub struct CsmlBotBincode {
     pub id: String,
     pub name: String,
     pub flows: Vec<CsmlFlow>,
@@ -114,7 +121,7 @@ pub struct TMPSerializeCsmlBot {
     pub default_flow: String,
 }
 
-impl TMPSerializeCsmlBot {
+impl CsmlBotBincode {
     pub fn to_bot(self) -> SerializeCsmlBot {
         SerializeCsmlBot {
             id: self.id,
@@ -197,15 +204,22 @@ pub struct DynamoBot {
     pub env: Option<String>
 }
 
+/**
+ * Before CSML v1.5, the Bot struct was encoded with bincode. This does not
+ * allow to easily change the contents of a bot, and would not allow to add
+ * the bot env feature.
+ * We need to keep this for backwards compatibility until CSML v2.
+ * TO BE REMOVED in CSML v2
+ */
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TMPDynamoBot {
+pub struct DynamoBotBincode {
     pub id: String,
     pub name: String,
     pub custom_components: Option<String>,
     pub default_flow: String,
 }
 
-impl TMPDynamoBot {
+impl DynamoBotBincode {
     pub fn to_bot(self) -> DynamoBot {
         DynamoBot {
             id: self.id,
