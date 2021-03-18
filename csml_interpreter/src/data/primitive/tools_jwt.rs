@@ -85,7 +85,7 @@ pub fn token_data_to_literal(
     map.insert("header".to_owned(), headers);
 
     let claims = json_to_literal(&data.claims, interval.to_owned())?;
-    map.insert("claims".to_owned(), claims);
+    map.insert("payload".to_owned(), claims);
 
     Ok(PrimitiveObject::get_literal(&map, interval.to_owned()))
 }
