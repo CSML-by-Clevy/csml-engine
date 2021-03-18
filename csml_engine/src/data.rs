@@ -1,5 +1,5 @@
-use crate::{db_connectors, Client, Context};
-use csml_interpreter::data::{csml_bot::CsmlBot, Message};
+use crate::{Client, Context, db_connectors, encrypt::{decrypt_data, encrypt_data}};
+use csml_interpreter::data::{CsmlBot, CsmlFlow, Message};
 use curl::easy::Easy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -89,6 +89,187 @@ impl BotOpt {
                 bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
                 bot_version.bot
             }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SerializeCsmlBot {
+    pub id: String,
+    pub name: String,
+    pub flows: Vec<CsmlFlow>,
+    pub native_components: Option<String>, // serde_json::Map<String, serde_json::Value>
+    pub custom_components: Option<String>, // serde_json::Value
+    pub default_flow: String,
+    pub env: Option<String>,
+}
+
+/**
+ * Before CSML v1.5, the Bot struct was encoded with bincode. This does not
+ * allow to easily change the contents of a bot, and would not allow to add
+ * the bot env feature.
+ * We need to keep this for backwards compatibility until CSML v2.
+ * TO BE REMOVED in CSML v2
+ */
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CsmlBotBincode {
+    pub id: String,
+    pub name: String,
+    pub flows: Vec<CsmlFlow>,
+    pub native_components: Option<String>, // serde_json::Map<String, serde_json::Value>
+    pub custom_components: Option<String>, // serde_json::Value
+    pub default_flow: String,
+}
+
+impl CsmlBotBincode {
+    pub fn to_bot(self) -> SerializeCsmlBot {
+        SerializeCsmlBot {
+            id: self.id,
+            name: self.name,
+            flows: self.flows,
+            native_components: self.native_components,
+            custom_components: self.custom_components,
+            default_flow: self.default_flow,
+            env: None
+        }
+    }
+}
+
+pub fn to_serializable_bot(bot: &CsmlBot) -> SerializeCsmlBot {
+    SerializeCsmlBot {
+        id: bot.id.to_owned(),
+        name: bot.name.to_owned(),
+        flows: bot.flows.to_owned(),
+        native_components: {
+            match bot.native_components.to_owned() {
+                Some(value) => Some(serde_json::Value::Object(value).to_string()),
+                None => None,
+            }
+        },
+        custom_components: {
+            match bot.custom_components.to_owned() {
+                Some(value) => Some(value.to_string()),
+                None => None,
+            }
+        },
+        default_flow: bot.default_flow.to_owned(),
+        env: match &bot.env {
+            Some(value) => encrypt_data(value).ok(),
+            None => None,
+        }
+    }
+}
+
+impl SerializeCsmlBot {
+    pub fn to_bot(&self) -> CsmlBot {
+        CsmlBot {
+            id: self.id.to_owned(),
+            name: self.name.to_owned(),
+            fn_endpoint: None,
+            flows: self.flows.to_owned(),
+            native_components: {
+                match self.native_components.to_owned() {
+                    Some(value) => match serde_json::from_str(&value) {
+                        Ok(serde_json::Value::Object(map)) => Some(map),
+                        _ => unreachable!(),
+                    },
+                    None => None,
+                }
+            },
+            custom_components: {
+                match self.custom_components.to_owned() {
+                    Some(value) => match serde_json::from_str(&value) {
+                        Ok(value) => Some(value),
+                        Err(_e) => unreachable!(),
+                    },
+                    None => None,
+                }
+            },
+            default_flow: self.default_flow.to_owned(),
+            bot_ast: None,
+            env: match self.custom_components.to_owned() {
+                Some(value) => decrypt_data(value).ok(),
+                None => None,
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DynamoBot {
+    pub id: String,
+    pub name: String,
+    pub custom_components: Option<String>,
+    pub default_flow: String,
+    pub env: Option<String>
+}
+
+/**
+ * Before CSML v1.5, the Bot struct was encoded with bincode. This does not
+ * allow to easily change the contents of a bot, and would not allow to add
+ * the bot env feature.
+ * We need to keep this for backwards compatibility until CSML v2.
+ * TO BE REMOVED in CSML v2
+ */
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DynamoBotBincode {
+    pub id: String,
+    pub name: String,
+    pub custom_components: Option<String>,
+    pub default_flow: String,
+}
+
+impl DynamoBotBincode {
+    pub fn to_bot(self) -> DynamoBot {
+        DynamoBot {
+            id: self.id,
+            name: self.name,
+            custom_components: self.custom_components,
+            default_flow: self.default_flow,
+            env: None
+        }
+    }
+}
+
+pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
+    DynamoBot {
+        id: csml_bot.id.to_owned(),
+        name: csml_bot.name.to_owned(),
+        custom_components: match csml_bot.custom_components.to_owned() {
+            Some(value) => Some(value.to_string()),
+            None => None,
+        },
+        default_flow: csml_bot.default_flow.to_owned(),
+        env: match &csml_bot.env {
+            Some(value) => encrypt_data(value).ok(),
+            None => None,
+        }
+    }
+}
+
+impl DynamoBot {
+    pub fn to_bot(&self, flows: Vec<CsmlFlow>) -> CsmlBot {
+        CsmlBot {
+            id: self.id.to_owned(),
+            name: self.name.to_owned(),
+            fn_endpoint: None,
+            flows,
+            native_components: None,
+            custom_components: {
+                match self.custom_components.to_owned() {
+                    Some(value) => match serde_json::from_str(&value) {
+                        Ok(value) => Some(value),
+                        Err(_e) => unreachable!(),
+                    },
+                    None => None,
+                }
+            },
+            default_flow: self.default_flow.to_owned(),
+            bot_ast: None,
+            env: match self.env.to_owned() {
+                Some(value) => decrypt_data(value).ok(),
+                None => None,
+            },
         }
     }
 }
