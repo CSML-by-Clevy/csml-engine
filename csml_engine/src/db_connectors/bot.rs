@@ -4,8 +4,6 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{BotVersion, CsmlBot, Database, EngineError};
-#[cfg(feature = "dynamo")]
-use csml_interpreter::data::csml_bot::DynamoBot;
 
 pub fn create_bot_version(
     bot_id: String,
@@ -14,8 +12,8 @@ pub fn create_bot_version(
 ) -> Result<String, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let serializable_bot = csml_bot.to_serializable_bot();
-        let bot = base64::encode(bincode::serialize(&serializable_bot).unwrap());
+        let serializable_bot = crate::data::to_serializable_bot(&csml_bot);
+        let bot = serde_json::json!(serializable_bot).to_string();
 
         let db = mongodb_connector::get_db(db)?;
         return mongodb_connector::bot::create_bot_version(bot_id, bot, db);
@@ -24,19 +22,11 @@ pub fn create_bot_version(
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-
-        let dynamo_bot = DynamoBot {
-            id: csml_bot.id.to_owned(),
-            name: csml_bot.name.to_owned(),
-            custom_components: match csml_bot.custom_components.to_owned() {
-                Some(value) => Some(value.to_string()),
-                None => None,
-            },
-            default_flow: csml_bot.default_flow.to_owned(),
-        };
+        let dynamo_bot = crate::data::to_dynamo_bot(&csml_bot);
 
         let flows = serde_json::json!(&csml_bot.flows);
-        let bot = base64::encode(bincode::serialize(&dynamo_bot).unwrap());
+        let bot = serde_json::json!(dynamo_bot).to_string();
+
         let version_id = dynamodb_connector::bot::create_bot_version(
             bot_id.clone(),
             bot,
