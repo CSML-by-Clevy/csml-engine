@@ -1,6 +1,7 @@
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_RIGHT_BRACKET};
 use crate::parser::{
+    parse_closure::parse_closure,
     operator::parse_operator,
     parse_built_in::parse_built_in,
     parse_comments::comment,
@@ -169,6 +170,7 @@ where
         StringState::Normal => preceded(
             comment,
             alt((
+                parse_closure,
                 parse_condition_group,
                 parse_object,
                 parse_expr_array,
@@ -181,6 +183,7 @@ where
         StringState::Expand => preceded(
             comment,
             alt((
+                parse_closure,
                 parse_condition_group,
                 parse_object,
                 parse_expr_array,

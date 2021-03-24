@@ -57,7 +57,7 @@ fn interpret_function_scope(
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn exec_fn_in_new_scope(
-    expr: Expr,
+    expr: &Expr,
     new_scope_data: &mut Data,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
@@ -70,7 +70,7 @@ pub fn exec_fn_in_new_scope(
         } => {
             let fn_msg_data = interpret_function_scope(&scope, new_scope_data, sender)?;
 
-            let mut return_value = PrimitiveNull::get_literal(interal);
+            let mut return_value = PrimitiveNull::get_literal(interal.to_owned());
             if let Some(ExitCondition::Return(lit)) = fn_msg_data.exit_condition {
                 return_value = lit;
             }

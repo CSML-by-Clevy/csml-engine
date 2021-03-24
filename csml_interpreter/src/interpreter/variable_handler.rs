@@ -18,7 +18,8 @@ use crate::data::primitive::{
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
     tokens::{COMPONENT, EVENT, _ENV, _METADATA},
-    ArgsType, Data, Literal, MemoryType, MessageData, MSG,
+    data::{Data, init_child_context},
+    ArgsType, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
@@ -52,12 +53,13 @@ fn loop_path(
     new: Option<Literal>,
     path: &mut Iter<(Interval, PathLiteral)>,
     content_type: &ContentType,
+    data: &mut Data,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<(Literal, bool), ErrorInfo> {
     let mut tmp_update_var = false;
-    // this is temporary until we find a better way, it helps restore the string in
-    // string index searching otherwise the string will be replace by the char at index
+    // this is temporary until we find a better way, it helps restore the string in the
+    // string index otherwise the string will be replaced by the char at the index
     let mut old_string = None;
 
     while let Some((interval, action)) = path.next() {
@@ -113,6 +115,9 @@ fn loop_path(
                         interval.to_owned(),
                         content_type,
                         &mut false,
+                        data,
+                        msg_data,
+                        sender
                     )?;
                     return Ok((lit.to_owned(), true));
                 } else {
@@ -161,6 +166,9 @@ fn loop_path(
                     *interval,
                     content_type,
                     &mut tmp_update_var,
+                    data,
+                    msg_data,
+                    sender
                 ) {
                     Ok(lit) => lit,
                     Err(err) => MSG::send_error_msg(sender, msg_data, Err(err)),
@@ -173,6 +181,7 @@ fn loop_path(
                     None,
                     path,
                     &content_type,
+                    data,
                     msg_data,
                     sender,
                 )?;
@@ -358,6 +367,7 @@ pub fn exec_path_actions(
     new: Option<Literal>,
     path: &Option<Vec<(Interval, PathLiteral)>>,
     content_type: &ContentType,
+    data: &mut Data,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<(Literal, bool), ErrorInfo> {
@@ -369,6 +379,7 @@ pub fn exec_path_actions(
             new,
             &mut path,
             content_type,
+            data,
             msg_data,
             sender,
         )?;
@@ -412,6 +423,7 @@ pub fn get_literal_from_metadata(
         None,
         &Some(path[1..].to_owned()),
         &content_type,
+        data,
         msg_data,
         sender,
     )?;
@@ -446,6 +458,7 @@ pub fn get_var(
                     None,
                     &Some(path.to_owned()),
                     &content_type,
+                    data,
                     msg_data,
                     sender,
                 )?;
@@ -463,58 +476,87 @@ pub fn get_var(
                 interval.to_owned(),
             )),
         },
-        _ => match get_var_from_mem(var.to_owned(), condition, path, data, msg_data, sender) {
-            Ok((lit, name, mem_type, path)) => {
-                let result = exec_path_actions(
-                    lit,
-                    condition,
-                    None,
-                    &path,
-                    &ContentType::get(&lit),
-                    msg_data,
-                    sender,
-                );
+        _ => {
+            // ######################
+            let mut context_tmp = init_child_context(&data);
+            let flows_tmp = data.flows.clone();
+            let flow_tmp = data.flow.clone();
+            let event_tmp = data.event.clone();
+            let env_tmp = data.env.clone();
+            let loop_indexs_tmp = data.loop_indexs.clone();
+            let loop_index_tmp = data.loop_index.clone();
+            let step_vars_tmp = data.step_vars.clone();
+            let custom_component_tmp = data.custom_component.clone();
+            let native_component_tmp = data.native_component.clone();
+            let mut new_scope_data = Data {
+                flows: &flows_tmp,
+                flow: &flow_tmp,
+                context: &mut context_tmp,
+                event: &event_tmp,
+                env: &env_tmp,
+                loop_indexs: loop_indexs_tmp,
+                loop_index: loop_index_tmp,
+                step_vars: step_vars_tmp,
+                custom_component: &custom_component_tmp,
+                native_component: &native_component_tmp,
+            };
+            // #####################
 
-                let (new_literal, update_mem) = match result {
-                    Ok((lit, update)) => (lit, update),
-                    Err(err) => (MSG::send_error_msg(&sender, msg_data, Err(err)), false),
-                };
+            match get_var_from_mem(var.to_owned(), condition, path, data, msg_data, sender) {
+                Ok((lit, name, mem_type, path)) => {
 
-                save_literal_in_mem(
-                    lit.to_owned(),
-                    name,
-                    &mem_type,
-                    update_mem,
-                    data,
-                    msg_data,
-                    sender,
-                );
-                Ok(new_literal)
-            }
-            Err(err) => {
-                // if value does not exist in memory we create a null value and we apply all the path actions
-                // if we are not in a condition an error message is created and send
-                let mut null = match condition {
-                    true => PrimitiveNull::get_literal(err.position.interval),
-                    false => MSG::send_error_msg(&sender, msg_data, Err(err)),
-                };
+                    let result = exec_path_actions(
+                        lit,
+                        condition,
+                        None,
+                        &path,
+                        &ContentType::get(&lit),
+                        &mut new_scope_data,
+                        msg_data,
+                        sender,
+                    );
+                    let (new_literal, update_mem) = match result {
+                        Ok((lit, update)) => (lit, update),
+                        Err(err) => (MSG::send_error_msg(&sender, msg_data, Err(err)), false),
+                    };
 
-                let path = if let Some(p) = path {
-                    Some(resolve_path(p, condition, data, msg_data, sender)?)
-                } else {
-                    None
-                };
-                let content_type = ContentType::get(&null);
-                let (new_literal, ..) = exec_path_actions(
-                    &mut null,
-                    condition,
-                    None,
-                    &path,
-                    &content_type,
-                    msg_data,
-                    sender,
-                )?;
-                Ok(new_literal)
+                    save_literal_in_mem(
+                        lit.to_owned(),
+                        name,
+                        &mem_type,
+                        update_mem,
+                        data,
+                        msg_data,
+                        sender,
+                    );
+                    Ok(new_literal)
+                }
+                Err(err) => {
+                    // if value does not exist in memory we create a null value and we apply all the path actions
+                    // if we are not in a condition an error message is created and send
+                    let mut null = match condition {
+                        true => PrimitiveNull::get_literal(err.position.interval),
+                        false => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                    };
+
+                    let path = if let Some(p) = path {
+                        Some(resolve_path(p, condition, data, msg_data, sender)?)
+                    } else {
+                        None
+                    };
+                    let content_type = ContentType::get(&null);
+                    let (new_literal, ..) = exec_path_actions(
+                        &mut null,
+                        condition,
+                        None,
+                        &path,
+                        &content_type,
+                        data,
+                        msg_data,
+                        sender,
+                    )?;
+                    Ok(new_literal)
+                }
             }
         },
     }

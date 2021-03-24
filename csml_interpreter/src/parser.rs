@@ -17,6 +17,7 @@ pub mod parse_path;
 pub mod parse_scope;
 pub mod parse_string;
 pub mod parse_var_types;
+pub mod parse_closure;
 pub mod state_context;
 pub mod step_checksum;
 pub mod tools;
@@ -46,7 +47,7 @@ pub fn parse_step_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
     E: ParseError<Span<'a>>,
 {
-    // this will save the location of teh key word in order to display the error correctly
+    // this will save the location of the keyword in order to display the error correctly
     let (command_span, _) = comment(s)?;
 
     let (s2, ident) = match parse_idents_assignation(command_span) {

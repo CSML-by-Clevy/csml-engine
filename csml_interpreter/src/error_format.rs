@@ -145,6 +145,10 @@ pub const ERROR_NATIVE_COMPONENT: &str = "native component does not exist";
 // #### Indexing
 pub const ERROR_INDEXING: &str =
     "indexing can only be done in ARRAY, OBJECT or STRING primitive types";
+
+// #### Closure
+pub const ERROR_CLOSURE_UNKNOWN_METHOD: &str = "Closure don't have methods";
+
 // #### Boolean
 pub const ERROR_BOOLEAN_UNKNOWN_METHOD: &str = "is not a method of Boolean";
 

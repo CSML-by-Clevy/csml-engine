@@ -55,3 +55,29 @@ impl<'a> Data<'a> {
         }
     }
 }
+
+pub fn init_child_context(data: &Data) -> Context {
+    Context {
+        current: HashMap::new(),
+        metadata: data.context.metadata.clone(),
+        api_info: data.context.api_info.clone(),
+        hold: None,
+        step: data.context.step.clone(),
+        flow: data.context.flow.clone(),
+    }
+}
+
+pub fn init_child_scope<'a>(data: &'a Data, context: &'a mut Context) -> Data<'a> {
+    Data::new(
+        &data.flows,
+        &data.flow,
+        context,
+        &data.event,
+        &data.env,
+        data.loop_indexs.clone(),
+        data.loop_index,
+        HashMap::new(),
+        &data.custom_component,
+        &data.native_component,
+    )
+}

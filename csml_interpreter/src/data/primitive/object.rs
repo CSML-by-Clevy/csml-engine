@@ -6,7 +6,7 @@ use crate::data::{
     message::Message,
     primitive::{
         tools_crypto, tools_jwt, Primitive, PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull,
-        PrimitiveString, PrimitiveType, Right,
+        PrimitiveString, PrimitiveType, Right, Data, MessageData, MSG
     },
     tokens::TYPES,
     Literal,
@@ -20,7 +20,7 @@ use lazy_static::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -1757,6 +1757,9 @@ impl Primitive for PrimitiveObject {
         args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &ContentType,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         let event = vec![FUNCTIONS_EVENT.clone()];
         let http = vec![
@@ -1800,7 +1803,7 @@ impl Primitive for PrimitiveObject {
                 if let Some(res) = self.value.get_mut(*value) {
                     return res
                         .primitive
-                        .do_exec(name, args, interval, &ContentType::Primitive);
+                        .do_exec(name, args, interval, &ContentType::Primitive, data, msg_data, sender);
                 }
             }
         }

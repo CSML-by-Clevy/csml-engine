@@ -5,6 +5,8 @@ pub mod int;
 pub mod null;
 pub mod object;
 pub mod string;
+pub mod closure;
+
 pub mod tools;
 pub mod tools_jwt;
 pub mod tools_crypto;
@@ -17,14 +19,16 @@ pub use int::PrimitiveInt;
 pub use null::PrimitiveNull;
 pub use object::PrimitiveObject;
 pub use string::PrimitiveString;
+pub use closure::PrimitiveClosure;
 
 use crate::data::primitive::tools::*;
-use crate::data::{Interval, Literal, Message};
+use crate::data::{Interval, Literal, Message, MessageData, MSG, Data};
 use crate::error_format::*;
 
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::mpsc};
 use std::ops::{Add, Div, Mul, Rem, Sub};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -45,6 +49,7 @@ pub enum PrimitiveType {
     PrimitiveNull,
     PrimitiveObject,
     PrimitiveString,
+    PrimitiveClosure,
 }
 
 #[typetag::serde(tag = "primitive")]
@@ -74,6 +79,9 @@ pub trait Primitive: Send {
         args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &ContentType,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo>;
 }
 
@@ -91,6 +99,7 @@ impl PrimitiveType {
             PrimitiveType::PrimitiveNull => "null".to_owned(),
             PrimitiveType::PrimitiveObject => "object".to_owned(),
             PrimitiveType::PrimitiveString => "string".to_owned(),
+            PrimitiveType::PrimitiveClosure => "closure".to_owned(),
         }
     }
 }
@@ -103,10 +112,13 @@ impl dyn Primitive {
         interval: Interval,
         content_type: &ContentType,
         mem_update: &mut bool,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         *mem_update = false;
 
-        let (res, right) = self.do_exec(name, args, interval, content_type)?;
+        let (res, right) = self.do_exec(name, args, interval, content_type, data, msg_data, sender)?;
         if right == Right::Write {
             *mem_update = true;
         }

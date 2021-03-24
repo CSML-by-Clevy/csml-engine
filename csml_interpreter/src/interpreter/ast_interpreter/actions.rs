@@ -1,6 +1,7 @@
 use crate::data::position::Position;
 use crate::data::{
-    ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data, Literal,
+    data::{Data, init_child_context},
+    ast::*, literal::ContentType, message::*, primitive::{PrimitiveNull, closure::capture_variables}, Literal,
     Memory, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
@@ -76,7 +77,35 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Do(DoType::Update(old, new)) => {
-            let new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
+            // ######################
+            let mut context_tmp = init_child_context(&data);
+            let flows_tmp = data.flows.clone();
+            let flow_tmp = data.flow.clone();
+            let event_tmp = data.event.clone();
+            let env_tmp = data.env.clone();
+            let loop_indexs_tmp = data.loop_indexs.clone();
+            let loop_index_tmp = data.loop_index.clone();
+            let step_vars_tmp = data.step_vars.clone();
+            let custom_component_tmp = data.custom_component.clone();
+            let native_component_tmp = data.native_component.clone();
+            let mut new_scope_data = Data {
+                flows: &flows_tmp,
+                flow: &flow_tmp,
+                context: &mut context_tmp,
+                event: &event_tmp,
+                env: &env_tmp,
+                loop_indexs: loop_indexs_tmp,
+                loop_index: loop_index_tmp,
+                step_vars: step_vars_tmp,
+                custom_component: &custom_component_tmp,
+                native_component: &native_component_tmp,
+            };
+            // #####################
+            let mut new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
+
+            // only for closure capture the step variables
+            capture_variables(&mut &mut new_value, data.step_vars.clone());
+
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
             exec_path_actions(
                 lit,
@@ -84,9 +113,11 @@ pub fn match_actions(
                 Some(new_value),
                 &path,
                 &ContentType::get(&lit),
+                &mut new_scope_data,
                 &mut msg_data,
                 sender,
             )?;
+
             save_literal_in_mem(
                 lit.to_owned(),
                 name,
@@ -166,15 +197,19 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Remember(name, variable) => {
-            let lit = expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
-            msg_data.add_to_memory(&name.ident, lit.clone());
+            let mut new_value = expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
+
+            // only for closure capture the step variables
+            capture_variables(&mut &mut new_value, data.step_vars.clone());
+
+            msg_data.add_to_memory(&name.ident, new_value.clone());
 
             MSG::send(
                 &sender,
-                MSG::Memory(Memory::new(name.ident.to_owned(), lit.clone())),
+                MSG::Memory(Memory::new(name.ident.to_owned(), new_value.clone())),
             );
 
-            data.context.current.insert(name.ident.to_owned(), lit);
+            data.context.current.insert(name.ident.to_owned(), new_value);
             Ok(msg_data)
         }
         reserved => Err(gen_error_info(
