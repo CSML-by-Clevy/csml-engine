@@ -23,7 +23,7 @@ pub mod tools;
 
 use crate::linter::data::Linter;
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExecutionState, ExitCondition, ScopeState, StateContext};
+pub use state_context::{ExecutionState, ExitCondition, ScopeState, StateContext, StringState};
 
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
@@ -173,6 +173,8 @@ where
     Position::set_step(&ident.ident);
     Linter::add_step(&Position::get_flow(), &ident.ident, interval.clone());
     StateContext::clear_rip();
+    StateContext::set_string(StringState::Normal);
+    StateContext::set_scope(ScopeState::Normal);
 
     let (s, actions) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;
