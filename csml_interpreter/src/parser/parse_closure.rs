@@ -1,13 +1,11 @@
 use crate::data::{ast::*, primitive::closure::PrimitiveClosure, tokens::*};
 use crate::parser::{
-    tools::*,
-    parse_comments::comment,
-    parse_braces::{parse_r_brace},
-    parse_scope::parse_fn_root, ScopeState, StateContext,
+    parse_braces::parse_r_brace, parse_comments::comment, parse_scope::parse_fn_root, tools::*,
+    ScopeState, StateContext,
 };
 use nom::{
     bytes::complete::tag,
-    combinator::{opt},
+    combinator::opt,
     error::ParseError,
     multi::separated_list,
     sequence::{preceded, terminated, tuple},
@@ -51,21 +49,16 @@ where
     let (s, end) = get_interval(s)?;
     interval.add_end(end);
 
-    let closure = Expr::LitExpr(
-        PrimitiveClosure::get_literal(
-            args,
-            Box::new(Expr::Scope {
-                block_type: BlockType::Function,
-                scope: func,
-                range: interval,
-            }),
-            interval,
-            None
-        )
-    );
+    let closure = Expr::LitExpr(PrimitiveClosure::get_literal(
+        args,
+        Box::new(Expr::Scope {
+            block_type: BlockType::Function,
+            scope: func,
+            range: interval,
+        }),
+        interval,
+        None,
+    ));
 
-    Ok((
-        s,
-        closure
-    ))
+    Ok((s, closure))
 }

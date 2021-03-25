@@ -1,7 +1,10 @@
 use crate::data::{
-    ast::*, error_info::ErrorInfo, tokens::*, ArgsType, Literal, MemoryType,
-    MessageData, Position, MSG, primitive::PrimitiveClosure,
-    data::{Data, init_child_context, init_child_scope}
+    ast::*,
+    data::{init_child_context, init_child_scope, Data},
+    error_info::ErrorInfo,
+    primitive::PrimitiveClosure,
+    tokens::*,
+    ArgsType, Literal, MemoryType, MessageData, Position, MSG,
 };
 use crate::error_format::*;
 use crate::imports::search_function;
@@ -12,7 +15,7 @@ use crate::interpreter::{
     variable_handler::save_literal_in_mem,
 };
 
-use std::{collections::HashMap ,sync::mpsc};
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -47,7 +50,6 @@ fn insert_memories_in_scope_memory(
     sender: &Option<mpsc::Sender<MSG>>,
 ) {
     for (name, value) in memories.iter() {
-
         save_literal_in_mem(
             value.to_owned(),
             name.to_owned(),
@@ -103,15 +105,17 @@ fn check_for_closure<'a>(
     data: &'a Data,
 ) -> Option<(Vec<String>, Expr)> {
     match data.step_vars.get(name) {
-        Some(lit) => { 
+        Some(lit) => {
             let val = Literal::get_value::<PrimitiveClosure>(
                 &lit.primitive,
                 interval,
                 "expect Literal of type [Closure]".to_owned(),
-            ).ok()?.to_owned();
+            )
+            .ok()?
+            .to_owned();
             Some((val.args, *val.func))
-        },
-        None => None
+        }
+        None => None,
     }
 }
 
@@ -160,8 +164,11 @@ pub fn resolve_object(
                 },
                 scope,
             )),
-            _, _,
-        ) => exec_fn(&scope, &fn_args, args, None,interval, data, msg_data, sender),
+            _,
+            _,
+        ) => exec_fn(
+            &scope, &fn_args, args, None, interval, data, msg_data, sender,
+        ),
 
         (.., Some((fn_args, expr, new_flow)), _) => {
             if fn_args.len() > args.len() {
@@ -180,7 +187,9 @@ pub fn resolve_object(
             exec_fn_in_new_scope(&expr, &mut new_scope_data, msg_data, sender)
         }
 
-        (.., Some((fn_args, scope))) => exec_fn(&scope, &fn_args, args, None,interval, data, msg_data, sender),
+        (.., Some((fn_args, scope))) => exec_fn(
+            &scope, &fn_args, args, None, interval, data, msg_data, sender,
+        ),
 
         _ => {
             let err = gen_error_info(

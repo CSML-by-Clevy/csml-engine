@@ -1,0 +1,7 @@
+start:
+    do func = (val) {
+        return val + 1
+    }
+    say func(1)
+
+    goto end

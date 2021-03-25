@@ -226,11 +226,13 @@ pub const ERROR_ARRAY_UNKNOWN_METHOD: &str = "is not a method of Array";
 // #### CRYPTO OBJECT
 // ## HMAC and HASH OBJECT
 pub const ERROR_HASH: &str = "Crypto(string) command expect argument of type String";
-pub const ERROR_HASH_ALGO: &str = "Invalid Algorithm, supported Algorithms are md5 sha1 sha256 sha384 sha512";
+pub const ERROR_HASH_ALGO: &str =
+    "Invalid Algorithm, supported Algorithms are md5 sha1 sha256 sha384 sha512";
 pub const ERROR_HMAC_KEY: &str = "HMAC key need to be of type string";
 
 pub const ERROR_DIGEST: &str = "Invalid argument, '.digest' is use incorrectly";
-pub const ERROR_DIGEST_ALGO: &str = "Invalid Digest Algorithm, supported Algorithms are hex, base64";
+pub const ERROR_DIGEST_ALGO: &str =
+    "Invalid Digest Algorithm, supported Algorithms are hex, base64";
 
 // #### JWT OBJECT
 pub const ERROR_JWT_ALGO: &str = "Invalid Algorithm, supported Algorithms are HS256, HS384, HS512";

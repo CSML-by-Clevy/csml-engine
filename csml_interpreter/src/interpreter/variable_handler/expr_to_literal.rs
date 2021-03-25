@@ -1,6 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
-use crate::data::primitive::{PrimitiveArray, PrimitiveObject, closure::capture_variables};
+use crate::data::primitive::{closure::capture_variables, PrimitiveArray, PrimitiveObject};
 use crate::data::Position;
 use crate::data::{ast::*, ArgsType, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
@@ -127,7 +127,7 @@ pub fn expr_to_literal(
             // only for closure capture the step variables
             capture_variables(&mut &mut new_value, data.step_vars.clone());
             Ok(new_value)
-        },
+        }
         Expr::IdentExpr(var, ..) => Ok(get_var(
             var.to_owned(),
             condition,

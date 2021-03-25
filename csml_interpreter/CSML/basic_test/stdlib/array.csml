@@ -139,3 +139,25 @@ array_find_2:
     say vec.find({"obj":"42"}) // [{"obj":"42"}]
 
     goto end
+
+array_map:
+    say [1, 2].map((x) {
+        return x + 1
+    })
+    goto end
+
+array_reduce:
+    do func = (acc, val) {
+        return acc + val
+    }
+
+    say [1, 2, 3].reduce(4, func)
+
+    goto end
+
+array_filter:
+    say [1, 2, 3, 4, 5].filter((x) {
+        return x % 2 == 1
+    })
+
+    goto end

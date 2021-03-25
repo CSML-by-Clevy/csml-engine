@@ -5,7 +5,7 @@ use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Literal, Data, MessageData, MSG};
+use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use lazy_static::*;
 use serde::{Deserialize, Serialize};
@@ -182,7 +182,6 @@ impl Primitive for PrimitiveBoolean {
         _data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
-        
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
             let res = f(self, args, interval)?;

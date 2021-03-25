@@ -1,6 +1,9 @@
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
-use crate::data::{ast::PathLiteral, primitive::{PrimitiveNull, PrimitiveString}, };
+use crate::data::{
+    ast::PathLiteral,
+    primitive::{PrimitiveNull, PrimitiveString},
+};
 use crate::data::{
     ast::{Interval, PathState},
     Data, Literal, MessageData, MSG,

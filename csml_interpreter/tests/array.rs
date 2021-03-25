@@ -333,3 +333,69 @@ fn array_find_2() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn array_map() {
+    let data = r#"{"memories":[], "messages":[{"content":[2, 3], "content_type":"array"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "array_map",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/array.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_reduce() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"10"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "array_reduce",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/array.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_filter() {
+    let data = r#"{"memories":[], "messages":[{"content":[1, 3, 5], "content_type":"array"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "array_filter",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/array.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

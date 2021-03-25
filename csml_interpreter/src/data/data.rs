@@ -27,7 +27,6 @@ pub struct Data<'a> {
 ////////////////////////////////////////////////////////////////////////////////
 // STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
-
 impl<'a> Data<'a> {
     pub fn new(
         flows: &'a HashMap<String, Flow>,
@@ -53,6 +52,34 @@ impl<'a> Data<'a> {
             custom_component,
             native_component,
         }
+    }
+
+    pub fn copy_scope(
+        &self,
+    ) -> (
+        HashMap<String, Flow>,
+        Flow,
+        Context,
+        Event,
+        Literal,
+        Vec<usize>,
+        usize,
+        HashMap<String, Literal>,
+        serde_json::Map<String, serde_json::Value>,
+        serde_json::Map<String, serde_json::Value>,
+    ) {
+        (
+            self.flows.clone(),
+            self.flow.clone(),
+            init_child_context(&self),
+            self.event.clone(),
+            self.env.clone(),
+            self.loop_indexs.clone(),
+            self.loop_index.clone(),
+            self.step_vars.clone(),
+            self.custom_component.clone(),
+            self.native_component.clone(),
+        )
     }
 }
 

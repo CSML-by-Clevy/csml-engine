@@ -1,8 +1,11 @@
 use crate::data::position::Position;
 use crate::data::{
-    data::{Data, init_child_context},
-    ast::*, literal::ContentType, message::*, primitive::{PrimitiveNull, closure::capture_variables}, Literal,
-    Memory, MemoryType, MessageData, MSG,
+    ast::*,
+    data::Data,
+    literal::ContentType,
+    message::*,
+    primitive::{closure::capture_variables, PrimitiveNull},
+    Literal, Memory, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
@@ -78,28 +81,32 @@ pub fn match_actions(
         }
         ObjectType::Do(DoType::Update(old, new)) => {
             // ######################
-            let mut context_tmp = init_child_context(&data);
-            let flows_tmp = data.flows.clone();
-            let flow_tmp = data.flow.clone();
-            let event_tmp = data.event.clone();
-            let env_tmp = data.env.clone();
-            let loop_indexs_tmp = data.loop_indexs.clone();
-            let loop_index_tmp = data.loop_index.clone();
-            let step_vars_tmp = data.step_vars.clone();
-            let custom_component_tmp = data.custom_component.clone();
-            let native_component_tmp = data.native_component.clone();
-            let mut new_scope_data = Data {
-                flows: &flows_tmp,
-                flow: &flow_tmp,
-                context: &mut context_tmp,
-                event: &event_tmp,
-                env: &env_tmp,
-                loop_indexs: loop_indexs_tmp,
-                loop_index: loop_index_tmp,
-                step_vars: step_vars_tmp,
-                custom_component: &custom_component_tmp,
-                native_component: &native_component_tmp,
-            };
+            // create a temporary scope, this is necessary in order to bypass de borrow checker
+            // in the future we need to refacto this code to avoid any scope copy like this
+            let (
+                tmp_flows,
+                tmp_flow,
+                mut tmp_context,
+                tmp_event,
+                tmp_env,
+                tmp_loop_indexs,
+                tmp_loop_index,
+                tmp_step_vars,
+                tmp_custom_component,
+                tmp_native_component,
+            ) = data.copy_scope();
+            let mut new_scope_data = Data::new(
+                &tmp_flows,
+                &tmp_flow,
+                &mut tmp_context,
+                &tmp_event,
+                &tmp_env,
+                tmp_loop_indexs,
+                tmp_loop_index,
+                tmp_step_vars,
+                &tmp_custom_component,
+                &tmp_native_component,
+            );
             // #####################
             let mut new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
 
@@ -197,7 +204,8 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Remember(name, variable) => {
-            let mut new_value = expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
+            let mut new_value =
+                expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
             capture_variables(&mut &mut new_value, data.step_vars.clone());
@@ -209,7 +217,9 @@ pub fn match_actions(
                 MSG::Memory(Memory::new(name.ident.to_owned(), new_value.clone())),
             );
 
-            data.context.current.insert(name.ident.to_owned(), new_value);
+            data.context
+                .current
+                .insert(name.ident.to_owned(), new_value);
             Ok(msg_data)
         }
         reserved => Err(gen_error_info(

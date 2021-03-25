@@ -6,7 +6,11 @@ use crate::data::primitive::string::PrimitiveString;
 
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::{Interval, Expr}, message::Message, Literal, Data, MessageData, MSG};
+use crate::data::{
+    ast::{Expr, Interval},
+    message::Message,
+    Data, Literal, MessageData, MSG,
+};
 use crate::error_format::*;
 use lazy_static::*;
 use serde::{Deserialize, Serialize};
@@ -18,8 +22,9 @@ pub fn capture_variables(literal: &mut Literal, memories: HashMap<String, Litera
         let mut closure = Literal::get_mut_value::<PrimitiveClosure>(
             &mut literal.primitive,
             literal.interval,
-            format!("")
-        ).unwrap();
+            format!(""),
+        )
+        .unwrap();
         closure.enclosed_variables = Some(memories);
     }
 }
@@ -166,15 +171,24 @@ impl PrimitiveClosure {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl PrimitiveClosure {
-    pub fn new(args: Vec<String>, func: Box<Expr>, enclosed_variables: Option<HashMap<String, Literal>>,) -> Self {
-        Self { 
+    pub fn new(
+        args: Vec<String>,
+        func: Box<Expr>,
+        enclosed_variables: Option<HashMap<String, Literal>>,
+    ) -> Self {
+        Self {
             args,
             func,
-            enclosed_variables
+            enclosed_variables,
         }
     }
 
-    pub fn get_literal(args: Vec<String>, func: Box<Expr>, interval: Interval, enclosed_variables: Option<HashMap<String, Literal>>,) -> Literal {
+    pub fn get_literal(
+        args: Vec<String>,
+        func: Box<Expr>,
+        interval: Interval,
+        enclosed_variables: Option<HashMap<String, Literal>>,
+    ) -> Literal {
         let primitive = Box::new(PrimitiveClosure::new(args, func, enclosed_variables));
 
         Literal {
@@ -257,11 +271,17 @@ impl Primitive for PrimitiveClosure {
     }
 
     fn to_json(&self) -> serde_json::Value {
-        serde_json::Value::Null
+        let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+        map.insert("_closure".to_owned(), serde_json::json!(self));
+
+        serde_json::Value::Object(map)
     }
 
     fn format_mem(&self, _content_type: &str, _first: bool) -> serde_json::Value {
-        serde_json::Value::Null
+        let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+        map.insert("_closure".to_owned(), serde_json::json!(self));
+
+        serde_json::Value::Object(map)
     }
 
     fn to_string(&self) -> String {

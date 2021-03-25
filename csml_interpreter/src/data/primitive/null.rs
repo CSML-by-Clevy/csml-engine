@@ -4,7 +4,10 @@ use crate::data::primitive::{
     boolean::PrimitiveBoolean, object::PrimitiveObject, string::PrimitiveString, Primitive,
     PrimitiveType, Right,
 };
-use crate::data::{ast::Interval, literal::ContentType, message::Message, tokens::NULL, Literal, Data, MessageData, MSG};
+use crate::data::{
+    ast::Interval, literal::ContentType, message::Message, tokens::NULL, Data, Literal,
+    MessageData, MSG,
+};
 use crate::error_format::*;
 use lazy_static::*;
 use serde::{Deserialize, Serialize};

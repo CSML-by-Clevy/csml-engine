@@ -1,23 +1,23 @@
 use crate::data::position::Position;
 use crate::data::{
-    Interval, Literal, Message, Data, MessageData, MSG, ArgsType,
-    tokens::TYPES,
     literal::ContentType,
     primitive::{
-        Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType,
-        PrimitiveClosure, Right,
+        Primitive, PrimitiveBoolean, PrimitiveClosure, PrimitiveInt, PrimitiveNull,
+        PrimitiveString, PrimitiveType, Right,
     },
+    tokens::TYPES,
+    ArgsType, Data, Interval, Literal, Message, MessageData, MSG,
 };
-use crate::interpreter::variable_handler::resolve_csml_object::exec_fn;
 use crate::error_format::*;
+use crate::interpreter::variable_handler::resolve_csml_object::exec_fn;
 use lazy_static::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::cmp::Ordering;
-use std::{collections::HashMap, sync::mpsc};
 use std::usize;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -106,17 +106,14 @@ lazy_static! {
             (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
         );
 
-        map.insert(
-            "map",
-            (PrimitiveArray::map as PrimitiveMethod, Right::Read),
-        );
+        map.insert("map", (PrimitiveArray::map as PrimitiveMethod, Right::Read));
         map.insert(
             "filter",
-            (PrimitiveArray::map as PrimitiveMethod, Right::Read),
+            (PrimitiveArray::filter as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "reduce",
-            (PrimitiveArray::map as PrimitiveMethod, Right::Read),
+            (PrimitiveArray::reduce as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -746,27 +743,132 @@ impl PrimitiveArray {
         let usage = "map(fn) expect one argument of type [Closure]";
 
         match args.get("arg0") {
-            Some(lit) => { 
+            Some(lit) => {
                 let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
                     &lit.primitive,
                     interval,
-                    format!("usage: {}", usage)
+                    format!("usage: {}", usage),
                 )?;
 
-                let mut vec = vec!();
+                let mut vec = vec![];
 
                 for value in array.value.iter() {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), value.to_owned());
                     let args = ArgsType::Normal(map);
 
-                    let result = exec_fn(&closure.func, &closure.args, args, closure.enclosed_variables.clone(), interval, data, msg_data, sender)?;
+                    let result = exec_fn(
+                        &closure.func,
+                        &closure.args,
+                        args,
+                        closure.enclosed_variables.clone(),
+                        interval,
+                        data,
+                        msg_data,
+                        sender,
+                    )?;
                     vec.push(result);
                 }
 
                 Ok(PrimitiveArray::get_literal(&vec, interval))
-            },
+            }
             None => Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        }
+    }
+
+    fn filter(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "filter(fn) expect one argument of type [Closure]";
+
+        match args.get("arg0") {
+            Some(lit) => {
+                let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
+                    &lit.primitive,
+                    interval,
+                    format!("usage: {}", usage),
+                )?;
+
+                let mut vec = vec![];
+
+                for value in array.value.iter() {
+                    let mut map = HashMap::new();
+                    map.insert("arg0".to_owned(), value.to_owned());
+                    let args = ArgsType::Normal(map);
+
+                    let result = exec_fn(
+                        &closure.func,
+                        &closure.args,
+                        args,
+                        closure.enclosed_variables.clone(),
+                        interval,
+                        data,
+                        msg_data,
+                        sender,
+                    )?;
+                    if result.primitive.as_bool() {
+                        vec.push(value.clone());
+                    }
+                }
+
+                Ok(PrimitiveArray::get_literal(&vec, interval))
+            }
+            None => Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        }
+    }
+
+    fn reduce(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "reduce(acc, fn) expect tow arguments an initial value and 'Closure' with two arguments: an 'accumulator', and an element";
+
+        match (args.get("arg0"), args.get("arg1")) {
+            (Some(acc), Some(closure)) => {
+                let mut accumulator = acc.clone();
+
+                let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
+                    &closure.primitive,
+                    interval,
+                    format!("usage: {}", usage),
+                )?;
+
+                for value in array.value.iter() {
+                    let mut map = HashMap::new();
+                    map.insert("arg0".to_owned(), accumulator);
+                    map.insert("arg1".to_owned(), value.to_owned());
+                    let args = ArgsType::Normal(map);
+
+                    accumulator = exec_fn(
+                        &closure.func,
+                        &closure.args,
+                        args,
+                        closure.enclosed_variables.clone(),
+                        interval,
+                        data,
+                        msg_data,
+                        sender,
+                    )?;
+                }
+
+                Ok(accumulator)
+            }
+            _ => Err(gen_error_info(
                 Position::new(interval),
                 format!("usage: {}", usage),
             )),

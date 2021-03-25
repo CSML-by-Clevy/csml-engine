@@ -91,8 +91,10 @@ pub const STRING: &str = "string";
 pub const INT: &str = "int";
 pub const FLOAT: &str = "float";
 pub const BOOLEAN: &str = "boolean";
+pub const CLOSURE: &str = "closure";
 
 pub const TYPES: &[&str] = &[
+    CLOSURE,
     OBJECT_TYPE,
     ARRAY,
     TEXT_TYPE,
@@ -105,7 +107,7 @@ pub const TYPES: &[&str] = &[
 
 pub const RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, _METADATA,_ENV, DEFAULT, REMEMBER, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    MATCH, _METADATA, _ENV, DEFAULT, REMEMBER, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 pub const UTILISATION_RESERVED: &[&str] = &[

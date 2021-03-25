@@ -10,7 +10,7 @@ use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Literal, Data, MessageData, MSG};
+use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::json_to_literal;
 use lazy_static::*;
@@ -1065,16 +1065,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "abs",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "abs",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1096,8 +1110,15 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "cos",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1105,8 +1126,15 @@ impl PrimitiveString {
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "cos",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1128,16 +1156,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "ceil",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "ceil",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1159,16 +1201,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "pow",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "pow",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1190,16 +1246,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "floor",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "floor",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1221,16 +1291,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "round",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "round",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1252,16 +1336,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "sin",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "sin",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1283,16 +1381,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "sqrt",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "sqrt",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1314,16 +1426,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "tan",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "tan",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1345,16 +1471,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_int",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_int",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1376,16 +1516,30 @@ impl PrimitiveString {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_float",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Primitive, data, msg_data, sender)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_float",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }

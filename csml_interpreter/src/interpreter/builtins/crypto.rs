@@ -1,5 +1,5 @@
 use crate::data::position::Position;
-use crate::data::primitive::{PrimitiveObject};
+use crate::data::primitive::PrimitiveObject;
 use std::collections::HashMap;
 
 use crate::data::{ast::Interval, ArgsType, Literal};
