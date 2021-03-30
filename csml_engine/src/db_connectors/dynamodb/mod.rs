@@ -113,50 +113,6 @@ impl Bot {
     }
 }
 
-// #[derive(Serialize, Deserialize, Debug)]
-// pub struct DynamoFlow {
-//     pub hash: String,
-//     pub range: String,
-//     pub range_time: String,
-//     pub class: String,
-
-//     pub id: String,
-//     pub bot_id: String,
-//     pub version_id: String,
-//     pub flow: String,
-//     pub created_at: String,
-// }
-
-// impl DynamoFlow {
-//     pub fn get_hash(bot_id: &str) -> String {
-//         format!("bot#{}", bot_id)
-//     }
-
-//     pub fn get_range(version_id: &str, id: &str) -> String {
-//         make_range(&["flow", version_id, id])
-//     }
-
-//     pub fn new(bot_id: String, version_id: String, flow: &CsmlFlow) -> Self {
-//         let id = Uuid::new_v4().to_string();
-//         let now = get_date_time();
-//         let class_name = "flow";
-
-//         let flow = base64::encode(bincode::serialize(flow).unwrap());
-
-//         Self {
-//             hash: Self::get_hash(&bot_id),
-//             range: Self::get_range(&version_id, &id),
-//             range_time: make_range(&[&class_name, &version_id, &now, &id]),
-//             class: class_name.to_owned(),
-//             id,
-//             bot_id,
-//             version_id,
-//             flow,
-//             created_at: now,
-//         }
-//     }
-// }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Conversation {
     pub hash: String,

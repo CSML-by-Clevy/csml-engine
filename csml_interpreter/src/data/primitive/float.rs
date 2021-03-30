@@ -8,12 +8,12 @@ use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_division_by_zero_f64;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Literal};
+use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use lazy_static::*;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -663,6 +663,9 @@ impl Primitive for PrimitiveFloat {
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
             let res = f(self, args, interval)?;

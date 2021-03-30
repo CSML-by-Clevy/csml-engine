@@ -1,6 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
-use crate::data::primitive::{PrimitiveArray, PrimitiveObject};
+use crate::data::primitive::{closure::capture_variables, PrimitiveArray, PrimitiveObject};
 use crate::data::Position;
 use crate::data::{ast::*, ArgsType, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
@@ -34,11 +34,11 @@ fn exec_path_literal(
             None,
             &Some(path),
             &ContentType::get(&literal),
+            data,
             msg_data,
             sender,
         )?;
 
-        //TODO: remove this condition when 'msg_data' and 'sender' can be access anywhere in the code
         if new_literal.content_type == "string" {
             let string = serde_json::json!(new_literal.primitive.to_string());
             new_literal = interpolate(&string, new_literal.interval, data, msg_data, sender)?;
@@ -115,14 +115,19 @@ pub fn expr_to_literal(
         Expr::InfixExpr(infix, exp_1, exp_2) => {
             evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)
         }
-        Expr::LitExpr(literal) => exec_path_literal(
-            &mut literal.clone(),
-            condition,
-            path,
-            data,
-            msg_data,
-            sender,
-        ),
+        Expr::LitExpr(literal) => {
+            let mut new_value = exec_path_literal(
+                &mut literal.clone(),
+                condition,
+                path,
+                data,
+                msg_data,
+                sender,
+            )?;
+            // only for closure capture the step variables
+            capture_variables(&mut &mut new_value, data.step_vars.clone());
+            Ok(new_value)
+        }
         Expr::IdentExpr(var, ..) => Ok(get_var(
             var.to_owned(),
             condition,

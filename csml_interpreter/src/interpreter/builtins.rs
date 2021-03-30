@@ -1,9 +1,9 @@
 pub mod api;
+pub mod crypto;
 pub mod format;
 pub mod functions;
 pub mod http;
 pub mod jwt;
-pub mod crypto;
 pub mod tools;
 
 use crate::data::{
@@ -14,11 +14,11 @@ use crate::interpreter::variable_handler::gen_generic_component::gen_generic_com
 use std::sync::mpsc;
 
 use api::api;
+use crypto::crypto;
 use format::*;
 use functions::*;
 use http::http;
 use jwt::jwt;
-use crypto::crypto;
 
 pub fn match_native_builtin(
     name: &str,

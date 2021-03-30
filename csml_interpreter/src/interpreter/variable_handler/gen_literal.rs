@@ -1,6 +1,9 @@
 use crate::data::literal::ContentType;
 use crate::data::position::Position;
-use crate::data::{ast::PathLiteral, primitive::{PrimitiveNull, PrimitiveString}, };
+use crate::data::{
+    ast::PathLiteral,
+    primitive::{PrimitiveNull, PrimitiveString},
+};
 use crate::data::{
     ast::{Interval, PathState},
     Data, Literal, MessageData, MSG,
@@ -48,6 +51,7 @@ pub fn gen_literal_from_event(
                 None,
                 &Some(path),
                 &content_type,
+                data,
                 msg_data,
                 sender,
             )?;
@@ -90,6 +94,7 @@ pub fn gen_literal_from_component(
                             None,
                             &Some(path),
                             &ContentType::Primitive,
+                            data,
                             msg_data,
                             sender,
                         )?;
@@ -139,6 +144,7 @@ pub fn get_literal_from_metadata(
         None,
         &Some(path[1..].to_owned()),
         &content_type,
+        data,
         msg_data,
         sender,
     )?;

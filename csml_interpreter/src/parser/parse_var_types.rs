@@ -3,6 +3,7 @@ use crate::error_format::{gen_nom_failure, ERROR_RIGHT_BRACKET};
 use crate::parser::{
     operator::parse_operator,
     parse_built_in::parse_built_in,
+    parse_closure::parse_closure,
     parse_comments::comment,
     parse_idents::{parse_idents_as, parse_idents_assignation, parse_idents_usage},
     parse_literal::parse_literal_expr,
@@ -169,6 +170,7 @@ where
         StringState::Normal => preceded(
             comment,
             alt((
+                parse_closure,
                 parse_condition_group,
                 parse_object,
                 parse_expr_array,
@@ -181,6 +183,7 @@ where
         StringState::Expand => preceded(
             comment,
             alt((
+                parse_closure,
                 parse_condition_group,
                 parse_object,
                 parse_expr_array,

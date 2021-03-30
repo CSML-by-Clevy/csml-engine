@@ -10,14 +10,14 @@ use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Literal};
+use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::json_to_literal;
 use lazy_static::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -27,6 +27,9 @@ type PrimitiveMethod = fn(
     string: &mut PrimitiveString,
     args: &HashMap<String, Literal>,
     interval: Interval,
+    data: &mut Data,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo>;
 
 lazy_static! {
@@ -208,6 +211,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
@@ -227,6 +233,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_int() => boolean";
 
@@ -246,6 +255,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_float() => boolean";
 
@@ -270,6 +282,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_email() => boolean";
 
@@ -294,6 +309,9 @@ impl PrimitiveString {
         _string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
@@ -311,6 +329,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
@@ -330,6 +351,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "append(value: string) => string";
 
@@ -367,6 +391,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "contains(value: string) => boolean";
 
@@ -402,6 +429,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "contains_regex(value: string) => boolean";
 
@@ -447,6 +477,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ends_with(value: string) => boolean";
 
@@ -482,6 +515,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ends_with_regex(value: string) => boolean";
 
@@ -531,6 +567,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "from_json() => object";
 
@@ -558,6 +597,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_empty() => boolean";
 
@@ -577,6 +619,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "length() => int";
 
@@ -596,6 +641,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "match(value: string>) => array";
 
@@ -639,6 +687,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "match_regex(value: string>) => array";
 
@@ -697,6 +748,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "starts_with(value: string) => boolean";
 
@@ -732,6 +786,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "starts_with_regex(value: string) => boolean";
 
@@ -781,6 +838,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_lowercase() => string";
 
@@ -799,6 +859,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_uppercase() => string";
 
@@ -817,6 +880,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "capitalize() => string";
 
@@ -842,6 +908,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "slice(start: Integer, end: Optional<Integer>) => string";
         let text_vec = string.value.chars().collect::<Vec<_>>();
@@ -945,6 +1014,9 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "string(separator: string) => array";
 
@@ -986,20 +1058,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "abs",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("abs", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "abs",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1014,12 +1103,22 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "cos",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1027,8 +1126,15 @@ impl PrimitiveString {
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("cos", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "cos",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1043,20 +1149,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "ceil",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("ceil", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "ceil",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1071,20 +1194,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "pow",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("pow", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "pow",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1099,20 +1239,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "floor",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("floor", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "floor",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1127,20 +1284,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "round",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("round", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "round",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1155,20 +1329,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "sin",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("sin", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "sin",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1183,20 +1374,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "sqrt",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("sqrt", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "sqrt",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1211,20 +1419,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "tan",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("tan", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "tan",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1239,20 +1464,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_int",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("to_int", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_int",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1267,20 +1509,37 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         if let Ok(int) = string.value.parse::<i64>() {
             let mut primitive = PrimitiveInt::new(int);
 
-            let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_float",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
         if let Ok(float) = string.value.parse::<f64>() {
             let mut primitive = PrimitiveFloat::new(float);
 
-            let (literal, _right) =
-                primitive.do_exec("to_float", args, interval, &ContentType::Primitive)?;
+            let (literal, _right) = primitive.do_exec(
+                "to_float",
+                args,
+                interval,
+                &ContentType::Primitive,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok(literal);
         }
@@ -1592,9 +1851,12 @@ impl Primitive for PrimitiveString {
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
+            let res = f(self, args, interval, data, msg_data, sender)?;
 
             return Ok((res, *right));
         }

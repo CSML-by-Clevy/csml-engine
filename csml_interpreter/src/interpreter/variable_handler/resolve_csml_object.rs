@@ -1,6 +1,10 @@
 use crate::data::{
-    ast::*, error_info::ErrorInfo, tokens::*, ArgsType, Context, Data, Literal, MemoryType,
-    MessageData, Position, MSG,
+    ast::*,
+    data::{init_child_context, init_child_scope, Data},
+    error_info::ErrorInfo,
+    primitive::PrimitiveClosure,
+    tokens::*,
+    ArgsType, Literal, MemoryType, MessageData, Position, MSG,
 };
 use crate::error_format::*;
 use crate::imports::search_function;
@@ -17,24 +21,9 @@ use std::{collections::HashMap, sync::mpsc};
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn init_new_scope<'a>(data: &'a Data, context: &'a mut Context) -> Data<'a> {
-    Data::new(
-        &data.flows,
-        &data.flow,
-        context,
-        &data.event,
-        &data.env,
-        data.loop_indexs.clone(),
-        data.loop_index,
-        HashMap::new(),
-        &data.custom_component,
-        &data.native_component,
-    )
-}
-
 fn insert_args_in_scope_memory(
     new_scope_data: &mut Data,
-    fn_args: &Vec<String>,
+    fn_args: &[String],
     args: &ArgsType,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
@@ -42,6 +31,25 @@ fn insert_args_in_scope_memory(
     for (index, name) in fn_args.iter().enumerate() {
         let value = args.get(name, index).unwrap();
 
+        save_literal_in_mem(
+            value.to_owned(),
+            name.to_owned(),
+            &MemoryType::Use,
+            true,
+            new_scope_data,
+            msg_data,
+            sender,
+        );
+    }
+}
+
+fn insert_memories_in_scope_memory(
+    new_scope_data: &mut Data,
+    memories: HashMap<String, Literal>,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) {
+    for (name, value) in memories.iter() {
         save_literal_in_mem(
             value.to_owned(),
             name.to_owned(),
@@ -91,6 +99,26 @@ fn check_for_import<'a>(
     }
 }
 
+fn check_for_closure<'a>(
+    name: &str,
+    interval: Interval,
+    data: &'a Data,
+) -> Option<(Vec<String>, Expr)> {
+    match data.step_vars.get(name) {
+        Some(lit) => {
+            let val = Literal::get_value::<PrimitiveClosure>(
+                &lit.primitive,
+                interval,
+                "expect Literal of type [Closure]".to_owned(),
+            )
+            .ok()?
+            .to_owned();
+            Some((val.args, *val.func))
+        }
+        None => None,
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,12 +135,14 @@ pub fn resolve_object(
 
     let function = check_for_function(name, data);
     let import = check_for_import(name, interval, data);
+    let closure = check_for_closure(name, interval, data);
 
     match (
         data.native_component.contains_key(name),
         BUILT_IN.contains(&name),
         function,
         import,
+        closure,
     ) {
         (true, ..) => {
             let value = match_native_builtin(&name, args, interval.to_owned(), data);
@@ -132,10 +162,15 @@ pub fn resolve_object(
                     name: _,
                     args: fn_args,
                 },
-                expr,
+                scope,
             )),
             _,
-        ) => {
+            _,
+        ) => exec_fn(
+            &scope, &fn_args, args, None, interval, data, msg_data, sender,
+        ),
+
+        (.., Some((fn_args, expr, new_flow)), _) => {
             if fn_args.len() > args.len() {
                 return Err(gen_error_info(
                     Position::new(interval),
@@ -143,46 +178,18 @@ pub fn resolve_object(
                 ));
             }
 
-            let mut context = Context {
-                current: HashMap::new(),
-                metadata: data.context.metadata.clone(),
-                api_info: data.context.api_info.clone(),
-                hold: None,
-                step: data.context.step.clone(),
-                flow: data.context.flow.clone(),
-            };
-
-            let mut new_scope_data = init_new_scope(data, &mut context);
-
-            insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
-
-            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data, sender)
-        }
-
-        (.., Some((fn_args, expr, new_flow))) => {
-            if fn_args.len() > args.len() {
-                return Err(gen_error_info(
-                    Position::new(interval),
-                    ERROR_FN_ARGS.to_owned(),
-                ));
-            }
-
-            let mut context = Context {
-                current: HashMap::new(),
-                metadata: HashMap::new(),
-                api_info: data.context.api_info.clone(),
-                hold: None,
-                step: data.context.step.clone(),
-                flow: data.context.flow.clone(),
-            };
-
-            let mut new_scope_data = init_new_scope(data, &mut context);
+            let mut context = init_child_context(&data);
+            let mut new_scope_data = init_child_scope(data, &mut context);
             new_scope_data.flow = new_flow;
 
             insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
 
-            exec_fn_in_new_scope(expr, &mut new_scope_data, msg_data, sender)
+            exec_fn_in_new_scope(&expr, &mut new_scope_data, msg_data, sender)
         }
+
+        (.., Some((fn_args, scope))) => exec_fn(
+            &scope, &fn_args, args, None, interval, data, msg_data, sender,
+        ),
 
         _ => {
             let err = gen_error_info(
@@ -196,4 +203,31 @@ pub fn resolve_object(
             ))
         }
     }
+}
+
+pub fn exec_fn(
+    scope: &Expr,
+    fn_args: &[String],
+    args: ArgsType,
+    memories_to_insert: Option<HashMap<String, Literal>>,
+    interval: Interval,
+    data: &mut Data,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    if fn_args.len() > args.len() {
+        return Err(gen_error_info(
+            Position::new(interval),
+            ERROR_FN_ARGS.to_owned(),
+        ));
+    }
+
+    let mut context = init_child_context(&data);
+    let mut new_scope_data = init_child_scope(data, &mut context);
+    insert_args_in_scope_memory(&mut new_scope_data, fn_args, &args, msg_data, sender);
+    if let Some(memories) = memories_to_insert {
+        insert_memories_in_scope_memory(&mut new_scope_data, memories, msg_data, sender);
+    }
+
+    exec_fn_in_new_scope(scope, &mut new_scope_data, msg_data, sender)
 }

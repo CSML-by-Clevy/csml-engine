@@ -5,8 +5,8 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        tools_crypto, tools_jwt, Primitive, PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull,
-        PrimitiveString, PrimitiveType, Right,
+        tools_crypto, tools_jwt, Data, MessageData, Primitive, PrimitiveArray, PrimitiveBoolean,
+        PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right, MSG,
     },
     tokens::TYPES,
     Literal,
@@ -20,7 +20,7 @@ use lazy_static::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -106,7 +106,7 @@ lazy_static! {
             "digest",
             (PrimitiveObject::digest as PrimitiveMethod, Right::Read),
         );
-        
+
         map
     };
 }
@@ -748,11 +748,9 @@ impl PrimitiveObject {
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         let data = match object.value.get("value") {
-            Some(literal) => Literal::get_value::<String>(
-                &literal.primitive,
-                interval,
-                ERROR_HASH.to_owned(),
-            )?,
+            Some(literal) => {
+                Literal::get_value::<String>(&literal.primitive, interval, ERROR_HASH.to_owned())?
+            }
             None => {
                 return Err(gen_error_info(
                     Position::new(interval),
@@ -800,21 +798,24 @@ impl PrimitiveObject {
             Ok(mut signer) => {
                 signer.update(data.as_bytes()).unwrap();
 
-                let vec = signer.sign_to_vec().unwrap().iter().map(|val|
-                    PrimitiveInt::get_literal(val.clone() as i64, interval)
-                ).collect::<Vec<Literal>>();
+                let vec = signer
+                    .sign_to_vec()
+                    .unwrap()
+                    .iter()
+                    .map(|val| PrimitiveInt::get_literal(val.clone() as i64, interval))
+                    .collect::<Vec<Literal>>();
 
                 let mut map = HashMap::new();
-                map.insert("hash".to_string(), PrimitiveArray::get_literal(&vec, interval));
+                map.insert(
+                    "hash".to_string(),
+                    PrimitiveArray::get_literal(&vec, interval),
+                );
 
                 let mut lit = PrimitiveObject::get_literal(&map, interval);
                 lit.set_content_type("crypto");
                 Ok(lit)
-            },
-            Err(e) => return Err(gen_error_info(
-                Position::new(interval),
-                format!("{}", e),
-            ))
+            }
+            Err(e) => return Err(gen_error_info(Position::new(interval), format!("{}", e))),
         }
     }
 
@@ -825,11 +826,9 @@ impl PrimitiveObject {
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         let data = match object.value.get("value") {
-            Some(literal) => Literal::get_value::<String>(
-                &literal.primitive,
-                interval,
-                ERROR_HASH.to_owned(),
-            )?,
+            Some(literal) => {
+                Literal::get_value::<String>(&literal.primitive, interval, ERROR_HASH.to_owned())?
+            }
             None => {
                 return Err(gen_error_info(
                     Position::new(interval),
@@ -857,21 +856,23 @@ impl PrimitiveObject {
 
         match openssl::hash::hash(algo, data.as_bytes()) {
             Ok(digest_bytes) => {
-                let vec = digest_bytes.to_vec().iter().map(|val|
-                    PrimitiveInt::get_literal(*val as i64, interval)
-                ).collect::<Vec<Literal>>();
+                let vec = digest_bytes
+                    .to_vec()
+                    .iter()
+                    .map(|val| PrimitiveInt::get_literal(*val as i64, interval))
+                    .collect::<Vec<Literal>>();
 
                 let mut map = HashMap::new();
-                map.insert("hash".to_string(), PrimitiveArray::get_literal(&vec, interval));
-                
+                map.insert(
+                    "hash".to_string(),
+                    PrimitiveArray::get_literal(&vec, interval),
+                );
+
                 let mut lit = PrimitiveObject::get_literal(&map, interval);
                 lit.set_content_type("crypto");
                 Ok(lit)
-            },
-            Err(e) => return Err(gen_error_info(
-                Position::new(interval),
-                format!("{}", e),
-            ))
+            }
+            Err(e) => return Err(gen_error_info(Position::new(interval), format!("{}", e))),
         }
     }
 
@@ -911,15 +912,13 @@ impl PrimitiveObject {
             }
         };
 
-        let mut data = vec!();
+        let mut data = vec![];
         for value in vec.iter() {
-            data.push(
-                *Literal::get_value::<i64>(
-                    &value.primitive,
-                    interval,
-                    "ERROR_hash_TOKEN".to_owned(),
-                )? as u8
-            );
+            data.push(*Literal::get_value::<i64>(
+                &value.primitive,
+                interval,
+                "ERROR_hash_TOKEN".to_owned(),
+            )? as u8);
         }
 
         let value = tools_crypto::digest_data(algo, &data, interval)?;
@@ -1757,6 +1756,9 @@ impl Primitive for PrimitiveObject {
         args: &HashMap<String, Literal>,
         interval: Interval,
         content_type: &ContentType,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         let event = vec![FUNCTIONS_EVENT.clone()];
         let http = vec![
@@ -1798,9 +1800,15 @@ impl Primitive for PrimitiveObject {
             let vec = ["text", "payload"];
             for value in vec.iter() {
                 if let Some(res) = self.value.get_mut(*value) {
-                    return res
-                        .primitive
-                        .do_exec(name, args, interval, &ContentType::Primitive);
+                    return res.primitive.do_exec(
+                        name,
+                        args,
+                        interval,
+                        &ContentType::Primitive,
+                        data,
+                        msg_data,
+                        sender,
+                    );
                 }
             }
         }

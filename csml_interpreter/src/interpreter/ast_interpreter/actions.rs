@@ -1,7 +1,11 @@
 use crate::data::position::Position;
 use crate::data::{
-    ast::*, literal::ContentType, message::*, primitive::null::PrimitiveNull, Data, Literal,
-    Memory, MemoryType, MessageData, MSG,
+    ast::*,
+    data::Data,
+    literal::ContentType,
+    message::*,
+    primitive::{closure::capture_variables, PrimitiveNull},
+    Literal, Memory, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
@@ -76,7 +80,39 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Do(DoType::Update(old, new)) => {
-            let new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
+            // ######################
+            // create a temporary scope, this is necessary in order to bypass de borrow checker
+            // in the future we need to refacto this code to avoid any scope copy like this
+            let (
+                tmp_flows,
+                tmp_flow,
+                mut tmp_context,
+                tmp_event,
+                tmp_env,
+                tmp_loop_indexs,
+                tmp_loop_index,
+                tmp_step_vars,
+                tmp_custom_component,
+                tmp_native_component,
+            ) = data.copy_scope();
+            let mut new_scope_data = Data::new(
+                &tmp_flows,
+                &tmp_flow,
+                &mut tmp_context,
+                &tmp_event,
+                &tmp_env,
+                tmp_loop_indexs,
+                tmp_loop_index,
+                tmp_step_vars,
+                &tmp_custom_component,
+                &tmp_native_component,
+            );
+            // #####################
+            let mut new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
+
+            // only for closure capture the step variables
+            capture_variables(&mut &mut new_value, data.step_vars.clone());
+
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
             exec_path_actions(
                 lit,
@@ -84,9 +120,11 @@ pub fn match_actions(
                 Some(new_value),
                 &path,
                 &ContentType::get(&lit),
+                &mut new_scope_data,
                 &mut msg_data,
                 sender,
             )?;
+
             save_literal_in_mem(
                 lit.to_owned(),
                 name,
@@ -166,15 +204,22 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Remember(name, variable) => {
-            let lit = expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
-            msg_data.add_to_memory(&name.ident, lit.clone());
+            let mut new_value =
+                expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
+
+            // only for closure capture the step variables
+            capture_variables(&mut &mut new_value, data.step_vars.clone());
+
+            msg_data.add_to_memory(&name.ident, new_value.clone());
 
             MSG::send(
                 &sender,
-                MSG::Memory(Memory::new(name.ident.to_owned(), lit.clone())),
+                MSG::Memory(Memory::new(name.ident.to_owned(), new_value.clone())),
             );
 
-            data.context.current.insert(name.ident.to_owned(), lit);
+            data.context
+                .current
+                .insert(name.ident.to_owned(), new_value);
             Ok(msg_data)
         }
         reserved => Err(gen_error_info(

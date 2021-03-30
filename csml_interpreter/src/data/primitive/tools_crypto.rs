@@ -1,7 +1,10 @@
 use crate::data::{ast::Interval, position::Position};
 use crate::error_format::*;
 
-pub fn get_hash_algorithm(algo: &str, interval: Interval) -> Result<openssl::hash::MessageDigest, ErrorInfo> {
+pub fn get_hash_algorithm(
+    algo: &str,
+    interval: Interval,
+) -> Result<openssl::hash::MessageDigest, ErrorInfo> {
     match algo {
         "md5" | "MD5" => Ok(openssl::hash::MessageDigest::md5()),
         "sha1" | "SHA1" => Ok(openssl::hash::MessageDigest::sha1()),
@@ -23,7 +26,7 @@ pub fn get_hash_algorithm(algo: &str, interval: Interval) -> Result<openssl::has
         _ => Err(gen_error_info(
             Position::new(interval),
             format!("'{}' {}", algo, ERROR_HASH_ALGO),
-        ))
+        )),
     }
 }
 
@@ -34,6 +37,6 @@ pub fn digest_data(algo: &str, data: &[u8], interval: Interval) -> Result<String
         _ => Err(gen_error_info(
             Position::new(interval),
             format!("'{}' {}", algo, ERROR_DIGEST_ALGO),
-        ))
+        )),
     }
 }

@@ -4,12 +4,15 @@ use crate::data::primitive::{
     boolean::PrimitiveBoolean, object::PrimitiveObject, string::PrimitiveString, Primitive,
     PrimitiveType, Right,
 };
-use crate::data::{ast::Interval, literal::ContentType, message::Message, tokens::NULL, Literal};
+use crate::data::{
+    ast::Interval, literal::ContentType, message::Message, tokens::NULL, Data, Literal,
+    MessageData, MSG,
+};
 use crate::error_format::*;
 use lazy_static::*;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -307,6 +310,9 @@ impl Primitive for PrimitiveNull {
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
             let res = f(self, args, interval)?;

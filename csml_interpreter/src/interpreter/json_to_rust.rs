@@ -1,7 +1,7 @@
 use crate::data::position::Position;
 use crate::data::primitive::{
-    array::PrimitiveArray, boolean::PrimitiveBoolean, float::PrimitiveFloat, int::PrimitiveInt,
-    null::PrimitiveNull, object::PrimitiveObject, string::PrimitiveString,
+    PrimitiveArray, PrimitiveBoolean, PrimitiveClosure, PrimitiveFloat, PrimitiveInt,
+    PrimitiveNull, PrimitiveObject, PrimitiveString,
 };
 use crate::data::{ast::Interval, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
@@ -98,13 +98,27 @@ pub fn memory_to_literal(
         serde_json::Value::Object(val) => {
             let mut map = HashMap::new();
 
-            match (val.get("_content"), val.get("_content_type")) {
-                (Some(content), Some(serde_json::Value::String(conent_type))) => {
+            match (
+                val.get("_content"),
+                val.get("_content_type"),
+                val.get("_closure"),
+            ) {
+                (Some(content), Some(serde_json::Value::String(conent_type)), _) => {
                     let mut literal = memory_to_literal(content, interval)?;
                     literal.set_content_type(&conent_type);
                     Ok(literal)
                 }
-                (_, _) => {
+                (_, _, Some(closure_json)) => {
+                    let closure: PrimitiveClosure =
+                        serde_json::from_value(closure_json.to_owned())?;
+
+                    Ok(Literal {
+                        content_type: "closure".to_owned(),
+                        primitive: Box::new(closure),
+                        interval,
+                    })
+                }
+                (_, _, _) => {
                     for (k, v) in val.iter() {
                         map.insert(k.to_owned(), memory_to_literal(v, interval)?);
                     }

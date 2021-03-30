@@ -2,21 +2,22 @@ use crate::data::position::Position;
 use crate::data::{
     literal::ContentType,
     primitive::{
-        Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType,
-        Right,
+        Primitive, PrimitiveBoolean, PrimitiveClosure, PrimitiveInt, PrimitiveNull,
+        PrimitiveString, PrimitiveType, Right,
     },
     tokens::TYPES,
+    ArgsType, Data, Interval, Literal, Message, MessageData, MSG,
 };
-use crate::data::{Interval, Literal, Message};
 use crate::error_format::*;
+use crate::interpreter::variable_handler::resolve_csml_object::exec_fn;
 use lazy_static::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::usize;
+use std::{collections::HashMap, sync::mpsc};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -26,6 +27,9 @@ type PrimitiveMethod = fn(
     array: &mut PrimitiveArray,
     args: &HashMap<String, Literal>,
     interval: Interval,
+    data: &mut Data,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo>;
 
 lazy_static! {
@@ -102,6 +106,16 @@ lazy_static! {
             (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
         );
 
+        map.insert("map", (PrimitiveArray::map as PrimitiveMethod, Right::Read));
+        map.insert(
+            "filter",
+            (PrimitiveArray::filter as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "reduce",
+            (PrimitiveArray::reduce as PrimitiveMethod, Right::Read),
+        );
+
         map
     };
 }
@@ -138,6 +152,9 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
@@ -155,6 +172,9 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_int() => boolean";
 
@@ -172,6 +192,9 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_float() => boolean";
 
@@ -189,6 +212,9 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
@@ -206,6 +232,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
@@ -225,6 +254,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "find(value: primitive) => array";
 
@@ -264,6 +296,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_empty() => boolean";
 
@@ -283,6 +318,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "insert_at(index: int, value: primitive) => null";
 
@@ -330,6 +368,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "index_of(value: primitive) => int";
 
@@ -363,6 +404,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "join(separator: string) => string";
 
@@ -403,6 +447,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "length() => int";
 
@@ -422,6 +469,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "one_of() => primitive";
 
@@ -446,6 +496,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "push(value: primitive) => null";
 
@@ -482,6 +535,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "pop() => primitive";
 
@@ -505,6 +561,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "remove_at(index: int) => primitive";
 
@@ -540,6 +599,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "shuffle() => array";
 
@@ -561,6 +623,9 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "slice(start: Integer, end: Optional<Integer>) => [Literal]";
         let len = array.value.len();
@@ -658,6 +723,151 @@ impl PrimitiveArray {
                     ERROR_SLICE_ARG_INT.to_owned(),
                 )),
             },
+            _ => Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        }
+    }
+}
+
+impl PrimitiveArray {
+    fn map(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "map(fn) expect one argument of type [Closure]";
+
+        match args.get("arg0") {
+            Some(lit) => {
+                let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
+                    &lit.primitive,
+                    interval,
+                    format!("usage: {}", usage),
+                )?;
+
+                let mut vec = vec![];
+
+                for value in array.value.iter() {
+                    let mut map = HashMap::new();
+                    map.insert("arg0".to_owned(), value.to_owned());
+                    let args = ArgsType::Normal(map);
+
+                    let result = exec_fn(
+                        &closure.func,
+                        &closure.args,
+                        args,
+                        closure.enclosed_variables.clone(),
+                        interval,
+                        data,
+                        msg_data,
+                        sender,
+                    )?;
+                    vec.push(result);
+                }
+
+                Ok(PrimitiveArray::get_literal(&vec, interval))
+            }
+            None => Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        }
+    }
+
+    fn filter(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "filter(fn) expect one argument of type [Closure]";
+
+        match args.get("arg0") {
+            Some(lit) => {
+                let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
+                    &lit.primitive,
+                    interval,
+                    format!("usage: {}", usage),
+                )?;
+
+                let mut vec = vec![];
+
+                for value in array.value.iter() {
+                    let mut map = HashMap::new();
+                    map.insert("arg0".to_owned(), value.to_owned());
+                    let args = ArgsType::Normal(map);
+
+                    let result = exec_fn(
+                        &closure.func,
+                        &closure.args,
+                        args,
+                        closure.enclosed_variables.clone(),
+                        interval,
+                        data,
+                        msg_data,
+                        sender,
+                    )?;
+                    if result.primitive.as_bool() {
+                        vec.push(value.clone());
+                    }
+                }
+
+                Ok(PrimitiveArray::get_literal(&vec, interval))
+            }
+            None => Err(gen_error_info(
+                Position::new(interval),
+                format!("usage: {}", usage),
+            )),
+        }
+    }
+
+    fn reduce(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "reduce(acc, fn) expect tow arguments an initial value and 'Closure' with two arguments: an 'accumulator', and an element";
+
+        match (args.get("arg0"), args.get("arg1")) {
+            (Some(acc), Some(closure)) => {
+                let mut accumulator = acc.clone();
+
+                let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
+                    &closure.primitive,
+                    interval,
+                    format!("usage: {}", usage),
+                )?;
+
+                for value in array.value.iter() {
+                    let mut map = HashMap::new();
+                    map.insert("arg0".to_owned(), accumulator);
+                    map.insert("arg1".to_owned(), value.to_owned());
+                    let args = ArgsType::Normal(map);
+
+                    accumulator = exec_fn(
+                        &closure.func,
+                        &closure.args,
+                        args,
+                        closure.enclosed_variables.clone(),
+                        interval,
+                        data,
+                        msg_data,
+                        sender,
+                    )?;
+                }
+
+                Ok(accumulator)
+            }
             _ => Err(gen_error_info(
                 Position::new(interval),
                 format!("usage: {}", usage),
@@ -839,9 +1049,12 @@ impl Primitive for PrimitiveArray {
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
+        data: &mut Data,
+        msg_data: &mut MessageData,
+        sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
+            let res = f(self, args, interval, data, msg_data, sender)?;
 
             return Ok((res, *right));
         }
