@@ -8,7 +8,7 @@ pub fn get_hash_algorithm(
     match algo {
         "md5" | "MD5" => Ok(openssl::hash::MessageDigest::md5()),
         "sha1" | "SHA1" => Ok(openssl::hash::MessageDigest::sha1()),
-        "sha256" | "SHA256"  => Ok(openssl::hash::MessageDigest::sha256()),
+        "sha256" | "SHA256" => Ok(openssl::hash::MessageDigest::sha256()),
         "sha384" | "SHA384" => Ok(openssl::hash::MessageDigest::sha384()),
         "sha512" | "SHA512" => Ok(openssl::hash::MessageDigest::sha512()),
 

@@ -1,7 +1,6 @@
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
-use crate::linter::data::Linter;
 use crate::parser::{
     get_interval, parse_comments::comment, parse_idents::parse_string_assignation,
     tools::get_string, tools::get_tag, GotoType, GotoValueType, StateContext,
@@ -45,22 +44,9 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, STEP)(s)?;
 
     let (s, step) = preceded(comment, get_goto_value_type)(s)?;
-
-    let flow = Position::get_flow();
-
-    if let GotoValueType::Name(_) = &step {
-        Linter::add_goto(
-            &Position::get_flow(),
-            &Position::get_step(),
-            &flow.to_string(),
-            &step.to_string(),
-            interval,
-        );
-    }
 
     Ok((s, GotoType::Step(step)))
 }
@@ -70,20 +56,9 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, FLOW)(s)?;
 
     let (s, flow) = preceded(comment, get_goto_value_type)(s)?;
-
-    if let GotoValueType::Name(_) = &flow {
-        Linter::add_goto(
-            &Position::get_flow(),
-            &Position::get_step(),
-            &flow.to_string(),
-            "start",
-            interval,
-        );
-    }
 
     Ok((s, GotoType::Flow(flow)))
 }
@@ -120,16 +95,6 @@ where
         _ => return Err(gen_nom_failure(s, ERROR_GOTO_STEP)),
     };
 
-    if let (GotoValueType::Name(_), GotoValueType::Name(_)) = (&step, &flow) {
-        Linter::add_goto(
-            &Position::get_flow(),
-            &Position::get_step(),
-            &flow.to_string(),
-            &step.to_string(),
-            interval,
-        );
-    }
-
     Ok((s, GotoType::StepFlow { step, flow }))
 }
 
@@ -153,7 +118,6 @@ where
         total: 0,
     };
 
-    StateContext::clear_state();
     StateContext::inc_rip();
 
     Ok((

@@ -1,155 +1,187 @@
-use crate::data::ast::Interval;
+use crate::data::{
+    ast::Interval,
+    warnings::*,
+};
+use crate::error_format::{ErrorInfo};
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 
-use lazy_static::*;
-use std::collections::*;
-use std::sync::*;
-use std::thread::*;
-
-////////////////////////////////////////////////////////////////////////////////
-// DATA STRUCTURES
-////////////////////////////////////////////////////////////////////////////////
-
-lazy_static! {
-    static ref HASHMAP: Mutex<HashMap<ThreadId, Linter>> = Mutex::new(HashMap::default());
-}
-
-#[derive(Debug, Clone)]
-pub struct Goto {
-    pub src_flow: String,
-    pub src_step: String,
-    pub dst_flow: String,
-    pub dst_step: String,
+#[derive(Debug)]
+pub struct StepInfo<'a> {
+    pub flow: String,
+    pub step: String,
+    pub raw_flow: &'a str,
     pub interval: Interval,
 }
 
-#[derive(Debug, Clone)]
-pub struct Linter {
-    pub flow: HashMap<String, HashMap<String, Vec<Interval>>>, // can be change ?
-    pub goto: Vec<Goto>,
+#[derive(Debug)]
+pub struct FunctionInfo<'a> {
+    pub name: String,
+    pub in_flow: &'a str,
+    pub raw_flow: &'a str,
+    pub interval: Interval,
+}
+
+#[derive(Debug)]
+pub struct ImportInfo<'a> {
+    pub as_name: String,
+    pub original_name: Option<String>,
+    pub from_flow: Option<String>,
+    pub in_flow: &'a str,
+    pub raw_flow: &'a str,
+    pub interval: Interval,
+}
+
+#[derive(Debug)]
+pub struct State {
+    pub in_function: bool,
+    pub loop_scope: usize,
+}
+
+#[derive(Debug)]
+pub struct LinterInfo<'a> {
+    pub flow_name: &'a str,
+    pub raw_flow: &'a str,
+    pub goto_list: &'a mut Vec<StepInfo<'a>>,
+    pub step_list: &'a mut HashSet<StepInfo<'a>>,
+    pub function_list: &'a mut HashSet<FunctionInfo<'a>>,
+    pub import_list: &'a mut HashSet<ImportInfo<'a>>,
+    pub errors: &'a mut Vec<ErrorInfo>,
+    pub warnings: &'a mut Vec<Warnings>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// TRAIT FUNCTIONS
+// Hash FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl Default for Linter {
-    fn default() -> Self {
-        Self {
-            flow: HashMap::default(),
-            goto: Vec::default(),
-        }
+impl<'a> Hash for StepInfo<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.step.hash(state);
+        self.flow.hash(state)
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// PRIVATE FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-impl Goto {
-    fn new(
-        src_flow: &str,
-        src_step: &str,
-        dst_flow: &str,
-        dst_step: &str,
-        interval: Interval,
-    ) -> Self {
-        Self {
-            src_flow: src_flow.to_owned(),
-            src_step: src_step.to_owned(),
-            dst_flow: dst_flow.to_owned(),
-            dst_step: dst_step.to_owned(),
-            interval,
-        }
+impl<'a> PartialEq for StepInfo<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.step == other.step && self.flow == other.flow
     }
 }
+
+impl<'a> Eq for StepInfo<'a> {}
+
+impl<'a> Hash for FunctionInfo<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+        self.in_flow.hash(state)
+    }
+}
+
+impl<'a> PartialEq for FunctionInfo<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.in_flow == other.in_flow
+    }
+}
+
+impl<'a> Eq for FunctionInfo<'a> {}
+
+impl<'a> Hash for ImportInfo<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_name.hash(state);
+        self.in_flow.hash(state)
+    }
+}
+
+impl<'a> PartialEq for ImportInfo<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_name == other.as_name && self.in_flow == other.in_flow
+    }
+}
+
+impl<'a> Eq for ImportInfo<'a> {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl Linter {
-    pub fn add_flow(flow: &str) {
-        let thread_id = current().id();
-        let mut hashmap = HASHMAP.lock().unwrap();
-
-        hashmap.entry(thread_id).or_insert_with(Linter::default);
-
-        if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter
-                .flow
-                .entry(flow.to_owned())
-                .or_insert_with(HashMap::default);
-        }
-    }
-
-    pub fn add_step(flow: &str, step: &str, interval: Interval) {
-        let thread_id = current().id();
-        let mut hashmap = HASHMAP.lock().unwrap();
-
-        hashmap.entry(thread_id).or_insert_with(Linter::default);
-
-        if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter
-                .flow
-                .entry(flow.to_owned())
-                .or_insert_with(HashMap::default);
-
-            if let Some(hashmap_step) = linter.flow.get_mut(flow) {
-                match hashmap_step.get_mut(step) {
-                    Some(vector_step) => {
-                        vector_step.push(interval);
-                    }
-                    None => {
-                        hashmap_step.insert(step.to_owned(), vec![interval]);
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn add_goto(
-        src_flow: &str,
-        src_step: &str,
-        dst_flow: &str,
-        dst_step: &str,
-        interval: Interval,
-    ) {
-        let thread_id = current().id();
-        let mut hashmap = HASHMAP.lock().unwrap();
-
-        hashmap.entry(thread_id).or_insert_with(Linter::default);
-
-        if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter
-                .goto
-                .push(Goto::new(src_flow, src_step, dst_flow, dst_step, interval));
-        }
-    }
-
-    pub fn clear() {
-        let thread_id = current().id();
-        let mut hashmap = HASHMAP.lock().unwrap();
-
-        hashmap.entry(thread_id).or_insert_with(Linter::default);
-
-        if let Some(linter) = hashmap.get_mut(&thread_id) {
-            linter.flow.clear();
-            linter.goto.clear();
+impl<'a> StepInfo<'a> {
+    pub fn new(flow: &str, step: &str, raw_flow: &'a str, interval: Interval) -> Self {
+        Self {
+            flow: flow.to_owned(),
+            step: step.to_owned(),
+            raw_flow,
+            interval,
         }
     }
 }
 
-impl Linter {
-    pub fn get_linter() -> Linter {
-        let thread_id = current().id();
-        let mut hashmap = HASHMAP.lock().unwrap();
+impl State {
+    pub fn new(in_function: bool) -> Self {
+        Self {
+            in_function,
+            loop_scope: 0,
+        }
+    }
 
-        hashmap.entry(thread_id).or_insert_with(Linter::default);
+    pub fn enter_loop(&mut self) {
+        self.loop_scope = self.loop_scope + 1
+    }
 
-        if let Some(linter) = hashmap.get(&thread_id) {
-            (*linter).to_owned()
-        } else {
-            unreachable!();
+    pub fn exit_loop(&mut self) {
+        self.loop_scope = self.loop_scope - 1
+    }
+}
+
+impl<'a> LinterInfo<'a> {
+    pub fn new(
+        flow_name: &'a str,
+        raw_flow: &'a str,
+        goto_list: &'a mut Vec<StepInfo<'a>>,
+        step_list: &'a mut HashSet<StepInfo<'a>>,
+        function_list: &'a mut HashSet<FunctionInfo<'a>>,
+        import_list: &'a mut HashSet<ImportInfo<'a>>,
+        errors: &'a mut Vec<ErrorInfo>,
+        warnings: &'a mut Vec<Warnings>,
+    ) -> Self {
+        Self {
+            flow_name,
+            raw_flow,
+            goto_list,
+            step_list,
+            function_list,
+            import_list,
+            errors,
+            warnings,
+        }
+    }
+}
+
+impl<'a> FunctionInfo<'a> {
+    pub fn new(name: String, in_flow: &'a str, raw_flow: &'a str, interval: Interval) -> Self {
+        Self {
+            name,
+            in_flow,
+            raw_flow,
+            interval,
+        }
+    }
+}
+
+impl<'a> ImportInfo<'a> {
+    pub fn new(
+        as_name: String,
+        original_name: Option<String>,
+        from_flow: Option<String>,
+        in_flow: &'a str,
+        raw_flow: &'a str,
+        interval: Interval,
+    ) -> Self {
+        Self {
+            as_name,
+            original_name,
+            from_flow,
+            in_flow,
+            raw_flow,
+            interval,
         }
     }
 }

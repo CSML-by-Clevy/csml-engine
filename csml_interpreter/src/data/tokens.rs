@@ -36,6 +36,8 @@ pub const DOT: &str = ".";
 pub const SEMICOLON: &str = ";";
 pub const COLON: &str = ":";
 pub const DOUBLE_QUOTE: &str = "\"";
+pub const BACKSLASH_DOUBLE_QUOTE: &str = "\\\"";
+
 pub const UNDERSCORE: char = '_';
 
 pub const L_PAREN: &str = "(";
@@ -77,8 +79,6 @@ pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
 pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, USE, HOLD, BREAK];
-
-pub const SCOPE_REJECTED: &[&str] = &[RETURN];
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";

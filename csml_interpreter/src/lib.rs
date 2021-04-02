@@ -1,6 +1,5 @@
 pub mod data;
 pub mod error_format;
-pub mod imports;
 pub mod interpreter;
 pub mod linter;
 pub mod parser;
@@ -17,14 +16,11 @@ use data::error_info::ErrorInfo;
 use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
-use data::warnings::Warnings;
 use data::CsmlBot;
 use data::CsmlResult;
 use data::{Context, Data, Position};
 use error_format::*;
-use imports::validate_imports;
-use linter::data::Linter;
-use linter::linter::lint_flow;
+use linter::{linter::lint_bot, FlowToValidate};
 use parser::ExitCondition;
 
 use std::collections::HashMap;
@@ -91,27 +87,23 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
             let mut vec = vec![];
 
             for instruction_type in parsed_flow.flow_instructions.keys() {
-                if let InstructionScope::StepScope(step_name) = instruction_type {
+                if let InstructionScope::StepScope(step_name, ..) = instruction_type {
                     vec.push(step_name.to_owned());
                 }
             }
             result.insert(flow.name.to_owned(), vec);
         }
     }
-    Warnings::clear();
-    Linter::clear();
-
     result
 }
 
 pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
-    let mut flows = HashMap::default();
+    let mut flows = vec![];
     let mut errors = Vec::new();
     let mut imports = Vec::new();
 
     for flow in bot.flows.iter() {
         Position::set_flow(&flow.name);
-        Linter::add_flow(&flow.name);
 
         match parse_flow(&flow.content) {
             Ok(ast_flow) => {
@@ -121,7 +113,12 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
                     }
                 }
 
-                flows.insert(flow.name.to_owned(), ast_flow);
+                // flows.insert(flow.name.to_owned(), ast_flow);
+                flows.push(FlowToValidate {
+                    flow_name: flow.name.to_owned(),
+                    ast: ast_flow,
+                    raw_flow: &flow.content,
+                });
             }
             Err(error) => {
                 errors.push(error);
@@ -129,16 +126,13 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
         }
     }
 
-    let warnings = Warnings::get();
+    let mut warnings = vec![];
     // only use the linter if there is no error in the paring otherwise the linter will catch false errors
     if errors.is_empty() {
-        lint_flow(&bot, &mut errors);
-        validate_imports(&flows, imports, &mut errors);
+        lint_bot(&flows, &mut errors, &mut warnings);
     }
 
-    Warnings::clear();
-    Linter::clear();
-    CsmlResult::new(flows, warnings, errors)
+    CsmlResult::new(FlowToValidate::get_bot(flows), warnings, errors)
 }
 
 fn get_flows(bot: &CsmlBot) -> HashMap<String, Flow> {

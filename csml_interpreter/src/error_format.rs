@@ -1,7 +1,7 @@
 pub mod data;
 
-use crate::data::position::Position;
 use crate::data::tokens::Span;
+use crate::data::{position::Position, Interval};
 use nom::{
     error::{ErrorKind, ParseError},
     *,
@@ -44,8 +44,6 @@ pub const ERROR_WRONG_ARGUMENT_EXPANDABLE_STRING: &str =
     "wrong argument(s) given to expandable string";
 pub const ERROR_FN_SCOPE: &str =
     "invalid action. Use a valid action for this type of scope [do, if, return, ...]"; //\ndoc: https://docs.csml.dev/language/native-csml-functions
-pub const ERROR_SCOPE: &str =
-    "invalid action. Use a valid action for this type of scope [say, do, if, ...]"; //\ndoc: https://docs.csml.dev/language/standard-library/keywords
 
 // Linter Errors
 pub const ERROR_NO_FLOW: &str = "bot must have at least one flow";
@@ -291,6 +289,61 @@ pub const ERROR_OPS_DIV_FLOAT: &str = "[!] Float: Division by zero";
 pub const ERROR_ILLEGAL_OPERATION: &str = "illegal operation:";
 pub const OVERFLOWING_OPERATION: &str = "overflowing operation:";
 
+////////////////////////////////////////////////////////////////////////////////
+// PRiVTE FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
+fn add_context_to_error_message<'a>(
+    flow_slice: Span<'a>,
+    message: String,
+    line_number: u32,
+    column: usize,
+    offset: usize,
+) -> String {
+    use std::fmt::Write;
+
+    let mut result = String::new();
+
+    let prefix = &flow_slice.fragment().as_bytes()[..offset];
+
+    // Find the line that includes the subslice:
+    // Find the *last* newline before the substring starts
+    let line_begin = prefix
+        .iter()
+        .rev()
+        .position(|&b| b == b'\n')
+        .map(|pos| offset - pos)
+        .unwrap_or(0);
+
+    // Find the full line after that newline
+    let line = flow_slice.fragment()[line_begin..]
+        .lines()
+        .next()
+        .unwrap_or(&flow_slice.fragment()[line_begin..])
+        .trim_end();
+
+    write!(
+        &mut result,
+        "at line {line_number},\n\
+            {line}\n\
+            {caret:>column$}\n\
+            {context}\n\n",
+        line_number = line_number,
+        context = message,
+        line = line,
+        caret = '^',
+        column = column,
+    )
+    // Because `write!` to a `String` is infallible, this `unwrap` is fine.
+    .unwrap();
+
+    result
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC FUNCTION
+////////////////////////////////////////////////////////////////////////////////
+
 pub fn gen_error_info(position: Position, message: String) -> ErrorInfo {
     ErrorInfo::new(position, message)
 }
@@ -315,4 +368,29 @@ where
         error,
         E::from_error_kind(span, ErrorKind::Tag),
     ))
+}
+
+pub fn convert_error_from_span<'a>(flow_slice: Span<'a>, e: CustomError<Span<'a>>) -> String {
+    let message = e.error.to_owned();
+    let offset = e.input.location_offset();
+    // Count the number of newlines in the first `offset` bytes of input
+    let line_number = e.input.location_line();
+    // The (1-indexed) column number is the offset of our substring into that line
+    let column = e.input.get_column();
+
+    add_context_to_error_message(flow_slice, message, line_number, column, offset)
+}
+
+pub fn convert_error_from_interval<'a>(
+    flow_slice: Span<'a>,
+    message: String,
+    interval: Interval,
+) -> String {
+    let offset = interval.offset;
+    // Count the number of newlines in the first `offset` bytes of input
+    let line_number = interval.start_line;
+    // The (1-indexed) column number is the offset of our substring into that line
+    let column = interval.start_column as usize;
+
+    add_context_to_error_message(flow_slice, message, line_number, column, offset)
 }

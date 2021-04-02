@@ -31,7 +31,7 @@ fn valid_condition(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> bool {
     match expr {
-        Expr::LitExpr(literal) => valid_literal(Ok(literal.to_owned())),
+        Expr::LitExpr { literal, .. } => valid_literal(Ok(literal.to_owned())),
         Expr::IdentExpr(ident) => valid_literal(get_var(
             ident.to_owned(),
             true,

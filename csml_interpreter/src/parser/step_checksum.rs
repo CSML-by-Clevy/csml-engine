@@ -105,6 +105,7 @@ fn get_offsets(ast: &Flow) -> (Vec<(String, usize)>, Vec<usize>) {
                 let interval = interval_from_expr(block);
                 skip_offsets.push(interval.offset)
             }
+            InstructionScope::DuplicateInstruction(..) => {}
         }
     }
     offsets.sort_by(|(_, a), (_, b)| a.cmp(b));

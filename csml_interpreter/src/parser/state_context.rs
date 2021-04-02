@@ -23,29 +23,8 @@ pub enum ExitCondition {
     Return(Literal),
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum ExecutionState {
-    Normal,
-    Loop,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum StringState {
-    Normal,
-    Expand,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum ScopeState {
-    Normal,
-    Function,
-}
-
 #[derive(Debug)]
 pub struct StateContext {
-    state: Vec<ExecutionState>,
-    string_state: StringState,
-    scope_state: ScopeState,
     rip: usize,
 }
 
@@ -56,9 +35,6 @@ pub struct StateContext {
 impl Default for StateContext {
     fn default() -> Self {
         Self {
-            state: Vec::new(),
-            string_state: StringState::Normal,
-            scope_state: ScopeState::Normal,
             rip: 0,
         }
     }
@@ -104,117 +80,5 @@ impl StateContext {
         } else {
             unreachable!();
         }
-    }
-}
-
-impl StateContext {
-    pub fn clear_state() {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.state.clear();
-        }
-    }
-
-    pub fn set_state(state: ExecutionState) {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            match state {
-                ExecutionState::Loop => {
-                    state_context.state.push(state);
-                }
-                ExecutionState::Normal => {
-                    state_context.state.pop();
-                }
-            }
-        }
-    }
-
-    pub fn get_state() -> ExecutionState {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            if state_context.state.is_empty() {
-                return ExecutionState::Normal;
-            }
-        }
-
-        ExecutionState::Loop
-    }
-}
-
-impl StateContext {
-    pub fn set_string(state: StringState) {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.string_state = state;
-        }
-    }
-
-    pub fn get_string() -> StringState {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            return state_context.string_state;
-        }
-
-        unreachable!();
-    }
-}
-
-impl StateContext {
-    pub fn set_scope(state: ScopeState) {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.scope_state = state;
-        }
-    }
-
-    pub fn get_scope() -> ScopeState {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            return state_context.scope_state;
-        }
-
-        unreachable!();
     }
 }

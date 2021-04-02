@@ -4,9 +4,9 @@ use crate::parser::parse_parenthesis::parse_l_parentheses;
 use crate::parser::parse_parenthesis::parse_r_parentheses;
 use crate::parser::{
     parse_comments::comment,
-    parse_scope::{parse_fn_implicit_scope, parse_fn_scope, parse_implicit_scope, parse_scope},
+    parse_scope::{parse_implicit_scope, parse_scope},
     tools::*,
-    ScopeState, StateContext,
+    StateContext,
 };
 use nom::{
     branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::delimited,
@@ -37,11 +37,7 @@ where
 
     let (s, condition) = parse_strict_condition_group(s)?;
 
-    let scope_type = StateContext::get_scope();
-    let (s, block) = match scope_type {
-        ScopeState::Normal => alt((parse_scope, parse_implicit_scope))(s)?,
-        ScopeState::Function => alt((parse_fn_scope, parse_fn_implicit_scope))(s)?,
-    };
+    let (s, block) = alt((parse_scope, parse_implicit_scope))(s)?;
 
     let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
 
@@ -72,14 +68,9 @@ where
     let (s, mut interval) = get_interval(s)?;
 
     let index = StateContext::get_rip();
-
     StateContext::inc_rip();
 
-    let scope_type = StateContext::get_scope();
-    let (s, block) = match scope_type {
-        ScopeState::Normal => alt((parse_scope, parse_implicit_scope))(s)?,
-        ScopeState::Function => alt((parse_fn_scope, parse_fn_implicit_scope))(s)?,
-    };
+    let (s, block) = alt((parse_scope, parse_implicit_scope))(s)?;
 
     let (s, end) = get_interval(s)?;
     interval.add_end(end);
@@ -111,14 +102,9 @@ where
     let (s, condition) = parse_strict_condition_group(s)?;
 
     let index = StateContext::get_rip();
-
     StateContext::inc_rip();
 
-    let scope_type = StateContext::get_scope();
-    let (s, block) = match scope_type {
-        ScopeState::Normal => alt((parse_scope, parse_implicit_scope))(s)?,
-        ScopeState::Function => alt((parse_fn_scope, parse_fn_implicit_scope))(s)?,
-    };
+    let (s, block) = alt((parse_scope, parse_implicit_scope))(s)?;
 
     let (s, opt) = opt(alt((parse_else_if, parse_else)))(s)?;
 

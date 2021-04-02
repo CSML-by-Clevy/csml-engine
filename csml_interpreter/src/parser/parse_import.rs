@@ -130,7 +130,10 @@ where
                     from_flow: from_flow.clone(),
                     position: Position::new(start.clone()),
                 }),
-                actions: Expr::LitExpr(PrimitiveNull::get_literal(start)),
+                actions: Expr::LitExpr {
+                    literal: PrimitiveNull::get_literal(start),
+                    in_in_substring: false,
+                },
             }
         })
         .collect();

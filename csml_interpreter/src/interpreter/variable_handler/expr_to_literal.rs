@@ -71,7 +71,7 @@ pub fn expr_to_literal(
         Expr::PathExpr { literal, path } => {
             expr_to_literal(literal, condition, Some(path), data, msg_data, sender)
         }
-        Expr::ObjectExpr(ObjectType::Normal(Function {
+        Expr::ObjectExpr(ObjectType::BuiltIn(Function {
             name,
             args,
             interval,
@@ -80,16 +80,20 @@ pub fn expr_to_literal(
 
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
-        Expr::MapExpr(map, range_interval) => {
-            let mut object = HashMap::new();
+        Expr::MapExpr {
+            object,
+            interval: range_interval,
+            ..
+        } => {
+            let mut map = HashMap::new();
 
-            for (key, value) in map.iter() {
-                object.insert(
+            for (key, value) in object.iter() {
+                map.insert(
                     key.to_owned(),
                     expr_to_literal(&value, condition, None, data, msg_data, sender)?,
                 );
             }
-            let mut literal = PrimitiveObject::get_literal(&object, range_interval.to_owned());
+            let mut literal = PrimitiveObject::get_literal(&map, range_interval.to_owned());
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::ComplexLiteral(vec, range_interval) => {
@@ -115,7 +119,7 @@ pub fn expr_to_literal(
         Expr::InfixExpr(infix, exp_1, exp_2) => {
             evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)
         }
-        Expr::LitExpr(literal) => {
+        Expr::LitExpr { literal, .. } => {
             let mut new_value = exec_path_literal(
                 &mut literal.clone(),
                 condition,

@@ -46,6 +46,10 @@ pub enum InstructionScope {
     StepScope(String),
     FunctionScope { name: String, args: Vec<String> },
     ImportScope(ImportScope),
+
+    // this Variant is use to store all duplicated instruction during parsing
+    // and use by the linter to display them all as errors
+    DuplicateInstruction(Interval, String),
 }
 
 impl Hash for InstructionScope {
@@ -54,6 +58,7 @@ impl Hash for InstructionScope {
             InstructionScope::StepScope(name) => name.hash(state),
             InstructionScope::FunctionScope { name, .. } => name.hash(state),
             InstructionScope::ImportScope(import_scope) => import_scope.hash(state),
+            InstructionScope::DuplicateInstruction(interval, ..) => interval.hash(state),
         }
     }
 }
@@ -61,7 +66,7 @@ impl Hash for InstructionScope {
 impl PartialEq for InstructionScope {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (InstructionScope::StepScope(name1), InstructionScope::StepScope(name2)) => {
+            (InstructionScope::StepScope(name1, ..), InstructionScope::StepScope(name2, ..)) => {
                 name1 == name2
             }
             (
@@ -72,6 +77,10 @@ impl PartialEq for InstructionScope {
                 InstructionScope::ImportScope(import_scope1),
                 InstructionScope::ImportScope(import_scope2),
             ) => import_scope1 == import_scope2,
+            (
+                InstructionScope::DuplicateInstruction(interval1, ..),
+                InstructionScope::DuplicateInstruction(interval2, ..),
+            ) => interval1 == interval2,
             _ => false,
         }
     }
@@ -82,7 +91,7 @@ impl Eq for InstructionScope {}
 impl Display for InstructionScope {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionScope::StepScope(ref idents) => write!(f, "{}", idents),
+            InstructionScope::StepScope(ref idents, ..) => write!(f, "{}", idents),
             InstructionScope::FunctionScope { name, .. } => write!(f, "{}", name),
             InstructionScope::ImportScope(ImportScope {
                 name,
@@ -90,6 +99,20 @@ impl Display for InstructionScope {
                 from_flow,
                 ..
             }) => write!(f, "import {} from {:?} ", name, from_flow),
+            InstructionScope::DuplicateInstruction(index, ..) => {
+                write!(f, "duplicate instruction at line {}", index.start_line)
+            }
+        }
+    }
+}
+
+impl InstructionScope {
+    pub fn get_info(&self) -> String {
+        match self {
+            InstructionScope::StepScope(name, ..) => format!("step {}", name),
+            InstructionScope::FunctionScope { name, .. } => format!("function {}", name),
+            InstructionScope::ImportScope(ImportScope { name, .. }) => format!("import {}", name),
+            InstructionScope::DuplicateInstruction(_, info) => format!("duplicate {}", info),
         }
     }
 }
@@ -151,12 +174,8 @@ pub enum ObjectType {
     Assign(Box<Expr>, Box<Expr>),
 
     As(Identifier, Box<Expr>),
-    Import {
-        step_name: Identifier,
-        as_name: Option<Identifier>,
-        file_path: Option<Identifier>,
-    },
-    Normal(Function),
+
+    BuiltIn(Function),
     Break(Interval),
     Continue(Interval),
 }
@@ -217,10 +236,14 @@ pub enum Expr {
     },
     ForEachExpr(Identifier, Option<Identifier>, Box<Expr>, Block, Interval),
     ComplexLiteral(Vec<Expr>, Interval),
-    MapExpr(HashMap<String, Expr>, Interval),
+    MapExpr {
+        object: HashMap<String, Expr>,
+        is_in_sub_string: bool, // this value is use to determine if this object was declare inside a string or not
+        interval: Interval,
+    },
     VecExpr(Vec<Expr>, Interval),
-    InfixExpr(Infix, Box<Expr>, Box<Expr>), // range Interval ?
-    ObjectExpr(ObjectType),                 // renge Interval ?
+    InfixExpr(Infix, Box<Expr>, Box<Expr>),
+    ObjectExpr(ObjectType),
     IfExpr(IfStatement),
 
     PathExpr {
@@ -229,7 +252,10 @@ pub enum Expr {
     },
     IdentExpr(Identifier),
 
-    LitExpr(Literal),
+    LitExpr {
+        literal: Literal,
+        in_in_substring: bool, // this value is use to determine if this literal was declare inside a string or not
+    },
 }
 
 impl Expr {
