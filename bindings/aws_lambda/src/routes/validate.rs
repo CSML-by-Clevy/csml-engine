@@ -22,7 +22,6 @@ impl ValidateBotResponse {
 #[derive(Debug, Serialize, Deserialize)]
 struct ValidationError {
     flow: String,
-    step: String,
     start_line: u32,
     start_column: u32,
     end_line: Option<u32>,
@@ -49,7 +48,6 @@ pub fn handler(body: CsmlBot) -> Result<serde_json::Value, HandlerError> {
             for (_, error_info) in errors.iter().enumerate() {
                 errors_array.push(ValidationError {
                     flow: error_info.position.flow.clone(),
-                    step: error_info.position.step.clone(),
                     start_line: error_info.position.interval.start_line,
                     start_column: error_info.position.interval.start_column,
                     end_line: error_info.position.interval.end_line,

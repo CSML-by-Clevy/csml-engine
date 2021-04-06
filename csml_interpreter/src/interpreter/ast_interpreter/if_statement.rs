@@ -79,6 +79,8 @@ pub fn evaluate_condition(
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
+    let flow_name = &data.context.flow.clone();
+
     match (expr1, expr2) {
         (exp_1, ..) if Infix::Not == *infix => {
             let value = !valid_literal(expr_to_literal(exp_1, true, None, data, msg_data, sender));
@@ -86,21 +88,25 @@ pub fn evaluate_condition(
             Ok(PrimitiveBoolean::get_literal(value, interval))
         }
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate(
+            &flow_name,
             infix,
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
             evaluate_condition(i2, exp_1, exp_2, data, msg_data, sender),
         ),
         (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
+            &flow_name,
             infix,
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
             expr_to_literal(exp, true, None, data, msg_data, sender),
         ),
         (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
+            &flow_name,
             infix,
             expr_to_literal(exp, true, None, data, msg_data, sender),
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
         ),
         (exp_1, exp_2) => evaluate(
+            &flow_name,
             infix,
             expr_to_literal(exp_1, true, None, data, msg_data, sender),
             expr_to_literal(exp_2, true, None, data, msg_data, sender),

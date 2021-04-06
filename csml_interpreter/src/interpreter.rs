@@ -124,7 +124,10 @@ pub fn interpret_scope(
             }
             e => {
                 return Err(gen_error_info(
-                    Position::new(interval_from_expr(e)),
+                    Position::new(
+                        interval_from_expr(e),
+                        &data.context.flow,
+                    ),
                     ERROR_START_INSTRUCTIONS.to_owned(),
                 ));
             }

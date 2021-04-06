@@ -28,7 +28,7 @@ pub fn for_loop(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
     let literal = expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
-    let mut array = get_array(literal, ERROR_FOREACH.to_owned())?;
+    let mut array = get_array(literal, &data.context.flow, ERROR_FOREACH.to_owned())?;
 
     let mut skip_value = 0;
     let array = hold_index_start_loop(data, &mut array, &mut skip_value);

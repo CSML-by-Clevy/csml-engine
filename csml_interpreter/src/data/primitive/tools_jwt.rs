@@ -77,6 +77,7 @@ fn header_to_literal(
 
 pub fn token_data_to_literal(
     data: jsonwebtoken::TokenData<serde_json::Value>,
+    flow_name: &str,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo> {
     let mut map = HashMap::new();
@@ -84,7 +85,7 @@ pub fn token_data_to_literal(
     let headers = header_to_literal(&data.header, interval)?;
     map.insert("header".to_owned(), headers);
 
-    let claims = json_to_literal(&data.claims, interval.to_owned())?;
+    let claims = json_to_literal(&data.claims, interval.to_owned(), flow_name,)?;
     map.insert("payload".to_owned(), claims);
 
     Ok(PrimitiveObject::get_literal(&map, interval.to_owned()))
@@ -92,9 +93,10 @@ pub fn token_data_to_literal(
 
 pub fn get_algorithm(
     lit: &Literal,
+    flow_name: &str,
     interval: Interval,
 ) -> Result<jsonwebtoken::Algorithm, ErrorInfo> {
-    let algo = Literal::get_value::<String>(&lit.primitive, interval, ERROR_JWT_ALGO.to_owned())?;
+    let algo = Literal::get_value::<String>(&lit.primitive, flow_name, interval, ERROR_JWT_ALGO.to_owned())?;
 
     match jsonwebtoken::Algorithm::from_str(algo) {
         Ok(algorithm)
@@ -106,7 +108,7 @@ pub fn get_algorithm(
         }
         _ => {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, flow_name),
                 ERROR_JWT_ALGO.to_string(),
             ))
         }
@@ -115,11 +117,13 @@ pub fn get_algorithm(
 
 pub fn get_headers(
     lit: &Literal,
+    flow_name: &str,
     interval: Interval,
     headers: &mut jsonwebtoken::Header,
 ) -> Result<(), ErrorInfo> {
     let map = Literal::get_value::<HashMap<String, Literal>>(
         &lit.primitive,
+        flow_name,
         interval,
         "JWT Headers wrong format".to_owned(),
     )?;
@@ -129,6 +133,7 @@ pub fn get_headers(
                 headers.typ = Some(
                     Literal::get_value::<String>(
                         &value.primitive,
+                        flow_name,
                         interval,
                         "JWT Headers 'typ' must be of type String".to_owned(),
                     )?
@@ -139,6 +144,7 @@ pub fn get_headers(
                 headers.cty = Some(
                     Literal::get_value::<String>(
                         &lit.primitive,
+                        flow_name,
                         interval,
                         "JWT Headers 'cty' must be of type String".to_owned(),
                     )?
@@ -149,6 +155,7 @@ pub fn get_headers(
                 headers.jku = Some(
                     Literal::get_value::<String>(
                         &lit.primitive,
+                        flow_name,
                         interval,
                         "JWT Headers 'jku' must be of type String".to_owned(),
                     )?
@@ -159,6 +166,7 @@ pub fn get_headers(
                 headers.kid = Some(
                     Literal::get_value::<String>(
                         &lit.primitive,
+                        flow_name,
                         interval,
                         "JWT Headers 'kid' must be of type String".to_owned(),
                     )?
@@ -169,6 +177,7 @@ pub fn get_headers(
                 headers.x5u = Some(
                     Literal::get_value::<String>(
                         &lit.primitive,
+                        flow_name,
                         interval,
                         "JWT Headers 'x5u' must be of type String".to_owned(),
                     )?
@@ -179,6 +188,7 @@ pub fn get_headers(
                 headers.x5t = Some(
                     Literal::get_value::<String>(
                         &lit.primitive,
+                        flow_name,
                         interval,
                         "JWT Headers 'x5t' must be of type String".to_owned(),
                     )?
@@ -194,11 +204,13 @@ pub fn get_headers(
 
 pub fn get_validation(
     lit: &Literal,
+    flow_name: &str,
     interval: Interval,
     validation: &mut jsonwebtoken::Validation,
 ) -> Result<(), ErrorInfo> {
     let map = Literal::get_value::<HashMap<String, Literal>>(
         &lit.primitive,
+        flow_name,
         interval,
         "JWT Headers wrong format".to_owned(),
     )?;
@@ -207,6 +219,7 @@ pub fn get_validation(
             "leeway" => {
                 validation.leeway = Literal::get_value::<u64>(
                     &value.primitive,
+                    flow_name,
                     interval,
                     "JWT Validation 'leeway' must be of type Int".to_owned(),
                 )?
@@ -215,6 +228,7 @@ pub fn get_validation(
             "validate_exp" => {
                 validation.validate_exp = Literal::get_value::<bool>(
                     &value.primitive,
+                    flow_name,
                     interval,
                     "JWT Validation 'validate_exp' must be of type Boolean".to_owned(),
                 )?
@@ -223,6 +237,7 @@ pub fn get_validation(
             "validate_nbf" => {
                 validation.validate_nbf = Literal::get_value::<bool>(
                     &value.primitive,
+                    flow_name,
                     interval,
                     "JWT Validation 'validate_nbf' must be of type Boolean".to_owned(),
                 )?
@@ -231,6 +246,7 @@ pub fn get_validation(
             "aud" => {
                 let vec = Literal::get_value::<Vec<String>>(
                     &value.primitive,
+                    flow_name,
                     interval,
                     "JWT Validation 'aud' must be of type Boolean".to_owned(),
                 )?;
@@ -241,6 +257,7 @@ pub fn get_validation(
                 validation.iss = Some(
                     Literal::get_value::<String>(
                         &value.primitive,
+                        flow_name,
                         interval,
                         "JWT Validation 'validate_nbf' must be of type Boolean".to_owned(),
                     )?
@@ -251,6 +268,7 @@ pub fn get_validation(
                 validation.sub = Some(
                     Literal::get_value::<String>(
                         &value.primitive,
+                        flow_name,
                         interval,
                         "JWT Validation 'validate_nbf' must be of type Boolean".to_owned(),
                     )?

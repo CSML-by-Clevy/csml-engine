@@ -73,7 +73,7 @@ where
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
+pub fn parse_flow<'a>(slice: &'a str, flow_name: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => {
             let flow_instructions =
@@ -113,12 +113,14 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
 
                 Err(gen_error_info(
                     Position::new(Interval::new_as_u32(
-                        err.input.location_line(),
-                        err.input.get_column() as u32,
-                        err.input.location_offset(),
-                        end_line,
-                        end_column,
-                    )),
+                            err.input.location_line(),
+                            err.input.get_column() as u32,
+                            err.input.location_offset(),
+                            end_line,
+                            end_column,
+                        ),
+                        flow_name
+                    ),
                     convert_error_from_span(Span::new(slice), err),
                 ))
             }
@@ -138,7 +140,6 @@ where
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, ident) = preceded(comment, parse_step_name)(s)?;
 
-    Position::set_step(&ident.ident);
     StateContext::clear_rip();
 
     let (s, actions) = preceded(comment, parse_root)(s)?;

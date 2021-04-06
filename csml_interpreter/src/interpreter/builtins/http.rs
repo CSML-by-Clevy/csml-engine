@@ -13,23 +13,24 @@ use std::env;
 fn get_value<'lifetime, T: 'static>(
     key: &str,
     object: &'lifetime HashMap<String, Literal>,
+    flow_name: &str,
     interval: Interval,
     error: &'static str,
 ) -> Result<&'lifetime T, ErrorInfo> {
     if let Some(literal) = object.get(key) {
-        Literal::get_value::<T>(&literal.primitive, interval, format!("'{}' {}", key, error))
+        Literal::get_value::<T>(&literal.primitive, flow_name, interval, format!("'{}' {}", key, error))
     } else {
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             format!("'{}' {}", key, error),
         ))
     }
 }
 
-fn get_url(object: &HashMap<String, Literal>, interval: Interval) -> Result<String, ErrorInfo> {
-    let url = &mut get_value::<String>("url", object, interval, ERROR_HTTP_GET_VALUE)?.to_owned();
+fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Interval) -> Result<String, ErrorInfo> {
+    let url = &mut get_value::<String>("url", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?.to_owned();
     let query =
-        get_value::<HashMap<String, Literal>>("query", object, interval, ERROR_HTTP_GET_VALUE)?;
+        get_value::<HashMap<String, Literal>>("query", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?;
 
     if !query.is_empty() {
         let length = query.len();
@@ -37,7 +38,7 @@ fn get_url(object: &HashMap<String, Literal>, interval: Interval) -> Result<Stri
         url.push_str("?");
 
         for (index, key) in query.keys().enumerate() {
-            let value = get_value::<String>(key, query, interval, ERROR_HTTP_QUERY_VALUES)?;
+            let value = get_value::<String>(key, query, flow_name, interval, ERROR_HTTP_QUERY_VALUES)?;
 
             url.push_str(key);
             url.push_str("=");
@@ -59,17 +60,18 @@ fn get_url(object: &HashMap<String, Literal>, interval: Interval) -> Result<Stri
 pub fn http_request(
     object: &HashMap<String, Literal>,
     function: fn(&str) -> ureq::Request,
+    flow_name: &str,
     interval: Interval,
 ) -> Result<serde_json::Value, ErrorInfo> {
-    let url = get_url(object, interval)?;
+    let url = get_url(object, flow_name, interval)?;
 
     let header =
-        get_value::<HashMap<String, Literal>>("header", object, interval, ERROR_HTTP_GET_VALUE)?;
+        get_value::<HashMap<String, Literal>>("header", object, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
 
     let mut request = function(&url);
 
     for key in header.keys() {
-        let value = get_value::<String>(key, header, interval, ERROR_HTTP_GET_VALUE)?;
+        let value = get_value::<String>(key, header, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
 
         request.set(key, value);
     }
@@ -85,19 +87,19 @@ pub fn http_request(
                 eprintln!("FN request failed: {:?}", err.body_text());
             }
         }
-        return Err(gen_error_info(Position::new(interval), err.body_text()));
+        return Err(gen_error_info(Position::new(interval, flow_name), err.body_text()));
     }
 
     match response.into_json() {
         Ok(value) => Ok(value),
         Err(_) => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_FAIL_RESPONSE_JSON.to_owned(),
         )),
     }
 }
 
-pub fn http(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn http(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut http: HashMap<String, Literal> = HashMap::new();
     let mut header = HashMap::new();
 
@@ -129,7 +131,7 @@ pub fn http(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
             let lit_body = PrimitiveObject::get_literal(&HashMap::default(), interval);
             http.insert("body".to_owned(), lit_body);
 
-            args.populate(&mut http, &["url", "header", "query", "body"], interval)?;
+            args.populate(&mut http, &["url", "header", "query", "body"], flow_name, interval)?;
 
             let mut result = PrimitiveObject::get_literal(&http, interval);
 
@@ -138,7 +140,7 @@ pub fn http(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
             Ok(result)
         }
         _ => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_HTTP.to_owned(),
         )),
     }

@@ -1,5 +1,5 @@
 use crate::data::tokens::*;
-use crate::data::{ArgsType, Literal, Position};
+use crate::data::{ArgsType, Literal};
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ pub struct ImportScope {
     pub name: String,
     pub original_name: Option<String>,
     pub from_flow: Option<String>,
-    pub position: Position,
+    pub interval: Interval,
 }
 
 impl Hash for ImportScope {
@@ -128,6 +128,7 @@ pub enum GotoValueType {
     Variable(Identifier),
     Name(Identifier),
 }
+
 impl GotoValueType {
     pub fn to_string(&self) -> String {
         match self {
@@ -141,8 +142,8 @@ pub enum GotoType {
     Step(GotoValueType),
     Flow(GotoValueType),
     StepFlow {
-        step: GotoValueType,
-        flow: GotoValueType,
+        step: Option<GotoValueType>,
+        flow: Option<GotoValueType>,
     },
 }
 

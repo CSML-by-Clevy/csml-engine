@@ -23,10 +23,10 @@ pub struct Warnings {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Warnings {
-    pub fn new(interval: Interval, message: &'static str) -> Self {
+    pub fn new(flow_name: &str, interval: Interval, message: &'static str) -> Self {
         Self {
             message: message.to_owned(),
-            position: Position::new(interval),
+            position: Position::new(interval, flow_name),
         }
     }
 }

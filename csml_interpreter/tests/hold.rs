@@ -15,10 +15,10 @@ fn hold_test_none() {
     let data = r#"
     {"memories":[],
     "messages":[
-        {"content":{"error":"< this_hold > is used before it was saved in memory at line 2, column 5 in step [start] from flow [flow]"}, "content_type":"error"},
+        {"content":{"error":"< this_hold > is used before it was saved in memory at line 2, column 5 at flow [flow]"}, "content_type":"error"},
         {"content":{"text":"1"}, "content_type":"text"},
         {"content":{"text":"2"}, "content_type":"text"},
-        {"content":{"error": "< this_hold > is used before it was saved in memory at line 8, column 6 in step [start] from flow [flow]"}, "content_type":"error"},
+        {"content":{"error": "< this_hold > is used before it was saved in memory at line 8, column 6 at flow [flow]"}, "content_type":"error"},
         {"content":{"text":"4"}, "content_type":"text"}]
     }
     "#;
@@ -42,7 +42,7 @@ fn hold_test_some_0() {
         "messages":[
             {"content":{"text":"1"}, "content_type":"text"},
             {"content":{"text":"2"}, "content_type":"text"},
-            {"content":{"error": "< this_hold > is used before it was saved in memory at line 8, column 6 in step [start] from flow [flow]"}, "content_type":"error"},
+            {"content":{"error": "< this_hold > is used before it was saved in memory at line 8, column 6 at flow [flow]"}, "content_type":"error"},
             {"content":{"text":"4"}, "content_type":"text"}
         ]
     }

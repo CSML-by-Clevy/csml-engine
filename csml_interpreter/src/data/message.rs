@@ -27,10 +27,10 @@ const MAX_PAYLOAD_SIZE: usize = 16000;
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Message {
-    pub fn new(literal: Literal) -> Result<Self, ErrorInfo> {
+    pub fn new(literal: Literal, flow_name: &str) -> Result<Self, ErrorInfo> {
         if literal.primitive.to_string().len() >= MAX_PAYLOAD_SIZE {
             return Err(gen_error_info(
-                Position::new(literal.interval),
+                Position::new(literal.interval, flow_name),
                 ERROR_PAYLOAD_EXCEED_MAX_SIZE.to_owned(),
             ));
         }

@@ -22,6 +22,7 @@ use std::{collections::HashMap, sync::mpsc};
 type PrimitiveMethod = fn(
     float: &mut PrimitiveFloat,
     args: &HashMap<String, Literal>,
+    data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
@@ -97,13 +98,14 @@ impl PrimitiveFloat {
     fn is_number(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -114,13 +116,14 @@ impl PrimitiveFloat {
     fn is_int(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_int() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -131,13 +134,14 @@ impl PrimitiveFloat {
     fn is_float(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_float() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -148,13 +152,14 @@ impl PrimitiveFloat {
     fn type_of(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -165,13 +170,14 @@ impl PrimitiveFloat {
     fn to_string(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -184,13 +190,14 @@ impl PrimitiveFloat {
     fn abs(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "abs() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -203,13 +210,14 @@ impl PrimitiveFloat {
     fn cos(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "cos() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -222,13 +230,14 @@ impl PrimitiveFloat {
     fn ceil(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "ceil() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -241,13 +250,14 @@ impl PrimitiveFloat {
     fn floor(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "floor() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -260,13 +270,14 @@ impl PrimitiveFloat {
     fn pow(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "pow(exponent: number) => float";
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -275,6 +286,7 @@ impl PrimitiveFloat {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 *Literal::get_value::<i64>(
                     &exponent.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_NUMBER_POW.to_owned(),
                 )? as f64
@@ -282,6 +294,7 @@ impl PrimitiveFloat {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveFloat => {
                 *Literal::get_value::<f64>(
                     &exponent.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_NUMBER_POW.to_owned(),
                 )?
@@ -289,6 +302,7 @@ impl PrimitiveFloat {
             Some(exponent) if exponent.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 let exponent = Literal::get_value::<String>(
                     &exponent.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_NUMBER_POW.to_owned(),
                 )?;
@@ -297,7 +311,7 @@ impl PrimitiveFloat {
                     Ok(res) => res,
                     Err(_) => {
                         return Err(gen_error_info(
-                            Position::new(interval),
+                            Position::new(interval, &data.context.flow),
                             ERROR_NUMBER_POW.to_owned(),
                         ));
                     }
@@ -305,7 +319,7 @@ impl PrimitiveFloat {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     ERROR_NUMBER_POW.to_owned(),
                 ));
             }
@@ -319,13 +333,14 @@ impl PrimitiveFloat {
     fn round(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "round() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -338,13 +353,14 @@ impl PrimitiveFloat {
     fn sin(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "sin() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -357,13 +373,14 @@ impl PrimitiveFloat {
     fn sqrt(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "sqrt() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -376,13 +393,14 @@ impl PrimitiveFloat {
     fn tan(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "tan() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -395,13 +413,14 @@ impl PrimitiveFloat {
     fn to_int(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_int() => int";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -412,13 +431,14 @@ impl PrimitiveFloat {
     fn to_float(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_float() => float";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -663,18 +683,18 @@ impl Primitive for PrimitiveFloat {
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
+            let res = f(self, args, data, interval)?;
 
             return Ok((res, *right));
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", name, ERROR_FLOAT_UNKNOWN_METHOD),
         ))
     }

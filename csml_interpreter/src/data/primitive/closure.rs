@@ -17,10 +17,11 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
 
-pub fn capture_variables(literal: &mut Literal, memories: HashMap<String, Literal>) {
+pub fn capture_variables(literal: &mut Literal, memories: HashMap<String, Literal>, flow_name: &str) {
     if literal.content_type == "closure" {
         let mut closure = Literal::get_mut_value::<PrimitiveClosure>(
             &mut literal.primitive,
+            flow_name,
             literal.interval,
             format!(""),
         )
@@ -36,6 +37,7 @@ pub fn capture_variables(literal: &mut Literal, memories: HashMap<String, Litera
 type PrimitiveMethod = fn(
     int: &mut PrimitiveClosure,
     args: &HashMap<String, Literal>,
+    data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
@@ -83,13 +85,14 @@ impl PrimitiveClosure {
     fn is_number(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -100,13 +103,14 @@ impl PrimitiveClosure {
     fn is_int(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_int() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -117,13 +121,14 @@ impl PrimitiveClosure {
     fn is_float(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_float() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -134,13 +139,14 @@ impl PrimitiveClosure {
     fn type_of(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -151,13 +157,14 @@ impl PrimitiveClosure {
     fn to_string(
         closure: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -317,18 +324,18 @@ impl Primitive for PrimitiveClosure {
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
+            let res = f(self, args, data, interval)?;
 
             return Ok((res, *right));
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", name, ERROR_CLOSURE_UNKNOWN_METHOD),
         ))
     }

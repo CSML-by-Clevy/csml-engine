@@ -41,12 +41,13 @@ fn execute_step(
         .get(&InstructionScope::StepScope(step.to_owned()))
     {
         Some(Expr::Scope { scope, .. }) => {
-            Position::set_step(&step);
-
             interpret_scope(scope, &mut data, &sender)
         }
         _ => Err(gen_error_info(
-            Position::new(Interval::new_as_u32(0, 0, 0, None, None)),
+            Position::new(
+                Interval::new_as_u32(0, 0, 0, None, None),
+                &data.context.flow,
+            ),
             format!("[{}] {}", step, ERROR_STEP_EXIST),
         )),
     };
@@ -83,7 +84,7 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
     let mut result = HashMap::new();
 
     for flow in bot.flows.iter() {
-        if let Ok(parsed_flow) = parse_flow(&flow.content) {
+        if let Ok(parsed_flow) = parse_flow(&flow.content, &flow.name) {
             let mut vec = vec![];
 
             for instruction_type in parsed_flow.flow_instructions.keys() {
@@ -103,9 +104,8 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     let mut imports = Vec::new();
 
     for flow in bot.flows.iter() {
-        Position::set_flow(&flow.name);
 
-        match parse_flow(&flow.content) {
+        match parse_flow(&flow.content, &flow.name) {
             Ok(ast_flow) => {
                 for (scope, ..) in ast_flow.flow_instructions.iter() {
                     if let InstructionScope::ImportScope(import_scope) = scope {
@@ -163,7 +163,7 @@ pub fn interpret(
     let mut step = context.step.to_owned();
 
     let mut step_vars = match &context.hold {
-        Some(hold) => get_hashmap_from_mem(&hold.step_vars),
+        Some(hold) => get_hashmap_from_mem(&hold.step_vars, &flow),
         None => HashMap::new(),
     };
 
@@ -180,12 +180,11 @@ pub fn interpret(
     let flows = get_flows(&bot);
 
     let env = match bot.env {
-        Some(env) => json_to_literal(&env, Interval::default()).unwrap(),
+        Some(env) => json_to_literal(&env, Interval::default(), &flow).unwrap(),
         None => data::primitive::PrimitiveNull::get_literal(Interval::default()),
     };
 
     while msg_data.exit_condition.is_none() {
-        Position::set_flow(&flow);
 
         let ast = match flows.get(&flow) {
             Some(result) => result.to_owned(),
@@ -194,7 +193,6 @@ pub fn interpret(
                     Err(ErrorInfo {
                         position: Position {
                             flow: flow.clone(),
-                            step: "start".to_owned(),
                             interval: Interval::default(),
                         },
                         message: format!("flow '{}' dose not exist in this bot", flow),

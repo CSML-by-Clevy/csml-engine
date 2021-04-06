@@ -1,4 +1,3 @@
-use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
 use crate::parser::{
@@ -68,32 +67,14 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, ..) = comment(s)?;
-    let (s, interval) = get_interval(s)?;
 
     let (s, step) = opt(get_goto_value_type)(s)?;
     let (s, at) = opt(tag("@"))(s)?;
     let (s, flow) = opt(get_goto_value_type)(s)?;
 
-    let (step, flow) = match (step, at, flow) {
-        (Some(step), Some(..), Some(flow)) => (step, flow),
-        (None, Some(..), Some(flow)) => (
-            GotoValueType::Name(Expr::new_idents("start".to_owned(), interval)),
-            flow,
-        ),
-        (Some(step), Some(..), None) => (
-            step,
-            GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval)),
-        ),
-        (Some(step), None, None) => (
-            step,
-            GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval)),
-        ),
-        (None, Some(..), None) => (
-            GotoValueType::Name(Expr::new_idents("start".to_owned(), interval)),
-            GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval)),
-        ),
-        _ => return Err(gen_nom_failure(s, ERROR_GOTO_STEP)),
-    };
+    if let (None, None, None) = (&step, at, &flow) {
+        return Err(gen_nom_failure(s, ERROR_GOTO_STEP));
+    }
 
     Ok((s, GotoType::StepFlow { step, flow }))
 }

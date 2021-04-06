@@ -26,7 +26,7 @@ use md5::{Digest, Md5};
  */
 pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memory]) {
     for elem in mem.iter() {
-        let lit = json_to_literal(&elem.value, Interval::default()).unwrap();
+        let lit = json_to_literal(&elem.value, Interval::default(), &data.context.flow).unwrap();
 
         data.context.current.insert(elem.key.to_owned(), lit);
     }

@@ -74,8 +74,8 @@ pub fn init_conversation_info<'a>(
         &mut db,
     )?;
 
-    context.metadata = get_hashmap_from_json(&request.metadata);
-    context.current = get_hashmap_from_mem(&get_memories(&request.client, &mut db)?);
+    context.metadata = get_hashmap_from_json(&request.metadata, &context.flow);
+    context.current = get_hashmap_from_mem(&get_memories(&request.client, &mut db)?, &context.flow);
 
     let mut data = ConversationInfo {
         conversation_id,

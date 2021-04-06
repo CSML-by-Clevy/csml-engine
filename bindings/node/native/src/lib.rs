@@ -64,14 +64,12 @@ fn format_warnings<'a, C: Context<'a>>(
     for (index, warning) in warnings.iter().enumerate() {
         let object = JsObject::new(cx);
         let flow = cx.string(warning.position.flow.clone());
-        let step = cx.string(warning.position.step.clone());
         let line = cx.number(warning.position.interval.start_line as f64);
         let column = cx.number(warning.position.interval.start_column as f64);
 
         let message = cx.string(&warning.message);
 
         object.set(cx, "flow", flow).unwrap();
-        object.set(cx, "step", step).unwrap();
         object.set(cx, "start_line", line).unwrap();
         object.set(cx, "start_column", column).unwrap();
         if let (Some(end_line),Some(end_column)) = (warning.position.interval.end_line, warning.position.interval.end_column) {
@@ -96,13 +94,11 @@ fn format_errors<'a, C: Context<'a>>(
     for (index, err) in errors.iter().enumerate() {
         let object = JsObject::new(cx);
         let flow = cx.string(err.position.flow.clone());
-        let step = cx.string(err.position.step.clone());
         let line = cx.number(err.position.interval.start_line as f64);
         let column = cx.number(err.position.interval.start_column as f64);
         let message = cx.string(&err.message);
 
         object.set(cx, "flow", flow).unwrap();
-        object.set(cx, "step", step).unwrap();
         object.set(cx, "start_line", line).unwrap();
         object.set(cx, "start_column", column).unwrap();
         if let (Some(end_line),Some(end_column)) = (err.position.interval.end_line, err.position.interval.end_column) {

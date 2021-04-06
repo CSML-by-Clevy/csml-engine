@@ -48,11 +48,11 @@ fn validate_expr_literals(to_be_literal: &Expr, state: &mut State, linter_info: 
             if name == "Object" {
                 linter_info
                     .warnings
-                    .push(Warnings::new(interval.to_owned(), WARNING_OBJECT));
+                    .push(Warnings::new(linter_info.flow_name, interval.to_owned(), WARNING_OBJECT));
             } else if name == "Fn" {
                 linter_info
                     .warnings
-                    .push(Warnings::new(interval.to_owned(), WARNING_FN));
+                    .push(Warnings::new(linter_info.flow_name,interval.to_owned(), WARNING_FN));
             }
             validate_expr_literals(args, state, linter_info);
         }
@@ -74,6 +74,7 @@ fn validate_expr_literals(to_be_literal: &Expr, state: &mut State, linter_info: 
             if literal.primitive.get_type() == PrimitiveType::PrimitiveClosure {
                 if let Ok(closure) = Literal::get_value::<PrimitiveClosure>(
                     &literal.primitive,
+                    linter_info.flow_name,
                     literal.interval,
                     format!(""),
                 ) {
@@ -126,7 +127,10 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
             Expr::ObjectExpr(ObjectType::Return(value)) => {
                 if !state.in_function {
                     linter_info.errors.push(gen_error_info(
-                        Position::new(interval_from_expr(value)),
+                        Position::new(
+                            interval_from_expr(value),
+                            linter_info.flow_name,
+                        ),
                         convert_error_from_interval(
                             Span::new(linter_info.raw_flow),
                             ERROR_RETURN_IN_FN.to_owned(),
@@ -138,7 +142,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
             Expr::ObjectExpr(ObjectType::Goto(goto, interval)) => {
                 if state.in_function {
                     linter_info.errors.push(gen_error_info(
-                        Position::new(interval.to_owned()),
+                        Position::new(interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
                             Span::new(linter_info.raw_flow),
                             ERROR_GOTO_IN_FN.to_owned(),
@@ -164,13 +168,40 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                         ))
                     }
                     GotoType::StepFlow {
-                        step: GotoValueType::Name(step),
-                        flow: GotoValueType::Name(flow),
+                        step: Some(GotoValueType::Name(step)),
+                        flow: Some(GotoValueType::Name(flow)),
                     } => linter_info.goto_list.push(StepInfo::new(
-                        &flow.ident,
-                        &step.ident,
-                        linter_info.raw_flow,
-                        interval.to_owned(),
+                            &flow.ident,
+                            &step.ident,
+                            linter_info.raw_flow,
+                            interval.to_owned(),
+                    )),
+                    GotoType::StepFlow {
+                        step: None,
+                        flow: Some(GotoValueType::Name(flow)),
+                    } => linter_info.goto_list.push(StepInfo::new(
+                            &flow.ident,
+                            "start",
+                            linter_info.raw_flow,
+                            interval.to_owned(),
+                    )),
+                    GotoType::StepFlow {
+                        step: Some(GotoValueType::Name(step)),
+                        flow: None,
+                    } => linter_info.goto_list.push(StepInfo::new(
+                            &linter_info.flow_name,
+                            &step.ident,
+                            linter_info.raw_flow,
+                            interval.to_owned(),
+                    )),
+                    GotoType::StepFlow {
+                        step: None,
+                        flow: None,
+                    } => linter_info.goto_list.push(StepInfo::new(
+                            &linter_info.flow_name,
+                            "start",
+                            linter_info.raw_flow,
+                            interval.to_owned(),
                     )),
                     _ => {}
                 }
@@ -179,7 +210,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
             Expr::ObjectExpr(ObjectType::Break(interval)) => {
                 if state.loop_scope == 0 {
                     linter_info.errors.push(gen_error_info(
-                        Position::new(interval.to_owned()),
+                        Position::new(interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
                             Span::new(linter_info.raw_flow),
                             ERROR_BREAK_IN_LOOP.to_owned(),
@@ -191,7 +222,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
             Expr::ObjectExpr(ObjectType::Continue(interval)) => {
                 if state.loop_scope == 0 {
                     linter_info.errors.push(gen_error_info(
-                        Position::new(interval.to_owned()),
+                        Position::new(interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
                             Span::new(linter_info.raw_flow),
                             ERROR_CONTINUE_IN_LOOP.to_owned(),
@@ -204,7 +235,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
             Expr::ObjectExpr(ObjectType::Hold(interval)) => {
                 if state.in_function {
                     linter_info.errors.push(gen_error_info(
-                        Position::new(interval.to_owned()),
+                        Position::new(interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
                             Span::new(linter_info.raw_flow),
                             ERROR_HOLD_IN_LOOP.to_owned(),
@@ -216,7 +247,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
             Expr::ObjectExpr(ObjectType::Say(value)) => {
                 if state.in_function {
                     linter_info.errors.push(gen_error_info(
-                        Position::new(interval_from_expr(value)),
+                        Position::new(interval_from_expr(value), linter_info.flow_name,),
                         convert_error_from_interval(
                             Span::new(linter_info.raw_flow),
                             ERROR_SAY_IN_FN.to_owned(),
@@ -231,14 +262,14 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
             Expr::ObjectExpr(ObjectType::Use(value)) => {
                 linter_info
                     .warnings
-                    .push(Warnings::new(interval_from_expr(value), WARNING_USE));
+                    .push(Warnings::new(linter_info.flow_name, interval_from_expr(value), WARNING_USE));
                 validate_expr_literals(value, state, linter_info);
             }
 
             Expr::ObjectExpr(ObjectType::Remember(name, value)) => {
                 if state.in_function {
                     linter_info.errors.push(gen_error_info(
-                        Position::new(name.interval.to_owned()),
+                        Position::new(name.interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
                             Span::new(linter_info.raw_flow),
                             ERROR_REMEMBER_IN_FN.to_owned(),
@@ -270,7 +301,7 @@ fn validate_gotos(linter_info: &mut LinterInfo) {
 
         if let None = linter_info.step_list.get(&goto_info) {
             linter_info.errors.push(gen_error_info(
-                Position::new(goto_info.interval.to_owned()),
+                Position::new(goto_info.interval.to_owned(), linter_info.flow_name,),
                 convert_error_from_interval(
                     Span::new(goto_info.raw_flow),
                     format!(
@@ -287,11 +318,12 @@ fn validate_gotos(linter_info: &mut LinterInfo) {
 fn gen_function_error(
     errors: &mut Vec<ErrorInfo>,
     raw_flow: &str,
+    flow_name: &str,
     interval: Interval,
     message: String,
 ) {
     errors.push(gen_error_info(
-        Position::new(interval.to_owned()),
+        Position::new(interval.to_owned(), flow_name,),
         convert_error_from_interval(Span::new(raw_flow), message, interval),
     ));
 }
@@ -307,6 +339,7 @@ fn validate_imports(linter_info: &mut LinterInfo) {
             gen_function_error(
                 linter_info.errors,
                 import_info.raw_flow,
+                linter_info.flow_name,
                 import_info.interval.to_owned(),
                 format!(
                     "import failed a function named '{}' already exist in current flow '{}'",
@@ -338,6 +371,7 @@ fn validate_imports(linter_info: &mut LinterInfo) {
                     gen_function_error(
                         linter_info.errors,
                         raw_flow,
+                        linter_info.flow_name,
                         interval.to_owned(),
                         format!(
                             "import failed function '{}' not found in flow '{}'",
@@ -367,6 +401,7 @@ fn validate_imports(linter_info: &mut LinterInfo) {
                 gen_function_error(
                     linter_info.errors,
                     raw_flow,
+                    linter_info.flow_name,
                     interval.to_owned(),
                     format!("function '{}' not found in bot", as_name,),
                 );
@@ -415,13 +450,13 @@ fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
                     import_scope.from_flow.to_owned(),
                     linter_info.flow_name,
                     linter_info.raw_flow,
-                    import_scope.position.interval.to_owned(),
+                    import_scope.interval.to_owned(),
                 ));
             }
 
             InstructionScope::DuplicateInstruction(interval, info) => {
                 linter_info.errors.push(gen_error_info(
-                    Position::new(interval.to_owned()),
+                    Position::new(interval.to_owned(), linter_info.flow_name,),
                     convert_error_from_interval(
                         Span::new(flow.raw_flow),
                         format!("duplicate {}", info),
@@ -434,7 +469,7 @@ fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
 
     if !is_step_start_present {
         linter_info.errors.push(gen_error_info(
-            Position::new(Interval::default()),
+            Position::new(Interval::default(), linter_info.flow_name),
             format!("missing step 'start' in flow [{}]", flow.flow_name),
         ));
     }

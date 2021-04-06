@@ -262,6 +262,7 @@ lazy_static! {
 type PrimitiveMethod = fn(
     object: &mut PrimitiveObject,
     args: &HashMap<String, Literal>,
+    data: &mut Data,
     interval: Interval,
     content_type: &str,
 ) -> Result<Literal, ErrorInfo>;
@@ -279,6 +280,7 @@ impl PrimitiveObject {
     fn set(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -286,7 +288,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -295,7 +297,7 @@ impl PrimitiveObject {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("usage: {}", usage),
                 ));
             }
@@ -305,11 +307,12 @@ impl PrimitiveObject {
 
         let header = Literal::get_value::<HashMap<String, Literal>>(
             &literal.primitive,
+            &data.context.flow,
             interval,
             ERROR_HTTP_SET.to_owned(),
         )?;
 
-        insert_to_object(header, &mut object, "header", literal);
+        insert_to_object(header, &mut object, "header", &data.context.flow, literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -321,6 +324,7 @@ impl PrimitiveObject {
     fn query(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -328,7 +332,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -337,7 +341,7 @@ impl PrimitiveObject {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("usage: {}", usage),
                 ));
             }
@@ -347,10 +351,11 @@ impl PrimitiveObject {
 
         let header = Literal::get_value::<HashMap<String, Literal>>(
             &literal.primitive,
+            &data.context.flow,
             interval,
             ERROR_HTTP_QUERY.to_owned(),
         )?;
-        insert_to_object(header, &mut object, "query", literal);
+        insert_to_object(header, &mut object, "query", &data.context.flow, literal);
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
@@ -362,6 +367,7 @@ impl PrimitiveObject {
     fn get_http(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -369,7 +375,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -393,6 +399,7 @@ impl PrimitiveObject {
     fn post(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -418,6 +425,7 @@ impl PrimitiveObject {
     fn put(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -443,6 +451,7 @@ impl PrimitiveObject {
     fn delete(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -468,6 +477,7 @@ impl PrimitiveObject {
     fn patch(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -495,6 +505,7 @@ impl PrimitiveObject {
     fn send(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -502,7 +513,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -510,6 +521,7 @@ impl PrimitiveObject {
         if let Some(literal) = object.value.get("method") {
             let function = match Literal::get_value::<String>(
                 &literal.primitive,
+                &data.context.flow,
                 interval,
                 ERROR_HTTP_UNKNOWN_METHOD.to_string(),
             ) {
@@ -520,18 +532,18 @@ impl PrimitiveObject {
                 Ok(get) if get == "get" => ureq::get,
                 _ => {
                     return Err(gen_error_info(
-                        Position::new(interval),
+                        Position::new(interval, &data.context.flow,),
                         ERROR_HTTP_UNKNOWN_METHOD.to_string(),
                     ))
                 }
             };
 
-            let value = http_request(&object.value, function, interval)?;
-            return json_to_literal(&value, interval);
+            let value = http_request(&object.value, function, &data.context.flow, interval)?;
+            return json_to_literal(&value, interval, &data.context.flow,);
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             ERROR_HTTP_SEND.to_owned(),
         ))
     }
@@ -541,6 +553,7 @@ impl PrimitiveObject {
     fn jwt_sign(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -548,11 +561,11 @@ impl PrimitiveObject {
 
         match args.get("arg0") {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                headers.alg = tools_jwt::get_algorithm(algo, interval)?;
+                headers.alg = tools_jwt::get_algorithm(algo, &data.context.flow, interval)?;
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_SIGN_ALGO.to_string(),
                 ))
             }
@@ -562,7 +575,7 @@ impl PrimitiveObject {
             Some(literal) => literal.primitive.to_json(),
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_SIGN_CLAIMS.to_string(),
                 ))
             }
@@ -572,6 +585,7 @@ impl PrimitiveObject {
             Some(key) if key.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 let key = Literal::get_value::<String>(
                     &key.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_JWT_SIGN_SECRET.to_string(),
                 )?;
@@ -580,21 +594,21 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_ALGO.to_string(),
                 ))
             }
         };
 
         if let Some(lit) = args.get("arg2") {
-            tools_jwt::get_headers(lit, interval, &mut headers)?;
+            tools_jwt::get_headers(lit, &data.context.flow, interval, &mut headers)?;
         }
 
         match jsonwebtoken::encode(&headers, &claims, &key) {
             Ok(value) => Ok(PrimitiveString::get_literal(&value, interval)),
             Err(e) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("Invalid JWT encode {:?}", e.kind()),
                 ))
             }
@@ -604,18 +618,20 @@ impl PrimitiveObject {
     fn jwt_decode(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         let token = match object.value.get("jwt") {
             Some(literal) => Literal::get_value::<String>(
                 &literal.primitive,
+                &data.context.flow,
                 interval,
                 ERROR_JWT_TOKEN.to_owned(),
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_TOKEN.to_string(),
                 ))
             }
@@ -623,11 +639,11 @@ impl PrimitiveObject {
 
         let algo = match args.get("arg0") {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                tools_jwt::get_algorithm(algo, interval)?
+                tools_jwt::get_algorithm(algo, &data.context.flow, interval)?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_DECODE_ALGO.to_string(),
                 ))
             }
@@ -637,6 +653,7 @@ impl PrimitiveObject {
             Some(key) if key.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 let key = Literal::get_value::<String>(
                     &key.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_JWT_DECODE_SECRET.to_owned(),
                 )?;
@@ -645,7 +662,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_DECODE_SECRET.to_string(),
                 ))
             }
@@ -656,10 +673,10 @@ impl PrimitiveObject {
             &key,
             &jsonwebtoken::Validation::new(algo),
         ) {
-            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, interval),
+            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, &data.context.flow, interval),
             Err(e) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("Invalid JWT decode {:?}", e.kind()),
                 ))
             }
@@ -669,6 +686,7 @@ impl PrimitiveObject {
     fn jwt_verity(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -677,22 +695,23 @@ impl PrimitiveObject {
         let token = match object.value.get("jwt") {
             Some(literal) => Literal::get_value::<String>(
                 &literal.primitive,
+                &data.context.flow,
                 interval,
                 ERROR_JWT_TOKEN.to_owned(),
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_TOKEN.to_string(),
                 ))
             }
         };
 
         match args.get("arg0") {
-            Some(lit) => tools_jwt::get_validation(lit, interval, &mut validation)?,
+            Some(lit) => tools_jwt::get_validation(lit, &data.context.flow, interval, &mut validation)?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_VALIDATION_CLAIMS.to_string(),
                 ))
             }
@@ -700,11 +719,11 @@ impl PrimitiveObject {
 
         match args.get("arg1") {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                validation.algorithms = vec![tools_jwt::get_algorithm(algo, interval)?];
+                validation.algorithms = vec![tools_jwt::get_algorithm(algo, &data.context.flow, interval)?];
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_VALIDATION_ALGO.to_string(),
                 ))
             }
@@ -714,6 +733,7 @@ impl PrimitiveObject {
             Some(key) if key.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 let key = Literal::get_value::<String>(
                     &key.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_JWT_SECRET.to_owned(),
                 )?;
@@ -722,17 +742,17 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_JWT_VALIDATION_SECRETE.to_string(),
                 ))
             }
         };
 
         match jsonwebtoken::decode::<serde_json::Value>(token, &key, &validation) {
-            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, interval),
+            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, &data.context.flow, interval),
             Err(e) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("Invalid JWT verify {:?}", e.kind()),
                 ))
             }
@@ -744,16 +764,19 @@ impl PrimitiveObject {
     fn create_hmac(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
+        let flow_name = &data.context.flow;
+
         let data = match object.value.get("value") {
             Some(literal) => {
-                Literal::get_value::<String>(&literal.primitive, interval, ERROR_HASH.to_owned())?
+                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_HASH.to_owned())?
             }
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name,),
                     ERROR_HASH.to_string(),
                 ))
             }
@@ -763,14 +786,15 @@ impl PrimitiveObject {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 let algo = Literal::get_value::<String>(
                     &algo.primitive,
+                    flow_name,
                     interval,
                     ERROR_HASH_ALGO.to_owned(),
                 )?;
-                tools_crypto::get_hash_algorithm(algo, interval)?
+                tools_crypto::get_hash_algorithm(algo, flow_name, interval)?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name),
                     ERROR_HASH_ALGO.to_string(),
                 ))
             }
@@ -780,6 +804,7 @@ impl PrimitiveObject {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 let secret = Literal::get_value::<String>(
                     &algo.primitive,
+                    flow_name,
                     interval,
                     ERROR_HMAC_KEY.to_owned(),
                 )?;
@@ -787,7 +812,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name),
                     ERROR_HMAC_KEY.to_string(),
                 ))
             }
@@ -815,23 +840,26 @@ impl PrimitiveObject {
                 lit.set_content_type("crypto");
                 Ok(lit)
             }
-            Err(e) => return Err(gen_error_info(Position::new(interval), format!("{}", e))),
+            Err(e) => return Err(gen_error_info(Position::new(interval, flow_name,), format!("{}", e))),
         }
     }
 
     fn create_hash(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
+        let flow_name = &data.context.flow;
+
         let data = match object.value.get("value") {
             Some(literal) => {
-                Literal::get_value::<String>(&literal.primitive, interval, ERROR_HASH.to_owned())?
+                Literal::get_value::<String>(&literal.primitive, &data.context.flow, interval, ERROR_HASH.to_owned())?
             }
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name,),
                     ERROR_HASH.to_string(),
                 ))
             }
@@ -841,14 +869,15 @@ impl PrimitiveObject {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 let algo = Literal::get_value::<String>(
                     &algo.primitive,
+                    flow_name,
                     interval,
                     ERROR_HASH_ALGO.to_owned(),
                 )?;
-                tools_crypto::get_hash_algorithm(algo, interval)?
+                tools_crypto::get_hash_algorithm(algo, flow_name, interval)?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name,),
                     ERROR_HASH_ALGO.to_string(),
                 ))
             }
@@ -872,25 +901,27 @@ impl PrimitiveObject {
                 lit.set_content_type("crypto");
                 Ok(lit)
             }
-            Err(e) => return Err(gen_error_info(Position::new(interval), format!("{}", e))),
+            Err(e) => return Err(gen_error_info(Position::new(interval, flow_name,), format!("{}", e))),
         }
     }
 
     fn digest(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         let vec = match object.value.get("hash") {
             Some(literal) => Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
+                &data.context.flow,
                 interval,
                 ERROR_DIGEST.to_owned(),
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_DIGEST.to_string(),
                 ))
             }
@@ -900,28 +931,30 @@ impl PrimitiveObject {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &algo.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_DIGEST_ALGO.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_DIGEST_ALGO.to_string(),
                 ))
             }
         };
 
-        let mut data = vec![];
+        let mut digest_data = vec![];
         for value in vec.iter() {
-            data.push(*Literal::get_value::<i64>(
+            digest_data.push(*Literal::get_value::<i64>(
                 &value.primitive,
+                &data.context.flow,
                 interval,
                 "ERROR_hash_TOKEN".to_owned(),
             )? as u8);
         }
 
-        let value = tools_crypto::digest_data(algo, &data, interval)?;
+        let value = tools_crypto::digest_data(algo, &digest_data, &data.context.flow, interval)?;
 
         Ok(PrimitiveString::get_literal(&value, interval))
     }
@@ -931,6 +964,7 @@ impl PrimitiveObject {
     fn base64_encode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -940,7 +974,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("usage: {}", usage),
                 ))
             }
@@ -954,6 +988,7 @@ impl PrimitiveObject {
     fn base64_decode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -963,7 +998,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("usage: {}", usage),
                 ))
             }
@@ -973,7 +1008,7 @@ impl PrimitiveObject {
             Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("Base64 invalid value: {}, can't be decode", string),
                 ))
             }
@@ -987,6 +1022,7 @@ impl PrimitiveObject {
     fn hex_encode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -996,7 +1032,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("usage: {}", usage),
                 ))
             }
@@ -1010,6 +1046,7 @@ impl PrimitiveObject {
     fn hex_decode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1019,7 +1056,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("usage: {}", usage),
                 ))
             }
@@ -1029,7 +1066,7 @@ impl PrimitiveObject {
             Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("Hex invalid value: {}, can't be decode", string),
                 ))
             }
@@ -1043,6 +1080,7 @@ impl PrimitiveObject {
     fn get_type(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1050,7 +1088,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1061,6 +1099,7 @@ impl PrimitiveObject {
     fn get_content(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1068,7 +1107,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1083,6 +1122,7 @@ impl PrimitiveObject {
     fn is_email(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1095,7 +1135,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1113,6 +1153,7 @@ impl PrimitiveObject {
     fn match_args(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1125,7 +1166,7 @@ impl PrimitiveObject {
 
         if args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1141,6 +1182,7 @@ impl PrimitiveObject {
     fn match_array(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1154,12 +1196,13 @@ impl PrimitiveObject {
         let array = match args.get("arg0") {
             Some(lit) => Literal::get_value::<Vec<Literal>>(
                 &lit.primitive,
+                &data.context.flow,
                 interval,
                 format!("expect Array value as argument usage: {}", usage),
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("expect Array value as argument usage: {}", usage),
                 ))
             }
@@ -1178,6 +1221,7 @@ impl PrimitiveObject {
     fn is_number(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1185,7 +1229,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1196,6 +1240,7 @@ impl PrimitiveObject {
     fn is_int(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1203,7 +1248,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1214,6 +1259,7 @@ impl PrimitiveObject {
     fn is_float(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1221,7 +1267,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1232,6 +1278,7 @@ impl PrimitiveObject {
     fn type_of(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1239,7 +1286,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1250,6 +1297,7 @@ impl PrimitiveObject {
     fn to_string(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1257,7 +1305,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1268,6 +1316,7 @@ impl PrimitiveObject {
     fn contains(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1275,7 +1324,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1284,13 +1333,14 @@ impl PrimitiveObject {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_OBJECT_CONTAINS.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_OBJECT_CONTAINS.to_owned(),
                 ));
             }
@@ -1304,6 +1354,7 @@ impl PrimitiveObject {
     fn is_empty(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1311,7 +1362,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1324,6 +1375,7 @@ impl PrimitiveObject {
     fn length(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1331,7 +1383,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1344,6 +1396,7 @@ impl PrimitiveObject {
     fn keys(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1351,7 +1404,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1368,6 +1421,7 @@ impl PrimitiveObject {
     fn values(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1375,7 +1429,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1392,6 +1446,7 @@ impl PrimitiveObject {
     fn get_generics(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1399,7 +1454,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1408,13 +1463,14 @@ impl PrimitiveObject {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_OBJECT_GET_GENERICS.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_OBJECT_GET_GENERICS.to_owned(),
                 ));
             }
@@ -1431,6 +1487,7 @@ impl PrimitiveObject {
     fn clear_values(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1438,7 +1495,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1461,6 +1518,7 @@ impl PrimitiveObject {
     fn insert(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1468,7 +1526,7 @@ impl PrimitiveObject {
 
         if args.len() != 2 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1477,13 +1535,14 @@ impl PrimitiveObject {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_OBJECT_INSERT.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_OBJECT_INSERT.to_owned(),
                 ));
             }
@@ -1493,7 +1552,7 @@ impl PrimitiveObject {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     format!("usage: {}", usage),
                 ));
             }
@@ -1507,6 +1566,7 @@ impl PrimitiveObject {
     fn remove(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -1514,7 +1574,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1523,13 +1583,14 @@ impl PrimitiveObject {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_OBJECT_REMOVE.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_OBJECT_REMOVE.to_owned(),
                 ));
             }
@@ -1550,6 +1611,7 @@ fn insert_to_object(
     src: &HashMap<String, Literal>,
     dst: &mut PrimitiveObject,
     key_name: &str,
+    flow_name: &str,
     literal: &Literal,
 ) {
     dst.value
@@ -1557,6 +1619,7 @@ fn insert_to_object(
         .and_modify(|tmp: &mut Literal| {
             if let Ok(tmp) = Literal::get_mut_value::<HashMap<String, Literal>>(
                 &mut tmp.primitive,
+                flow_name,
                 literal.interval,
                 ERROR_UNREACHABLE.to_owned(),
             ) {
@@ -1790,7 +1853,7 @@ impl Primitive for PrimitiveObject {
 
         for function in vector.iter() {
             if let Some((f, right)) = function.get(name) {
-                let result = f(self, args, interval, &content_type)?;
+                let result = f(self, args, data, interval, &content_type)?;
 
                 return Ok((result, *right));
             }
@@ -1814,7 +1877,7 @@ impl Primitive for PrimitiveObject {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", name, ERROR_OBJECT_UNKNOWN_METHOD),
         ))
     }

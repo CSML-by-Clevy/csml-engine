@@ -256,13 +256,16 @@ pub fn interpolate_string(
         Ok((span, expr)) => {
             if !span.fragment().is_empty() {
                 Err(gen_error_info(
-                    Position::new(Interval::new_as_u32(
-                        span.location_line(),
-                        span.get_column() as u32,
-                        span.location_offset(),
-                        None,
-                        None,
-                    )),
+                    Position::new(
+                        Interval::new_as_u32(
+                            span.location_line(),
+                            span.get_column() as u32,
+                            span.location_offset(),
+                            None,
+                            None,
+                        ),
+                        &data.context.flow,
+                    ),
                     ERROR_PARSING.to_owned(),
                 ))
             } else {
@@ -277,7 +280,9 @@ pub fn interpolate_string(
                     span.location_offset(),
                     None,
                     None,
-                )),
+                ),
+                &data.context.flow,
+            ),
                 err.error,
             )),
             Err::Incomplete(_err) => unimplemented!(),

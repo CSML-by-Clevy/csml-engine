@@ -129,7 +129,7 @@ pub fn expr_to_literal(
                 sender,
             )?;
             // only for closure capture the step variables
-            capture_variables(&mut &mut new_value, data.step_vars.clone());
+            capture_variables(&mut &mut new_value, data.step_vars.clone(), &data.context.flow);
             Ok(new_value)
         }
         Expr::IdentExpr(var, ..) => Ok(get_var(
@@ -141,7 +141,7 @@ pub fn expr_to_literal(
             sender,
         )?),
         e => Err(gen_error_info(
-            Position::new(interval_from_expr(e)),
+            Position::new(interval_from_expr(e), &data.context.flow),
             ERROR_EXPR_TO_LITERAL.to_owned(),
         )),
     }
@@ -166,7 +166,7 @@ pub fn resolve_fn_args(
                             Expr::IdentExpr(ref var, ..) => var,
                             _ => {
                                 return Err(gen_error_info(
-                                    Position::new(interval_from_expr(name)),
+                                    Position::new(interval_from_expr(name), &data.context.flow),
                                     "key must be of type string".to_owned(),
                                 ))
                             }
@@ -180,7 +180,7 @@ pub fn resolve_fn_args(
                         first += 1;
                         if named_args && first > 1 {
                             return Err(gen_error_info(
-                                Position::new(interval_from_expr(expr)),
+                                Position::new(interval_from_expr(expr), &data.context.flow),
                                 ERROR_EXPR_TO_LITERAL.to_owned(), // TODO: error mix of named args and anonymous args
                             ));
                         }
@@ -196,7 +196,7 @@ pub fn resolve_fn_args(
             }
         }
         e => Err(gen_error_info(
-            Position::new(interval_from_expr(e)),
+            Position::new(interval_from_expr(e), &data.context.flow),
             ERROR_EXPR_TO_LITERAL.to_owned(), //TODO: internal error fn args bad format
         )),
     }

@@ -9,7 +9,7 @@ use support::tools::read_file;
 fn format_message(filepath: String) -> Result<Flow, ErrorInfo> {
     let text = read_file(filepath).unwrap();
 
-    parse_flow(&text)
+    parse_flow(&text, "Test")
 }
 
 #[test]

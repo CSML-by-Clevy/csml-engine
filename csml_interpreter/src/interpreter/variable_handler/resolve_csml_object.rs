@@ -43,6 +43,7 @@ fn get_function<'a>(
 }
 
 fn search_function<'a>(
+    origin_flow_name: &str,
     bot: &'a HashMap<String, Flow>,
     import: &ImportScope,
 ) -> Result<(Vec<String>, Expr, &'a Flow), ErrorInfo> {
@@ -50,7 +51,7 @@ fn search_function<'a>(
         Some(flow_name) => match bot.get(flow_name) {
             Some(flow) => {
                 get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
-                    position: import.position.clone(),
+                    position: Position::new(import.interval, origin_flow_name),
                     message: format!(
                         "function '{}' not found in '{}' flow",
                         import.name, flow_name
@@ -58,7 +59,7 @@ fn search_function<'a>(
                 })
             }
             None => Err(ErrorInfo {
-                position: import.position.clone(),
+                position: Position::new(import.interval, origin_flow_name),
                 message: format!(
                     "function '{}' not found in '{}' flow",
                     import.name, flow_name
@@ -73,7 +74,7 @@ fn search_function<'a>(
             }
 
             Err(ErrorInfo {
-                position: import.position.clone(),
+                position: Position::new(import.interval, origin_flow_name),
                 message: format!("function '{}' not found in bot", import.name),
             })
         }
@@ -146,10 +147,10 @@ fn check_for_import<'a>(
             name: name.to_owned(),
             original_name: None,
             from_flow: None,
-            position: Position::new(interval.clone()),
+            interval: interval.clone(),
         })) {
         Some((InstructionScope::ImportScope(import), _expr)) => {
-            match search_function(data.flows, import) {
+            match search_function(&data.context.flow,data.flows, import) {
                 Ok((fn_args, expr, new_flow)) => Some((fn_args, expr, new_flow)), // if new_flow == data.flow {
                 _err => None,
             }
@@ -167,6 +168,7 @@ fn check_for_closure<'a>(
         Some(lit) => {
             let val = Literal::get_value::<PrimitiveClosure>(
                 &lit.primitive,
+                &data.context.flow,
                 interval,
                 "expect Literal of type [Closure]".to_owned(),
             )
@@ -232,7 +234,7 @@ pub fn resolve_object(
         (.., Some((fn_args, expr, new_flow)), _) => {
             if fn_args.len() > args.len() {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     ERROR_FN_ARGS.to_owned(),
                 ));
             }
@@ -252,7 +254,7 @@ pub fn resolve_object(
 
         _ => {
             let err = gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("{} [{}]", ERROR_BUILTIN_UNKNOWN, name),
             );
             Ok(MSG::send_error_msg(
@@ -276,7 +278,7 @@ pub fn exec_fn(
 ) -> Result<Literal, ErrorInfo> {
     if fn_args.len() > args.len() {
         return Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow),
             ERROR_FN_ARGS.to_owned(),
         ));
     }
