@@ -103,7 +103,7 @@ fn validate_if_scope(if_statement: &IfStatement, state: &mut State, linter_info:
             ..
         } => {
             match then_branch {
-                Some((else_scope, _)) => validate_if_scope(else_scope, state, linter_info),
+                Some(else_scope) => validate_if_scope(else_scope, state, linter_info),
                 None => {}
             };
 

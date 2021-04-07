@@ -11,7 +11,6 @@ use crate::parser::{
     parse_if::parse_if,
     parse_path::parse_path,
     tools::{get_interval, get_string, get_tag},
-    StateContext,
 };
 use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, Err, IResult};
 
@@ -77,7 +76,7 @@ where
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn parse_do<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_do<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -94,20 +93,13 @@ where
         _ => (s, DoType::Exec(Box::new(expr))),
     };
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (Expr::ObjectExpr(ObjectType::Do(do_type)), instruction_info),
+        Expr::ObjectExpr(ObjectType::Do(do_type)),
     ))
 }
 
-fn parse_remember<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_remember<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -117,23 +109,13 @@ where
     let (s, (idents, expr)) =
         parse_action_argument(s, alt((parse_assignation, parse_remember_as)))?;
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Remember(idents, expr)),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Remember(idents, expr)),
     ))
 }
 
-fn parse_say<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_say<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -142,23 +124,13 @@ where
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Say(Box::new(expr))),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Say(Box::new(expr))),
     ))
 }
 
-fn parse_debug<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_debug<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -173,24 +145,14 @@ where
     // this vec is temporary until a solution for multiple arguments in debug is found
     let vec = Expr::VecExpr(vec![expr], interval);
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Debug(Box::new(vec), interval)),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Debug(Box::new(vec), interval)),
     ))
 }
 
 //TODO: deprecate use
-fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -204,23 +166,13 @@ where
         _ => return Err(gen_nom_failure(s, ERROR_USE)),
     }
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Use(Box::new(expr))),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Use(Box::new(expr))),
     ))
 }
 
-fn parse_hold<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_hold<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -229,18 +181,13 @@ where
 
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-    StateContext::inc_rip();
     Ok((
         s,
-        (Expr::ObjectExpr(ObjectType::Hold(inter)), instruction_info),
+        Expr::ObjectExpr(ObjectType::Hold(inter)),
     ))
 }
 
-fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -249,18 +196,13 @@ where
 
     let (s, ..) = get_tag(name, BREAK)(s)?;
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-    StateContext::inc_rip();
     Ok((
         s,
-        (Expr::ObjectExpr(ObjectType::Break(inter)), instruction_info),
+        Expr::ObjectExpr(ObjectType::Break(inter)),
     ))
 }
 
-fn parse_continue<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_continue<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -269,21 +211,13 @@ where
 
     let (s, ..) = get_tag(name, CONTINUE)(s)?;
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-    StateContext::inc_rip();
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Continue(inter)),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Continue(inter)),
     ))
 }
 
-fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -297,19 +231,9 @@ where
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Return(Box::new(expr))),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Return(Box::new(expr))),
     ))
 }
 
@@ -317,7 +241,7 @@ where
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+pub fn parse_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {

@@ -54,13 +54,13 @@ fn evaluate_if_condition(
     consequence: &Block,
     instruction_info: &InstructionInfo,
     sender: &Option<mpsc::Sender<MSG>>,
-    then_branch: &Option<(Box<IfStatement>, InstructionInfo)>,
+    then_branch: &Option<Box<IfStatement>>,
 ) -> Result<MessageData, ErrorInfo> {
     if valid_condition(cond, data, &mut msg_data, sender) {
         msg_data = msg_data + interpret_scope(consequence, data, sender)?;
         return Ok(msg_data);
     }
-    if let Some((then, _)) = then_branch {
+    if let Some(then) = then_branch {
         solve_if_statement(then, msg_data, data, instruction_info, sender)
     } else {
         Ok(msg_data)
@@ -124,39 +124,22 @@ pub fn solve_if_statement(
     match statement {
         IfStatement::IfStmt {
             cond,
-            consequence,
+            consequence: scope,
             then_branch,
+            last_action_index,
         } => {
             match &data.context.hold {
-                Some(hold) if hold.index.command_index <= instruction_info.index => {
-                    return evaluate_if_condition(
-                        cond,
-                        msg_data,
-                        data,
-                        consequence,
-                        instruction_info,
-                        sender,
-                        then_branch,
-                    );
-                }
                 Some(hold) => {
-                    if let Some((then_branch, then_index)) = then_branch {
-                        if hold.index.command_index < then_index.index {
-                            msg_data = msg_data + interpret_scope(consequence, data, sender)?;
-                            return Ok(msg_data);
-                        } else {
-                            return solve_if_statement(
-                                &then_branch,
-                                msg_data,
-                                data,
-                                instruction_info,
-                                sender,
-                            );
-                        }
-                    }
-
-                    if hold.index.command_index != instruction_info.index {
-                        msg_data = msg_data + interpret_scope(consequence, data, sender)?;
+                    if hold.index.command_index <= *last_action_index {
+                        msg_data = msg_data + interpret_scope(scope, data, sender)?;
+                    } else if let Some(then_branch) = then_branch {
+                        return solve_if_statement(
+                            &then_branch,
+                            msg_data,
+                            data,
+                            instruction_info,
+                            sender,
+                        );
                     }
                 }
                 None => {
@@ -164,7 +147,7 @@ pub fn solve_if_statement(
                         cond,
                         msg_data,
                         data,
-                        consequence,
+                        scope,
                         instruction_info,
                         sender,
                         then_branch,

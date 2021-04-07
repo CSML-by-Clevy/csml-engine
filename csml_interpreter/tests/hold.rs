@@ -75,7 +75,7 @@ fn hold_test_some_0() {
 }
 
 #[test]
-fn hold_test_some_5() {
+fn hold_test_some_3() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"4"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
@@ -85,7 +85,7 @@ fn hold_test_some_5() {
             None,
             Some(Hold::new(
                 IndexInfo {
-                    command_index: 5,
+                    command_index: 3,
                     loop_index: vec![],
                 },
                 serde_json::json!({}),
@@ -105,7 +105,7 @@ fn hold_test_some_5() {
 }
 
 #[test]
-fn hold_test_some_12() {
+fn hold_test_some_7() {
     let data = r#"{"memories":[], "messages":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
@@ -115,7 +115,7 @@ fn hold_test_some_12() {
             None,
             Some(Hold::new(
                 IndexInfo {
-                    command_index: 12,
+                    command_index: 7,
                     loop_index: vec![],
                 },
                 serde_json::json!({}),
@@ -135,7 +135,7 @@ fn hold_test_some_12() {
 }
 
 #[test]
-fn hold_test_some_14() {
+fn hold_test_some_8() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"3"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
@@ -145,7 +145,7 @@ fn hold_test_some_14() {
             None,
             Some(Hold::new(
                 IndexInfo {
-                    command_index: 14,
+                    command_index: 8,
                     loop_index: vec![],
                 },
                 serde_json::json!({}),

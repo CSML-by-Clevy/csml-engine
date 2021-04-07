@@ -1,16 +1,8 @@
-use crate::data::Literal;
-use lazy_static::*;
-use std::collections::*;
-use std::sync::*;
-use std::thread::*;
+use crate::data::{ast::*, Literal};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
-
-lazy_static! {
-    static ref CONTEXT: Mutex<HashMap<ThreadId, StateContext>> = Mutex::new(HashMap::new());
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExitCondition {
@@ -23,62 +15,58 @@ pub enum ExitCondition {
     Return(Literal),
 }
 
-#[derive(Debug)]
-pub struct StateContext {
-    rip: usize,
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// TRAIT FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-impl Default for StateContext {
-    fn default() -> Self {
-        Self {
-            rip: 0,
-        }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl StateContext {
-    pub fn clear_rip() {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
+fn count_if_commands(if_statement: &mut IfStatement, index: &mut usize) {
+    match if_statement {
+        IfStatement::IfStmt {
+            consequence: scope,
+            then_branch,
+            last_action_index,
+            ..
+        } => {
+            count_scope_commands(scope, index);
+            if *index >= 1 {
+                *last_action_index = *index -1;
+            }
 
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.rip = 0;
+            if let Some(else_scope) = then_branch {
+                count_if_commands(else_scope, index)
+            }
         }
+        IfStatement::ElseStmt(scope, ..) => count_scope_commands(scope, index),
+    }
+}
+
+fn count_scope_commands(scope: &mut Block, index: &mut usize) {
+    for (command, info) in scope.commands.iter_mut() {
+        count_commands(command, index, info);
+    }
+}
+
+pub fn count_commands(command: &mut Expr, index: &mut usize, info: &mut InstructionInfo) {
+    let start_index = *index;
+
+    match command {
+        Expr::ObjectExpr(..) => {
+            info.index = *index;
+            *index = *index + 1
+        },
+
+        Expr::IfExpr(if_statement) => {
+            info.index = *index;
+            count_if_commands(if_statement, index)
+        }
+        Expr::ForEachExpr(_ident, _index, _expr, block, _range) => {
+            info.index = *index;
+            count_scope_commands(block, index)
+        }
+        _ => {}
     }
 
-    pub fn inc_rip() {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.rip += 1;
-        }
-    }
-
-    pub fn get_rip() -> usize {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            state_context.rip
-        } else {
-            unreachable!();
-        }
+    if *index > start_index + 1 {
+        info.total = *index - (start_index + 1);
     }
 }

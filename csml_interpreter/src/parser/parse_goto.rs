@@ -2,7 +2,7 @@ use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
 use crate::parser::{
     get_interval, parse_comments::comment, parse_idents::parse_string_assignation,
-    tools::get_string, tools::get_tag, GotoType, GotoValueType, StateContext,
+    tools::get_string, tools::get_tag, GotoType, GotoValueType,
 };
 
 use nom::{branch::alt, bytes::complete::tag, combinator::opt, error::*, sequence::preceded, *};
@@ -83,7 +83,7 @@ where
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_goto<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+pub fn parse_goto<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -94,18 +94,8 @@ where
 
     let (s, goto_type) = alt((get_step, get_flow, get_step_at_flow))(s)?;
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Goto(goto_type, interval)),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Goto(goto_type, interval)),
     ))
 }

@@ -22,7 +22,7 @@ pub mod step_checksum;
 pub mod tools;
 
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExitCondition, StateContext};
+pub use state_context::{ExitCondition};
 
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
@@ -139,8 +139,6 @@ where
 {
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, ident) = preceded(comment, parse_step_name)(s)?;
-
-    StateContext::clear_rip();
 
     let (s, actions) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;

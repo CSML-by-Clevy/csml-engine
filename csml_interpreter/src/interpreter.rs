@@ -50,10 +50,11 @@ pub fn interpret_scope(
         let instruction_total = instruction_info.index + instruction_info.total;
 
         if let Some(hold) = &mut data.context.hold {
-            if hold.index.command_index >= instruction_total {
+            if hold.index.command_index > instruction_total {
                 continue;
-            } else if hold.index.command_index + 1 == instruction_info.index {
+            } else if hold.index.command_index == instruction_info.index {
                 data.context.hold = None;
+                continue; // this command is the hold, we need to skip it in order to continue the conversation
             }
         }
 

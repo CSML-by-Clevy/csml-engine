@@ -190,7 +190,6 @@ pub struct InstructionInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block {
     pub commands: Vec<(Expr, InstructionInfo)>,
-    pub hooks: Vec<Hook>,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -204,7 +203,6 @@ impl Default for Block {
     fn default() -> Self {
         Self {
             commands: Vec::new(),
-            hooks: Vec::new(),
         }
     }
 }
@@ -223,7 +221,8 @@ pub enum IfStatement {
     IfStmt {
         cond: Box<Expr>,
         consequence: Block,
-        then_branch: Option<(Box<IfStatement>, InstructionInfo)>,
+        then_branch: Option<Box<IfStatement>>,
+        last_action_index: usize,
     },
     ElseStmt(Block, Interval),
 }
