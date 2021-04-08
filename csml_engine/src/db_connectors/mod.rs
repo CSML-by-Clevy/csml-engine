@@ -63,7 +63,7 @@ pub struct DbConversation {
     pub client: Client,
     pub flow_id: String,
     pub step_id: String,
-    pub metadata: serde_json::Value,
+    // pub metadata: serde_json::Value,
     pub status: String,
     pub last_interaction_at: String,
     pub updated_at: String,

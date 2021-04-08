@@ -1,4 +1,4 @@
-use crate::{db_connectors::DbConversation, encrypt::encrypt_data, Client, EngineError};
+use crate::{db_connectors::DbConversation, Client, EngineError};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
@@ -10,7 +10,6 @@ fn format_conversation_struct(
         client: bson::from_bson(conversation.get("client").unwrap().to_owned())?,
         flow_id: conversation.get_str("flow_id").unwrap().to_owned(), // to_hex
         step_id: conversation.get_str("step_id").unwrap().to_owned(), // to_hex
-        metadata: bson::from_bson(conversation.get("metadata").unwrap().to_owned())?, // encrypted
         status: conversation.get_str("status").unwrap().to_owned(),   //(OPEN, CLOSED, //Faild?
         last_interaction_at: conversation
             .get_utc_datetime("last_interaction_at")
@@ -31,18 +30,15 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
-    metadata: serde_json::Value,
     db: &mongodb::Database,
 ) -> Result<String, EngineError> {
     let collection = db.collection("conversation");
     let time = Bson::UtcDatetime(chrono::Utc::now());
-    let metadata = encrypt_data(&metadata)?;
 
     let conversation = doc! {
         "client": bson::to_bson(&client)?,
         "flow_id": flow_id,
         "step_id": step_id,
-        "metadata": metadata, // encrypted
         "status": "OPEN",
         "last_interaction_at": &time,
         "updated_at": &time,

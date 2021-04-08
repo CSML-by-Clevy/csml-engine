@@ -9,14 +9,13 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
-    metadata: serde_json::Value,
     db: &mut Database,
 ) -> Result<String, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
         return mongodb_connector::conversations::create_conversation(
-            flow_id, step_id, client, metadata, db,
+            flow_id, step_id, client, db,
         );
     }
 
@@ -24,7 +23,7 @@ pub fn create_conversation(
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::conversations::create_conversation(
-            flow_id, step_id, client, metadata, db,
+            flow_id, step_id, client, db,
         );
     }
 

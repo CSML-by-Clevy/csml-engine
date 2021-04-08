@@ -2,7 +2,6 @@ use crate::data::DynamoDbClient;
 use crate::db_connectors::dynamodb::{Conversation, DynamoDbKey};
 use crate::db_connectors::DbConversation;
 use crate::{
-    encrypt::{decrypt_data, encrypt_data},
     Client, EngineError,
 };
 use rusoto_dynamodb::*;
@@ -14,10 +13,9 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
-    metadata: serde_json::Value,
     db: &mut DynamoDbClient,
 ) -> Result<String, EngineError> {
-    let data = Conversation::new(client, &encrypt_data(&metadata)?, flow_id, step_id);
+    let data = Conversation::new(client, flow_id, step_id);
     let input = PutItemInput {
         item: serde_dynamodb::to_hashmap(&data)?,
         table_name: get_table_name()?,
@@ -91,7 +89,6 @@ fn replace_conversation(
     old_key: &DynamoDbKey,
     new_item: HashMap<String, AttributeValue>,
     db: &mut DynamoDbClient,
-    // runtime: &mut tokio::runtime::Runtime,
 ) -> Result<(), EngineError> {
     let put = Put {
         table_name: get_table_name()?,
@@ -279,7 +276,7 @@ pub fn get_latest_open(
         client: client.to_owned(),
         flow_id: conv.flow_id.to_string(),
         step_id: conv.step_id.to_string(),
-        metadata: decrypt_data(conv.metadata)?,
+        // metadata: decrypt_data(conv.metadata)?,
         status: conv.status.to_string(),
         last_interaction_at: conv.last_interaction_at.to_string(),
         updated_at: conv.updated_at.to_string(),
