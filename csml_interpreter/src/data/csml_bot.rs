@@ -63,7 +63,7 @@ impl CsmlBot {
         }
 
         Err(vec![gen_error_info(
-            Position::new(Interval::new_as_u32(0, 0, 0, None, None)),
+            Position::new(Interval::new_as_u32(0, 0, 0, None, None), name),
             format!("{} {}", ERROR_INVALID_FLOW, name),
         )])
     }

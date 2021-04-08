@@ -28,11 +28,10 @@ impl ErrorInfo {
 impl ErrorInfo {
     pub fn format_error(&self) -> String {
         format!(
-            "{} at line {}, column {} in step [{}] from flow [{}]",
+            "{} at line {}, column {} at flow [{}]",
             self.message,
             self.position.interval.start_line,
             self.position.interval.start_column,
-            self.position.step,
             self.position.flow,
         )
     }

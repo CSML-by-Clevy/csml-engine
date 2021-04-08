@@ -1,9 +1,10 @@
 use crate::data::{ast::*, tokens::*};
 use crate::parser::parse_braces::parse_r_brace;
 use crate::parser::{
-    parse_actions::{parse_fn_root_functions, parse_root_functions},
+    parse_actions::parse_root_functions,
     parse_comments::comment,
     tools::{get_interval, parse_error},
+    state_context::count_commands,
 };
 use nom::{
     bytes::complete::tag, error::ParseError, multi::fold_many0, sequence::delimited,
@@ -18,28 +19,26 @@ pub fn parse_root<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
 where
     E: ParseError<Span<'a>>,
 {
-    fold_many0(
+    let result = fold_many0(
         parse_root_functions,
         Block::default(),
-        |mut acc: Block, (item, instruction_info)| {
-            acc.commands.push((item, instruction_info));
-            acc
-        },
-    )(s)
-}
+        |mut acc: Block, mut command| {
+            let mut index = acc.commands.len();
 
-pub fn parse_fn_root<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    fold_many0(
-        parse_fn_root_functions,
-        Block::default(),
-        |mut acc: Block, (item, instruction_info)| {
-            acc.commands.push((item, instruction_info));
+            let mut instruction_info = InstructionInfo {
+                index: index.clone(),
+                total: 0,
+            };
+
+            count_commands(&mut command, &mut index, &mut instruction_info);
+
+            acc.commands.push((command, instruction_info));
+
             acc
         },
-    )(s)
+    )(s);
+
+    result
 }
 
 pub fn parse_implicit_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
@@ -47,17 +46,13 @@ where
     E: ParseError<Span<'a>>,
 {
     let mut acc = Block::default();
-    let (s, (item, instruction_info)) = parse_root_functions(s)?;
-    acc.commands.push((item, instruction_info));
-    Ok((s, acc))
-}
+    let (s, item) = parse_root_functions(s)?;
 
-pub fn parse_fn_implicit_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    let mut acc = Block::default();
-    let (s, (item, instruction_info)) = parse_fn_root_functions(s)?;
+    let instruction_info = InstructionInfo {
+        index: 0,
+        total: 0,
+    };
+
     acc.commands.push((item, instruction_info));
     Ok((s, acc))
 }
@@ -74,23 +69,6 @@ where
         delimited(
             preceded(comment, tag(L_BRACE)),
             parse_root,
-            preceded(comment, parse_r_brace),
-        ),
-    )
-}
-
-pub fn parse_fn_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    let (start, _) = get_interval(s)?;
-
-    parse_error(
-        start,
-        s,
-        delimited(
-            preceded(comment, tag(L_BRACE)),
-            parse_fn_root,
             preceded(comment, parse_r_brace),
         ),
     )

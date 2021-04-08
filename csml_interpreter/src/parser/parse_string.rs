@@ -4,7 +4,6 @@ use crate::error_format::{gen_nom_failure, CustomError, *};
 use crate::interpreter::variable_handler::expr_to_literal;
 use crate::parser::operator::parse_operator;
 use crate::parser::parse_comments::comment;
-use crate::parser::state_context::{StateContext, StringState};
 use crate::parser::tools::{get_distance_brace, get_interval, get_range_interval, parse_error};
 use nom::{
     bytes::complete::tag,
@@ -57,9 +56,10 @@ where
     }
 
     if !value.fragment().is_empty() {
-        expr_vector.push(Expr::LitExpr(PrimitiveString::get_literal(
-            &string, interval,
-        )));
+        expr_vector.push(Expr::LitExpr {
+            literal: PrimitiveString::get_literal(&string, interval),
+            in_in_substring: false,
+        });
 
         interval_vector.push(interval);
     }
@@ -115,13 +115,14 @@ fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    StateContext::set_string(StringState::Expand);
-
     let (rest, expr) = match parse_operator(s) {
         Ok((rest, val)) => (rest, val),
         Err(Err::Error(_e)) => {
             let (_, interval) = get_interval(s)?;
-            let expr = Expr::LitExpr(PrimitiveString::get_literal("", interval));
+            let expr = Expr::LitExpr {
+                literal: PrimitiveString::get_literal("", interval),
+                in_in_substring: true,
+            };
 
             (s, expr)
         }
@@ -130,8 +131,6 @@ where
             return Err(Err::Incomplete(needed));
         }
     };
-
-    StateContext::set_string(StringState::Normal);
 
     Ok((rest, expr))
 }
@@ -189,6 +188,29 @@ where
     }
 }
 
+fn do_parse_expand_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    match s.find_substring("\\\"") {
+        Some(distance) => {
+            let (rest, string) = s.take_split(distance);
+
+            Ok((
+                rest,
+                Expr::LitExpr {
+                    literal: PrimitiveString::get_literal(
+                        string.fragment(),
+                        Interval::new_as_u32(0, 0, 0, None, None),
+                    ),
+                    in_in_substring: true,
+                },
+            ))
+        }
+        None => Err(gen_nom_failure(s, ERROR_DOUBLE_QUOTE)),
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,11 +220,27 @@ where
     E: ParseError<Span<'a>>,
 {
     let (start, _) = get_interval(s)?;
-    parse_error(
-        start,
-        s,
-        delimited(tag(DOUBLE_QUOTE), do_parse_string, cut(tag(DOUBLE_QUOTE))),
-    )
+
+    match (
+        tag(DOUBLE_QUOTE)(s) as IResult<Span<'a>, Span<'a>, E>,
+        tag(BACKSLASH_DOUBLE_QUOTE)(s) as IResult<Span<'a>, Span<'a>, E>,
+    ) {
+        (Ok(_), ..) => parse_error(
+            start,
+            s,
+            delimited(tag(DOUBLE_QUOTE), do_parse_string, cut(tag(DOUBLE_QUOTE))),
+        ),
+        (.., Ok(_)) => parse_error(
+            start,
+            s,
+            delimited(
+                tag(BACKSLASH_DOUBLE_QUOTE),
+                do_parse_expand_string,
+                tag(BACKSLASH_DOUBLE_QUOTE),
+            ),
+        ),
+        (Err(err), ..) => Err(err),
+    }
 }
 
 pub fn interpolate_string(
@@ -218,13 +256,16 @@ pub fn interpolate_string(
         Ok((span, expr)) => {
             if !span.fragment().is_empty() {
                 Err(gen_error_info(
-                    Position::new(Interval::new_as_u32(
-                        span.location_line(),
-                        span.get_column() as u32,
-                        span.location_offset(),
-                        None,
-                        None,
-                    )),
+                    Position::new(
+                        Interval::new_as_u32(
+                            span.location_line(),
+                            span.get_column() as u32,
+                            span.location_offset(),
+                            None,
+                            None,
+                        ),
+                        &data.context.flow,
+                    ),
                     ERROR_PARSING.to_owned(),
                 ))
             } else {
@@ -239,7 +280,9 @@ pub fn interpolate_string(
                     span.location_offset(),
                     None,
                     None,
-                )),
+                ),
+                &data.context.flow,
+            ),
                 err.error,
             )),
             Err::Incomplete(_err) => unimplemented!(),

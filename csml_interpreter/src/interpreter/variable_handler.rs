@@ -41,7 +41,7 @@ fn get_var_from_step_var<'a>(
     match data.step_vars.get_mut(&name.ident) {
         Some(var) => Ok(var),
         None => Err(gen_error_info(
-            Position::new(name.interval),
+            Position::new(name.interval, &data.context.flow),
             format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
         )),
     }
@@ -67,14 +67,14 @@ fn loop_path(
             PathLiteral::VecIndex(index)
                 if lit.primitive.get_type() == PrimitiveType::PrimitiveString =>
             {
-                match get_string_index(lit.clone(), *index)? {
+                match get_string_index(lit.clone(), &data.context.flow, *index)? {
                     Some(new_lit) => {
                         old_string = Some((lit.clone(), *index));
                         *lit = new_lit
                     }
                     None => {
                         let err = gen_error_info(
-                            Position::new(*interval),
+                            Position::new(*interval, &data.context.flow),
                             format!("[{}] {}", index, ERROR_ARRAY_INDEX),
                         );
                         let null = match condition {
@@ -85,11 +85,11 @@ fn loop_path(
                     }
                 }
             }
-            PathLiteral::VecIndex(index) => match get_at_index(lit, *index) {
+            PathLiteral::VecIndex(index) => match get_at_index(lit, &data.context.flow,*index) {
                 Some(new_lit) => lit = new_lit,
                 None => {
                     let err = gen_error_info(
-                        Position::new(*interval),
+                        Position::new(*interval, &data.context.flow),
                         format!("[{}] {}", index, ERROR_ARRAY_INDEX),
                     );
                     let null = match condition {
@@ -121,11 +121,11 @@ fn loop_path(
                     )?;
                     return Ok((lit.to_owned(), true));
                 } else {
-                    match get_value_from_key(lit, key) {
+                    match get_value_from_key(lit, &data.context.flow, key) {
                         Some(new_lit) => lit = new_lit,
                         None => {
                             let err = gen_error_info(
-                                Position::new(*interval),
+                                Position::new(*interval, &data.context.flow),
                                 format!("[{}] {}", key, ERROR_OBJECT_GET),
                             );
                             let null = match condition {
@@ -146,7 +146,7 @@ fn loop_path(
                     ArgsType::Normal(args) => args,
                     ArgsType::Named(_) => {
                         let err = gen_error_info(
-                            Position::new(*interval),
+                            Position::new(*interval, &data.context.flow),
                             format!("{}", ERROR_METHOD_NAMED_ARGS),
                         );
                         return Ok((
@@ -205,6 +205,7 @@ fn loop_path(
             let interval = old_string.interval.to_owned();
             let old_string = Literal::get_value::<String>(
                 &old_string.primitive,
+                &data.context.flow,
                 old_string.interval.to_owned(),
                 ERROR_INDEXING.to_owned(),
             )?
@@ -241,10 +242,11 @@ fn loop_path(
 ////////////////////////////////////////////////////////////////////////////////
 
 //TODO: return Warning or Error Component
-pub fn get_literal(
-    literal: &mut Literal,
+pub fn get_literal<'a, 'b>(
+    literal: &'a mut Literal,
     index: Option<Literal>,
-) -> Result<&mut Literal, ErrorInfo> {
+    flow_name: &'b str,
+) -> Result<&'a mut Literal, ErrorInfo> {
     let interval = literal.interval.to_owned();
 
     match (literal, index) {
@@ -254,11 +256,13 @@ pub fn get_literal(
         {
             let items = Literal::get_mut_value::<&mut Vec<Literal>>(
                 &mut literal_lhs.primitive,
+                flow_name,
                 literal_lhs.interval,
                 ERROR_ARRAY_TYPE.to_owned(),
             )?;
             let value = Literal::get_value::<i64>(
                 &literal_rhs.primitive,
+                flow_name,
                 literal_rhs.interval,
                 ERROR_ARRAY_INDEX_TYPE.to_owned(),
             )?;
@@ -266,21 +270,21 @@ pub fn get_literal(
             match items.get_mut(*value as usize) {
                 Some(lit) => Ok(lit),
                 None => Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name),
                     format!("{} {}", value, ERROR_ARRAY_INDEX_EXIST.to_owned()),
                 )),
             }
         }
         (literal, None) => Ok(literal),
         (_, Some(_)) => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_ARRAY_TYPE.to_owned(),
         )),
     }
 }
 
-pub fn get_string_index(lit: Literal, index: usize) -> Result<Option<Literal>, ErrorInfo> {
-    let array = get_array(lit, ERROR_INDEXING.to_owned())?;
+pub fn get_string_index(lit: Literal, flow_name: &str, index: usize) -> Result<Option<Literal>, ErrorInfo> {
+    let array = get_array(lit, flow_name, ERROR_INDEXING.to_owned())?;
 
     match array.get(index) {
         Some(value) => Ok(Some(value.to_owned())),
@@ -288,9 +292,10 @@ pub fn get_string_index(lit: Literal, index: usize) -> Result<Option<Literal>, E
     }
 }
 
-pub fn get_at_index(lit: &mut Literal, index: usize) -> Option<&mut Literal> {
+pub fn get_at_index<'a>(lit: &'a mut Literal, flow_name: &str, index: usize) -> Option<&'a mut Literal> {
     let vec = Literal::get_mut_value::<Vec<Literal>>(
         &mut lit.primitive,
+        flow_name,
         lit.interval,
         ERROR_ARRAY_TYPE.to_owned(),
     )
@@ -298,9 +303,10 @@ pub fn get_at_index(lit: &mut Literal, index: usize) -> Option<&mut Literal> {
     vec.get_mut(index)
 }
 
-pub fn get_value_from_key<'a>(lit: &'a mut Literal, key: &str) -> Option<&'a mut Literal> {
+pub fn get_value_from_key<'a>(lit: &'a mut Literal, flow_name: &str, key: &str) -> Option<&'a mut Literal> {
     let map = Literal::get_mut_value::<HashMap<String, Literal>>(
         &mut lit.primitive,
+        flow_name,
         lit.interval,
         ERROR_OBJECT_TYPE.to_owned(),
     )
@@ -323,19 +329,21 @@ pub fn resolve_path(
                 let lit = expr_to_literal(&expr, condition, None, data, msg_data, sender)?;
                 if let Ok(val) = Literal::get_value::<i64>(
                     &lit.primitive,
+                    &data.context.flow,
                     lit.interval,
                     ERROR_UNREACHABLE.to_owned(),
                 ) {
                     new_path.push((interval.to_owned(), PathLiteral::VecIndex(*val as usize)))
                 } else if let Ok(val) = Literal::get_value::<String>(
                     &lit.primitive,
+                    &data.context.flow,
                     lit.interval,
                     ERROR_UNREACHABLE.to_owned(),
                 ) {
                     new_path.push((interval.to_owned(), PathLiteral::MapIndex(val.to_owned())))
                 } else {
                     return Err(gen_error_info(
-                        Position::new(*interval),
+                        Position::new(*interval, &data.context.flow),
                         ERROR_FIND_BY_INDEX.to_owned(),
                     ));
                 }
@@ -409,7 +417,7 @@ pub fn get_literal_from_metadata(
         },
         Some((interval, _)) => {
             return Err(gen_error_info(
-                Position::new(*interval),
+                Position::new(*interval, &data.context.flow),
                 ERROR_FIND_BY_INDEX.to_owned(),
             ));
         }
@@ -604,6 +612,8 @@ pub fn search_goto_var_memory<'a>(
     msg_data: &mut MessageData,
     data: &'a mut Data,
 ) -> Result<String, ErrorInfo> {
+    let flow_name = data.context.flow.clone();
+
     match var {
         GotoValueType::Name(ident) => Ok(ident.ident.clone()),
         GotoValueType::Variable(ident) => {
@@ -612,6 +622,7 @@ pub fn search_goto_var_memory<'a>(
 
             Ok(Literal::get_value::<String>(
                 &literal.primitive,
+                &flow_name,
                 literal.interval,
                 format!("< {} > {}", ident.ident, ERROR_FIND_MEMORY),
             )?

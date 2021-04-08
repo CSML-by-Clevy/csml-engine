@@ -1,14 +1,13 @@
 use crate::data::{
-    ast::{Expr, Identifier, InstructionInfo},
+    ast::{Expr, Identifier},
     tokens::{Span, COMMA, FOREACH, IN, L_PAREN, R_PAREN},
 };
 use crate::parser::operator::parse_operator;
 use crate::parser::parse_idents::parse_idents_assignation;
 use crate::parser::{
     parse_comments::comment,
-    parse_scope::{parse_fn_scope, parse_scope},
+    parse_scope::parse_scope,
     tools::{get_interval, get_string, get_tag},
-    ExecutionState, ScopeState, StateContext,
 };
 use nom::{
     bytes::complete::tag,
@@ -36,7 +35,7 @@ where
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_foreach<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+pub fn parse_foreach<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -53,33 +52,12 @@ where
 
     let (s, expr) = cut(parse_operator)(s)?;
 
-    let index = StateContext::get_rip();
-
-    StateContext::inc_rip();
-
-    StateContext::set_state(ExecutionState::Loop);
-
-    let scope_type = StateContext::get_scope();
-    let (s, block) = match scope_type {
-        ScopeState::Normal => parse_scope(s)?,
-        ScopeState::Function => parse_fn_scope(s)?,
-    };
-    StateContext::set_state(ExecutionState::Normal);
-
+    let (s, block) = parse_scope(s)?;
     let (s, end) = get_interval(s)?;
     interval.add_end(end);
 
-    let new_index = StateContext::get_rip() - 1;
-    let instruction_info = InstructionInfo {
-        index,
-        total: new_index - index,
-    };
-
     Ok((
         s,
-        (
-            Expr::ForEachExpr(idents, opt, Box::new(expr), block, interval),
-            instruction_info,
-        ),
+        Expr::ForEachExpr(idents, opt, Box::new(expr), block, interval),
     ))
 }

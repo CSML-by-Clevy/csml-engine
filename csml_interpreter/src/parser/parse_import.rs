@@ -1,4 +1,4 @@
-use crate::data::{ast::*, primitive::PrimitiveNull, tokens::*, Position};
+use crate::data::{ast::*, primitive::PrimitiveNull, tokens::*};
 use crate::error_format::ERROR_IMPORT_ARGUMENT;
 use crate::parser::{
     get_interval, get_string, get_tag,
@@ -109,7 +109,7 @@ pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, (start, fn_names, from_flow)) = parse_import_prototype(s)?;
+    let (s, (interval, fn_names, from_flow)) = parse_import_prototype(s)?;
 
     let instructions = fn_names
         .iter()
@@ -128,9 +128,12 @@ where
                     name,
                     original_name,
                     from_flow: from_flow.clone(),
-                    position: Position::new(start.clone()),
+                    interval: interval.clone(),
                 }),
-                actions: Expr::LitExpr(PrimitiveNull::get_literal(start)),
+                actions: Expr::LitExpr {
+                    literal: PrimitiveNull::get_literal(interval),
+                    in_in_substring: false,
+                },
             }
         })
         .collect();

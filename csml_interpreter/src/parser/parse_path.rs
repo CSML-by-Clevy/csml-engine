@@ -35,8 +35,6 @@ where
     Ok((s, (interval, PathState::ExprIndex(path))))
 }
 
-//.string
-//.func (expr, ..)
 fn parse_dot_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathState), E>
 where
     E: ParseError<Span<'a>>,
@@ -51,8 +49,7 @@ where
     let (s, _) = tag(DOT)(s)?;
     let (s, interval) = get_interval(s)?;
     let (s, name) = get_string(s)?;
-    let tmp: IResult<Span<'a>, Expr, E> = parse_expr_list(s);
-    match tmp {
+    match parse_expr_list(s) as IResult<Span<'a>, Expr, E> {
         Ok((s, args)) => Ok((
             s,
             (

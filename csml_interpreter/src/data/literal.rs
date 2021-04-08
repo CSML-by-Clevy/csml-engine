@@ -35,25 +35,27 @@ pub enum ContentType {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Literal {
-    pub fn get_value<'lifetime, T: 'static>(
+    pub fn get_value<'lifetime, 'a, T: 'static>(
         primitive: &'lifetime Box<dyn Primitive>,
+        flow_name: &'a str,
         interval: Interval,
         error_message: String,
     ) -> Result<&'lifetime T, ErrorInfo> {
         match primitive.get_value().downcast_ref::<T>() {
             Some(sep) => Ok(sep),
-            None => Err(gen_error_info(Position::new(interval), error_message)),
+            None => Err(gen_error_info(Position::new(interval, flow_name), error_message)),
         }
     }
 
-    pub fn get_mut_value<'lifetime, T: 'static>(
+    pub fn get_mut_value<'lifetime, 'a, T: 'static>(
         primitive: &'lifetime mut Box<dyn Primitive>,
+        flow_name: &'a str,
         interval: Interval,
         error_message: String,
     ) -> Result<&'lifetime mut T, ErrorInfo> {
         match primitive.get_mut_value().downcast_mut::<T>() {
             Some(sep) => Ok(sep),
-            None => Err(gen_error_info(Position::new(interval), error_message)),
+            None => Err(gen_error_info(Position::new(interval, flow_name), error_message)),
         }
     }
 

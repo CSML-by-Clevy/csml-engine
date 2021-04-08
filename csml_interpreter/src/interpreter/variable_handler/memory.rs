@@ -12,7 +12,7 @@ pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, E
         (_, Some(_)) => Ok("use".to_owned()),
         (Some(_), _) => Ok("remember".to_owned()),
         (None, None) => Err(gen_error_info(
-            Position::new(name.interval),
+            Position::new(name.interval, &data.context.flow),
             format!("< {} > {}", name.ident, ERROR_FIND_MEMORY),
         )),
     }
@@ -28,7 +28,7 @@ pub fn search_var_memory<'a>(
             Ok(lit)
         }
         None => Err(gen_error_info(
-            Position::new(name.interval),
+            Position::new(name.interval, &data.context.flow),
             format!("< {} > {}", name.ident, ERROR_FIND_MEMORY),
         )),
     }

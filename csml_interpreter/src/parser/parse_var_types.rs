@@ -14,9 +14,6 @@ use crate::parser::{
     tools::*,
 };
 
-use crate::parser::parse_expand_string::parse_expand_string;
-use crate::parser::state_context::StateContext;
-use crate::parser::state_context::StringState;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -166,34 +163,19 @@ pub fn parse_basic_expr<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, expr) = match StateContext::get_string() {
-        StringState::Normal => preceded(
-            comment,
-            alt((
-                parse_closure,
-                parse_condition_group,
-                parse_object,
-                parse_expr_array,
-                parse_literal_expr,
-                parse_built_in,
-                parse_string,
-                parse_idents_expr_usage,
-            )),
-        )(s)?,
-        StringState::Expand => preceded(
-            comment,
-            alt((
-                parse_closure,
-                parse_condition_group,
-                parse_object,
-                parse_expr_array,
-                parse_literal_expr,
-                parse_built_in,
-                parse_expand_string,
-                parse_idents_expr_usage,
-            )),
-        )(s)?,
-    };
+    let (s, expr) = preceded(
+        comment,
+        alt((
+            parse_closure,
+            parse_condition_group,
+            parse_object,
+            parse_expr_array,
+            parse_literal_expr,
+            parse_built_in,
+            parse_string,
+            parse_idents_expr_usage,
+        )),
+    )(s)?;
 
     let (s, expr) = parse_path(s, expr)?;
 

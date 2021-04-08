@@ -1,10 +1,8 @@
-use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
-use crate::linter::data::Linter;
 use crate::parser::{
     get_interval, parse_comments::comment, parse_idents::parse_string_assignation,
-    tools::get_string, tools::get_tag, GotoType, GotoValueType, StateContext,
+    tools::get_string, tools::get_tag, GotoType, GotoValueType,
 };
 
 use nom::{branch::alt, bytes::complete::tag, combinator::opt, error::*, sequence::preceded, *};
@@ -45,22 +43,9 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, STEP)(s)?;
 
     let (s, step) = preceded(comment, get_goto_value_type)(s)?;
-
-    let flow = Position::get_flow();
-
-    if let GotoValueType::Name(_) = &step {
-        Linter::add_goto(
-            &Position::get_flow(),
-            &Position::get_step(),
-            &flow.to_string(),
-            &step.to_string(),
-            interval,
-        );
-    }
 
     Ok((s, GotoType::Step(step)))
 }
@@ -70,20 +55,9 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
-    let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, FLOW)(s)?;
 
     let (s, flow) = preceded(comment, get_goto_value_type)(s)?;
-
-    if let GotoValueType::Name(_) = &flow {
-        Linter::add_goto(
-            &Position::get_flow(),
-            &Position::get_step(),
-            &flow.to_string(),
-            "start",
-            interval,
-        );
-    }
 
     Ok((s, GotoType::Flow(flow)))
 }
@@ -93,41 +67,13 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, ..) = comment(s)?;
-    let (s, interval) = get_interval(s)?;
 
     let (s, step) = opt(get_goto_value_type)(s)?;
     let (s, at) = opt(tag("@"))(s)?;
     let (s, flow) = opt(get_goto_value_type)(s)?;
 
-    let (step, flow) = match (step, at, flow) {
-        (Some(step), Some(..), Some(flow)) => (step, flow),
-        (None, Some(..), Some(flow)) => (
-            GotoValueType::Name(Expr::new_idents("start".to_owned(), interval)),
-            flow,
-        ),
-        (Some(step), Some(..), None) => (
-            step,
-            GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval)),
-        ),
-        (Some(step), None, None) => (
-            step,
-            GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval)),
-        ),
-        (None, Some(..), None) => (
-            GotoValueType::Name(Expr::new_idents("start".to_owned(), interval)),
-            GotoValueType::Name(Expr::new_idents(Position::get_flow(), interval)),
-        ),
-        _ => return Err(gen_nom_failure(s, ERROR_GOTO_STEP)),
-    };
-
-    if let (GotoValueType::Name(_), GotoValueType::Name(_)) = (&step, &flow) {
-        Linter::add_goto(
-            &Position::get_flow(),
-            &Position::get_step(),
-            &flow.to_string(),
-            &step.to_string(),
-            interval,
-        );
+    if let (None, None, None) = (&step, at, &flow) {
+        return Err(gen_nom_failure(s, ERROR_GOTO_STEP));
     }
 
     Ok((s, GotoType::StepFlow { step, flow }))
@@ -137,7 +83,7 @@ where
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_goto<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Expr, InstructionInfo), E>
+pub fn parse_goto<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
@@ -148,19 +94,8 @@ where
 
     let (s, goto_type) = alt((get_step, get_flow, get_step_at_flow))(s)?;
 
-    let instruction_info = InstructionInfo {
-        index: StateContext::get_rip(),
-        total: 0,
-    };
-
-    StateContext::clear_state();
-    StateContext::inc_rip();
-
     Ok((
         s,
-        (
-            Expr::ObjectExpr(ObjectType::Goto(goto_type, interval)),
-            instruction_info,
-        ),
+        Expr::ObjectExpr(ObjectType::Goto(goto_type, interval)),
     ))
 }

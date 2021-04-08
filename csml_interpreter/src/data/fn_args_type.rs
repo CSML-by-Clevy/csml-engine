@@ -75,6 +75,7 @@ impl ArgsType {
         &self,
         map: &mut HashMap<String, Literal>,
         vec: &[&str],
+        flow_name: &str,
         interval: Interval,
     ) -> Result<(), ErrorInfo> {
         match self {
@@ -90,7 +91,7 @@ impl ArgsType {
                 if vec.len() < var.len() {
                     //TODO:: error msg
                     Err(gen_error_info(
-                        Position::new(interval),
+                        Position::new(interval, flow_name),
                         "to many arguments".to_owned(),
                     ))
                 } else {
@@ -104,6 +105,7 @@ impl ArgsType {
         &self,
         map: &mut HashMap<String, Literal>,
         vec: &[serde_json::Value],
+        flow_name: &str,
         interval: Interval,
     ) -> Result<(), ErrorInfo> {
         match self {
@@ -126,7 +128,7 @@ impl ArgsType {
             Self::Normal(var) => {
                 if vec.len() < var.len() {
                     Err(gen_error_info(
-                        Position::new(interval),
+                        Position::new(interval, flow_name),
                         "to many arguments".to_owned(),
                     ))
                 } else {

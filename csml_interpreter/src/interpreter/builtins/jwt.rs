@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
 
-pub fn jwt(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn jwt(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut jwt_map: HashMap<String, Literal> = HashMap::new();
     let mut header = HashMap::new();
 
@@ -30,7 +30,7 @@ pub fn jwt(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
             Ok(result)
         }
         _ => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_HTTP.to_owned(),
         )),
     }

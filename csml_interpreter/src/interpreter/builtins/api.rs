@@ -10,13 +10,14 @@ use crate::interpreter::{
 
 use std::{collections::HashMap, env, sync::mpsc};
 
-fn format_body(args: &ArgsType, interval: Interval, client: Client) -> Result<Literal, ErrorInfo> {
+fn format_body(args: &ArgsType, flow_name: &str, interval: Interval, client: Client) -> Result<Literal, ErrorInfo> {
     let mut map: HashMap<String, Literal> = HashMap::new();
 
     match args.get("fn_id", 0) {
         Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
             let fn_id = Literal::get_value::<String>(
                 &literal.primitive,
+                flow_name,
                 literal.interval,
                 ERROR_FN_ID.to_owned(),
             )?;
@@ -28,13 +29,13 @@ fn format_body(args: &ArgsType, interval: Interval, client: Client) -> Result<Li
         }
         _ => {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, flow_name),
                 ERROR_FN_ID.to_owned(),
             ))
         }
     };
     let mut sub_map = HashMap::new();
-    args.populate(&mut sub_map, &["fn_id"], interval)?;
+    args.populate(&mut sub_map, &["fn_id"], flow_name, interval)?;
 
     let client = client_to_json(&client, interval);
 
@@ -88,7 +89,7 @@ pub fn api(
         }) => (client.to_owned(), fn_endpoint.to_owned()),
         None => {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 ERROR_FN_ENDPOINT.to_owned(),
             ))
         }
@@ -96,7 +97,7 @@ pub fn api(
 
     let mut http: HashMap<String, Literal> = HashMap::new();
     let header = format_headers(interval);
-    let body = format_body(&args, interval, client)?;
+    let body = format_body(&args, &data.context.flow, interval, client)?;
 
     http.insert(
         "url".to_owned(),
@@ -109,11 +110,11 @@ pub fn api(
     http.insert("query".to_owned(), lit_query);
     http.insert("body".to_owned(), body);
 
-    match http_request(&http, ureq::post, interval) {
+    match http_request(&http, ureq::post, &data.context.flow, interval) {
         Ok(value) => match value.get("data") {
             Some(value) => interpolate(value, interval, data, msg_data, sender),
             None => {
-                let err = gen_error_info(Position::new(interval), ERROR_HTTP_NOT_DATA.to_owned());
+                let err = gen_error_info(Position::new(interval, &data.context.flow), ERROR_HTTP_NOT_DATA.to_owned());
                 Ok(MSG::send_error_msg(sender, msg_data, Err(err)))
             }
         },

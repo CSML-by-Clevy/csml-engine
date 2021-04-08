@@ -1,16 +1,8 @@
-use crate::data::Literal;
-use lazy_static::*;
-use std::collections::*;
-use std::sync::*;
-use std::thread::*;
+use crate::data::{ast::*, Literal};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
-
-lazy_static! {
-    static ref CONTEXT: Mutex<HashMap<ThreadId, StateContext>> = Mutex::new(HashMap::new());
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExitCondition {
@@ -23,198 +15,58 @@ pub enum ExitCondition {
     Return(Literal),
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum ExecutionState {
-    Normal,
-    Loop,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum StringState {
-    Normal,
-    Expand,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum ScopeState {
-    Normal,
-    Function,
-}
-
-#[derive(Debug)]
-pub struct StateContext {
-    state: Vec<ExecutionState>,
-    string_state: StringState,
-    scope_state: ScopeState,
-    rip: usize,
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// TRAIT FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
-impl Default for StateContext {
-    fn default() -> Self {
-        Self {
-            state: Vec::new(),
-            string_state: StringState::Normal,
-            scope_state: ScopeState::Normal,
-            rip: 0,
-        }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-impl StateContext {
-    pub fn clear_rip() {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
+fn count_if_commands(if_statement: &mut IfStatement, index: &mut usize) {
+    match if_statement {
+        IfStatement::IfStmt {
+            consequence: scope,
+            then_branch,
+            last_action_index,
+            ..
+        } => {
+            count_scope_commands(scope, index);
+            if *index >= 1 {
+                *last_action_index = *index -1;
+            }
 
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.rip = 0;
-        }
-    }
-
-    pub fn inc_rip() {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.rip += 1;
-        }
-    }
-
-    pub fn get_rip() -> usize {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            state_context.rip
-        } else {
-            unreachable!();
-        }
-    }
-}
-
-impl StateContext {
-    pub fn clear_state() {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.state.clear();
-        }
-    }
-
-    pub fn set_state(state: ExecutionState) {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            match state {
-                ExecutionState::Loop => {
-                    state_context.state.push(state);
-                }
-                ExecutionState::Normal => {
-                    state_context.state.pop();
-                }
+            if let Some(else_scope) = then_branch {
+                count_if_commands(else_scope, index)
             }
         }
-    }
-
-    pub fn get_state() -> ExecutionState {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            if state_context.state.is_empty() {
-                return ExecutionState::Normal;
-            }
-        }
-
-        ExecutionState::Loop
+        IfStatement::ElseStmt(scope, ..) => count_scope_commands(scope, index),
     }
 }
 
-impl StateContext {
-    pub fn set_string(state: StringState) {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.string_state = state;
-        }
-    }
-
-    pub fn get_string() -> StringState {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            return state_context.string_state;
-        }
-
-        unreachable!();
+fn count_scope_commands(scope: &mut Block, index: &mut usize) {
+    for (command, info) in scope.commands.iter_mut() {
+        count_commands(command, index, info);
     }
 }
 
-impl StateContext {
-    pub fn set_scope(state: ScopeState) {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
+pub fn count_commands(command: &mut Expr, index: &mut usize, info: &mut InstructionInfo) {
+    let start_index = *index;
 
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
+    match command {
+        Expr::ObjectExpr(..) => {
+            info.index = *index;
+            *index = *index + 1
+        },
 
-        if let Some(state_context) = hashmap.get_mut(&thread_id) {
-            state_context.scope_state = state;
+        Expr::IfExpr(if_statement) => {
+            info.index = *index;
+            count_if_commands(if_statement, index)
         }
+        Expr::ForEachExpr(_ident, _index, _expr, block, _range) => {
+            info.index = *index;
+            count_scope_commands(block, index)
+        }
+        _ => {}
     }
 
-    pub fn get_scope() -> ScopeState {
-        let thread_id = current().id();
-        let mut hashmap = CONTEXT.lock().unwrap();
-
-        hashmap
-            .entry(thread_id)
-            .or_insert_with(StateContext::default);
-
-        if let Some(state_context) = hashmap.get(&thread_id) {
-            return state_context.scope_state;
-        }
-
-        unreachable!();
+    if *index > start_index + 1 {
+        info.total = *index - (start_index + 1);
     }
 }

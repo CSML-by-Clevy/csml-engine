@@ -3,12 +3,13 @@ use crate::error_format::*;
 
 pub fn get_hash_algorithm(
     algo: &str,
+    flow_name: &str,
     interval: Interval,
 ) -> Result<openssl::hash::MessageDigest, ErrorInfo> {
     match algo {
         "md5" | "MD5" => Ok(openssl::hash::MessageDigest::md5()),
         "sha1" | "SHA1" => Ok(openssl::hash::MessageDigest::sha1()),
-        "sha256" | "SHA256"  => Ok(openssl::hash::MessageDigest::sha256()),
+        "sha256" | "SHA256" => Ok(openssl::hash::MessageDigest::sha256()),
         "sha384" | "SHA384" => Ok(openssl::hash::MessageDigest::sha384()),
         "sha512" | "SHA512" => Ok(openssl::hash::MessageDigest::sha512()),
 
@@ -24,18 +25,18 @@ pub fn get_hash_algorithm(
         "sm3" | "SM3" => Ok(openssl::hash::MessageDigest::sm3()),
 
         _ => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             format!("'{}' {}", algo, ERROR_HASH_ALGO),
         )),
     }
 }
 
-pub fn digest_data(algo: &str, data: &[u8], interval: Interval) -> Result<String, ErrorInfo> {
+pub fn digest_data(algo: &str, data: &[u8], flow_name: &str, interval: Interval) -> Result<String, ErrorInfo> {
     match algo {
         "hex" => Ok(hex::encode(&data)),
         "base64" => Ok(openssl::base64::encode_block(&data)),
         _ => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             format!("'{}' {}", algo, ERROR_DIGEST_ALGO),
         )),
     }

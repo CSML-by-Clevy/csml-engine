@@ -31,7 +31,7 @@ fn valid_condition(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> bool {
     match expr {
-        Expr::LitExpr(literal) => valid_literal(Ok(literal.to_owned())),
+        Expr::LitExpr { literal, .. } => valid_literal(Ok(literal.to_owned())),
         Expr::IdentExpr(ident) => valid_literal(get_var(
             ident.to_owned(),
             true,
@@ -54,13 +54,13 @@ fn evaluate_if_condition(
     consequence: &Block,
     instruction_info: &InstructionInfo,
     sender: &Option<mpsc::Sender<MSG>>,
-    then_branch: &Option<(Box<IfStatement>, InstructionInfo)>,
+    then_branch: &Option<Box<IfStatement>>,
 ) -> Result<MessageData, ErrorInfo> {
     if valid_condition(cond, data, &mut msg_data, sender) {
         msg_data = msg_data + interpret_scope(consequence, data, sender)?;
         return Ok(msg_data);
     }
-    if let Some((then, _)) = then_branch {
+    if let Some(then) = then_branch {
         solve_if_statement(then, msg_data, data, instruction_info, sender)
     } else {
         Ok(msg_data)
@@ -79,6 +79,8 @@ pub fn evaluate_condition(
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
+    let flow_name = &data.context.flow.clone();
+
     match (expr1, expr2) {
         (exp_1, ..) if Infix::Not == *infix => {
             let value = !valid_literal(expr_to_literal(exp_1, true, None, data, msg_data, sender));
@@ -86,21 +88,25 @@ pub fn evaluate_condition(
             Ok(PrimitiveBoolean::get_literal(value, interval))
         }
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate(
+            &flow_name,
             infix,
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
             evaluate_condition(i2, exp_1, exp_2, data, msg_data, sender),
         ),
         (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
+            &flow_name,
             infix,
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
             expr_to_literal(exp, true, None, data, msg_data, sender),
         ),
         (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
+            &flow_name,
             infix,
             expr_to_literal(exp, true, None, data, msg_data, sender),
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
         ),
         (exp_1, exp_2) => evaluate(
+            &flow_name,
             infix,
             expr_to_literal(exp_1, true, None, data, msg_data, sender),
             expr_to_literal(exp_2, true, None, data, msg_data, sender),
@@ -118,39 +124,22 @@ pub fn solve_if_statement(
     match statement {
         IfStatement::IfStmt {
             cond,
-            consequence,
+            consequence: scope,
             then_branch,
+            last_action_index,
         } => {
             match &data.context.hold {
-                Some(hold) if hold.index.command_index <= instruction_info.index => {
-                    return evaluate_if_condition(
-                        cond,
-                        msg_data,
-                        data,
-                        consequence,
-                        instruction_info,
-                        sender,
-                        then_branch,
-                    );
-                }
                 Some(hold) => {
-                    if let Some((then_branch, then_index)) = then_branch {
-                        if hold.index.command_index < then_index.index {
-                            msg_data = msg_data + interpret_scope(consequence, data, sender)?;
-                            return Ok(msg_data);
-                        } else {
-                            return solve_if_statement(
-                                &then_branch,
-                                msg_data,
-                                data,
-                                instruction_info,
-                                sender,
-                            );
-                        }
-                    }
-
-                    if hold.index.command_index != instruction_info.index {
-                        msg_data = msg_data + interpret_scope(consequence, data, sender)?;
+                    if hold.index.command_index <= *last_action_index {
+                        msg_data = msg_data + interpret_scope(scope, data, sender)?;
+                    } else if let Some(then_branch) = then_branch {
+                        return solve_if_statement(
+                            &then_branch,
+                            msg_data,
+                            data,
+                            instruction_info,
+                            sender,
+                        );
                     }
                 }
                 None => {
@@ -158,7 +147,7 @@ pub fn solve_if_statement(
                         cond,
                         msg_data,
                         data,
-                        consequence,
+                        scope,
                         instruction_info,
                         sender,
                         then_branch,

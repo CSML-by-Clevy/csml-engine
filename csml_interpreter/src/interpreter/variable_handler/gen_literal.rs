@@ -31,7 +31,7 @@ pub fn gen_literal_from_event(
     match path {
         Some(path) => {
             let path = resolve_path(path, condition, data, msg_data, sender)?;
-            let mut lit = json_to_literal(&data.event.content, interval.to_owned())?;
+            let mut lit = json_to_literal(&data.event.content, interval.to_owned(), &data.context.flow)?;
 
             lit.set_content_type("event");
 
@@ -39,7 +39,7 @@ pub fn gen_literal_from_event(
                 ContentType::Event(_) => ContentType::Event(data.event.content_type.to_owned()),
                 _ => {
                     return Err(gen_error_info(
-                        Position::new(interval),
+                        Position::new(interval, &data.context.flow),
                         ERROR_EVENT_CONTENT_TYPE.to_owned(),
                     ))
                 }
@@ -84,7 +84,7 @@ pub fn gen_literal_from_component(
                 } = function_name
                 {
                     if let Some(component) = data.custom_component.get(name) {
-                        let mut lit = gen_generic_component(name, true, interval, args, component)?;
+                        let mut lit = gen_generic_component(name, true, &data.context.flow, interval, args, component)?;
 
                         path.drain(..1);
 
@@ -105,12 +105,12 @@ pub fn gen_literal_from_component(
             }
 
             Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 ERROR_COMPONENT_UNKNOWN.to_owned(),
             ))
         }
         None => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow),
             ERROR_COMPONENT_NAMESPACE.to_owned(),
         )),
     }
@@ -131,7 +131,7 @@ pub fn get_literal_from_metadata(
         },
         _ => {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 ERROR_FIND_BY_INDEX.to_owned(),
             ));
         }

@@ -43,7 +43,7 @@ fn get_var_info<'a>(
             }
         },
         e => Err(gen_error_info(
-            Position::new(interval_from_expr(e)),
+            Position::new(interval_from_expr(e), &data.context.flow),
             ERROR_GET_VAR_INFO.to_owned(),
         )),
     }
@@ -58,20 +58,25 @@ pub fn match_actions(
     match function {
         ObjectType::Say(arg) => {
             let msg = Message::new(expr_to_literal(
-                arg,
-                false,
-                None,
-                data,
-                &mut msg_data,
-                sender,
-            )?)?;
+                    arg,
+                    false,
+                    None,
+                    data,
+                    &mut msg_data,
+                    sender,
+                )?,
+                &data.context.flow
+            )?;
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
         ObjectType::Debug(args, interval) => {
             let args = resolve_fn_args(args, data, &mut msg_data, sender)?;
 
-            let msg = Message::new(args.args_to_debug(interval.to_owned()))?;
+            let msg = Message::new(
+                args.args_to_debug(interval.to_owned()),
+                &data.context.flow
+            )?;
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
@@ -111,7 +116,7 @@ pub fn match_actions(
             let mut new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
-            capture_variables(&mut &mut new_value, data.step_vars.clone());
+            capture_variables(&mut &mut new_value, data.step_vars.clone(), &data.context.flow);
 
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
             exec_path_actions(
@@ -179,8 +184,15 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
-            let step = search_goto_var_memory(&step, &mut msg_data, data)?;
-            let flow = search_goto_var_memory(&flow, &mut msg_data, data)?;
+            let step = match step {
+                Some(step) => search_goto_var_memory(&step, &mut msg_data, data)?,
+                None => "start".to_owned() // default value start step
+            };
+            let flow = match flow {
+                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data)?,
+                None => data.context.flow.to_owned() // default value current flow
+            };
+
             let mut flow_opt = Some(flow.clone());
 
             msg_data.exit_condition = Some(ExitCondition::Goto);
@@ -208,7 +220,7 @@ pub fn match_actions(
                 expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
-            capture_variables(&mut &mut new_value, data.step_vars.clone());
+            capture_variables(&mut &mut new_value, data.step_vars.clone(), &data.context.flow);
 
             msg_data.add_to_memory(&name.ident, new_value.clone());
 
@@ -223,7 +235,7 @@ pub fn match_actions(
             Ok(msg_data)
         }
         reserved => Err(gen_error_info(
-            Position::new(interval_from_reserved_fn(reserved)),
+            Position::new(interval_from_reserved_fn(reserved), &data.context.flow),
             ERROR_START_INSTRUCTIONS.to_owned(),
         )),
     }
