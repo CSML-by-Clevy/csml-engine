@@ -1,4 +1,4 @@
-use crate::{db_connectors::mongodb::get_db, ConversationInfo, EngineError};
+use crate::{db_connectors::mongodb::get_db, ConversationInfo, EngineError, Client};
 use bson::{doc, Bson};
 
 pub fn create_node(
@@ -33,6 +33,18 @@ pub fn create_node(
     let path = db.collection("path");
 
     path.insert_one(node, None)?;
+
+    Ok(())
+}
+
+pub fn delete_conversation_nodes(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("path");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
 
     Ok(())
 }

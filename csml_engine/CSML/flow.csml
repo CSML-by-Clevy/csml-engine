@@ -5,9 +5,13 @@ fn add(var1, var2):
     return 56
 
 start:
-    say "hello World"
-    // goto end
-    goto toto
+    say val
+    remember val = "42"
+
+    hold
+
+    goto end
+    // goto toto
 
 toto:
     do vec = [1, 2]

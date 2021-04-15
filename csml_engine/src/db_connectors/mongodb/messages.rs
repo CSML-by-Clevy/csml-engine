@@ -1,4 +1,4 @@
-use crate::{db_connectors::mongodb::get_db, encrypt::encrypt_data, ConversationInfo, EngineError};
+use crate::{db_connectors::mongodb::get_db, encrypt::encrypt_data, ConversationInfo, EngineError, Client};
 use bson::{doc, Bson, Document};
 
 fn format_messages(
@@ -54,6 +54,19 @@ pub fn add_messages_bulk(
     let message = db.collection("message");
 
     message.insert_many(docs, None)?;
+
+    Ok(())
+}
+
+
+pub fn delete_user_messages(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("message");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
 
     Ok(())
 }

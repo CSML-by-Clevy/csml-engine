@@ -1,5 +1,5 @@
-use crate::data::DynamoDbClient;
-use crate::db_connectors::dynamodb::{get_db, Memory};
+use crate::data::{DynamoDbClient};
+use crate::db_connectors::dynamodb::{get_db, Memory, DynamoDbKey};
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, ConversationInfo, EngineError,
@@ -78,21 +78,20 @@ pub fn add_memories(
     Ok(())
 }
 
-struct QueryResult {
-    last_evaluated_key: Option<HashMap<String, AttributeValue>>,
-    items: Vec<serde_json::Value>,
-}
-
 fn query_memories(
     client: &Client,
+    range: String,
+    range_key: &str,
+    index_name: Option<String>,
     db: &mut DynamoDbClient,
-    last_evaluated_key: Option<HashMap<String, AttributeValue>>,
-) -> Result<QueryResult, EngineError> {
+    limit: i64,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+) -> Result<QueryOutput, EngineError> {
     let hash = Memory::get_hash(client);
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
+        (String::from("#rangeKey"), range_key.to_owned()),
     ]
     .iter()
     .cloned()
@@ -109,7 +108,7 @@ fn query_memories(
         (
             String::from(":rangePrefix"),
             AttributeValue {
-                s: Some(String::from("memory#")),
+                s: Some(range),
                 ..Default::default()
             },
         ),
@@ -120,13 +119,14 @@ fn query_memories(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        index_name: Some(String::from("TimeIndex")),
+        index_name,
         key_condition_expression: Some(
-            "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned(),
+            "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_owned(),
         ),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
-        exclusive_start_key: last_evaluated_key,
+        limit: Some(limit),
+        exclusive_start_key: pagination_key,
         scan_index_forward: Some(false),
         select: Some(String::from("ALL_ATTRIBUTES")),
         ..Default::default()
@@ -135,24 +135,7 @@ fn query_memories(
     let future = db.client.query(input);
     let data = db.runtime.block_on(future)?;
 
-    let mut items = vec![];
-    match data.items {
-        Some(val) => {
-            for item in val.iter() {
-                let mem: Memory = serde_dynamodb::from_hashmap(item.to_owned())?;
-
-                let mut clean = serde_json::json!(mem);
-                clean["value"] = decrypt_data(clean["value"].as_str().unwrap().to_string())?;
-                items.push(clean);
-            }
-        }
-        _ => (),
-    };
-
-    Ok(QueryResult {
-        last_evaluated_key: data.last_evaluated_key,
-        items,
-    })
+    Ok(data)
 }
 
 pub fn get_memories(
@@ -162,15 +145,36 @@ pub fn get_memories(
     let mut memories = vec![];
     let mut last_evaluated_key = None;
 
-    // recursively retrieve all memories from dynamodb
+    // retrieve all memories from dynamodb
     loop {
-        let tmp = query_memories(client, db, last_evaluated_key)?;
-        let mut items = tmp.items.to_owned();
-        memories.append(&mut items);
-        if let None = tmp.last_evaluated_key {
-            break;
-        }
-        last_evaluated_key = tmp.last_evaluated_key;
+        let data = query_memories(
+            client,
+            String::from("memory#"),
+            "range_time",
+            Some("TimeIndex".to_owned()),
+            db,
+            25,
+            last_evaluated_key
+        )?;
+
+        match data.items {
+            Some(val) => {
+                for item in val.iter() {
+                    let mem: Memory = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+                    let mut json_value = serde_json::json!(mem);
+                    json_value["value"] = decrypt_data(json_value["value"].as_str().unwrap().to_string())?;
+                    memories.push(json_value);
+                }
+
+                if let None = data.last_evaluated_key {
+                    break;
+                }
+
+                last_evaluated_key = data.last_evaluated_key;
+            }
+            _ => break,
+        };
     }
 
     // format memories output
@@ -183,4 +187,94 @@ pub fn get_memories(
     }
 
     Ok(serde_json::json!(map))
+}
+
+fn get_memory_batches_to_delete(
+    client: &Client,
+    range: String,
+    db: &mut DynamoDbClient,
+) -> Result<Vec<Vec<WriteRequest>>, EngineError> {
+    let mut batches = vec![];
+    let mut pagination_key = None;
+
+    // retrieve all memories from dynamodb
+    loop {
+        let data = query_memories(client, range.clone(), "range", None, db, 25, pagination_key)?;
+
+        // The query returns an array of items (max 10, based on the limit param above).
+        // If 0 item is returned it means that there is no open conversation, so simply return None
+        // , "last_key": :
+        let items = match data.items {
+            None => return Ok(batches),
+            Some(items) if items.len() == 0 => return Ok(batches),
+            Some(items) => items.clone(),
+        };
+
+        let mut write_requests = vec![];
+
+        for item in items {
+            let mem: Memory = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+            let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+                hash: Memory::get_hash(client),
+                range: Memory::get_range(&mem.key, &mem.id),
+            })?;
+
+            write_requests.push(WriteRequest {
+                delete_request: Some(DeleteRequest { key }),
+                put_request: None,
+            });
+        }
+
+        batches.push(write_requests);
+
+        pagination_key = match data.last_evaluated_key {
+            Some(pagination_key) => Some(pagination_key),
+            None => return Ok(batches),
+        };
+    }
+}
+
+pub fn delete_user_memories(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
+    let batches = get_memory_batches_to_delete(client, format!("memory#"), db)?;
+
+    for write_requests in batches {
+        let request_items = [(get_table_name()?, write_requests)]
+            .iter()
+            .cloned()
+            .collect();
+
+        let input = BatchWriteItemInput {
+            request_items,
+            ..Default::default()
+        };
+
+        let future = db.client.batch_write_item(input);
+        db.runtime.block_on(future)?;
+    }
+    Ok(())
+}
+
+pub fn delete_user_memory(
+    client: &Client,
+    key: &str,
+    db: &mut DynamoDbClient,
+) -> Result<(), EngineError> {
+    let batches = get_memory_batches_to_delete(client, format!("memory#{}", key), db)?;
+
+    for write_requests in batches {
+        let request_items = [(get_table_name()?, write_requests)]
+            .iter()
+            .cloned()
+            .collect();
+
+        let input = BatchWriteItemInput {
+            request_items,
+            ..Default::default()
+        };
+
+        let future = db.client.batch_write_item(input);
+        db.runtime.block_on(future)?;
+    }
+    Ok(())
 }

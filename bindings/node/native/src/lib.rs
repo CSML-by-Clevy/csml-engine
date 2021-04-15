@@ -29,7 +29,7 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
 
             Ok(js_value)
         }
-        Err(err) => panic!(err),
+        Err(err) => panic!("{:?}", err),
     }
 }
 
@@ -186,7 +186,7 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 
     match user_close_all_conversations(neon_serde::from_value(&mut cx, json_client)?) {
         Ok(_) => Ok(cx.boolean(true)),
-        Err(err) => panic!(err),
+        Err(err) => panic!("{:?}", err),
     }
 }
 

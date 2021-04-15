@@ -159,3 +159,15 @@ pub fn update_conversation(
     collection.update_one(filter, update, None)?;
     Ok(())
 }
+
+pub fn delete_user_conversations(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("conversation");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
+}

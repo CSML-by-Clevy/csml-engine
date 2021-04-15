@@ -237,3 +237,19 @@ pub fn delete_bot_versions(bot_id: &str, db: &mongodb::Database) -> Result<(), E
 
     Ok(())
 }
+
+
+pub fn delete_all_bot_data(bot_id: &str, class: &str, db: &mongodb::Database) -> Result<(), EngineError> {
+
+    let collection = db.collection(class);
+
+    let filter = doc! {
+        "client": {
+            "bot_id": bson::to_bson(bot_id)?,
+        },
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
+}

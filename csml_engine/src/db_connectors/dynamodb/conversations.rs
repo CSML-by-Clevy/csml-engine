@@ -377,3 +377,129 @@ pub fn update_conversation(
 
     Ok(())
 }
+
+
+fn query_conversation(
+    client: &Client,
+    db: &mut DynamoDbClient,
+    limit: i64,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+) -> Result<QueryOutput, EngineError> {
+    let hash = Conversation::get_hash(client);
+
+    let expr_attr_names = [
+        ("#hashKey".to_string(), "hash".to_string()),
+        ("#rangeKey".to_string(), "range".to_string()),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let expr_attr_values = [
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(hash),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":rangePrefix"),
+            AttributeValue {
+                s: Some(String::from("conversation#")),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let input = QueryInput {
+        table_name: get_table_name()?,
+        // index_name: Some(String::from("TimeIndex")),
+        key_condition_expression: Some(
+            "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_owned(),
+        ),
+        expression_attribute_names: Some(expr_attr_names),
+        expression_attribute_values: Some(expr_attr_values),
+        limit: Some(limit),
+        exclusive_start_key: pagination_key,
+        scan_index_forward: Some(false),
+        select: Some(String::from("ALL_ATTRIBUTES")),
+        ..Default::default()
+    };
+
+    let future = db.client.query(input);
+    let data = db.runtime.block_on(future)?;
+
+    Ok(data)
+}
+
+fn get_conversation_batches_to_delete(
+    client: &Client,
+    db: &mut DynamoDbClient,
+) -> Result<Vec<Vec<WriteRequest>>, EngineError> {
+    let mut batches = vec![];
+    let mut pagination_key = None;
+
+    // retrieve all memories from dynamodb
+    loop {
+        let data = query_conversation(client, db, 25, pagination_key)?;
+
+        // The query returns an array of items (max 10, based on the limit param above).
+        // If 0 item is returned it means that there is no open conversation, so simply return None
+        // , "last_key": :
+        let items = match data.items {
+            None => return Ok(batches),
+            Some(items) if items.len() == 0 => return Ok(batches),
+            Some(items) => items.clone(),
+        };
+
+        let mut write_requests = vec![];
+
+        for item in items {
+            let conversation: Conversation = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+            // delete all conversation paths
+            super::nodes::delete_conversation_nodes(&conversation.id, db).unwrap();
+
+            let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+                hash: Conversation::get_hash(client),
+                range: Conversation::get_range(&conversation.status, &conversation.id),
+            })?;
+
+            write_requests.push(WriteRequest {
+                delete_request: Some(DeleteRequest { key }),
+                put_request: None,
+            });
+        }
+
+        batches.push(write_requests);
+
+        pagination_key = match data.last_evaluated_key {
+            Some(pagination_key) => Some(pagination_key),
+            None => return Ok(batches),
+        };
+    }
+}
+
+pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
+    let batches = get_conversation_batches_to_delete(client, db)?;
+
+    for write_requests in batches {
+        let request_items = [(get_table_name()?, write_requests)]
+            .iter()
+            .cloned()
+            .collect();
+
+        let input = BatchWriteItemInput {
+            request_items,
+            ..Default::default()
+        };
+
+        let future = db.client.batch_write_item(input);
+        db.runtime.block_on(future)?;
+    }
+    Ok(())
+}

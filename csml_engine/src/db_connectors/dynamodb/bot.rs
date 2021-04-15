@@ -1,13 +1,12 @@
-use crate::data::{DynamoDbClient, DynamoBot, DynamoBotBincode};
+use crate::data::{DynamoDbClient, DynamoBot, DynamoBotBincode, };
 use crate::db_connectors::{
-    dynamodb::{aws_s3, Bot, DynamoDbKey},
+    dynamodb::{aws_s3, Bot, DynamoDbKey, Class},
     BotVersion,
 };
-use crate::EngineError;
 use csml_interpreter::data::{csml_flow::CsmlFlow};
-
 use rusoto_dynamodb::*;
-
+use std::collections::HashMap;
+use crate::EngineError;
 use crate::db_connectors::dynamodb::utils::*;
 
 pub fn create_bot_version(
@@ -390,4 +389,120 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut DynamoDbClient) -> Result<(), 
         db.runtime.block_on(future)?;
     }
     Ok(())
+}
+
+fn query_bot_info(
+    bot_id: &str,
+    class: &str,
+    limit: i64,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+    db: &mut DynamoDbClient,
+) -> Result<QueryOutput, EngineError> {
+    let hash = format!("bot_id:{}#", bot_id);
+
+    let expr_attr_names = [
+        (String::from("#classKey"), String::from("class")),
+        (String::from("#hashKey"), String::from("hash")),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let expr_attr_values = [
+        (
+            String::from(":classPrefix"),
+            AttributeValue {
+                s: Some(String::from(class)),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":hashPrefix"),
+            AttributeValue {
+                s: Some(hash),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    // Class key = class val and begins with (hash key, hash prefix)
+    // "#hashKey = :hashVal AND begins_with(#classKey, :classPrefix)".to_owned(),
+    let input = QueryInput {
+        table_name: get_table_name()?,
+        key_condition_expression: Some(
+            "#classKey = :classPrefix AND begins_with(#hashKey, :hashPrefix)".to_owned(),
+        ),
+        index_name: Some("ClassByClientIndex".to_owned()),
+        expression_attribute_names: Some(expr_attr_names),
+        expression_attribute_values: Some(expr_attr_values),
+        limit: Some(limit),
+        exclusive_start_key: pagination_key,
+        // select: Some(String::from("ALL_ATTRIBUTES")),
+        ..Default::default()
+    };
+
+    // RequestLimitExceeded(String)
+
+    let future = db.client.query(input);
+    let data = db.runtime.block_on(future)?;
+
+    Ok(data)
+}
+
+pub fn delete_all_bot_data(
+    bot_id: &str,
+    class: &str,
+    db: &mut DynamoDbClient,
+) -> Result<(), EngineError> {
+    let mut pagination_key = None;
+
+    loop {
+        // 25 is the Maximum operations in a single request for BatchWriteItemInput
+        let data = query_bot_info(bot_id, class, 25, pagination_key, db)?;
+
+        // The query returns an array of items (max 10, based on the limit param above).
+        // If 0 item is returned it means that there is no open conversation, so simply return None
+        // , "last_key": :
+        let items = match data.items {
+            None => return Ok(()),
+            Some(items) if items.len() == 0 => return Ok(()),
+            Some(items) => items.clone(),
+        };
+
+        let mut write_requests = vec![];
+        for item in items {
+            let class: Class = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+            let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+                hash: class.hash,
+                range: class.range,
+            })?;
+
+            write_requests.push(WriteRequest {
+                delete_request: Some(DeleteRequest { key }),
+                put_request: None,
+            });
+        }
+
+        let request_items = [(get_table_name()?, write_requests)]
+        .iter()
+        .cloned()
+        .collect();
+
+        let input = BatchWriteItemInput {
+            request_items,
+            ..Default::default()
+        };
+
+        let future = db.client.batch_write_item(input);
+        db.runtime.block_on(future)?;
+
+        pagination_key = data.last_evaluated_key;
+        if let None = &pagination_key {
+            return Ok(())
+        }
+    }
 }

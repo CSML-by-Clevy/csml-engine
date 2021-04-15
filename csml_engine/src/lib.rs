@@ -18,7 +18,7 @@ mod utils;
 
 use data::*;
 use db_connectors::{
-    bot, conversations::*, init_db, messages::*, state::*, BotVersion, BotVersionCreated,
+    bot, memories, user, conversations::*, init_db, messages::*, state::*, BotVersion, BotVersionCreated,
     DbConversation,
 };
 use init::*;
@@ -166,12 +166,48 @@ pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> 
 }
 
 /**
- * delete all bot versions of bot_id
+ * delete  of bot_id
 */
 pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
     bot::delete_bot_versions(bot_id, &mut db)
+}
+
+/**
+ * delete all data related to bot. all bot versions, all user conversations, memories, interactions, messages
+*/
+pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    bot::delete_all_bot_data(bot_id, &mut db)
+}
+
+/**
+ * delete all user memories for bot id
+*/
+pub fn delete_user_memories(client: &Client) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    memories::delete_user_memories(client, &mut db)
+}
+
+/**
+ * delete user memory for bot id
+*/
+pub fn delete_user_memory(client: &Client, memory_name: &str,) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    memories::delete_user_memory(client, memory_name ,&mut db)
+}
+
+/**
+ * delete user
+*/
+pub fn delete_user(client: &Client) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    user::delete_user(client, &mut db)
 }
 
 /**

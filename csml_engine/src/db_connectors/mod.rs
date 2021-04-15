@@ -48,6 +48,7 @@ pub mod memories;
 pub mod messages;
 pub mod nodes;
 pub mod state;
+pub mod user;
 
 use crate::Client;
 

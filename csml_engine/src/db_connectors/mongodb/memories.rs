@@ -85,3 +85,28 @@ pub fn get_memories(
 
     Ok(serde_json::json!(map))
 }
+
+pub fn delete_user_memory(client: &Client, key: &str, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("bot");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+        "key": key
+    };
+
+    collection.delete_one(filter, None)?;
+
+    Ok(())
+}
+
+pub fn delete_user_memories(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("memory");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
+}

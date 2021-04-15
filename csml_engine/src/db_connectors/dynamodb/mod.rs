@@ -480,6 +480,7 @@ pub struct State {
     pub expires_at: Option<String>,
     pub created_at: String,
 }
+
 impl State {
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)
@@ -513,4 +514,12 @@ impl State {
             created_at: now.to_string(),
         }
     }
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Class {
+    pub class: String,
+    pub hash: String,
+    pub range: String,
 }

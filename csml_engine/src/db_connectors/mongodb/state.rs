@@ -87,3 +87,15 @@ pub fn set_state_items(
 
     Ok(())
 }
+
+pub fn delete_user_state(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("state");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
+}
