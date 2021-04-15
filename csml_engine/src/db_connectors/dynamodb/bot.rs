@@ -43,7 +43,7 @@ pub fn get_flows(key: &str, db: &mut DynamoDbClient) -> Result<Vec<CsmlFlow>, En
 fn query_bot_version(
     bot_id: &str,
     limit: i64,
-    pagination_key: Option<String>,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
     db: &mut DynamoDbClient,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Bot::get_hash(bot_id);
@@ -76,21 +76,6 @@ fn query_bot_version(
     .cloned()
     .collect();
 
-    let last_evaluated_key = match pagination_key {
-        Some(key) => {
-            let base64decoded = match base64::decode(&key) {
-                Ok(base64decoded) => base64decoded,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            };
-
-            match serde_json::from_slice(&base64decoded) {
-                Ok(key) => Some(key),
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            }
-        }
-        None => None,
-    };
-
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name: Some(String::from("TimeIndex")),
@@ -100,7 +85,7 @@ fn query_bot_version(
         limit: Some(limit),
         select: Some(String::from("ALL_ATTRIBUTES")),
         scan_index_forward: Some(false),
-        exclusive_start_key: last_evaluated_key,
+        exclusive_start_key: pagination_key,
         ..Default::default()
     };
 
@@ -113,7 +98,7 @@ fn query_bot_version(
 pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
-    pagination_key: Option<String>,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
     db: &mut DynamoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
     let limit = match limit {
@@ -323,11 +308,10 @@ pub fn delete_bot_version(
     Ok(())
 }
 
-fn get_bot_version_batches_and_delete_flows(
+pub fn delete_bot_versions(
     bot_id: &str,
     db: &mut DynamoDbClient,
-) -> Result<Vec<Vec<WriteRequest>>, EngineError> {
-    let mut batches = vec![];
+) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
     loop {
@@ -338,8 +322,8 @@ fn get_bot_version_batches_and_delete_flows(
         // If 0 item is returned it means that there is no open conversation, so simply return None
         // , "last_key": :
         let items = match data.items {
-            None => return Ok(batches),
-            Some(items) if items.len() == 0 => return Ok(batches),
+            None => return Ok(()),
+            Some(items) if items.len() == 0 => return Ok(()),
             Some(items) => items.clone(),
         };
 
@@ -360,35 +344,24 @@ fn get_bot_version_batches_and_delete_flows(
                 put_request: None,
             });
         }
-        batches.push(write_requests);
 
-        pagination_key = match data.last_evaluated_key {
-            Some(pagination_key) => Some(base64::encode(
-                serde_json::json!(pagination_key).to_string(),
-            )),
-            None => return Ok(batches),
-        };
-    }
-}
-
-pub fn delete_bot_versions(bot_id: &str, db: &mut DynamoDbClient) -> Result<(), EngineError> {
-    let batches = get_bot_version_batches_and_delete_flows(bot_id, db)?;
-
-    for write_requests in batches {
         let request_items = [(get_table_name()?, write_requests)]
-            .iter()
-            .cloned()
-            .collect();
+        .iter()
+        .cloned()
+        .collect();
 
         let input = BatchWriteItemInput {
             request_items,
             ..Default::default()
         };
 
-        let future = db.client.batch_write_item(input);
-        db.runtime.block_on(future)?;
+        execute_batch_write_query(db, input)?;
+
+        pagination_key = data.last_evaluated_key;
+        if let None = &pagination_key {
+            return Ok(())
+        }
     }
-    Ok(())
 }
 
 fn query_bot_info(
@@ -444,8 +417,6 @@ fn query_bot_info(
         ..Default::default()
     };
 
-    // RequestLimitExceeded(String)
-
     let future = db.client.query(input);
     let data = db.runtime.block_on(future)?;
 
@@ -497,8 +468,7 @@ pub fn delete_all_bot_data(
             ..Default::default()
         };
 
-        let future = db.client.batch_write_item(input);
-        db.runtime.block_on(future)?;
+        execute_batch_write_query(db, input)?;
 
         pagination_key = data.last_evaluated_key;
         if let None = &pagination_key {

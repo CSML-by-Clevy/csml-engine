@@ -358,6 +358,106 @@ fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 /*
+* Delete client memory
+*/
+fn delete_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let memory_name = cx.argument::<JsString>(1)?.value();
+
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+    match csml_engine::delete_client_memory(&client, &memory_name) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Delete client memories
+*/
+fn delete_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::delete_client_memories(&client) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Delete client
+*/
+fn delete_client(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::delete_client(&client) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Delete all bot data, conversations, messages, memories, interactions, states, path and delete all bot versions
+*/
+fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let bot_id = cx.argument::<JsString>(0)?.value();
+
+    match csml_engine::delete_all_bot_data(&bot_id) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
 * Get the last 20 versions of the bot if no limit is set
 *
 * {
@@ -370,7 +470,6 @@ fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 *  "created_at": String
 * }
 */
-
 #[derive(Debug, Deserialize)]
 pub struct BotVersionsQueryParams {
   limit: Option<i64>,
@@ -408,6 +507,11 @@ register_module!(mut cx, {
     cx.export_function("deleteBotVersion", delete_bot_version)?;
     cx.export_function("deleteBotVersions", delete_bot_versions)?;
 
+    cx.export_function("deleteMemory", delete_client_memory)?;
+    cx.export_function("deleteMemories", delete_client_memories)?;
+    cx.export_function("deleteClient", delete_client)?;
+    cx.export_function("deleteBot", delete_bot_data)?;
+    
     cx.export_function("run", run_bot)?;
 
     cx.export_function("closeAllConversations", close_conversations)?;

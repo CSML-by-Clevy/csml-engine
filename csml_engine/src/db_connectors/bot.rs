@@ -82,19 +82,34 @@ pub fn get_by_version_id(
 pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
-    last_key: Option<String>,
+    pagination_key: Option<String>,
     db: &mut Database,
 ) -> Result<serde_json::Value, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::bot::get_bot_versions(&bot_id, limit, last_key, db);
+        return mongodb_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, last_key, db);
+
+        let pagination_key = match pagination_key {
+            Some(key) => {
+                let base64decoded = match base64::decode(&key) {
+                    Ok(base64decoded) => base64decoded,
+                    Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+                };
+                match serde_json::from_slice(&base64decoded) {
+                    Ok(key) => Some(key),
+                    Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+                }
+            }
+            None => None,
+        };
+
+        return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -149,8 +164,7 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
         mongodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
         mongodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
         mongodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
-
-        // dynamodb_connector::bot::tmp(bot_id, "path", db)?;
+        mongodb_connector::bot::delete_all_bot_data(bot_id, "path", db)?;
 
         return Ok(());
     }
@@ -166,7 +180,7 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
         dynamodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
         dynamodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
         dynamodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
-        dynamodb_connector::bot::delete_all_bot_data(bot_id, "path", db)?;
+        // dynamodb_connector::bot::delete_all_bot_data(bot_id, "path", db)?;
 
         return Ok(());
     }

@@ -61,6 +61,7 @@ pub fn get_state_key(
         "type": _type,
         "key": key,
     };
+
     match state.find_one(filter, None)? {
         Some(value) => {
             let state: serde_json::Value = bson::from_bson(bson::Bson::Document(value))?;

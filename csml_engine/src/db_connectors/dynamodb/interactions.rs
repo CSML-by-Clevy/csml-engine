@@ -187,11 +187,7 @@ fn query_interactions(
     Ok(data)
 }
 
-fn get_interactions_batches_to_delete(
-    client: &Client,
-    db: &mut DynamoDbClient,
-) -> Result<Vec<Vec<WriteRequest>>, EngineError> {
-    let mut batches = vec![];
+pub fn delete_user_interactions(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
     // retrieve all memories from dynamodb
@@ -202,8 +198,8 @@ fn get_interactions_batches_to_delete(
         // If 0 item is returned it means that there is no open conversation, so simply return None
         // , "last_key": :
         let items = match data.items {
-            None => return Ok(batches),
-            Some(items) if items.len() == 0 => return Ok(batches),
+            None => return Ok(()),
+            Some(items) if items.len() == 0 => return Ok(()),
             Some(items) => items.clone(),
         };
 
@@ -223,31 +219,21 @@ fn get_interactions_batches_to_delete(
             });
         }
 
-        batches.push(write_requests);
-
-        pagination_key = match data.last_evaluated_key {
-            Some(pagination_key) => Some(pagination_key),
-            None => return Ok(batches),
-        };
-    }
-}
-
-pub fn delete_user_interactions(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
-    let batches = get_interactions_batches_to_delete(client, db)?;
-
-    for write_requests in batches {
         let request_items = [(get_table_name()?, write_requests)]
-            .iter()
-            .cloned()
-            .collect();
+        .iter()
+        .cloned()
+        .collect();
 
         let input = BatchWriteItemInput {
             request_items,
             ..Default::default()
         };
 
-        let future = db.client.batch_write_item(input);
-        db.runtime.block_on(future)?;
+        execute_batch_write_query(db, input)?;
+
+        pagination_key = data.last_evaluated_key;
+        if let None = &pagination_key {
+            return Ok(())
+        }
     }
-    Ok(())
 }

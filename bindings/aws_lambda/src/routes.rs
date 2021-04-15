@@ -3,6 +3,9 @@ pub mod conversations;
 pub mod validate;
 pub mod sns;
 pub mod bot_versions;
+pub mod bots;
+pub mod clients;
+pub mod memories;
 
 use csml_engine::data::{RunRequest};
 use serde::{Deserialize, Serialize};

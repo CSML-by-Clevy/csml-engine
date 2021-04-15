@@ -1,6 +1,6 @@
 use csml_engine::{
     data::{BotOpt, CsmlRequest},
-    start_conversation, delete_user_memories, delete_user_memory, delete_user, delete_all_bot_data,
+    start_conversation,
 };
 use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
@@ -65,46 +65,33 @@ fn init_bot() -> CsmlBot {
 }
 
 fn main() {
-    // let client =  Client {
-    //     user_id: "alexis".to_owned(),
-    //     bot_id: "botid".to_owned(),
-    //     channel_id: "some-channel-id".to_owned(),
-    // };
+    let mut line: String = String::new();
 
-    delete_all_bot_data("botid").unwrap();
+    loop {
+        let run_opt = BotOpt::CsmlBot(init_bot());
 
-    // delete_user_memories(&client);
-    // delete_user(&client);
-
-    // delete_user_memory(&client, "val").unwrap();
-
-    // let mut line: String = String::new();
-
-    // loop {
-    //     let run_opt = BotOpt::CsmlBot(init_bot());
-
-    //     stdin()
-    //         .read_line(&mut line)
-    //         .ok()
-    //         .expect("Failed to read line :)");
-    //     if line.trim().is_empty() {
-    //         continue;
-    //     }
-    //     let input = line.trim().to_owned();
-    //     if input == "exit" {
-    //         break;
-    //     }
-    //     match start_conversation(init_request(&input), run_opt) {
-    //         Ok(obj) => {
-    //             if obj["conversation_end"].as_bool().unwrap() {
-    //                 break;
-    //             }
-    //         }
-    //         Err(err) => {
-    //             println!("{:?}", err);
-    //             break;
-    //         }
-    //     }
-    //     line.clear();
-    // }
+        stdin()
+            .read_line(&mut line)
+            .ok()
+            .expect("Failed to read line :)");
+        if line.trim().is_empty() {
+            continue;
+        }
+        let input = line.trim().to_owned();
+        if input == "exit" {
+            break;
+        }
+        match start_conversation(init_request(&input), run_opt) {
+            Ok(obj) => {
+                if obj["conversation_end"].as_bool().unwrap() {
+                    break;
+                }
+            }
+            Err(err) => {
+                println!("{:?}", err);
+                break;
+            }
+        }
+        line.clear();
+    }
 }

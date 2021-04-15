@@ -186,28 +186,28 @@ pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
 /**
  * delete all user memories for bot id
 */
-pub fn delete_user_memories(client: &Client) -> Result<(), EngineError> {
+pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
-    memories::delete_user_memories(client, &mut db)
+    memories::delete_client_memories(client, &mut db)
 }
 
 /**
  * delete user memory for bot id
 */
-pub fn delete_user_memory(client: &Client, memory_name: &str,) -> Result<(), EngineError> {
+pub fn delete_client_memory(client: &Client, memory_name: &str,) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
-    memories::delete_user_memory(client, memory_name ,&mut db)
+    memories::delete_client_memory(client, memory_name ,&mut db)
 }
 
 /**
  * delete user
 */
-pub fn delete_user(client: &Client) -> Result<(), EngineError> {
+pub fn delete_client(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
-    user::delete_user(client, &mut db)
+    user::delete_client(client, &mut db)
 }
 
 /**
