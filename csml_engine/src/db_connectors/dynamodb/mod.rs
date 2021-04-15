@@ -142,6 +142,12 @@ impl Conversation {
         make_range(&["conversation", status, id])
     }
 
+    pub fn get_conversation_id_from_range(range: &str) -> String {
+        let vec: Vec<&str> = range.split("#").collect();
+
+        vec[2].to_owned()
+    }
+
     pub fn get_key(client: &Client, status: &str, id: &str) -> DynamoDbKey {
         let hash = Self::get_hash(client);
         let range = Self::get_range(status, id);
@@ -515,7 +521,6 @@ impl State {
         }
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Class {

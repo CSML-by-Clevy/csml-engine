@@ -180,8 +180,6 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
         dynamodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
         dynamodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
         dynamodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
-        // dynamodb_connector::bot::delete_all_bot_data(bot_id, "path", db)?;
-
         return Ok(());
     }
 
