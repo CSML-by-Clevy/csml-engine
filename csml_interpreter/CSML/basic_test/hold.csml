@@ -1,26 +1,91 @@
 start:
 	do this_hold		// 0
-	if (1) {		// 1
-		say "1"		// 1
-		if (1) {	// 2
-			say "2"	// 2
+	if (1) {			
+		say "1"			// 1
+		if (1) {		
+			say "2"		// 2
 		}
 		do this_hold	// 3
-		if (1 == 2) {	// 4
-			say "3"	// 4
+		if (1 == 2) {	
+			say "3"		// 4
 		}
-		else {		// 5
-			say "4"	// 5
+		else {			
+			say "4"		// 5
 		}
 	}
-	else if (2) {		// 6
-		say "2"		// 6
+	else if (2) {		
+		say "2"			// 6
 		do this_hold	// 7
 	}
-	else {			// 8
+	else {
 		do this_hold	// 8
-		say "3"		// 9
+		say "3"			// 9
 	}
-	goto end		// 10
-	do this_hold		// 10
-	goto end // 11
+	goto end			// 10
+	do this_hold		// 11
+	goto end 			// 12
+
+
+hold_1_ok:
+	if (true) {
+		say "ERROR"		// 0
+		say "ERROR"		// 1
+		say "ERROR"		// 2
+		say "ERROR"		// 3
+	}
+
+	hold				// 4
+	say "OK" 			// 5
+	goto end 
+
+hold_2_ok:
+	foreach(elem) in [1,2,3] {
+		if (true) {
+			say "ERROR"		// 0
+			say "ERROR"		// 1
+			say "ERROR"		// 2
+			say "ERROR"		// 3
+		}
+		say "ERROR"			// 4
+	}
+
+	hold 					// 5
+	say "OK" 				// 6
+	goto end 
+
+
+hold_3_ok:
+	if (false) {
+		say "ERROR"		// 0
+		say "ERROR"		// 1
+		say "ERROR"		// 2
+		say "ERROR"		// 3
+		say "ERROR"		// 4
+	} else if (true) {
+		say "ERROR"		// 5
+		hold			// 6
+		say "OK" 		// 7
+	} else {
+		say "ERROR"		// 8
+	}
+
+	goto end
+
+hold_4_ok:
+	if (true) {
+		say "ERROR"				// 0
+		foreach(elem) in [1] {
+			if(false) {
+				say "ERROR"		// 1
+			} else if (false) {
+				say "ERROR"		// 2
+			}
+			else if (true) {
+				say "ERROR"		// 3
+				hold			// 4
+				say "OK"		// 5
+			}
+		}
+	}
+
+	goto end

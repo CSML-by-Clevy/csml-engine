@@ -193,3 +193,124 @@ fn hold_test_some_17() {
 
     assert_eq!(v1, v2)
 }
+
+
+#[test]
+fn hold_test_step_1_ok() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"OK"}, "content_type":"text"}] }"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            Some(Hold::new(
+                IndexInfo {
+                    command_index: 4,
+                    loop_index: vec![],
+                },
+                serde_json::json!({}),
+                "".to_owned(),
+                "".to_owned(),
+            )),
+            "hold_1_ok",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn hold_test_step_2_ok() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"OK"}, "content_type":"text"}] }"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            Some(Hold::new(
+                IndexInfo {
+                    command_index: 5,
+                    loop_index: vec![],
+                },
+                serde_json::json!({}),
+                "".to_owned(),
+                "".to_owned(),
+            )),
+            "hold_2_ok",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn hold_test_step_3_ok() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"OK"}, "content_type":"text"}] }"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            Some(Hold::new(
+                IndexInfo {
+                    command_index: 6,
+                    loop_index: vec![],
+                },
+                serde_json::json!({}),
+                "".to_owned(),
+                "".to_owned(),
+            )),
+            "hold_3_ok",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn hold_test_step_4_ok() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"OK"}, "content_type":"text"}] }"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            Some(Hold::new(
+                IndexInfo {
+                    command_index: 4,
+                    loop_index: vec![],
+                },
+                serde_json::json!({}),
+                "".to_owned(),
+                "".to_owned(),
+            )),
+            "hold_4_ok",
+            "flow",
+        ),
+        "CSML/basic_test/hold.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
