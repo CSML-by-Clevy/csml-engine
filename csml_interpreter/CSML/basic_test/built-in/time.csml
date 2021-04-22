@@ -1,0 +1,11 @@
+start:
+    do time = Time()
+
+    say time.milliseconds.is_int()
+    say time.unix().is_int()
+
+    do time.at(2014, 10, 20)
+    say time.format()
+
+    say time.format("%Y")
+    goto end

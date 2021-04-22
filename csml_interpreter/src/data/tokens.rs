@@ -148,12 +148,13 @@ pub const HEX: &str = "Hex";
 pub const FILE: &str = "File";
 pub const DEBUG: &str = "Debug";
 pub const UUID: &str = "UUID";
+pub const TIME: &str = "Time";
 
 pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, APP, HTTP, OBJECT, DEBUG, UUID, BASE64, HEX,
-    JWT, CRYPTO,
+    JWT, CRYPTO, TIME
 ];
 
 pub const FROM_FILE: &str = "FromFile";
