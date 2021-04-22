@@ -23,17 +23,17 @@ where
         parse_root_functions,
         Block::default(),
         |mut acc: Block, mut command| {
-            let mut index = acc.commands.len();
+            let mut index = acc.commands_count;
 
             let mut instruction_info = InstructionInfo {
-                index: index.clone(),
+                index,
                 total: 0,
             };
 
             count_commands(&mut command, &mut index, &mut instruction_info);
 
             acc.commands.push((command, instruction_info));
-
+            acc.commands_count = index;
             acc
         },
     )(s);

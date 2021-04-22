@@ -190,6 +190,7 @@ pub struct InstructionInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block {
     pub commands: Vec<(Expr, InstructionInfo)>,
+    pub commands_count: usize,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -203,6 +204,7 @@ impl Default for Block {
     fn default() -> Self {
         Self {
             commands: Vec::new(),
+            commands_count: 0,
         }
     }
 }
