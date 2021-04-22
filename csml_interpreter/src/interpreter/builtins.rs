@@ -4,6 +4,8 @@ pub mod format;
 pub mod functions;
 pub mod http;
 pub mod jwt;
+pub mod time;
+
 pub mod tools;
 
 use crate::data::{
@@ -19,6 +21,7 @@ use format::*;
 use functions::*;
 use http::http;
 use jwt::jwt;
+use time::time;
 
 pub fn match_native_builtin(
     name: &str,
@@ -59,6 +62,7 @@ pub fn match_builtin(
         UUID => uuid_command(args, &data.context.flow, interval),
         JWT => jwt(args, &data.context.flow, interval),
         CRYPTO => crypto(args, &data.context.flow, interval),
+        TIME => time(args, &data.context.flow, interval),
 
         //old builtin
         _object => object(args, &data.context.flow, interval),

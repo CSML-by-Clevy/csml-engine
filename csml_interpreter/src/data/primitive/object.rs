@@ -5,7 +5,7 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        tools_crypto, tools_jwt, Data, MessageData, Primitive, PrimitiveArray, PrimitiveBoolean,
+        tools_time, tools_crypto, tools_jwt, Data, MessageData, Primitive, PrimitiveArray, PrimitiveBoolean,
         PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right, MSG,
     },
     tokens::TYPES,
@@ -16,6 +16,7 @@ use crate::interpreter::{
     builtins::http::http_request, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
+use chrono::{DateTime, TimeZone, Utc, SecondsFormat};
 use lazy_static::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -61,6 +62,29 @@ lazy_static! {
         map.insert(
             "send",
             (PrimitiveObject::send as PrimitiveMethod, Right::Read),
+        );
+
+        map
+    };
+}
+
+lazy_static! {
+    static ref FUNCTIONS_TIME: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+
+        map.insert(
+            "at",
+            (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "unix",
+            (PrimitiveObject::unix as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "format",
+            (PrimitiveObject::date_format as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -546,6 +570,125 @@ impl PrimitiveObject {
             Position::new(interval, &data.context.flow,),
             ERROR_HTTP_SEND.to_owned(),
         ))
+    }
+}
+
+impl PrimitiveObject {
+    fn set_date_at(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let date = tools_time::get_date(args);
+
+        let date = Utc.ymd(
+            date[0] as i32, // year
+            date[1] as u32, // month
+            date[2] as u32 // day
+        ).and_hms_milli_opt(
+            date[3] as u32, // hour
+            date[4] as u32, // min
+            date[5] as u32, // sec
+            date[6] as u32, // milli
+        );
+
+        match date {
+            Some(date) => {
+                object.value.insert(
+                    "milliseconds".to_owned(),
+                    PrimitiveInt::get_literal(
+                        date.timestamp_millis(),
+                        interval
+                    )
+                );
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            None => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
+    fn unix(
+        object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "invalid value, use 'Time()' built-in to create a valid 'time' object";
+
+        match object.value.get("milliseconds") {
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let millis = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                let date: DateTime<Utc> = Utc.timestamp_millis(*millis);
+
+                Ok(PrimitiveInt::get_literal(date.timestamp_millis(), interval))
+            },
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("{}", usage),
+                ))
+            }
+        }
+    }
+
+    fn date_format(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "Time().format(format: String)";
+
+        let date: DateTime<Utc> = match object.value.get("milliseconds") {
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let millis = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                Utc.timestamp_millis(*millis)
+            },
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("usage: {}", usage),
+                ))
+            }
+        };
+
+        let formatted_date = match args.len() {
+            0 => {
+                date.to_rfc3339_opts(SecondsFormat::Millis, true)
+            }
+            _ => {
+                let format_lit = match args.get("arg0") {
+                    Some(res) => res.to_owned(),
+                    _ => PrimitiveNull::get_literal(Interval::default()),
+                };
+
+                let format = Literal::get_value::<String>(
+                    &format_lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "format parameter must be of type string".to_string(),
+                )?;
+                date.format(format).to_string()
+            }
+        };
+
+        Ok(PrimitiveString::get_literal(&formatted_date, interval))
     }
 }
 
@@ -1833,6 +1976,7 @@ impl Primitive for PrimitiveObject {
         let hex = vec![FUNCTIONS_HEX.clone()];
         let jwt = vec![FUNCTIONS_JWT.clone()];
         let crypto = vec![FUNCTIONS_CRYPTO.clone()];
+        let time = vec![FUNCTIONS_TIME.clone()];
         let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
 
         let mut is_event = false;
@@ -1848,6 +1992,7 @@ impl Primitive for PrimitiveObject {
             ContentType::Hex => ("", hex),
             ContentType::Jwt => ("", jwt),
             ContentType::Crypto => ("", crypto),
+            ContentType::Time => ("", time),
             ContentType::Primitive => ("", generics),
         };
 
