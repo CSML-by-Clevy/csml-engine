@@ -23,11 +23,12 @@ pub fn get_integer(text: &str) -> Result<Integer, String> {
     }
 }
 
-pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>, ErrorInfo> {
+pub fn get_array(literal: Literal, flow_name: &str, error_message: String) -> Result<Vec<Literal>, ErrorInfo> {
     match literal.primitive.get_type() {
         PrimitiveType::PrimitiveString => {
             let string = Literal::get_value::<String>(
                 &literal.primitive,
+                flow_name,
                 literal.interval.to_owned(),
                 error_message,
             )?;
@@ -39,12 +40,13 @@ pub fn get_array(literal: Literal, error_message: String) -> Result<Vec<Literal>
         }
         PrimitiveType::PrimitiveArray => Ok(Literal::get_value::<Vec<Literal>>(
             &literal.primitive,
+            flow_name,
             literal.interval.to_owned(),
             error_message,
         )?
         .to_owned()),
         _ => Err(gen_error_info(
-            Position::new(literal.interval),
+            Position::new(literal.interval, flow_name),
             error_message,
         )),
     }

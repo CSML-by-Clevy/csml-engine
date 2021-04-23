@@ -3,8 +3,7 @@ use crate::parser::parse_idents::parse_idents_assignation;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use crate::parser::{
-    parse_comments::comment, parse_scope::parse_fn_root, parse_var_types::parse_fn_args, tools::*,
-    ScopeState, StateContext,
+    parse_comments::comment, parse_scope::parse_root, parse_var_types::parse_fn_args, tools::*,
 };
 
 use nom::error::ParseError;
@@ -45,9 +44,7 @@ where
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, (ident, args)) = parse_function_prototype(s)?;
 
-    StateContext::set_scope(ScopeState::Function);
-    let result = preceded(comment, parse_fn_root)(s);
-    StateContext::set_scope(ScopeState::Normal);
+    let result = preceded(comment, parse_root)(s);
     let (s, actions) = result?;
 
     let (s, end) = get_interval(s)?;

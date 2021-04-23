@@ -21,6 +21,7 @@ use std::{collections::HashMap, sync::mpsc};
 type PrimitiveMethod = fn(
     null: &mut PrimitiveNull,
     args: &HashMap<String, Literal>,
+    data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
@@ -64,13 +65,14 @@ impl PrimitiveNull {
     fn is_number(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_number() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -81,13 +83,14 @@ impl PrimitiveNull {
     fn is_int(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_int() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -98,13 +101,14 @@ impl PrimitiveNull {
     fn is_float(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "is_float() => boolean";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -115,13 +119,14 @@ impl PrimitiveNull {
     fn type_of(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "type_of() => string";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -132,13 +137,14 @@ impl PrimitiveNull {
     fn to_string(
         null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "to_string() => string";
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -310,18 +316,18 @@ impl Primitive for PrimitiveNull {
         args: &HashMap<String, Literal>,
         interval: Interval,
         _content_type: &ContentType,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval)?;
+            let res = f(self, args, data, interval)?;
 
             return Ok((res, *right));
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", name, ERROR_NULL_UNKNOWN_METHOD),
         ))
     }

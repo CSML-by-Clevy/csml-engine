@@ -34,8 +34,10 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, int) = get_int(s)?;
 
-    let expression = Expr::LitExpr(PrimitiveInt::get_literal(int, interval));
-
+    let expression = Expr::LitExpr {
+        literal: PrimitiveInt::get_literal(int, interval),
+        in_in_substring: false,
+    };
     Ok((s, expression))
 }
 
@@ -53,7 +55,10 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, float) = map_res(floating_point, |s: Span| s.fragment().parse::<f64>())(s)?;
 
-    let expression = Expr::LitExpr(PrimitiveFloat::get_literal(float, interval));
+    let expression = Expr::LitExpr {
+        literal: PrimitiveFloat::get_literal(float, interval),
+        in_in_substring: false,
+    };
 
     Ok((s, expression))
 }
@@ -91,11 +96,14 @@ where
     let (s, boolean) = alt((parse_true, parse_false))(s)?;
 
     let primitive = Box::new(boolean);
-    let expression = Expr::LitExpr(Literal {
-        content_type: "boolean".to_owned(),
-        primitive,
-        interval,
-    });
+    let expression = Expr::LitExpr {
+        literal: Literal {
+            content_type: "boolean".to_owned(),
+            primitive,
+            interval,
+        },
+        in_in_substring: false,
+    };
 
     Ok((s, expression))
 }
@@ -108,7 +116,10 @@ where
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, _) = get_tag(name.to_ascii_lowercase(), NULL)(s)?;
 
-    let expression = Expr::LitExpr(PrimitiveNull::get_literal(interval));
+    let expression = Expr::LitExpr {
+        literal: PrimitiveNull::get_literal(interval),
+        in_in_substring: false,
+    };
 
     Ok((s, expression))
 }

@@ -211,7 +211,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -219,7 +219,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -233,7 +233,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -241,7 +241,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -255,7 +255,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -263,7 +263,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -282,7 +282,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -290,7 +290,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -309,7 +309,7 @@ impl PrimitiveString {
         _string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -317,7 +317,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -329,7 +329,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -337,7 +337,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -351,7 +351,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -359,7 +359,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -370,13 +370,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_APPEND.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_APPEND.to_owned(),
                 ));
             }
@@ -391,7 +392,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -399,7 +400,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -408,13 +409,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_DO_MATCH.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_DO_MATCH.to_owned(),
                 ));
             }
@@ -429,7 +431,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -437,7 +439,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -446,13 +448,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
@@ -462,7 +465,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
@@ -477,7 +480,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -485,7 +488,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -494,13 +497,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_CONTAINS.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_END_WITH.to_owned(),
                 ));
             }
@@ -515,7 +519,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -523,7 +527,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -532,13 +536,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
@@ -548,7 +553,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
@@ -567,7 +572,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -575,7 +580,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -584,20 +589,20 @@ impl PrimitiveString {
             Ok(result) => result,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_FROM_JSON.to_owned(),
                 ));
             }
         };
 
-        json_to_literal(&object, interval)
+        json_to_literal(&object, interval, &data.context.flow,)
     }
 
     fn is_empty(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -605,7 +610,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -619,7 +624,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -627,7 +632,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -641,7 +646,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -649,7 +654,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -660,13 +665,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_DO_MATCH.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_DO_MATCH.to_owned(),
                 ));
             }
@@ -687,7 +693,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -695,7 +701,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -707,13 +713,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_MATCH_REGEX.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_MATCH_REGEX.to_owned(),
                 ));
             }
@@ -723,7 +730,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
@@ -748,7 +755,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -756,7 +763,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -765,13 +772,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_START_WITH.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_START_WITH.to_owned(),
                 ));
             }
@@ -786,7 +794,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -794,7 +802,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -803,13 +811,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_START_WITH_REGEX.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_START_WITH_REGEX.to_owned(),
                 ));
             }
@@ -819,7 +828,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
@@ -838,7 +847,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -846,7 +855,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -859,7 +868,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -867,7 +876,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -880,7 +889,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -888,7 +897,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -908,7 +917,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -921,6 +930,7 @@ impl PrimitiveString {
                 Some(literal) => {
                     let mut int_start = Literal::get_value::<i64>(
                         &literal.primitive,
+                        &data.context.flow,
                         literal.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
                     )?
@@ -934,7 +944,7 @@ impl PrimitiveString {
                         value if value.is_positive() && (value as usize) < len => value as usize,
                         _ => {
                             return Err(gen_error_info(
-                                Position::new(interval),
+                                Position::new(interval, &data.context.flow,),
                                 ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
@@ -945,7 +955,7 @@ impl PrimitiveString {
                     Ok(PrimitiveString::get_literal(&value, interval))
                 }
                 _ => Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_SLICE_ARG_INT.to_owned(),
                 )),
             },
@@ -953,12 +963,14 @@ impl PrimitiveString {
                 (Some(literal_start), Some(literal_end)) => {
                     let mut int_start = Literal::get_value::<i64>(
                         &literal_start.primitive,
+                        &data.context.flow,
                         literal_start.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
                     )?
                     .to_owned();
                     let mut int_end = Literal::get_value::<i64>(
                         &literal_end.primitive,
+                        &data.context.flow,
                         literal_end.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
                     )?
@@ -973,7 +985,7 @@ impl PrimitiveString {
                     }
                     if int_end < int_start {
                         return Err(gen_error_info(
-                            Position::new(interval),
+                            Position::new(interval, &data.context.flow,),
                             ERROR_SLICE_ARG2.to_owned(),
                         ));
                     }
@@ -989,7 +1001,7 @@ impl PrimitiveString {
                         }
                         _ => {
                             return Err(gen_error_info(
-                                Position::new(interval),
+                                Position::new(interval, &data.context.flow,),
                                 ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
@@ -999,12 +1011,12 @@ impl PrimitiveString {
                     Ok(PrimitiveString::get_literal(&value, interval))
                 }
                 _ => Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_SLICE_ARG_INT.to_owned(),
                 )),
             },
             _ => Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             )),
         }
@@ -1014,7 +1026,7 @@ impl PrimitiveString {
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -1022,7 +1034,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow,),
                 format!("usage: {}", usage),
             ));
         }
@@ -1031,13 +1043,14 @@ impl PrimitiveString {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
                 Literal::get_value::<String>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_STRING_SPLIT.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow,),
                     ERROR_ARRAY_JOIN.to_owned(),
                 ));
             }
@@ -1094,7 +1107,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "abs", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1140,7 +1153,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "cos", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1185,7 +1198,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "ceil", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1230,7 +1243,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "pow", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1275,7 +1288,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "floor", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1320,7 +1333,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "round", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1365,7 +1378,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "sin", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1410,7 +1423,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "sqrt", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1455,7 +1468,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "tan", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1500,7 +1513,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "to_int", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1545,7 +1558,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", "to_float", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1862,7 +1875,7 @@ impl Primitive for PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow,),
             format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
         ))
     }

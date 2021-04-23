@@ -22,11 +22,12 @@ pub fn client_to_json(client: &Client, interval: Interval) -> HashMap<String, Li
     map
 }
 
-pub fn accept_to_array(literal: &HashMap<String, Literal>, mut vec: Vec<Literal>) -> Vec<Literal> {
+pub fn accept_to_array(literal: &HashMap<String, Literal>, mut vec: Vec<Literal>, flow_name: &str,) -> Vec<Literal> {
     match literal.get("accepts") {
         Some(literal) => {
             match Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
+                flow_name,
                 literal.interval,
                 ERROR_UNREACHABLE.to_owned(),
             ) {
@@ -39,9 +40,10 @@ pub fn accept_to_array(literal: &HashMap<String, Literal>, mut vec: Vec<Literal>
     }
 }
 
-pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
+pub fn accepts_from_buttons(buttons: &Literal, flow_name: &str,) -> Literal {
     match Literal::get_value::<Vec<Literal>>(
         &buttons.primitive,
+        flow_name,
         buttons.interval,
         ERROR_UNREACHABLE.to_owned(),
     ) {
@@ -49,10 +51,11 @@ pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
             let array = vec.iter().fold(vec![], |vec, elem| {
                 match Literal::get_value::<HashMap<String, Literal>>(
                     &elem.primitive,
+                    flow_name,
                     buttons.interval,
                     ERROR_UNREACHABLE.to_owned(),
                 ) {
-                    Ok(value) => accept_to_array(value, vec),
+                    Ok(value) => accept_to_array(value, vec, flow_name,),
                     Err(..) => vec,
                 }
             });
@@ -65,11 +68,13 @@ pub fn accepts_from_buttons(buttons: &Literal) -> Literal {
 pub fn format_accept(
     values: Option<&Literal>,
     mut title: Vec<Literal>,
+    flow_name: &str,
     interval: Interval,
 ) -> Literal {
     match values {
         Some(literal) => match Literal::get_value::<Vec<Literal>>(
             &literal.primitive,
+            flow_name,
             literal.interval,
             ERROR_UNREACHABLE.to_owned(),
         ) {

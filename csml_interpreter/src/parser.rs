@@ -4,7 +4,6 @@ pub mod parse_braces;
 pub mod parse_built_in;
 pub mod parse_closure;
 pub mod parse_comments;
-pub mod parse_expand_string;
 pub mod parse_foreach;
 pub mod parse_functions;
 pub mod parse_goto;
@@ -22,13 +21,13 @@ pub mod state_context;
 pub mod step_checksum;
 pub mod tools;
 
-use crate::linter::data::Linter;
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExecutionState, ExitCondition, ScopeState, StateContext, StringState};
+pub use state_context::{ExitCondition};
 
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
+use crate::interpreter::variable_handler::interval::interval_from_expr;
 use parse_comments::comment;
 use parse_functions::parse_function;
 use parse_import::parse_import;
@@ -74,16 +73,32 @@ where
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
+pub fn parse_flow<'a>(slice: &'a str, flow_name: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => {
             let flow_instructions =
                 instructions
                     .into_iter()
                     .fold(HashMap::new(), |mut flow, elem| {
-                        flow.insert(elem.instruction_type, elem.actions);
+                        let instruction_interval = interval_from_expr(&elem.actions);
+                        let instruction_info = elem.instruction_type.get_info();
+
+                        if let Some(old_instruction) =
+                            flow.insert(elem.instruction_type, elem.actions)
+                        {
+                            // this is done in order to store all duplicated instruction during parsing
+                            // and use by the linter to display them all as errors
+                            flow.insert(
+                                InstructionScope::DuplicateInstruction(
+                                    instruction_interval,
+                                    instruction_info,
+                                ),
+                                old_instruction,
+                            );
+                        };
                         flow
                     });
+
             Ok(Flow {
                 flow_instructions,
                 flow_type,
@@ -98,66 +113,20 @@ pub fn parse_flow<'a>(slice: &'a str) -> Result<Flow, ErrorInfo> {
 
                 Err(gen_error_info(
                     Position::new(Interval::new_as_u32(
-                        err.input.location_line(),
-                        err.input.get_column() as u32,
-                        err.input.location_offset(),
-                        end_line,
-                        end_column,
-                    )),
-                    convert_error(Span::new(slice), err),
+                            err.input.location_line(),
+                            err.input.get_column() as u32,
+                            err.input.location_offset(),
+                            end_line,
+                            end_column,
+                        ),
+                        flow_name
+                    ),
+                    convert_error_from_span(Span::new(slice), err),
                 ))
             }
             Err::Incomplete(_err) => unreachable!(),
         },
     }
-}
-
-fn convert_error<'a>(input: Span<'a>, e: CustomError<Span<'a>>) -> String {
-    use std::fmt::Write;
-
-    let mut result = String::new();
-
-    let offset = e.input.location_offset();
-    let prefix = &input.fragment().as_bytes()[..offset];
-
-    // Count the number of newlines in the first `offset` bytes of input
-    let line_number = e.input.location_line();
-
-    // Find the line that includes the subslice:
-    // Find the *last* newline before the substring starts
-    let line_begin = prefix
-        .iter()
-        .rev()
-        .position(|&b| b == b'\n')
-        .map(|pos| offset - pos)
-        .unwrap_or(0);
-
-    // Find the full line after that newline
-    let line = input.fragment()[line_begin..]
-        .lines()
-        .next()
-        .unwrap_or(&input.fragment()[line_begin..])
-        .trim_end();
-
-    // The (1-indexed) column number is the offset of our substring into that line
-    let column_number = e.input.get_column();
-
-    write!(
-        &mut result,
-        "at line {line_number},\n\
-            {line}\n\
-            {caret:>column$}\n\
-            {context}\n\n",
-        line_number = line_number,
-        context = e.error,
-        line = line,
-        caret = '^',
-        column = column_number,
-    )
-    // Because `write!` to a `String` is infallible, this `unwrap` is fine.
-    .unwrap();
-
-    result
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,12 +139,6 @@ where
 {
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, ident) = preceded(comment, parse_step_name)(s)?;
-
-    Position::set_step(&ident.ident);
-    Linter::add_step(&Position::get_flow(), &ident.ident, interval.clone());
-    StateContext::clear_rip();
-    StateContext::set_string(StringState::Normal);
-    StateContext::set_scope(ScopeState::Normal);
 
     let (s, actions) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;

@@ -129,17 +129,17 @@ pub struct PrimitiveArray {
 // METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn check_index(index: i64, length: i64, interval: Interval) -> Result<(), ErrorInfo> {
+fn check_index(index: i64, length: i64, flow_name: &str, interval: Interval) -> Result<(), ErrorInfo> {
     if index.is_negative() {
         return Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_ARRAY_NEGATIVE.to_owned(),
         ));
     }
 
     if index > length {
         return Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_ARRAY_INDEX.to_owned(),
         ));
     }
@@ -152,7 +152,7 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -160,7 +160,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -172,7 +172,7 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -180,7 +180,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -192,7 +192,7 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -200,7 +200,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -212,7 +212,7 @@ impl PrimitiveArray {
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -220,7 +220,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -232,7 +232,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -240,7 +240,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -254,7 +254,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -262,7 +262,7 @@ impl PrimitiveArray {
 
         if array.value.len() + args.len() == usize::MAX {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("{} {}", ERROR_ARRAY_OVERFLOW, usize::MAX),
             ));
         }
@@ -271,7 +271,7 @@ impl PrimitiveArray {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ));
             }
@@ -296,7 +296,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -304,7 +304,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -318,7 +318,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -326,7 +326,7 @@ impl PrimitiveArray {
 
         if args.len() != 2 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -335,13 +335,14 @@ impl PrimitiveArray {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 Literal::get_value::<i64>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_ARRAY_INSERT_AT.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     ERROR_ARRAY_INSERT_AT.to_owned(),
                 ));
             }
@@ -351,13 +352,13 @@ impl PrimitiveArray {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ));
             }
         };
 
-        check_index(*index, array.value.len() as i64, interval)?;
+        check_index(*index, array.value.len() as i64, &data.context.flow, interval)?;
 
         array.value.insert(*index as usize, value.clone());
 
@@ -368,7 +369,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -376,7 +377,7 @@ impl PrimitiveArray {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -385,7 +386,7 @@ impl PrimitiveArray {
             Some(res) => res,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ));
             }
@@ -404,7 +405,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -412,18 +413,18 @@ impl PrimitiveArray {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
 
         let separator = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive, interval, ERROR_ARRAY_JOIN.to_owned())?
+                Literal::get_value::<String>(&res.primitive, &data.context.flow, interval, ERROR_ARRAY_JOIN.to_owned())?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     ERROR_ARRAY_JOIN.to_owned(),
                 ));
             }
@@ -447,7 +448,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -455,7 +456,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -469,7 +470,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -477,7 +478,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -496,7 +497,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -504,7 +505,7 @@ impl PrimitiveArray {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -513,7 +514,7 @@ impl PrimitiveArray {
             Some(res) => res,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ));
             }
@@ -521,7 +522,7 @@ impl PrimitiveArray {
 
         if array.value.len() + args.len() == usize::MAX {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("{} {}", ERROR_ARRAY_OVERFLOW, usize::MAX,),
             ));
         }
@@ -535,7 +536,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -543,7 +544,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -551,7 +552,7 @@ impl PrimitiveArray {
         match array.value.pop() {
             Some(literal) => Ok(literal),
             None => Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 ERROR_ARRAY_POP.to_owned(),
             )),
         }
@@ -561,7 +562,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -569,7 +570,7 @@ impl PrimitiveArray {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -578,19 +579,20 @@ impl PrimitiveArray {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 Literal::get_value::<i64>(
                     &res.primitive,
+                    &data.context.flow,
                     interval,
                     ERROR_ARRAY_REMOVE_AT.to_owned(),
                 )?
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     ERROR_ARRAY_REMOVE_AT.to_owned(),
                 ));
             }
         };
 
-        check_index(*index, array.value.len() as i64, interval)?;
+        check_index(*index, array.value.len() as i64, &data.context.flow, interval)?;
 
         Ok(array.value.remove(*index as usize))
     }
@@ -599,7 +601,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -607,7 +609,7 @@ impl PrimitiveArray {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -623,7 +625,7 @@ impl PrimitiveArray {
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
         interval: Interval,
-        _data: &mut Data,
+        data: &mut Data,
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
@@ -635,6 +637,7 @@ impl PrimitiveArray {
                 Some(literal) => {
                     let mut int_start = Literal::get_value::<i64>(
                         &literal.primitive,
+                        &data.context.flow,
                         literal.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
                     )?
@@ -648,7 +651,7 @@ impl PrimitiveArray {
                         value if value.is_positive() && (value as usize) < len => value as usize,
                         _ => {
                             return Err(gen_error_info(
-                                Position::new(interval),
+                                Position::new(interval, &data.context.flow),
                                 ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
@@ -662,7 +665,7 @@ impl PrimitiveArray {
                     Ok(PrimitiveArray::get_literal(&value, interval))
                 }
                 _ => Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     ERROR_SLICE_ARG_INT.to_owned(),
                 )),
             },
@@ -670,12 +673,14 @@ impl PrimitiveArray {
                 (Some(literal_start), Some(literal_end)) => {
                     let mut int_start = Literal::get_value::<i64>(
                         &literal_start.primitive,
+                        &data.context.flow,
                         literal_start.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
                     )?
                     .to_owned();
                     let mut int_end = Literal::get_value::<i64>(
                         &literal_end.primitive,
+                        &data.context.flow,
                         literal_end.interval,
                         ERROR_SLICE_ARG_INT.to_owned(),
                     )?
@@ -690,7 +695,7 @@ impl PrimitiveArray {
                     }
                     if int_end < int_start {
                         return Err(gen_error_info(
-                            Position::new(interval),
+                            Position::new(interval, &data.context.flow),
                             ERROR_SLICE_ARG2.to_owned(),
                         ));
                     }
@@ -706,7 +711,7 @@ impl PrimitiveArray {
                         }
                         _ => {
                             return Err(gen_error_info(
-                                Position::new(interval),
+                                Position::new(interval, &data.context.flow),
                                 ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
@@ -719,12 +724,12 @@ impl PrimitiveArray {
                     Ok(PrimitiveArray::get_literal(&value, interval))
                 }
                 _ => Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, &data.context.flow),
                     ERROR_SLICE_ARG_INT.to_owned(),
                 )),
             },
             _ => Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             )),
         }
@@ -746,6 +751,7 @@ impl PrimitiveArray {
             Some(lit) => {
                 let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
                     &lit.primitive,
+                    &data.context.flow,
                     interval,
                     format!("usage: {}", usage),
                 )?;
@@ -773,7 +779,7 @@ impl PrimitiveArray {
                 Ok(PrimitiveArray::get_literal(&vec, interval))
             }
             None => Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             )),
         }
@@ -793,6 +799,7 @@ impl PrimitiveArray {
             Some(lit) => {
                 let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
                     &lit.primitive,
+                    &data.context.flow,
                     interval,
                     format!("usage: {}", usage),
                 )?;
@@ -822,7 +829,7 @@ impl PrimitiveArray {
                 Ok(PrimitiveArray::get_literal(&vec, interval))
             }
             None => Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             )),
         }
@@ -844,6 +851,7 @@ impl PrimitiveArray {
 
                 let closure: &PrimitiveClosure = Literal::get_value::<PrimitiveClosure>(
                     &closure.primitive,
+                    &data.context.flow,
                     interval,
                     format!("usage: {}", usage),
                 )?;
@@ -869,7 +877,7 @@ impl PrimitiveArray {
                 Ok(accumulator)
             }
             _ => Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             )),
         }
@@ -1060,7 +1068,7 @@ impl Primitive for PrimitiveArray {
         }
 
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", name, ERROR_ARRAY_UNKNOWN_METHOD),
         ))
     }

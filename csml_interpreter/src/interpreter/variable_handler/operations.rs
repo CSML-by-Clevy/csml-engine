@@ -9,6 +9,7 @@ use crate::interpreter::variable_handler::match_literals::match_obj;
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn evaluate(
+    flow_name: &str,
     infix: &Infix,
     lhs: Result<Literal, ErrorInfo>,
     rhs: Result<Literal, ErrorInfo>,
@@ -47,7 +48,7 @@ pub fn evaluate(
                     primitive,
                     interval: lhs.interval,
                 }),
-                Err(err) => Err(gen_error_info(Position::new(lhs.interval), err)),
+                Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
             }
         }
         (Infix::Subtraction, Ok(lhs), Ok(rhs)) => {
@@ -59,7 +60,7 @@ pub fn evaluate(
                     primitive,
                     interval: lhs.interval,
                 }),
-                Err(err) => Err(gen_error_info(Position::new(lhs.interval), err)),
+                Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
             }
         }
         (Infix::Divide, Ok(lhs), Ok(rhs)) => {
@@ -71,7 +72,7 @@ pub fn evaluate(
                     primitive,
                     interval: lhs.interval,
                 }),
-                Err(err) => Err(gen_error_info(Position::new(lhs.interval), err)),
+                Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
             }
         }
 
@@ -84,7 +85,7 @@ pub fn evaluate(
                     primitive,
                     interval: lhs.interval,
                 }),
-                Err(err) => Err(gen_error_info(Position::new(lhs.interval), err)),
+                Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
             }
         }
         (Infix::Remainder, Ok(lhs), Ok(rhs)) => {
@@ -96,7 +97,7 @@ pub fn evaluate(
                     primitive,
                     interval: lhs.interval,
                 }),
-                Err(err) => Err(gen_error_info(Position::new(lhs.interval), err)),
+                Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
             }
         }
 

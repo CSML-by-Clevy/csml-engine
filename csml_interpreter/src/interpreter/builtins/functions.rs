@@ -16,34 +16,36 @@ use rand::Rng;
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn one_of(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn one_of(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("array", 0) {
         Some(literal) => {
             let res = Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
+                flow_name,
                 literal.interval,
                 ERROR_ONE_OF.to_owned(),
             )?;
             match res.get(rand::thread_rng().gen_range(0, res.len())) {
                 Some(lit) => Ok(lit.to_owned()),
                 None => Err(gen_error_info(
-                    Position::new(literal.interval),
+                    Position::new(literal.interval, flow_name),
                     ERROR_ONE_OF.to_owned(),
                 )),
             }
         }
         None => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_ONE_OF.to_owned(),
         )),
     }
 }
 
-pub fn shuffle(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn shuffle(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("array", 0) {
         Some(literal) => {
             let res = Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
+                flow_name,
                 interval,
                 ERROR_SHUFFLE.to_owned(),
             )?;
@@ -52,17 +54,18 @@ pub fn shuffle(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo>
             Ok(PrimitiveArray::get_literal(&vec, literal.interval))
         }
         None => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_SHUFFLE.to_owned(),
         )),
     }
 }
 
-pub fn length(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn length(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("length", 0) {
         Some(literal) => {
             if let Ok(res) = Literal::get_value::<Vec<Literal>>(
                 &literal.primitive,
+                flow_name,
                 interval,
                 ERROR_LENGTH.to_owned(),
             ) {
@@ -72,7 +75,7 @@ pub fn length(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> 
                 ));
             }
             if let Ok(res) =
-                Literal::get_value::<String>(&literal.primitive, interval, ERROR_LENGTH.to_owned())
+                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_LENGTH.to_owned())
             {
                 return Ok(PrimitiveInt::get_literal(
                     res.len() as i64,
@@ -81,37 +84,37 @@ pub fn length(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> 
             }
 
             Err(gen_error_info(
-                Position::new(interval),
+                Position::new(interval, flow_name),
                 ERROR_LENGTH.to_owned(),
             ))
         }
         None => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_LENGTH.to_owned(),
         )),
     }
 }
 
-pub fn find(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn find(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     let mut string = None;
     let mut case = false;
 
     if let Some(literal) = args.get("in", 1) {
         if let Ok(res) =
-            Literal::get_value::<String>(&literal.primitive, interval, ERROR_FIND.to_owned())
+            Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_FIND.to_owned())
         {
             string = Some(res);
         }
     } else if string.is_none() {
         return Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_FIND.to_owned(),
         ));
     }
 
     if let Some(literal) = args.get("in", 1) {
         if let Ok(res) =
-            Literal::get_value::<bool>(&literal.primitive, interval, ERROR_FIND.to_owned())
+            Literal::get_value::<bool>(&literal.primitive, flow_name, interval, ERROR_FIND.to_owned())
         {
             case = *res;
         }
@@ -120,7 +123,7 @@ pub fn find(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
     match (args.get("value", 0), string) {
         (Some(literal), Some(string)) => {
             let res =
-                Literal::get_value::<String>(&literal.primitive, interval, ERROR_FIND.to_owned())?;
+                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_FIND.to_owned())?;
             if case {
                 Ok(PrimitiveBoolean::get_literal(
                     string.contains(res),
@@ -134,7 +137,7 @@ pub fn find(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
             }
         }
         (_, _) => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_FIND.to_owned(),
         )),
     }
@@ -148,21 +151,21 @@ pub fn random(interval: Interval) -> Result<Literal, ErrorInfo> {
     Ok(PrimitiveFloat::get_literal(random, interval))
 }
 
-pub fn floor(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn floor(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("float", 0) {
         Some(literal) => {
             let res =
-                Literal::get_value::<f64>(&literal.primitive, interval, ERROR_FLOOR.to_owned())?;
+                Literal::get_value::<f64>(&literal.primitive, flow_name, interval, ERROR_FLOOR.to_owned())?;
             Ok(PrimitiveFloat::get_literal(res.floor(), literal.interval))
         }
         _ => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_FLOOR.to_owned(),
         )),
     }
 }
 
-pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn uuid_command(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     if args.len() == 0 {
         return Ok(PrimitiveString::get_literal(
             &Uuid::new_v4().to_string(),
@@ -173,7 +176,7 @@ pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, Error
     match args.get("value", 0) {
         Some(literal) => {
             let arg =
-                Literal::get_value::<String>(&literal.primitive, interval, ERROR_FLOOR.to_owned())?;
+                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_FLOOR.to_owned())?;
 
             match arg {
                 arg if arg == "v1" => {
@@ -199,13 +202,13 @@ pub fn uuid_command(args: ArgsType, interval: Interval) -> Result<Literal, Error
                     interval,
                 )),
                 _ => Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name),
                     ERROR_UUID.to_owned(),
                 )),
             }
         }
         _ => Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, flow_name),
             ERROR_UUID.to_owned(),
         )),
     }

@@ -100,6 +100,7 @@ mod tests {
             match gen_generic_component(
                 "Button",
                 false,
+                "Test",
                 &interval,
                 &ArgsType::Named(map),
                 component,
@@ -138,6 +139,7 @@ mod tests {
             match gen_generic_component(
                 "Button",
                 false,
+                "Test",
                 &interval,
                 &ArgsType::Named(map),
                 component,

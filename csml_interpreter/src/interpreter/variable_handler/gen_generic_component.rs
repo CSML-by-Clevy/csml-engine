@@ -14,6 +14,7 @@ use std::collections::HashSet;
 trait ArithmeticOperation {
     fn get_type(value: &serde_json::Value) -> String;
     fn add(
+        flow_name: &str,
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
         interval: &Interval,
@@ -33,6 +34,7 @@ impl ArithmeticOperation for serde_json::Value {
     }
 
     fn add(
+        flow_name: &str,
         lhs: &serde_json::Value,
         rhs: &serde_json::Value,
         interval: &Interval,
@@ -81,7 +83,7 @@ impl ArithmeticOperation for serde_json::Value {
                 }
 
                 Err(ErrorInfo::new(
-                    Position::new(*interval),
+                    Position::new(*interval, flow_name),
                     "Illegal operation: overflow".to_string(),
                 ))
             }
@@ -117,7 +119,7 @@ impl ArithmeticOperation for serde_json::Value {
                 Ok(serde_json::Value::Array(lhs))
             }
             (_, _) => Err(ErrorInfo::new(
-                Position::new(*interval),
+                Position::new(*interval, flow_name),
                 format!(
                     "Type Error expecting {} type but {} type was found",
                     serde_json::Value::get_type(rhs),
@@ -134,6 +136,7 @@ impl ArithmeticOperation for serde_json::Value {
 
 fn create_default_object(
     object: &serde_json::Map<String, serde_json::Value>,
+    flow_name: &str,
     interval: &Interval,
 ) -> Result<serde_json::Value, ErrorInfo> {
     if let Some(serde_json::Value::String(result)) = object.get("type") {
@@ -145,14 +148,14 @@ fn create_default_object(
             "Array" => Ok(serde_json::Value::Array(Vec::default())),
             "Object" => Ok(serde_json::Value::Object(serde_json::Map::default())),
             _ => Err(ErrorInfo::new(
-                Position::new(*interval),
+                Position::new(*interval, flow_name),
                 format!("type '{}' is unknown", result),
             )),
         };
     }
 
     return Err(ErrorInfo::new(
-        Position::new(*interval),
+        Position::new(*interval, flow_name),
         "type value must exist on all keys".to_string(),
     ));
 }
@@ -250,6 +253,7 @@ fn get_default_object(
     object: &serde_json::Map<String, serde_json::Value>,
     array: &[serde_json::Value],
     args: &ArgsType,
+    flow_name: &str,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
     recursion: &mut HashSet<String>,
@@ -259,7 +263,7 @@ fn get_default_object(
     // Eliminates circular dependencies by checking if we already visited this key
     // Eliminates recurrent recursion if object has already been created once.
 
-    let mut result = create_default_object(object, interval)?;
+    let mut result = create_default_object(object, flow_name, interval)?;
 
     if let Some(serde_json::Value::Array(default_value)) = object.get(key) {
         for function in default_value.iter() {
@@ -267,12 +271,12 @@ fn get_default_object(
                 if let Some(serde_json::Value::String(dependency)) = function.get("$_get") {
                     match memoization.get(dependency) {
                         Some(value) => {
-                            result = serde_json::Value::add(&result, &value, interval)?;
+                            result = serde_json::Value::add(flow_name,&result, &value, interval)?;
                         }
                         None => {
                             if recursion.contains(dependency) {
                                 return Err(ErrorInfo::new(
-                                    Position::new(*interval),
+                                    Position::new(*interval, flow_name),
                                     "GENERIC_COMPONENT_CIRCULAR_DEPENDENCY".to_string(),
                                 ));
                             }
@@ -280,6 +284,7 @@ fn get_default_object(
                                 dependency,
                                 array,
                                 args,
+                                flow_name,
                                 interval,
                                 memoization,
                                 recursion,
@@ -288,13 +293,13 @@ fn get_default_object(
                             if let Some(value) = value {
                                 memoization.insert(dependency.to_string(), value.to_owned());
 
-                                result = serde_json::Value::add(&result, value, interval)?;
+                                result = serde_json::Value::add(flow_name,&result, value, interval)?;
                             }
                         }
                     }
                 }
                 if let Some(dependency) = function.get("$_set") {
-                    result = serde_json::Value::add(&result, dependency, interval)?;
+                    result = serde_json::Value::add(flow_name,&result, dependency, interval)?;
                 }
             }
         }
@@ -307,6 +312,7 @@ fn get_object(
     key: &str,
     array: &[serde_json::Value],
     args: &ArgsType,
+    flow_name: &str,
     interval: &Interval,
     memoization: &mut HashMap<String, serde_json::Value>,
     recursion: &mut HashSet<String>,
@@ -329,12 +335,14 @@ fn get_object(
                 is_parameter_required(object),
             ) {
                 (Some(param), _) => Ok(Some(serde_json::Value::add(
+                    flow_name,
                     &param,
                     &get_default_object(
                         "add_value",
                         object,
                         array,
                         args,
+                        flow_name,
                         interval,
                         memoization,
                         recursion,
@@ -344,7 +352,7 @@ fn get_object(
                 (None, true) => {
                     //TODO: send Error component instead of stopping program
                     Err(ErrorInfo::new(
-                        Position::new(*interval),
+                        Position::new(*interval, flow_name),
                         format!("{} is a required parameter", key),
                     ))
                 }
@@ -353,11 +361,13 @@ fn get_object(
                         Ok(None)
                     } else {
                         Ok(Some(serde_json::Value::add(
+                            flow_name,
                             &get_default_object(
                                 "default_value",
                                 object,
                                 array,
                                 args,
+                                flow_name,
                                 interval,
                                 memoization,
                                 recursion,
@@ -367,6 +377,7 @@ fn get_object(
                                 object,
                                 array,
                                 args,
+                                flow_name,
                                 interval,
                                 memoization,
                                 recursion,
@@ -389,6 +400,7 @@ fn get_object(
 pub fn gen_generic_component(
     name: &str,
     is_custom_component: bool,
+    flow_name: &str,
     interval: &Interval,
     args: &ArgsType,
     component: &serde_json::Value,
@@ -408,13 +420,14 @@ pub fn gen_generic_component(
                         if let Some(result) = memoization.get(key) {
                             hashmap.insert(
                                 key.to_owned(),
-                                json_to_literal(&result.to_owned(), *interval)?,
+                                json_to_literal(&result.to_owned(), *interval, flow_name)?,
                             );
                         } else {
                             let result = get_object(
                                 key,
                                 array,
                                 args,
+                                flow_name,
                                 interval,
                                 &mut memoization,
                                 &mut HashSet::new(),
@@ -423,14 +436,14 @@ pub fn gen_generic_component(
                             if let Some(result) = result {
                                 hashmap.insert(
                                     key.to_owned(),
-                                    json_to_literal(&result.to_owned(), *interval)?,
+                                    json_to_literal(&result.to_owned(), *interval, flow_name)?,
                                 );
                             }
                         }
                     }
                 }
             }
-            args.populate_json_to_literal(&mut hashmap, array, interval.to_owned())?;
+            args.populate_json_to_literal(&mut hashmap, array, flow_name, interval.to_owned())?;
         }
     }
 

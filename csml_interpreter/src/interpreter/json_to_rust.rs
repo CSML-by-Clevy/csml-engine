@@ -21,13 +21,14 @@ pub fn interpolate(
 ) -> Result<Literal, ErrorInfo> {
     match literal {
         serde_json::Value::String(val) => interpolate_string(val, data, msg_data, sender),
-        _ => json_to_literal(literal, interval),
+        _ => json_to_literal(literal, interval, &data.context.flow),
     }
 }
 
 pub fn json_to_literal(
     literal: &serde_json::Value,
     interval: Interval,
+    flow_name: &str,
 ) -> Result<Literal, ErrorInfo> {
     match literal {
         serde_json::Value::String(val) => Ok(PrimitiveString::get_literal(val, interval)),
@@ -40,7 +41,7 @@ pub fn json_to_literal(
                 Ok(PrimitiveInt::get_literal(int, interval))
             } else {
                 Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name),
                     ERROR_JSON_TO_LITERAL.to_owned(),
                 ))
             }
@@ -49,7 +50,7 @@ pub fn json_to_literal(
             let mut vec = vec![];
 
             for elem in val {
-                vec.push(json_to_literal(elem, interval)?);
+                vec.push(json_to_literal(elem, interval, flow_name)?);
             }
 
             Ok(PrimitiveArray::get_literal(&vec, interval))
@@ -58,7 +59,7 @@ pub fn json_to_literal(
             let mut map = HashMap::new();
 
             for (k, v) in val.iter() {
-                map.insert(k.to_owned(), json_to_literal(v, interval)?);
+                map.insert(k.to_owned(), json_to_literal(v, interval, flow_name)?);
             }
 
             Ok(PrimitiveObject::get_literal(&map, interval))
@@ -69,6 +70,7 @@ pub fn json_to_literal(
 pub fn memory_to_literal(
     literal: &serde_json::Value,
     interval: Interval,
+    flow_name: &str,
 ) -> Result<Literal, ErrorInfo> {
     match literal {
         serde_json::Value::String(val) => Ok(PrimitiveString::get_literal(val, interval)),
@@ -81,7 +83,7 @@ pub fn memory_to_literal(
                 Ok(PrimitiveInt::get_literal(int, interval))
             } else {
                 Err(gen_error_info(
-                    Position::new(interval),
+                    Position::new(interval, flow_name),
                     ERROR_JSON_TO_LITERAL.to_owned(),
                 ))
             }
@@ -90,7 +92,7 @@ pub fn memory_to_literal(
             let mut vec = vec![];
 
             for elem in val {
-                vec.push(memory_to_literal(elem, interval)?);
+                vec.push(memory_to_literal(elem, interval, flow_name)?);
             }
 
             Ok(PrimitiveArray::get_literal(&vec, interval))
@@ -104,7 +106,7 @@ pub fn memory_to_literal(
                 val.get("_closure"),
             ) {
                 (Some(content), Some(serde_json::Value::String(conent_type)), _) => {
-                    let mut literal = memory_to_literal(content, interval)?;
+                    let mut literal = memory_to_literal(content, interval, flow_name)?;
                     literal.set_content_type(&conent_type);
                     Ok(literal)
                 }
@@ -120,7 +122,7 @@ pub fn memory_to_literal(
                 }
                 (_, _, _) => {
                     for (k, v) in val.iter() {
-                        map.insert(k.to_owned(), memory_to_literal(v, interval)?);
+                        map.insert(k.to_owned(), memory_to_literal(v, interval, flow_name)?);
                     }
                     Ok(PrimitiveObject::get_literal(&map, interval))
                 }

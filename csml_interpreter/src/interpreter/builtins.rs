@@ -4,6 +4,8 @@ pub mod format;
 pub mod functions;
 pub mod http;
 pub mod jwt;
+pub mod time;
+
 pub mod tools;
 
 use crate::data::{
@@ -19,6 +21,7 @@ use format::*;
 use functions::*;
 use http::http;
 use jwt::jwt;
+use time::time;
 
 pub fn match_native_builtin(
     name: &str,
@@ -27,10 +30,10 @@ pub fn match_native_builtin(
     data: &mut Data,
 ) -> Result<Literal, ErrorInfo> {
     if let Some(component) = data.native_component.get(name) {
-        gen_generic_component(name, false, &interval, &args, component)
+        gen_generic_component(name, false, &data.context.flow, &interval, &args, component)
     } else {
         Err(gen_error_info(
-            Position::new(interval),
+            Position::new(interval, &data.context.flow),
             format!("{} [{}]", ERROR_NATIVE_COMPONENT, name),
         ))
     }
@@ -45,22 +48,23 @@ pub fn match_builtin(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     match name {
-        HTTP => http(args, interval),
-        BASE64 => base64(args, interval),
-        HEX => hex(args, interval),
+        HTTP => http(args, &data.context.flow, interval),
+        BASE64 => base64(args, &data.context.flow, interval),
+        HEX => hex(args, &data.context.flow, interval),
         FN | APP => api(args, interval, data, msg_data, sender),
-        ONE_OF => one_of(args, interval),
-        SHUFFLE => shuffle(args, interval),
-        LENGTH => length(args, interval),
-        FIND => find(args, interval),
+        ONE_OF => one_of(args, &data.context.flow, interval),
+        SHUFFLE => shuffle(args, &data.context.flow, interval),
+        LENGTH => length(args, &data.context.flow, interval),
+        FIND => find(args, &data.context.flow, interval),
         RANDOM => random(interval),
         DEBUG => debug(args, interval),
-        FLOOR => floor(args, interval),
-        UUID => uuid_command(args, interval),
-        JWT => jwt(args, interval),
-        CRYPTO => crypto(args, interval),
+        FLOOR => floor(args, &data.context.flow, interval),
+        UUID => uuid_command(args, &data.context.flow, interval),
+        JWT => jwt(args, &data.context.flow, interval),
+        CRYPTO => crypto(args, &data.context.flow, interval),
+        TIME => time(args, &data.context.flow, interval),
 
         //old builtin
-        _object => object(args, interval),
+        _object => object(args, &data.context.flow, interval),
     }
 }

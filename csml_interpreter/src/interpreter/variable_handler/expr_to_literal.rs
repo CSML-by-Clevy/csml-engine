@@ -71,7 +71,7 @@ pub fn expr_to_literal(
         Expr::PathExpr { literal, path } => {
             expr_to_literal(literal, condition, Some(path), data, msg_data, sender)
         }
-        Expr::ObjectExpr(ObjectType::Normal(Function {
+        Expr::ObjectExpr(ObjectType::BuiltIn(Function {
             name,
             args,
             interval,
@@ -80,16 +80,20 @@ pub fn expr_to_literal(
 
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
-        Expr::MapExpr(map, range_interval) => {
-            let mut object = HashMap::new();
+        Expr::MapExpr {
+            object,
+            interval: range_interval,
+            ..
+        } => {
+            let mut map = HashMap::new();
 
-            for (key, value) in map.iter() {
-                object.insert(
+            for (key, value) in object.iter() {
+                map.insert(
                     key.to_owned(),
                     expr_to_literal(&value, condition, None, data, msg_data, sender)?,
                 );
             }
-            let mut literal = PrimitiveObject::get_literal(&object, range_interval.to_owned());
+            let mut literal = PrimitiveObject::get_literal(&map, range_interval.to_owned());
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::ComplexLiteral(vec, range_interval) => {
@@ -115,7 +119,7 @@ pub fn expr_to_literal(
         Expr::InfixExpr(infix, exp_1, exp_2) => {
             evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)
         }
-        Expr::LitExpr(literal) => {
+        Expr::LitExpr { literal, .. } => {
             let mut new_value = exec_path_literal(
                 &mut literal.clone(),
                 condition,
@@ -125,7 +129,7 @@ pub fn expr_to_literal(
                 sender,
             )?;
             // only for closure capture the step variables
-            capture_variables(&mut &mut new_value, data.step_vars.clone());
+            capture_variables(&mut &mut new_value, data.step_vars.clone(), &data.context.flow);
             Ok(new_value)
         }
         Expr::IdentExpr(var, ..) => Ok(get_var(
@@ -137,7 +141,7 @@ pub fn expr_to_literal(
             sender,
         )?),
         e => Err(gen_error_info(
-            Position::new(interval_from_expr(e)),
+            Position::new(interval_from_expr(e), &data.context.flow),
             ERROR_EXPR_TO_LITERAL.to_owned(),
         )),
     }
@@ -162,7 +166,7 @@ pub fn resolve_fn_args(
                             Expr::IdentExpr(ref var, ..) => var,
                             _ => {
                                 return Err(gen_error_info(
-                                    Position::new(interval_from_expr(name)),
+                                    Position::new(interval_from_expr(name), &data.context.flow),
                                     "key must be of type string".to_owned(),
                                 ))
                             }
@@ -176,7 +180,7 @@ pub fn resolve_fn_args(
                         first += 1;
                         if named_args && first > 1 {
                             return Err(gen_error_info(
-                                Position::new(interval_from_expr(expr)),
+                                Position::new(interval_from_expr(expr), &data.context.flow),
                                 ERROR_EXPR_TO_LITERAL.to_owned(), // TODO: error mix of named args and anonymous args
                             ));
                         }
@@ -192,7 +196,7 @@ pub fn resolve_fn_args(
             }
         }
         e => Err(gen_error_info(
-            Position::new(interval_from_expr(e)),
+            Position::new(interval_from_expr(e), &data.context.flow),
             ERROR_EXPR_TO_LITERAL.to_owned(), //TODO: internal error fn args bad format
         )),
     }
