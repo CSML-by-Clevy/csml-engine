@@ -23,6 +23,11 @@ pub struct BotIdPath {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct MemoryKeyPath {
+    pub key: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetVersionsRequest {
     pub bot_id: String,
     pub limit: Option<i64>,

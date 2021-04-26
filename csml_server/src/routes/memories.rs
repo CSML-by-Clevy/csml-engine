@@ -6,7 +6,7 @@ use std::thread;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MemoryKeyPath {
-    memory_key: String
+    key: String
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -22,7 +22,7 @@ pub struct ClientQuery {
 * {"statusCode": 204}
 *
 */
-#[delete("/memory")]
+#[delete("/client/memories")]
 pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
@@ -49,9 +49,9 @@ pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
 * {"statusCode": 204}
 *
 */
-#[delete("/memory/{memoryKey})")]
+#[delete("/client/memories/{key})")]
 pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>) -> HttpResponse {
-    let memory_key = path.memory_key.to_owned();
+    let memory_key = path.key.to_owned();
 
     let client = Client {
         user_id: query.user_id.clone(),

@@ -1,6 +1,6 @@
 mod routes;
 
-use routes::{BotIdPath, BotIdVersionIdPath, GetVersionsRequest, bot_versions::{
+use routes::{MemoryKeyPath, BotIdPath, BotIdVersionIdPath, GetVersionsRequest, bot_versions::{
         add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
         delete_bot_versions, delete_bot_version
 
@@ -186,7 +186,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
                 Ok(path_params) => {
                     path_params
                 },
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Path parameters bad format")))
             };
             delete_bot_versions(path_params.bot_id)
         }
@@ -201,7 +201,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
                 Ok(path_params) => {
                     path_params
                 },
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Path parameters bad format")))
             };
 
             delete_bot_version(path_params.bot_id, path_params.version_id)
@@ -212,18 +212,11 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             query_string_parameters: Some(query_params),
             ..
-        } if path.ends_with("/memory") && http_method == "DELETE" => {
+        } if path.ends_with("/client/memories") && http_method == "DELETE" => {
 
-            let client = match (query_params.get("user_id"), query_params.get("bot_id"), query_params.get("channel_id")) {
-                (Some(serde_json::Value::String(user_id)), Some(serde_json::Value::String(bot_id)), Some(serde_json::Value::String(channel_id))) => Client {
-                    user_id: user_id.to_owned(),
-                    channel_id: channel_id.to_owned(),
-                    bot_id: bot_id.to_owned(),
-                },
-                (None, _, _) =>  return Ok(format_response(400, serde_json::json!("user_id query string parameters missing"))),
-                (_, None, _) =>  return Ok(format_response(400, serde_json::json!("bot_id query string parameters missing"))),
-                (_, _,  None) =>  return Ok(format_response(400, serde_json::json!("channel_id query string parameters missing"))),
-                _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
+            let client: Client = match serde_json::from_value(query_params) {
+                Ok(client) => client,
+                _ => return Ok(format_response(400, serde_json::json!("query string parameters bad format"))),
             };
 
             delete_memories(client)
@@ -235,26 +228,19 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             query_string_parameters: Some(query_params),
             path_parameters: Some(path_params),
             ..
-        } if path.ends_with("/memory/{memoryKey}") && http_method == "DELETE" => {
+        } if path.ends_with("/client/memories/{key}") && http_method == "DELETE" => {
 
-            let client = match (query_params.get("user_id"), query_params.get("bot_id"), query_params.get("channel_id")) {
-                (Some(serde_json::Value::String(user_id)), Some(serde_json::Value::String(bot_id)), Some(serde_json::Value::String(channel_id))) => Client {
-                    user_id: user_id.to_owned(),
-                    channel_id: channel_id.to_owned(),
-                    bot_id: bot_id.to_owned(),
-                },
-                (None, _, _) =>  return Ok(format_response(400, serde_json::json!("user_id query string parameters missing"))),
-                (_, None, _) =>  return Ok(format_response(400, serde_json::json!("bot_id query string parameters missing"))),
-                (_, _,  None) =>  return Ok(format_response(400, serde_json::json!("channel_id query string parameters missing"))),
+            let client: Client = match serde_json::from_value(query_params) {
+                Ok(client) => client,
                 _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
             };
 
-            let memory_key: String = match serde_json::from_value(path_params) {
+            let memory: MemoryKeyPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => {path_params},
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Path parameters bad format")))
             };
 
-            delete_memory(client, &memory_key)
+            delete_memory(client, &memory.key)
         }
 
         LambdaRequest {
@@ -264,15 +250,8 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             ..
         } if path.ends_with("/client") && http_method == "DELETE" => {
 
-            let client = match (query_params.get("user_id"), query_params.get("bot_id"), query_params.get("channel_id")) {
-                (Some(serde_json::Value::String(user_id)), Some(serde_json::Value::String(bot_id)), Some(serde_json::Value::String(channel_id))) => Client {
-                    user_id: user_id.to_owned(),
-                    channel_id: channel_id.to_owned(),
-                    bot_id: bot_id.to_owned(),
-                },
-                (None, _, _) =>  return Ok(format_response(400, serde_json::json!("user_id query string parameters missing"))),
-                (_, None, _) =>  return Ok(format_response(400, serde_json::json!("bot_id query string parameters missing"))),
-                (_, _,  None) =>  return Ok(format_response(400, serde_json::json!("channel_id query string parameters missing"))),
+            let client: Client = match serde_json::from_value(query_params) {
+                Ok(client) => client,
                 _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
             };
 
@@ -286,15 +265,13 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             ..
         } if path.ends_with("/bots/{bot_id}") && http_method == "DELETE" => {
 
-            let bot_id: String = match serde_json::from_value(path_params) {
+            let bot: BotIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => {path_params},
                 Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
             };
 
-            delete_bot(&bot_id)
+            delete_bot(&bot.bot_id)
         }
-
-        // delete_bot
 
         LambdaRequest {
             path,

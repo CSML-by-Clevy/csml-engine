@@ -166,7 +166,7 @@ pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> 
 }
 
 /**
- * delete  of bot_id
+* Delete all bot versions of bot_id
 */
 pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
@@ -175,7 +175,7 @@ pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
 }
 
 /**
- * delete all data related to bot. all bot versions, all user conversations, memories, interactions, messages
+* Delete all data related to bot: versions, conversations, messages, memories, nodes, integrations
 */
 pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
@@ -184,7 +184,7 @@ pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
 }
 
 /**
- * delete all user memories for bot id
+* Delete all the memories of a given client
 */
 pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
@@ -193,7 +193,7 @@ pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
 }
 
 /**
- * delete user memory for bot id
+* Delete a single memory for a given Client
 */
 pub fn delete_client_memory(client: &Client, memory_name: &str,) -> Result<(), EngineError> {
     let mut db = init_db()?;
@@ -202,7 +202,7 @@ pub fn delete_client_memory(client: &Client, memory_name: &str,) -> Result<(), E
 }
 
 /**
- * delete user
+* Delete all data related to a given Client
 */
 pub fn delete_client(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;

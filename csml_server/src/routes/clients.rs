@@ -11,7 +11,7 @@ pub struct ClientQuery {
 }
 
 /*
-* Delete all client data
+* Delete all data for a given Client
 *
 * {"statusCode": 204}
 *

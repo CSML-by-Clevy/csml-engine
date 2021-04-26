@@ -384,7 +384,7 @@ fn delete_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 /*
-* Delete client memories
+* Remove all memories associated with a given Client
 */
 fn delete_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
@@ -409,7 +409,7 @@ fn delete_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 /*
-* Delete client
+* Remove all data associated with a given Client
 */
 fn delete_client(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
@@ -434,7 +434,8 @@ fn delete_client(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 /*
-* Delete all bot data, conversations, messages, memories, interactions, states, path and delete all bot versions
+* Remove all data associated with a given bot:
+* conversations, messages, memories, interactions, states, path, versions
 */
 fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
     let bot_id = cx.argument::<JsString>(0)?.value();

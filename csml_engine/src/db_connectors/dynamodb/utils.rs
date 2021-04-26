@@ -62,7 +62,7 @@ pub fn make_range(args: &[&str]) -> String {
 }
 
 /**
-* execute batch write query
+* Batch write query wrapper with exponential backoff in case of exceeded throughput
 */
 pub fn execute_batch_write_query(db: &mut DynamoDbClient, input: BatchWriteItemInput) -> Result<(), RusotoError<BatchWriteItemError>> {
     let mut retry_times = 1;
