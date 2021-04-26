@@ -1,0 +1,11 @@
+start:
+    // pass
+    do obj = {
+        "params": {
+            "name": "sub_step"
+        }
+    }
+    goto $obj.params.name
+
+sub_step:
+    say "OK"
