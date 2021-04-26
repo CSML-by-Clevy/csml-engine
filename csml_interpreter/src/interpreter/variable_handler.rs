@@ -611,20 +611,27 @@ pub fn search_goto_var_memory<'a>(
     var: &GotoValueType,
     msg_data: &mut MessageData,
     data: &'a mut Data,
+    sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<String, ErrorInfo> {
     let flow_name = data.context.flow.clone();
 
     match var {
         GotoValueType::Name(ident) => Ok(ident.ident.clone()),
-        GotoValueType::Variable(ident) => {
-            let (literal, ..) =
-                get_var_from_mem(ident.clone(), false, None, data, msg_data, &None)?;
+        GotoValueType::Variable(expr) => {
+            let literal = expr_to_literal(
+                expr,
+                false,
+                None,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             Ok(Literal::get_value::<String>(
                 &literal.primitive,
                 &flow_name,
                 literal.interval,
-                format!("< {} > {}", ident.ident, ERROR_FIND_MEMORY),
+                format!("{}", ERROR_GOTO_VAR),
             )?
             .to_owned())
         }

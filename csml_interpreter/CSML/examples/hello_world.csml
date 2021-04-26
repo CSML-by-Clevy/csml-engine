@@ -1,5 +1,16 @@
 start:
 
     say "Hello World 😆"
+    do obj = {
+        "params": {
+            "name": "toto"
+        }
+    }
+
+    goto $obj.params.name
 
     goto end
+
+
+toto:
+    say "TOTO"
