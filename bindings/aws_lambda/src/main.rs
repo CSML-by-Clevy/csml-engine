@@ -1,14 +1,19 @@
 mod routes;
 
-use routes::{MemoryKeyPath, BotIdPath, BotIdVersionIdPath, GetVersionsRequest, bot_versions::{
+use routes::{
+    BotIdPath, BotIdVersionIdPath, GetVersionsRequest,
+    MemoryBody, MemoryKeyPath, ConversationIdPath,
+    bot_versions::{
         add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
         delete_bot_versions, delete_bot_version
 
     }, 
-    conversations::{close_user_conversations, get_open},
-    memories::{delete_memories, delete_memory},
-    bots::delete_bot,
-    clients::delete_client,
+    bots::delete_bot, clients::delete_client,
+    conversations::{close_user_conversations, get_open, get_client_conversations},
+    memories::{create_client_memory,
+    delete_memories, delete_memory},
+    messages::get_client_conversation_messages,
+    state::get_client_current_state,
     run, sns, validate
 };
 
@@ -80,6 +85,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             get_open(body)
         }
+
         LambdaRequest {
             path,
             http_method,
@@ -93,6 +99,117 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             close_user_conversations(body)
         }
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            query_string_parameters: Some(query_params),
+            ..
+        } if path.ends_with("/memory") && http_method == "POST" => {
+            let body: MemoryBody =  match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            let client: Client = match serde_json::from_value(query_params) {
+                Ok(client) => client,
+                _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
+            };
+
+            create_client_memory(client, body.key, body.value)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/conversations/{conversation_id}/messages") && http_method == "GET" => {
+            let path_params: ConversationIdPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {
+                    path_params
+                },
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            let client = match (
+                query_params.get("user_id"),
+                query_params.get("bot_id"),
+                query_params.get("channel_id")
+            ) {
+                (Some(serde_json::Value::String(user_id)),
+                Some(serde_json::Value::String(bot_id)),
+                Some(serde_json::Value::String(channel_id))) => Client {
+                    user_id: user_id.to_owned(),
+                    bot_id: bot_id.to_owned(),
+                    channel_id: channel_id.to_owned()
+                },
+                _ => return Ok(format_response(400, serde_json::json!("query params client info (user_id, bot_id, channel_id) are missing")))
+            };
+
+            let limit = match query_params.get("limit") {
+                Some(serde_json::Value::Number(limit)) => limit.as_i64(),
+                _ => None
+            };
+
+            let pagination_key = match query_params.get("pagination_key") {
+                Some(serde_json::Value::String(pagination_key)) => Some(pagination_key.to_owned()),
+                _ => None
+            };
+
+            get_client_conversation_messages(client, &path_params.conversation_id, limit, pagination_key)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            ..
+        } if path.ends_with("/conversations") && http_method == "GET" => {
+            let client = match (
+                query_params.get("user_id"),
+                query_params.get("bot_id"),
+                query_params.get("channel_id")
+            ) {
+                (Some(serde_json::Value::String(user_id)),
+                Some(serde_json::Value::String(bot_id)),
+                Some(serde_json::Value::String(channel_id))) => Client {
+                    user_id: user_id.to_owned(),
+                    bot_id: bot_id.to_owned(),
+                    channel_id: channel_id.to_owned()
+                },
+                _ => return Ok(format_response(400, serde_json::json!("query params client info (user_id, bot_id, channel_id) are missing")))
+            };
+
+            let limit = match query_params.get("limit") {
+                Some(serde_json::Value::Number(limit)) => limit.as_i64(),
+                _ => None
+            };
+
+            let pagination_key = match query_params.get("pagination_key") {
+                Some(serde_json::Value::String(pagination_key)) => Some(pagination_key.to_owned()),
+                _ => None
+            };
+
+            get_client_conversations(client, limit, pagination_key)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            ..
+        } if path.ends_with("/state") && http_method == "GET" => {
+            let client: Client = match serde_json::from_value(query_params) {
+                Ok(client) => client,
+                _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
+            };
+
+            get_client_current_state(client)
+        }
+
         LambdaRequest {
             path,
             http_method,
@@ -283,6 +400,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             Ok(sns::handler(headers, body))
         }
+
         _ => Ok(format_response(404, serde_json::json!("Bad request")))
     }
 }

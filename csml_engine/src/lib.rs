@@ -18,7 +18,7 @@ mod utils;
 
 use data::*;
 use db_connectors::{
-    bot, memories, user, conversations::*, init_db, messages::*, state::*, BotVersion, BotVersionCreated,
+    bot, memories, user, messages, conversations, init_db, state, BotVersion, BotVersionCreated,
     DbConversation,
 };
 use init::*;
@@ -65,7 +65,7 @@ pub fn start_conversation(
 
     // save event in db as message RECEIVE
     let msgs = vec![request.payload.to_owned()];
-    add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+    messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
     check_for_hold(&mut data, &bot)?;
 
@@ -87,7 +87,44 @@ pub fn start_conversation(
 pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, EngineError> {
     let mut db = init_db()?;
 
-    get_latest_open(client, &mut db)
+    conversations::get_latest_open(client, &mut db)
+}
+
+pub fn get_client_conversation_messages(
+    client: &Client,
+    conversation_id: &str,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+
+    messages::get_conversation_messages(client, conversation_id, &mut db, limit, pagination_key)
+}
+
+pub fn get_client_conversations(
+    client: &Client,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+
+    conversations::get_client_conversations(client, &mut db, limit, pagination_key)
+}
+
+pub fn get_current_state(client: &Client) -> Result<Option<serde_json::Value>, EngineError> {
+    let mut db = init_db()?;
+
+    state::get_current_state(client, &mut db)
+}
+
+pub fn create_client_memory(
+    client: &Client,
+    key: String,
+    value: serde_json::Value,
+) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    memories::create_client_memory(client, key, value , &mut db)
 }
 
 /**
@@ -234,22 +271,22 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
-    delete_state_key(&client, "hold", "position", &mut db)?;
-    close_all_conversations(&client, &mut db)
+    state::delete_state_key(&client, "hold", "position", &mut db)?;
+    conversations::close_all_conversations(&client, &mut db)
 }
 
 /**
- * Verify if the user is currently on hold in a given conversation.
- *
- * If a hold is found, make sure that the flow has not been updated since last conversation.
- * If that's the case, we can not be sure that the hold is in the same position,
- * so we need to clear the hold's position and restart the conversation.
- *
- * If the hold is valid, we also need to load the local step memory
- * (context.hold.step_vars) into the conversation context.
- */
+* Verify if the user is currently on hold in a given conversation.
+*
+* If a hold is found, make sure that the flow has not been updated since last conversation.
+* If that's the case, we can not be sure that the hold is in the same position,
+* so we need to clear the hold's position and restart the conversation.
+*
+* If the hold is valid, we also need to load the local step memory
+* (context.hold.step_vars) into the conversation context.
+**/
 fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), EngineError> {
-    match get_state_key(&data.client, "hold", "position", &mut data.db) {
+    match state::get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(hold)) => {
             match hold.get("hash") {
@@ -268,7 +305,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
             let index = match serde_json::from_value::<IndexInfo>(hold["index"].clone()) {
                 Ok(index) => index,
                 Err(_) => {
-                    delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+                    state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
                     return Ok(());
                 }
             };
@@ -280,7 +317,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),
             });
-            delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+           state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }
         // user is not on hold
         Ok(None) => (),

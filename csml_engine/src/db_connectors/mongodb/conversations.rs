@@ -1,16 +1,19 @@
-use crate::{db_connectors::DbConversation, encrypt::encrypt_data, Client, EngineError};
+use crate::{db_connectors::DbConversation, encrypt::{encrypt_data, decrypt_data}, Client, EngineError};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
 fn format_conversation_struct(
     conversation: bson::ordered::OrderedDocument,
 ) -> Result<DbConversation, EngineError> {
+    let encrypted_metadata: String = conversation.get_str("metadata").unwrap().to_owned();
+    let metadata = decrypt_data(encrypted_metadata)?;
+
     Ok(DbConversation {
         id: conversation.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
         client: bson::from_bson(conversation.get("client").unwrap().to_owned())?,
         flow_id: conversation.get_str("flow_id").unwrap().to_owned(), // to_hex
         step_id: conversation.get_str("step_id").unwrap().to_owned(), // to_hex
-        metadata: bson::from_bson(conversation.get("metadata").unwrap().to_owned())?, // encrypted
+        metadata, // encrypted
         status: conversation.get_str("status").unwrap().to_owned(),   //(OPEN, CLOSED, //Faild?
         last_interaction_at: conversation
             .get_utc_datetime("last_interaction_at")
@@ -170,4 +173,84 @@ pub fn delete_user_conversations(client: &Client, db: &mongodb::Database) -> Res
     collection.delete_many(filter, None)?;
 
     Ok(())
+}
+
+pub fn get_client_conversations(
+    client: &Client,
+    db: &mongodb::Database,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    let collection = db.collection("conversation");
+
+    let limit = match limit {
+        Some(limit) if limit >= 1 => limit + 1,
+        Some(_limit) => 21,
+        None => 21,
+    };
+
+    let filter = match pagination_key {
+        Some(key) => {
+            let base64decoded = match base64::decode(&key) {
+                Ok(base64decoded) => base64decoded,
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            };
+    
+            let key: String = match serde_json::from_slice(&base64decoded) {
+                Ok(key) => key,
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            };
+
+            doc! {
+                "client": bson::to_bson(&client)?,
+                "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
+            }
+        }
+        None => doc! {"client": bson::to_bson(&client)?},
+    };
+
+    let find_options = mongodb::options::FindOptions::builder()
+        .sort(doc! { "$natural": -1 })
+        .batch_size(30)
+        .limit(limit)
+        .build();
+    let cursor = collection.find(filter, find_options)?;
+
+    let mut conversations = vec![];
+    for doc in cursor {
+        match doc {
+            Ok(conv) => {
+                let conversation = format_conversation_struct(conv)?;
+
+                let json = serde_json::json!({
+                    "client": conversation.client,
+                    "flow_id": conversation.flow_id,
+                    "step_id": conversation.step_id,
+                    "metadata": conversation.metadata,
+                    "status": conversation.status,
+                    "last_interaction_at": conversation.last_interaction_at,
+                    "updated_at": conversation.updated_at,
+                    "created_at": conversation.created_at
+                });
+
+                conversations.push(json);
+            }
+            Err(_) => (),
+        };
+    }
+
+    match conversations.len() == limit as usize {
+        true => {
+            conversations.pop();
+            match conversations.last() {
+                Some(last) => {
+                    let pagination_key = base64::encode(last["version_id"].clone().to_string());
+
+                    Ok(serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}))
+                }
+                None => Ok(serde_json::json!({ "conversations": conversations })),
+            }
+        }
+        false => Ok(serde_json::json!({ "conversations": conversations })),
+    }
 }

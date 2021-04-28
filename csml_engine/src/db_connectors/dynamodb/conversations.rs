@@ -417,7 +417,7 @@ fn query_conversation(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        // index_name: Some(String::from("TimeIndex")),
+        index_name: Some(String::from("TimeIndex")),
         key_condition_expression: Some(
             "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_owned(),
         ),
@@ -487,5 +487,57 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
         if let None = &pagination_key {
             return Ok(())
         }
+    }
+}
+
+pub fn get_client_conversations(
+    client: &Client,
+    db: &mut DynamoDbClient,
+    limit: Option<i64>,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut conversations = vec![];
+    let limit = match limit {
+        Some(limit) if limit >= 1 => limit,
+        Some(_limit) => 20,
+        None => 20,
+    };
+
+    let data = query_conversation(client, db, limit, pagination_key)?;
+
+    // The query returns an array of items (max 10, based on the limit param above).
+    // If 0 item is returned it means that there is no open conversation, so simply return None
+    // , "last_key": :
+    let items = match data.items {
+        None => return Ok(serde_json::json!({"conversations": []})),
+        Some(items) if items.len() == 0 => return Ok(serde_json::json!({"conversations": []})),
+        Some(items) => items.clone(),
+    };
+
+    for item in items {
+        let conv: Conversation = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+        conversations.push(
+            DbConversation {
+                id: conv.id.to_string(),
+                client: client.to_owned(),
+                flow_id: conv.flow_id.to_string(),
+                step_id: conv.step_id.to_string(),
+                metadata: decrypt_data(conv.metadata)?,
+                status: conv.status.to_string(),
+                last_interaction_at: conv.last_interaction_at.to_string(),
+                updated_at: conv.updated_at.to_string(),
+                created_at: conv.created_at.to_string(),
+            }
+        )
+    }
+
+    match data.last_evaluated_key {
+        Some(pagination_key) => {
+            let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
+
+            Ok(serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}))
+        }
+        None => Ok(serde_json::json!({ "conversations": conversations })),
     }
 }

@@ -56,6 +56,32 @@ pub fn add_memories(
     Ok(())
 }
 
+pub fn create_client_memory(
+    client: &Client,
+    key: String,
+    value: serde_json::Value,
+    db: &mongodb::Database,
+) -> Result<(), EngineError> {
+    let memory = doc! {
+        "client": bson::to_bson(&client)?,
+        "interaction_id": "",
+        "conversation_id": "",
+        "flow_id": "",
+        "step_id": "",
+        "memory_order": 0,
+        "interaction_order": 0,
+        "key": key,
+        "value": encrypt_data(&value)?, // encrypted
+        "expires_at": Bson::Null,
+        "created_at": Bson::UtcDatetime(chrono::Utc::now())
+    };
+
+    let collection = db.collection("memory");
+    collection.insert_one(memory, None)?;
+
+    Ok(())
+}
+
 pub fn get_memories(
     client: &Client,
     db: &mongodb::Database,

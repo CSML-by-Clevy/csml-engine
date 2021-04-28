@@ -78,6 +78,38 @@ pub fn add_memories(
     Ok(())
 }
 
+pub fn create_client_memory(
+    client: &Client,
+    key: String,
+    value: serde_json::Value,
+    db: &mut DynamoDbClient,
+) -> Result<(), EngineError> {
+    let memories = Memory::new(
+        client,
+        "",
+        "",
+        0,
+        0,
+        "",
+        "",
+        &key,
+        Some(encrypt_data(&value)?),
+    );
+
+    let input = PutItemInput {
+        item: serde_dynamodb::to_hashmap(&memories)?,
+        table_name: get_table_name()?,
+        ..Default::default()
+    };
+
+    let client = db.client.to_owned();
+    let future = client.put_item(input);
+
+    db.runtime.block_on(future)?;
+
+    Ok(())
+}
+
 fn query_memories(
     client: &Client,
     range: String,

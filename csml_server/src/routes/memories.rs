@@ -1,4 +1,4 @@
-use actix_web::{delete, web, HttpResponse};
+use actix_web::{post, delete, web, HttpResponse};
 use csml_interpreter::data::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
@@ -65,6 +65,39 @@ pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Cli
 
     match res {
         Ok(_) => HttpResponse::NoContent().finish(),
+        Err(err) => {
+            eprintln!("EngineError: {:?}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Memory {
+    key: String,
+    value: serde_json::Value,
+}
+
+/*
+* Create client memory
+*
+* {"statusCode": 201}
+*
+*/
+#[post("/memories")]
+pub async fn create_client_memory(query: web::Query<ClientQuery>, body: web::Json<Memory>) -> HttpResponse {
+    let client = Client {
+        user_id: query.user_id.clone(),
+        channel_id: query.channel_id.clone(),
+        bot_id: query.bot_id.clone(),
+    };
+
+    let res = thread::spawn(move || {
+        csml_engine::create_client_memory(&client, body.key.to_owned(), body.value.to_owned())
+    }).join().unwrap();
+
+    match res {
+        Ok(_) => HttpResponse::Created().finish(),
         Err(err) => {
             eprintln!("EngineError: {:?}", err);
             HttpResponse::InternalServerError().finish()

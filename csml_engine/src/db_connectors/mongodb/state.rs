@@ -72,6 +72,28 @@ pub fn get_state_key(
     }
 }
 
+pub fn get_current_state(
+    client: &Client,
+    db: &mongodb::Database,
+) -> Result<Option<serde_json::Value>, EngineError> {
+    let state = db.collection("state");
+
+    let filter = doc! {
+        "client": bson::to_bson(client)?,
+        "type": "hold",
+        "key": "position",
+    };
+
+    match state.find_one(filter, None)? {
+        Some(value) => {
+            let state: serde_json::Value = bson::from_bson(bson::Bson::Document(value))?;
+            let val = state["value"].as_str().unwrap().to_owned();
+            Ok(Some(decrypt_data(val)?))
+        }
+        None => Ok(None),
+    }
+}
+
 pub fn set_state_items(
     client: &Client,
     _type: &str,

@@ -6,10 +6,11 @@ pub mod bot_versions;
 pub mod bots;
 pub mod clients;
 pub mod memories;
+pub mod messages;
+pub mod state;
 
-use csml_engine::data::{RunRequest};
+use csml_engine::{data::{RunRequest}};
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BotIdVersionIdPath {
@@ -23,10 +24,20 @@ pub struct BotIdPath {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ConversationIdPath {
+    pub conversation_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MemoryKeyPath {
     pub key: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MemoryBody {
+    pub key: String,
+    pub value: serde_json::Value,
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetVersionsRequest {
     pub bot_id: String,

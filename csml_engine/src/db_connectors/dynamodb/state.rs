@@ -64,6 +64,37 @@ pub fn get_state_key(
     }
 }
 
+pub fn get_current_state(
+    client: &Client,
+    db: &mut DynamoDbClient,
+) -> Result<Option<serde_json::Value>, EngineError> {
+    let item_key = DynamoDbKey {
+        hash: State::get_hash(client),
+        range: State::get_range("hold", "position"),
+    };
+
+    let input = GetItemInput {
+        table_name: get_table_name()?,
+        key: serde_dynamodb::to_hashmap(&item_key)?,
+        ..Default::default()
+    };
+
+    let future = db.client.get_item(input);
+    let res = db.runtime.block_on(future)?;
+
+    match res.item {
+        Some(val) => {
+            let dynamo_state: State = serde_dynamodb::from_hashmap(val)?;
+
+            let mut state = serde_json::json!(dynamo_state);
+            state["value"] = decrypt_data(state["value"].as_str().unwrap().to_string())?;
+
+            Ok(Some(state))
+        }
+        _ => Ok(None),
+    }
+}
+
 fn format_state_data(
     client: &Client,
     _type: &str,

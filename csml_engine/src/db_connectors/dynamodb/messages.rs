@@ -1,5 +1,5 @@
 use crate::db_connectors::dynamodb::{get_db, Message, DynamoDbClient, DynamoDbKey};
-use crate::{encrypt::encrypt_data, ConversationInfo, EngineError, Client};
+use crate::{encrypt::{encrypt_data, decrypt_data}, ConversationInfo, EngineError, Client};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
 
@@ -78,6 +78,7 @@ pub fn add_messages_bulk(
 fn query_messages(
     client: &Client,
     db: &mut DynamoDbClient,
+    range: String,
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
 ) -> Result<QueryOutput, EngineError> {
@@ -102,7 +103,7 @@ fn query_messages(
         (
             String::from(":rangePrefix"),
             AttributeValue {
-                s: Some(String::from("message#")),
+                s: Some(range),
                 ..Default::default()
             },
         ),
@@ -132,12 +133,68 @@ fn query_messages(
     Ok(data)
 }
 
+pub fn get_conversation_messages(
+    client: &Client,
+    conversation_id: &str,
+    db: &mut DynamoDbClient,
+    limit: Option<i64>,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut messages = vec![];
+    let limit = match limit {
+        Some(limit) if limit >= 1 => limit,
+        Some(_limit) => 20,
+        None => 20,
+    };
+
+    let data = query_messages(client, db, format!("message#{}#", conversation_id), limit, pagination_key)?;
+
+    // The query returns an array of items (max 10, based on the limit param above).
+    // If 0 item is returned it means that there is no open conversation, so simply return None
+    // , "last_key": :
+    let items = match data.items {
+        None => return Ok(serde_json::json!({"messages": []})),
+        Some(items) if items.len() == 0 => return Ok(serde_json::json!({"messages": []})),
+        Some(items) => items.clone(),
+    };
+
+    for item in items {
+        let message: Message = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+
+        let json = serde_json::json!({
+            "client": message.client,
+            "interaction_id": message.interaction_id,
+            "conversation_id": message.conversation_id,
+            "flow_id": message.flow_id,
+            "step_id": message.step_id,
+            "message_order": message.message_order,
+            "interaction_order": message.interaction_order,
+            "direction": message.direction,
+            "payload": decrypt_data(message.payload)?,
+            "content_type": message.content_type,
+            "created_at": message.created_at
+        });
+
+        messages.push(json)
+    }
+
+    match data.last_evaluated_key {
+        Some(pagination_key) => {
+            let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
+
+            Ok(serde_json::json!({"messages": messages, "pagination_key": pagination_key}))
+        }
+        None => Ok(serde_json::json!({ "messages": messages })),
+    }
+}
+
 pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
     // retrieve all memories from dynamodb
     loop {
-        let data = query_messages(client, db, 25, pagination_key)?;
+        let data = query_messages(client, db, String::from("message#"),25, pagination_key)?;
 
         // The query returns an array of items (max 10, based on the limit param above).
         // If 0 item is returned it means that there is no open conversation, so simply return None
