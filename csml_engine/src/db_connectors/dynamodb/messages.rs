@@ -1,6 +1,7 @@
 use crate::db_connectors::dynamodb::{get_db, Message, DynamoDbClient, DynamoDbKey};
 use crate::{encrypt::{encrypt_data, decrypt_data}, ConversationInfo, EngineError, Client};
 use rusoto_dynamodb::*;
+use chrono::prelude::*;
 use std::collections::HashMap;
 
 use crate::db_connectors::dynamodb::utils::*;
@@ -23,26 +24,18 @@ fn format_messages(
             direction,
             interaction_order,
             i as i32,
-            &encrypt_data(&message["payload"])?,
-            &message["payload"]["content_type"].to_string(),
+            &encrypt_data(&message)?,
+            &message["content_type"].to_string(),
         ));
     }
 
     Ok(res)
 }
 
-pub fn add_messages_bulk(
-    data: &mut ConversationInfo,
-    messages: &[serde_json::Value],
-    interaction_order: i32,
-    direction: &str,
+pub fn write_messages_batch(
+    messages: &[Message],
+    db: &mut DynamoDbClient
 ) -> Result<(), EngineError> {
-    if messages.len() == 0 {
-        return Ok(());
-    }
-
-    let messages = format_messages(data, messages, interaction_order, direction)?;
-
     // We can only use BatchWriteItem on up to 25 items at once,
     // so we need to split the messages to write into chunks of max
     // 25 items.
@@ -66,7 +59,6 @@ pub fn add_messages_bulk(
             ..Default::default()
         };
 
-        let db = get_db(&mut data.db)?;
         let future = db.client.batch_write_item(input);
 
         db.runtime.block_on(future)?;
@@ -75,10 +67,28 @@ pub fn add_messages_bulk(
     Ok(())
 }
 
+pub fn add_messages_bulk(
+    data: &mut ConversationInfo,
+    messages: &[serde_json::Value],
+    interaction_order: i32,
+    direction: &str,
+) -> Result<(), EngineError> {
+    if messages.len() == 0 {
+        return Ok(());
+    }
+
+    let messages = format_messages(data, messages, interaction_order, direction)?;
+    let db = get_db(&mut data.db)?;
+
+    write_messages_batch(&messages, db)
+}
+
 fn query_messages(
     client: &Client,
     db: &mut DynamoDbClient,
     range: String,
+    range_type: &str,
+    index_name: Option<String>,
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
 ) -> Result<QueryOutput, EngineError> {
@@ -86,7 +96,7 @@ fn query_messages(
 
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
+        (String::from("#rangeKey"), String::from(range_type)), // time index
     ]
     .iter()
     .cloned()
@@ -103,7 +113,7 @@ fn query_messages(
         (
             String::from(":rangePrefix"),
             AttributeValue {
-                s: Some(range),
+                s: Some(format!("{}", range)),
                 ..Default::default()
             },
         ),
@@ -114,7 +124,7 @@ fn query_messages(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        index_name: Some(String::from("TimeIndex")),
+        index_name,
         key_condition_expression: Some(
             "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned(),
         ),
@@ -147,7 +157,7 @@ pub fn get_conversation_messages(
         None => 20,
     };
 
-    let data = query_messages(client, db, format!("message#{}#", conversation_id), limit, pagination_key)?;
+    let data = query_messages(client, db, format!("message#{}#", conversation_id), "range", None, limit, pagination_key)?;
 
     // The query returns an array of items (max 10, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -160,7 +170,6 @@ pub fn get_conversation_messages(
 
     for item in items {
         let message: Message = serde_dynamodb::from_hashmap(item.to_owned())?;
-
 
         let json = serde_json::json!({
             "client": message.client,
@@ -179,6 +188,15 @@ pub fn get_conversation_messages(
         messages.push(json)
     }
 
+    // sort by time because 'range' dose not have a time label in order to trie by time 
+    // we need to do it by hand
+    messages.sort_by(|a, b| {
+        let a = a["created_at"].as_str().unwrap().parse::<DateTime<Utc>>().unwrap();
+        let b = b["created_at"].as_str().unwrap().parse::<DateTime<Utc>>().unwrap();
+
+        a.cmp(&b)
+    });
+
     match data.last_evaluated_key {
         Some(pagination_key) => {
             let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
@@ -194,7 +212,7 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
 
     // retrieve all memories from dynamodb
     loop {
-        let data = query_messages(client, db, String::from("message#"),25, pagination_key)?;
+        let data = query_messages(client, db, String::from("message#"),"range_time", Some(String::from("TimeIndex")), 25, pagination_key)?;
 
         // The query returns an array of items (max 10, based on the limit param above).
         // If 0 item is returned it means that there is no open conversation, so simply return None

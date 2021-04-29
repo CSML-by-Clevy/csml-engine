@@ -86,12 +86,12 @@ pub fn create_client_memory(
 ) -> Result<(), EngineError> {
     let memories = Memory::new(
         client,
-        "",
-        "",
+        "_",
+        "_",
         0,
         0,
-        "",
-        "",
+        "_",
+        "_",
         &key,
         Some(encrypt_data(&value)?),
     );

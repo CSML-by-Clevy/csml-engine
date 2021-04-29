@@ -36,7 +36,7 @@ fn format_message(
         "interaction_order": interaction_order,
         "direction": direction,
         "payload": encrypt_data(&message)?, // encrypted
-        "content_type": "event",
+        "content_type": &message["content_type"],
         "created_at": time
     };
 

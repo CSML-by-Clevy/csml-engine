@@ -8,6 +8,7 @@ start:
     say val
     remember val = "42"
 
+    remember toto = "tataaa"
     hold
 
     goto end

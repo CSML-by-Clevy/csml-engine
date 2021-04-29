@@ -13,6 +13,8 @@ pub mod nodes;
 pub mod state;
 pub mod utils;
 
+mod dynamodb_tests;
+
 use crate::db_connectors::dynamodb::utils::*;
 
 use rusoto_core::Region;

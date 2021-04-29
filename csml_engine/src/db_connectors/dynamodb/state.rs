@@ -89,7 +89,14 @@ pub fn get_current_state(
             let mut state = serde_json::json!(dynamo_state);
             state["value"] = decrypt_data(state["value"].as_str().unwrap().to_string())?;
 
-            Ok(Some(state))
+            let current_state = serde_json::json!({
+                "client": state["client"],
+                "type": state["type"],
+                "value": state["value"],
+                "created_at": state["created_at"],
+            });
+
+            Ok(Some(current_state))
         }
         _ => Ok(None),
     }

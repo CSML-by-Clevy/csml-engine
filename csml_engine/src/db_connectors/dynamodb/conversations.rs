@@ -389,7 +389,7 @@ fn query_conversation(
 
     let expr_attr_names = [
         ("#hashKey".to_string(), "hash".to_string()),
-        ("#rangeKey".to_string(), "range".to_string()),
+        ("#rangeKey".to_string(), "range_time".to_string()),
     ]
     .iter()
     .cloned()

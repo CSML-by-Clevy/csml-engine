@@ -85,10 +85,18 @@ pub fn get_current_state(
     };
 
     match state.find_one(filter, None)? {
-        Some(value) => {
-            let state: serde_json::Value = bson::from_bson(bson::Bson::Document(value))?;
-            let val = state["value"].as_str().unwrap().to_owned();
-            Ok(Some(decrypt_data(val)?))
+        Some(doc) => {
+            let state: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
+            let value = state["value"].as_str().unwrap().to_owned();
+
+            let current_state = serde_json::json!({
+                "client": state["client"],
+                "type": state["type"],
+                "value": decrypt_data(value)?,
+                "created_at": state["created_at"],
+            });
+
+            Ok(Some(current_state))
         }
         None => Ok(None),
     }
