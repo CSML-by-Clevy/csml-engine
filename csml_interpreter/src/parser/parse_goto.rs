@@ -1,6 +1,7 @@
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
 use crate::parser::{
+    parse_path::parse_path, parse_var_types::parse_idents_expr_usage,
     get_interval, parse_comments::comment, parse_idents::parse_string_assignation,
     tools::get_string, tools::get_tag, GotoType, GotoValueType,
 };
@@ -15,10 +16,12 @@ fn get_variable<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, position) = get_interval(s)?;
     let (s, ..) = tag(DOLLAR)(s)?;
-    let (s, name) = parse_string_assignation(s)?;
-    Ok((s, GotoValueType::Variable(Expr::new_idents(name, position))))
+
+    let (s, expr) = parse_idents_expr_usage(s)?;
+    let (s, expr) = parse_path(s, expr)?;
+
+    Ok((s, GotoValueType::Variable(Box::new(expr))))
 }
 
 fn get_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
