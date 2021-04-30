@@ -1,7 +1,7 @@
 use crate::data::{ast::*, tokens::*};
 use crate::parser::{parse_comments::comment, tools::get_interval};
 
-use crate::parser::parse_var_types::parse_basic_expr;
+use crate::parser::operator::parse_operator;
 use nom::{
     bytes::complete::tag,
     bytes::complete::take_till1,
@@ -61,7 +61,7 @@ where
         separated_pair(
             preceded(comment, string),
             cut(preceded(comment, tag(COLON))),
-            parse_basic_expr,
+            parse_operator,
         ),
     )(s)?;
 
