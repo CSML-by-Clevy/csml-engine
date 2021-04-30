@@ -758,11 +758,17 @@ impl PrimitiveArray {
 
                 let mut vec = vec![];
 
-                for value in array.value.iter() {
+                for (index, value) in array.value.iter().enumerate() {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), value.to_owned());
+                    if closure.args.len() >= 2 {
+                        map.insert(
+                            "arg1".to_owned(), 
+                            PrimitiveInt::get_literal(index as i64, interval)
+                        );
+                    }
+                    
                     let args = ArgsType::Normal(map);
-
                     let result = exec_fn(
                         &closure.func,
                         &closure.args,
@@ -806,9 +812,17 @@ impl PrimitiveArray {
 
                 let mut vec = vec![];
 
-                for value in array.value.iter() {
+                for (index, value) in array.value.iter().enumerate() {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), value.to_owned());
+                    if closure.args.len() >= 2 {
+                        dbg!(index);
+                        map.insert(
+                            "arg1".to_owned(), 
+                            PrimitiveInt::get_literal(index as i64, interval)
+                        );
+                    }
+
                     let args = ArgsType::Normal(map);
 
                     let result = exec_fn(
@@ -856,10 +870,18 @@ impl PrimitiveArray {
                     format!("usage: {}", usage),
                 )?;
 
-                for value in array.value.iter() {
+                for (index, value) in array.value.iter().enumerate() {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), accumulator);
                     map.insert("arg1".to_owned(), value.to_owned());
+
+                    if closure.args.len() >= 2 {
+                        map.insert(
+                            "arg2".to_owned(), 
+                            PrimitiveInt::get_literal(index as i64, interval)
+                        );
+                    }
+
                     let args = ArgsType::Normal(map);
 
                     accumulator = exec_fn(
