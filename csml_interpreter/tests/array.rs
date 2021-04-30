@@ -399,3 +399,70 @@ fn array_filter() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn array_map_index() {
+    let data = r#"{"memories":[], "messages":[{"content":[0, 1, 2, 3, 4], "content_type":"array"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "array_map_index",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/array.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+
+#[test]
+fn array_filter_index() {
+    let data = r#"{"memories":[], "messages":[{"content":[34, 232], "content_type":"array"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "array_filter_index",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/array.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn array_reduce_index() {
+    let data = r#"{"memories":[], "messages":[{"content":{"text":"6"}, "content_type":"text"}]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "array_reduce_index",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/array.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
