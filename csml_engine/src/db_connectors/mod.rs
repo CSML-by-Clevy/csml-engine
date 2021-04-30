@@ -59,7 +59,6 @@ mod mongodb;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbConversation {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
     pub flow_id: String,
@@ -73,7 +72,6 @@ pub struct DbConversation {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbInteraction {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
     pub success: bool,
@@ -84,7 +82,6 @@ pub struct DbInteraction {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbMemory {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
     pub interaction_id: String,
@@ -101,7 +98,6 @@ pub struct DbMemory {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbMessage {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
     pub interaction_id: String,
@@ -118,7 +114,6 @@ pub struct DbMessage {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbNode {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
     pub interaction_id: String,
@@ -132,7 +127,6 @@ pub struct DbNode {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbState {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub client: Client,
     #[serde(rename = "type")]
@@ -144,7 +138,6 @@ pub struct DbState {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbBot {
-    #[serde(rename = "_id")] // Use MongoDB's special primary key field name when serializing
     pub id: String,
     pub bot_id: String,
     pub bot: String,
