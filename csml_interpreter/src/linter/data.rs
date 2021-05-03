@@ -46,8 +46,11 @@ pub struct LinterInfo<'a> {
     pub step_list: &'a mut HashSet<StepInfo<'a>>,
     pub function_list: &'a mut HashSet<FunctionInfo<'a>>,
     pub import_list: &'a mut HashSet<ImportInfo<'a>>,
+    pub valid_closure_list: &'a mut Vec<String>,
+    pub functions_call_list: &'a mut Vec<(String, Interval)>,
     pub errors: &'a mut Vec<ErrorInfo>,
     pub warnings: &'a mut Vec<Warnings>,
+    pub native_components: &'a Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,8 +142,11 @@ impl<'a> LinterInfo<'a> {
         step_list: &'a mut HashSet<StepInfo<'a>>,
         function_list: &'a mut HashSet<FunctionInfo<'a>>,
         import_list: &'a mut HashSet<ImportInfo<'a>>,
+        valid_closure_list: &'a mut Vec<String>,
+        functions_call_list: &'a mut Vec<(String, Interval)>,
         errors: &'a mut Vec<ErrorInfo>,
         warnings: &'a mut Vec<Warnings>,
+        native_components: &'a Option<serde_json::Map<String, serde_json::Value>>,
     ) -> Self {
         Self {
             flow_name,
@@ -149,8 +155,11 @@ impl<'a> LinterInfo<'a> {
             step_list,
             function_list,
             import_list,
+            valid_closure_list,
+            functions_call_list,
             errors,
             warnings,
+            native_components
         }
     }
 }

@@ -1,5 +1,5 @@
 use crate::data::{
-    ast::*, tokens::Span,
+    ast::*, tokens::{Span, BUILT_IN, COMPONENT},
     position::Position,
     primitive::{PrimitiveClosure, PrimitiveType},
     warnings::*,
@@ -23,9 +23,20 @@ pub const ERROR_HOLD_IN_LOOP: &str = "'hold' action is not allowed in function s
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+fn register_closure(name: &Identifier, expr: &Expr, linter_info: &mut LinterInfo) {
+    if let Expr::LitExpr{ literal , ..} = expr {
+        // register closure var name for function validation
+        if literal.primitive.get_type() == PrimitiveType::PrimitiveClosure {
+            linter_info.valid_closure_list.push(name.ident.to_owned());
+        }
+    }
+}
+
 fn validate_expr_literals(to_be_literal: &Expr, state: &mut State, linter_info: &mut LinterInfo) {
     match to_be_literal {
-        Expr::ObjectExpr(ObjectType::As(_, value)) => {
+        Expr::ObjectExpr(ObjectType::As(name, value)) => {
+            register_closure(name, value, linter_info);
+
             validate_expr_literals(value, state, linter_info)
         }
         Expr::PathExpr { literal, path } => {
@@ -54,6 +65,9 @@ fn validate_expr_literals(to_be_literal: &Expr, state: &mut State, linter_info: 
                     .warnings
                     .push(Warnings::new(linter_info.flow_name,interval.to_owned(), WARNING_FN));
             }
+
+            linter_info.functions_call_list.push((name.to_owned(), interval.to_owned()));
+
             validate_expr_literals(args, state, linter_info);
         }
         Expr::MapExpr { object, .. } => {
@@ -116,14 +130,6 @@ fn validate_if_scope(if_statement: &IfStatement, state: &mut State, linter_info:
 fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo) {
     for (action, _) in scope.commands.iter() {
         match action {
-            Expr::ObjectExpr(ObjectType::Do(DoType::Update(target, new))) => {
-                validate_expr_literals(target, state, linter_info);
-                validate_expr_literals(new, state, linter_info);
-            }
-            Expr::ObjectExpr(ObjectType::Do(DoType::Exec(expr))) => {
-                validate_expr_literals(expr, state, linter_info);
-            }
-
             Expr::ObjectExpr(ObjectType::Return(value)) => {
                 if !state.in_function {
                     linter_info.errors.push(gen_error_info(
@@ -266,7 +272,22 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                 validate_expr_literals(value, state, linter_info);
             }
 
-            Expr::ObjectExpr(ObjectType::Remember(name, value)) => {
+            Expr::ObjectExpr(ObjectType::Do(DoType::Update(target, new))) => {
+
+                if let Expr::IdentExpr(name) = &**target {
+                    register_closure(name, new, linter_info);
+                }
+
+                validate_expr_literals(target, state, linter_info);
+                validate_expr_literals(new, state, linter_info);
+            }
+            Expr::ObjectExpr(ObjectType::Do(DoType::Exec(expr))) => {
+                validate_expr_literals(expr, state, linter_info);
+            }
+
+            Expr::ObjectExpr(ObjectType::Remember(ref name, value)) => {
+                register_closure(name, value, linter_info);
+
                 if state.in_function {
                     linter_info.errors.push(gen_error_info(
                         Position::new(name.interval.to_owned(), linter_info.flow_name,),
@@ -410,6 +431,46 @@ fn validate_imports(linter_info: &mut LinterInfo) {
     }
 }
 
+fn function_exist(name: &str, linter_info: &LinterInfo) -> bool {
+    match linter_info.function_list.iter().find(|&func| func.name == name) {
+        Some(_) => return true,
+        None => {},
+    }
+
+    match linter_info.import_list.iter().find(|&import| import.as_name == name) {
+        Some(_) => true,
+        None => false
+    }
+}
+
+fn validate_functions(linter_info: &mut LinterInfo) {
+
+    for (name, interval) in linter_info.functions_call_list.iter() {
+        // add step and flow info for 
+
+        let is_native_component = match linter_info.native_components {
+            Some(native_component) => {
+                let test = native_component.contains_key(name);
+                dbg!(&test);
+                test
+            },
+            None  => false
+        };
+
+        if !linter_info.valid_closure_list.contains(&name) &&
+            !function_exist(name, linter_info) &&
+            !is_native_component &&
+            !BUILT_IN.contains(&name.as_str()) &&
+            COMPONENT != name 
+        {
+            linter_info.errors.push(gen_error_info(
+                Position::new(Interval::default(), linter_info.flow_name),
+                format!("function: [{}] dose not exist", name),
+            ));
+        }
+    }
+}
+
 fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
     let mut is_step_start_present = false;
 
@@ -483,11 +544,14 @@ pub fn lint_bot(
     flows: &[FlowToValidate],
     errors: &mut Vec<ErrorInfo>,
     warnings: &mut Vec<Warnings>,
+    native_components: &Option<serde_json::Map<String, serde_json::Value>>,
 ) {
     let mut goto_list = vec![];
     let mut step_list = HashSet::new();
     let mut function_list = HashSet::new();
     let mut import_list = HashSet::new();
+    let mut valid_closure_list = vec![];
+    let mut functions_call_list = vec![];
 
     let mut linter_info = LinterInfo::new(
         "",
@@ -496,8 +560,11 @@ pub fn lint_bot(
         &mut step_list,
         &mut function_list,
         &mut import_list,
+        &mut valid_closure_list,
+        &mut functions_call_list,
         errors,
         warnings,
+        native_components,
     );
 
     for flow in flows.iter() {
@@ -509,4 +576,5 @@ pub fn lint_bot(
 
     validate_gotos(&mut linter_info);
     validate_imports(&mut linter_info);
+    validate_functions(&mut linter_info);
 }
