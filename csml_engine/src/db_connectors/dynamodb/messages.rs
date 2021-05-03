@@ -1,7 +1,6 @@
 use crate::db_connectors::dynamodb::{get_db, Message, DynamoDbClient, DynamoDbKey};
 use crate::{encrypt::{encrypt_data, decrypt_data}, ConversationInfo, EngineError, Client};
 use rusoto_dynamodb::*;
-use chrono::prelude::*;
 use std::collections::HashMap;
 
 use crate::db_connectors::dynamodb::utils::*;
@@ -143,9 +142,8 @@ fn query_messages(
     Ok(data)
 }
 
-pub fn get_conversation_messages(
+pub fn get_client_messages(
     client: &Client,
-    conversation_id: &str,
     db: &mut DynamoDbClient,
     limit: Option<i64>,
     pagination_key: Option<HashMap<String, AttributeValue>>,
@@ -157,7 +155,7 @@ pub fn get_conversation_messages(
         None => 20,
     };
 
-    let data = query_messages(client, db, format!("message#{}#", conversation_id), "range", None, limit, pagination_key)?;
+    let data = query_messages(client, db, String::from("message#"),"range_time", Some(String::from("TimeIndex")), limit, pagination_key)?;
 
     // The query returns an array of items (max 10, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -187,15 +185,6 @@ pub fn get_conversation_messages(
 
         messages.push(json)
     }
-
-    // sort by time because 'range' dose not have a time label in order to trie by time 
-    // we need to do it by hand
-    messages.sort_by(|a, b| {
-        let a = a["created_at"].as_str().unwrap().parse::<DateTime<Utc>>().unwrap();
-        let b = b["created_at"].as_str().unwrap().parse::<DateTime<Utc>>().unwrap();
-
-        a.cmp(&b)
-    });
 
     match data.last_evaluated_key {
         Some(pagination_key) => {

@@ -511,16 +511,14 @@ pub struct LimitPaginationQueryParams {
   pagination_key: Option<String>,
 }
 
-fn get_client_conversation_messages(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn get_client_messages(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
 
-    let conversation_id = cx.argument::<JsString>(1)?.value();
-
-    let jsparams = cx.argument::<JsValue>(2)?;
+    let jsparams = cx.argument::<JsValue>(1)?;
     let params: LimitPaginationQueryParams = neon_serde::from_value(&mut cx, jsparams)?;
 
-    match csml_engine::get_client_conversation_messages(&client, &conversation_id, params.limit, params.pagination_key) {
+    match csml_engine::get_client_messages(&client, params.limit, params.pagination_key) {
         Ok(value) => {
             Ok(neon_serde::to_value(&mut cx, &value)?)
         },
@@ -600,7 +598,7 @@ register_module!(mut cx, {
     cx.export_function("deleteBotVersions", delete_bot_versions)?;
 
     cx.export_function("createClientMemory ", create_client_memory)?;
-    cx.export_function("getConversationMessages", get_client_conversation_messages)?;
+    cx.export_function("getClientMessages", get_client_messages)?;
     cx.export_function("getClientCurrentState", get_client_current_state)?;
     cx.export_function("getClientConversations", get_client_conversations)?;
     cx.export_function("deleteMemory", delete_client_memory)?;

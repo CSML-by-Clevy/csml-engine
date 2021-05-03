@@ -5,15 +5,14 @@ use crate::{format_response};
 
 use lambda_runtime::error::HandlerError;
 
-pub fn get_client_conversation_messages(
+pub fn get_client_messages(
     client: Client,
-    conversation_id: &str,
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, HandlerError> {
 
-    let res = csml_engine::get_client_conversation_messages(
-        &client, conversation_id, limit, pagination_key
+    let res = csml_engine::get_client_messages(
+        &client, limit, pagination_key
     );
 
     match res {

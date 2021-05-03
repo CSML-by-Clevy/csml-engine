@@ -2,7 +2,7 @@ mod routes;
 
 use routes::{
     BotIdPath, BotIdVersionIdPath, GetVersionsRequest,
-    MemoryBody, MemoryKeyPath, ConversationIdPath,
+    MemoryBody, MemoryKeyPath,
     bot_versions::{
         add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
         delete_bot_versions, delete_bot_version
@@ -12,7 +12,7 @@ use routes::{
     conversations::{close_user_conversations, get_open, get_client_conversations},
     memories::{create_client_memory,
     delete_memories, delete_memory},
-    messages::get_client_conversation_messages,
+    messages::get_client_messages,
     state::get_client_current_state,
     run, sns, validate
 };
@@ -124,15 +124,8 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             path,
             http_method,
             query_string_parameters: Some(query_params),
-            path_parameters: Some(path_params),
             ..
-        } if path.ends_with("/conversations/{conversation_id}/messages") && http_method == "GET" => {
-            let path_params: ConversationIdPath = match serde_json::from_value(path_params) {
-                Ok(path_params) => {
-                    path_params
-                },
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
-            };
+        } if path.ends_with("/messages") && http_method == "GET" => {
 
             let client = match (
                 query_params.get("user_id"),
@@ -159,7 +152,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
                 _ => None
             };
 
-            get_client_conversation_messages(client, &path_params.conversation_id, limit, pagination_key)
+            get_client_messages(client, limit, pagination_key)
         }
 
         LambdaRequest {

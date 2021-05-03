@@ -96,9 +96,8 @@ pub fn delete_user_messages(client: &Client, db: &mongodb::Database) -> Result<(
     Ok(())
 }
 
-pub fn get_conversation_messages(
+pub fn get_client_messages(
     client: &Client,
-    conversation_id: &str,
     db: &mongodb::Database,
     limit: Option<i64>,
     pagination_key: Option<String>,
@@ -125,13 +124,11 @@ pub fn get_conversation_messages(
 
             doc! {
                 "client": bson::to_bson(&client)?,
-                "conversation_id": conversation_id,
                 "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
             }
         }
         None => doc! {
             "client": bson::to_bson(&client)?,
-            "conversation_id": conversation_id,
         },
     };
 

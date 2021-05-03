@@ -34,9 +34,8 @@ pub fn add_messages_bulk(
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn get_conversation_messages(
+pub fn get_client_messages(
     client: &Client,
-    conversation_id: &str,
     db: &mut Database,
     limit: Option<i64>,
     pagination_key: Option<String>,
@@ -45,9 +44,8 @@ pub fn get_conversation_messages(
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
 
-        return mongodb_connector::messages::get_conversation_messages(
+        return mongodb_connector::messages::get_client_messages(
             client,
-            conversation_id,
             db,
             limit,
             pagination_key,
@@ -72,9 +70,8 @@ pub fn get_conversation_messages(
             None => None,
         };
 
-        return dynamodb_connector::messages::get_conversation_messages(
+        return dynamodb_connector::messages::get_client_messages(
             client,
-            conversation_id,
             db,
             limit,
             pagination_key,

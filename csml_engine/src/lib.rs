@@ -90,15 +90,14 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
     conversations::get_latest_open(client, &mut db)
 }
 
-pub fn get_client_conversation_messages(
+pub fn get_client_messages(
     client: &Client,
-    conversation_id: &str,
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
 
-    messages::get_conversation_messages(client, conversation_id, &mut db, limit, pagination_key)
+    messages::get_client_messages(client, &mut db, limit, pagination_key)
 }
 
 pub fn get_client_conversations(

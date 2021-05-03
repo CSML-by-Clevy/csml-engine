@@ -20,16 +20,14 @@ pub struct GetClientInfoQuery {
 /*
 *
 */
-#[get("/conversations/{conversation_id}/messages")]
-pub async fn get_client_conversation_messages(path: web::Path<ConversationIdPath>, query: web::Query<GetClientInfoQuery>) -> HttpResponse {
+#[get("/messages")]
+pub async fn get_client_conversation_messages(query: web::Query<GetClientInfoQuery>) -> HttpResponse {
 
     let client = Client {
         bot_id: query.bot_id.to_owned(),
         channel_id: query.channel_id.to_owned(),
         user_id: query.user_id.to_owned()
     };
-
-    let conversation_id = path.conversation_id.to_owned();
 
     let limit = query.limit.to_owned();
     let pagination_key = match query.pagination_key.to_owned() {
@@ -39,7 +37,7 @@ pub async fn get_client_conversation_messages(path: web::Path<ConversationIdPath
     };
 
     let res = thread::spawn(move || {
-        csml_engine::get_client_conversation_messages(&client, &conversation_id, limit, pagination_key)
+        csml_engine::get_client_messages(&client, limit, pagination_key)
     }).join().unwrap();
 
     match res {

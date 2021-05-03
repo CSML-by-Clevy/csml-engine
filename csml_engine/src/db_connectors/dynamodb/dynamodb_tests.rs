@@ -7,7 +7,7 @@ mod tests {
             init_db,
             dynamodb::{
                 Message, get_db,
-                messages::{write_messages_batch, delete_user_messages, get_conversation_messages},
+                messages::{write_messages_batch, delete_user_messages, get_client_messages},
                 conversations::{create_conversation, get_client_conversations, delete_user_conversations},
                 memories::{create_client_memory, get_memories, delete_client_memories}
             }
@@ -52,11 +52,10 @@ mod tests {
 
         write_messages_batch(&messages, db).unwrap();
 
-        let response = get_conversation_messages(
+        let response = get_client_messages(
             &client,
-            conversation_id,
-            db, 
-            Some(24), 
+            db,
+            Some(24),
             None
         ).unwrap();
 
@@ -68,9 +67,8 @@ mod tests {
 
         delete_user_messages(&client, db).unwrap();
 
-        let response = get_conversation_messages(
+        let response = get_client_messages(
             &client,
-            conversation_id,
             db, 
             None, 
             None

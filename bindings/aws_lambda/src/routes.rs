@@ -24,11 +24,6 @@ pub struct BotIdPath {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ConversationIdPath {
-    pub conversation_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct MemoryKeyPath {
     pub key: String,
 }
