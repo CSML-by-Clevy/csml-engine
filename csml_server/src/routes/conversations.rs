@@ -3,6 +3,10 @@ use csml_engine::{user_close_all_conversations, get_open_conversation, Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
 
+/**
+ * If a conversation is open, return it.
+ * Otherwise, return nothing
+ */
 #[post("/conversations/open")]
 pub async fn get_open(body: web::Json<Client>) -> HttpResponse {
 
@@ -21,6 +25,9 @@ pub async fn get_open(body: web::Json<Client>) -> HttpResponse {
 
 }
 
+/**
+ * Close any open conversation
+ */
 #[post("/conversations/close")]
 pub async fn close_user_conversations(body: web::Json<Client>) -> HttpResponse {
 
@@ -46,6 +53,9 @@ pub struct GetClientInfoQuery {
   pagination_key: Option<String>,
 }
 
+/**
+ * List all the conversations of a given client
+ */
 #[get("/conversations")]
 pub async fn get_client_conversations(query: web::Query<GetClientInfoQuery>) -> HttpResponse {
 

@@ -16,7 +16,7 @@ pub struct ClientQuery {
 * {"statusCode": 204}
 *
 */
-#[delete("/client)")]
+#[delete("/clients)")]
 pub async fn delete_client(query: web::Query<ClientQuery>) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),

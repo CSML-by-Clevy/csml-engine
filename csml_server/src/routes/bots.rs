@@ -7,12 +7,12 @@ pub struct MemoryKeyPath {
     bot_id: String
 }
 
-/*
-* Delete all bot data
-*
-* {"statusCode": 204}
-*
-*/
+/**
+ * Delete all bot data
+ *
+ * {"statusCode": 204}
+ *
+ */
 #[delete("/bots/{bot_id}")]
 pub async fn delete_bot(path: web::Path<MemoryKeyPath>,) -> HttpResponse {
 

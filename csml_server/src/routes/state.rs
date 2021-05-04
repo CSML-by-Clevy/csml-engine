@@ -11,7 +11,7 @@ pub struct ClientQuery {
     pub user_id: String,
 }
 
-#[get("/conversations")]
+#[get("/state")]
 pub async fn get_client_current_state(query: web::Query<ClientQuery>) -> HttpResponse {
 
   let client = Client {

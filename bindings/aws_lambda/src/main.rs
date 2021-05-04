@@ -1,4 +1,5 @@
 mod routes;
+mod helpers;
 
 use routes::{
     BotIdPath, BotIdVersionIdPath, GetVersionsRequest,
@@ -7,7 +8,7 @@ use routes::{
         add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
         delete_bot_versions, delete_bot_version
 
-    }, 
+    },
     bots::delete_bot, clients::delete_client,
     conversations::{close_user_conversations, get_open, get_client_conversations},
     memories::{create_client_memory,
@@ -19,21 +20,12 @@ use routes::{
 
 use csml_engine::{data::RunRequest, Client};
 use csml_interpreter::data::csml_bot::CsmlBot;
+use helpers::{format_response, format_csml_client};
 
 use lambda_runtime::{error::HandlerError, lambda, Context};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
-pub fn format_response(status_code: i32, body: serde_json::Value) -> serde_json::Value {
-    serde_json::json!(
-        {
-            "isBase64Encoded": false,
-            "statusCode": status_code,
-            "headers": { "Content-Type": "application/json" },
-            "body": body
-        }
-    )
-}
 
 fn main() -> Result<(), Box<dyn Error>> {
     lambda!(lambda_handler);
@@ -59,6 +51,10 @@ struct LambdaRequest {
 
 fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Value, HandlerError> {
     match request {
+
+        /*
+         * RUN
+         */
         LambdaRequest {
             path,
             http_method,
@@ -72,6 +68,22 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             run::handler(body)
         }
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            headers,
+            ..
+        } if path.ends_with("/sns") && http_method == "POST" => {
+
+            Ok(sns::handler(headers, body))
+        }
+
+
+        /*
+         * CONVERSATIONS
+         */
         LambdaRequest {
             path,
             http_method,
@@ -103,77 +115,12 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
         LambdaRequest {
             path,
             http_method,
-            body: Some(body),
-            query_string_parameters: Some(query_params),
-            ..
-        } if path.ends_with("/memory") && http_method == "POST" => {
-            let body: MemoryBody =  match serde_json::from_str(&body) {
-                Ok(body) => body,
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
-            };
-
-            let client: Client = match serde_json::from_value(query_params) {
-                Ok(client) => client,
-                _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
-            };
-
-            create_client_memory(client, body.key, body.value)
-        }
-
-        LambdaRequest {
-            path,
-            http_method,
-            query_string_parameters: Some(query_params),
-            ..
-        } if path.ends_with("/messages") && http_method == "GET" => {
-
-            let client = match (
-                query_params.get("user_id"),
-                query_params.get("bot_id"),
-                query_params.get("channel_id")
-            ) {
-                (Some(serde_json::Value::String(user_id)),
-                Some(serde_json::Value::String(bot_id)),
-                Some(serde_json::Value::String(channel_id))) => Client {
-                    user_id: user_id.to_owned(),
-                    bot_id: bot_id.to_owned(),
-                    channel_id: channel_id.to_owned()
-                },
-                _ => return Ok(format_response(400, serde_json::json!("query params client info (user_id, bot_id, channel_id) are missing")))
-            };
-
-            let limit = match query_params.get("limit") {
-                Some(serde_json::Value::Number(limit)) => limit.as_i64(),
-                _ => None
-            };
-
-            let pagination_key = match query_params.get("pagination_key") {
-                Some(serde_json::Value::String(pagination_key)) => Some(pagination_key.to_owned()),
-                _ => None
-            };
-
-            get_client_messages(client, limit, pagination_key)
-        }
-
-        LambdaRequest {
-            path,
-            http_method,
             query_string_parameters: Some(query_params),
             ..
         } if path.ends_with("/conversations") && http_method == "GET" => {
-            let client = match (
-                query_params.get("user_id"),
-                query_params.get("bot_id"),
-                query_params.get("channel_id")
-            ) {
-                (Some(serde_json::Value::String(user_id)),
-                Some(serde_json::Value::String(bot_id)),
-                Some(serde_json::Value::String(channel_id))) => Client {
-                    user_id: user_id.to_owned(),
-                    bot_id: bot_id.to_owned(),
-                    channel_id: channel_id.to_owned()
-                },
-                _ => return Ok(format_response(400, serde_json::json!("query params client info (user_id, bot_id, channel_id) are missing")))
+            let client = match format_csml_client(&query_params) {
+                Ok(client) => client,
+                Err(err) => return Ok(err),
             };
 
             let limit = match query_params.get("limit") {
@@ -189,20 +136,132 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             get_client_conversations(client, limit, pagination_key)
         }
 
+        /*
+         * MEMORIES
+         */
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            query_string_parameters: Some(query_params),
+            ..
+        } if path.ends_with("/memories") && http_method == "POST" => {
+            let client = match format_csml_client(&query_params) {
+                Ok(client) => client,
+                Err(err) => return Ok(err),
+            };
+
+            let body: MemoryBody =  match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            create_client_memory(client, body.key, body.value)
+        }
+
         LambdaRequest {
             path,
             http_method,
             query_string_parameters: Some(query_params),
             ..
-        } if path.ends_with("/state") && http_method == "GET" => {
-            let client: Client = match serde_json::from_value(query_params) {
+        } if path.ends_with("/memories") && http_method == "DELETE" => {
+
+            let client = match format_csml_client(&query_params) {
                 Ok(client) => client,
-                _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
+                Err(err) => return Ok(err),
+            };
+
+            delete_memories(client)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/memories/{key}") && http_method == "DELETE" => {
+
+            let client = match format_csml_client(&query_params) {
+                Ok(client) => client,
+                Err(err) => return Ok(err),
+            };
+
+            let memory: MemoryKeyPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {path_params},
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Path parameters bad format")))
+            };
+
+            delete_memory(client, &memory.key)
+        }
+
+        /*
+         * STATE
+         */
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            ..
+        } if path.ends_with("/state?") && http_method == "GET" => {
+
+            let client = match format_csml_client(&query_params) {
+                Ok(client) => client,
+                Err(err) => return Ok(err),
             };
 
             get_client_current_state(client)
         }
 
+        /*
+         * MESSAGES
+         */
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            ..
+        } if path.ends_with("/messages") && http_method == "GET" => {
+
+            let client = match format_csml_client(&query_params) {
+                Ok(client) => client,
+                Err(err) => return Ok(err),
+            };
+
+            let limit = match query_params.get("limit") {
+                Some(serde_json::Value::Number(limit)) => limit.as_i64(),
+                _ => None
+            };
+
+            let pagination_key = match query_params.get("pagination_key") {
+                Some(serde_json::Value::String(pagination_key)) => Some(pagination_key.to_owned()),
+                _ => None
+            };
+
+            get_client_messages(client, limit, pagination_key)
+        }
+
+        /*
+         * CLIENTS
+         */
+        LambdaRequest {
+            path,
+            http_method,
+            query_string_parameters: Some(query_params),
+            ..
+        } if path.ends_with("/clients") && http_method == "DELETE" => {
+
+            let client = match format_csml_client(&query_params) {
+                Ok(client) => client,
+                Err(err) => return Ok(err),
+            };
+
+            delete_client(client)
+        }
+
+        /*
+         * VALIDATION
+         */
         LambdaRequest {
             path,
             http_method,
@@ -217,6 +276,9 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             validate::handler(body)
         }
 
+        /*
+         * BOTS
+         */
         LambdaRequest {
             path,
             http_method,
@@ -236,20 +298,6 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             path_parameters: Some(path_params),
             ..
-        } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "GET" => {
-            let path_parameters: BotIdVersionIdPath = match serde_json::from_value(path_params) {
-                Ok(path_parameters) => path_parameters,
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
-            };
-
-            get_bot_version(path_parameters)
-        }
-
-        LambdaRequest {
-            path,
-            http_method,
-            path_parameters: Some(path_params),
-            ..
         } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
             let path_params: BotIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => path_params,
@@ -262,10 +310,25 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
         LambdaRequest {
             path,
             http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}") && http_method == "DELETE" => {
+
+            let bot: BotIdPath = match serde_json::from_value(path_params) {
+                Ok(path_params) => {path_params},
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            delete_bot(&bot.bot_id)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
             query_string_parameters: Some(query_params),
             path_parameters: Some(path_params),
             ..
-        } if path.ends_with("/bots/{bot_id}") && http_method == "GET" => {
+        } if path.ends_with("/bots/{bot_id}/versions") && http_method == "GET" => {
             let path_params: BotIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => {
                     path_params
@@ -291,7 +354,7 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             http_method,
             path_parameters: Some(path_params),
             ..
-        } if path.ends_with("/bots/{bot_id}") && http_method == "DELETE" => {
+        } if path.ends_with("/bots/{bot_id}/versions") && http_method == "DELETE" => {
             let path_params: BotIdPath = match serde_json::from_value(path_params) {
                 Ok(path_params) => {
                     path_params
@@ -299,6 +362,20 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
                 Err(_err) => return Ok(format_response(400, serde_json::json!("Path parameters bad format")))
             };
             delete_bot_versions(path_params.bot_id)
+        }
+
+        LambdaRequest {
+            path,
+            http_method,
+            path_parameters: Some(path_params),
+            ..
+        } if path.ends_with("/bots/{bot_id}/versions/{version_id}") && http_method == "GET" => {
+            let path_parameters: BotIdVersionIdPath = match serde_json::from_value(path_params) {
+                Ok(path_parameters) => path_parameters,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            get_bot_version(path_parameters)
         }
 
         LambdaRequest {
@@ -317,83 +394,12 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             delete_bot_version(path_params.bot_id, path_params.version_id)
         }
 
-        LambdaRequest {
-            path,
-            http_method,
-            query_string_parameters: Some(query_params),
-            ..
-        } if path.ends_with("/client/memories") && http_method == "DELETE" => {
 
-            let client: Client = match serde_json::from_value(query_params) {
-                Ok(client) => client,
-                _ => return Ok(format_response(400, serde_json::json!("query string parameters bad format"))),
-            };
+        /*
+         * CATCHALL
+         */
 
-            delete_memories(client)
-        }
+        _ => Ok(format_response(404, serde_json::json!("Not found")))
 
-        LambdaRequest {
-            path,
-            http_method,
-            query_string_parameters: Some(query_params),
-            path_parameters: Some(path_params),
-            ..
-        } if path.ends_with("/client/memories/{key}") && http_method == "DELETE" => {
-
-            let client: Client = match serde_json::from_value(query_params) {
-                Ok(client) => client,
-                _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
-            };
-
-            let memory: MemoryKeyPath = match serde_json::from_value(path_params) {
-                Ok(path_params) => {path_params},
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Path parameters bad format")))
-            };
-
-            delete_memory(client, &memory.key)
-        }
-
-        LambdaRequest {
-            path,
-            http_method,
-            query_string_parameters: Some(query_params),
-            ..
-        } if path.ends_with("/client") && http_method == "DELETE" => {
-
-            let client: Client = match serde_json::from_value(query_params) {
-                Ok(client) => client,
-                _ =>  return Ok(format_response(400, serde_json::json!("query string parameters value bad format"))),
-            };
-
-            delete_client(client)
-        }
-
-        LambdaRequest {
-            path,
-            http_method,
-            path_parameters: Some(path_params),
-            ..
-        } if path.ends_with("/bots/{bot_id}") && http_method == "DELETE" => {
-
-            let bot: BotIdPath = match serde_json::from_value(path_params) {
-                Ok(path_params) => {path_params},
-                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
-            };
-
-            delete_bot(&bot.bot_id)
-        }
-
-        LambdaRequest {
-            path,
-            http_method,
-            body: Some(body),
-            headers,
-            ..
-        } if path.ends_with("/sns") && http_method == "POST" => {
-
-            Ok(sns::handler(headers, body))
-        }
-
-        _ => Ok(format_response(404, serde_json::json!("Bad request")))
     }
 }

@@ -17,11 +17,11 @@ pub struct GetClientInfoQuery {
     pagination_key: Option<String>,
 }
 
-/*
-*
-*/
+/**
+ * List all the messages a client has ever exchanged with the chatbot
+ */
 #[get("/messages")]
-pub async fn get_client_conversation_messages(query: web::Query<GetClientInfoQuery>) -> HttpResponse {
+pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>) -> HttpResponse {
 
     let client = Client {
         bot_id: query.bot_id.to_owned(),

@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
       .service(routes::memories::delete_memories)
       .service(routes::memories::delete_memory)
 
-      .service(routes::messages::get_client_conversation_messages)
+      .service(routes::messages::get_client_messages)
 
       .service(routes::state::get_client_current_state)
 

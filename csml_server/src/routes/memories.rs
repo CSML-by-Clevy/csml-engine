@@ -16,13 +16,13 @@ pub struct ClientQuery {
     pub user_id: String,
 }
 
-/*
-* Delete client memory key
-*
-* {"statusCode": 204}
-*
-*/
-#[delete("/client/memories")]
+/**
+ * Delete client memory key
+ *
+ * {"statusCode": 204}
+ *
+ */
+#[delete("/memories")]
 pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
@@ -43,13 +43,13 @@ pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
     }
 }
 
-/*
-* Delete all client memories 
-*
-* {"statusCode": 204}
-*
-*/
-#[delete("/client/memories/{key})")]
+/**
+ * Delete all client memories
+ *
+ * {"statusCode": 204}
+ *
+ */
+#[delete("/memories/{key})")]
 pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>) -> HttpResponse {
     let memory_key = path.key.to_owned();
 
@@ -78,12 +78,12 @@ pub struct Memory {
     value: serde_json::Value,
 }
 
-/*
-* Create client memory
-*
-* {"statusCode": 201}
-*
-*/
+/**
+ * Create client memory
+ *
+ * {"statusCode": 201}
+ *
+ */
 #[post("/memories")]
 pub async fn create_client_memory(query: web::Query<ClientQuery>, body: web::Json<Memory>) -> HttpResponse {
     let client = Client {
