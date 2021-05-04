@@ -48,8 +48,8 @@ pub fn make_hash(client: &Client) -> String {
 }
 
 /**
-* Create a serialized range key from given arguments
-*/
+ * Create a serialized range key from given arguments
+ */
 pub fn make_range(args: &[&str]) -> String {
     let mut res = "".to_owned();
     for arg in args.iter() {
@@ -62,15 +62,15 @@ pub fn make_range(args: &[&str]) -> String {
 }
 
 /**
-* Batch write query wrapper with exponential backoff in case of exceeded throughput
-*/
+ * Batch write query wrapper with exponential backoff in case of exceeded throughput
+ */
 pub fn execute_batch_write_query(db: &mut DynamoDbClient, input: BatchWriteItemInput) -> Result<(), RusotoError<BatchWriteItemError>> {
     let mut retry_times = 1;
 
     let mut rng = rand::thread_rng();
     let now = time::Instant::now();
     loop {
-        
+
         match db.runtime.block_on(db.client.batch_write_item(input.clone())) {
             Ok(_) => return Ok(()),
             // request rate is too high, reduce the frequency of requests and use exponential backoff. "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff"

@@ -194,7 +194,7 @@ pub fn get_bot_versions(
 
 /**
  * delete bot by version_id
-*/
+ */
 pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
@@ -202,8 +202,8 @@ pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> 
 }
 
 /**
-* Delete all bot versions of bot_id
-*/
+ * Delete all bot versions of bot_id
+ */
 pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
@@ -211,8 +211,8 @@ pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
 }
 
 /**
-* Delete all data related to bot: versions, conversations, messages, memories, nodes, integrations
-*/
+ * Delete all data related to bot: versions, conversations, messages, memories, nodes, integrations
+ */
 pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
@@ -220,8 +220,8 @@ pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
 }
 
 /**
-* Delete all the memories of a given client
-*/
+ * Delete all the memories of a given client
+ */
 pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
@@ -229,8 +229,8 @@ pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
 }
 
 /**
-* Delete a single memory for a given Client
-*/
+ * Delete a single memory for a given Client
+ */
 pub fn delete_client_memory(client: &Client, memory_name: &str,) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
@@ -238,8 +238,8 @@ pub fn delete_client_memory(client: &Client, memory_name: &str,) -> Result<(), E
 }
 
 /**
-* Delete all data related to a given Client
-*/
+ * Delete all data related to a given Client
+ */
 pub fn delete_client(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
@@ -275,15 +275,15 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
 }
 
 /**
-* Verify if the user is currently on hold in a given conversation.
-*
-* If a hold is found, make sure that the flow has not been updated since last conversation.
-* If that's the case, we can not be sure that the hold is in the same position,
-* so we need to clear the hold's position and restart the conversation.
-*
-* If the hold is valid, we also need to load the local step memory
-* (context.hold.step_vars) into the conversation context.
-**/
+ * Verify if the user is currently on hold in a given conversation.
+ *
+ * If a hold is found, make sure that the flow has not been updated since last conversation.
+ * If that's the case, we can not be sure that the hold is in the same position,
+ * so we need to clear the hold's position and restart the conversation.
+ *
+ * If the hold is valid, we also need to load the local step memory
+ * (context.hold.step_vars) into the conversation context.
+ */
 fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), EngineError> {
     match state::get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold

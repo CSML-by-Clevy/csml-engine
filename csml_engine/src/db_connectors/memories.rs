@@ -47,9 +47,9 @@ pub fn create_client_memory(
 
 
 /**
-* Memories will be injected into the conversation's current context
-* so `context` must be mutable.
-*/
+ * Memories will be injected into the conversation's current context
+ * so `context` must be mutable.
+ */
 pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
