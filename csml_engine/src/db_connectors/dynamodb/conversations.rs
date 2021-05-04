@@ -384,6 +384,7 @@ fn query_conversation(
     db: &mut DynamoDbClient,
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
+    attributes_to_get: Option<Vec<String>>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Conversation::get_hash(client);
 
@@ -426,7 +427,7 @@ fn query_conversation(
         limit: Some(limit),
         exclusive_start_key: pagination_key,
         scan_index_forward: Some(false),
-        select: Some(String::from("ALL_ATTRIBUTES")),
+        attributes_to_get: attributes_to_get,
         ..Default::default()
     };
 
@@ -441,7 +442,7 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
 
     // retrieve all memories from dynamodb
     loop {
-        let data = query_conversation(client, db, 25, pagination_key)?;
+        let data = query_conversation(client, db, 25, pagination_key, Some(vec!("hash".to_owned(), "range".to_owned())))?;
 
         // The query returns an array of items (max 10, based on the limit param above).
         // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -503,7 +504,7 @@ pub fn get_client_conversations(
         None => 20,
     };
 
-    let data = query_conversation(client, db, limit, pagination_key)?;
+    let data = query_conversation(client, db, limit, pagination_key, None)?;
 
     // The query returns an array of items (max 10, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
