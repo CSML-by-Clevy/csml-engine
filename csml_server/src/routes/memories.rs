@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::thread;
 
 
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MemoryKeyPath {
     key: String
@@ -15,6 +16,13 @@ pub struct ClientQuery {
     pub channel_id: String,
     pub user_id: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Memory {
+    key: String,
+    value: serde_json::Value,
+}
+
 
 /**
  * Delete client memory key
@@ -44,7 +52,34 @@ pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
 }
 
 /**
- * Delete all client memories
+ * Create client memory
+ *
+ * {"statusCode": 201}
+ *
+ */
+#[post("/memories")]
+pub async fn create_client_memory(query: web::Query<ClientQuery>, body: web::Json<Memory>) -> HttpResponse {
+    let client = Client {
+        user_id: query.user_id.clone(),
+        channel_id: query.channel_id.clone(),
+        bot_id: query.bot_id.clone(),
+    };
+
+    let res = thread::spawn(move || {
+        csml_engine::create_client_memory(&client, body.key.to_owned(), body.value.to_owned())
+    }).join().unwrap();
+
+    match res {
+        Ok(_) => HttpResponse::Created().finish(),
+        Err(err) => {
+            eprintln!("EngineError: {:?}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/**
+ * Delete a specific key in client memory
  *
  * {"statusCode": 204}
  *
@@ -72,35 +107,3 @@ pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Cli
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Memory {
-    key: String,
-    value: serde_json::Value,
-}
-
-/**
- * Create client memory
- *
- * {"statusCode": 201}
- *
- */
-#[post("/memories")]
-pub async fn create_client_memory(query: web::Query<ClientQuery>, body: web::Json<Memory>) -> HttpResponse {
-    let client = Client {
-        user_id: query.user_id.clone(),
-        channel_id: query.channel_id.clone(),
-        bot_id: query.bot_id.clone(),
-    };
-
-    let res = thread::spawn(move || {
-        csml_engine::create_client_memory(&client, body.key.to_owned(), body.value.to_owned())
-    }).join().unwrap();
-
-    match res {
-        Ok(_) => HttpResponse::Created().finish(),
-        Err(err) => {
-            eprintln!("EngineError: {:?}", err);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
-}
