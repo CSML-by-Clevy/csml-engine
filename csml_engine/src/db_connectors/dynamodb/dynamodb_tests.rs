@@ -30,6 +30,8 @@ mod tests {
         let mut db = init_db().unwrap();
         let db = get_db(&mut db).unwrap();
 
+        delete_user_messages(&client, db).unwrap();
+
         let message = serde_json::json!({
             "content_type": "text",
             "content": "super message"
@@ -86,6 +88,8 @@ mod tests {
         let mut db = init_db().unwrap();
         let db = get_db(&mut db).unwrap();
 
+        delete_user_conversations(&client, db).unwrap();
+
         let metadata = serde_json::json!({
             "toto": "text",
             "plop": "super metadata"
@@ -112,6 +116,8 @@ mod tests {
         let client = get_client();
         let mut db = init_db().unwrap();
         let db = get_db(&mut db).unwrap();
+
+        delete_client_memories(&client, db).unwrap();
 
         let mems = vec![
             ("key".to_owned(), serde_json::json!("value")),

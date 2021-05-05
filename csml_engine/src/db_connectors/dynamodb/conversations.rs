@@ -1,5 +1,5 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::dynamodb::{Conversation, DynamoDbKey};
+use crate::db_connectors::dynamodb::{Conversation, ConversationDeleteInfo, DynamoDbKey};
 use crate::db_connectors::DbConversation;
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
@@ -384,17 +384,10 @@ fn query_conversation(
     db: &mut DynamoDbClient,
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
-    attributes_to_get: Option<Vec<String>>,
+    projection_expression: Option<String>,
+    expression_attribute_names: Option<HashMap<String, String>>
 ) -> Result<QueryOutput, EngineError> {
     let hash = Conversation::get_hash(client);
-
-    let expr_attr_names = [
-        ("#hashKey".to_string(), "hash".to_string()),
-        ("#rangeKey".to_string(), "range_time".to_string()),
-    ]
-    .iter()
-    .cloned()
-    .collect();
 
     let expr_attr_values = [
         (
@@ -422,12 +415,12 @@ fn query_conversation(
         key_condition_expression: Some(
             "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_owned(),
         ),
-        expression_attribute_names: Some(expr_attr_names),
+        expression_attribute_names,
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(limit),
         exclusive_start_key: pagination_key,
         scan_index_forward: Some(false),
-        attributes_to_get: attributes_to_get,
+        projection_expression,
         ..Default::default()
     };
 
@@ -440,9 +433,26 @@ fn query_conversation(
 pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
+    let expr_attr_names: HashMap<String, String> = [
+        ("#hashKey".to_string(), "hash".to_string()),
+        ("#rangeKey".to_string(), "range_time".to_string()),
+        ("#status".to_string(), "status".to_string()),
+        ("#id".to_string(), "id".to_string()),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
     // retrieve all memories from dynamodb
     loop {
-        let data = query_conversation(client, db, 25, pagination_key, Some(vec!("hash".to_owned(), "range".to_owned())))?;
+        let data = query_conversation(
+            client,
+            db,
+            25,
+            pagination_key,
+            Some("#status, #id".to_owned()),
+            Some(expr_attr_names.clone())
+        )?;
 
         // The query returns an array of items (max 10, based on the limit param above).
         // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -456,7 +466,7 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
         let mut write_requests = vec![];
 
         for item in items {
-            let conversation: Conversation = serde_dynamodb::from_hashmap(item.to_owned())?;
+            let conversation: ConversationDeleteInfo = serde_dynamodb::from_hashmap(item.to_owned())?;
 
             // delete all conversation paths
             super::nodes::delete_conversation_nodes(&conversation.id, db).unwrap();
@@ -504,7 +514,22 @@ pub fn get_client_conversations(
         None => 20,
     };
 
-    let data = query_conversation(client, db, limit, pagination_key, None)?;
+    let expr_attr_names: HashMap<String, String> = [
+        ("#hashKey".to_string(), "hash".to_string()),
+        ("#rangeKey".to_string(), "range_time".to_string()),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let data = query_conversation(
+        client, 
+        db,
+        limit,
+        pagination_key,
+        None,
+        Some(expr_attr_names.clone()),
+    )?;
 
     // The query returns an array of items (max 10, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None

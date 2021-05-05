@@ -368,8 +368,8 @@ fn query_bot_info(
     bot_id: &str,
     class: &str,
     limit: i64,
-    pagination_key: Option<HashMap<String, AttributeValue>>,
     db: &mut DynamoDbClient,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = format!("bot_id:{}#", bot_id);
 
@@ -431,7 +431,7 @@ pub fn delete_all_bot_data(
 
     loop {
         // 25 is the Maximum operations in a single request for BatchWriteItemInput
-        let data = query_bot_info(bot_id, class, 25, pagination_key, db)?;
+        let data = query_bot_info(bot_id, class, 25, db, pagination_key, )?;
 
         // The query returns an array of items (max 10, based on the limit param above).
         // If 0 item is returned it means that there is no open conversation, so simply return None

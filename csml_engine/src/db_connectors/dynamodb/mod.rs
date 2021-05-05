@@ -115,6 +115,13 @@ impl Bot {
     }
 }
 
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConversationDeleteInfo {
+    pub status: String,
+    pub id: String,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Conversation {
     pub hash: String,
@@ -188,6 +195,11 @@ impl Conversation {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct InteractionDeleteInfo {
+    pub id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Interaction {
     pub hash: String,
     pub range: String,
@@ -246,6 +258,11 @@ impl Interaction {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MemoryDeleteInfo {
+    pub key: String,
+    pub id: String,
+}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Memory {
     pub hash: String,
@@ -328,6 +345,13 @@ impl Memory {
             created_at: now.to_owned(),
         }
     }
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+struct MessageDeleteInfo {
+    conversation_id: String,
+    id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -413,6 +437,12 @@ impl Message {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct NodeDeleteInfo {
+    pub id: String,
+    pub conversation_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Node {
     pub hash: String,
     pub range: String,
@@ -469,6 +499,13 @@ impl Node {
             created_at: now.to_owned(),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StatDeleteInfo {
+    #[serde(rename = "type")]
+    pub _type: String,
+    pub key: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
