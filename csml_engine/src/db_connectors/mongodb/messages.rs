@@ -112,16 +112,6 @@ pub fn get_client_messages(
 
     let filter = match pagination_key {
         Some(key) => {
-            let base64decoded = match base64::decode(&key) {
-                Ok(base64decoded) => base64decoded,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            };
-    
-            let key: String = match serde_json::from_slice(&base64decoded) {
-                Ok(key) => key,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            };
-
             doc! {
                 "client": bson::to_bson(&client)?,
                 "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }

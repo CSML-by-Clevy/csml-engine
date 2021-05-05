@@ -2,6 +2,8 @@ use crate::data::DynamoDbClient;
 use crate::{Client, Database, EngineError};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use std::collections::HashMap;
+use rusoto_dynamodb::AttributeValue;
 
 pub mod aws_s3;
 pub mod bot;
@@ -54,6 +56,22 @@ pub fn get_db<'a>(db: &'a mut Database) -> Result<&'a mut DynamoDbClient, Engine
         _ => Err(EngineError::Manager(
             "DynamoDB connector is not setup correctly".to_owned(),
         )),
+    }
+}
+
+pub fn get_pagination_key(pagination_key: Option<String>) ->  Result<Option<HashMap<String, AttributeValue>>, EngineError> {
+    match pagination_key {
+        Some(key) => {
+            let base64decoded = match base64::decode(&key) {
+                Ok(base64decoded) => base64decoded,
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            };
+            match serde_json::from_slice(&base64decoded) {
+                Ok(key) => Ok(Some(key)),
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            }
+        }
+        None => Ok(None),
     }
 }
 

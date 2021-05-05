@@ -43,6 +43,7 @@ pub fn get_client_messages(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
+        let pagination_key = mongodb_connector::get_pagination_key(pagination_key)?;
 
         return mongodb_connector::messages::get_client_messages(
             client,
@@ -55,20 +56,7 @@ pub fn get_client_messages(
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-
-        let pagination_key = match pagination_key {
-            Some(key) => {
-                let base64decoded = match base64::decode(&key) {
-                    Ok(base64decoded) => base64decoded,
-                    Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-                };
-                match serde_json::from_slice(&base64decoded) {
-                    Ok(key) => Some(key),
-                    Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-                }
-            }
-            None => None,
-        };
+        let pagination_key = dynamodb_connector::get_pagination_key(pagination_key)?;
 
         return dynamodb_connector::messages::get_client_messages(
             client,
