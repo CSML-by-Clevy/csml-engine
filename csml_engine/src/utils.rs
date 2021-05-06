@@ -7,7 +7,10 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    data::{ast::Flow, Client, Context, Event, Interval, Memory, Message},
+    error_format::{ERROR_SIZE_IDENT, ERROR_NUMBER_AS_KEY, ERROR_KEY_ALPHANUMERIC},
+    data::{ast::Flow, Client, Context,
+        Event, Interval, Memory, Message,
+    },
     get_step,
     interpreter::json_to_literal,
 };
@@ -30,6 +33,32 @@ pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memory]) {
 
         data.context.current.insert(elem.key.to_owned(), lit);
     }
+}
+
+/**
+ * Check if memory key is valid
+ */
+pub fn validate_memory_key_format(key: &str) -> Result<(), EngineError> {
+
+    if !key.chars().all(|c| c.is_alphanumeric() || c == '_') {
+        return Err(EngineError::Format(
+            ERROR_KEY_ALPHANUMERIC.to_owned(),
+        ))
+    }
+
+    if key.len() > std::u8::MAX as usize {
+        return Err(EngineError::Format(
+            ERROR_SIZE_IDENT.to_owned(),
+        ))
+    }
+
+    if key.parse::<f64>().is_ok() {
+        return Err(EngineError::Format(
+            ERROR_NUMBER_AS_KEY.to_owned(),
+        ))
+    }
+
+    Ok(())
 }
 
 /**

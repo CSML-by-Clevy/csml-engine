@@ -8,31 +8,24 @@ use bson::{doc, Bson};
 fn format_memories(
     data: &mut ConversationInfo,
     memories: &[Memory],
-    interaction_order: i32,
 ) -> Result<Vec<bson::Document>, EngineError> {
     let client = bson::to_bson(&data.client)?;
 
     memories
         .iter()
-        .enumerate()
-        .fold(Ok(vec![]), |vec, (memory_order, var)| {
+        .fold(Ok(vec![]), |vec, mem | {
             let time = Bson::UtcDatetime(chrono::Utc::now());
-            let value = encrypt_data(&var.value)?;
+            let value = encrypt_data(&mem.value)?;
 
             let mut vec = vec?;
 
             vec.push(doc! {
                 "client": client.clone(),
-                "interaction_id": &data.interaction_id,
-                "conversation_id": &data.conversation_id,
-                "flow_id": &data.context.flow,
-                "step_id": &data.context.step,
-                "memory_order": memory_order as i32,
-                "interaction_order": interaction_order,
-                "key": &var.key,
+                "key": &mem.key,
                 "value": value, // encrypted
                 "expires_at": Bson::Null,
-                "created_at": time
+                "created_at": time.clone(),
+                "updated_at": time
             });
             Ok(vec)
         })
@@ -41,13 +34,12 @@ fn format_memories(
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &[Memory],
-    interaction_order: i32,
 ) -> Result<(), EngineError> {
     if memories.is_empty() {
         return Ok(());
     }
 
-    let mem = format_memories(data, memories, interaction_order)?;
+    let mem = format_memories(data, memories)?;
     let db = get_db(&data.db)?;
 
     let collection = db.collection("memory");
@@ -64,12 +56,6 @@ pub fn create_client_memory(
 ) -> Result<(), EngineError> {
     let memory = doc! {
         "client": bson::to_bson(&client)?,
-        "interaction_id": "",
-        "conversation_id": "",
-        "flow_id": "",
-        "step_id": "",
-        "memory_order": 0,
-        "interaction_order": 0,
         "key": key,
         "value": encrypt_data(&value)?, // encrypted
         "expires_at": Bson::Null,

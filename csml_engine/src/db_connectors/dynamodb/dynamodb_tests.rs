@@ -9,7 +9,7 @@ mod tests {
                 Message, get_db,
                 messages::{write_messages_batch, delete_user_messages, get_client_messages},
                 conversations::{create_conversation, get_client_conversations, delete_user_conversations},
-                memories::{create_client_memory, get_memories, delete_client_memories}
+                memories::{create_client_memory, get_memories, delete_client_memories, delete_client_memory}
             }
         }
     };
@@ -143,5 +143,53 @@ mod tests {
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 0);
+    }
+
+    #[test]
+    fn ok_memory() {
+        let client = get_client();
+        let mut db = init_db().unwrap();
+        let db = get_db(&mut db).unwrap();
+
+        delete_client_memories(&client, db).unwrap();
+
+        let mems = vec![
+            ("memory_key".to_owned(), serde_json::json!("value")),
+            ("memory".to_owned(), serde_json::json!("tmp")),
+            ("memory_key".to_owned(), serde_json::json!("next")),
+        ];
+
+        for (key, value) in mems.iter() {
+            create_client_memory(&client, key.to_owned(), value.to_owned(), db).unwrap();
+        }
+
+        let response = get_memories(&client, db).unwrap();
+        let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
+
+        assert_eq!(memories.len(), 2);
+
+        let mems = vec![
+            ("memory".to_owned(), serde_json::json!("tmp")),
+            ("memory_key".to_owned(), serde_json::json!("next")),
+        ];
+
+        for (key, value) in mems.iter() {
+            assert_eq!(memories.get(key).unwrap(), value);
+        }
+
+        delete_client_memory(&client, "memory", db).unwrap();
+
+        let response = get_memories(&client, db).unwrap();
+        let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
+
+        assert_eq!(memories.len(), 1);
+
+        let mems = vec![
+            ("memory_key".to_owned(), serde_json::json!("next")),
+        ];
+
+        for (key, value) in mems.iter() {
+            assert_eq!(memories.get(key).unwrap(), value);
+        }
     }
 }

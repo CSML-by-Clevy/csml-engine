@@ -278,8 +278,7 @@ impl Interaction {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MemoryDeleteInfo {
-    pub key: String,
-    pub id: String,
+    pub range: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Memory {
@@ -287,17 +286,10 @@ pub struct Memory {
     pub range: String,
     pub range_time: String,
     pub class: String,
-    pub id: String,
     pub client: Option<Client>,
     pub bot_id: Option<String>,
     pub channel_id: Option<String>,
     pub user_id: Option<String>,
-    pub interaction_id: String,
-    pub conversation_id: String,
-    pub flow_id: String,
-    pub step_id: String,
-    pub memory_order: i32,
-    pub interaction_order: i32,
     pub key: String,
     pub value: Option<String>,
     pub expires_at: Option<String>,
@@ -309,29 +301,22 @@ impl Memory {
         make_hash(client)
     }
 
-    pub fn get_range(key: &str, id: &str) -> String {
-        make_range(&["memory", key, id])
+    pub fn get_range(key: &str) -> String {
+        make_range(&["memory", key])
     }
 
     /**
      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
-     * range = memory#[mem_key]#id
-     * range_time = memory#timestamp#interaction_order#memory_order#[mem_key]#id
+     * range = memory#[mem_key]
+     * range_time = memory#timestamp#interaction_order#memory_order#[mem_key]
      */
     pub fn new(
         client: &Client,
-        conversation_id: &str,
-        interaction_id: &str,
-        interaction_order: i32,
-        memory_order: i32,
-        flow_id: &str,
-        step_id: &str,
         key: &str,
         encrypted_value: Option<String>,
     ) -> Self {
-        let id = uuid::Uuid::new_v4().to_string();
         let hash = Self::get_hash(client);
-        let range = Self::get_range(key, &id);
+        let range = Self::get_range(key);
         let now = get_date_time();
 
         let class_name = "memory";
@@ -340,27 +325,18 @@ impl Memory {
             range: range.to_owned(),
             range_time: make_range(&[
                 class_name,
-                &now,
-                &interaction_order.to_string(),
-                &memory_order.to_string(),
-                &id,
+                &now
             ]),
             class: class_name.to_owned(),
-            id: id.to_string(),
             client: Some(client.to_owned()),
             bot_id: Some(client.bot_id.to_owned()),
             channel_id: Some(client.channel_id.to_owned()),
             user_id: Some(client.user_id.to_owned()),
-            interaction_id: interaction_id.to_owned(),
-            conversation_id: conversation_id.to_owned(),
-            flow_id: flow_id.to_owned(),
-            step_id: step_id.to_owned(),
-            memory_order,
-            interaction_order,
             key: key.to_owned(),
             value: encrypted_value.clone(),
             expires_at: None,
             created_at: now.to_owned(),
+            
         }
     }
 }

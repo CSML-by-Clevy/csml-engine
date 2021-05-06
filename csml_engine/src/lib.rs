@@ -110,24 +110,31 @@ pub fn get_client_conversations(
     conversations::get_client_conversations(client, &mut db, limit, pagination_key)
 }
 
+/**
+ * Get current State ether Hold or NULL
+ */
 pub fn get_current_state(client: &Client) -> Result<Option<serde_json::Value>, EngineError> {
     let mut db = init_db()?;
 
     state::get_current_state(client, &mut db)
 }
 
+/**
+ * Create memory
+ */
 pub fn create_client_memory(
     client: &Client,
     key: String,
     value: serde_json::Value,
 ) -> Result<(), EngineError> {
     let mut db = init_db()?;
+    validate_memory_key_format(&key)?;
 
     memories::create_client_memory(client, key, value , &mut db)
 }
 
 /**
- * create bot version
+ * Create bot version
  */
 pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
     let mut db = init_db()?;

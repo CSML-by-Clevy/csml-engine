@@ -40,6 +40,7 @@ pub fn interpret_step(
         match received {
             MSG::Memory(mem) => memories.push(mem),
             MSG::Message(msg) => {
+                dbg!(&msg);
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -136,7 +137,7 @@ pub fn interpret_step(
         .collect();
 
     add_messages_bulk(data, msgs, interaction_order, "SEND")?;
-    add_memories(data, &memories, interaction_order)?;
+    add_memories(data, &memories)?;
 
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {

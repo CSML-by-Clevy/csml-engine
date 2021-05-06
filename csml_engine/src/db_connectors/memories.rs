@@ -8,16 +8,15 @@ use crate::{Client, ConversationInfo, Database, EngineError, Memory};
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &[Memory],
-    interaction_order: i32,
 ) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        return mongodb_connector::memories::add_memories(data, &memories, interaction_order);
+        return mongodb_connector::memories::add_memories(data, &memories);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-        return dynamodb_connector::memories::add_memories(data, &memories, interaction_order);
+        return dynamodb_connector::memories::add_memories(data, &memories);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
