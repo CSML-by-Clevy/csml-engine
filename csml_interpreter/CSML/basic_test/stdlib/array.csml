@@ -161,3 +161,18 @@ array_filter:
     })
 
     goto end
+
+array_map_index:
+    say [1, 2, 3, 4, 5].map((x, index) {
+        return index
+    })
+
+array_filter_index:
+    say [34, 232].filter((x, index) {
+        return 1
+    })
+
+array_reduce_index:
+    say [1, 2, 3].reduce(0, (x, index) {
+        return x + index
+    })

@@ -147,7 +147,7 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::Step(step), ..) => {
-            let step = search_goto_var_memory(step, &mut msg_data, data)?;
+            let step = search_goto_var_memory(step, &mut msg_data, data, sender)?;
 
             MSG::send(
                 &sender,
@@ -167,7 +167,7 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::Flow(flow), ..) => {
-            let flow = search_goto_var_memory(&flow, &mut msg_data, data)?;
+            let flow = search_goto_var_memory(&flow, &mut msg_data, data, sender)?;
 
             MSG::send(
                 &sender,
@@ -185,11 +185,11 @@ pub fn match_actions(
         }
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
             let step = match step {
-                Some(step) => search_goto_var_memory(&step, &mut msg_data, data)?,
+                Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
                 None => "start".to_owned() // default value start step
             };
             let flow = match flow {
-                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data)?,
+                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender)?,
                 None => data.context.flow.to_owned() // default value current flow
             };
 

@@ -69,6 +69,9 @@ pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &str = "payload exceeds max payload siz
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &str = "event can only be of ContentType::Event";
 
+// Goto
+pub const ERROR_GOTO_VAR: &str = "variables in goto need to resolve as strings";
+
 // Component
 pub const ERROR_COMPONENT_NAMESPACE: &str = "component must have a function applied";
 pub const ERROR_COMPONENT_UNKNOWN: &str = "function does not exist for component";

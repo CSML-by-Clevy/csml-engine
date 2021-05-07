@@ -153,7 +153,6 @@ pub struct Conversation {
     pub user_id: Option<String>,
     pub flow_id: String,
     pub step_id: String,
-    pub metadata: String,
     pub status: String,
     pub last_interaction_at: String,
     pub updated_at: String,
@@ -186,7 +185,7 @@ impl Conversation {
      * range = conversation#OPEN|CLOSED#id
      * range_time = conversation#OPEN|CLOSED#timestamp#id
      */
-    pub fn new(client: &Client, encrypted_metadata: &str, flow_id: &str, step_id: &str) -> Self {
+    pub fn new(client: &Client, flow_id: &str, step_id: &str) -> Self {
         let id = Uuid::new_v4().to_string();
         let now = get_date_time();
         let status = "OPEN";
@@ -201,7 +200,6 @@ impl Conversation {
             channel_id: Some(client.channel_id.to_owned()),
             user_id: Some(client.user_id.to_owned()),
             class: class_name.to_owned(),
-            metadata: encrypted_metadata.to_owned(),
             flow_id: flow_id.to_owned(),
             step_id: step_id.to_owned(),
             status: status.to_owned(),

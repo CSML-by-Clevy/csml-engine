@@ -90,19 +90,14 @@ mod tests {
 
         delete_user_conversations(&client, db).unwrap();
 
-        let metadata = serde_json::json!({
-            "toto": "text",
-            "plop": "super metadata"
-        });
-
-        create_conversation("Default", "start", &client, metadata.clone(), db).unwrap();
+        create_conversation("Default", "start", &client, db).unwrap();
 
         let response = get_client_conversations(&client, db, None, None).unwrap();
         let conversations: Vec<serde_json::Value> = serde_json::from_value(response["conversations"].clone()).unwrap();
 
         assert_eq!(conversations.len(), 1);
 
-        assert_eq!(&metadata, &conversations[0]["metadata"]);
+        assert_eq!("start", &conversations[0]["step_id"]);
 
         delete_user_conversations(&client, db).unwrap();
 

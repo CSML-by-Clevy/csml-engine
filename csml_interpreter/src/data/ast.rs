@@ -123,21 +123,13 @@ pub struct Instruction {
     pub actions: Expr,
 }
 
-#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GotoValueType {
-    Variable(Identifier),
     Name(Identifier),
+    Variable(Box<Expr>),
 }
 
-impl GotoValueType {
-    pub fn to_string(&self) -> String {
-        match self {
-            GotoValueType::Variable(value) | GotoValueType::Name(value) => value.ident.to_string(),
-        }
-    }
-}
-
-#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GotoType {
     Step(GotoValueType),
     Flow(GotoValueType),
