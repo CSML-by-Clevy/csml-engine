@@ -8,31 +8,24 @@ use bson::{doc, Bson};
 fn format_memories(
     data: &mut ConversationInfo,
     memories: &[Memory],
-    interaction_order: i32,
 ) -> Result<Vec<bson::Document>, EngineError> {
     let client = bson::to_bson(&data.client)?;
 
     memories
         .iter()
-        .enumerate()
-        .fold(Ok(vec![]), |vec, (memory_order, var)| {
+        .fold(Ok(vec![]), |vec, mem | {
             let time = Bson::UtcDatetime(chrono::Utc::now());
-            let value = encrypt_data(&var.value)?;
+            let value = encrypt_data(&mem.value)?;
 
             let mut vec = vec?;
 
             vec.push(doc! {
                 "client": client.clone(),
-                "interaction_id": &data.interaction_id,
-                "conversation_id": &data.conversation_id,
-                "flow_id": &data.context.flow,
-                "step_id": &data.context.step,
-                "memory_order": memory_order as i32,
-                "interaction_order": interaction_order,
-                "key": &var.key,
+                "key": &mem.key,
                 "value": value, // encrypted
                 "expires_at": Bson::Null,
-                "created_at": time
+                "created_at": time.clone(),
+                "updated_at": time
             });
             Ok(vec)
         })
@@ -41,17 +34,36 @@ fn format_memories(
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &[Memory],
-    interaction_order: i32,
 ) -> Result<(), EngineError> {
     if memories.is_empty() {
         return Ok(());
     }
 
-    let mem = format_memories(data, memories, interaction_order)?;
+    let mem = format_memories(data, memories)?;
     let db = get_db(&data.db)?;
 
     let collection = db.collection("memory");
     collection.insert_many(mem, None)?;
+
+    Ok(())
+}
+
+pub fn create_client_memory(
+    client: &Client,
+    key: String,
+    value: serde_json::Value,
+    db: &mongodb::Database,
+) -> Result<(), EngineError> {
+    let memory = doc! {
+        "client": bson::to_bson(&client)?,
+        "key": key,
+        "value": encrypt_data(&value)?, // encrypted
+        "expires_at": Bson::Null,
+        "created_at": Bson::UtcDatetime(chrono::Utc::now())
+    };
+
+    let collection = db.collection("memory");
+    collection.insert_one(memory, None)?;
 
     Ok(())
 }
@@ -84,4 +96,29 @@ pub fn get_memories(
     }
 
     Ok(serde_json::json!(map))
+}
+
+pub fn delete_client_memory(client: &Client, key: &str, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("memory");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+        "key": key,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
+}
+
+pub fn delete_client_memories(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("memory");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
 }

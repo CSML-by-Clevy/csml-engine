@@ -48,6 +48,25 @@ pub fn get_state_key(
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
+pub fn get_current_state(
+    client: &Client,
+    db: &mut Database,
+) -> Result<Option<serde_json::Value>, EngineError> {
+    #[cfg(feature = "mongo")]
+    if is_mongodb() {
+        let db = mongodb_connector::get_db(db)?;
+        return mongodb_connector::state::get_current_state(client, db); // "hold", "position"
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::state::get_current_state(client, db);
+    }
+
+    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
+}
+
 pub fn set_state_items(
     client: &Client,
     _type: &str,

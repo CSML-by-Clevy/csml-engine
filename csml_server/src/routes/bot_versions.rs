@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::thread;
 
 
-/*
+/**
  * create bot version
  *
  * {"statusCode": 200,"body": {"version_id": String} }

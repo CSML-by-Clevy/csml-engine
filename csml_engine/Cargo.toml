@@ -20,7 +20,7 @@ edition = "2018"
 
 [features]
 mongo = ["mongodb", "bson"]
-dynamo = ["rusoto_core", "rusoto_dynamodb", "rusoto_s3", "serde_dynamodb",]
+dynamo = ["rusoto_core", "rusoto_dynamodb", "rusoto_s3", "serde_dynamodb"]
 
 [dependencies.mongodb]
 version = "0.9.2"
@@ -37,7 +37,6 @@ features = ["rustls"]
 optional = true
 
 [dependencies.rusoto_core]
-# impossible to build with rustls in 0.45.0, stick to 0.44.0
 version = "0.46.0"
 default_features = false
 features = ["rustls"]

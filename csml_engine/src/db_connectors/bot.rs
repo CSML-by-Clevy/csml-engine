@@ -82,19 +82,24 @@ pub fn get_by_version_id(
 pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
-    last_key: Option<String>,
+    pagination_key: Option<String>,
     db: &mut Database,
 ) -> Result<serde_json::Value, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::bot::get_bot_versions(&bot_id, limit, last_key, db);
+        let pagination_key = mongodb_connector::get_pagination_key(pagination_key)?;
+
+        return mongodb_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, last_key, db);
+        let pagination_key = dynamodb_connector::get_pagination_key(pagination_key)?;
+
+
+        return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -135,3 +140,42 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), Engine
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
+
+
+pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), EngineError> {
+    #[cfg(feature = "mongo")]
+    if is_mongodb() {
+        delete_bot_versions(bot_id, db)?;
+
+        let db = mongodb_connector::get_db(db)?;
+
+        mongodb_connector::bot::delete_all_bot_data(bot_id, "memory", db)?;
+        mongodb_connector::bot::delete_all_bot_data(bot_id, "message", db)?;
+        mongodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
+        mongodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
+        mongodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
+        mongodb_connector::bot::delete_all_bot_data(bot_id, "path", db)?;
+
+        return Ok(());
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        delete_bot_versions(bot_id, db)?;
+
+        let db = dynamodb_connector::get_db(db)?;
+
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "memory", db)?;
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "message", db)?;
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
+        return Ok(());
+    }
+
+    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
+}
+
+
+
+

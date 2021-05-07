@@ -112,3 +112,38 @@ pub fn update_conversation(
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
+
+pub fn get_client_conversations(
+    client: &Client,
+    db: &mut Database,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    #[cfg(feature = "mongo")]
+    if is_mongodb() {
+        let db = mongodb_connector::get_db(db)?;
+        let pagination_key = mongodb_connector::get_pagination_key(pagination_key)?;
+
+        return mongodb_connector::conversations::get_client_conversations(
+            client,
+            db,
+            limit,
+            pagination_key
+        );
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        let pagination_key = dynamodb_connector::get_pagination_key(pagination_key)?;
+
+        return dynamodb_connector::conversations::get_client_conversations(
+            client,
+            db,
+            limit,
+            pagination_key
+        );
+    }
+
+    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
+}

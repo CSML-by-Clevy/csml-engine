@@ -2,6 +2,8 @@ use crate::data::DynamoDbClient;
 use crate::{Client, Database, EngineError};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use std::collections::HashMap;
+use rusoto_dynamodb::AttributeValue;
 
 pub mod aws_s3;
 pub mod bot;
@@ -12,6 +14,8 @@ pub mod messages;
 pub mod nodes;
 pub mod state;
 pub mod utils;
+
+mod dynamodb_tests;
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -52,6 +56,22 @@ pub fn get_db<'a>(db: &'a mut Database) -> Result<&'a mut DynamoDbClient, Engine
         _ => Err(EngineError::Manager(
             "DynamoDB connector is not setup correctly".to_owned(),
         )),
+    }
+}
+
+pub fn get_pagination_key(pagination_key: Option<String>) ->  Result<Option<HashMap<String, AttributeValue>>, EngineError> {
+    match pagination_key {
+        Some(key) => {
+            let base64decoded = match base64::decode(&key) {
+                Ok(base64decoded) => base64decoded,
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            };
+            match serde_json::from_slice(&base64decoded) {
+                Ok(key) => Ok(Some(key)),
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            }
+        }
+        None => Ok(None),
     }
 }
 
@@ -113,6 +133,13 @@ impl Bot {
     }
 }
 
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConversationDeleteInfo {
+    pub status: String,
+    pub id: String,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Conversation {
     pub hash: String,
@@ -139,6 +166,12 @@ impl Conversation {
 
     pub fn get_range(status: &str, id: &str) -> String {
         make_range(&["conversation", status, id])
+    }
+
+    pub fn get_conversation_id_from_range(range: &str) -> String {
+        let vec: Vec<&str> = range.split("#").collect();
+
+        vec[2].to_owned()
     }
 
     pub fn get_key(client: &Client, status: &str, id: &str) -> DynamoDbKey {
@@ -175,6 +208,11 @@ impl Conversation {
             created_at: now.to_owned(),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InteractionDeleteInfo {
+    pub id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -237,22 +275,19 @@ impl Interaction {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct MemoryDeleteInfo {
+    pub range: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Memory {
     pub hash: String,
     pub range: String,
     pub range_time: String,
     pub class: String,
-    pub id: String,
     pub client: Option<Client>,
     pub bot_id: Option<String>,
     pub channel_id: Option<String>,
     pub user_id: Option<String>,
-    pub interaction_id: String,
-    pub conversation_id: String,
-    pub flow_id: String,
-    pub step_id: String,
-    pub memory_order: i32,
-    pub interaction_order: i32,
     pub key: String,
     pub value: Option<String>,
     pub expires_at: Option<String>,
@@ -264,29 +299,22 @@ impl Memory {
         make_hash(client)
     }
 
-    pub fn get_range(key: &str, id: &str) -> String {
-        make_range(&["memory", key, id])
+    pub fn get_range(key: &str) -> String {
+        make_range(&["memory", key])
     }
 
     /**
      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
-     * range = memory#[mem_key]#id
-     * range_time = memory#timestamp#interaction_order#memory_order#[mem_key]#id
+     * range = memory#[mem_key]
+     * range_time = memory#timestamp#interaction_order#memory_order#[mem_key]
      */
     pub fn new(
         client: &Client,
-        conversation_id: &str,
-        interaction_id: &str,
-        interaction_order: i32,
-        memory_order: i32,
-        flow_id: &str,
-        step_id: &str,
         key: &str,
         encrypted_value: Option<String>,
     ) -> Self {
-        let id = uuid::Uuid::new_v4().to_string();
         let hash = Self::get_hash(client);
-        let range = Self::get_range(key, &id);
+        let range = Self::get_range(key);
         let now = get_date_time();
 
         let class_name = "memory";
@@ -295,29 +323,27 @@ impl Memory {
             range: range.to_owned(),
             range_time: make_range(&[
                 class_name,
-                &now,
-                &interaction_order.to_string(),
-                &memory_order.to_string(),
-                &id,
+                &now
             ]),
             class: class_name.to_owned(),
-            id: id.to_string(),
             client: Some(client.to_owned()),
             bot_id: Some(client.bot_id.to_owned()),
             channel_id: Some(client.channel_id.to_owned()),
             user_id: Some(client.user_id.to_owned()),
-            interaction_id: interaction_id.to_owned(),
-            conversation_id: conversation_id.to_owned(),
-            flow_id: flow_id.to_owned(),
-            step_id: step_id.to_owned(),
-            memory_order,
-            interaction_order,
             key: key.to_owned(),
             value: encrypted_value.clone(),
             expires_at: None,
             created_at: now.to_owned(),
+            
         }
     }
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+struct MessageDeleteInfo {
+    conversation_id: String,
+    id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -403,6 +429,12 @@ impl Message {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct NodeDeleteInfo {
+    pub id: String,
+    pub conversation_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Node {
     pub hash: String,
     pub range: String,
@@ -462,6 +494,13 @@ impl Node {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct StatDeleteInfo {
+    #[serde(rename = "type")]
+    pub _type: String,
+    pub key: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct State {
     pub hash: String,
     pub range: String,
@@ -478,6 +517,7 @@ pub struct State {
     pub expires_at: Option<String>,
     pub created_at: String,
 }
+
 impl State {
     pub fn get_hash(client: &Client) -> String {
         make_hash(client)
@@ -511,4 +551,11 @@ impl State {
             created_at: now.to_string(),
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Class {
+    pub class: String,
+    pub hash: String,
+    pub range: String,
 }

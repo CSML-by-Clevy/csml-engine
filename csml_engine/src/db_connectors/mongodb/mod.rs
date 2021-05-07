@@ -72,3 +72,22 @@ pub fn get_db<'a>(db: &'a Database) -> Result<&'a mongodb::Database, EngineError
         )),
     }
 }
+
+pub fn get_pagination_key(pagination_key: Option<String>) ->  Result<Option<String>, EngineError> {
+    match pagination_key {
+        Some(key) => {
+            let base64decoded = match base64::decode(&key) {
+                Ok(base64decoded) => base64decoded,
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            };
+
+            let key: String = match serde_json::from_slice(&base64decoded) {
+                Ok(key) => key,
+                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
+            };
+
+            Ok(Some(key))
+        },
+        None => Ok(None)
+    }
+}

@@ -1,13 +1,12 @@
-use crate::data::{DynamoDbClient, DynamoBot, DynamoBotBincode};
+use crate::data::{DynamoDbClient, DynamoBot, DynamoBotBincode, };
 use crate::db_connectors::{
-    dynamodb::{aws_s3, Bot, DynamoDbKey},
+    dynamodb::{nodes::delete_conversation_nodes ,aws_s3, Bot, Conversation, DynamoDbKey, Class},
     BotVersion,
 };
-use crate::EngineError;
 use csml_interpreter::data::{csml_flow::CsmlFlow};
-
 use rusoto_dynamodb::*;
-
+use std::collections::HashMap;
+use crate::EngineError;
 use crate::db_connectors::dynamodb::utils::*;
 
 pub fn create_bot_version(
@@ -44,7 +43,7 @@ pub fn get_flows(key: &str, db: &mut DynamoDbClient) -> Result<Vec<CsmlFlow>, En
 fn query_bot_version(
     bot_id: &str,
     limit: i64,
-    pagination_key: Option<String>,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
     db: &mut DynamoDbClient,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Bot::get_hash(bot_id);
@@ -77,21 +76,6 @@ fn query_bot_version(
     .cloned()
     .collect();
 
-    let last_evaluated_key = match pagination_key {
-        Some(key) => {
-            let base64decoded = match base64::decode(&key) {
-                Ok(base64decoded) => base64decoded,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            };
-
-            match serde_json::from_slice(&base64decoded) {
-                Ok(key) => Some(key),
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            }
-        }
-        None => None,
-    };
-
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name: Some(String::from("TimeIndex")),
@@ -101,7 +85,7 @@ fn query_bot_version(
         limit: Some(limit),
         select: Some(String::from("ALL_ATTRIBUTES")),
         scan_index_forward: Some(false),
-        exclusive_start_key: last_evaluated_key,
+        exclusive_start_key: pagination_key,
         ..Default::default()
     };
 
@@ -114,7 +98,7 @@ fn query_bot_version(
 pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
-    pagination_key: Option<String>,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
     db: &mut DynamoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
     let limit = match limit {
@@ -324,11 +308,10 @@ pub fn delete_bot_version(
     Ok(())
 }
 
-fn get_bot_version_batches_and_delete_flows(
+pub fn delete_bot_versions(
     bot_id: &str,
     db: &mut DynamoDbClient,
-) -> Result<Vec<Vec<WriteRequest>>, EngineError> {
-    let mut batches = vec![];
+) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
     loop {
@@ -339,8 +322,8 @@ fn get_bot_version_batches_and_delete_flows(
         // If 0 item is returned it means that there is no open conversation, so simply return None
         // , "last_key": :
         let items = match data.items {
-            None => return Ok(batches),
-            Some(items) if items.len() == 0 => return Ok(batches),
+            None => return Ok(()),
+            Some(items) if items.len() == 0 => return Ok(()),
             Some(items) => items.clone(),
         };
 
@@ -361,33 +344,141 @@ fn get_bot_version_batches_and_delete_flows(
                 put_request: None,
             });
         }
-        batches.push(write_requests);
 
-        pagination_key = match data.last_evaluated_key {
-            Some(pagination_key) => Some(base64::encode(
-                serde_json::json!(pagination_key).to_string(),
-            )),
-            None => return Ok(batches),
-        };
-    }
-}
-
-pub fn delete_bot_versions(bot_id: &str, db: &mut DynamoDbClient) -> Result<(), EngineError> {
-    let batches = get_bot_version_batches_and_delete_flows(bot_id, db)?;
-
-    for write_requests in batches {
         let request_items = [(get_table_name()?, write_requests)]
-            .iter()
-            .cloned()
-            .collect();
+        .iter()
+        .cloned()
+        .collect();
 
         let input = BatchWriteItemInput {
             request_items,
             ..Default::default()
         };
 
-        let future = db.client.batch_write_item(input);
-        db.runtime.block_on(future)?;
+        execute_batch_write_query(db, input)?;
+
+        pagination_key = data.last_evaluated_key;
+        if let None = &pagination_key {
+            return Ok(())
+        }
     }
-    Ok(())
+}
+
+fn query_bot_info(
+    bot_id: &str,
+    class: &str,
+    limit: i64,
+    db: &mut DynamoDbClient,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+) -> Result<QueryOutput, EngineError> {
+    let hash = format!("bot_id:{}#", bot_id);
+
+    let expr_attr_names = [
+        (String::from("#classKey"), String::from("class")),
+        (String::from("#hashKey"), String::from("hash")),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let expr_attr_values = [
+        (
+            String::from(":classPrefix"),
+            AttributeValue {
+                s: Some(String::from(class)),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":hashPrefix"),
+            AttributeValue {
+                s: Some(hash),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    // Class key = class val and begins with (hash key, hash prefix)
+    // "#hashKey = :hashVal AND begins_with(#classKey, :classPrefix)".to_owned(),
+    let input = QueryInput {
+        table_name: get_table_name()?,
+        key_condition_expression: Some(
+            "#classKey = :classPrefix AND begins_with(#hashKey, :hashPrefix)".to_owned(),
+        ),
+        index_name: Some("ClassByClientIndex".to_owned()),
+        expression_attribute_names: Some(expr_attr_names),
+        expression_attribute_values: Some(expr_attr_values),
+        limit: Some(limit),
+        exclusive_start_key: pagination_key,
+        ..Default::default()
+    };
+
+    let future = db.client.query(input);
+    let data = db.runtime.block_on(future)?;
+
+    Ok(data)
+}
+
+pub fn delete_all_bot_data(
+    bot_id: &str,
+    class: &str,
+    db: &mut DynamoDbClient,
+) -> Result<(), EngineError> {
+    let mut pagination_key = None;
+
+    loop {
+        // 25 is the Maximum operations in a single request for BatchWriteItemInput
+        let data = query_bot_info(bot_id, class, 25, db, pagination_key, )?;
+
+        // The query returns an array of items (max 10, based on the limit param above).
+        // If 0 item is returned it means that there is no open conversation, so simply return None
+        // , "last_key": :
+        let items = match data.items {
+            None => return Ok(()),
+            Some(items) if items.len() == 0 => return Ok(()),
+            Some(items) => items.clone(),
+        };
+
+        let mut write_requests = vec![];
+        for item in items {
+            let class: Class = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+            // only for class 'conversation' we need to get the conversation id in order to delete the path class 
+            // witch 'hash' is base in the conversation id
+            if class.class == "conversation" {
+                let conversation_id = Conversation::get_conversation_id_from_range(&class.range);
+                delete_conversation_nodes(&conversation_id, db)?;
+            }
+
+            let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+                hash: class.hash,
+                range: class.range,
+            })?;
+
+            write_requests.push(WriteRequest {
+                delete_request: Some(DeleteRequest { key }),
+                put_request: None,
+            });
+        }
+
+        let request_items = [(get_table_name()?, write_requests)]
+        .iter()
+        .cloned()
+        .collect();
+
+        let input = BatchWriteItemInput {
+            request_items,
+            ..Default::default()
+        };
+
+        execute_batch_write_query(db, input)?;
+
+        pagination_key = data.last_evaluated_key;
+        if let None = &pagination_key {
+            return Ok(())
+        }
+    }
 }

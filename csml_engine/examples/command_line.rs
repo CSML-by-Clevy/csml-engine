@@ -25,7 +25,7 @@ fn init_request(string: &str) -> CsmlRequest {
         request_id: "tmp".to_owned(),
         client: Client {
             user_id: "alexis".to_owned(),
-            bot_id: "42".to_owned(),
+            bot_id: "botid".to_owned(),
             channel_id: "some-channel-id".to_owned(),
         },
         callback_url: Some("http://httpbin.org/post".to_owned()),
