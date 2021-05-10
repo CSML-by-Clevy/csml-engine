@@ -458,7 +458,7 @@ fn delete_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
 /*
 * Remove all data associated with a given Client
 */
-fn delete_client(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn delete_client_data(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
 
@@ -603,8 +603,8 @@ register_module!(mut cx, {
     cx.export_function("getClientConversations", get_client_conversations)?;
     cx.export_function("deleteMemory", delete_client_memory)?;
     cx.export_function("deleteMemories", delete_client_memories)?;
-    cx.export_function("deleteClient", delete_client)?;
-    cx.export_function("deleteBot", delete_bot_data)?;
+    cx.export_function("deleteClientData", delete_client_data)?;
+    cx.export_function("deleteBotData", delete_bot_data)?;
 
     cx.export_function("run", run_bot)?;
 

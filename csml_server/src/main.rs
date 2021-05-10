@@ -62,9 +62,8 @@ async fn main() -> std::io::Result<()> {
 
       .service(routes::state::get_client_current_state)
 
-      .service(routes::bots::delete_bot)
-
-      .service(routes::clients::delete_client)
+      .service(routes::data::delete_bot)
+      .service(routes::data::delete_client)
 
   })
   .bind(format!("0.0.0.0:{}", server_port))?

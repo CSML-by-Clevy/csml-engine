@@ -25,7 +25,7 @@ pub struct Memory {
 
 
 /**
- * Delete client memory key
+ * Delete a client's full memory
  *
  * {"statusCode": 204}
  *
