@@ -372,7 +372,7 @@ fn validate_imports(linter_info: &mut LinterInfo) {
         if let Some(_) = linter_info.function_list.get(&FunctionInfo::new(
             import_info.as_name.to_owned(),
             import_info.in_flow,
-            
+
             import_info.raw_flow,
             import_info.interval.to_owned(),
         )) {
@@ -464,9 +464,9 @@ fn function_exist(info: &FunctionCallInfo, linter_info: &LinterInfo) -> bool {
 
 fn validate_closure(info: &FunctionCallInfo, linter_info: &LinterInfo) -> bool {
     match linter_info.valid_closure_list.iter().find(|&func| {
-        func.name == info.name && 
-        ( 
-            func.scope_type == info.scope_type || 
+        func.name == info.name &&
+        (
+            func.scope_type == info.scope_type ||
             func.is_permanent
         )
     }) {
@@ -494,7 +494,7 @@ fn validate_functions(linter_info: &mut LinterInfo) {
                 Position::new(info.interval.to_owned(), linter_info.flow_name,),
                 convert_error_from_interval(
                     Span::new(info.raw_flow),
-                    format!("function [{}] dose not exist", info.name),
+                    format!("function [{}] does not exist", info.name),
                     info.interval.to_owned(),
                 ),
             ));

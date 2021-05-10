@@ -1,5 +1,5 @@
 use crate::data::{
-    Literal, primitive::PrimitiveType, 
+    Literal, primitive::PrimitiveType,
 };
 use std::{collections::HashMap};
 
@@ -12,7 +12,7 @@ pub fn get_date(args: &HashMap<String, Literal>) -> [i64; 7] {
 
     let mut date: [i64; 7] = [0; 7];
 
-    // set default month, day, and hour to 1 year dose not need to have a default
+    // set default month, day, and hour to 1 year does not need to have a default
     // value because set_date_at expect at least the year value as parameter
     date[1] = 1; // month
     date[2] = 1; // day
