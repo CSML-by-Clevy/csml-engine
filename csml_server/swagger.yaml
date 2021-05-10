@@ -445,6 +445,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /data/clients:
+    delete:
+      description: Delete all the data belonging to a client
+      operationId: deleteClientData
+      tags:
+        - data
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /data/bots/{bot_id}:
+    delete:
+      description: Delete all the data in a bot
+      operationId: deleteBotData
+      tags:
+        - data
+      parameters:
+        - name: bot_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 
   /bots/{bot_id}:
     get:
