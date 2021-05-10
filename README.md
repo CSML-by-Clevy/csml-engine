@@ -183,17 +183,18 @@ CSML Server's HTTP REST API documentation is available in OpenAPIv3 format: [swa
 ### Play with the language
 
 * [Studio] - Create and deploy your chatbot in a matter of minutes.
+* [Playground] - Test and learn CSML in your browser.
 
 [Studio]: https://studio.csml.dev
+[Playground]: https://play.csml.dev
 
 ### Getting Help
 
-* [Slack] - Direct questions about using the language.
+* [Slack] - The official CSML community.
 * [CSML Documentation](https://docs.csml.dev) - Getting started.
 
 [Slack]: https://csml-by-clevy.slack.com/join/shared_invite/enQtODAxMzY2MDQ4Mjk0LWZjOTZlODI0YTMxZTg4ZGIwZDEzYTRlYmU1NmZjYWM2MjAwZTU5MmU2NDdhNmU2N2Q5ZTU2ZTcxZDYzNTBhNTc
 
 ### Information
 
-* [Roadmap](https://trello.com/b/tZ1MoALL/csml-open-roadmap) - Upcoming new features.
-* [Release notes](https://headwayapp.co/csml-release-notes) - Stay up to date.
+* [Release notes](https://updates.csml.dev/) - Stay up to date.
