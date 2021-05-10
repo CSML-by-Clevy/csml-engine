@@ -70,6 +70,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /conversations:
+    get:
+      description: Get all past conversations for a client
+      operationId: getConversations
+      tags:
+        - conversations
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConversationModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /conversations/open:
     post:
       description: Get the currently open conversation for the given client, or an empty response if there is none
@@ -143,6 +180,272 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /messages:
+    get:
+      description: Get a client's message history
+      operationId: getMessages
+      tags:
+        - messages
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: pagination_key
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StateModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /state:
+    get:
+      description: Get a client's current state
+      operationId: getState
+      tags:
+        - state
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StateModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /memories:
+    get:
+      description: Get a client's current memories
+      operationId: getMemories
+      tags:
+        - memory
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemoryModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      description: Create a new memory for a client
+      operationId: createMemory
+      tags:
+        - memory
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemoryModel'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      description: Delete all memories for a client
+      operationId: deleteMemories
+      tags:
+        - memory
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /memories/{key}:
+    get:
+      description: Get a given memory for a client
+      operationId: getMemory
+      tags:
+        - memory
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      description: Delete a given memory
+      operationId: deleteMemory
+      tags:
+        - memory
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
   /bots/{bot_id}:
     get:
       description: Get the latest version of a bot
@@ -169,9 +472,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
     delete:
-      description: Delete all saved versions of a bot
+      description: Delete all versions of a bot
       operationId: deleteBot
       tags:
         - bots
@@ -297,16 +599,6 @@ paths:
 
 components:
   schemas:
-    FnEndpoint:
-      type: string
-      description: optional endpoint to call for external Fn() calls
-      format: url
-
-    EngineVersion:
-      type: string
-      description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
-      example: '1.5.0'
-
     BotModel:
       type: object
       required:
@@ -411,8 +703,6 @@ components:
         step_id:
           type: string
           example: 'start'
-        metadata:
-          type: object
         last_interaction_at:
           type: string
           format: date-time
@@ -422,6 +712,37 @@ components:
         updated_at:
           type: string
           format: date-time
+
+    StateModel:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+        value:
+          anyOf:
+            - type: string
+            - type: number
+            - type: object
+            - type: array
+
+
+    MemoryModel:
+      type: object
+      required:
+        - key
+        - value
+      properties:
+        key:
+          type: string
+        value:
+          anyOf:
+            - type: string
+            - type: number
+            - type: object
+            - type: array
 
 
     ClientModel:
@@ -597,6 +918,16 @@ components:
           example: 'c3001dfb-8a10-4815-bb4e-6cd98b0ef5e7'
         engine_version:
           $ref: '#/components/schemas/EngineVersion'
+
+    FnEndpoint:
+      type: string
+      description: optional endpoint to call for external App() calls
+      format: url
+
+    EngineVersion:
+      type: string
+      description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
+      example: '1.5.0'
 
     Error:
       type: object
