@@ -2,7 +2,7 @@ pub mod data;
 pub mod linter;
 
 use crate::data::ast::Flow;
-use data::{FunctionInfo, ImportInfo, LinterInfo, State, StepInfo};
+use data::{FunctionInfo, ImportInfo, LinterInfo, State, StepInfo, FunctionCallInfo, ScopeType};
 use std::collections::HashMap;
 
 pub struct FlowToValidate<'a> {

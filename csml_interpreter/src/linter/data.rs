@@ -15,6 +15,16 @@ pub struct StepInfo<'a> {
 }
 
 #[derive(Debug)]
+pub struct FunctionCallInfo<'a> {
+    pub name: String,
+    pub in_flow: &'a str,
+    pub scope_type: ScopeType,
+    pub is_permanent: bool,
+    pub raw_flow: &'a str,
+    pub interval: Interval,
+}
+
+#[derive(Debug)]
 pub struct FunctionInfo<'a> {
     pub name: String,
     pub in_flow: &'a str,
@@ -38,16 +48,26 @@ pub struct State {
     pub loop_scope: usize,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ScopeType {
+    Function(String),
+    Step(String)
+}
+
 #[derive(Debug)]
 pub struct LinterInfo<'a> {
     pub flow_name: &'a str,
+    pub scope_type: ScopeType,
     pub raw_flow: &'a str,
     pub goto_list: &'a mut Vec<StepInfo<'a>>,
     pub step_list: &'a mut HashSet<StepInfo<'a>>,
     pub function_list: &'a mut HashSet<FunctionInfo<'a>>,
     pub import_list: &'a mut HashSet<ImportInfo<'a>>,
+    pub valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
+    pub functions_call_list: &'a mut Vec<FunctionCallInfo<'a>>,
     pub errors: &'a mut Vec<ErrorInfo>,
     pub warnings: &'a mut Vec<Warnings>,
+    pub native_components: &'a Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,23 +154,31 @@ impl State {
 impl<'a> LinterInfo<'a> {
     pub fn new(
         flow_name: &'a str,
+        scope_type: ScopeType,
         raw_flow: &'a str,
         goto_list: &'a mut Vec<StepInfo<'a>>,
         step_list: &'a mut HashSet<StepInfo<'a>>,
         function_list: &'a mut HashSet<FunctionInfo<'a>>,
         import_list: &'a mut HashSet<ImportInfo<'a>>,
+        valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
+        functions_call_list: &'a mut Vec<FunctionCallInfo<'a>>,
         errors: &'a mut Vec<ErrorInfo>,
         warnings: &'a mut Vec<Warnings>,
+        native_components: &'a Option<serde_json::Map<String, serde_json::Value>>,
     ) -> Self {
         Self {
             flow_name,
+            scope_type,
             raw_flow,
             goto_list,
             step_list,
             function_list,
             import_list,
+            valid_closure_list,
+            functions_call_list,
             errors,
             warnings,
+            native_components
         }
     }
 }
@@ -160,6 +188,19 @@ impl<'a> FunctionInfo<'a> {
         Self {
             name,
             in_flow,
+            raw_flow,
+            interval,
+        }
+    }
+}
+
+impl<'a> FunctionCallInfo<'a> {
+    pub fn new(name: String, in_flow: &'a str, scope_type: ScopeType, is_permanent: bool, raw_flow: &'a str, interval: Interval) -> Self {
+        Self {
+            name,
+            in_flow,
+            scope_type,
+            is_permanent,
             raw_flow,
             interval,
         }
