@@ -613,6 +613,9 @@ components:
         name:
           type: string
           example: MyBot
+        env:
+          type: object
+          example: {"SOME_KEY": "SOME_VALUE"}
         default_flow:
           type: string
           example: Default
@@ -622,6 +625,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FlowModel'
+
+    BotVersionModel:
+      allOf:
+        - $ref: '#/components/schemas/BotModel'
+        - type: object
+          properties:
+            version_id:
+              type: string
+            engine_version:
+              $ref: '#/components/schemas/EngineVersion'
 
     FlowModel:
       type: object
@@ -780,44 +793,6 @@ components:
             - SEND
             - RECEIVE
 
-    BotVersionModel:
-      allOf:
-        - $ref: '#/components/schemas/BotModel'
-        - type: object
-          properties:
-            version_id:
-              type: string
-            engine_version:
-              $ref: '#/components/schemas/EngineVersion'
-
-    BotVersionsResponse:
-      type: object
-      required:
-        - bots
-      properties:
-        pagination_key:
-          type: string
-          default: null
-          description: Only set if there are more results. You can add this query param to a subsequent request to get the next batch of versions.
-        bots:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-              version_id:
-                type: string
-              engine_version:
-                $ref: '#/components/schemas/EngineVersion'
-              name:
-                type: string
-              default_flow:
-                type: string
-              created_at:
-                type: string
-                format: date-time
-
     LintErrorModel:
       type: object
       properties:
@@ -909,6 +884,35 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LintErrorModel'
+
+
+    BotVersionsResponse:
+      type: object
+      required:
+        - bots
+      properties:
+        pagination_key:
+          type: string
+          default: null
+          description: Only set if there are more results. You can add this query param to a subsequent request to get the next batch of versions.
+        bots:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              version_id:
+                type: string
+              engine_version:
+                $ref: '#/components/schemas/EngineVersion'
+              name:
+                type: string
+              default_flow:
+                type: string
+              created_at:
+                type: string
+                format: date-time
 
     NewBotVersionResponse:
       type: object
