@@ -195,7 +195,7 @@ pub fn interpret(
                             flow: flow.clone(),
                             interval: Interval::default(),
                         },
-                        message: format!("flow '{}' dose not exist in this bot", flow),
+                        message: format!("flow '{}' does not exist in this bot", flow),
                     }),
                     &sender,
                 );

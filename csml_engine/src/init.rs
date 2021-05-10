@@ -69,7 +69,6 @@ pub fn init_conversation_info<'a>(
         &mut context,
         &bot,
         flow_found,
-        request.metadata.clone(),
         &request.client,
         &mut db,
     )?;
@@ -177,7 +176,6 @@ fn get_or_create_conversation<'a>(
     context: &mut Context,
     bot: &'a CsmlBot,
     flow_found: Option<&'a CsmlFlow>,
-    metadata: serde_json::Value,
     client: &Client,
     db: &mut Database,
 ) -> Result<String, EngineError> {
@@ -196,7 +194,7 @@ fn get_or_create_conversation<'a>(
                             close_conversation(&conversation.id, &client, db)?;
                             // start new conversation at default flow
                             return create_new_conversation(
-                                context, bot, flow_found, client, metadata, db,
+                                context, bot, flow_found, client, db,
                             );
                         }
                     };
@@ -208,7 +206,7 @@ fn get_or_create_conversation<'a>(
 
             Ok(conversation.id)
         }
-        None => create_new_conversation(context, bot, flow_found, client, metadata, db),
+        None => create_new_conversation(context, bot, flow_found, client, db),
     }
 }
 
@@ -220,7 +218,6 @@ fn create_new_conversation<'a>(
     bot: &'a CsmlBot,
     flow_found: Option<&'a CsmlFlow>,
     client: &Client,
-    metadata: serde_json::Value,
     db: &mut Database,
 ) -> Result<String, EngineError> {
     let flow = match flow_found {
@@ -231,7 +228,7 @@ fn create_new_conversation<'a>(
     context.flow = flow.name.to_owned();
 
     let conversation_id =
-        create_conversation(&flow.id, &context.step, client, metadata.clone(), db)?;
+        create_conversation(&flow.id, &context.step, client, db)?;
 
     Ok(conversation_id)
 }

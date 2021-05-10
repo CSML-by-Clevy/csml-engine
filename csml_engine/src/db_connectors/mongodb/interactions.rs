@@ -50,3 +50,15 @@ pub fn update_interaction(
 
     Ok(())
 }
+
+pub fn delete_user_interactions(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("interaction");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
+}

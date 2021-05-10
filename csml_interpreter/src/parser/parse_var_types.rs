@@ -52,15 +52,6 @@ where
     )(s)
 }
 
-fn parse_idents_expr_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    let (s, idents) = parse_idents_usage(s)?;
-
-    Ok((s, Expr::IdentExpr(idents)))
-}
-
 fn parse_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
@@ -81,6 +72,15 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_idents_expr_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, idents) = parse_idents_usage(s)?;
+
+    Ok((s, Expr::IdentExpr(idents)))
+}
 
 pub fn parse_fn_args<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<String>, E>
 where

@@ -51,3 +51,24 @@ pub fn close_user_conversations(body: Client) -> Result<serde_json::Value, Handl
         }
     }
 }
+
+pub fn get_client_conversations(client: Client, limit: Option<i64>, pagination_key: Option<String>) -> Result<serde_json::Value, HandlerError> {
+    let res = csml_engine::get_client_conversations(&client, limit, pagination_key);
+
+    match res {
+        Ok(conversations) => Ok(serde_json::json!(
+            {
+                "isBase64Encoded": false,
+                "statusCode": 200,
+                "headers": { "Content-Type": "application/json" },
+                "body": conversations
+            }
+        )),
+        Err(err) => {
+            let error = format!("EngineError: {:?}", err);
+            eprintln!("{}", error);
+            Err(HandlerError::from(error.as_str()))
+        }
+    }
+
+}

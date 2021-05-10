@@ -9,8 +9,7 @@ use serde::Deserialize;
 
 fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
-    let jsonclient: Value = neon_serde::from_value(&mut cx, jsclient)?;
-    let client: Client = serde_json::from_value(jsonclient).unwrap();
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
 
     match csml_engine::get_open_conversation(&client) {
         Ok(Some(conversation)) => {
@@ -29,7 +28,55 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
 
             Ok(js_value)
         }
-        Err(err) => panic!(err),
+        Err(err) => panic!("{:?}", err),
+    }
+}
+
+fn get_client_current_state(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::get_current_state(&client) {
+        Ok(Some(value)) => {
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Ok(None) => {
+            Ok(neon_serde::to_value(&mut cx, &serde_json::Value::Null)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+fn create_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    let key = cx.argument::<JsString>(1)?.value();
+
+    let jsvalue = cx.argument::<JsValue>(2)?;
+    let value: Value = neon_serde::from_value(&mut cx, jsvalue)?;
+
+    match csml_engine::create_client_memory(&client, key, value) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
     }
 }
 
@@ -186,7 +233,7 @@ fn close_conversations(mut cx: FunctionContext) -> JsResult<JsBoolean> {
 
     match user_close_all_conversations(neon_serde::from_value(&mut cx, json_client)?) {
         Ok(_) => Ok(cx.boolean(true)),
-        Err(err) => panic!(err),
+        Err(err) => panic!("{:?}", err),
     }
 }
 
@@ -358,6 +405,155 @@ fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 /*
+* Delete client memory
+*/
+fn delete_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let memory_name = cx.argument::<JsString>(1)?.value();
+
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+    match csml_engine::delete_client_memory(&client, &memory_name) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Remove all memories associated with a given Client
+*/
+fn delete_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::delete_client_memories(&client) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Remove all data associated with a given Client
+*/
+fn delete_client(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::delete_client(&client) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
+* Remove all data associated with a given bot:
+* conversations, messages, memories, interactions, states, path, versions
+*/
+fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let bot_id = cx.argument::<JsString>(0)?.value();
+
+    match csml_engine::delete_all_bot_data(&bot_id) {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LimitPaginationQueryParams {
+  limit: Option<i64>,
+  pagination_key: Option<String>,
+}
+
+fn get_client_messages(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    let jsparams = cx.argument::<JsValue>(1)?;
+    let params: LimitPaginationQueryParams = neon_serde::from_value(&mut cx, jsparams)?;
+
+    match csml_engine::get_client_messages(&client, params.limit, params.pagination_key) {
+        Ok(value) => {
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+fn get_client_conversations(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    let jsparams = cx.argument::<JsValue>(1)?;
+    let params: LimitPaginationQueryParams = neon_serde::from_value(&mut cx, jsparams)?;
+
+    match csml_engine::get_client_conversations(&client, params.limit, params.pagination_key) {
+        Ok(value) => {
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
 * Get the last 20 versions of the bot if no limit is set
 *
 * {
@@ -370,19 +566,12 @@ fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 *  "created_at": String
 * }
 */
-
-#[derive(Debug, Deserialize)]
-pub struct BotVersionsQueryParams {
-  limit: Option<i64>,
-  pagination_key: Option<String>,
-}
-
 fn get_bot_versions_limit(mut cx: FunctionContext) -> JsResult<JsValue> {
     let bot_id = cx.argument::<JsString>(0)?.value();
 
     let jsparams = cx.argument::<JsValue>(1)?;
     let jsonparams: Value = neon_serde::from_value(&mut cx, jsparams)?;
-    let params: BotVersionsQueryParams = serde_json::from_value(jsonparams).unwrap();
+    let params: LimitPaginationQueryParams = serde_json::from_value(jsonparams).unwrap();
 
     match csml_engine::get_bot_versions(&bot_id, params.limit, params.pagination_key) {
         Ok(value) => {
@@ -407,6 +596,15 @@ register_module!(mut cx, {
     cx.export_function("getBotVersionsLimit", get_bot_versions_limit)?;
     cx.export_function("deleteBotVersion", delete_bot_version)?;
     cx.export_function("deleteBotVersions", delete_bot_versions)?;
+
+    cx.export_function("createClientMemory ", create_client_memory)?;
+    cx.export_function("getClientMessages", get_client_messages)?;
+    cx.export_function("getClientCurrentState", get_client_current_state)?;
+    cx.export_function("getClientConversations", get_client_conversations)?;
+    cx.export_function("deleteMemory", delete_client_memory)?;
+    cx.export_function("deleteMemories", delete_client_memories)?;
+    cx.export_function("deleteClient", delete_client)?;
+    cx.export_function("deleteBot", delete_bot_data)?;
 
     cx.export_function("run", run_bot)?;
 

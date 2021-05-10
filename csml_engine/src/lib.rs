@@ -18,7 +18,7 @@ mod utils;
 
 use data::*;
 use db_connectors::{
-    bot, conversations::*, init_db, messages::*, state::*, BotVersion, BotVersionCreated,
+    bot, memories, user, messages, conversations, init_db, state, BotVersion, BotVersionCreated,
     DbConversation,
 };
 use init::*;
@@ -65,7 +65,7 @@ pub fn start_conversation(
 
     // save event in db as message RECEIVE
     let msgs = vec![request.payload.to_owned()];
-    add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+    messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
 
     check_for_hold(&mut data, &bot)?;
 
@@ -87,11 +87,54 @@ pub fn start_conversation(
 pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, EngineError> {
     let mut db = init_db()?;
 
-    get_latest_open(client, &mut db)
+    conversations::get_latest_open(client, &mut db)
+}
+
+pub fn get_client_messages(
+    client: &Client,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+
+    messages::get_client_messages(client, &mut db, limit, pagination_key)
+}
+
+pub fn get_client_conversations(
+    client: &Client,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+
+    conversations::get_client_conversations(client, &mut db, limit, pagination_key)
 }
 
 /**
- * create bot version
+ * Get current State ether Hold or NULL
+ */
+pub fn get_current_state(client: &Client) -> Result<Option<serde_json::Value>, EngineError> {
+    let mut db = init_db()?;
+
+    state::get_current_state(client, &mut db)
+}
+
+/**
+ * Create memory
+ */
+pub fn create_client_memory(
+    client: &Client,
+    key: String,
+    value: serde_json::Value,
+) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+    validate_memory_key_format(&key)?;
+
+    memories::create_client_memory(client, key, value , &mut db)
+}
+
+/**
+ * Create bot version
  */
 pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
     let mut db = init_db()?;
@@ -158,7 +201,7 @@ pub fn get_bot_versions(
 
 /**
  * delete bot by version_id
-*/
+ */
 pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
@@ -166,12 +209,48 @@ pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> 
 }
 
 /**
- * delete all bot versions of bot_id
-*/
+ * Delete all bot versions of bot_id
+ */
 pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
     bot::delete_bot_versions(bot_id, &mut db)
+}
+
+/**
+ * Delete all data related to bot: versions, conversations, messages, memories, nodes, integrations
+ */
+pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    bot::delete_all_bot_data(bot_id, &mut db)
+}
+
+/**
+ * Delete all the memories of a given client
+ */
+pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    memories::delete_client_memories(client, &mut db)
+}
+
+/**
+ * Delete a single memory for a given Client
+ */
+pub fn delete_client_memory(client: &Client, memory_name: &str,) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    memories::delete_client_memory(client, memory_name ,&mut db)
+}
+
+/**
+ * Delete all data related to a given Client
+ */
+pub fn delete_client(client: &Client) -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    user::delete_client(client, &mut db)
 }
 
 /**
@@ -198,8 +277,8 @@ pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
 pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
 
-    delete_state_key(&client, "hold", "position", &mut db)?;
-    close_all_conversations(&client, &mut db)
+    state::delete_state_key(&client, "hold", "position", &mut db)?;
+    conversations::close_all_conversations(&client, &mut db)
 }
 
 /**
@@ -213,7 +292,7 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
  * (context.hold.step_vars) into the conversation context.
  */
 fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), EngineError> {
-    match get_state_key(&data.client, "hold", "position", &mut data.db) {
+    match state::get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(hold)) => {
             match hold.get("hash") {
@@ -232,7 +311,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
             let index = match serde_json::from_value::<IndexInfo>(hold["index"].clone()) {
                 Ok(index) => index,
                 Err(_) => {
-                    delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+                    state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
                     return Ok(());
                 }
             };
@@ -244,7 +323,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),
             });
-            delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+           state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }
         // user is not on hold
         Ok(None) => (),

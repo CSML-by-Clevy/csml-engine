@@ -61,11 +61,42 @@ pub fn get_state_key(
         "type": _type,
         "key": key,
     };
+
     match state.find_one(filter, None)? {
         Some(value) => {
             let state: serde_json::Value = bson::from_bson(bson::Bson::Document(value))?;
             let val = state["value"].as_str().unwrap().to_owned();
             Ok(Some(decrypt_data(val)?))
+        }
+        None => Ok(None),
+    }
+}
+
+pub fn get_current_state(
+    client: &Client,
+    db: &mongodb::Database,
+) -> Result<Option<serde_json::Value>, EngineError> {
+    let state = db.collection("state");
+
+    let filter = doc! {
+        "client": bson::to_bson(client)?,
+        "type": "hold",
+        "key": "position",
+    };
+
+    match state.find_one(filter, None)? {
+        Some(doc) => {
+            let state: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
+            let value = state["value"].as_str().unwrap().to_owned();
+
+            let current_state = serde_json::json!({
+                "client": state["client"],
+                "type": state["type"],
+                "value": decrypt_data(value)?,
+                "created_at": state["created_at"],
+            });
+
+            Ok(Some(current_state))
         }
         None => Ok(None),
     }
@@ -84,6 +115,18 @@ pub fn set_state_items(
     let state_data = format_state_data(client, _type, keys_values)?;
     let state = db.collection("state");
     state.insert_many(state_data, None)?;
+
+    Ok(())
+}
+
+pub fn delete_user_state(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
+    let collection = db.collection("state");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+
+    collection.delete_many(filter, None)?;
 
     Ok(())
 }

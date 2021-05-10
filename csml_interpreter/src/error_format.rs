@@ -60,12 +60,17 @@ pub const ERROR_FIND_BY_INDEX: &str =
     "index must be of type int or string. Example var.[42] or var.[\"key\"]";
 pub const ERROR_ASSIGN_IDENT: &str = "key must be of type identifier";
 pub const ERROR_SIZE_IDENT: &str = "key can't be longer than 255 character";
+pub const ERROR_NUMBER_AS_KEY: &str = "Int/Float can't be used as key";
+pub const ERROR_KEY_ALPHANUMERIC: &str = "key must be alphanumeric";
 pub const ERROR_FUNCTIONS_ARGS: &str = "argument in of function must be in an array";
 pub const ERROR_EXPR_TO_LITERAL: &str = "expression can't be converted to Literal";
 pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &str = "payload exceeds max payload size (16kb)";
 
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &str = "event can only be of ContentType::Event";
+
+// Goto
+pub const ERROR_GOTO_VAR: &str = "variables in goto need to resolve as strings";
 
 // Component
 pub const ERROR_COMPONENT_NAMESPACE: &str = "component must have a function applied";

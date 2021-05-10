@@ -344,7 +344,7 @@ fn validate_gotos(linter_info: &mut LinterInfo) {
                 convert_error_from_interval(
                     Span::new(goto_info.raw_flow),
                     format!(
-                        "step {} at flow {} dose not exist",
+                        "step {} at flow {} does not exist",
                         goto_info.step, goto_info.flow
                     ),
                     goto_info.interval.to_owned(),

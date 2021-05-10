@@ -136,7 +136,7 @@ pub fn interpret_step(
         .collect();
 
     add_messages_bulk(data, msgs, interaction_order, "SEND")?;
-    add_memories(data, &memories, interaction_order)?;
+    add_memories(data, &memories)?;
 
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {

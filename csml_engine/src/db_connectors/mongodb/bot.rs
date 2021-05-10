@@ -57,16 +57,6 @@ pub fn get_bot_versions(
 
     let filter = match pagination_key {
         Some(key) => {
-            let base64decoded = match base64::decode(&key) {
-                Ok(base64decoded) => base64decoded,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            };
-
-            let key: String = match serde_json::from_slice(&base64decoded) {
-                Ok(key) => key,
-                Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
-            };
-
             doc! {
                 "bot_id": bot_id,
                 "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
@@ -231,6 +221,19 @@ pub fn delete_bot_versions(bot_id: &str, db: &mongodb::Database) -> Result<(), E
 
     let filter = doc! {
         "bot_id": bot_id,
+    };
+
+    collection.delete_many(filter, None)?;
+
+    Ok(())
+}
+
+pub fn delete_all_bot_data(bot_id: &str, class: &str, db: &mongodb::Database) -> Result<(), EngineError> {
+
+    let collection = db.collection(class);
+
+    let filter = doc! {
+        "client.bot_id": bot_id,
     };
 
     collection.delete_many(filter, None)?;
