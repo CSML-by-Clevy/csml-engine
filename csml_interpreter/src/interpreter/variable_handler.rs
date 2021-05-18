@@ -18,7 +18,7 @@ use crate::data::primitive::{
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
     data::Data,
-    tokens::{COMPONENT, EVENT, _ENV, _METADATA},
+    tokens::{COMPONENT, EVENT, _ENV, _METADATA, _MEMORY},
     ArgsType, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
@@ -483,6 +483,15 @@ pub fn get_var(
                 &data.context.metadata,
                 interval.to_owned(),
             )),
+        },
+        name if name == _MEMORY => {
+            let remember_memory = data.context.current.clone();
+            let step_memory = data.step_vars.clone();
+
+            let memory: HashMap<String, Literal> = remember_memory.into_iter().chain(step_memory).collect();
+            let lit = PrimitiveObject::get_literal(&memory, var.interval);
+
+            Ok(lit)
         },
         _ => {
             // ######################
