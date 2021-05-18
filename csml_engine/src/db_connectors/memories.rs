@@ -4,11 +4,13 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, EngineError, Memory};
+use std::collections::HashMap;
 
 pub fn add_memories(
     data: &mut ConversationInfo,
-    memories: &[Memory],
+    memories: &HashMap<String, Memory>,
 ) -> Result<(), EngineError> {
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         return mongodb_connector::memories::add_memories(data, &memories);
