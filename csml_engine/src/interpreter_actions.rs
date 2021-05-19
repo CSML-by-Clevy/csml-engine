@@ -43,6 +43,7 @@ pub fn interpret_step(
                 memories.insert(mem.key.clone(), mem);
             },
             MSG::Message(msg) => {
+                println!("{:?}", msg);
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }

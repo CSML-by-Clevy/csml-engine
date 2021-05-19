@@ -1,9 +1,12 @@
 pub mod data;
-pub use csml_interpreter::data::{
-    ast::{Expr, Flow, InstructionScope},
-    error_info::ErrorInfo,
-    warnings::Warnings,
-    Client, CsmlResult,
+pub use csml_interpreter::{
+    load_components,
+    data::{
+        ast::{Expr, Flow, InstructionScope},
+        error_info::ErrorInfo,
+        warnings::Warnings,
+        Client, CsmlResult,
+    }
 };
 use serde_json::json;
 
@@ -265,7 +268,17 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
  * Does not check for possible runtime errors, only for build-time errors
  * (missing steps or flows, syntax errors, etc.)
  */
-pub fn validate_bot(bot: CsmlBot) -> CsmlResult {
+pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
+    // load native components into the bot
+    bot.native_components = match load_components() {
+        Ok(components) => Some(components),
+        Err(err) => return CsmlResult {
+            errors: Some(vec!(err)),
+            warnings: None,
+            flows: None
+        },
+    };
+
     csml_interpreter::validate_bot(&bot)
 }
 
