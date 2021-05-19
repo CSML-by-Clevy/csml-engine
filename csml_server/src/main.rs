@@ -55,6 +55,8 @@ async fn main() -> std::io::Result<()> {
       .service(routes::conversations::get_client_conversations)
 
       .service(routes::memories::create_client_memory)
+      .service(routes::memories::get_memories)
+      .service(routes::memories::get_memory)
       .service(routes::memories::delete_memories)
       .service(routes::memories::delete_memory)
 

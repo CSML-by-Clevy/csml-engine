@@ -505,6 +505,45 @@ fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
+fn get_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::get_client_memories(&client) {
+        Ok(value) => {
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+fn get_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let key = cx.argument::<JsString>(1)?.value();
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::get_client_memory(&client, &key) {
+        Ok(value) => {
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct LimitPaginationQueryParams {
   limit: Option<i64>,
@@ -598,6 +637,8 @@ register_module!(mut cx, {
     cx.export_function("deleteBotVersions", delete_bot_versions)?;
 
     cx.export_function("createClientMemory ", create_client_memory)?;
+    cx.export_function("getClientMemories", get_client_memories)?;
+    cx.export_function("getClientMemory", get_client_memory)?;
     cx.export_function("getClientMessages", get_client_messages)?;
     cx.export_function("getClientCurrentState", get_client_current_state)?;
     cx.export_function("getClientConversations", get_client_conversations)?;

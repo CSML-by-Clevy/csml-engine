@@ -9,7 +9,7 @@ mod tests {
                 Message, get_db,
                 messages::{write_messages_batch, delete_user_messages, get_client_messages},
                 conversations::{create_conversation, get_client_conversations, delete_user_conversations},
-                memories::{create_client_memory, get_memories, delete_client_memories, delete_client_memory}
+                memories::{create_client_memory, internal_use_get_memories, delete_client_memories, delete_client_memory}
             }
         }
     };
@@ -123,7 +123,7 @@ mod tests {
             create_client_memory(&client, key.to_owned(), value.to_owned(), db).unwrap();
         }
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 2);
@@ -134,7 +134,7 @@ mod tests {
 
         delete_client_memories(&client, db).unwrap();
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 0);
@@ -158,7 +158,7 @@ mod tests {
             create_client_memory(&client, key.to_owned(), value.to_owned(), db).unwrap();
         }
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 2);
@@ -174,7 +174,7 @@ mod tests {
 
         delete_client_memory(&client, "memory", db).unwrap();
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 1);
