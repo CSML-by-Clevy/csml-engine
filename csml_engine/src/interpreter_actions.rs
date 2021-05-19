@@ -43,7 +43,6 @@ pub fn interpret_step(
                 memories.insert(mem.key.clone(), mem);
             },
             MSG::Message(msg) => {
-                println!("{:?}", msg);
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -145,7 +144,7 @@ pub fn interpret_step(
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {
             let el = now.elapsed()?;
-            println!(
+            eprintln!(
                 "Save message & memories bulk at the end of step - {}.{}",
                 el.as_secs(),
                 el.as_millis()
