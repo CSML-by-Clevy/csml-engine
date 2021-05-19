@@ -603,7 +603,7 @@ impl PrimitiveObject {
                         interval
                     )
                 );
-                Ok(PrimitiveBoolean::get_literal(true, interval))
+                Ok(PrimitiveObject::get_literal(&object.value, interval))
             }
             None => Ok(PrimitiveBoolean::get_literal(false, interval))
         }
