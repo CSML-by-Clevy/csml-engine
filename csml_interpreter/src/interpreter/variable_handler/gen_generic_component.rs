@@ -416,7 +416,17 @@ pub fn gen_generic_component(
         if let Some(serde_json::Value::Array(array)) = object.get("params") {
             for object in array.iter() {
                 if let Some(object) = object.as_object() {
-                    for key in object.keys() {
+                    let keys: Vec<&str> = object.keys().map(|key| key.as_str()).collect();
+
+                    if keys.len() > 1 {
+                        return Err(ErrorInfo::new(
+                            Position::new(*interval, flow_name),
+                            format!("invalid generic component {}, multiple keys are no allowed for single argument {:?}", name, keys),
+                        ))
+                    }
+
+                    for key in keys {
+                        println!("=> {}", key);
                         if let Some(result) = memoization.get(key) {
                             hashmap.insert(
                                 key.to_owned(),

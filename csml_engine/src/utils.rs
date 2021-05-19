@@ -27,11 +27,11 @@ use md5::{Digest, Md5};
  * Instead, the memory is saved in bulk at the end of each step or interaction, but we still
  * must allow the user to use the `remembered` data immediately.
  */
-pub fn update_current_context(data: &mut ConversationInfo, mem: &[Memory]) {
-    for elem in mem.iter() {
-        let lit = json_to_literal(&elem.value, Interval::default(), &data.context.flow).unwrap();
+pub fn update_current_context(data: &mut ConversationInfo, memories: &HashMap<String, Memory> ) {
+    for (_key, mem) in memories.iter() {
+        let lit = json_to_literal(&mem.value, Interval::default(), &data.context.flow).unwrap();
 
-        data.context.current.insert(elem.key.to_owned(), lit);
+        data.context.current.insert(mem.key.to_owned(), lit);
     }
 }
 

@@ -12,11 +12,11 @@ use crate::db_connectors::dynamodb::utils::*;
 
 fn format_memories(
     data: &ConversationInfo,
-    memories: &[InterpreterMemory],
+    memories: &HashMap<String, InterpreterMemory>,
 ) -> Result<Vec<Memory>, EngineError> {
     let mut res = vec![];
 
-    for mem in memories.iter() {
+    for (_, mem) in memories.iter() {
         res.push(Memory::new(
             &data.client,
             &mem.key,
@@ -29,7 +29,7 @@ fn format_memories(
 
 pub fn add_memories(
     data: &mut ConversationInfo,
-    memories: &[InterpreterMemory],
+    memories: &HashMap<String, InterpreterMemory>,
 ) -> Result<(), EngineError> {
     if memories.len() == 0 {
         return Ok(());
