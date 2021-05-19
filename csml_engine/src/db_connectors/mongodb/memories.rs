@@ -4,16 +4,17 @@ use crate::{
     Client, ConversationInfo, EngineError, Memory,
 };
 use bson::{doc, Bson};
+use std::collections::HashMap;
 
 fn format_memories(
     data: &mut ConversationInfo,
-    memories: &[Memory],
+    memories: &HashMap<String, Memory>,
 ) -> Result<Vec<bson::Document>, EngineError> {
     let client = bson::to_bson(&data.client)?;
 
     memories
         .iter()
-        .fold(Ok(vec![]), |vec, mem | {
+        .fold(Ok(vec![]), |vec, (_, mem) | {
             let time = Bson::UtcDatetime(chrono::Utc::now());
             let value = encrypt_data(&mem.value)?;
 
@@ -33,7 +34,7 @@ fn format_memories(
 
 pub fn add_memories(
     data: &mut ConversationInfo,
-    memories: &[Memory],
+    memories: &HashMap<String, Memory>,
 ) -> Result<(), EngineError> {
     if memories.is_empty() {
         return Ok(());
