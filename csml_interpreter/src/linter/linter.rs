@@ -484,11 +484,11 @@ fn validate_functions(linter_info: &mut LinterInfo) {
             None  => false
         };
 
-        if !validate_closure(&info, linter_info) &&
-            !function_exist(&info, linter_info) &&
-            !is_native_component &&
-            !BUILT_IN.contains(&info.name.as_str()) &&
-            COMPONENT != info.name
+        if !is_native_component && 
+            !BUILT_IN.contains(&info.name.as_str()) && 
+            COMPONENT != info.name &&
+            !validate_closure(&info, linter_info) &&
+            !function_exist(&info, linter_info)
         {
             linter_info.errors.push(gen_error_info(
                 Position::new(info.interval.to_owned(), linter_info.flow_name,),
