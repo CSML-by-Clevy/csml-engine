@@ -8,6 +8,7 @@ use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Event, Hold, MSG},
     interpret,
 };
+use std::collections::HashMap;
 use serde_json::{map::Map, Value};
 use std::{env, sync::mpsc, thread, time::SystemTime};
 
@@ -34,12 +35,15 @@ pub fn interpret_step(
         interpret(new_bot, context, event, Some(sender));
     });
 
-    let mut memories = vec![];
+    let mut memories = HashMap::new();
 
     for received in receiver {
         match received {
-            MSG::Memory(mem) => memories.push(mem),
+            MSG::Memory(mem) => {
+                memories.insert(mem.key.clone(), mem);
+            },
             MSG::Message(msg) => {
+                println!("{:?}", msg);
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -118,7 +122,7 @@ pub fn interpret_step(
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {
             let el = interpret_step.elapsed()?;
-            println!(
+            eprintln!(
                 "Total Time interpret step {} - {}.{}",
                 data.context.step,
                 el.as_secs(),
