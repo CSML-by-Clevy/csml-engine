@@ -1,5 +1,5 @@
 use crate::data::{DynamoDbClient};
-use crate::db_connectors::dynamodb::{get_db, Memory, MemoryDeleteInfo, DynamoDbKey};
+use crate::db_connectors::dynamodb::{get_db, Memory, MemoryGetInfo, MemoryDeleteInfo, DynamoDbKey};
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, ConversationInfo, EngineError,
@@ -128,16 +128,19 @@ fn query_memories(
     Ok(data)
 }
 
-pub fn get_memories(
+fn get_all_memories(
     client: &Client,
     db: &mut DynamoDbClient,
-) -> Result<serde_json::Value, EngineError> {
+) -> Result<Vec<serde_json::Value>, EngineError> {
     let mut memories = vec![];
     let mut last_evaluated_key = None;
 
     let expr_attr_names: HashMap<String, String> = [
-        (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), "range_time".to_owned()),
+        ("#hashKey".to_string(), String::from("hash")),
+        ("#rangeKey".to_string(), "range_time".to_owned()),
+        ("#key".to_string(), "key".to_string()),
+        ("#value".to_string(), "value".to_string()),
+        ("#created_at".to_string(), "created_at".to_string()),
     ]
     .iter()
     .cloned()
@@ -161,7 +164,7 @@ pub fn get_memories(
             db,
             25,
             last_evaluated_key,
-            None,
+            Some("#key, #value, #created_at".to_owned()),
             Some(expr_attr_names.clone()),
             Some(expr_attr_values.clone()),
             None,
@@ -170,7 +173,7 @@ pub fn get_memories(
         match data.items {
             Some(val) => {
                 for item in val.iter() {
-                    let mem: Memory = serde_dynamodb::from_hashmap(item.to_owned())?;
+                    let mem: MemoryGetInfo = serde_dynamodb::from_hashmap(item.to_owned())?;
 
                     let mut json_value = serde_json::json!(mem);
                     json_value["value"] = decrypt_data(json_value["value"].as_str().unwrap().to_string())?;
@@ -187,16 +190,69 @@ pub fn get_memories(
         };
     }
 
+    Ok(memories)
+}
+
+pub fn internal_use_get_memories(
+    client: &Client,
+    db: &mut DynamoDbClient,
+) -> Result<serde_json::Value, EngineError> {
+    let memories = get_all_memories(client, db)?;
+
     // format memories output
     let mut map = serde_json::Map::new();
     for mem in memories {
         let key = mem["key"].as_str().unwrap();
+
         if !map.contains_key(key) {
             map.insert(key.to_string(), mem["value"].clone());
         }
     }
 
     Ok(serde_json::json!(map))
+}
+
+pub fn get_memories(
+    client: &Client,
+    db: &mut DynamoDbClient,
+) -> Result<serde_json::Value, EngineError> {
+    let memories = get_all_memories(client, db)?;
+
+    // format memories output
+    let mut map = serde_json::Map::new();
+    let mut vec = vec![];
+    for mem in memories {
+        let key = mem["key"].as_str().unwrap();
+
+        if !map.contains_key(key) {
+            map.insert(key.to_string(), mem["value"].clone());
+
+            vec.push(mem);
+        }
+    }
+
+    Ok(serde_json::json!(vec))
+}
+
+pub fn get_memory(
+    client: &Client,
+    key: &str,
+    db: &mut DynamoDbClient,
+) -> Result<serde_json::Value, EngineError> {
+    let memories = get_all_memories(client, db)?;
+
+    // format memories output
+    let mut return_value  = serde_json::Value::Null;
+    for mem in memories {
+        let val = mem["key"].as_str().unwrap();
+
+        if key == val  {
+            return_value = mem;
+            break
+        }
+    }
+
+    Ok(return_value)
 }
 
 fn get_memory_batches_to_delete(

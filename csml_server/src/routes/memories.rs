@@ -1,4 +1,4 @@
-use actix_web::{post, delete, web, HttpResponse};
+use actix_web::{post, delete, get, web, HttpResponse};
 use csml_interpreter::data::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
@@ -23,33 +23,6 @@ pub struct Memory {
     value: serde_json::Value,
 }
 
-
-/**
- * Delete client memory key
- *
- * {"statusCode": 204}
- *
- */
-#[delete("/memories")]
-pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
-    let client = Client {
-        user_id: query.user_id.clone(),
-        channel_id: query.channel_id.clone(),
-        bot_id: query.bot_id.clone(),
-    };
-
-    let res = thread::spawn(move || {
-        csml_engine::delete_client_memories(&client)
-    }).join().unwrap();
-
-    match res {
-        Ok(_) => HttpResponse::NoContent().finish(),
-        Err(err) => {
-            eprintln!("EngineError: {:?}", err);
-            HttpResponse::InternalServerError().finish()
-        }
-    }
-}
 
 /**
  * Create client memory
@@ -100,6 +73,85 @@ pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Cli
 
     match res {
         Ok(_) => HttpResponse::NoContent().finish(),
+        Err(err) => {
+            eprintln!("EngineError: {:?}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/**
+ * Delete a client's full memory
+ *
+ * {"statusCode": 204}
+ *
+ */
+#[delete("/memories")]
+pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
+    let client = Client {
+        user_id: query.user_id.clone(),
+        channel_id: query.channel_id.clone(),
+        bot_id: query.bot_id.clone(),
+    };
+
+    let res = thread::spawn(move || {
+        csml_engine::delete_client_memories(&client)
+    }).join().unwrap();
+
+    match res {
+        Ok(_) => HttpResponse::NoContent().finish(),
+        Err(err) => {
+            eprintln!("EngineError: {:?}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/**
+ * Get a specific key in client memory
+ *
+ */
+#[get("/memories/{key})")]
+pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>) -> HttpResponse {
+    let memory_key = path.key.to_owned();
+
+    let client = Client {
+        user_id: query.user_id.clone(),
+        channel_id: query.channel_id.clone(),
+        bot_id: query.bot_id.clone(),
+    };
+
+    let res = thread::spawn(move || {
+        csml_engine::get_client_memory(&client, &memory_key)
+    }).join().unwrap();
+
+    match res {
+        Ok(memory) => HttpResponse::Ok().json(memory),
+        Err(err) => {
+            eprintln!("EngineError: {:?}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/**
+* Get a client's full memory
+*
+*/
+#[get("/memories")]
+pub async fn get_memories( query: web::Query<ClientQuery>) -> HttpResponse {
+    let client = Client {
+        user_id: query.user_id.clone(),
+        channel_id: query.channel_id.clone(),
+        bot_id: query.bot_id.clone(),
+    };
+
+    let res = thread::spawn(move || {
+        csml_engine::get_client_memories(&client)
+    }).join().unwrap();
+
+    match res {
+    Ok(memory) => HttpResponse::Ok().json(memory),
         Err(err) => {
             eprintln!("EngineError: {:?}", err);
             HttpResponse::InternalServerError().finish()

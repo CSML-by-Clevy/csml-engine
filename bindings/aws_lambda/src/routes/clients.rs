@@ -4,7 +4,7 @@ use crate::{format_response};
 
 use lambda_runtime::error::HandlerError;
 
-pub fn delete_client(body: Client) -> Result<serde_json::Value, HandlerError> {
+pub fn delete_client_data(body: Client) -> Result<serde_json::Value, HandlerError> {
 
     let res = csml_engine::delete_client(&body);
 

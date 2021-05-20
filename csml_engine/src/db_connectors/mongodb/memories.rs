@@ -69,7 +69,7 @@ pub fn create_client_memory(
     Ok(())
 }
 
-pub fn get_memories(
+pub fn internal_use_get_memories(
     client: &Client,
     db: &mongodb::Database,
 ) -> Result<serde_json::Value, EngineError> {
@@ -97,6 +97,88 @@ pub fn get_memories(
     }
 
     Ok(serde_json::json!(map))
+}
+
+pub fn get_memories(
+    client: &Client,
+    db: &mongodb::Database,
+) -> Result<serde_json::Value, EngineError> {
+    let collection = db.collection("memory");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+    };
+    let find_options = mongodb::options::FindOptions::builder()
+        .sort(doc! { "$natural": -1 })
+        .build();
+
+    let cursor = collection.find(filter, find_options)?;
+
+    let mut vec = vec!();
+    for elem in cursor {
+        if let Ok(doc) = elem {
+            let mem: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
+            let value: serde_json::Value = decrypt_data(mem["value"].as_str().unwrap().to_owned())?;
+            let mut memory = serde_json::Map::new();
+
+            memory.insert(
+                "key".to_owned(),
+                mem["key"].clone()
+            );
+            memory.insert(
+                "value".to_owned(),
+                value
+            );
+            memory.insert(
+                "created_at".to_owned(),
+                mem["created_at"].clone()
+            );
+
+            vec.push(memory);
+        }
+    }
+
+    Ok(serde_json::json!(vec))
+}
+
+pub fn get_memory(
+    client: &Client,
+    key: &str,
+    db: &mongodb::Database,
+) -> Result<serde_json::Value, EngineError> {
+    let collection = db.collection("memory");
+
+    let filter = doc! {
+        "client": bson::to_bson(&client)?,
+        "key": key,
+    };
+    let find_options = mongodb::options::FindOneOptions::builder()
+        .sort(doc! { "$natural": -1 })
+        .build();
+
+    let result = collection.find_one(filter, find_options)?;
+
+    if let Some(doc) = result {
+        let mem: serde_json::Value = bson::from_bson(bson::Bson::Document(doc))?;
+        let mut memory = serde_json::Map::new();
+
+        memory.insert(
+            "key".to_owned(),
+            mem["key"].clone()
+        );
+        memory.insert(
+            "value".to_owned(),
+            decrypt_data(mem["value"].as_str().unwrap().to_owned())?
+        );
+        memory.insert(
+            "created_at".to_owned(),
+            mem["created_at"].clone()
+        );
+
+        return Ok(serde_json::json!(memory))
+    } else {
+        return Ok(serde_json::Value::Null)
+    }
 }
 
 pub fn delete_client_memory(client: &Client, key: &str, db: &mongodb::Database) -> Result<(), EngineError> {

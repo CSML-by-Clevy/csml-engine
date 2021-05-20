@@ -98,7 +98,6 @@ pub fn get_bot_versions(
         let db = dynamodb_connector::get_db(db)?;
         let pagination_key = dynamodb_connector::get_pagination_key(pagination_key)?;
 
-
         return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
     }
 
