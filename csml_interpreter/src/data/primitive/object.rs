@@ -74,17 +74,22 @@ lazy_static! {
 
         map.insert(
             "at",
-            (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Read),
+            (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Write),
         );
 
         map.insert(
             "unix",
-            (PrimitiveObject::unix as PrimitiveMethod, Right::Read),
+            (PrimitiveObject::unix as PrimitiveMethod, Right::Write),
         );
 
         map.insert(
             "format",
             (PrimitiveObject::date_format as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "parse",
+            (PrimitiveObject::parse_from_rfc_3339 as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -603,7 +608,10 @@ impl PrimitiveObject {
                         interval
                     )
                 );
-                Ok(PrimitiveObject::get_literal(&object.value, interval))
+                let mut lit = PrimitiveObject::get_literal(&object.value, interval);
+                lit.set_content_type("time");
+
+                Ok(lit)
             }
             None => Ok(PrimitiveBoolean::get_literal(false, interval))
         }
@@ -638,6 +646,53 @@ impl PrimitiveObject {
                 ))
             }
         }
+    }
+
+    fn parse_from_rfc_3339(
+        _object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "invalid value, 'parse(String)' expect a valid RFC 3339 and ISO 8601 date and time string such as '1996-12-19T16:39:57-08:00'";
+
+        let date_str =  match args.get(&format!("arg{}", 0)) {
+            Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                Literal::get_value::<String>(
+                    &literal.primitive,
+                    &data.context.flow,
+                    literal.interval,
+                    format!("{}", usage),
+                )?
+            }
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("{}", usage),
+            ))
+        };
+
+        let date = match DateTime::parse_from_rfc3339(date_str) {
+            Ok(date) => date,
+            Err(_) => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("{}", usage),
+            ))
+        };
+
+        let mut object = HashMap::new();
+
+        object.insert(
+            "milliseconds".to_owned(),
+            PrimitiveInt::get_literal(
+                date.timestamp_millis(),
+                interval
+            )
+        );
+        let mut lit = PrimitiveObject::get_literal(&object, interval);
+        lit.set_content_type("time");
+
+        Ok(lit)
     }
 
     fn date_format(
