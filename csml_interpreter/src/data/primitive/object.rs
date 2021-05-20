@@ -89,7 +89,7 @@ lazy_static! {
 
         map.insert(
             "parse",
-            (PrimitiveObject::parse_from_rfc_3339 as PrimitiveMethod, Right::Read),
+            (PrimitiveObject::parse_date as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -648,51 +648,23 @@ impl PrimitiveObject {
         }
     }
 
-    fn parse_from_rfc_3339(
+    fn parse_date(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "invalid value, 'parse(String)' expect a valid RFC 3339 and ISO 8601 date and time string such as '1996-12-19T16:39:57-08:00'";
-
-        let date_str =  match args.get(&format!("arg{}", 0)) {
-            Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(
-                    &literal.primitive,
-                    &data.context.flow,
-                    literal.interval,
-                    format!("{}", usage),
-                )?
-            }
+        match args.len() {
+            1 => tools_time::parse_rfc3339(args, data, interval),
+            len if len >= 2 => tools_time::pasre_from_str(args, data, interval),
             _ => return Err(gen_error_info(
                 Position::new(interval, &data.context.flow,),
-                format!("{}", usage),
+                format!("usage: expect one ore two arguments :
+                Time().parse(\"2020-08-13\")   or
+                Time().parse(\"1983-08-13 12:09:14.274\", \"%Y-%m-%d %H:%M:%S%.3f\")"),
             ))
-        };
-
-        let date = match DateTime::parse_from_rfc3339(date_str) {
-            Ok(date) => date,
-            Err(_) => return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
-                format!("{}", usage),
-            ))
-        };
-
-        let mut object = HashMap::new();
-
-        object.insert(
-            "milliseconds".to_owned(),
-            PrimitiveInt::get_literal(
-                date.timestamp_millis(),
-                interval
-            )
-        );
-        let mut lit = PrimitiveObject::get_literal(&object, interval);
-        lit.set_content_type("time");
-
-        Ok(lit)
+        }
     }
 
     fn date_format(
