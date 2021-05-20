@@ -46,12 +46,26 @@ pub fn create_client_memory(
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
+pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
+    #[cfg(feature = "mongo")]
+    if is_mongodb() {
+        let db = mongodb_connector::get_db(db)?;
+        return mongodb_connector::memories::internal_use_get_memories(client, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::memories::internal_use_get_memories(client, db);
+    }
+
+    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
+}
 
 /**
- * Memories will be injected into the conversation's current context
- * so `context` must be mutable.
+ * Get client Memories
  */
-pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
+ pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -66,6 +80,26 @@ pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Va
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
+
+/**
+ * Get client Memory
+ */
+ pub fn get_memory(client: &Client, key: &str, db: &mut Database) -> Result<serde_json::Value, EngineError> {
+    #[cfg(feature = "mongo")]
+    if is_mongodb() {
+        let db = mongodb_connector::get_db(db)?;
+        return mongodb_connector::memories::get_memory(client, key, db);
+    }
+
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        let db = dynamodb_connector::get_db(db)?;
+        return dynamodb_connector::memories::get_memory(client, key, db);
+    }
+
+    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
+}
+
 
 pub fn delete_client_memory(client: &Client, key: &str, db: &mut Database) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]

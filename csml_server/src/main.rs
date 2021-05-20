@@ -55,6 +55,8 @@ async fn main() -> std::io::Result<()> {
       .service(routes::conversations::get_client_conversations)
 
       .service(routes::memories::create_client_memory)
+      .service(routes::memories::get_memories)
+      .service(routes::memories::get_memory)
       .service(routes::memories::delete_memories)
       .service(routes::memories::delete_memory)
 
@@ -62,9 +64,8 @@ async fn main() -> std::io::Result<()> {
 
       .service(routes::state::get_client_current_state)
 
-      .service(routes::bots::delete_bot)
-
-      .service(routes::clients::delete_client)
+      .service(routes::data::delete_bot)
+      .service(routes::data::delete_client)
 
   })
   .bind(format!("0.0.0.0:{}", server_port))?
