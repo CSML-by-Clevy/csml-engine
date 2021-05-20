@@ -203,10 +203,9 @@ pub fn internal_use_get_memories(
     let mut map = serde_json::Map::new();
     for mem in memories {
         let key = mem["key"].as_str().unwrap();
-        let value: serde_json::Value = decrypt_data(mem["value"].as_str().unwrap().to_owned())?;
 
         if !map.contains_key(key) {
-            map.insert(key.to_string(), value);
+            map.insert(key.to_string(), mem["value"].clone());
         }
     }
 
@@ -222,14 +221,11 @@ pub fn get_memories(
     // format memories output
     let mut map = serde_json::Map::new();
     let mut vec = vec![];
-    for mut mem in memories {
+    for mem in memories {
         let key = mem["key"].as_str().unwrap();
-        let value: serde_json::Value = decrypt_data(mem["value"].as_str().unwrap().to_owned())?;
 
         if !map.contains_key(key) {
             map.insert(key.to_string(), mem["value"].clone());
-
-            mem["value"] = value;
 
             vec.push(mem);
         }
@@ -247,15 +243,11 @@ pub fn get_memory(
 
     // format memories output
     let mut return_value  = serde_json::Value::Null;
-    for mut mem in memories {
+    for mem in memories {
         let val = mem["key"].as_str().unwrap();
-        let value: serde_json::Value = decrypt_data(mem["value"].as_str().unwrap().to_owned())?;
 
         if key == val  {
-            mem["value"] = value;
-
             return_value = mem;
-
             break
         }
     }
