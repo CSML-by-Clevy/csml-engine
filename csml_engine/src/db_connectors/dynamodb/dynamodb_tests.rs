@@ -9,7 +9,10 @@ mod tests {
                 Message, get_db,
                 messages::{write_messages_batch, delete_user_messages, get_client_messages},
                 conversations::{create_conversation, get_client_conversations, delete_user_conversations},
-                memories::{create_client_memory, get_memories, delete_client_memories, delete_client_memory}
+                memories::{create_client_memory, internal_use_get_memories, 
+                    delete_client_memories, delete_client_memory,
+                    get_memories, get_memory
+                }
             }
         }
     };
@@ -81,7 +84,6 @@ mod tests {
         assert_eq!(received_msgs.len(), 0)
     }
 
-
     #[test]
     fn ok_conversation() {
         let client = get_client();
@@ -123,7 +125,7 @@ mod tests {
             create_client_memory(&client, key.to_owned(), value.to_owned(), db).unwrap();
         }
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 2);
@@ -134,7 +136,7 @@ mod tests {
 
         delete_client_memories(&client, db).unwrap();
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 0);
@@ -158,7 +160,7 @@ mod tests {
             create_client_memory(&client, key.to_owned(), value.to_owned(), db).unwrap();
         }
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 2);
@@ -174,7 +176,7 @@ mod tests {
 
         delete_client_memory(&client, "memory", db).unwrap();
 
-        let response = get_memories(&client, db).unwrap();
+        let response = internal_use_get_memories(&client, db).unwrap();
         let memories: &serde_json::Map<String, serde_json::Value> = response.as_object().unwrap();
 
         assert_eq!(memories.len(), 1);
@@ -185,6 +187,44 @@ mod tests {
 
         for (key, value) in mems.iter() {
             assert_eq!(memories.get(key).unwrap(), value);
+        }
+    }
+
+    #[test]
+    fn ok_get_memory() {
+        let client = get_client();
+        let mut db = init_db().unwrap();
+        let db = get_db(&mut db).unwrap();
+
+        delete_client_memories(&client, db).unwrap();
+
+        let mems = vec![
+            ("my_key".to_owned(), serde_json::json!("value")),
+            ("random".to_owned(), serde_json::json!("tmp")),
+            ("my_key".to_owned(), serde_json::json!("next")),
+        ];
+
+        for (key, value) in mems.iter() {
+            create_client_memory(&client, key.to_owned(), value.to_owned(), db).unwrap();
+        }
+
+        let response = get_memory(&client, "my_key", db).unwrap();
+
+        assert_eq!(serde_json::Value::String("next".to_owned()), response["value"]);
+
+
+        let response = get_memories(&client, db).unwrap();
+
+        match response {
+            serde_json::Value::Array(memories) => {
+                for memory in memories {
+                    let key = memory["key"].as_str().unwrap();
+                    if key != "random" && key != "my_key" {
+                        panic!("bad memory => {:?}", memory)
+                    }
+                }
+            }
+            value => panic!("bad format => {:?}", value)
         }
     }
 }

@@ -93,6 +93,19 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
     conversations::get_latest_open(client, &mut db)
 }
 
+
+pub fn get_client_memories(client: &Client) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+
+    memories::get_memories(client, &mut db)
+}
+
+pub fn get_client_memory(client: &Client, key: &str) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+
+    memories::get_memory(client, key, &mut db)
+}
+
 pub fn get_client_messages(
     client: &Client,
     limit: Option<i64>,

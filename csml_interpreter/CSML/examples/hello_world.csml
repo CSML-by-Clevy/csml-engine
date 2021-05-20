@@ -1,5 +1,9 @@
 start:
 
-    say "Hello World 😆"
+    // say Url("Hello World 😆")
+    say Time().at(2020, 12, 24)
+
+    do x = Time().at(2020, 12, 24)
+    say "{{x}}"
 
     goto end

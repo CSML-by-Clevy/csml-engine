@@ -278,6 +278,13 @@ impl Interaction {
 pub struct MemoryDeleteInfo {
     pub range: String,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MemoryGetInfo {
+    pub key: String,
+    pub value: Option<String>,
+    pub created_at: String,
+}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Memory {
     pub hash: String,
@@ -306,7 +313,7 @@ impl Memory {
     /**
      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
      * range = memory#[mem_key]
-     * range_time = memory#timestamp#interaction_order#memory_order#[mem_key]
+     * range_time = memory#timestamp#[mem_key]
      */
     pub fn new(
         client: &Client,
@@ -323,7 +330,8 @@ impl Memory {
             range: range.to_owned(),
             range_time: make_range(&[
                 class_name,
-                &now
+                &now,
+                &range
             ]),
             class: class_name.to_owned(),
             client: Some(client.to_owned()),
@@ -334,7 +342,6 @@ impl Memory {
             value: encrypted_value.clone(),
             expires_at: None,
             created_at: now.to_owned(),
-            
         }
     }
 }

@@ -458,7 +458,7 @@ fn delete_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
 /*
 * Remove all data associated with a given Client
 */
-fn delete_client(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn delete_client_data(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
 
@@ -492,6 +492,45 @@ fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
             let value= serde_json::json!(
                 value
             );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+fn get_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::get_client_memories(&client) {
+        Ok(value) => {
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+fn get_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let jsclient = cx.argument::<JsValue>(0)?;
+    let key = cx.argument::<JsString>(1)?.value();
+    let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
+
+    match csml_engine::get_client_memory(&client, &key) {
+        Ok(value) => {
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
         },
@@ -598,13 +637,15 @@ register_module!(mut cx, {
     cx.export_function("deleteBotVersions", delete_bot_versions)?;
 
     cx.export_function("createClientMemory ", create_client_memory)?;
+    cx.export_function("getClientMemories", get_client_memories)?;
+    cx.export_function("getClientMemory", get_client_memory)?;
     cx.export_function("getClientMessages", get_client_messages)?;
     cx.export_function("getClientCurrentState", get_client_current_state)?;
     cx.export_function("getClientConversations", get_client_conversations)?;
     cx.export_function("deleteMemory", delete_client_memory)?;
     cx.export_function("deleteMemories", delete_client_memories)?;
-    cx.export_function("deleteClient", delete_client)?;
-    cx.export_function("deleteBot", delete_bot_data)?;
+    cx.export_function("deleteClientData", delete_client_data)?;
+    cx.export_function("deleteBotData", delete_bot_data)?;
 
     cx.export_function("run", run_bot)?;
 
