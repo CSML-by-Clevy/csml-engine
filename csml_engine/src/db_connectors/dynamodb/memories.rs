@@ -164,7 +164,7 @@ fn get_all_memories(
             db,
             25,
             last_evaluated_key,
-            Some("#key, #value, #crated_at".to_owned()),
+            Some("#key, #value, #created_at".to_owned()),
             Some(expr_attr_names.clone()),
             Some(expr_attr_values.clone()),
             None,

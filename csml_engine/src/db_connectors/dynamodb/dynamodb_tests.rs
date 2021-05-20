@@ -81,7 +81,6 @@ mod tests {
         assert_eq!(received_msgs.len(), 0)
     }
 
-
     #[test]
     fn ok_conversation() {
         let client = get_client();
