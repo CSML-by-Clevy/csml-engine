@@ -426,7 +426,6 @@ pub fn gen_generic_component(
                     }
 
                     for key in keys {
-                        println!("=> {}", key);
                         if let Some(result) = memoization.get(key) {
                             hashmap.insert(
                                 key.to_owned(),
