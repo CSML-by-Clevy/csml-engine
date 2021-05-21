@@ -74,17 +74,22 @@ lazy_static! {
 
         map.insert(
             "at",
-            (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Read),
+            (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Write),
         );
 
         map.insert(
             "unix",
-            (PrimitiveObject::unix as PrimitiveMethod, Right::Read),
+            (PrimitiveObject::unix as PrimitiveMethod, Right::Write),
         );
 
         map.insert(
             "format",
             (PrimitiveObject::date_format as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "parse",
+            (PrimitiveObject::parse_date as PrimitiveMethod, Right::Read),
         );
 
         map
@@ -603,7 +608,10 @@ impl PrimitiveObject {
                         interval
                     )
                 );
-                Ok(PrimitiveObject::get_literal(&object.value, interval))
+                let mut lit = PrimitiveObject::get_literal(&object.value, interval);
+                lit.set_content_type("time");
+
+                Ok(lit)
             }
             None => Ok(PrimitiveBoolean::get_literal(false, interval))
         }
@@ -637,6 +645,25 @@ impl PrimitiveObject {
                     format!("{}", usage),
                 ))
             }
+        }
+    }
+
+    fn parse_date(
+        _object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        match args.len() {
+            1 => tools_time::parse_rfc3339(args, data, interval),
+            len if len >= 2 => tools_time::pasre_from_str(args, data, interval),
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("usage: expect one ore two arguments :
+                Time().parse(\"2020-08-13\")   or
+                Time().parse(\"1983-08-13 12:09:14.274\", \"%Y-%m-%d %H:%M:%S%.3f\")"),
+            ))
         }
     }
 

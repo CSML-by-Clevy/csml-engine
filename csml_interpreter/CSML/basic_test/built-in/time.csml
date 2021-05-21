@@ -9,3 +9,15 @@ start:
 
     say time.format("%Y")
     goto end
+
+parse_1_arg:
+    do time = Time().parse("1983-08-13")
+
+    say time.format()
+    goto end
+
+parse_2_arg:
+    do time = Time().parse("1983 08 13 12:09:14.274", "%Y %m %d %H:%M:%S%.3f")
+
+    say time.format()
+    goto end
