@@ -92,3 +92,8 @@ step5:
     say "{{ OneOf([\"1\", \"2\"])  }}"
 
     goto end
+
+step6:
+    do foo = { "bar": 2 + 1 }
+
+    say foo.bar

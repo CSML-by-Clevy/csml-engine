@@ -92,3 +92,20 @@ fn ok_object_step5() {
         panic!("Random fail {}", int);
     }
 }
+
+
+#[test]
+fn ok_object_step6() {
+    let data = r#"{"messages":[ {"content":{"text":"3"},"content_type":"text"} ],"memories":[]}"#;
+
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "step6", "flow"),
+        "CSML/basic_test/object.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
