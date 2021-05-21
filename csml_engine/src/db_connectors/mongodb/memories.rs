@@ -2,6 +2,7 @@ use crate::{
     db_connectors::mongodb::get_db,
     encrypt::{decrypt_data, encrypt_data},
     Client, ConversationInfo, EngineError, Memory,
+    MongoDbClient
 };
 use bson::{doc, Bson};
 use std::collections::HashMap;
@@ -15,7 +16,7 @@ fn format_memories(
     memories
         .iter()
         .fold(Ok(vec![]), |vec, (_, mem) | {
-            let time = Bson::UtcDatetime(chrono::Utc::now());
+            let time = Bson::DateTime(chrono::Utc::now());
             let value = encrypt_data(&mem.value)?;
 
             let mut vec = vec?;
@@ -43,7 +44,7 @@ pub fn add_memories(
     let mem = format_memories(data, memories)?;
     let db = get_db(&data.db)?;
 
-    let collection = db.collection("memory");
+    let collection = db.client.collection("memory");
     collection.insert_many(mem, None)?;
 
     Ok(())
@@ -53,17 +54,17 @@ pub fn create_client_memory(
     client: &Client,
     key: String,
     value: serde_json::Value,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<(), EngineError> {
     let memory = doc! {
         "client": bson::to_bson(&client)?,
         "key": key,
         "value": encrypt_data(&value)?, // encrypted
         "expires_at": Bson::Null,
-        "created_at": Bson::UtcDatetime(chrono::Utc::now())
+        "created_at": Bson::DateTime(chrono::Utc::now())
     };
 
-    let collection = db.collection("memory");
+    let collection = db.client.collection("memory");
     collection.insert_one(memory, None)?;
 
     Ok(())
@@ -71,9 +72,9 @@ pub fn create_client_memory(
 
 pub fn internal_use_get_memories(
     client: &Client,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.collection("memory");
+    let collection = db.client.collection("memory");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -101,9 +102,9 @@ pub fn internal_use_get_memories(
 
 pub fn get_memories(
     client: &Client,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.collection("memory");
+    let collection = db.client.collection("memory");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -144,9 +145,9 @@ pub fn get_memories(
 pub fn get_memory(
     client: &Client,
     key: &str,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.collection("memory");
+    let collection = db.client.collection("memory");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -181,8 +182,8 @@ pub fn get_memory(
     }
 }
 
-pub fn delete_client_memory(client: &Client, key: &str, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("memory");
+pub fn delete_client_memory(client: &Client, key: &str, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("memory");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -194,8 +195,8 @@ pub fn delete_client_memory(client: &Client, key: &str, db: &mongodb::Database) 
     Ok(())
 }
 
-pub fn delete_client_memories(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("memory");
+pub fn delete_client_memories(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("memory");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
