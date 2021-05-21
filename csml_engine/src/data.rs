@@ -285,12 +285,26 @@ pub struct CsmlRequest {
 
 pub enum Database {
     #[cfg(feature = "mongo")]
-    Mongo(mongodb::Database),
+    Mongo(MongoDbClient),
     #[cfg(feature = "dynamo")]
     Dynamodb(DynamoDbClient),
     None,
 }
 
+#[cfg(feature = "mongo")]
+pub struct MongoDbClient {
+    pub client: mongodb::sync::Database,
+}
+
+#[cfg(feature = "mongo")]
+impl MongoDbClient {
+    pub fn new(client: mongodb::sync::Database) -> Self {
+        Self {
+            client,
+        }
+    }
+
+}
 /**
  * Dynamodb runs in async by default and returns futures, that need to be awaited on.
  * The proper way to do it is by using tokio's runtime::block_on(). It is however quite costly
@@ -309,7 +323,7 @@ impl DynamoDbClient {
         Self {
             client: rusoto_dynamodb::DynamoDbClient::new(dynamo_region),
             s3_client: rusoto_s3::S3Client::new(s3_region),
-            runtime: { tokio::runtime::Runtime::new().unwrap() },
+            runtime: tokio::runtime::Runtime::new().unwrap(),
         }
     }
 }
@@ -348,9 +362,9 @@ pub enum EngineError {
     Base64(base64::DecodeError),
 
     #[cfg(any(feature = "mongo"))]
-    BsonDecoder(bson::DecoderError),
+    BsonDecoder(bson::de::Error),
     #[cfg(any(feature = "mongo"))]
-    BsonEncoder(bson::EncoderError),
+    BsonEncoder(bson::ser::Error),
     #[cfg(any(feature = "mongo"))]
     MongoDB(mongodb::error::Error),
 
@@ -399,16 +413,16 @@ impl From<base64::DecodeError> for EngineError {
 }
 
 #[cfg(any(feature = "mongo"))]
-impl From<bson::EncoderError> for EngineError {
-    fn from(e: bson::EncoderError) -> Self {
-        EngineError::BsonEncoder(e)
+impl From<bson::de::Error> for EngineError {
+    fn from(e: bson::de::Error) -> Self {
+        EngineError::BsonDecoder(e)
     }
 }
 
 #[cfg(any(feature = "mongo"))]
-impl From<bson::DecoderError> for EngineError {
-    fn from(e: bson::DecoderError) -> Self {
-        EngineError::BsonDecoder(e)
+impl From<bson::ser::Error> for EngineError {
+    fn from(e: bson::ser::Error) -> Self {
+        EngineError::BsonEncoder(e)
     }
 }
 
@@ -432,10 +446,3 @@ impl From<serde_dynamodb::Error> for EngineError {
         EngineError::SerdeDynamodb(e)
     }
 }
-
-// #[cfg(any(feature = "dynamo"))]
-// impl From<s3::S3Error> for EngineError {
-//     fn from(e: s3::S3Error) -> Self {
-//         EngineError::S3(e)
-//     }
-// }

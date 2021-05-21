@@ -1,9 +1,9 @@
-use crate::{db_connectors::DbConversation, Client, EngineError};
+use crate::{db_connectors::DbConversation, Client, EngineError, MongoDbClient};
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
 fn format_conversation_struct(
-    conversation: bson::ordered::OrderedDocument,
+    conversation: bson::document::Document,
 ) -> Result<DbConversation, EngineError> {
     Ok(DbConversation {
         id: conversation.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
@@ -12,15 +12,15 @@ fn format_conversation_struct(
         step_id: conversation.get_str("step_id").unwrap().to_owned(), // to_hex
         status: conversation.get_str("status").unwrap().to_owned(),   //(OPEN, CLOSED, //Faild?
         last_interaction_at: conversation
-            .get_utc_datetime("last_interaction_at")
+            .get_datetime("last_interaction_at")
             .unwrap()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
         updated_at: conversation
-            .get_utc_datetime("updated_at")
+            .get_datetime("updated_at")
             .unwrap()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
         created_at: conversation
-            .get_utc_datetime("created_at")
+            .get_datetime("created_at")
             .unwrap()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
     })
@@ -30,10 +30,10 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<String, EngineError> {
-    let collection = db.collection("conversation");
-    let time = Bson::UtcDatetime(chrono::Utc::now());
+    let collection = db.client.collection("conversation");
+    let time = Bson::DateTime(chrono::Utc::now());
 
     let conversation = doc! {
         "client": bson::to_bson(&client)?,
@@ -56,9 +56,9 @@ pub fn close_conversation(
     id: &str,
     client: &Client,
     status: &str,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<(), EngineError> {
-    let collection = db.collection("conversation");
+    let collection = db.client.collection("conversation");
 
     let filter = doc! {
         "_id": bson::oid::ObjectId::with_string(id).unwrap(),
@@ -76,8 +76,8 @@ pub fn close_conversation(
     Ok(())
 }
 
-pub fn close_all_conversations(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("conversation");
+pub fn close_all_conversations(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("conversation");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -97,9 +97,9 @@ pub fn close_all_conversations(client: &Client, db: &mongodb::Database) -> Resul
 
 pub fn get_latest_open(
     client: &Client,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<Option<DbConversation>, EngineError> {
-    let collection = db.collection("conversation");
+    let collection = db.client.collection("conversation");
 
     let filter = doc! {
         "status": "OPEN",
@@ -124,9 +124,9 @@ pub fn update_conversation(
     client: &Client,
     flow_id: Option<String>,
     step_id: Option<String>,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<(), EngineError> {
-    let collection = db.collection("conversation");
+    let collection = db.client.collection("conversation");
 
     let filter = doc! {
         "_id": bson::oid::ObjectId::with_string(conversation_id).unwrap(),
@@ -156,8 +156,8 @@ pub fn update_conversation(
     Ok(())
 }
 
-pub fn delete_user_conversations(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("conversation");
+pub fn delete_user_conversations(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("conversation");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -170,11 +170,11 @@ pub fn delete_user_conversations(client: &Client, db: &mongodb::Database) -> Res
 
 pub fn get_client_conversations(
     client: &Client,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.collection("conversation");
+    let collection = db.client.collection("conversation");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,

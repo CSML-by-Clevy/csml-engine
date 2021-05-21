@@ -1,19 +1,19 @@
 use crate::{
     db_connectors::{BotVersion, DbBot},
-    data::{SerializeCsmlBot, CsmlBotBincode},
+    data::{SerializeCsmlBot, CsmlBotBincode, MongoDbClient},
     EngineError,
 };
 use bson::{doc, Bson};
 use chrono::SecondsFormat;
 
-fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, EngineError> {
+fn format_bot_struct(bot: bson::document::Document) -> Result<DbBot, EngineError> {
     Ok(DbBot {
         id: bot.get_object_id("_id").unwrap().to_hex(),
         bot_id: bot.get_str("bot_id").unwrap().to_owned(),
         bot: bot.get_str("bot").unwrap().to_owned(),
         engine_version: bot.get_str("engine_version").unwrap().to_owned(),
         created_at: bot
-            .get_utc_datetime("created_at")
+            .get_datetime("created_at")
             .unwrap()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
     })
@@ -22,10 +22,10 @@ fn format_bot_struct(bot: bson::ordered::OrderedDocument) -> Result<DbBot, Engin
 pub fn create_bot_version(
     bot_id: String,
     bot: String,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<String, EngineError> {
-    let collection = db.collection("bot");
-    let time = Bson::UtcDatetime(chrono::Utc::now());
+    let collection = db.client.collection("bot");
+    let time = Bson::DateTime(chrono::Utc::now());
 
     let bot = doc! {
         "bot_id": bot_id,
@@ -45,9 +45,9 @@ pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
     pagination_key: Option<String>,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.collection("bot");
+    let collection = db.client.collection("bot");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,
@@ -126,9 +126,9 @@ pub fn get_bot_versions(
 
 pub fn get_bot_by_version_id(
     id: &str,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<Option<BotVersion>, EngineError> {
-    let collection = db.collection("bot");
+    let collection = db.client.collection("bot");
 
     let filter = doc! {
         "_id": bson::oid::ObjectId::with_string(id).unwrap()
@@ -166,9 +166,9 @@ pub fn get_bot_by_version_id(
 
 pub fn get_last_bot_version(
     bot_id: &str,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<Option<BotVersion>, EngineError> {
-    let collection = db.collection("bot");
+    let collection = db.client.collection("bot");
 
     let filter = doc! {
         "bot_id": bot_id,
@@ -185,7 +185,7 @@ pub fn get_last_bot_version(
             let bot = format_bot_struct(bot)?;
 
             let csml_bot: SerializeCsmlBot = match base64::decode(&bot.bot) {
-                Ok(base64decoded) =>  {
+                Ok(base64decoded) => {
                     match bincode::deserialize::<CsmlBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
                         Err(_) => serde_json::from_str(&bot.bot).unwrap()
@@ -204,8 +204,8 @@ pub fn get_last_bot_version(
     }
 }
 
-pub fn delete_bot_version(version_id: &str, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("bot");
+pub fn delete_bot_version(version_id: &str, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("bot");
 
     let filter = doc! {
         "_id": bson::oid::ObjectId::with_string(version_id).unwrap()
@@ -216,8 +216,8 @@ pub fn delete_bot_version(version_id: &str, db: &mongodb::Database) -> Result<()
     Ok(())
 }
 
-pub fn delete_bot_versions(bot_id: &str, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("bot");
+pub fn delete_bot_versions(bot_id: &str, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("bot");
 
     let filter = doc! {
         "bot_id": bot_id,
@@ -228,9 +228,9 @@ pub fn delete_bot_versions(bot_id: &str, db: &mongodb::Database) -> Result<(), E
     Ok(())
 }
 
-pub fn delete_all_bot_data(bot_id: &str, class: &str, db: &mongodb::Database) -> Result<(), EngineError> {
+pub fn delete_all_bot_data(bot_id: &str, class: &str, db: &MongoDbClient) -> Result<(), EngineError> {
 
-    let collection = db.collection(class);
+    let collection = db.client.collection(class);
 
     let filter = doc! {
         "client.bot_id": bot_id,
