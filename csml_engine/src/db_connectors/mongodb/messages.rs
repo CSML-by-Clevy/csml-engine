@@ -1,7 +1,8 @@
 use crate::{
     db_connectors::{mongodb::{get_db}, DbMessage},
     encrypt::{encrypt_data, decrypt_data},
-    ConversationInfo, EngineError, Client
+    ConversationInfo, EngineError, Client,
+    MongoDbClient
 };
 use bson::{doc, Bson, Document};
 
@@ -25,7 +26,7 @@ fn format_message(
     interaction_order: i32,
     direction: &str,
 ) -> Result<Document, EngineError> {
-    let time = Bson::UtcDatetime(chrono::Utc::now());
+    let time = Bson::DateTime(chrono::Utc::now());
     let doc = doc! {
         "client": bson::to_bson(&data.client)?,
         "interaction_id": &data.interaction_id,
@@ -36,7 +37,7 @@ fn format_message(
         "interaction_order": interaction_order,
         "direction": direction,
         "payload": encrypt_data(&message)?, // encrypted
-        "content_type": &message["content_type"],
+        "content_type": &message["content_type"].as_str().unwrap_or("text"),
         "created_at": time
     };
 
@@ -44,7 +45,7 @@ fn format_message(
 }
 
 fn format_message_struct(
-    message: bson::ordered::OrderedDocument,
+    message: bson::document::Document,
 ) -> Result<DbMessage, EngineError> {
     let encrypted_payload: String = message.get_str("payload").unwrap().to_owned();
     let payload = decrypt_data(encrypted_payload)?;
@@ -77,15 +78,15 @@ pub fn add_messages_bulk(
     let docs = format_messages(data, msgs, interaction_order, direction)?;
     let db = get_db(&data.db)?;
 
-    let message = db.collection("message");
+    let message = db.client.collection("message");
 
     message.insert_many(docs, None)?;
 
     Ok(())
 }
 
-pub fn delete_user_messages(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("message");
+pub fn delete_user_messages(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("message");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -98,11 +99,11 @@ pub fn delete_user_messages(client: &Client, db: &mongodb::Database) -> Result<(
 
 pub fn get_client_messages(
     client: &Client,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.collection("conversation");
+    let collection = db.client.collection("conversation");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,

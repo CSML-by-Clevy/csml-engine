@@ -1,4 +1,4 @@
-use crate::{db_connectors::mongodb::get_db, ConversationInfo, EngineError, Client};
+use crate::{db_connectors::mongodb::get_db, ConversationInfo, EngineError, Client, MongoDbClient};
 use bson::{doc, Bson};
 
 pub fn create_node(
@@ -6,7 +6,7 @@ pub fn create_node(
     nextflow: Option<String>,
     nextstep: Option<String>,
 ) -> Result<(), EngineError> {
-    let time = Bson::UtcDatetime(chrono::Utc::now());
+    let time = Bson::DateTime(chrono::Utc::now());
 
     let nextflow = match nextflow {
         Some(nextflow) => Bson::String(nextflow),
@@ -30,15 +30,15 @@ pub fn create_node(
     };
 
     let db = get_db(&data.db)?;
-    let path = db.collection("path");
+    let path = db.client.collection("path");
 
     path.insert_one(node, None)?;
 
     Ok(())
 }
 
-pub fn delete_conversation_nodes(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("path");
+pub fn delete_conversation_nodes(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("path");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,

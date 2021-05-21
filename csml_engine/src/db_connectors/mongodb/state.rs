@@ -1,6 +1,6 @@
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
-    EngineError,
+    EngineError, MongoDbClient
 };
 use bson::{doc, Bson, Document};
 use csml_interpreter::data::Client;
@@ -13,7 +13,7 @@ pub fn format_state_data(
     let client = bson::to_bson(client)?;
 
     keys_values.iter().fold(Ok(vec![]), |vec, (key, value)| {
-        let time = Bson::UtcDatetime(chrono::Utc::now());
+        let time = Bson::DateTime(chrono::Utc::now());
 
         let value = encrypt_data(value)?;
         let mut vec = vec?;
@@ -34,9 +34,9 @@ pub fn delete_state_key(
     client: &Client,
     _type: &str,
     key: &str,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<(), EngineError> {
-    let state = db.collection("state");
+    let state = db.client.collection("state");
 
     let filter = doc! {
         "client": bson::to_bson(client)?,
@@ -52,9 +52,9 @@ pub fn get_state_key(
     client: &Client,
     _type: &str,
     key: &str,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<Option<serde_json::Value>, EngineError> {
-    let state = db.collection("state");
+    let state = db.client.collection("state");
 
     let filter = doc! {
         "client": bson::to_bson(client)?,
@@ -74,9 +74,9 @@ pub fn get_state_key(
 
 pub fn get_current_state(
     client: &Client,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<Option<serde_json::Value>, EngineError> {
-    let state = db.collection("state");
+    let state = db.client.collection("state");
 
     let filter = doc! {
         "client": bson::to_bson(client)?,
@@ -106,21 +106,21 @@ pub fn set_state_items(
     client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
-    db: &mongodb::Database,
+    db: &MongoDbClient,
 ) -> Result<(), EngineError> {
     if keys_values.len() == 0 {
         return Ok(());
     }
 
     let state_data = format_state_data(client, _type, keys_values)?;
-    let state = db.collection("state");
+    let state = db.client.collection("state");
     state.insert_many(state_data, None)?;
 
     Ok(())
 }
 
-pub fn delete_user_state(client: &Client, db: &mongodb::Database) -> Result<(), EngineError> {
-    let collection = db.collection("state");
+pub fn delete_user_state(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
+    let collection = db.client.collection("state");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,

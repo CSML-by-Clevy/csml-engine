@@ -6,9 +6,9 @@ pub mod messages;
 pub mod nodes;
 pub mod state;
 
-use crate::{Database, EngineError};
+use crate::{Database, EngineError, MongoDbClient};
 
-fn init_mongo_credentials() -> Option<mongodb::options::auth::Credential> {
+fn init_mongo_credentials() -> Option<mongodb::options::Credential> {
     let username = match std::env::var("MONGODB_USERNAME") {
         Ok(var) if var.len() > 0 => Some(var),
         _ => None,
@@ -22,7 +22,7 @@ fn init_mongo_credentials() -> Option<mongodb::options::auth::Credential> {
         return None;
     }
 
-    let credentials = mongodb::options::auth::Credential::builder()
+    let credentials = mongodb::options::Credential::builder()
         .password(password)
         .username(username)
         .build();
@@ -59,12 +59,12 @@ pub fn init() -> Result<Database, EngineError> {
         .credential(credentials)
         .build();
 
-    let client = mongodb::Client::with_options(options)?;
-    let db = Database::Mongo(client.database(&dbname));
+    let client = mongodb::sync::Client::with_options(options)?;
+    let db = Database::Mongo(MongoDbClient::new(client.database(&dbname)));
     Ok(db)
 }
 
-pub fn get_db<'a>(db: &'a Database) -> Result<&'a mongodb::Database, EngineError> {
+pub fn get_db<'a>(db: &'a Database) -> Result<&'a MongoDbClient, EngineError> {
     match db {
         Database::Mongo(db) => Ok(db),
         _ => Err(EngineError::Manager(
