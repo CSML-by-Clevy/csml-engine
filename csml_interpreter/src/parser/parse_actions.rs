@@ -7,12 +7,22 @@ use crate::parser::{
     parse_comments::comment,
     parse_foreach::parse_foreach,
     parse_goto::parse_goto,
-    parse_idents::parse_idents_assignation,
+    parse_idents::{parse_idents_assignation, parse_idents_usage},
     parse_if::parse_if,
     parse_path::parse_path,
+    parse_var_types::parse_r_bracket,
     tools::{get_interval, get_string, get_tag},
 };
-use nom::{branch::alt, bytes::complete::tag, error::*, sequence::preceded, Err, IResult};
+
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    combinator::{opt},
+    error::ParseError,
+    multi::separated_list,
+    sequence::{preceded, terminated, tuple},
+    Err, IResult,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
@@ -55,6 +65,42 @@ where
         Expr::ObjectExpr(ObjectType::As(idents, expr)) => Ok((s, (idents, expr))),
         _ => Err(gen_nom_failure(s, ERROR_REMEMBER)),
     }
+}
+
+fn parse_forget_all<'a, E>(s: Span<'a>) -> IResult<Span<'a>, ForgetMemory, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, _) = tag("*")(s)?;
+
+    Ok((s, ForgetMemory::ALL))
+}
+
+fn parse_forget_single<'a, E>(s: Span<'a>) -> IResult<Span<'a>, ForgetMemory, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, ident) = parse_idents_usage(s)?;
+
+    Ok((s, ForgetMemory::SINGLE(ident)))
+}
+
+fn parse_forget_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, ForgetMemory, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, (vec, _)) = preceded(
+        tag(L_BRACKET),
+        terminated(
+            tuple((
+                separated_list(preceded(comment, tag(COMMA)), parse_idents_usage), 
+                opt(preceded(comment, tag(COMMA))),
+            )),
+            preceded(comment, parse_r_bracket),
+        ),
+    )(s)?;
+
+    Ok((s, ForgetMemory::LIST(vec)))
 }
 
 fn parse_action_argument<'a, E, F, G>(s: Span<'a>, func: F) -> IResult<Span<'a>, G, E>
@@ -112,6 +158,31 @@ where
     Ok((
         s,
         Expr::ObjectExpr(ObjectType::Remember(idents, expr)),
+    ))
+}
+
+fn parse_forget<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, interval) = get_interval(s)?;
+    let (s, ..) = get_tag(name, FORGET)(s)?;
+
+    let (s, forget_mem) = parse_action_argument(s,
+        preceded(
+            comment,
+            alt((
+                parse_forget_all,
+                parse_forget_single,
+                parse_forget_list
+            ))
+        )
+    )?;
+
+    Ok((
+        s,
+        Expr::ObjectExpr(ObjectType::Forget(forget_mem, interval)),
     ))
 }
 
@@ -258,6 +329,7 @@ where
         parse_goto,
         parse_say,
         parse_remember,
+        parse_forget,
         parse_hold,
         // only accessible in functions scopes
         parse_return,

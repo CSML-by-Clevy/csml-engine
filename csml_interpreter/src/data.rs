@@ -35,4 +35,4 @@ pub use message::Message;
 pub use message_data::MessageData;
 pub use position::Position;
 
-pub use msg::MSG;
+pub use msg::{MSG};

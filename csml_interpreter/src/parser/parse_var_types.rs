@@ -28,19 +28,6 @@ use nom::{
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn parse_r_bracket<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    match tag(R_BRACKET)(s) {
-        Ok((rest, val)) => Ok((rest, val)),
-        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
-            Err(gen_nom_failure(s, ERROR_RIGHT_BRACKET))
-        }
-        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
-    }
-}
-
 fn parse_condition_group<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
@@ -72,6 +59,19 @@ where
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_r_bracket<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    match tag(R_BRACKET)(s) {
+        Ok((rest, val)) => Ok((rest, val)),
+        Err(Err::Error((s, _err))) | Err(Err::Failure((s, _err))) => {
+            Err(gen_nom_failure(s, ERROR_RIGHT_BRACKET))
+        }
+        Err(Err::Incomplete(needed)) => Err(Err::Incomplete(needed)),
+    }
+}
 
 pub fn parse_idents_expr_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where

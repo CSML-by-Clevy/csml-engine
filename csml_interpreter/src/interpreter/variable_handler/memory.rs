@@ -48,7 +48,7 @@ pub fn save_literal_in_mem(
             // save new value in current memory
             msg_data.add_to_memory(&name, lit.clone());
             // send new value to manager in order to be save in db
-            MSG::send(sender, MSG::Memory(Memory::new(name.clone(), lit.clone())));
+            MSG::send(sender, MSG::Remember(Memory::new(name.clone(), lit.clone())));
             data.context.current.insert(name, lit);
         }
         MemoryType::Use if update => {

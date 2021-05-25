@@ -1,11 +1,11 @@
-use crate::data::*;
+use crate::{data::*, delete_client_memories};
 use crate::db_connectors::{
     conversations::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
 };
 use crate::utils::*;
 
 use csml_interpreter::{
-    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Event, Hold, MSG},
+    data::{ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, Event, Hold, MSG},
     interpret,
 };
 use std::collections::HashMap;
@@ -39,8 +39,26 @@ pub fn interpret_step(
 
     for received in receiver {
         match received {
-            MSG::Memory(mem) => {
+            MSG::Remember(mem) => {
                 memories.insert(mem.key.clone(), mem);
+            },
+            MSG::Forget(mem) => {
+                match mem {
+                    ForgetMemory::ALL => {
+                        memories.clear();
+                        delete_client_memories(&data.client)?;
+                    },
+                    ForgetMemory::SINGLE(memory) => {
+                        memories.remove(&memory.ident);
+                        crate::delete_client_memory(&data.client, &memory.ident)?;
+                    }
+                    ForgetMemory::LIST(mem_list) => {
+                        for mem in mem_list.iter() {
+                            memories.remove(&mem.ident);
+                            crate::delete_client_memory(&data.client, &mem.ident)?;
+                        }
+                    }
+                }
             },
             MSG::Message(msg) => {
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);

@@ -39,6 +39,7 @@ pub fn interval_from_reserved_fn(reserved_fn: &ObjectType) -> Interval {
         ObjectType::Debug(_expr, interval) => interval.to_owned(),
         ObjectType::Return(expr) => interval_from_expr(expr),
         ObjectType::Remember(ident, ..) => ident.interval.to_owned(),
+        ObjectType::Forget(_, interval) => interval.to_owned(),
         ObjectType::Assign(ident, ..) => interval_from_expr(ident),
         ObjectType::As(ident, ..) => ident.interval.to_owned(),
         ObjectType::BuiltIn(Function { interval, .. }) => interval.to_owned(),
