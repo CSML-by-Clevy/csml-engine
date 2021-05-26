@@ -6,6 +6,7 @@ pub mod match_literals;
 pub mod memory;
 pub mod operations;
 pub mod resolve_csml_object;
+pub mod forget_memories;
 
 use crate::data::literal::ContentType;
 pub use expr_to_literal::{expr_to_literal, resolve_fn_args};

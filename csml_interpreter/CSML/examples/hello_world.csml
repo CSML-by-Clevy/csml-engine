@@ -1,9 +1,5 @@
 start:
 
-    // say Url("Hello World 😆")
-    say Time().at(2020, 12, 24)
-
-    do x = Time().at(2020, 12, 24)
-    say "{{x}}"
+    say "Hello World 😆"
 
     goto end

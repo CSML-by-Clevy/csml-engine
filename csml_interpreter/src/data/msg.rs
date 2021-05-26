@@ -1,6 +1,8 @@
-use crate::data::error_info::ErrorInfo;
-use crate::data::primitive::PrimitiveNull;
-use crate::data::{hold::Hold, message::Message, Literal, Memory, MessageData};
+use crate::data::{
+    ast::ForgetMemory, primitive::PrimitiveNull,
+    hold::Hold, message::Message, Literal, Memory, MessageData,
+    error_info::ErrorInfo
+};
 
 use std::sync::mpsc;
 
@@ -10,7 +12,8 @@ use std::sync::mpsc;
 
 #[derive(Debug)]
 pub enum MSG {
-    Memory(Memory),
+    Remember(Memory),
+    Forget(ForgetMemory),
     Message(Message),
     Hold(Hold),
     Next {

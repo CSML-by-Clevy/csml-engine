@@ -1,0 +1,28 @@
+start:
+    goto end
+
+forget_all:
+    do mem = 42
+    remember toto = "text"
+
+    forget *
+
+    goto end
+
+forget_single:
+    do mem = 42
+    remember toto = "text"
+
+    forget toto
+
+    say _memory
+
+    goto end
+
+forget_list:
+    do mem = 42
+    remember toto = "text"
+
+    forget [toto, mem]
+
+    goto end

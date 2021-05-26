@@ -72,6 +72,7 @@ pub const MATCH: &str = "match";
 pub const NOT_MATCH: &str = "!match";
 pub const DEFAULT: &str = "default";
 pub const REMEMBER: &str = "remember";
+pub const FORGET: &str = "forget";
 pub const _METADATA: &str = "_metadata";
 pub const _MEMORY: &str = "_memory";
 pub const _ENV: &str = "_env";
@@ -79,7 +80,7 @@ pub const BREAK: &str = "break";
 pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
-pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, USE, HOLD, BREAK];
+pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, FORGET, USE, HOLD, BREAK];
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
@@ -108,17 +109,17 @@ pub const TYPES: &[&str] = &[
 
 pub const RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 pub const UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, BREAK,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, FORGET, BREAK,
     COMPONENT,
 ];
 
 pub const ASSIGNATION_RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER,
-    _METADATA, _MEMORY, _ENV, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    FORGET,  _METADATA, _MEMORY, _ENV, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 pub const TYPING: &str = "Typing";

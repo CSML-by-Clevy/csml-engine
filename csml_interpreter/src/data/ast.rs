@@ -154,6 +154,13 @@ pub struct Function {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ForgetMemory {
+    ALL,
+    SINGLE(Identifier),
+    LIST(Vec<Identifier>)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObjectType {
     Goto(GotoType, Interval),
     Hold(Interval),
@@ -165,6 +172,7 @@ pub enum ObjectType {
 
     Remember(Identifier, Box<Expr>),
     Assign(Box<Expr>, Box<Expr>),
+    Forget(ForgetMemory, Interval),
 
     As(Identifier, Box<Expr>),
 

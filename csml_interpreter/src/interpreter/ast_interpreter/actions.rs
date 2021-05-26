@@ -5,12 +5,12 @@ use crate::data::{
     literal::ContentType,
     message::*,
     primitive::{closure::capture_variables, PrimitiveNull},
-    Literal, Memory, MemoryType, MessageData, MSG,
+    Literal, Memory, MemoryType, MessageData, MSG
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*, resolve_fn_args,
-    search_goto_var_memory,
+    search_goto_var_memory, forget_memories::{forget_scope_memories, remove_message_data_memories}
 };
 use crate::parser::ExitCondition;
 use std::sync::mpsc;
@@ -226,7 +226,7 @@ pub fn match_actions(
 
             MSG::send(
                 &sender,
-                MSG::Memory(Memory::new(name.ident.to_owned(), new_value.clone())),
+                MSG::Remember(Memory::new(name.ident.to_owned(), new_value.clone())),
             );
 
             data.context
@@ -234,6 +234,20 @@ pub fn match_actions(
                 .insert(name.ident.to_owned(), new_value);
             Ok(msg_data)
         }
+        ObjectType::Forget(memory, _interval) => {
+            // delete memories form message data
+            remove_message_data_memories(&memory, &mut msg_data);
+            // delete memory from current scope
+            forget_scope_memories(&memory, data);
+
+            MSG::send(
+                &sender,
+                MSG::Forget(memory.to_owned()),
+            );
+
+            Ok(msg_data)
+        }
+
         reserved => Err(gen_error_info(
             Position::new(interval_from_reserved_fn(reserved), &data.context.flow),
             ERROR_START_INSTRUCTIONS.to_owned(),
