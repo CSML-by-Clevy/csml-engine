@@ -98,7 +98,7 @@ where
     E: ParseError<Span<'a>>,
 {
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
-    // the is in sub string param is use to determine if this object was declare inside a string or not
+    // the 'is_in_sub_string' param is use to determine if this object was declare inside a string or not
     let (s, ((object, is_in_sub_string), _trailing_comma)) = preceded(
         tag(L_BRACE),
         terminated(

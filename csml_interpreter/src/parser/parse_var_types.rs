@@ -5,7 +5,7 @@ use crate::parser::{
     parse_built_in::parse_built_in,
     parse_closure::parse_closure,
     parse_comments::comment,
-    parse_idents::{parse_idents_as, parse_idents_assignation, parse_idents_usage},
+    parse_idents::{parse_idents_as, parse_arg_idents_assignation, parse_idents_usage},
     parse_literal::parse_literal_expr,
     parse_object::parse_object,
     parse_parenthesis::parse_r_parentheses,
@@ -43,7 +43,7 @@ fn parse_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr,
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, name) = parse_idents_assignation(s)?;
+    let (s, name) = parse_arg_idents_assignation(s)?;
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 

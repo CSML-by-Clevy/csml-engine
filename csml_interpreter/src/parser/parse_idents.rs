@@ -36,6 +36,21 @@ where
     Ok((s, ()))
 }
 
+fn validate_arg_string<'a, E>(s: Span<'a>, var: &str) -> IResult<Span<'a>, (), E>
+where
+    E: ParseError<Span<'a>>,
+{
+    if var.len() > std::u8::MAX as usize {
+        return Err(gen_nom_failure(s, ERROR_SIZE_IDENT));
+    }
+
+    if var.parse::<f64>().is_ok() {
+        return Err(gen_nom_error(s, ERROR_NUMBER_AS_IDENT));
+    }
+
+    Ok((s, ()))
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +75,16 @@ where
     Ok((span, var))
 }
 
+pub fn parse_arg_string_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (span, var) = get_string(s)?;
+    let (_, ..) = validate_arg_string(s, &var)?;
+
+    Ok((span, var))
+}
+
 pub fn parse_idents_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
     E: ParseError<Span<'a>>,
@@ -76,6 +101,16 @@ where
 {
     let (s, position) = preceded(comment, get_interval)(s)?;
     let (s, var) = parse_string_assignation(s)?;
+
+    Ok((s, form_idents(var.to_owned(), position)))
+}
+
+pub fn parse_arg_idents_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (s, position) = preceded(comment, get_interval)(s)?;
+    let (s, var) = parse_arg_string_assignation(s)?;
 
     Ok((s, form_idents(var.to_owned(), position)))
 }
