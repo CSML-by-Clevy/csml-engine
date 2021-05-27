@@ -18,7 +18,7 @@ use data::message_data::MessageData;
 use data::msg::MSG;
 use data::CsmlBot;
 use data::CsmlResult;
-use data::{Context, Data, Position};
+use data::{Context, Data, Position, STEP_LIMIT};
 use error_format::*;
 use linter::{linter::lint_bot, FlowToValidate};
 use parser::ExitCondition;
@@ -36,11 +36,26 @@ fn execute_step(
     mut data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
+
+    // stop execution if step_count >= STEP_LIMIT in order to avoid infinite loops
+    if *data.step_count >= STEP_LIMIT {
+       let msg_data = Err(gen_error_info(
+            Position::new(
+                Interval::new_as_u32(0, 0, 0, None, None),
+                &data.context.flow,
+            ),
+            format!("{}, stop at step {}", ERROR_STEP_LIMIT, step),
+        ));
+
+        return MessageData::error_to_message(msg_data, sender)
+    }
+
     let mut msg_data = match flow
         .flow_instructions
         .get(&InstructionScope::StepScope(step.to_owned()))
     {
         Some(Expr::Scope { scope, .. }) => {
+            *data.step_count += 1;
             interpret_scope(scope, &mut data, &sender)
         }
         _ => Err(gen_error_info(
@@ -162,6 +177,8 @@ pub fn interpret(
     let mut flow = context.flow.to_owned();
     let mut step = context.step.to_owned();
 
+    let mut step_count = 0;
+
     let mut step_vars = match &context.hold {
         Some(hold) => get_hashmap_from_mem(&hold.step_vars, &flow),
         None => HashMap::new(),
@@ -210,6 +227,7 @@ pub fn interpret(
             &env,
             vec![],
             0,
+            &mut step_count,
             step_vars,
             &custom,
             &native,

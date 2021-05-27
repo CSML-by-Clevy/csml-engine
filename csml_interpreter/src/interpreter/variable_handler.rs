@@ -513,6 +513,7 @@ pub fn get_var(
         },
         _ => {
             // ######################
+            //// TODO:
             // create a temporary scope, this is necessary in order to bypass de borrow checker
             // in the future we need to refacto this code to avoid any scope copy like this
             let (
@@ -523,10 +524,12 @@ pub fn get_var(
                 tmp_env,
                 tmp_loop_indexs,
                 tmp_loop_index,
+                mut tmp_step_count,
                 tmp_step_vars,
                 tmp_custom_component,
                 tmp_native_component,
             ) = data.copy_scope();
+
             let mut new_scope_data = Data::new(
                 &tmp_flows,
                 &tmp_flow,
@@ -535,6 +538,7 @@ pub fn get_var(
                 &tmp_env,
                 tmp_loop_indexs,
                 tmp_loop_index,
+                &mut tmp_step_count, 
                 tmp_step_vars,
                 &tmp_custom_component,
                 &tmp_native_component,

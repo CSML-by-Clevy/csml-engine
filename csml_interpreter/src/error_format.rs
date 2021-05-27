@@ -66,6 +66,8 @@ pub const ERROR_FUNCTIONS_ARGS: &str = "argument in of function must be in an ar
 pub const ERROR_EXPR_TO_LITERAL: &str = "expression can't be converted to Literal";
 pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &str = "payload exceeds max payload size (16kb)";
 
+pub const ERROR_STEP_LIMIT: &str = "[infinite loop are not allowed]: Step Limit reach, 100 steps where executed in a single run without stop (hold, goto end)";
+
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &str = "event can only be of ContentType::Event";
 
