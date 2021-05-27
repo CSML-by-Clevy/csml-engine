@@ -180,6 +180,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                             linter_info.flow_name,
                             &step.ident,
                             linter_info.raw_flow,
+                            linter_info.flow_name.to_owned(),
                             interval.to_owned(),
                         ))
                     }
@@ -188,6 +189,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                             &flow.ident,
                             "start",
                             linter_info.raw_flow,
+                            linter_info.flow_name.to_owned(),
                             interval.to_owned(),
                         ))
                     }
@@ -198,6 +200,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                             &flow.ident,
                             &step.ident,
                             linter_info.raw_flow,
+                            linter_info.flow_name.to_owned(),
                             interval.to_owned(),
                     )),
                     GotoType::StepFlow {
@@ -207,6 +210,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                             &flow.ident,
                             "start",
                             linter_info.raw_flow,
+                            linter_info.flow_name.to_owned(),
                             interval.to_owned(),
                     )),
                     GotoType::StepFlow {
@@ -216,6 +220,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                             &linter_info.flow_name,
                             &step.ident,
                             linter_info.raw_flow,
+                            linter_info.flow_name.to_owned(),
                             interval.to_owned(),
                     )),
                     GotoType::StepFlow {
@@ -225,6 +230,7 @@ fn validate_scope(scope: &Block, state: &mut State, linter_info: &mut LinterInfo
                             &linter_info.flow_name,
                             "start",
                             linter_info.raw_flow,
+                            linter_info.flow_name.to_owned(),
                             interval.to_owned(),
                     )),
                     _ => {}
@@ -340,7 +346,7 @@ fn validate_gotos(linter_info: &mut LinterInfo) {
 
         if let None = linter_info.step_list.get(&goto_info) {
             linter_info.errors.push(gen_error_info(
-                Position::new(goto_info.interval.to_owned(), linter_info.flow_name,),
+                Position::new(goto_info.interval.to_owned(), &goto_info.in_flow,),
                 convert_error_from_interval(
                     Span::new(goto_info.raw_flow),
                     format!(
@@ -395,7 +401,7 @@ fn validate_imports(linter_info: &mut LinterInfo) {
                 from_flow: Some(flow),
                 raw_flow,
                 interval,
-                ..
+                in_flow,
             } => {
                 let as_name = match original_name {
                     Some(name) => name,
@@ -411,7 +417,7 @@ fn validate_imports(linter_info: &mut LinterInfo) {
                     gen_function_error(
                         linter_info.errors,
                         raw_flow,
-                        linter_info.flow_name,
+                        in_flow,
                         interval.to_owned(),
                         format!(
                             "import failed function '{}' not found in flow '{}'",
@@ -491,7 +497,7 @@ fn validate_functions(linter_info: &mut LinterInfo) {
             !function_exist(&info, linter_info)
         {
             linter_info.errors.push(gen_error_info(
-                Position::new(info.interval.to_owned(), linter_info.flow_name,),
+                Position::new(info.interval.to_owned(), info.in_flow,),
                 convert_error_from_interval(
                     Span::new(info.raw_flow),
                     format!("function [{}] does not exist", info.name),
@@ -518,6 +524,7 @@ fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
                         &flow.flow_name,
                         step_name,
                         linter_info.raw_flow,
+                        flow.flow_name.clone(),
                         range.to_owned(),
                     ));
 
