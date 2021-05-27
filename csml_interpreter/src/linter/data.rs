@@ -11,6 +11,7 @@ pub struct StepInfo<'a> {
     pub flow: String,
     pub step: String,
     pub raw_flow: &'a str,
+    pub in_flow: String,
     pub interval: Interval,
 }
 
@@ -124,11 +125,12 @@ impl<'a> Eq for ImportInfo<'a> {}
 ////////////////////////////////////////////////////////////////////////////////
 
 impl<'a> StepInfo<'a> {
-    pub fn new(flow: &str, step: &str, raw_flow: &'a str, interval: Interval) -> Self {
+    pub fn new(flow: &str, step: &str, raw_flow: &'a str, in_flow: String, interval: Interval) -> Self {
         Self {
             flow: flow.to_owned(),
             step: step.to_owned(),
             raw_flow,
+            in_flow,
             interval,
         }
     }
