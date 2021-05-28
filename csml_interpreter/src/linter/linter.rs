@@ -50,6 +50,12 @@ fn register_flow_breaker(step_breakers: &mut Option<&mut Vec<StepBreakers>>, bre
     }
 }
 
+fn is_in_list(list: &Vec<(String, String)>, flow: &str, step: &str) -> bool {
+    list
+    .iter()
+    .any(|(next_flow, next_step)| flow == next_flow && step == next_step)
+}
+
 fn validate_expr_literals(to_be_literal: &Expr, state: &mut State, linter_info: &mut LinterInfo) {
     match to_be_literal {
         Expr::ObjectExpr(ObjectType::As(name, value)) => {
@@ -193,11 +199,12 @@ fn validate_scope(
                         ),
                     ));
                 }
+
                 match goto {
                     GotoType::Step(GotoValueType::Name(step)) => {
                         register_flow_breaker(step_breakers, StepBreakers::GOTO {
-                                flow: Some(linter_info.flow_name.to_owned()),
-                                step: Some(step.ident.to_owned()),
+                                flow: linter_info.flow_name.to_owned(),
+                                step: step.ident.to_owned(),
                                 interval: interval.to_owned()
                             }
                         );
@@ -213,8 +220,8 @@ fn validate_scope(
                     }
                     GotoType::Flow(GotoValueType::Name(flow)) => {
                         register_flow_breaker(step_breakers, StepBreakers::GOTO {
-                                flow: Some(flow.ident.to_owned()),
-                                step: Some("start".to_owned()),
+                                flow: flow.ident.to_owned(),
+                                step: "start".to_owned(),
                                 interval: interval.to_owned()
                             }
                         );
@@ -233,8 +240,8 @@ fn validate_scope(
                         flow: Some(GotoValueType::Name(flow)),
                     } => {
                         register_flow_breaker(step_breakers, StepBreakers::GOTO {
-                                flow: None,
-                                step: None,
+                                flow: flow.ident.to_owned(),
+                                step: step.ident.to_owned(),
                                 interval: interval.to_owned()
                             }
                         );
@@ -253,11 +260,12 @@ fn validate_scope(
                         flow: Some(GotoValueType::Name(flow)),
                     } => {
                         register_flow_breaker(step_breakers, StepBreakers::GOTO {
-                                flow: None,
-                                step: None,
+                                flow: flow.ident.to_owned(),
+                                step: "start".to_owned(),
                                 interval: interval.to_owned()
                             }
                         );
+
                         linter_info.goto_list.push(StepInfo::new(
                             &flow.ident,
                             "start",
@@ -272,11 +280,12 @@ fn validate_scope(
                         flow: None,
                     } => {
                         register_flow_breaker(step_breakers, StepBreakers::GOTO {
-                                flow: None,
-                                step: None,
+                                flow: linter_info.flow_name.to_owned(),
+                                step: step.ident.to_owned(),
                                 interval: interval.to_owned()
                             }
                         );
+
                         linter_info.goto_list.push(StepInfo::new(
                             &linter_info.flow_name,
                             &step.ident,
@@ -286,17 +295,6 @@ fn validate_scope(
                             interval.to_owned(),
                         ))
                     },
-                    // GotoType::StepFlow {
-                    //     step: None,
-                    //     flow: None,
-                    // } => linter_info.goto_list.push(StepInfo::new(
-                    //         &linter_info.flow_name,
-                    //         "start",
-                    //         linter_info.raw_flow,
-                    //         linter_info.flow_name.to_owned(),
-                    //         vec!(),
-                    //         interval.to_owned(),
-                    // )),
                     _ => {}
                 }
             }
@@ -575,6 +573,68 @@ fn validate_functions(linter_info: &mut LinterInfo) {
     }
 }
 
+fn infinite_loop_check(
+    linter_info: &LinterInfo,
+    step_list: &mut Vec<(String, String)>, // flow, step
+    close_list: &mut Vec<(String, String)>, // flow, step
+    previews_flow: String,
+    previews_step: String,
+) -> Option<(Vec<(String, String)>, Interval, String)> {
+
+    let search_step_info = StepInfo {
+        flow: previews_flow.clone(),
+        step: previews_step,
+        raw_flow: "",
+        in_flow: "".to_owned(),
+        step_breakers: vec![],
+        interval: Interval::default()
+    };
+
+    match linter_info.step_list.get(&search_step_info) {
+        Some(step_info) => {
+            let mut hold_detected = false;
+
+            for breaker in step_info.step_breakers.iter() {
+
+                match breaker {
+                    StepBreakers::HOLD(_) => {
+                        hold_detected = true;
+                    },
+                    StepBreakers::GOTO {flow, step, interval } => {
+                        let is_infinite_loop = is_in_list(&step_list, flow, step);
+                        if is_infinite_loop {
+                            step_list.push((flow.to_owned(), step.to_owned()));
+                            return Some((step_list.to_owned(), interval.to_owned(), previews_flow))
+                        }
+
+                        if is_in_list(&close_list, flow, step) {
+                            continue
+                        }
+
+                        close_list.push((flow.to_owned(), step.to_owned()));
+                        if !hold_detected{
+                            step_list.push((flow.to_owned(), step.to_owned()));
+                        }
+
+                        match infinite_loop_check(linter_info, step_list, close_list, flow.to_owned(), step.to_owned()) {
+                            Some(infinite_loop_vec) => return Some(infinite_loop_vec),
+                            None => {}
+                        }
+
+                        if !hold_detected{
+                            step_list.pop();
+                        }
+                    }
+                }
+
+            } 
+        }
+        None => {} // we don't need to log non existent steps here because validate_gotos already do the work
+    }
+
+    return None
+}
+
 fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
     let mut is_step_start_present = false;
 
@@ -660,6 +720,7 @@ pub fn lint_bot(
     errors: &mut Vec<ErrorInfo>,
     warnings: &mut Vec<Warnings>,
     native_components: &Option<serde_json::Map<String, serde_json::Value>>,
+    default_flow: &str,
 ) {
     let scope_type = ScopeType::Step("start".to_owned());
     let mut goto_list = vec![];
@@ -694,4 +755,14 @@ pub fn lint_bot(
     validate_gotos(&mut linter_info);
     validate_imports(&mut linter_info);
     validate_functions(&mut linter_info);
+
+    match infinite_loop_check(&linter_info, &mut vec![], &mut vec![], default_flow.to_owned(), "start".to_owned()) {
+        Some((infinite_loop, interval, flow)) => {
+            linter_info.errors.push(gen_error_info(
+                Position::new(interval, &flow),
+                format!("{:?}", infinite_loop),
+            ));
+        },
+        None => {}
+    }
 }

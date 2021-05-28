@@ -144,7 +144,7 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     let mut warnings = vec![];
     // only use the linter if there is no error in the paring otherwise the linter will catch false errors
     if errors.is_empty() {
-        lint_bot(&flows, &mut errors, &mut warnings, &bot.native_components);
+        lint_bot(&flows, &mut errors, &mut warnings, &bot.native_components, &bot.default_flow);
     }
 
     CsmlResult::new(FlowToValidate::get_bot(flows), warnings, errors)

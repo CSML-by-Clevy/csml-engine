@@ -10,8 +10,8 @@ use std::hash::{Hash, Hasher};
 pub enum StepBreakers {
     HOLD(Interval),
     GOTO {
-        step: Option<String>,
-        flow: Option<String>,
+        step: String,
+        flow: String,
         interval: Interval
     }
 }
