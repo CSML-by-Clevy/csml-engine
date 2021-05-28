@@ -7,11 +7,22 @@ use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug)]
+pub enum StepBreakers {
+    HOLD(Interval),
+    GOTO {
+        step: Option<String>,
+        flow: Option<String>,
+        interval: Interval
+    }
+}
+
+#[derive(Debug)]
 pub struct StepInfo<'a> {
     pub flow: String,
     pub step: String,
     pub raw_flow: &'a str,
     pub in_flow: String,
+    pub step_breakers: Vec<StepBreakers>,
     pub interval: Interval,
 }
 
@@ -125,10 +136,18 @@ impl<'a> Eq for ImportInfo<'a> {}
 ////////////////////////////////////////////////////////////////////////////////
 
 impl<'a> StepInfo<'a> {
-    pub fn new(flow: &str, step: &str, raw_flow: &'a str, in_flow: String, interval: Interval) -> Self {
+    pub fn new(
+        flow: &str,
+        step: &str,
+        raw_flow: &'a str,
+        in_flow: String,
+        step_breakers: Vec<StepBreakers>,
+        interval: Interval
+    ) -> Self {
         Self {
             flow: flow.to_owned(),
             step: step.to_owned(),
+            step_breakers,
             raw_flow,
             in_flow,
             interval,
