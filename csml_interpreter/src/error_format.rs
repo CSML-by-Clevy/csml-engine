@@ -401,3 +401,10 @@ pub fn convert_error_from_interval<'a>(
 
     add_context_to_error_message(flow_slice, message, line_number, column, offset)
 }
+
+pub fn gen_infinite_loop_error_msg(infinite_loop: Vec<(String, String)>) -> String {
+    infinite_loop.iter().fold( String::new(), |mut acc, (flow, step)| {
+        acc.push_str(&format!("[flow] {}, [step] {}\n", flow, step));
+        acc
+    })
+}

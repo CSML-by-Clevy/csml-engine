@@ -5,7 +5,7 @@ use crate::data::{
     warnings::*,
     Literal,
 };
-use crate::error_format::{convert_error_from_interval, gen_error_info, ErrorInfo};
+use crate::error_format::{convert_error_from_interval, gen_error_info, gen_infinite_loop_error_msg, ErrorInfo};
 use crate::interpreter::variable_handler::interval::interval_from_expr;
 use crate::linter::{
     FlowToValidate, FunctionInfo, ImportInfo, LinterInfo, 
@@ -760,7 +760,7 @@ pub fn lint_bot(
         Some((infinite_loop, interval, flow)) => {
             linter_info.errors.push(gen_error_info(
                 Position::new(interval, &flow),
-                format!("{:?}", infinite_loop),
+                format!("infinite loop detected between:\n {}", gen_infinite_loop_error_msg(infinite_loop)),
             ));
         },
         None => {}
