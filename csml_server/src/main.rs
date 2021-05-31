@@ -20,7 +20,7 @@ async fn main() -> std::io::Result<()> {
   HttpServer::new(|| {
     App::new()
       .wrap(
-        Cors::new()
+        Cors::default()
           .send_wildcard()
           .allowed_methods(vec!["GET", "POST"])
           .allowed_headers(vec![
@@ -29,7 +29,6 @@ async fn main() -> std::io::Result<()> {
             header::CONTENT_TYPE
           ])
           .max_age(86_400) //24h
-          .finish(),
       )
       .wrap(middleware::Logger::default())
       .data(web::JsonConfig::default().limit(MAX_BODY_SIZE))
