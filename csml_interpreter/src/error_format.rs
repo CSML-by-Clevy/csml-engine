@@ -66,6 +66,8 @@ pub const ERROR_FUNCTIONS_ARGS: &str = "argument in of function must be in an ar
 pub const ERROR_EXPR_TO_LITERAL: &str = "expression can't be converted to Literal";
 pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &str = "payload exceeds max payload size (16kb)";
 
+pub const ERROR_STEP_LIMIT: &str = "[infinite loop are not allowed]: Step Limit reach, 100 steps where executed in a single run without stop (hold, goto end)";
+
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &str = "event can only be of ContentType::Event";
 
@@ -398,4 +400,11 @@ pub fn convert_error_from_interval<'a>(
     let column = interval.start_column as usize;
 
     add_context_to_error_message(flow_slice, message, line_number, column, offset)
+}
+
+pub fn gen_infinite_loop_error_msg(infinite_loop: Vec<(String, String)>) -> String {
+    infinite_loop.iter().fold( String::new(), |mut acc, (flow, step)| {
+        acc.push_str(&format!("[flow] {}, [step] {}\n", flow, step));
+        acc
+    })
 }

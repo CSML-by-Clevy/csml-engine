@@ -19,6 +19,8 @@ pub struct Data<'a> {
     pub loop_indexs: Vec<usize>,
     pub loop_index: usize,
 
+    pub step_count: &'a mut i32,
+
     pub step_vars: HashMap<String, Literal>,
     pub custom_component: &'a serde_json::Map<String, serde_json::Value>,
     pub native_component: &'a serde_json::Map<String, serde_json::Value>,
@@ -36,6 +38,7 @@ impl<'a> Data<'a> {
         env: &'a Literal,
         loop_indexs: Vec<usize>,
         loop_index: usize,
+        step_count: &'a mut i32,
         step_vars: HashMap<String, Literal>,
         custom_component: &'a serde_json::Map<String, serde_json::Value>,
         native_component: &'a serde_json::Map<String, serde_json::Value>,
@@ -48,6 +51,7 @@ impl<'a> Data<'a> {
             env,
             loop_indexs,
             loop_index,
+            step_count,
             step_vars,
             custom_component,
             native_component,
@@ -64,6 +68,7 @@ impl<'a> Data<'a> {
         Literal,
         Vec<usize>,
         usize,
+        i32,
         HashMap<String, Literal>,
         serde_json::Map<String, serde_json::Value>,
         serde_json::Map<String, serde_json::Value>,
@@ -76,6 +81,7 @@ impl<'a> Data<'a> {
             self.env.clone(),
             self.loop_indexs.clone(),
             self.loop_index.clone(),
+            self.step_count.clone(),
             self.step_vars.clone(),
             self.custom_component.clone(),
             self.native_component.clone(),
@@ -94,7 +100,7 @@ pub fn init_child_context(data: &Data) -> Context {
     }
 }
 
-pub fn init_child_scope<'a>(data: &'a Data, context: &'a mut Context) -> Data<'a> {
+pub fn init_child_scope<'a>(data: &'a Data, context: &'a mut Context, step_count: &'a mut i32) -> Data<'a> {
     Data::new(
         &data.flows,
         &data.flow,
@@ -103,6 +109,7 @@ pub fn init_child_scope<'a>(data: &'a Data, context: &'a mut Context) -> Data<'a
         &data.env,
         data.loop_indexs.clone(),
         data.loop_index,
+        step_count,
         HashMap::new(),
         &data.custom_component,
         &data.native_component,

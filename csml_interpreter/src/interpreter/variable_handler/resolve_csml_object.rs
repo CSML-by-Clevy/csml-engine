@@ -240,7 +240,8 @@ pub fn resolve_object(
             }
 
             let mut context = init_child_context(&data);
-            let mut new_scope_data = init_child_scope(data, &mut context);
+            let mut step_count = data.step_count.clone();
+            let mut new_scope_data = init_child_scope(data, &mut context, &mut step_count);
             new_scope_data.flow = new_flow;
 
             insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
@@ -284,7 +285,8 @@ pub fn exec_fn(
     }
 
     let mut context = init_child_context(&data);
-    let mut new_scope_data = init_child_scope(data, &mut context);
+    let mut step_count = data.step_count.clone();
+    let mut new_scope_data = init_child_scope(data, &mut context, &mut step_count);
     insert_args_in_scope_memory(&mut new_scope_data, fn_args, &args, msg_data, sender);
     if let Some(memories) = memories_to_insert {
         insert_memories_in_scope_memory(&mut new_scope_data, memories, msg_data, sender);
