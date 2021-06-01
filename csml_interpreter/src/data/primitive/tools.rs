@@ -53,7 +53,7 @@ pub fn get_array(literal: Literal, flow_name: &str, error_message: String) -> Re
 }
 
 pub fn check_division_by_zero_i64(lhs: i64, rhs: i64) -> Result<i64, String> {
-    if lhs == 0 || rhs == 0 {
+    if rhs == 0 {
         return Err(ERROR_OPS_DIV_INT.to_owned());
     }
 
@@ -61,7 +61,7 @@ pub fn check_division_by_zero_i64(lhs: i64, rhs: i64) -> Result<i64, String> {
 }
 
 pub fn check_division_by_zero_f64(lhs: f64, rhs: f64) -> Result<f64, String> {
-    if lhs == 0.0 || rhs == 0.0 {
+    if rhs == 0.0 {
         return Err(ERROR_OPS_DIV_FLOAT.to_owned());
     }
 
