@@ -22,7 +22,7 @@ async fn main() -> std::io::Result<()> {
       .wrap(
         Cors::default()
           .send_wildcard()
-          .allowed_methods(vec!["GET", "POST"])
+          .allowed_methods(vec!["GET", "POST", "DELETE"])
           .allowed_headers(vec![
             header::AUTHORIZATION,
             header::ACCEPT,

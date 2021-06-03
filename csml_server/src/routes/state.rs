@@ -32,3 +32,26 @@ pub async fn get_client_current_state(query: web::Query<ClientQuery>) -> HttpRes
     }
   }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App};
+    use actix_web::http::{StatusCode};
+
+    #[actix_rt::test]
+    async fn test_messages() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(get_client_current_state)
+        ).await;
+
+        let (user_id, channel_id, bot_id) = ("test", "state-channel", "botid");
+
+        let resp = test::TestRequest::get()
+                    .uri(&format!("/state?user_id={}&channel_id={}&bot_id={}", user_id, channel_id, bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+}

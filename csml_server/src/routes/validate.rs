@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 struct ValidateBotResponse {
   valid: bool,
-  // #[serde(skip_serializing_if = "Option::is_none")]
   errors: Vec<ValidationError>,
 }
 
@@ -65,4 +64,38 @@ pub async fn handler(body: web::Json<CsmlBot>) -> HttpResponse {
   };
 
   HttpResponse::Ok().json(response)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App};
+    use actix_web::http::{StatusCode};
+
+    #[actix_rt::test]
+    async fn test_validate() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(handler)
+        ).await;
+
+        let resp = test::TestRequest::post()
+                    .uri(&format!("/validate"))
+                    .set_json(&serde_json::json!({
+                          "id": "test_run",
+                          "name": "test_run",
+                          "flows": [
+                            {
+                              "id": "Default",
+                              "name": "Default",
+                              "content": "start: say \"Hello\" goto end",
+                              "commands": [],
+                            }
+                          ],
+                          "default_flow": "Default",
+                    }))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
 }

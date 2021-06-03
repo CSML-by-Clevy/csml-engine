@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, dev , ]
   pull_request:
-    branches: [ master, dev ]
+    branches: [ master, dev]
 
 jobs:
   build:
@@ -55,6 +55,25 @@ jobs:
       with:
         command: test
         args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "dynamo" -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: dynamodb
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DYNAMODB_TABLE: ${{ secrets.AWS_DYNAMODB_TABLE }}
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DISABLE_SSL_VERIFY: 'false'
+        DEBUG: 'true'
+
+    # Warning: only one live test can run at once!
+    - name: Test server endpoint 
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_server/Cargo.toml -j 1 --features csml_engine/dynamo -- --test-threads=1
       env:
         ENGINE_DB_TYPE: dynamodb
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
