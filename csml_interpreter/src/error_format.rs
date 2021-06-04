@@ -15,21 +15,21 @@ pub use data::CustomError;
 // Parsing Errors
 pub const ERROR_PARENTHESES: &str = "list elem type ( ... ) not found";
 pub const ERROR_PARENTHESES_END: &str =
-    "invalid argument expect one ',' between each argument or ')' to end the list";
+    "Invalid argument. Expecting one ',' between each argument or ')' to end the list";
 pub const ERROR_NUMBER_AS_IDENT: &str = "Int/Float can't be used as identifier";
 pub const ERROR_FLOW_STEP: &str = "syntax error.";
 pub const ERROR_RESERVED: &str = "reserved keyword can't be used as identifier";
 pub const ERROR_PARSING: &str =
-    "invalid argument. One of the action keywords [say, do, if, ...] is missing";
+    "Invalid argument. One of the action keywords [say, do, if, ...] is missing";
 pub const ERROR_REMEMBER: &str =
-    "remember must be assigning to a variable via '='. Example: 'remember key = value'";
+    "'remember' must be assigning to a variable via '='. Example: 'remember key = value'";
 pub const ERROR_USE: &str =
     "'use' must be assigning a variable with keyword 'as'. Example: 'use value as key'";
 pub const ERROR_ACTION_ARGUMENT: &str =
-    "expect valid argument after action keywords. Example: say value";
+    "expecting valid argument after action keywords. Example: say value";
 pub const ERROR_IMPORT_ARGUMENT: &str =
-    "import expect valid function name. Example: import function from flow";
-pub const ERROR_BREAK: &str = "break can only be used inside foreach";
+    "'import' expecting valid function name. Example: 'import function from flow'";
+pub const ERROR_BREAK: &str = "break can only be used inside loops";
 pub const ERROR_RETURN: &str = "return expects a value to return";
 pub const ERROR_LEFT_BRACE: &str = "expecting '{'";
 pub const ERROR_RIGHT_BRACE: &str = "expecting '}'";
@@ -53,7 +53,7 @@ pub const ERROR_NO_FLOW: &str = "bot must have at least one flow";
 pub const ERROR_STEP_EXIST: &str = "step does not exist";
 pub const ERROR_INVALID_FLOW: &str = "invalid flow: ";
 pub const ERROR_START_INSTRUCTIONS: &str =
-"to start an action one of the following instructions is expected: [say, do, if, foreach, goto]";
+    "to start an action one of the following instructions is expected: [say, do, if, foreach, goto]";
 pub const ERROR_FOREACH: &str =
     "foreach only accepts iterable elements like arrays and strings. Example: foreach(elem) in [1, 2, 3]";
 pub const ERROR_FIND_BY_INDEX: &str =
@@ -62,11 +62,11 @@ pub const ERROR_ASSIGN_IDENT: &str = "key must be of type identifier";
 pub const ERROR_SIZE_IDENT: &str = "key can't be longer than 255 character";
 pub const ERROR_NUMBER_AS_KEY: &str = "Int/Float can't be used as key";
 pub const ERROR_KEY_ALPHANUMERIC: &str = "key must be alphanumeric";
-pub const ERROR_FUNCTIONS_ARGS: &str = "argument in of function must be in an array";
+pub const ERROR_FUNCTIONS_ARGS: &str = "function arguments must be in an array";
 pub const ERROR_EXPR_TO_LITERAL: &str = "expression can't be converted to Literal";
 pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &str = "payload exceeds max payload size (16kb)";
 
-pub const ERROR_STEP_LIMIT: &str = "[infinite loop are not allowed]: Step Limit reach, 100 steps where executed in a single run without stop (hold, goto end)";
+pub const ERROR_STEP_LIMIT: &str = "[Infinite loop] Step limit reached: 100 steps where executed in a single run";
 
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &str = "event can only be of ContentType::Event";
@@ -79,8 +79,8 @@ pub const ERROR_COMPONENT_NAMESPACE: &str = "component must have a function appl
 pub const ERROR_COMPONENT_UNKNOWN: &str = "function does not exist for component";
 
 // Fn API
-pub const ERROR_FN_ID: &str = "Fn's name must be of type string";
-pub const ERROR_FN_ENDPOINT: &str = "Fn can not be called because fn_endpoint is not set in bot";
+pub const ERROR_FN_ID: &str = "App name must be of type string";
+pub const ERROR_FN_ENDPOINT: &str = "App can not be called because fn_endpoint is not set in bot";
 pub const ERROR_FAIL_RESPONSE_JSON: &str = "failed to read response as JSON";
 
 // ### Import
@@ -88,17 +88,17 @@ pub const ERROR_IMPORT_FAIL: &str = "import failed at";
 pub const ERROR_IMPORT_STEP_FLOW: &str = "step not found in flow";
 
 // ### Variables
-pub const ERROR_GET_VAR_INFO: &str = "expression must be a variable";
-pub const ERROR_JSON_TO_LITERAL: &str = "number is too big to be an int 64 bit";
+pub const ERROR_GET_VAR_INFO: &str = "Expression must be a variable";
+pub const ERROR_JSON_TO_LITERAL: &str = "Number is larget than a 64-bit integer";
 
 // ### Memory
-pub const ERROR_STEP_MEMORY: &str = "variable does not exist in step's memory";
+pub const ERROR_STEP_MEMORY: &str = "Variable does not exist in step's memory";
 pub const ERROR_FIND_MEMORY: &str = "is used before it was saved in memory";
 
 // ### Functions
-pub const ERROR_FN_ARGS: &str = "Function Arguments are not valid";
+pub const ERROR_FN_ARGS: &str = "function arguments are not valid";
 pub const ERROR_FN_COLON: &str =
-    "Expect a ':' at the end of function prototype. Example: 'fn name():' ";
+    "Expecting ':' at the end of function prototype. Example: 'fn name():' ";
 
 // ### Built-in
 pub const ERROR_TEXT: &str =
