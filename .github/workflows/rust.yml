@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ master, dev , ]
+    branches: [ master, dev ]
   pull_request:
-    branches: [ master, dev]
+    branches: [ master, dev ]
 
 jobs:
   build:
@@ -68,7 +68,7 @@ jobs:
         DEBUG: 'true'
 
     # Warning: only one live test can run at once!
-    - name: Test server endpoint 
+    - name: Test server endpoint
       uses: actions-rs/cargo@v1
       if: matrix.os == 'ubuntu-18.04'
       with:
