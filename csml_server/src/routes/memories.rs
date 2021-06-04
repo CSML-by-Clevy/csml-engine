@@ -3,8 +3,6 @@ use csml_interpreter::data::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
 
-
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MemoryKeyPath {
     key: String
@@ -57,7 +55,7 @@ pub async fn create_client_memory(query: web::Query<ClientQuery>, body: web::Jso
  * {"statusCode": 204}
  *
  */
-#[delete("/memories/{key})")]
+#[delete("/memories/{key}")]
 pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>) -> HttpResponse {
     let memory_key = path.key.to_owned();
 
@@ -111,7 +109,7 @@ pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
  * Get a specific key in client memory
  *
  */
-#[get("/memories/{key})")]
+#[get("/memories/{key}")]
 pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>) -> HttpResponse {
     let memory_key = path.key.to_owned();
 
@@ -139,7 +137,7 @@ pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Client
 *
 */
 #[get("/memories")]
-pub async fn get_memories( query: web::Query<ClientQuery>) -> HttpResponse {
+pub async fn get_memories(query: web::Query<ClientQuery>) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
         channel_id: query.channel_id.clone(),
@@ -159,3 +157,117 @@ pub async fn get_memories( query: web::Query<ClientQuery>) -> HttpResponse {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App};
+    use actix_web::body::{Body, ResponseBody};
+    use actix_web::http::{StatusCode};
+
+    trait BodyTest {
+        fn as_str(&self) -> &str;
+    }
+
+    impl BodyTest for ResponseBody<Body> {
+        fn as_str(&self) -> &str {
+            match self {
+                ResponseBody::Body(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(&by).unwrap(),
+                    _ => panic!(),
+                },
+                ResponseBody::Other(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(&by).unwrap(),
+                    _ => panic!(),
+                },
+            }
+        }
+    }
+
+    #[actix_rt::test]
+    async fn test_memories() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(get_memories)
+                    .service(delete_memories)
+                    .service(create_client_memory)
+        ).await;
+
+        let (user_id, channel_id, bot_id) = ("test", "memories-channel", "botid");
+
+        let resp = test::TestRequest::delete()
+                    .uri(&format!("/memories?user_id={}&channel_id={}&bot_id={}", user_id, channel_id, bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::NO_CONTENT);
+
+        let resp = test::TestRequest::post()
+                    .uri(&format!("/memories?user_id={}&channel_id={}&bot_id={}", user_id, channel_id, bot_id))
+                    .set_json(
+                        &serde_json::json!({
+                                "key": "val",
+                                "value": 42
+                        })
+                    )
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::CREATED);
+
+
+        let resp = test::TestRequest::get()
+                    .uri(&format!("/memories?user_id={}&channel_id={}&bot_id={}", user_id, channel_id, bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body: serde_json::Value = serde_json::from_str(resp.response().body().as_str()).unwrap();
+
+        assert_eq!(
+            (body[0]["key"].clone(), body[0]["value"].clone()),
+            (serde_json::json!("val"), serde_json::json!(42))
+        );
+    }
+
+    #[actix_rt::test]
+    async fn test_memory() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(get_memory)
+                    .service(delete_memory)
+                    .service(create_client_memory)
+        ).await;
+
+        let (user_id, channel_id, bot_id) = ("test", "memory-channel", "botid");
+        let key = "val";
+
+        let resp = test::TestRequest::delete()
+                    .uri(&format!("/memories/val?user_id={}&channel_id={}&bot_id={}", user_id, channel_id, bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::NO_CONTENT);
+
+        let resp = test::TestRequest::post()
+                    .uri(&format!("/memories?user_id={}&channel_id={}&bot_id={}", user_id, channel_id, bot_id))
+                    .set_json(
+                        &serde_json::json!({
+                                "key": key,
+                                "value": 42
+                        })
+                    )
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::CREATED);
+
+        let resp = test::TestRequest::get()
+                    .uri(&format!("/memories/{}?user_id={}&channel_id={}&bot_id={}", key, user_id, channel_id, bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body: serde_json::Value = serde_json::from_str(resp.response().body().as_str()).unwrap();
+
+        assert_eq!(
+            (body["key"].clone(), body["value"].clone()),
+            (serde_json::json!("val"), serde_json::json!(42))
+        );
+    }
+}

@@ -34,3 +34,54 @@ pub async fn handler(body: web::Json<RunRequest>) -> HttpResponse {
     }
   }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App};
+    use actix_web::http::{StatusCode};
+
+    #[actix_rt::test]
+    async fn test_run() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(handler)
+        ).await;
+
+        let resp = test::TestRequest::post()
+                    .uri(&format!("/run"))
+                    .set_json(&serde_json::json!({
+                        "bot": {
+                            "id": "test_run",
+                            "name": "test_run",
+                            "flows": [
+                              {
+                                "id": "Default",
+                                "name": "Default",
+                                "content": "start: say \"Hello\" goto end",
+                                "commands": [],
+                              }
+                            ],
+                            "default_flow": "Default",
+                        },
+                        "event": {
+                            "request_id": "request_id",
+                            "client": {
+                                "user_id": "user_id",
+                                "channel_id": "channel_id",
+                                "bot_id": "test_run"
+                            },
+                            "payload": { 
+                              "content_type": "text" ,
+                              "content": {
+                                "text": "toto"
+                              }
+                            },
+                            "metadata": Value::Null,
+                        },
+                    }))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+}

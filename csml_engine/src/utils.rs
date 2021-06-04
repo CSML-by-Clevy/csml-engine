@@ -118,7 +118,7 @@ pub fn format_event(json_event: serde_json::Value) -> Result<Event, EngineError>
         Some(content_type) => content_type.to_string(),
         None => {
             return Err(EngineError::Interpreter(
-                "no content_type in event".to_owned(),
+                "no content_type in event payload".to_owned(),
             ))
         }
     };

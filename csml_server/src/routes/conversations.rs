@@ -84,3 +84,68 @@ pub async fn get_client_conversations(query: web::Query<GetClientInfoQuery>) -> 
     }
   }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App};
+    use actix_web::http::{StatusCode};
+
+    #[actix_rt::test]
+    async fn test_get_open_conversations() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(get_open)
+        ).await;
+
+        let (user_id, channel_id, bot_id) = ("test", "open-conversations-channel", "botid");
+
+        let resp = test::TestRequest::post()
+                    .uri(&format!("/conversations/open"))
+                    .set_json(&serde_json::json!({
+                      "user_id": user_id,
+                      "channel_id": channel_id,
+                      "bot_id": bot_id
+                    }))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[actix_rt::test]
+    async fn test_close_conversations() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(close_user_conversations)
+        ).await;
+
+        let (user_id, channel_id, bot_id) = ("test", "close-conversations-channel", "botid");
+
+        let resp = test::TestRequest::post()
+                    .uri(&format!("/conversations/close"))
+                    .set_json(&serde_json::json!({
+                      "user_id": user_id,
+                      "channel_id": channel_id,
+                      "bot_id": bot_id
+                    }))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[actix_rt::test]
+    async fn test_get_conversations() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(get_client_conversations)
+        ).await;
+
+        let (user_id, channel_id, bot_id) = ("test", "conversations-channel", "botid");
+
+        let resp = test::TestRequest::get()
+                    .uri(&format!("/conversations?user_id={}&channel_id={}&bot_id={}", user_id, channel_id, bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+}

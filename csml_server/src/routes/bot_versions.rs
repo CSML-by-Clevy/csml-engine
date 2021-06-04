@@ -7,7 +7,6 @@ use csml_interpreter::data::csml_bot::CsmlBot;
 use serde::{Deserialize, Serialize};
 use std::thread;
 
-
 /**
  * create bot version
  *
@@ -30,7 +29,6 @@ pub async fn add_bot_version(body: web::Json<CsmlBot>) -> HttpResponse {
     }
   }
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BotIdPath {
@@ -204,4 +202,143 @@ pub async fn delete_bot_version(
       HttpResponse::InternalServerError().finish()
     }
   }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, App};
+    use actix_web::body::{Body, ResponseBody};
+    use actix_web::http::{StatusCode};
+    trait BodyTest {
+      fn as_str(&self) -> &str;
+    }
+
+    impl BodyTest for ResponseBody<Body> {
+        fn as_str(&self) -> &str {
+            match self {
+                ResponseBody::Body(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(&by).unwrap(),
+                    _ => panic!(),
+                },
+                ResponseBody::Other(ref b) => match b {
+                    Body::Bytes(ref by) => std::str::from_utf8(&by).unwrap(),
+                    _ => panic!(),
+                },
+            }
+        }
+    }
+
+    #[actix_rt::test]
+    async fn test_delete_bot_version() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(delete_bot_version)
+        ).await;
+
+        let ( bot_id, version_id) = ("botid", "60b872d1009d9aa600b108ea");
+
+        let resp = test::TestRequest::delete()
+                    .uri(&format!("/bots/{}/versions/{}", bot_id, version_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[actix_rt::test]
+    async fn test_delete_bot_versions() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(delete_bot_versions)
+        ).await;
+
+        let bot_id = "bot_versions";
+
+        let resp = test::TestRequest::delete()
+                    .uri(&format!("/bots/{}", bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::NO_CONTENT);
+    }
+
+    #[actix_rt::test]
+    async fn test_add_bot_version() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(add_bot_version)
+        ).await;
+
+        let resp = test::TestRequest::post()
+                    .uri(&format!("/bots"))
+                    .set_json(&serde_json::json!({
+                        "id": "bot_id",
+                        "name": "test",
+                        "flows": [
+                          {
+                            "id": "Default",
+                            "name": "Default",
+                            "content": "start: say \"Hello\" goto end",
+                            "commands": [],
+                          }
+                        ],
+                        "default_flow": "Default",
+                    }))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::CREATED);
+    }
+
+
+    #[actix_rt::test]
+    async fn test_get_bot_latest_versions() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(get_bot_latest_versions)
+        ).await;
+
+        let bot_id = "botid";
+
+        let resp = test::TestRequest::get()
+                    .uri(&format!("/bots/{}/versions", bot_id))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    #[actix_rt::test]
+    async fn test_get_bot_version() {
+        let mut app = test::init_service(
+            App::new()
+                    .service(get_bot_version)
+                    .service(add_bot_version)
+                    
+        ).await;
+
+        let resp = test::TestRequest::post()
+        .uri(&format!("/bots"))
+        .set_json(&serde_json::json!({
+            "id": "bot_id_test",
+            "name": "bot_id_test",
+            "flows": [
+              {
+                "id": "Default",
+                "name": "Default",
+                "content": "start: say \"Hello\" goto end",
+                "commands": [],
+              }
+            ],
+            "default_flow": "Default",
+        }))
+        .send_request(&mut app).await;
+
+        let body: serde_json::Value = serde_json::from_str(resp.response().body().as_str()).unwrap();
+
+        let (bot_id, bot_version) = ("bot_id_test", body["version_id"].as_str().unwrap());
+
+        let resp = test::TestRequest::get()
+                    .uri(&format!("/bots/{}/versions/{}", bot_id, bot_version))
+                    .send_request(&mut app).await;
+
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
 }

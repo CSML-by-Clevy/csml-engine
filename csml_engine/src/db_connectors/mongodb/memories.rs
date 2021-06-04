@@ -132,7 +132,7 @@ pub fn get_memories(
             );
             memory.insert(
                 "created_at".to_owned(),
-                mem["created_at"].clone()
+                mem["created_at"]["$date"].clone()
             );
 
             vec.push(memory);
@@ -173,7 +173,7 @@ pub fn get_memory(
         );
         memory.insert(
             "created_at".to_owned(),
-            mem["created_at"].clone()
+            mem["created_at"]["$date"].clone()
         );
 
         return Ok(serde_json::json!(memory))
