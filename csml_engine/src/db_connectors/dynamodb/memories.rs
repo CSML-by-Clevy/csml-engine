@@ -374,7 +374,7 @@ pub fn delete_client_memory(
             ..Default::default()
         }),
         (":key".to_owned(), AttributeValue {
-            s: Some("memory".to_owned()),
+            s: Some(key.to_owned()),
             ..Default::default()
         })
     ].iter().cloned().collect();
