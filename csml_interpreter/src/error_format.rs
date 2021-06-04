@@ -1,7 +1,7 @@
 pub mod data;
 
 use crate::data::tokens::Span;
-use crate::data::{position::Position, Interval};
+use crate::data::{position::Position, Interval, warnings::Warnings};
 use nom::{
     error::{ErrorKind, ParseError},
     *,
@@ -353,6 +353,13 @@ fn add_context_to_error_message<'a>(
 
 pub fn gen_error_info(position: Position, message: String) -> ErrorInfo {
     ErrorInfo::new(position, message)
+}
+
+pub fn gen_warning_info(position: Position, message: String) -> Warnings {
+    Warnings {
+        position,
+        message
+    }
 }
 
 pub fn gen_nom_error<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>

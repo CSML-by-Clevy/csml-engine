@@ -5,7 +5,7 @@ use crate::data::{
     warnings::*,
     Literal,
 };
-use crate::error_format::{convert_error_from_interval, gen_error_info, gen_infinite_loop_error_msg, ErrorInfo};
+use crate::error_format::{convert_error_from_interval, gen_error_info, gen_warning_info, gen_infinite_loop_error_msg, ErrorInfo};
 use crate::interpreter::variable_handler::interval::interval_from_expr;
 use crate::linter::{
     FlowToValidate, FunctionInfo, ImportInfo, LinterInfo, 
@@ -573,9 +573,26 @@ fn validate_functions(linter_info: &mut LinterInfo) {
     }
 }
 
+fn add_to_step_list(
+    hold_detected: bool,
+    mut step_list: Vec<(String, String)>, // flow, step
+    search_step_info: &StepInfo,
+    flow: String,
+    step: String
+) -> Vec<(String, String)> {
+    if !hold_detected {
+        if step_list.is_empty() {
+            step_list.push((search_step_info.flow.to_owned(), search_step_info.step.to_owned()));
+        }
+        step_list.push((flow, step));
+    }
+
+    step_list
+}
+
 fn infinite_loop_check(
     linter_info: &LinterInfo,
-    step_list: &mut Vec<(String, String)>, // flow, step
+    mut step_list: Vec<(String, String)>, // flow, step
     close_list: &mut Vec<(String, String)>, // flow, step
     previews_flow: String,
     previews_step: String,
@@ -599,6 +616,7 @@ fn infinite_loop_check(
                 match breaker {
                     StepBreakers::HOLD(_) => {
                         hold_detected = true;
+                        step_list.clear();
                     },
                     StepBreakers::GOTO {flow, step, interval } => {
                         let is_infinite_loop = is_in_list(&step_list, flow, step);
@@ -610,24 +628,29 @@ fn infinite_loop_check(
                         if is_in_list(&close_list, flow, step) {
                             continue
                         }
-
                         close_list.push((flow.to_owned(), step.to_owned()));
-                        if !hold_detected{
-                            step_list.push((flow.to_owned(), step.to_owned()));
-                        }
 
-                        match infinite_loop_check(linter_info, step_list, close_list, flow.to_owned(), step.to_owned()) {
+                        let new_step_list = add_to_step_list(
+                            hold_detected, 
+                            step_list.clone(),
+                            &search_step_info,
+                            flow.to_owned(),
+                            step.to_owned()
+                        );
+
+                        match infinite_loop_check(
+                            linter_info,
+                            new_step_list,
+                            close_list,
+                            flow.to_owned(),
+                            step.to_owned()
+                        ) {
                             Some(infinite_loop_vec) => return Some(infinite_loop_vec),
                             None => {}
                         }
-
-                        if !hold_detected{
-                            step_list.pop();
-                        }
                     }
                 }
-
-            } 
+            }
         }
         None => {} // we don't need to log non existent steps here because validate_gotos already do the work
     }
@@ -756,9 +779,9 @@ pub fn lint_bot(
     validate_imports(&mut linter_info);
     validate_functions(&mut linter_info);
 
-    match infinite_loop_check(&linter_info, &mut vec![], &mut vec![], default_flow.to_owned(), "start".to_owned()) {
+    match infinite_loop_check(&linter_info, vec![], &mut vec![], default_flow.to_owned(), "start".to_owned()) {
         Some((infinite_loop, interval, flow)) => {
-            linter_info.errors.push(gen_error_info(
+            linter_info.warnings.push(gen_warning_info(
                 Position::new(interval, &flow),
                 format!("infinite loop detected between:\n {}", gen_infinite_loop_error_msg(infinite_loop)),
             ));
