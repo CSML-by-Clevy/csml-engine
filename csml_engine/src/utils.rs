@@ -1,5 +1,5 @@
 use crate::{
-    data::{ConversationInfo, Database, EngineError, DEBUG},
+    data::{ConversationInfo, Database, FlowTrigger, EngineError, DEBUG},
     db_connectors::state::delete_state_key,
     send::send_to_callback_url,
     CsmlBot, CsmlFlow,
@@ -95,8 +95,8 @@ pub fn get_event_content(content_type: &str, metadata: &Value) -> Result<String,
             }
         }
         flow_trigger if flow_trigger == "flow_trigger" => {
-            if let Some(val) = metadata["flow_id"].as_str() {
-                Ok(val.to_string())
+            if let Some(_) = metadata["flow_id"].as_str() {
+                Ok(metadata.to_string())
             } else {
                 Err(EngineError::Interpreter(
                     "no flow_id content in event".to_owned(),
@@ -246,6 +246,7 @@ pub fn get_default_flow<'a>(bot: &'a CsmlBot) -> Result<&'a CsmlFlow, EngineErro
     }
 }
 
+
 /**
  * Find a flow in a bot based on the user's input.
  * - flow_trigger events must will match a flow's id or name and reset the hold position
@@ -256,11 +257,19 @@ pub fn search_flow<'a>(
     bot: &'a CsmlBot,
     client: &Client,
     db: &mut Database,
-) -> Result<&'a CsmlFlow, EngineError> {
+) -> Result<(&'a CsmlFlow, String), EngineError> {
     match event {
         event if event.content_type == "flow_trigger" => {
             delete_state_key(&client, "hold", "position", db)?;
-            get_flow_by_id(&event.content_value, &bot.flows)
+
+            let flow_trigger: FlowTrigger = serde_json::from_str(&event.content_value)?;
+
+            let flow = get_flow_by_id(&flow_trigger.flow_id, &bot.flows)?;
+
+            match flow_trigger.step_id {
+                Some(step_id) => Ok((flow, step_id)),
+                None => Ok((flow, "start".to_owned()))
+            }
         }
         event => {
             let mut random_flows = vec![];
@@ -279,7 +288,7 @@ pub fn search_flow<'a>(
             match random_flows.choose(&mut rand::thread_rng()) {
                 Some(flow) => {
                     delete_state_key(&client, "hold", "position", db)?;
-                    Ok(flow)
+                    Ok((flow, "start".to_owned()))
                 }
                 None => Err(EngineError::Interpreter(format!(
                     "Flow '{}' does not exist",
