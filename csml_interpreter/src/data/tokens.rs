@@ -68,6 +68,7 @@ pub const DEBUG_ACTION: &str = "debug";
 pub const USE: &str = "use";
 pub const HOLD: &str = "hold";
 pub const GOTO: &str = "goto";
+pub const PREVIOUS: &str = "previous";
 pub const MATCH: &str = "match";
 pub const NOT_MATCH: &str = "!match";
 pub const DEFAULT: &str = "default";

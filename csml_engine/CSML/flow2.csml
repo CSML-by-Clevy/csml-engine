@@ -13,5 +13,12 @@ fn pow(var, exp):
 
 start:
   say "flow 2 -> {{test}}"
-  say Button("end", hola = "hola")
-  goto end
+//   say Button("end", hola = "hola")
+  goto toto
+
+toto:
+    hold
+    if (test < 2) {
+        previous flow
+    }
+    goto end

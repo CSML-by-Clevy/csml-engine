@@ -1,5 +1,28 @@
+// start:
+
+//     say "Hello World 😆"
+
+//     goto end
+
+
+
 start:
 
-    say "Hello World 😆"
+    remember test = 0
+
+    goto toto
+
+
+toto:
+    do test = test + 1
+    // say "in toto test == {{test}}"
+
+    goto tata
+
+tata: 
+    // say "in tata"
+    if (test < 2) {
+        previous step
+    }
 
     goto end

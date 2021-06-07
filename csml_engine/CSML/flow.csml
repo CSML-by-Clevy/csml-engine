@@ -5,14 +5,16 @@ fn add(var1, var2):
     return 56
 
 start:
-    say val
-    remember val = "42"
+    say "start"
+    if (!test) {
+        say "create test"
+        remember test = 1
+    } else {
+        do test = test + 1
+    }
 
-    remember toto = "tataaa"
-    hold
-
-    goto end
-    // goto toto
+    // goto end
+    goto @flow2
 
 toto:
     do vec = [1, 2]
