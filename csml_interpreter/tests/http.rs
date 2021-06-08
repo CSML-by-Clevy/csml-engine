@@ -516,3 +516,37 @@ fn http_post_0() {
 
     assert_eq!(v1, v2)
 }
+
+
+
+#[test]
+fn http_auth_0() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {
+                "content":{
+                    "header":{
+                        "accept":"application/json,text/*",
+                        "content-type":"application/json",
+                        "User-Agent": "csml/v1",
+                        "Authorization": "Basic dXNlcjpwYXNzd2Q="
+                    },
+                    "method":"get",
+                    "query":{},
+                    "url":"https://clevy.io"
+                },
+                "content_type":"http"
+            }
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "auth_0", "flow"),
+        "CSML/basic_test/stdlib/http.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
