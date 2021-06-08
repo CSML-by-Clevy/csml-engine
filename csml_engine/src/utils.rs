@@ -95,12 +95,15 @@ pub fn get_event_content(content_type: &str, metadata: &Value) -> Result<String,
             }
         }
         flow_trigger if flow_trigger == "flow_trigger" => {
-            if let Some(_) = metadata["flow_id"].as_str() {
-                Ok(metadata.to_string())
-            } else {
-                Err(EngineError::Interpreter(
-                    "no flow_id content in event".to_owned(),
-                ))
+            match serde_json::from_value::<FlowTrigger>(metadata.clone()) {
+                Ok(_flow_trigger) => {
+                    Ok(metadata.to_string())
+                }
+                Err(_) => {
+                    Err(EngineError::Interpreter(
+                        "invalid content for event type flow_trigger: expect flow_id and optional step_id".to_owned(),
+                    ))
+                }
             }
         }
         content_type => Err(EngineError::Interpreter(format!(
