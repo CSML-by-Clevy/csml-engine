@@ -816,7 +816,6 @@ impl PrimitiveArray {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), value.to_owned());
                     if closure.args.len() >= 2 {
-                        dbg!(index);
                         map.insert(
                             "arg1".to_owned(), 
                             PrimitiveInt::get_literal(index as i64, interval)

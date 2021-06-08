@@ -55,6 +55,7 @@ pub fn match_actions(
     data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
+
     match function {
         ObjectType::Say(arg) => {
             let msg = Message::new(expr_to_literal(
@@ -113,6 +114,7 @@ pub fn match_actions(
                 tmp_loop_index,
                 &mut tmp_step_count,
                 tmp_step_vars,
+                data.previous_info.clone(),
                 &tmp_custom_component,
                 &tmp_native_component,
             );
@@ -161,6 +163,9 @@ pub fn match_actions(
                 },
             );
 
+            // previous flow/step
+            data.previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+            // current flow/step
             data.context.step = step.to_string();
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
@@ -181,8 +186,12 @@ pub fn match_actions(
                 },
             );
 
+            // previous flow/step
+            data.previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+            // current flow/step
             data.context.step = "start".to_string();
             data.context.flow = flow.to_string();
+
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
             Ok(msg_data)
@@ -214,8 +223,53 @@ pub fn match_actions(
                 },
             );
 
-            data.context.step = step.to_string();
+            // previous flow/step
+            data.previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+            // current flow/step
             data.context.flow = flow.to_string();
+            data.context.step = step.to_string();
+
+            Ok(msg_data)
+        }
+        ObjectType::Previous(previous_type, _) => {
+            let flow_opt;
+            let mut step_opt = None;
+
+            match previous_type {
+                PreviousType::Flow(_interval) => {
+                    let tmp_f = data.previous_info.flow.clone();
+                    flow_opt = Some(tmp_f.clone());
+
+                    data.previous_info.flow = data.context.flow.clone();
+                    data.previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
+
+                    data.context.flow = tmp_f;
+                    data.context.step = "start".to_string();
+                },
+                PreviousType::Step(_interval) => {
+                    let (tmp_s, tmp_f) = data.previous_info.step_at_flow.clone();
+                    flow_opt = Some(tmp_f.clone());
+                    step_opt = Some(tmp_s.clone());
+
+                    if data.context.flow != tmp_f {
+                        data.previous_info.flow = tmp_f.clone();
+                    }
+                    data.previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
+
+                    data.context.flow = tmp_f;
+                    data.context.step = tmp_s;
+                }
+            }
+
+            msg_data.exit_condition = Some(ExitCondition::Goto);
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    flow: flow_opt,
+                    step: step_opt,
+                },
+            );
 
             Ok(msg_data)
         }

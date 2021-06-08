@@ -7,6 +7,7 @@ use crate::parser::{
     parse_comments::comment,
     parse_foreach::parse_foreach,
     parse_goto::parse_goto,
+    parse_previous::parse_previous,
     parse_idents::{parse_idents_assignation, parse_idents_usage},
     parse_if::parse_if,
     parse_path::parse_path,
@@ -327,6 +328,7 @@ where
         parse_continue,
         // only accessible inside normal scopes
         parse_goto,
+        parse_previous,
         parse_say,
         parse_remember,
         parse_forget,

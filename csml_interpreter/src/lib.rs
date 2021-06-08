@@ -4,6 +4,7 @@ pub mod interpreter;
 pub mod linter;
 pub mod parser;
 
+use data::data::PreviousInfo;
 pub use interpreter::components::load_components;
 pub use parser::step_checksum::get_step;
 
@@ -201,6 +202,14 @@ pub fn interpret(
         None => data::primitive::PrimitiveNull::get_literal(Interval::default()),
     };
 
+    let mut previous_info = match &context.hold {
+        Some(hold) => match &hold.previous {
+            Some(previous) => previous.clone(),
+            None => PreviousInfo::new(flow.clone(), step.clone())
+        },
+        None => PreviousInfo::new(flow.clone(), step.clone())
+    };
+
     while msg_data.exit_condition.is_none() {
 
         let ast = match flows.get(&flow) {
@@ -229,11 +238,13 @@ pub fn interpret(
             0,
             &mut step_count,
             step_vars,
+            previous_info.clone(),
             &custom,
             &native,
         );
 
         msg_data = msg_data + execute_step(&step, &ast, &mut data, &sender);
+        previous_info = data.previous_info.clone();
         flow = data.context.flow.to_string();
         step = data.context.step.to_string();
         // add reset loops index
