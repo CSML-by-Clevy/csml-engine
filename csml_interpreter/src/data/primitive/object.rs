@@ -375,7 +375,7 @@ impl PrimitiveObject {
                 &lit.primitive,
                 &data.context.flow,
                 lit.interval,
-                ERROR_JWT_TOKEN.to_owned(),
+                format!("usage: {}", usage),
             )?,
             _ => {
                 return Err(gen_error_info(
@@ -390,7 +390,7 @@ impl PrimitiveObject {
                 &lit.primitive,
                 &data.context.flow,
                 lit.interval,
-                ERROR_JWT_TOKEN.to_owned(),
+                format!("usage: {}", usage),
             )?,
             _ => {
                 return Err(gen_error_info(
