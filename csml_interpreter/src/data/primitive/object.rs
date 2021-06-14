@@ -1796,8 +1796,6 @@ fn insert_to_object(
                 for (key, value) in src.iter() {
                     tmp.insert(key.to_owned(), value.to_owned());
                 }
-            } else {
-                unreachable!();
             }
         })
         .or_insert_with(|| literal.to_owned());

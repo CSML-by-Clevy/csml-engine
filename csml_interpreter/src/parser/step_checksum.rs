@@ -1,4 +1,4 @@
-use crate::data::{ast::*, tokens::*};
+use crate::data::{ast::*, tokens::*, Position};
 use crate::error_format::*;
 use crate::interpreter::variable_handler::interval::interval_from_expr;
 use crate::parser::parse_comments::comment;
@@ -58,7 +58,10 @@ fn get_step_offset(
                 (step_info, None)
             }
         }
-        None => unreachable!(),
+        None => {
+            eprintln!("get_step_offset unreachable code");
+            unreachable!()
+        },
     }
 }
 
@@ -118,7 +121,7 @@ fn get_offsets(ast: &Flow) -> (Vec<(String, usize)>, Vec<usize>) {
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn get_step<'a>(step_name: &'a str, flow: &'a str, ast: &'a Flow) -> String {
+pub fn get_step<'a>(step_name: &'a str, flow: &'a str, ast: &'a Flow) -> Result<String, ErrorInfo>  {
     let (offsets, skip_offsets) = get_offsets(ast);
     let span = Span::new(flow);
 
@@ -127,13 +130,19 @@ pub fn get_step<'a>(step_name: &'a str, flow: &'a str, ast: &'a Flow) -> String 
     match get_next_offset(offset, next_step, &skip_offsets) {
         Some(skip_offset) => {
             let (_, old) = new.take_split(skip_offset - offset);
-            old.fragment().to_string()
+            Ok(old.fragment().to_string())
         }
         None => match clean_text::<CustomError<Span<'a>>>(new) {
-            Ok((_s, string)) => string,
+            Ok((_s, string)) => Ok(string),
             Err(e) => match e {
-                Err::Error(_) | Err::Failure(_) => unreachable!(),
-                Err::Incomplete(_err) => unreachable!(),
+                Err::Error(_) | Err::Failure(_) => Err(gen_error_info(
+                    Position::new(Interval::default(), step_name),
+                    format!("invalid step [{}]", step_name),
+                )),
+                Err::Incomplete(_err) => Err(gen_error_info(
+                    Position::new(Interval::default(), step_name),
+                    format!("invalid step [{}]", step_name),
+                )),
             },
         },
     }

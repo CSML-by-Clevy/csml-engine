@@ -310,7 +310,7 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
         None => return Err(EngineError::Manager(format!("not valid ast"))),
     };
 
-    let step = get_step(&context.step, &flow, &ast);
+    let step = get_step(&context.step, &flow, &ast)?;
     hash.update(step.as_bytes());
 
     Ok(format!("{:x}", hash.finalize()))

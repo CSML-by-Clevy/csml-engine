@@ -408,6 +408,7 @@ pub fn get_literal_from_metadata(
     path: &[(Interval, PathLiteral)],
     condition: bool,
     data: &mut Data,
+    interval: Interval,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
@@ -416,13 +417,10 @@ pub fn get_literal_from_metadata(
             Some(lit) => lit.to_owned(),
             None => PrimitiveNull::get_literal(interval.to_owned()),
         },
-        Some((interval, _)) => {
-            return Err(gen_error_info(
-                Position::new(*interval, &data.context.flow),
-                ERROR_FIND_BY_INDEX.to_owned(),
-            ));
-        }
-        None => unreachable!(),
+        _ => return Err(gen_error_info(
+            Position::new(interval, &data.context.flow),
+            ERROR_FIND_BY_INDEX.to_owned(),
+        ))
     };
 
     let content_type = ContentType::get(&lit);
@@ -478,7 +476,7 @@ pub fn get_var(
         name if name == _METADATA => match path {
             Some(path) => {
                 let path = resolve_path(path, condition, data, msg_data, sender)?;
-                get_literal_from_metadata(&path, condition, data, msg_data, sender)
+                get_literal_from_metadata(&path, condition, data, interval.clone(), msg_data, sender)
             }
             None => Ok(PrimitiveObject::get_literal(
                 &data.context.metadata,

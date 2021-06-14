@@ -118,9 +118,15 @@ where
                 Expr::IdentExpr(ident) => (ident.ident.to_owned(), None),
                 Expr::ObjectExpr(ObjectType::As(name, expr)) => match &**expr {
                     Expr::IdentExpr(ident) => (name.ident.to_owned(), Some(ident.ident.to_owned())),
-                    _ => unreachable!(),
+                    _ => {
+                        eprintln!("parse_import unreachable code, invalid Identifier");
+                        unreachable!()
+                    },
                 },
-                _ => unreachable!(),
+                _ => {
+                    eprintln!("parse_import unreachable code, invalid Expr");
+                    unreachable!()
+                },
             };
 
             Instruction {

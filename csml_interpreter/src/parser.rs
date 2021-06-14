@@ -124,7 +124,10 @@ pub fn parse_flow<'a>(slice: &'a str, flow_name: &'a str) -> Result<Flow, ErrorI
                     convert_error_from_span(Span::new(slice), err),
                 ))
             }
-            Err::Incomplete(_err) => unreachable!(),
+            Err::Incomplete(_err) => return Err(ErrorInfo::new(
+                Position::new(Interval::default(), flow_name),
+                format!("flow {} parsing fail", flow_name),
+            )),
         },
     }
 }

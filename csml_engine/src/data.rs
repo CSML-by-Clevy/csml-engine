@@ -171,7 +171,10 @@ impl SerializeCsmlBot {
                 match self.native_components.to_owned() {
                     Some(value) => match serde_json::from_str(&value) {
                         Ok(serde_json::Value::Object(map)) => Some(map),
-                        _ => unreachable!(),
+                        _ => {
+                            eprintln!("invalid native_component");
+                            None
+                        },
                     },
                     None => None,
                 }
@@ -180,7 +183,10 @@ impl SerializeCsmlBot {
                 match self.custom_components.to_owned() {
                     Some(value) => match serde_json::from_str(&value) {
                         Ok(value) => Some(value),
-                        Err(_e) => unreachable!(),
+                        Err(_e) => {
+                            eprintln!("invalid custom_component");
+                            None
+                        },
                     },
                     None => None,
                 }
@@ -259,7 +265,10 @@ impl DynamoBot {
                 match self.custom_components.to_owned() {
                     Some(value) => match serde_json::from_str(&value) {
                         Ok(value) => Some(value),
-                        Err(_e) => unreachable!(),
+                        Err(_e) => {
+                            eprintln!("invalid custom_components");
+                            None
+                        },
                     },
                     None => None,
                 }
@@ -379,6 +388,12 @@ pub enum EngineError {
 impl From<serde_json::Error> for EngineError {
     fn from(e: serde_json::Error) -> Self {
         EngineError::Serde(e)
+    }
+}
+
+impl From<csml_interpreter::data::error_info::ErrorInfo> for EngineError {
+    fn from(e: csml_interpreter::data::error_info::ErrorInfo) -> Self {
+        EngineError::Interpreter(e.format_error())
     }
 }
 
