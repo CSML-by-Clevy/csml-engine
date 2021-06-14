@@ -36,6 +36,10 @@ lazy_static! {
             (PrimitiveObject::set as PrimitiveMethod, Right::Read),
         );
         map.insert(
+            "auth",
+            (PrimitiveObject::auth as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
             "query",
             (PrimitiveObject::query as PrimitiveMethod, Right::Read),
         );
@@ -348,6 +352,74 @@ impl PrimitiveObject {
         result.set_content_type("http");
 
         Ok(result)
+    }
+
+    fn auth(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "auth(username, password) => http object";
+
+        if args.len() < 2 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let username = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let password = match args.get("arg1") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let user_password = format!("{}:{}", username, password);
+        let authorization = format!("Basic {}", base64::encode(user_password.as_bytes()));
+
+        let mut object = object.to_owned();
+
+        let mut header = HashMap::new();
+        header.insert(
+            "Authorization".to_owned(), 
+            PrimitiveString::get_literal(&authorization, interval)
+        );
+        let literal = PrimitiveObject::get_literal( &header, interval);
+
+        insert_to_object(&header, &mut object, "header", &data.context.flow, &literal);
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("http");
+
+        Ok(result)
+
     }
 
     fn query(
@@ -1796,8 +1868,6 @@ fn insert_to_object(
                 for (key, value) in src.iter() {
                     tmp.insert(key.to_owned(), value.to_owned());
                 }
-            } else {
-                unreachable!();
             }
         })
         .or_insert_with(|| literal.to_owned());

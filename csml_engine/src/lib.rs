@@ -347,6 +347,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 step_vars: hold["step_vars"].clone(),
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),
+                previous: serde_json::from_value(hold["previous"].clone()).unwrap_or(None)
             });
            state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }

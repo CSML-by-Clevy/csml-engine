@@ -540,6 +540,7 @@ pub fn get_var(
                 tmp_loop_index,
                 &mut tmp_step_count, 
                 tmp_step_vars,
+                data.previous_info.clone(),
                 &tmp_custom_component,
                 &tmp_native_component,
             );

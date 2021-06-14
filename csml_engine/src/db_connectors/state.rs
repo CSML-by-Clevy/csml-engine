@@ -113,6 +113,7 @@ mod tests {
             step_vars: serde_json::json!({}),
             step_name: "step_name".to_owned(),
             flow_name: "flow_name".to_owned(),
+            previous: None,
         };
 
         let state_hold: serde_json::Value = serde_json::json!({
