@@ -5,7 +5,8 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        tools_time, tools_crypto, tools_jwt, Data, MessageData, Primitive, PrimitiveArray, PrimitiveBoolean,
+        tools_time, tools_crypto, tools_jwt, tools_smtp,
+        Data, MessageData, Primitive, PrimitiveArray, PrimitiveBoolean,
         PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right, MSG,
     },
     tokens::TYPES,
@@ -19,6 +20,7 @@ use crate::interpreter::{
 use chrono::{DateTime, TimeZone, Utc, SecondsFormat};
 use lazy_static::*;
 use regex::Regex;
+use lettre::{Transport};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
@@ -68,6 +70,25 @@ lazy_static! {
             (PrimitiveObject::send as PrimitiveMethod, Right::Read),
         );
 
+        map
+    };
+}
+
+lazy_static! {
+    static ref FUNCTIONS_SMTP: HashMap<&'static str, (PrimitiveMethod, Right)> = {
+        let mut map = HashMap::new();
+        map.insert(
+            "credentials",
+            (PrimitiveObject::credentials as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "port",
+            (PrimitiveObject::port as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "send",
+            (PrimitiveObject::smtp_send as PrimitiveMethod, Right::Read),
+        );
         map
     };
 }
@@ -647,6 +668,158 @@ impl PrimitiveObject {
             Position::new(interval, &data.context.flow,),
             ERROR_HTTP_SEND.to_owned(),
         ))
+    }
+}
+
+impl PrimitiveObject {
+    fn credentials(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "credentials(username, password) => smtp object";
+
+        if args.len() < 2 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let username = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let password = match args.get("arg1") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "username".to_owned(),
+            PrimitiveString::get_literal(username, interval),
+        );
+
+        object.value.insert(
+            "password".to_owned(),
+            PrimitiveString::get_literal(password, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
+    fn port(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "port(port) => smtp object";
+
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let port = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<i64>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "port".to_owned(),
+            PrimitiveInt::get_literal(*port, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
+    fn smtp_send(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "send(email) => smtp object";
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let csml_email = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<HashMap<String, Literal> >(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("usage: {}", usage),
+            ))
+        };
+
+        let email = tools_smtp::format_email(csml_email, data, interval)?;
+        let mailer = tools_smtp::get_mailer(&mut object.value, data, interval)?;
+
+        match mailer.send(&email) {
+            Ok(_) => Ok(PrimitiveBoolean::get_literal(true, interval)),
+            Err(e) => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("Could not send email: {:?}", e),
+            ))
+        }
     }
 }
 
@@ -2069,6 +2242,7 @@ impl Primitive for PrimitiveObject {
             FUNCTIONS_READ.clone(),
             FUNCTIONS_WRITE.clone(),
         ];
+        let smtp = vec![FUNCTIONS_SMTP.clone()];
         let base64 = vec![FUNCTIONS_BASE64.clone()];
         let hex = vec![FUNCTIONS_HEX.clone()];
         let jwt = vec![FUNCTIONS_JWT.clone()];
@@ -2085,6 +2259,7 @@ impl Primitive for PrimitiveObject {
                 (event_type.as_ref(), event)
             }
             ContentType::Http => ("", http),
+            ContentType::Smtp => ("", smtp),
             ContentType::Base64 => ("", base64),
             ContentType::Hex => ("", hex),
             ContentType::Jwt => ("", jwt),

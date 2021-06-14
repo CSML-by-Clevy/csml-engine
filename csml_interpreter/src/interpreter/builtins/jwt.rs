@@ -31,7 +31,7 @@ pub fn jwt(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Litera
         }
         _ => Err(gen_error_info(
             Position::new(interval, flow_name),
-            ERROR_HTTP.to_owned(),
+            ERROR_JWT.to_owned(),
         )),
     }
 }
