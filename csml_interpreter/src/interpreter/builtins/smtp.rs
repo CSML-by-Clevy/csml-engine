@@ -17,7 +17,7 @@ pub fn smtp(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Liter
 
             map.insert("smtp_server".to_owned(), server.to_owned());
 
-            // set default port to [465] for TLS connections RFC8314](https://tools.ietf.org/html/rfc8314)
+            // set default port to [465] for TLS connections [RFC8314](https://tools.ietf.org/html/rfc8314)
             map.insert("port".to_owned(), PrimitiveInt::get_literal(465, interval));
 
             let mut result = PrimitiveObject::get_literal(&map, interval);
