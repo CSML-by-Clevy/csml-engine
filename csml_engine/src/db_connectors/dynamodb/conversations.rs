@@ -6,7 +6,6 @@ use crate::{
 };
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
-use std::{thread, time};
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -374,20 +373,10 @@ pub fn update_conversation(
     let input = UpdateItemInput {
         table_name: get_table_name()?,
         key: serde_dynamodb::to_hashmap(&DynamoDbKey::new(&hash, &range))?,
-        condition_expression: Some(condition_expr.clone()),
+        condition_expression: Some(condition_expr),
         update_expression: Some(update_expr.to_string()),
-        expression_attribute_names: Some(expr_attr_names.clone()),
-        expression_attribute_values: Some(expr_attr_values.clone()),
-        ..Default::default()
-    };
-
-    let input_dbg = UpdateItemInput {
-        table_name: get_table_name()?,
-        key: serde_dynamodb::to_hashmap(&DynamoDbKey::new(&hash, &range))?,
-        condition_expression: Some(condition_expr.clone()),
-        update_expression: Some(update_expr.to_string()),
-        expression_attribute_names: Some(expr_attr_names.clone()),
-        expression_attribute_values: Some(expr_attr_values.clone()),
+        expression_attribute_names: Some(expr_attr_names),
+        expression_attribute_values: Some(expr_attr_values),
         ..Default::default()
     };
 
