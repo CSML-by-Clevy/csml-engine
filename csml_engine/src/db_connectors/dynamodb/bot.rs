@@ -90,7 +90,12 @@ fn query_bot_version(
     };
 
     let query = db.client.query(input);
-    let data = db.runtime.block_on(query)?;
+    let data = match db.runtime.block_on(query) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("query_bot_version {:?}", e)))
+        }
+    };
 
     Ok(data)
 }
@@ -252,7 +257,12 @@ pub fn get_last_bot_version(
     };
 
     let query = db.client.query(input);
-    let data = db.runtime.block_on(query)?;
+    let data = match db.runtime.block_on(query) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("get_last_bot_version {:?}", e)))
+        }
+    };
 
     // The query returns an array of items (max 1, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -417,7 +427,12 @@ fn query_bot_info(
     };
 
     let future = db.client.query(input);
-    let data = db.runtime.block_on(future)?;
+    let data = match db.runtime.block_on(future) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("query_bot_info {:?}", e)))
+        }
+    };
 
     Ok(data)
 }
