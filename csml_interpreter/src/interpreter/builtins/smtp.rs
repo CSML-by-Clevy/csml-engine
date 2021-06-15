@@ -1,5 +1,6 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
+use crate::data::primitive::PrimitiveBoolean;
 use crate::data::primitive::{object::PrimitiveObject, PrimitiveInt, PrimitiveType};
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
@@ -19,6 +20,8 @@ pub fn smtp(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Liter
 
             // set default port to [465] for TLS connections [RFC8314](https://tools.ietf.org/html/rfc8314)
             map.insert("port".to_owned(), PrimitiveInt::get_literal(465, interval));
+
+            map.insert("tls".to_owned(), PrimitiveBoolean::get_literal(true, interval));
 
             let mut result = PrimitiveObject::get_literal(&map, interval);
 

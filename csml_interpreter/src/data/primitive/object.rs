@@ -78,12 +78,16 @@ lazy_static! {
     static ref FUNCTIONS_SMTP: HashMap<&'static str, (PrimitiveMethod, Right)> = {
         let mut map = HashMap::new();
         map.insert(
-            "credentials",
+            "auth",
             (PrimitiveObject::credentials as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "port",
             (PrimitiveObject::port as PrimitiveMethod, Right::Read),
+        );
+        map.insert(
+            "tls",
+            (PrimitiveObject::smtp_tls as PrimitiveMethod, Right::Read),
         );
         map.insert(
             "send",
@@ -780,6 +784,52 @@ impl PrimitiveObject {
         result.set_content_type("smtp");
 
         Ok(result)
+    }
+
+    fn smtp_tls(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "tls(BOOLEAN) => smtp object";
+
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow,),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let tls = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<bool>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "tls".to_owned(),
+            PrimitiveBoolean::get_literal(*tls, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+
     }
 
     fn smtp_send(

@@ -9,10 +9,10 @@ use crate::data::{
     position::Position
 };
 use std::{collections::HashMap};
-
-use lettre::message::Mailbox;
-use lettre::transport::smtp::authentication::Credentials;
-
+use lettre::{
+    message::{header, MultiPart, SinglePart, Mailbox},
+    transport::smtp::authentication::Credentials
+};
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,9 +51,9 @@ fn format_email_value<'a>(
 fn parse_email(email_str: &str, data: &Data, interval: Interval) -> Result<Mailbox, ErrorInfo>{
     match email_str.parse::<Mailbox>() {
         Ok(mbox) => Ok(mbox),
-        Err(_) => Err(gen_error_info(
+        Err(e) => Err(gen_error_info(
             Position::new(interval, &data.context.flow,),
-            "Invalid email format".to_owned(),
+            format!("Invalid email format: {:?}", e)
         ))
     }
 }
@@ -98,10 +98,10 @@ pub fn format_email(
         message_builder = message_builder.from(mbox);
     }
 
-    let sender = format_email_value(&email, "sender", "and a valid email", data, interval)?;
-    if let Some(sender) = sender {
-        let mbox = parse_email(sender.as_ref(), data, interval)?;
-        message_builder = message_builder.sender(mbox);
+    let to = format_email_value(&email, "to", "and a valid email", data, interval)?;
+    if let Some(to) = to {
+        let mbox = parse_email(to.as_ref(), data, interval)?;
+        message_builder = message_builder.to(mbox);
     }
 
     let reply_to = format_email_value(&email, "reply_to", "and a valid email", data, interval)?;
@@ -122,30 +122,43 @@ pub fn format_email(
         message_builder = message_builder.cc(mbox);
     }
 
-    let to = format_email_value(&email, "to", "and a valid email", data, interval)?;
-    if let Some(to) = to {
-        let mbox = parse_email(to.as_ref(), data, interval)?;
-        message_builder = message_builder.to(mbox);
-    }
-
     let subject = format_email_value(&email, "subject", "", data, interval)?;
     if let Some (subject) = subject {
         message_builder = message_builder.subject(subject.to_owned());
     }
 
-    let body = format_email_value(&email, "body", "", data, interval)?;
+    let text = format_email_value(&email, "text", "", data, interval)?;
+    let html = format_email_value(&email, "html", "", data, interval)?;
 
-    match body {
-        Some(body) => match message_builder.body(body.to_owned()) {
-            Ok(message) => Ok(message),
-            Err(_) => Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
-                "missing mandatory email parameter [from] or [to]".to_owned(),
-            ))
-        },
-        None => Err(gen_error_info(
+    if text.is_none() && html.is_none() {
+        return Err(gen_error_info(
             Position::new(interval, &data.context.flow,),
-            "email body parameter is mandatory".to_owned(),
+            "email text/html parameter is mandatory".to_owned(),
+        ))
+    }
+
+    let mut multipart = MultiPart::alternative().build();
+
+    if let Some(text) = text {
+        multipart = multipart.singlepart(
+            SinglePart::builder()
+                .header(header::ContentType::TEXT_PLAIN)
+                .body(String::from(text)), 
+        );
+    }
+    if let Some(html) = html {
+        multipart = multipart.singlepart(
+            SinglePart::builder()
+                .header(header::ContentType::TEXT_HTML)
+                .body(String::from(html)),
+        );
+    }
+
+    match message_builder.multipart(multipart) {
+        Ok(message) => Ok(message),
+        Err(_) => Err(gen_error_info(
+            Position::new(interval, &data.context.flow,),
+            "missing mandatory email parameter [from] or [to]".to_owned(),
         ))
     }
 }
@@ -187,18 +200,43 @@ pub fn get_mailer(
 
     let credentials = Credentials::new(username.to_string(), password.to_string());
 
-    match lettre::SmtpTransport::relay(smtp_server){
-        Ok(smtp_server) => {
-            let mailer =  smtp_server
+    let is_tls = match get_value::<bool>(
+        object.get("tls"), 
+        data, 
+        "".to_owned(), 
+        interval
+    ) {
+        Ok(tls_value) => tls_value.to_owned(),
+        Err(_) => true
+    };
+
+    match is_tls {
+        true => {
+            match lettre::SmtpTransport::relay(smtp_server) {
+                Ok(smtp_server) => {
+                    let mailer =  smtp_server
+                    .credentials(credentials)
+                    .port(port)
+                    .build();
+        
+                    Ok(mailer)
+                }
+                Err(_) => Err(gen_error_info(
+                    Position::new(interval, &data.context.flow,),
+                    "invalid SMTP address".to_owned(),
+                ))
+            }
+        },
+        false => {
+            let mailer = lettre::SmtpTransport::builder_dangerous(smtp_server)
             .credentials(credentials)
             .port(port)
             .build();
 
             Ok(mailer)
         }
-        Err(_) => Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
-            "invalid SMTP address".to_owned(),
-        ))
     }
+    
+
+    
 }
