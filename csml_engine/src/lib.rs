@@ -326,7 +326,6 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                     let flow_hash = get_current_step_hash(&data.context, bot)?;
                     // cleanup the current hold and restart flow
                     if flow_hash != *hash_value {
-                        data.context.step = "start".to_owned();
                         return clean_hold_and_restart(data);
                     }
                     flow_hash
