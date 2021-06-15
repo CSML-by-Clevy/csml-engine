@@ -6,6 +6,7 @@ use crate::{
 };
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
+use std::{thread, time};
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -381,11 +382,17 @@ pub fn update_conversation(
 
     let future = db.client.update_item(input);
     match db.runtime.block_on(future) {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            // add 10 millis delay in order to avoid Dynamodb conditional request failed
+            thread::sleep(time::Duration::from_millis(10));
+            Ok(())
+        },
         Err(e) => {
             return Err(EngineError::Manager(format!("update_conversation {:?}", e)))
         }
     }
+
+    Ok(())
 }
 
 
@@ -538,7 +545,7 @@ pub fn get_client_conversations(
     .collect();
 
     let data = query_conversation(
-        client, 
+        client,
         db,
         limit,
         pagination_key,
