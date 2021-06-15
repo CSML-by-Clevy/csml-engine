@@ -4,6 +4,7 @@ use crate::{encrypt::encrypt_data, Client, EngineError};
 use rusoto_dynamodb::*;
 use uuid::Uuid;
 use std::collections::HashMap;
+use std::{thread, time};
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -55,6 +56,9 @@ pub fn init_interaction(
 
     let future = db.client.put_item(input);
     db.runtime.block_on(future)?;
+
+    // add 10 millis delay in order to avoid Dynamodb conditional request failed
+    thread::sleep(time::Duration::from_millis(5));
 
     Ok(id.to_string())
 }
