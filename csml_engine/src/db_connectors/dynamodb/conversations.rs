@@ -27,6 +27,10 @@ pub fn create_conversation(
     let future = client.put_item(input);
 
     db.runtime.block_on(future)?;
+
+    // add 10 millis delay in order to avoid Dynamodb conditional request failed
+    thread::sleep(time::Duration::from_millis(5));
+
     Ok(data.id.to_owned())
 }
 
