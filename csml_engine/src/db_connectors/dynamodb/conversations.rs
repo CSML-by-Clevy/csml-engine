@@ -29,7 +29,7 @@ pub fn create_conversation(
     db.runtime.block_on(future)?;
 
     // add 10 millis delay in order to avoid Dynamodb conditional request failed
-    thread::sleep(time::Duration::from_millis(5));
+    thread::sleep(time::Duration::from_millis(50));
 
     Ok(data.id.to_owned())
 }
@@ -388,7 +388,7 @@ pub fn update_conversation(
     match db.runtime.block_on(future) {
         Ok(_) => {
             // add 10 millis delay in order to avoid Dynamodb conditional request failed
-            thread::sleep(time::Duration::from_millis(10));
+            thread::sleep(time::Duration::from_millis(50));
             Ok(())
         },
         Err(e) => {

@@ -63,7 +63,7 @@ pub fn init_interaction(
     };
 
     // add 10 millis delay in order to avoid Dynamodb conditional request failed
-    thread::sleep(time::Duration::from_millis(5));
+    thread::sleep(time::Duration::from_millis(50));
 
     Ok(id.to_string())
 }
