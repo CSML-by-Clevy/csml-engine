@@ -93,6 +93,7 @@ pub fn init_conversation_info<'a>(
 
     // Now that everything is correctly setup, update the conversation with wherever
     // we are now and continue with the rest of the request!
+    println!("init.rs line=96 {:?}", data.context);
     update_conversation(&mut data, Some(flow), Some(step))?;
 
     Ok(data)

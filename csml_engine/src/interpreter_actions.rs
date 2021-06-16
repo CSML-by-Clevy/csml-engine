@@ -197,6 +197,7 @@ fn goto_flow<'a>(
     data.context.flow = nextflow;
     data.context.step = nextstep;
 
+    println!("interpreter_actions.rs line=200 {:?}", data.context);
     update_conversation(
         data,
         Some(current_flow.id.clone()),
@@ -225,6 +226,7 @@ fn goto_step<'a>(
 
         // send end of conversation
         send_msg_to_callback_url(data, vec![], *interaction_order, *conversation_end);
+        println!("interpreter_actions.rs line=229 {:?}", data.context);
         update_conversation(data, None, Some("end".to_owned()))?;
         close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
 
@@ -232,6 +234,7 @@ fn goto_step<'a>(
         return Ok(*conversation_end);
     } else {
         data.context.step = nextstep;
+        println!("interpreter_actions.rs line=237 {:?}", data.context);
         update_conversation(data, None, Some(data.context.step.to_owned()))?;
     }
 

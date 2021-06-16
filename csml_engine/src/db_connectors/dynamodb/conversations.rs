@@ -392,11 +392,11 @@ pub fn update_conversation(
             Ok(())
         },
         Err(e) => {
+            eprintln!("dynamodb/conversations.rs line=395 {:?}", input.clone());
             return Err(EngineError::Manager(format!("update_conversation {:?}", e)))
         }
     }
 
-    Ok(())
 }
 
 
