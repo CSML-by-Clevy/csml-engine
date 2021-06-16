@@ -29,7 +29,7 @@ pub fn create_conversation(
     db.runtime.block_on(future)?;
 
     // add 10 millis delay in order to avoid Dynamodb conditional request failed
-    thread::sleep(time::Duration::from_millis(5));
+    thread::sleep(time::Duration::from_millis(50));
 
     Ok(data.id.to_owned())
 }
@@ -524,7 +524,7 @@ pub fn get_client_conversations(
     .collect();
 
     let data = query_conversation(
-        client, 
+        client,
         db,
         limit,
         pagination_key,
