@@ -130,7 +130,12 @@ fn query_messages(
     };
 
     let future = db.client.query(input);
-    let data = db.runtime.block_on(future)?;
+    let data = match db.runtime.block_on(future) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("query_messages {:?}", e)))
+        }
+    };
 
     Ok(data)
 }

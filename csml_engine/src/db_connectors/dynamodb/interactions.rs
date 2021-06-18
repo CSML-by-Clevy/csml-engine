@@ -4,6 +4,7 @@ use crate::{encrypt::encrypt_data, Client, EngineError};
 use rusoto_dynamodb::*;
 use uuid::Uuid;
 use std::collections::HashMap;
+use std::{thread, time};
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -54,7 +55,12 @@ pub fn init_interaction(
     };
 
     let future = db.client.put_item(input);
-    db.runtime.block_on(future)?;
+    match db.runtime.block_on(future) {
+        Ok(_) => {},
+        Err(e) => {
+            return Err(EngineError::Manager(format!("init_interaction {:?}", e)))
+        }
+    };
 
     Ok(id.to_string())
 }
@@ -126,7 +132,12 @@ pub fn update_interaction(
     };
 
     let future = db.client.update_item(input);
-    db.runtime.block_on(future)?;
+    match db.runtime.block_on(future) {
+        Ok(_) => (),
+        Err(e) => {
+            return Err(EngineError::Manager(format!("update_interaction {:?}", e)))
+        }
+    };
 
     Ok(())
 }
@@ -176,7 +187,12 @@ fn query_interactions(
     };
 
     let future = db.client.query(input);
-    let data = db.runtime.block_on(future)?;
+    let data = match db.runtime.block_on(future) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("query_interactions {:?}", e)))
+        }
+    };
 
     Ok(data)
 }

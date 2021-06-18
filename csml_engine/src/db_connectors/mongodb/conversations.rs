@@ -135,14 +135,14 @@ pub fn update_conversation(
 
     let doc = match (flow_id, step_id) {
         (Some(flow_id), Some(step_id)) => doc! {
-           "flow_id": flow_id,
-           "step_id": step_id
+            "flow_id": flow_id,
+            "step_id": step_id
         },
         (Some(flow_id), None) => doc! {
             "flow_id": flow_id
         },
         (None, Some(step_id)) => doc! {
-           "step_id": step_id
+            "step_id": step_id
         },
         (None, None) => doc! {},
     };
