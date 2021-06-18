@@ -228,7 +228,6 @@ fn goto_step<'a>(
 
         // send end of conversation
         send_msg_to_callback_url(data, vec![], *interaction_order, *conversation_end);
-        update_conversation(data, None, Some("end".to_owned()))?;
         close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
 
         // break interpret_step loop
