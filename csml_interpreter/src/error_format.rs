@@ -134,12 +134,25 @@ pub const ERROR_AUDIO: &str =
     "Audio component expects one argument of type string. Example: Audio(url = \"hola\")";
 pub const ERROR_FILE: &str =
     "File component expects one argument of type string. Example: File(url = \"hola\")";
-pub const ERROR_HTTP: &str =
-    "HTTP builtin expects one url of type string. Example: HTTP(\"https://clevy.io\")";
 pub const ERROR_HTTP_GET_VALUE: &str =
-"not found in HTTP object. Use the HTTP() builtin to construct the correct object to make HTTP calls";
+    "not found in HTTP object. Use the HTTP() builtin to construct the correct object to make HTTP calls";
 pub const ERROR_HTTP_QUERY_VALUES: &str =
     "must have a value of type String. Example: {key: \"value\"}";
+pub const ERROR_HTTP: &str =
+    "HTTP builtin expects one url of type string. Example: HTTP(\"https://clevy.io\")";
+pub const ERROR_JWT: &str =
+    "JWT builtin expects payload as argument. Example: JWT({
+        \"user\": \"name\",
+        \"somekey\": {
+          \"somevalue\": 42
+        },
+        \"exp\": 1618064023,
+        \"iss\": \"CSML STUDIO\"
+      })";
+pub const ERROR_SMTP: &str =
+    "SMTP builtin expects SMTP Server Address. Example: SMTP(\"smtp.gmail.com\")";
+pub const ERROR_CRYPTO: &str =
+    "CRYPTO builtin expects one argument of type string. Example: CRYPTO(\"text\")";
 pub const ERROR_BUILTIN_UNKNOWN: &str = "Unknown builtin";
 
 // ### native Components

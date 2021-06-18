@@ -161,8 +161,16 @@ pub enum ForgetMemory {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+
+pub enum PreviousType {
+    Step(Interval),
+    Flow(Interval)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObjectType {
     Goto(GotoType, Interval),
+    Previous(PreviousType, Interval),
     Hold(Interval),
     Say(Box<Expr>),
     Debug(Box<Expr>, Interval),

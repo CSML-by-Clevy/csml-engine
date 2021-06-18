@@ -326,7 +326,6 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                     let flow_hash = get_current_step_hash(&data.context, bot)?;
                     // cleanup the current hold and restart flow
                     if flow_hash != *hash_value {
-                        data.context.step = "start".to_owned();
                         return clean_hold_and_restart(data);
                     }
                     flow_hash
@@ -348,6 +347,7 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 step_vars: hold["step_vars"].clone(),
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),
+                previous: serde_json::from_value(hold["previous"].clone()).unwrap_or(None)
             });
            state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }

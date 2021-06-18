@@ -175,15 +175,15 @@ pub fn init_curl(url: &str) -> Result<Easy, CurlError> {
 fn get_or_create_conversation<'a>(
     context: &mut Context,
     bot: &'a CsmlBot,
-    flow_found: Option<&'a CsmlFlow>,
+    flow_found: Option<(&'a CsmlFlow, String)>,
     client: &Client,
     db: &mut Database,
 ) -> Result<String, EngineError> {
     match get_latest_open(client, db)? {
         Some(conversation) => {
             match flow_found {
-                Some(flow) => {
-                    context.step = "start".to_owned();
+                Some((flow, step)) => {
+                    context.step = step;
                     context.flow = flow.name.to_owned();
                 }
                 None => {
@@ -216,15 +216,15 @@ fn get_or_create_conversation<'a>(
 fn create_new_conversation<'a>(
     context: &mut Context,
     bot: &'a CsmlBot,
-    flow_found: Option<&'a CsmlFlow>,
+    flow_found: Option<(&'a CsmlFlow, String)>,
     client: &Client,
     db: &mut Database,
 ) -> Result<String, EngineError> {
-    let flow = match flow_found {
-        Some(flow) => flow,
-        None => get_default_flow(bot)?,
+    let (flow, step) = match flow_found {
+        Some((flow, step)) => (flow, step),
+        None => (get_default_flow(bot)?, "start".to_owned()),
     };
-    context.step = "start".to_owned();
+    context.step = step;
     context.flow = flow.name.to_owned();
 
     let conversation_id =

@@ -68,6 +68,7 @@ pub const DEBUG_ACTION: &str = "debug";
 pub const USE: &str = "use";
 pub const HOLD: &str = "hold";
 pub const GOTO: &str = "goto";
+pub const PREVIOUS: &str = "previous";
 pub const MATCH: &str = "match";
 pub const NOT_MATCH: &str = "!match";
 pub const DEFAULT: &str = "default";
@@ -143,6 +144,7 @@ pub const CARD: &str = "Card";
 pub const FN: &str = "Fn";
 pub const APP: &str = "App";
 pub const HTTP: &str = "HTTP";
+pub const SMTP: &str = "SMTP";
 pub const JWT: &str = "JWT";
 pub const CRYPTO: &str = "Crypto";
 pub const BASE64: &str = "Base64";
@@ -156,7 +158,7 @@ pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, APP, HTTP, OBJECT, DEBUG, UUID, BASE64, HEX,
-    JWT, CRYPTO, TIME
+    JWT, CRYPTO, TIME, SMTP
 ];
 
 pub const FROM_FILE: &str = "FromFile";

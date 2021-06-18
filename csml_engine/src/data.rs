@@ -8,6 +8,12 @@ pub const DEBUG: &str = "DEBUG";
 pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FlowTrigger {
+    pub flow_id: String,
+    pub step_id: Option<String>
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RunRequest {
     pub bot: Option<CsmlBot>,
     pub bot_id: Option<String>,
