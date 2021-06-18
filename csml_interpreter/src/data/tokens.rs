@@ -144,6 +144,7 @@ pub const CARD: &str = "Card";
 pub const FN: &str = "Fn";
 pub const APP: &str = "App";
 pub const HTTP: &str = "HTTP";
+pub const SMTP: &str = "SMTP";
 pub const JWT: &str = "JWT";
 pub const CRYPTO: &str = "Crypto";
 pub const BASE64: &str = "Base64";
@@ -157,7 +158,7 @@ pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, APP, HTTP, OBJECT, DEBUG, UUID, BASE64, HEX,
-    JWT, CRYPTO, TIME
+    JWT, CRYPTO, TIME, SMTP
 ];
 
 pub const FROM_FILE: &str = "FromFile";

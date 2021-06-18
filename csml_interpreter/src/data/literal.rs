@@ -23,6 +23,7 @@ pub struct Literal {
 pub enum ContentType {
     Event(String),
     Http,
+    Smtp,
     Base64,
     Hex,
     Jwt,
@@ -69,6 +70,7 @@ impl ContentType {
     pub fn get(literal: &Literal) -> ContentType {
         match literal.content_type.as_ref() {
             "http" => ContentType::Http,
+            "smtp" => ContentType::Smtp,
             "base64" => ContentType::Base64,
             "hex" => ContentType::Hex,
             "jwt" => ContentType::Jwt,
