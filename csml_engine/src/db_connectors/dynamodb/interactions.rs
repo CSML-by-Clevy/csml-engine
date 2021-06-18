@@ -4,7 +4,6 @@ use crate::{encrypt::encrypt_data, Client, EngineError};
 use rusoto_dynamodb::*;
 use uuid::Uuid;
 use std::collections::HashMap;
-use std::{thread, time};
 
 use crate::db_connectors::dynamodb::utils::*;
 

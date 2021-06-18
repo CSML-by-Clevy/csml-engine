@@ -333,3 +333,16 @@ pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineE
     data.context.hold = None;
     return Ok(());
 }
+
+pub fn init_logger() {
+    if let Ok(debug) = env::var("DEBUG") {
+        // RUST_LOG=rusoto
+        // hyper=debug
+        if &debug == "true" {
+            env::set_var("RUST_LOG", "rusoto");
+            env::set_var("hyper", "debug");
+
+            let _ = env_logger::try_init();
+        }
+    };
+}
