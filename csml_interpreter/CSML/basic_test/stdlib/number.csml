@@ -51,6 +51,12 @@ float_1:
 
     goto end
 
+float_2:
+
+    say (100 / 3).floor()
+
+    goto end
+
 string_0:
     use "42" as string
 
