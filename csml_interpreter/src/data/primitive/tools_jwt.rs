@@ -85,7 +85,7 @@ pub fn token_data_to_literal(
     let headers = header_to_literal(&data.header, interval)?;
     map.insert("header".to_owned(), headers);
 
-    let claims = json_to_literal(&data.claims, interval.to_owned(), flow_name,)?;
+    let claims = json_to_literal(&data.claims, interval.to_owned(), flow_name)?;
     map.insert("payload".to_owned(), claims);
 
     Ok(PrimitiveObject::get_literal(&map, interval.to_owned()))
@@ -96,7 +96,12 @@ pub fn get_algorithm(
     flow_name: &str,
     interval: Interval,
 ) -> Result<jsonwebtoken::Algorithm, ErrorInfo> {
-    let algo = Literal::get_value::<String>(&lit.primitive, flow_name, interval, ERROR_JWT_ALGO.to_owned())?;
+    let algo = Literal::get_value::<String>(
+        &lit.primitive,
+        flow_name,
+        interval,
+        ERROR_JWT_ALGO.to_owned(),
+    )?;
 
     match jsonwebtoken::Algorithm::from_str(algo) {
         Ok(algorithm)

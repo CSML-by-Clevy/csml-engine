@@ -63,7 +63,7 @@ pub fn get_hashmap_from_json(lit: &serde_json::Value, flow_name: &str) -> HashMa
             end_column: None,
             offset: 0,
         },
-        flow_name
+        flow_name,
     ) {
         Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
             match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {
@@ -109,7 +109,7 @@ pub fn get_hashmap(lit: &serde_json::Value, flow_name: &str) -> HashMap<String, 
             end_column: None,
             offset: 0,
         },
-        flow_name
+        flow_name,
     ) {
         Ok(vars) if vars.primitive.get_type() == PrimitiveType::PrimitiveObject => {
             match vars.primitive.as_any().downcast_ref::<PrimitiveObject>() {

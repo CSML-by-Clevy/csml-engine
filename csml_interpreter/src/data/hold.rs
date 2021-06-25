@@ -19,7 +19,7 @@ pub struct Hold {
     pub step_vars: serde_json::Value,
     pub step_name: String,
     pub flow_name: String,
-    pub previous: Option<PreviousInfo>
+    pub previous: Option<PreviousInfo>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////

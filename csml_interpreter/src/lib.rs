@@ -37,10 +37,9 @@ fn execute_step(
     mut data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
-
     // stop execution if step_count >= STEP_LIMIT in order to avoid infinite loops
     if *data.step_count >= STEP_LIMIT {
-       let msg_data = Err(gen_error_info(
+        let msg_data = Err(gen_error_info(
             Position::new(
                 Interval::new_as_u32(0, 0, 0, None, None),
                 &data.context.flow,
@@ -48,7 +47,7 @@ fn execute_step(
             format!("{}, stop at step {}", ERROR_STEP_LIMIT, step),
         ));
 
-        return MessageData::error_to_message(msg_data, sender)
+        return MessageData::error_to_message(msg_data, sender);
     }
 
     let mut msg_data = match flow
@@ -120,7 +119,6 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     let mut imports = Vec::new();
 
     for flow in bot.flows.iter() {
-
         match parse_flow(&flow.content, &flow.name) {
             Ok(ast_flow) => {
                 for (scope, ..) in ast_flow.flow_instructions.iter() {
@@ -145,7 +143,13 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     let mut warnings = vec![];
     // only use the linter if there is no error in the paring otherwise the linter will catch false errors
     if errors.is_empty() {
-        lint_bot(&flows, &mut errors, &mut warnings, &bot.native_components, &bot.default_flow);
+        lint_bot(
+            &flows,
+            &mut errors,
+            &mut warnings,
+            &bot.native_components,
+            &bot.default_flow,
+        );
     }
 
     CsmlResult::new(FlowToValidate::get_bot(flows), warnings, errors)
@@ -205,13 +209,12 @@ pub fn interpret(
     let mut previous_info = match &context.hold {
         Some(hold) => match &hold.previous {
             Some(previous) => previous.clone(),
-            None => PreviousInfo::new(flow.clone(), step.clone())
+            None => PreviousInfo::new(flow.clone(), step.clone()),
         },
-        None => PreviousInfo::new(flow.clone(), step.clone())
+        None => PreviousInfo::new(flow.clone(), step.clone()),
     };
 
     while msg_data.exit_condition.is_none() {
-
         let ast = match flows.get(&flow) {
             Some(result) => result.to_owned(),
             None => {

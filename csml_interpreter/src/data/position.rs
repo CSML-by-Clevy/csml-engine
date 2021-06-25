@@ -1,7 +1,7 @@
 use crate::data::ast::Interval;
 
-use std::hash::Hash;
 use serde::{Deserialize, Serialize};
+use std::hash::Hash;
 
 ////////////////////////////////////////////////////////////////////////////////
 // STRUCTURE
