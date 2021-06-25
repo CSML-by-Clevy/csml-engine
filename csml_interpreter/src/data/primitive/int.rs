@@ -51,6 +51,11 @@ lazy_static! {
             (PrimitiveInt::to_string as PrimitiveMethod, Right::Read),
         );
 
+        map.insert(
+            "precision",
+            (PrimitiveInt::precision as PrimitiveMethod, Right::Read),
+        );
+
         map.insert("abs", (PrimitiveInt::abs as PrimitiveMethod, Right::Read));
         map.insert("cos", (PrimitiveInt::cos as PrimitiveMethod, Right::Read));
         map.insert("ceil", (PrimitiveInt::ceil as PrimitiveMethod, Right::Read));
@@ -250,6 +255,15 @@ impl PrimitiveInt {
         let result = result as i64;
 
         Ok(PrimitiveInt::get_literal(result, interval))
+    }
+
+    fn precision(
+        int: &mut PrimitiveInt,
+        _args: &HashMap<String, Literal>,
+        _data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        Ok(PrimitiveInt::get_literal(int.value, interval))
     }
 
     fn floor(
