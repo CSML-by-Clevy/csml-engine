@@ -1,14 +1,9 @@
-use crate::data::error_info::ErrorInfo;
-use crate::data::literal::ContentType;
-use crate::data::position::Position;
-use crate::data::primitive::boolean::PrimitiveBoolean;
-use crate::data::primitive::int::PrimitiveInt;
-use crate::data::primitive::object::PrimitiveObject;
-use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_division_by_zero_f64;
-use crate::data::primitive::Right;
-use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
+use crate::data::{
+    literal::ContentType, position::Position, error_info::ErrorInfo,
+    ast::Interval, message::Message, Data, Literal, MessageData, MSG,
+    primitive::{Right, Primitive, PrimitiveType, PrimitiveString , PrimitiveObject, PrimitiveInt, PrimitiveBoolean},
+};
 use crate::error_format::*;
 use lazy_static::*;
 use serde::{Deserialize, Serialize};
@@ -49,6 +44,11 @@ lazy_static! {
         map.insert(
             "to_string",
             (PrimitiveFloat::to_string as PrimitiveMethod, Right::Read),
+        );
+
+        map.insert(
+            "precision",
+            (PrimitiveFloat::precision as PrimitiveMethod, Right::Read),
         );
 
         map.insert("abs", (PrimitiveFloat::abs as PrimitiveMethod, Right::Read));
@@ -243,6 +243,34 @@ impl PrimitiveFloat {
         }
 
         let result = float.value.ceil();
+
+        Ok(PrimitiveFloat::get_literal(result, interval))
+    }
+
+    fn precision(
+        float: &mut PrimitiveFloat,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "precision(value) => float";
+
+        let precision =  match args.get("arg0") {
+            Some(int) if int.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                Literal::get_value::<i64>(
+                    &int.primitive,
+                    &data.context.flow,
+                    int.interval,
+                    format!("usage: {}", usage),
+                )?
+            },
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ))
+        };
+
+        let result = format!("{:.*}", *precision as usize, float.value).parse::<f64>().unwrap_or(float.value);
 
         Ok(PrimitiveFloat::get_literal(result, interval))
     }
