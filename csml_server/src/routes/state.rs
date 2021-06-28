@@ -2,7 +2,7 @@ use actix_web::{get, web, HttpResponse};
 use csml_engine::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
-
+use crate::routes::tools::validate_api_key;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ClientQuery {
@@ -12,13 +12,17 @@ pub struct ClientQuery {
 }
 
 #[get("/state")]
-pub async fn get_client_current_state(query: web::Query<ClientQuery>) -> HttpResponse {
+pub async fn get_client_current_state(query: web::Query<ClientQuery>, req: actix_web::HttpRequest) -> HttpResponse {
 
   let client = Client {
     bot_id: query.bot_id.to_owned(),
     channel_id: query.channel_id.to_owned(),
     user_id: query.user_id.to_owned()
   };
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let res = thread::spawn(move || {
     csml_engine::get_current_state(&client)

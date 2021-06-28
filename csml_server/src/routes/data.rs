@@ -2,6 +2,7 @@ use actix_web::{delete, web, HttpResponse};
 use csml_interpreter::data::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
+use crate::routes::tools::validate_api_key;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ClientQuery {
@@ -22,12 +23,16 @@ pub struct BotIdPath {
 *
 */
 #[delete("/data/clients)")]
-pub async fn delete_client(query: web::Query<ClientQuery>) -> HttpResponse {
+pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpRequest) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
         channel_id: query.channel_id.clone(),
         bot_id: query.bot_id.clone(),
     };
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::delete_client(&client)
@@ -49,7 +54,11 @@ pub async fn delete_client(query: web::Query<ClientQuery>) -> HttpResponse {
  *
  */
 #[delete("/data/bots/{bot_id}")]
-pub async fn delete_bot(path: web::Path<BotIdPath>,) -> HttpResponse {
+pub async fn delete_bot(path: web::Path<BotIdPath>, req: actix_web::HttpRequest) -> HttpResponse {
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::delete_all_bot_data(&path.bot_id)

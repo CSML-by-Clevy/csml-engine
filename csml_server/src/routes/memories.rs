@@ -2,6 +2,7 @@ use actix_web::{post, delete, get, web, HttpResponse};
 use csml_interpreter::data::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
+use crate::routes::tools::validate_api_key;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MemoryKeyPath {
@@ -29,12 +30,20 @@ pub struct Memory {
  *
  */
 #[post("/memories")]
-pub async fn create_client_memory(query: web::Query<ClientQuery>, body: web::Json<Memory>) -> HttpResponse {
+pub async fn create_client_memory(
+    query: web::Query<ClientQuery>,
+    body: web::Json<Memory>,
+    req: actix_web::HttpRequest
+) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
         channel_id: query.channel_id.clone(),
         bot_id: query.bot_id.clone(),
     };
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::create_client_memory(&client, body.key.to_owned(), body.value.to_owned())
@@ -56,7 +65,11 @@ pub async fn create_client_memory(query: web::Query<ClientQuery>, body: web::Jso
  *
  */
 #[delete("/memories/{key}")]
-pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>) -> HttpResponse {
+pub async fn delete_memory(
+    path: web::Path<MemoryKeyPath>,
+    query: web::Query<ClientQuery>,
+    req: actix_web::HttpRequest
+) -> HttpResponse {
     let memory_key = path.key.to_owned();
 
     let client = Client {
@@ -64,6 +77,10 @@ pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Cli
         channel_id: query.channel_id.clone(),
         bot_id: query.bot_id.clone(),
     };
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::delete_client_memory(&client, &memory_key)
@@ -85,12 +102,16 @@ pub async fn delete_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Cli
  *
  */
 #[delete("/memories")]
-pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
+pub async fn delete_memories(query: web::Query<ClientQuery>, req: actix_web::HttpRequest) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
         channel_id: query.channel_id.clone(),
         bot_id: query.bot_id.clone(),
     };
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::delete_client_memories(&client)
@@ -110,7 +131,7 @@ pub async fn delete_memories( query: web::Query<ClientQuery>) -> HttpResponse {
  *
  */
 #[get("/memories/{key}")]
-pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>) -> HttpResponse {
+pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<ClientQuery>, req: actix_web::HttpRequest) -> HttpResponse {
     let memory_key = path.key.to_owned();
 
     let client = Client {
@@ -118,6 +139,10 @@ pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Client
         channel_id: query.channel_id.clone(),
         bot_id: query.bot_id.clone(),
     };
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::get_client_memory(&client, &memory_key)
@@ -137,12 +162,16 @@ pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Client
 *
 */
 #[get("/memories")]
-pub async fn get_memories(query: web::Query<ClientQuery>) -> HttpResponse {
+pub async fn get_memories(query: web::Query<ClientQuery>, req: actix_web::HttpRequest) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
         channel_id: query.channel_id.clone(),
         bot_id: query.bot_id.clone(),
     };
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::get_client_memories(&client)

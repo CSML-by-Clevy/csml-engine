@@ -324,6 +324,7 @@ pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineE
     return Ok(());
 }
 
+#[cfg(feature = "dynamo")]
 pub fn init_logger() {
     if let Ok(debug) = env::var("DEBUG") {
         // RUST_LOG=rusoto

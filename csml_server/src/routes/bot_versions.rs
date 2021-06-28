@@ -6,6 +6,7 @@ use csml_engine::{
 use csml_interpreter::data::csml_bot::CsmlBot;
 use serde::{Deserialize, Serialize};
 use std::thread;
+use crate::routes::tools::validate_api_key;
 
 /**
  * create bot version
@@ -14,8 +15,12 @@ use std::thread;
  *
  */
 #[post("/bots")]
-pub async fn add_bot_version(body: web::Json<CsmlBot>) -> HttpResponse {
+pub async fn add_bot_version(body: web::Json<CsmlBot>, req: actix_web::HttpRequest) -> HttpResponse {
   let bot = body.to_owned();
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let res = thread::spawn(move || {
     create_bot_version(bot)
@@ -57,8 +62,12 @@ pub struct GetBotVersionsQuery {
  * }
  */
 #[get("/bots/{bot_id}")]
-pub async fn get_bot_latest_version(path: web::Path<BotIdPath>) -> HttpResponse {
+pub async fn get_bot_latest_version(path: web::Path<BotIdPath>, req: actix_web::HttpRequest) -> HttpResponse {
   let bot_id = path.bot_id.to_owned();
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let res = thread::spawn(move || {
     get_last_bot_version(&bot_id)
@@ -82,8 +91,13 @@ pub async fn get_bot_latest_version(path: web::Path<BotIdPath>) -> HttpResponse 
 #[delete("/bots/{bot_id}")]
 pub async fn delete_bot_versions(
   path: web::Path<BotIdPath>,
+  req: actix_web::HttpRequest,
 ) -> HttpResponse {
   let bot_id = path.bot_id.to_owned();
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let res = thread::spawn(move || {
     delete_all_bot_versions(&bot_id)
@@ -115,7 +129,7 @@ pub async fn delete_bot_versions(
  * }
  */
 #[get("/bots/{bot_id}/versions")]
-pub async fn get_bot_latest_versions(path: web::Path<BotIdPath>, query: web::Query<GetBotVersionsQuery>) -> HttpResponse {
+pub async fn get_bot_latest_versions(path: web::Path<BotIdPath>, query: web::Query<GetBotVersionsQuery>, req: actix_web::HttpRequest) -> HttpResponse {
   let bot_id = path.bot_id.to_owned();
   let limit = query.limit.to_owned();
   let pagination_key = match query.pagination_key.to_owned() {
@@ -123,6 +137,10 @@ pub async fn get_bot_latest_versions(path: web::Path<BotIdPath>, query: web::Que
     Some(pagination_key) => Some(pagination_key),
     None => None,
   };
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let res = thread::spawn(move || {
     get_bot_versions(&bot_id, limit, pagination_key)
@@ -161,9 +179,13 @@ pub struct BotVersionPath {
 #[get("/bots/{bot_id}/versions/{version_id}")]
 pub async fn get_bot_version(
   path: web::Path<BotVersionPath>
-) -> HttpResponse {
+, req: actix_web::HttpRequest) -> HttpResponse {
   let bot_id = path.bot_id.to_owned();
   let version_id = path.version_id.to_owned();
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let res = thread::spawn(move || {
     get_bot_by_version_id(&version_id, &bot_id)
@@ -187,9 +209,13 @@ pub async fn get_bot_version(
 #[delete("/bots/{bot_id}/versions/{version_id}")]
 pub async fn delete_bot_version(
   path: web::Path<BotVersionPath>
-) -> HttpResponse {
+, req: actix_web::HttpRequest) -> HttpResponse {
   let bot_id = path.bot_id.to_owned();
   let version_id = path.version_id.to_owned();
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let res = thread::spawn(move || {
     delete_bot_version_id(&version_id, &bot_id)

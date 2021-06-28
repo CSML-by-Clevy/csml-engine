@@ -3,10 +3,15 @@ use csml_engine::{start_conversation};
 use csml_engine::data::{RunRequest};
 use serde_json::{Value, json};
 use std::thread;
+use crate::routes::tools::validate_api_key;
 
 #[post("/run")]
-pub async fn handler(body: web::Json<RunRequest>) -> HttpResponse {
+pub async fn handler(body: web::Json<RunRequest>, req: actix_web::HttpRequest) -> HttpResponse {
   let mut request = body.event.to_owned();
+
+  if let Some(value) = validate_api_key(&req) {
+    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+  }
 
   let bot_opt = match body.get_bot_opt() {
     Ok(bot_opt) => bot_opt,

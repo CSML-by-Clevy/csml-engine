@@ -2,6 +2,8 @@ use actix_web::{get, web, HttpResponse};
 use csml_interpreter::data::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
+use crate::routes::tools::validate_api_key;
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConversationIdPath {
@@ -21,7 +23,7 @@ pub struct GetClientInfoQuery {
  * List all the messages a client has ever exchanged with the chatbot
  */
 #[get("/messages")]
-pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>) -> HttpResponse {
+pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>, req: actix_web::HttpRequest) -> HttpResponse {
 
     let client = Client {
         bot_id: query.bot_id.to_owned(),
@@ -35,6 +37,10 @@ pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>) -> HttpR
         Some(pagination_key) => Some(pagination_key),
         None => None,
     };
+
+    if let Some(value) = validate_api_key(&req) {
+        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    }
 
     let res = thread::spawn(move || {
         csml_engine::get_client_messages(&client, limit, pagination_key)
