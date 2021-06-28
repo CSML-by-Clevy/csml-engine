@@ -157,14 +157,14 @@ pub struct Function {
 pub enum ForgetMemory {
     ALL,
     SINGLE(Identifier),
-    LIST(Vec<Identifier>)
+    LIST(Vec<Identifier>),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
 pub enum PreviousType {
     Step(Interval),
-    Flow(Interval)
+    Flow(Interval),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

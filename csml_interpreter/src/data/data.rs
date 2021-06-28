@@ -2,7 +2,7 @@ use crate::data::context::Context;
 use crate::data::Event;
 use crate::data::{ast::*, Literal};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreviousInfo {
     pub flow: String,
-    pub step_at_flow: (String, String) // step / flow
+    pub step_at_flow: (String, String), // step / flow
 }
 
 #[derive(Debug)]
@@ -39,9 +39,9 @@ pub struct Data<'a> {
 
 impl PreviousInfo {
     pub fn new(flow: String, step: String) -> Self {
-        Self { 
+        Self {
             flow: flow.clone(),
-            step_at_flow: (step, flow)
+            step_at_flow: (step, flow),
         }
     }
 
@@ -127,7 +127,11 @@ pub fn init_child_context(data: &Data) -> Context {
     }
 }
 
-pub fn init_child_scope<'a>(data: &'a Data, context: &'a mut Context, step_count: &'a mut i32) -> Data<'a> {
+pub fn init_child_scope<'a>(
+    data: &'a Data,
+    context: &'a mut Context,
+    step_count: &'a mut i32,
+) -> Data<'a> {
     Data::new(
         &data.flows,
         &data.flow,

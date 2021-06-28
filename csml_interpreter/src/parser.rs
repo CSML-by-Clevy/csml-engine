@@ -7,7 +7,6 @@ pub mod parse_comments;
 pub mod parse_foreach;
 pub mod parse_functions;
 pub mod parse_goto;
-pub mod parse_previous;
 pub mod parse_idents;
 pub mod parse_if;
 pub mod parse_import;
@@ -15,6 +14,7 @@ pub mod parse_literal;
 pub mod parse_object;
 pub mod parse_parenthesis;
 pub mod parse_path;
+pub mod parse_previous;
 pub mod parse_scope;
 pub mod parse_string;
 pub mod parse_var_types;
@@ -23,7 +23,7 @@ pub mod step_checksum;
 pub mod tools;
 
 use crate::parser::parse_idents::parse_idents_assignation;
-pub use state_context::{ExitCondition};
+pub use state_context::ExitCondition;
 
 use crate::data::position::Position;
 use crate::data::{ast::*, tokens::*};
@@ -113,14 +113,15 @@ pub fn parse_flow<'a>(slice: &'a str, flow_name: &'a str) -> Result<Flow, ErrorI
                 };
 
                 Err(gen_error_info(
-                    Position::new(Interval::new_as_u32(
+                    Position::new(
+                        Interval::new_as_u32(
                             err.input.location_line(),
                             err.input.get_column() as u32,
                             err.input.location_offset(),
                             end_line,
                             end_column,
                         ),
-                        flow_name
+                        flow_name,
                     ),
                     convert_error_from_span(Span::new(slice), err),
                 ))

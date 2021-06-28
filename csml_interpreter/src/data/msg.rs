@@ -1,7 +1,6 @@
 use crate::data::{
-    ast::ForgetMemory, primitive::PrimitiveNull,
-    hold::Hold, message::Message, Literal, Memory, MessageData,
-    error_info::ErrorInfo
+    ast::ForgetMemory, error_info::ErrorInfo, hold::Hold, message::Message,
+    primitive::PrimitiveNull, Literal, Memory, MessageData,
 };
 
 use std::sync::mpsc;

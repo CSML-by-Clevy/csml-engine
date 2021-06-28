@@ -35,7 +35,7 @@ pub use message::Message;
 pub use message_data::MessageData;
 pub use position::Position;
 
-pub use msg::{MSG};
+pub use msg::MSG;
 
 // limit of steps in a single execution
 pub static STEP_LIMIT: i32 = 100;

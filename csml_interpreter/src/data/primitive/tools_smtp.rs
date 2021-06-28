@@ -1,18 +1,13 @@
-use crate::error_format::*;
 use crate::data::{
-    Literal, primitive::PrimitiveType,
-    ast::Interval,
-    primitive::{
-        Data,
-    },
-    error_info::ErrorInfo,
-    position::Position
+    ast::Interval, error_info::ErrorInfo, position::Position, primitive::Data,
+    primitive::PrimitiveType, Literal,
 };
-use std::{collections::HashMap};
+use crate::error_format::*;
 use lettre::{
-    message::{header, MultiPart, SinglePart, Mailbox},
-    transport::smtp::authentication::Credentials
+    message::{header, Mailbox, MultiPart, SinglePart},
+    transport::smtp::authentication::Credentials,
 };
+use std::collections::HashMap;
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,15 +19,18 @@ fn format_email_value<'a>(
     data: &'a Data,
     interval: Interval,
 ) -> Result<Option<&'a String>, ErrorInfo> {
-    let error_message = format!("email [{}] value need to be of type String {}", value, additional_info);
+    let error_message = format!(
+        "email [{}] value need to be of type String {}",
+        value, additional_info
+    );
 
     match email.get(value) {
         Some(lit) => {
             if lit.primitive.get_type() != PrimitiveType::PrimitiveString {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     error_message,
-                ))
+                ));
             }
 
             let value = Literal::get_value::<String>(
@@ -44,17 +42,17 @@ fn format_email_value<'a>(
 
             Ok(Some(value))
         }
-        None => Ok(None)
+        None => Ok(None),
     }
 }
 
-fn parse_email(email_str: &str, data: &Data, interval: Interval) -> Result<Mailbox, ErrorInfo>{
+fn parse_email(email_str: &str, data: &Data, interval: Interval) -> Result<Mailbox, ErrorInfo> {
     match email_str.parse::<Mailbox>() {
         Ok(mbox) => Ok(mbox),
         Err(e) => Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
-            format!("Invalid email format: {:?}", e)
-        ))
+            Position::new(interval, &data.context.flow),
+            format!("Invalid email format: {:?}", e),
+        )),
     }
 }
 
@@ -62,7 +60,7 @@ fn get_value<'a, T>(
     value: Option<&'a Literal>,
     data: &Data,
     error_message: String,
-    interval: Interval
+    interval: Interval,
 ) -> Result<&'a T, ErrorInfo>
 where
     T: 'static,
@@ -72,12 +70,12 @@ where
             &lit.primitive,
             &data.context.flow,
             lit.interval,
-            error_message
+            error_message,
         ),
         None => Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             error_message,
-        ))
+        )),
     }
 }
 
@@ -123,7 +121,7 @@ pub fn format_email(
     }
 
     let subject = format_email_value(&email, "subject", "", data, interval)?;
-    if let Some (subject) = subject {
+    if let Some(subject) = subject {
         message_builder = message_builder.subject(subject.to_owned());
     }
 
@@ -132,9 +130,9 @@ pub fn format_email(
 
     if text.is_none() && html.is_none() {
         return Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             "email text/html parameter is mandatory".to_owned(),
-        ))
+        ));
     }
 
     let mut multipart = MultiPart::alternative().build();
@@ -143,7 +141,7 @@ pub fn format_email(
         multipart = multipart.singlepart(
             SinglePart::builder()
                 .header(header::ContentType::TEXT_PLAIN)
-                .body(String::from(text)), 
+                .body(String::from(text)),
         );
     }
     if let Some(html) = html {
@@ -157,9 +155,9 @@ pub fn format_email(
     match message_builder.multipart(multipart) {
         Ok(message) => Ok(message),
         Err(_) => Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             "missing mandatory email parameter [from] or [to]".to_owned(),
-        ))
+        )),
     }
 }
 
@@ -168,75 +166,56 @@ pub fn get_mailer(
     data: &Data,
     interval: Interval,
 ) -> Result<lettre::SmtpTransport, ErrorInfo> {
-
     let username = get_value::<String>(
-        object.get("username"), 
-        data, 
-        "username is missing or invalid type".to_owned(), 
-        interval
+        object.get("username"),
+        data,
+        "username is missing or invalid type".to_owned(),
+        interval,
     )?;
     let password = get_value::<String>(
-        object.get("password"), 
-        data, 
-        "password is missing or invalid type".to_owned(), 
-        interval
+        object.get("password"),
+        data,
+        "password is missing or invalid type".to_owned(),
+        interval,
     )?;
     // set default port to [465] for TLS connections. RFC8314](https://tools.ietf.org/html/rfc8314)
-    let port = match get_value::<u16>(
-        object.get("port"), 
-        data, 
-        "".to_owned(), 
-        interval
-    ) {
+    let port = match get_value::<u16>(object.get("port"), data, "".to_owned(), interval) {
         Ok(port_value) => port_value.to_owned(),
-        Err(_) => 465
+        Err(_) => 465,
     };
     let smtp_server = get_value::<String>(
-        object.get("smtp_server"), 
-        data, 
-        "SMTP server address is missing or invalid type".to_owned(), 
-        interval
+        object.get("smtp_server"),
+        data,
+        "SMTP server address is missing or invalid type".to_owned(),
+        interval,
     )?;
 
     let credentials = Credentials::new(username.to_string(), password.to_string());
 
-    let is_tls = match get_value::<bool>(
-        object.get("tls"), 
-        data, 
-        "".to_owned(), 
-        interval
-    ) {
+    let is_tls = match get_value::<bool>(object.get("tls"), data, "".to_owned(), interval) {
         Ok(tls_value) => tls_value.to_owned(),
-        Err(_) => true
+        Err(_) => true,
     };
 
     match is_tls {
-        true => {
-            match lettre::SmtpTransport::relay(smtp_server) {
-                Ok(smtp_server) => {
-                    let mailer =  smtp_server
-                    .credentials(credentials)
-                    .port(port)
-                    .build();
-        
-                    Ok(mailer)
-                }
-                Err(_) => Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
-                    "invalid SMTP address".to_owned(),
-                ))
+        true => match lettre::SmtpTransport::relay(smtp_server) {
+            Ok(smtp_server) => {
+                let mailer = smtp_server.credentials(credentials).port(port).build();
+
+                Ok(mailer)
             }
+            Err(_) => Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                "invalid SMTP address".to_owned(),
+            )),
         },
         false => {
             let mailer = lettre::SmtpTransport::builder_dangerous(smtp_server)
-            .credentials(credentials)
-            .port(port)
-            .build();
+                .credentials(credentials)
+                .port(port)
+                .build();
 
             Ok(mailer)
         }
     }
-    
-
-    
 }

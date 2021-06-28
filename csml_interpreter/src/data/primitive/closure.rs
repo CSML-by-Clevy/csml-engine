@@ -12,12 +12,16 @@ use crate::data::{
     Data, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
-use lazy_static::*;
+use phf::phf_map;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
 
-pub fn capture_variables(literal: &mut Literal, memories: HashMap<String, Literal>, flow_name: &str) {
+pub fn capture_variables(
+    literal: &mut Literal,
+    memories: HashMap<String, Literal>,
+    flow_name: &str,
+) {
     if literal.content_type == "closure" {
         let mut closure = Literal::get_mut_value::<PrimitiveClosure>(
             &mut literal.primitive,
@@ -34,41 +38,20 @@ pub fn capture_variables(literal: &mut Literal, memories: HashMap<String, Litera
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
+const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "is_number" => (PrimitiveClosure::is_number as PrimitiveMethod, Right::Read),
+    "is_int" => (PrimitiveClosure::is_int as PrimitiveMethod, Right::Read),
+    "is_float" => (PrimitiveClosure::is_float as PrimitiveMethod, Right::Read),
+    "type_of" => (PrimitiveClosure::type_of as PrimitiveMethod, Right::Read),
+    "to_string" => (PrimitiveClosure::to_string as PrimitiveMethod, Right::Read),
+};
+
 type PrimitiveMethod = fn(
     int: &mut PrimitiveClosure,
     args: &HashMap<String, Literal>,
     data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
-
-lazy_static! {
-    static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "is_number",
-            (PrimitiveClosure::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_int",
-            (PrimitiveClosure::is_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_float",
-            (PrimitiveClosure::is_float as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "type_of",
-            (PrimitiveClosure::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveClosure::to_string as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveClosure {

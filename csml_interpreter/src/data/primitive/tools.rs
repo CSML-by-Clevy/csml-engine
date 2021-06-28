@@ -23,7 +23,11 @@ pub fn get_integer(text: &str) -> Result<Integer, String> {
     }
 }
 
-pub fn get_array(literal: Literal, flow_name: &str, error_message: String) -> Result<Vec<Literal>, ErrorInfo> {
+pub fn get_array(
+    literal: Literal,
+    flow_name: &str,
+    error_message: String,
+) -> Result<Vec<Literal>, ErrorInfo> {
     match literal.primitive.get_type() {
         PrimitiveType::PrimitiveString => {
             let string = Literal::get_value::<String>(
