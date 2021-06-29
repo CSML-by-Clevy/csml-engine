@@ -12,10 +12,6 @@ use csml_interpreter::{
     },
     load_components, validate_bot,
 };
-use curl::{
-    easy::{Easy, List},
-    Error as CurlError,
-};
 use std::collections::HashMap;
 
 /**
@@ -44,23 +40,6 @@ pub fn init_conversation_info<'a>(
     let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
     let mut context = init_context(default_flow, request.client.clone(), &bot.fn_endpoint);
 
-    // Create and cache a curl agent to call the callback_url for every new message.
-    // If no callback_url is set, no message will be sent as they are processed and
-    // they will only be returned at the end of the fully-processed and successful request.
-    let curl = match request.callback_url {
-        Some(ref url) => {
-            if let Ok(curl) = init_curl(url) {
-                Some(curl)
-            } else {
-                return Err(EngineError::Manager(format!(
-                    "not valid callback_url {}",
-                    url
-                )));
-            }
-        }
-        None => None,
-    };
-
     // Do we have a flow matching the request? If the user is requesting a flow in one way
     // or another, this takes precedence over any previously open conversation
     // and a new conversation is created with the new flow as a starting point.
@@ -82,7 +61,7 @@ pub fn init_conversation_info<'a>(
         context,
         metadata: request.metadata.clone(), // ??
         request_id: request.request_id.clone(),
-        curl,
+        callback_url: request.callback_url.clone(),
         client: request.client.clone(),
         messages: vec![],
         db,
@@ -151,22 +130,6 @@ pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) 
         step: "start".to_owned(),
         flow,
     }
-}
-
-/**
- * Initialize a curl agent for standardized post requests to a given url.
- * It should be cached whenever possible to reuse existing connections.
- */
-pub fn init_curl(url: &str) -> Result<Easy, CurlError> {
-    let mut easy = Easy::new();
-    let mut list = List::new();
-    easy.url(url)?;
-    easy.post(true)?;
-
-    list.append("Accept: application/json")?;
-    list.append("Content-Type: application/json")?;
-    easy.http_headers(list)?;
-    Ok(easy)
 }
 
 /**

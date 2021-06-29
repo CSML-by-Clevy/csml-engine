@@ -154,10 +154,7 @@ pub fn send_msg_to_callback_url(
         _ => (),
     };
 
-    match serde_json::to_string(&messages) {
-        Ok(string) => send_to_callback_url(data, string.as_bytes()),
-        Err(_err) => (),
-    };
+    send_to_callback_url(data, serde_json::json!(messages))
 }
 
 /**

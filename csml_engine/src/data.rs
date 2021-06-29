@@ -1,6 +1,5 @@
 use crate::{Client, Context, db_connectors, encrypt::{decrypt_data, encrypt_data}};
 use csml_interpreter::data::{CsmlBot, CsmlFlow, Message};
-use curl::easy::Easy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -336,9 +335,9 @@ impl DynamoDbClient {
 
 pub struct ConversationInfo {
     pub request_id: String,
-    pub curl: Option<Easy>,
     pub conversation_id: String,
     pub interaction_id: String,
+    pub callback_url: Option<String>,
     pub client: Client,
     pub context: Context,
     pub metadata: Value,
