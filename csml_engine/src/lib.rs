@@ -1,12 +1,12 @@
 pub mod data;
 pub use csml_interpreter::{
-    load_components,
     data::{
         ast::{Expr, Flow, InstructionScope},
         error_info::ErrorInfo,
         warnings::Warnings,
         Client, CsmlResult,
-    }
+    },
+    load_components,
 };
 use serde_json::json;
 
@@ -21,7 +21,7 @@ mod utils;
 
 use data::*;
 use db_connectors::{
-    bot, memories, user, messages, conversations, init_db, state, BotVersion, BotVersionCreated,
+    bot, conversations, init_db, memories, messages, state, user, BotVersion, BotVersionCreated,
     DbConversation,
 };
 use init::*;
@@ -95,7 +95,6 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
     conversations::get_latest_open(client, &mut db)
 }
 
-
 pub fn get_client_memories(client: &Client) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
     init_logger();
@@ -154,7 +153,7 @@ pub fn create_client_memory(
     init_logger();
     validate_memory_key_format(&key)?;
 
-    memories::create_client_memory(client, key, value , &mut db)
+    memories::create_client_memory(client, key, value, &mut db)
 }
 
 /**
@@ -270,11 +269,11 @@ pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
 /**
  * Delete a single memory for a given Client
  */
-pub fn delete_client_memory(client: &Client, memory_name: &str,) -> Result<(), EngineError> {
+pub fn delete_client_memory(client: &Client, memory_name: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
     init_logger();
 
-    memories::delete_client_memory(client, memory_name ,&mut db)
+    memories::delete_client_memory(client, memory_name, &mut db)
 }
 
 /**
@@ -303,11 +302,13 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
     // load native components into the bot
     bot.native_components = match load_components() {
         Ok(components) => Some(components),
-        Err(err) => return CsmlResult {
-            errors: Some(vec!(err)),
-            warnings: None,
-            flows: None
-        },
+        Err(err) => {
+            return CsmlResult {
+                errors: Some(vec![err]),
+                warnings: None,
+                flows: None,
+            }
+        }
     };
 
     csml_interpreter::validate_bot(&bot)
@@ -366,13 +367,66 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 step_vars: hold["step_vars"].clone(),
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),
-                previous: serde_json::from_value(hold["previous"].clone()).unwrap_or(None)
+                previous: serde_json::from_value(hold["previous"].clone()).unwrap_or(None),
             });
-           state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
+            state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }
         // user is not on hold
         Ok(None) => (),
         Err(_) => (),
     };
     Ok(())
+}
+
+/**
+ * get server status
+ */
+pub fn get_status() -> Result<serde_json::Value, EngineError> {
+    let mut status = serde_json::Map::new();
+
+    let mut ready = true;
+
+    match std::env::var("ENGINE_DB_TYPE") {
+        Ok(db_name) => match init_db() {
+            Ok(_) => status.insert("Database".to_owned(), serde_json::json!(db_name)),
+            Err(_) => {
+                ready = false;
+                status.insert(
+                    "Database".to_owned(),
+                    serde_json::json!(format!("{} setup error", db_name)),
+                )
+            }
+        },
+        Err(_) => {
+            ready = false;
+            status.insert("Database".to_owned(), serde_json::json!("error"))
+        }
+    };
+
+    match ready {
+        true => status.insert("Server_Ready".to_owned(), serde_json::json!(true)),
+        false => status.insert("".to_owned(), serde_json::json!(false)),
+    };
+
+    match std::env::var("ENGINE_SERVER_PORT") {
+        Ok(port) => status.insert("Port".to_owned(), serde_json::json!(port)),
+        Err(_) => status.insert("Port".to_owned(), serde_json::json!(5000)), // DEFAULT
+    };
+
+    match std::env::var("ENCRYPTION_SECRET") {
+        Ok(_) => status.insert("DB_Encryption".to_owned(), serde_json::json!(true)),
+        Err(_) => status.insert("DB_Encryption".to_owned(), serde_json::json!(false)),
+    };
+
+    match std::env::var("DEBUG") {
+        Ok(_) => status.insert("Debug_Mode".to_owned(), serde_json::json!(true)),
+        Err(_) => status.insert("DEBUG_MODE".to_owned(), serde_json::json!(false)),
+    };
+
+    match std::env::var("API_KEY") {
+        Ok(_) => status.insert("Server_Auth".to_owned(), serde_json::json!(true)),
+        Err(_) => status.insert("Server_Auth".to_owned(), serde_json::json!(false)),
+    };
+
+    Ok(serde_json::json!(status))
 }

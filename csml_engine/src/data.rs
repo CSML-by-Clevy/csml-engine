@@ -1,4 +1,8 @@
-use crate::{Client, Context, db_connectors, encrypt::{decrypt_data, encrypt_data}};
+use crate::{
+    db_connectors,
+    encrypt::{decrypt_data, encrypt_data},
+    Client, Context,
+};
 use csml_interpreter::data::{CsmlBot, CsmlFlow, Message};
 use curl::easy::Easy;
 use serde::{Deserialize, Serialize};
@@ -10,7 +14,7 @@ pub const DISABLE_SSL_VERIFY: &str = "DISABLE_SSL_VERIFY";
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FlowTrigger {
     pub flow_id: String,
-    pub step_id: Option<String>
+    pub step_id: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -136,7 +140,7 @@ impl CsmlBotBincode {
             native_components: self.native_components,
             custom_components: self.custom_components,
             default_flow: self.default_flow,
-            env: None
+            env: None,
         }
     }
 }
@@ -162,7 +166,7 @@ pub fn to_serializable_bot(bot: &CsmlBot) -> SerializeCsmlBot {
         env: match &bot.env {
             Some(value) => encrypt_data(value).ok(),
             None => None,
-        }
+        },
     }
 }
 
@@ -196,7 +200,7 @@ impl SerializeCsmlBot {
             env: match self.custom_components.to_owned() {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,
-            }
+            },
         }
     }
 }
@@ -207,7 +211,7 @@ pub struct DynamoBot {
     pub name: String,
     pub custom_components: Option<String>,
     pub default_flow: String,
-    pub env: Option<String>
+    pub env: Option<String>,
 }
 
 /**
@@ -232,7 +236,7 @@ impl DynamoBotBincode {
             name: self.name,
             custom_components: self.custom_components,
             default_flow: self.default_flow,
-            env: None
+            env: None,
         }
     }
 }
@@ -249,7 +253,7 @@ pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
         env: match &csml_bot.env {
             Some(value) => encrypt_data(value).ok(),
             None => None,
-        }
+        },
     }
 }
 
@@ -305,11 +309,8 @@ pub struct MongoDbClient {
 #[cfg(feature = "mongo")]
 impl MongoDbClient {
     pub fn new(client: mongodb::sync::Database) -> Self {
-        Self {
-            client,
-        }
+        Self { client }
     }
-
 }
 /**
  * Dynamodb runs in async by default and returns futures, that need to be awaited on.
