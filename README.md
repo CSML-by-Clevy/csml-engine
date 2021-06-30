@@ -118,10 +118,10 @@ DISABLE_SSL_VERIFY=false
 DEBUG=true
 ```
 
-### Deploy on Heroku
+### Deploy to Heroku
 
 <a href="https://heroku.com/deploy?template=https://github.com/CSML-by-Clevy/csml-engine/tree/masters">
-  <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy">
+  <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
 </a>
 
 ### Using a ready-to-use binary (Linux and MacOS only)
