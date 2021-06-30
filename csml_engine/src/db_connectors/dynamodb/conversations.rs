@@ -26,6 +26,7 @@ pub fn create_conversation(
     let future = client.put_item(input);
 
     db.runtime.block_on(future)?;
+
     Ok(data.id.to_owned())
 }
 
@@ -176,7 +177,12 @@ fn get_all_open_conversations(
     };
 
     let query = db.client.query(input);
-    let data = db.runtime.block_on(query)?;
+    let data = match db.runtime.block_on(query) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("get_all_open_conversations {:?}", e)))
+        }
+    };
 
     let keys = match data.items {
         Some(items) => items
@@ -259,7 +265,13 @@ pub fn get_latest_open(
     };
 
     let query = db.client.query(input);
-    let data = db.runtime.block_on(query)?;
+    let data = match db.runtime.block_on(query) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("get_latest_open {:?}", e)))
+        }
+    };
+
 
     // The query returns an array of items (max 1, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -295,7 +307,7 @@ pub fn update_conversation(
 
     // make sure that if the item does not already exist, it is NOT created automatically
     let condition_expr = "#hashKey = :hashVal AND #rangeKey = :rangeVal".to_string();
-    let expr_attr_names = [
+    let expr_attr_names: HashMap<String, String> = [
         ("#hashKey".to_string(), "hash".to_string()),
         ("#rangeKey".to_string(), "range".to_string()),
     ]
@@ -369,9 +381,12 @@ pub fn update_conversation(
     };
 
     let future = db.client.update_item(input);
-    db.runtime.block_on(future)?;
-
-    Ok(())
+    match db.runtime.block_on(future) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            return Err(EngineError::Manager(format!("update_conversation {:?}", e)))
+        }
+    }
 }
 
 
@@ -421,7 +436,12 @@ fn query_conversation(
     };
 
     let future = db.client.query(input);
-    let data = db.runtime.block_on(future)?;
+    let data = match db.runtime.block_on(future) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("query_conversation {:?}", e)))
+        }
+    };
 
     Ok(data)
 }
@@ -519,7 +539,7 @@ pub fn get_client_conversations(
     .collect();
 
     let data = query_conversation(
-        client, 
+        client,
         db,
         limit,
         pagination_key,

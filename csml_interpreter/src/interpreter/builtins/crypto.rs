@@ -6,10 +6,10 @@ use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
 
 pub fn crypto(args: ArgsType, flow_name: &str,interval: Interval) -> Result<Literal, ErrorInfo> {
-    let mut map: HashMap<String, Literal> = HashMap::new();
-
     match args.get("value", 0) {
         Some(value) => {
+            let mut map: HashMap<String, Literal> = HashMap::new();
+
             map.insert("value".to_owned(), value.to_owned());
             let mut result = PrimitiveObject::get_literal(&map, interval);
 
@@ -18,7 +18,7 @@ pub fn crypto(args: ArgsType, flow_name: &str,interval: Interval) -> Result<Lite
         }
         _ => Err(gen_error_info(
             Position::new(interval, flow_name),
-            ERROR_HTTP.to_owned(),
+            ERROR_CRYPTO.to_owned(),
         )),
     }
 }

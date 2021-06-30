@@ -117,7 +117,8 @@ pub fn expr_to_literal(
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::InfixExpr(infix, exp_1, exp_2) => {
-            evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)
+            let mut literal = evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)?;
+            exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::LitExpr { literal, .. } => {
             let mut new_value = exec_path_literal(

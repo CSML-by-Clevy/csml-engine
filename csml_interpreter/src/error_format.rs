@@ -1,7 +1,7 @@
 pub mod data;
 
 use crate::data::tokens::Span;
-use crate::data::{position::Position, Interval, warnings::Warnings};
+use crate::data::{position::Position, warnings::Warnings, Interval};
 use nom::{
     error::{ErrorKind, ParseError},
     *,
@@ -66,7 +66,8 @@ pub const ERROR_FUNCTIONS_ARGS: &str = "function arguments must be in an array";
 pub const ERROR_EXPR_TO_LITERAL: &str = "expression can't be converted to Literal";
 pub const ERROR_PAYLOAD_EXCEED_MAX_SIZE: &str = "payload exceeds max payload size (16kb)";
 
-pub const ERROR_STEP_LIMIT: &str = "[Infinite loop] Step limit reached: 100 steps where executed in a single run";
+pub const ERROR_STEP_LIMIT: &str =
+    "[Infinite loop] Step limit reached: 100 steps where executed in a single run";
 
 // Event
 pub const ERROR_EVENT_CONTENT_TYPE: &str = "event can only be of ContentType::Event";
@@ -134,12 +135,24 @@ pub const ERROR_AUDIO: &str =
     "Audio component expects one argument of type string. Example: Audio(url = \"hola\")";
 pub const ERROR_FILE: &str =
     "File component expects one argument of type string. Example: File(url = \"hola\")";
-pub const ERROR_HTTP: &str =
-    "HTTP builtin expects one url of type string. Example: HTTP(\"https://clevy.io\")";
 pub const ERROR_HTTP_GET_VALUE: &str =
-"not found in HTTP object. Use the HTTP() builtin to construct the correct object to make HTTP calls";
+    "not found in HTTP object. Use the HTTP() builtin to construct the correct object to make HTTP calls";
 pub const ERROR_HTTP_QUERY_VALUES: &str =
     "must have a value of type String. Example: {key: \"value\"}";
+pub const ERROR_HTTP: &str =
+    "HTTP builtin expects one url of type string. Example: HTTP(\"https://clevy.io\")";
+pub const ERROR_JWT: &str = "JWT builtin expects payload as argument. Example: JWT({
+        \"user\": \"name\",
+        \"somekey\": {
+          \"somevalue\": 42
+        },
+        \"exp\": 1618064023,
+        \"iss\": \"CSML STUDIO\"
+      })";
+pub const ERROR_SMTP: &str =
+    "SMTP builtin expects SMTP Server Address. Example: SMTP(\"smtp.gmail.com\")";
+pub const ERROR_CRYPTO: &str =
+    "CRYPTO builtin expects one argument of type string. Example: CRYPTO(\"text\")";
 pub const ERROR_BUILTIN_UNKNOWN: &str = "Unknown builtin";
 
 // ### native Components
@@ -356,10 +369,7 @@ pub fn gen_error_info(position: Position, message: String) -> ErrorInfo {
 }
 
 pub fn gen_warning_info(position: Position, message: String) -> Warnings {
-    Warnings {
-        position,
-        message
-    }
+    Warnings { position, message }
 }
 
 pub fn gen_nom_error<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>
@@ -410,8 +420,10 @@ pub fn convert_error_from_interval<'a>(
 }
 
 pub fn gen_infinite_loop_error_msg(infinite_loop: Vec<(String, String)>) -> String {
-    infinite_loop.iter().fold( String::new(), |mut acc, (flow, step)| {
-        acc.push_str(&format!("[flow] {}, [step] {}\n", flow, step));
-        acc
-    })
+    infinite_loop
+        .iter()
+        .fold(String::new(), |mut acc, (flow, step)| {
+            acc.push_str(&format!("[flow] {}, [step] {}\n", flow, step));
+            acc
+        })
 }

@@ -13,7 +13,7 @@ use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::json_to_literal;
-use lazy_static::*;
+use phf::phf_map;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -32,170 +32,43 @@ type PrimitiveMethod = fn(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo>;
 
-lazy_static! {
-    static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
+const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "is_number" => (PrimitiveString::is_number as PrimitiveMethod, Right::Read),
+    "is_int" => (PrimitiveString::is_int as PrimitiveMethod, Right::Read),
+    "is_float" => (PrimitiveString::is_float as PrimitiveMethod, Right::Read),
+    "type_of" => (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
+    "to_string" => (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
 
-        map.insert(
-            "is_number",
-            (PrimitiveString::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_int",
-            (PrimitiveString::is_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_float",
-            (PrimitiveString::is_float as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_email",
-            (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "type_of",
-            (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "append",
-            (PrimitiveString::append as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "contains",
-            (PrimitiveString::contains as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "contains_regex",
-            (
-                PrimitiveString::contains_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "ends_with",
-            (PrimitiveString::ends_with as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "ends_with_regex",
-            (
-                PrimitiveString::ends_with_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "from_json",
-            (PrimitiveString::from_json as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_empty",
-            (PrimitiveString::is_empty as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "length",
-            (PrimitiveString::length as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "match",
-            (PrimitiveString::do_match as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "match_regex",
-            (
-                PrimitiveString::do_match_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "starts_with",
-            (PrimitiveString::starts_with as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "starts_with_regex",
-            (
-                PrimitiveString::starts_with_regex as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "to_lowercase",
-            (
-                PrimitiveString::to_lowercase as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "to_uppercase",
-            (
-                PrimitiveString::to_uppercase as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "capitalize",
-            (PrimitiveString::capitalize as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "slice",
-            (PrimitiveString::slice as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "split",
-            (PrimitiveString::split as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "abs",
-            (PrimitiveString::abs as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "cos",
-            (PrimitiveString::cos as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "ceil",
-            (PrimitiveString::ceil as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "floor",
-            (PrimitiveString::floor as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "pow",
-            (PrimitiveString::pow as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "round",
-            (PrimitiveString::round as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "sin",
-            (PrimitiveString::sin as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "sqrt",
-            (PrimitiveString::sqrt as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "tan",
-            (PrimitiveString::tan as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_int",
-            (PrimitiveString::to_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_float",
-            (PrimitiveString::to_float as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
+    "is_email" => (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
+    "append" => (PrimitiveString::append as PrimitiveMethod, Right::Read),
+    "contains" => (PrimitiveString::contains as PrimitiveMethod, Right::Read),
+    "contains_regex" => (PrimitiveString::contains_regex as PrimitiveMethod, Right::Read),
+    "ends_with" => (PrimitiveString::ends_with as PrimitiveMethod, Right::Read),
+    "ends_with_regex" => (PrimitiveString::ends_with_regex as PrimitiveMethod, Right::Read),
+    "from_json" => (PrimitiveString::from_json as PrimitiveMethod, Right::Read),
+    "is_empty" => (PrimitiveString::is_empty as PrimitiveMethod, Right::Read),
+    "length" => (PrimitiveString::length as PrimitiveMethod, Right::Read),
+    "match" => (PrimitiveString::do_match as PrimitiveMethod, Right::Read),
+    "match_regex" => (PrimitiveString::do_match_regex as PrimitiveMethod, Right::Read),
+    "starts_with" => (PrimitiveString::starts_with as PrimitiveMethod, Right::Read),
+    "starts_with_regex" => (PrimitiveString::starts_with_regex as PrimitiveMethod, Right::Read),
+    "to_lowercase" => (PrimitiveString::to_lowercase as PrimitiveMethod, Right::Read),
+    "to_uppercase" => (PrimitiveString::to_uppercase as PrimitiveMethod, Right::Read),
+    "capitalize" => (PrimitiveString::capitalize as PrimitiveMethod, Right::Read),
+    "slice" => (PrimitiveString::slice as PrimitiveMethod, Right::Read),
+    "split" => (PrimitiveString::split as PrimitiveMethod, Right::Read),
+    "abs" => (PrimitiveString::abs as PrimitiveMethod, Right::Read),
+    "cos" => (PrimitiveString::cos as PrimitiveMethod, Right::Read),
+    "ceil" =>(PrimitiveString::ceil as PrimitiveMethod, Right::Read),
+    "floor" => (PrimitiveString::floor as PrimitiveMethod, Right::Read),
+    "pow" => (PrimitiveString::pow as PrimitiveMethod, Right::Read),
+    "round" => (PrimitiveString::round as PrimitiveMethod, Right::Read),
+    "sin" => (PrimitiveString::sin as PrimitiveMethod, Right::Read),
+    "sqrt" => (PrimitiveString::sqrt as PrimitiveMethod, Right::Read),
+    "tan" => (PrimitiveString::tan as PrimitiveMethod, Right::Read),
+    "to_int" => (PrimitiveString::to_int as PrimitiveMethod, Right::Read),
+    "to_float" =>(PrimitiveString::to_float as PrimitiveMethod, Right::Read),
+};
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveString {
@@ -219,7 +92,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -241,7 +114,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -263,7 +136,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -290,7 +163,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -317,7 +190,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -337,7 +210,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -359,7 +232,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -377,7 +250,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_APPEND.to_owned(),
                 ));
             }
@@ -400,7 +273,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -416,7 +289,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_DO_MATCH.to_owned(),
                 ));
             }
@@ -439,7 +312,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -455,7 +328,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
@@ -465,7 +338,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_CONTAINS_REGEX.to_owned(),
                 ));
             }
@@ -488,7 +361,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -504,7 +377,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_END_WITH.to_owned(),
                 ));
             }
@@ -527,7 +400,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -543,7 +416,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
@@ -553,7 +426,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_END_WITH_REGEX.to_owned(),
                 ));
             }
@@ -580,7 +453,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -589,13 +462,13 @@ impl PrimitiveString {
             Ok(result) => result,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_FROM_JSON.to_owned(),
                 ));
             }
         };
 
-        json_to_literal(&object, interval, &data.context.flow,)
+        json_to_literal(&object, interval, &data.context.flow)
     }
 
     fn is_empty(
@@ -610,7 +483,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -632,7 +505,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -654,7 +527,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -672,7 +545,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_DO_MATCH.to_owned(),
                 ));
             }
@@ -701,7 +574,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -720,7 +593,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_MATCH_REGEX.to_owned(),
                 ));
             }
@@ -730,7 +603,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
@@ -763,7 +636,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -779,7 +652,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_START_WITH.to_owned(),
                 ));
             }
@@ -802,7 +675,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -818,7 +691,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_START_WITH_REGEX.to_owned(),
                 ));
             }
@@ -828,7 +701,7 @@ impl PrimitiveString {
             Ok(res) => res,
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_STRING_VALID_REGEX.to_owned(),
                 ));
             }
@@ -855,7 +728,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -876,7 +749,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -897,7 +770,7 @@ impl PrimitiveString {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -944,7 +817,7 @@ impl PrimitiveString {
                         value if value.is_positive() && (value as usize) < len => value as usize,
                         _ => {
                             return Err(gen_error_info(
-                                Position::new(interval, &data.context.flow,),
+                                Position::new(interval, &data.context.flow),
                                 ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
@@ -955,7 +828,7 @@ impl PrimitiveString {
                     Ok(PrimitiveString::get_literal(&value, interval))
                 }
                 _ => Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_SLICE_ARG_INT.to_owned(),
                 )),
             },
@@ -985,7 +858,7 @@ impl PrimitiveString {
                     }
                     if int_end < int_start {
                         return Err(gen_error_info(
-                            Position::new(interval, &data.context.flow,),
+                            Position::new(interval, &data.context.flow),
                             ERROR_SLICE_ARG2.to_owned(),
                         ));
                     }
@@ -1001,7 +874,7 @@ impl PrimitiveString {
                         }
                         _ => {
                             return Err(gen_error_info(
-                                Position::new(interval, &data.context.flow,),
+                                Position::new(interval, &data.context.flow),
                                 ERROR_SLICE_ARG_LEN.to_owned(),
                             ))
                         }
@@ -1011,12 +884,12 @@ impl PrimitiveString {
                     Ok(PrimitiveString::get_literal(&value, interval))
                 }
                 _ => Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_SLICE_ARG_INT.to_owned(),
                 )),
             },
             _ => Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             )),
         }
@@ -1034,7 +907,7 @@ impl PrimitiveString {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1050,7 +923,7 @@ impl PrimitiveString {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_ARRAY_JOIN.to_owned(),
                 ));
             }
@@ -1107,7 +980,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "abs", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1153,7 +1026,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "cos", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1198,7 +1071,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "ceil", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1243,7 +1116,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "pow", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1288,7 +1161,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "floor", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1333,7 +1206,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "round", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1378,7 +1251,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "sin", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1423,7 +1296,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "sqrt", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1468,7 +1341,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "tan", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1513,7 +1386,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "to_int", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1558,7 +1431,7 @@ impl PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", "to_float", ERROR_STRING_NUMERIC),
         ))
     }
@@ -1875,7 +1748,7 @@ impl Primitive for PrimitiveString {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", name, ERROR_STRING_UNKNOWN_METHOD),
         ))
     }

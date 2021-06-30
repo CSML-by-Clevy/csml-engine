@@ -10,7 +10,7 @@ use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
-use lazy_static::*;
+use phf::phf_map;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
@@ -26,59 +26,26 @@ type PrimitiveMethod = fn(
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
-lazy_static! {
-    static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
+const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "is_number" => (PrimitiveInt::is_number as PrimitiveMethod, Right::Read),
+    "is_int" => (PrimitiveInt::is_int as PrimitiveMethod, Right::Read),
+    "is_float" => (PrimitiveInt::is_float as PrimitiveMethod, Right::Read),
+    "type_of" => (PrimitiveInt::type_of as PrimitiveMethod, Right::Read),
+    "to_string" => (PrimitiveInt::to_string as PrimitiveMethod, Right::Read),
 
-        map.insert(
-            "is_number",
-            (PrimitiveInt::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_int",
-            (PrimitiveInt::is_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_float",
-            (PrimitiveInt::is_float as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "type_of",
-            (PrimitiveInt::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveInt::to_string as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert("abs", (PrimitiveInt::abs as PrimitiveMethod, Right::Read));
-        map.insert("cos", (PrimitiveInt::cos as PrimitiveMethod, Right::Read));
-        map.insert("ceil", (PrimitiveInt::ceil as PrimitiveMethod, Right::Read));
-        map.insert(
-            "floor",
-            (PrimitiveInt::floor as PrimitiveMethod, Right::Read),
-        );
-        map.insert("pow", (PrimitiveInt::pow as PrimitiveMethod, Right::Read));
-        map.insert(
-            "round",
-            (PrimitiveInt::round as PrimitiveMethod, Right::Read),
-        );
-        map.insert("sin", (PrimitiveInt::sin as PrimitiveMethod, Right::Read));
-        map.insert("sqrt", (PrimitiveInt::sqrt as PrimitiveMethod, Right::Read));
-        map.insert("tan", (PrimitiveInt::tan as PrimitiveMethod, Right::Read));
-        map.insert(
-            "to_int",
-            (PrimitiveInt::to_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_float",
-            (PrimitiveInt::to_float as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
-
+    "precision" => (PrimitiveInt::precision as PrimitiveMethod, Right::Read),
+    "abs" => (PrimitiveInt::abs as PrimitiveMethod, Right::Read),
+    "cos" => (PrimitiveInt::cos as PrimitiveMethod, Right::Read),
+    "ceil" => (PrimitiveInt::ceil as PrimitiveMethod, Right::Read),
+    "floor" => (PrimitiveInt::floor as PrimitiveMethod, Right::Read),
+    "pow" => (PrimitiveInt::pow as PrimitiveMethod, Right::Read),
+    "round" => (PrimitiveInt::round as PrimitiveMethod, Right::Read),
+    "sin" => (PrimitiveInt::sin as PrimitiveMethod, Right::Read),
+    "sqrt" => (PrimitiveInt::sqrt as PrimitiveMethod, Right::Read),
+    "tan" => (PrimitiveInt::tan as PrimitiveMethod, Right::Read),
+    "to_int" => (PrimitiveInt::to_int as PrimitiveMethod, Right::Read),
+    "to_float" => (PrimitiveInt::to_float as PrimitiveMethod, Right::Read),
+};
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveInt {
     pub value: i64,
@@ -250,6 +217,15 @@ impl PrimitiveInt {
         let result = result as i64;
 
         Ok(PrimitiveInt::get_literal(result, interval))
+    }
+
+    fn precision(
+        int: &mut PrimitiveInt,
+        _args: &HashMap<String, Literal>,
+        _data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        Ok(PrimitiveInt::get_literal(int.value, interval))
     }
 
     fn floor(

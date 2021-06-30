@@ -31,7 +31,12 @@ pub fn get_hash_algorithm(
     }
 }
 
-pub fn digest_data(algo: &str, data: &[u8], flow_name: &str, interval: Interval) -> Result<String, ErrorInfo> {
+pub fn digest_data(
+    algo: &str,
+    data: &[u8],
+    flow_name: &str,
+    interval: Interval,
+) -> Result<String, ErrorInfo> {
     match algo {
         "hex" => Ok(hex::encode(&data)),
         "base64" => Ok(openssl::base64::encode_block(&data)),

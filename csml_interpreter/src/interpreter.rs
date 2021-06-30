@@ -91,6 +91,7 @@ pub fn interpret_scope(
                     step_vars_to_json(map),
                     data.context.step.clone(),
                     data.context.flow.clone(),
+                    Some(data.previous_info.clone()),
                 );
 
                 message_data.hold = Some(hold.to_owned());
@@ -125,10 +126,7 @@ pub fn interpret_scope(
             }
             e => {
                 return Err(gen_error_info(
-                    Position::new(
-                        interval_from_expr(e),
-                        &data.context.flow,
-                    ),
+                    Position::new(interval_from_expr(e), &data.context.flow),
                     ERROR_START_INSTRUCTIONS.to_owned(),
                 ));
             }

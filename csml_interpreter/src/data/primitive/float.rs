@@ -1,16 +1,18 @@
-use crate::data::error_info::ErrorInfo;
-use crate::data::literal::ContentType;
-use crate::data::position::Position;
-use crate::data::primitive::boolean::PrimitiveBoolean;
-use crate::data::primitive::int::PrimitiveInt;
-use crate::data::primitive::object::PrimitiveObject;
-use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_division_by_zero_f64;
-use crate::data::primitive::Right;
-use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
+use crate::data::{
+    ast::Interval,
+    error_info::ErrorInfo,
+    literal::ContentType,
+    message::Message,
+    position::Position,
+    primitive::{
+        Primitive, PrimitiveBoolean, PrimitiveInt, PrimitiveObject, PrimitiveString, PrimitiveType,
+        Right,
+    },
+    Data, Literal, MessageData, MSG,
+};
 use crate::error_format::*;
-use lazy_static::*;
+use phf::phf_map;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
@@ -26,65 +28,26 @@ type PrimitiveMethod = fn(
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
-lazy_static! {
-    static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
+const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "is_number" => (PrimitiveFloat::is_number as PrimitiveMethod, Right::Read),
+    "is_int" => (PrimitiveFloat::is_int as PrimitiveMethod, Right::Read),
+    "is_float" => (PrimitiveFloat::is_float as PrimitiveMethod, Right::Read),
+    "type_of" => (PrimitiveFloat::type_of as PrimitiveMethod, Right::Read),
+    "to_string" => (PrimitiveFloat::to_string as PrimitiveMethod, Right::Read),
 
-        map.insert(
-            "is_number",
-            (PrimitiveFloat::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_int",
-            (PrimitiveFloat::is_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_float",
-            (PrimitiveFloat::is_float as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "type_of",
-            (PrimitiveFloat::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveFloat::to_string as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert("abs", (PrimitiveFloat::abs as PrimitiveMethod, Right::Read));
-        map.insert("cos", (PrimitiveFloat::cos as PrimitiveMethod, Right::Read));
-        map.insert(
-            "ceil",
-            (PrimitiveFloat::ceil as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "floor",
-            (PrimitiveFloat::floor as PrimitiveMethod, Right::Read),
-        );
-        map.insert("pow", (PrimitiveFloat::pow as PrimitiveMethod, Right::Read));
-        map.insert(
-            "round",
-            (PrimitiveFloat::round as PrimitiveMethod, Right::Read),
-        );
-        map.insert("sin", (PrimitiveFloat::sin as PrimitiveMethod, Right::Read));
-        map.insert(
-            "sqrt",
-            (PrimitiveFloat::sqrt as PrimitiveMethod, Right::Read),
-        );
-        map.insert("tan", (PrimitiveFloat::tan as PrimitiveMethod, Right::Read));
-        map.insert(
-            "to_int",
-            (PrimitiveFloat::to_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_float",
-            (PrimitiveFloat::to_float as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
-
+    "precision" => (PrimitiveFloat::precision as PrimitiveMethod, Right::Read),
+    "abs" => (PrimitiveFloat::abs as PrimitiveMethod, Right::Read),
+    "cos" => (PrimitiveFloat::cos as PrimitiveMethod, Right::Read),
+    "ceil" => (PrimitiveFloat::ceil as PrimitiveMethod, Right::Read),
+    "floor" => (PrimitiveFloat::floor as PrimitiveMethod, Right::Read),
+    "pow" => (PrimitiveFloat::pow as PrimitiveMethod, Right::Read),
+    "round" => (PrimitiveFloat::round as PrimitiveMethod, Right::Read),
+    "sin" => (PrimitiveFloat::sin as PrimitiveMethod, Right::Read),
+    "sqrt" => (PrimitiveFloat::sqrt as PrimitiveMethod, Right::Read),
+    "tan" => (PrimitiveFloat::tan as PrimitiveMethod, Right::Read),
+    "to_int" => (PrimitiveFloat::to_int as PrimitiveMethod, Right::Read),
+    "to_float" => (PrimitiveFloat::to_float as PrimitiveMethod, Right::Read),
+};
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveFloat {
     pub value: f64,
@@ -243,6 +206,38 @@ impl PrimitiveFloat {
         }
 
         let result = float.value.ceil();
+
+        Ok(PrimitiveFloat::get_literal(result, interval))
+    }
+
+    fn precision(
+        float: &mut PrimitiveFloat,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "precision(value) => float";
+
+        let precision = match args.get("arg0") {
+            Some(int) if int.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                Literal::get_value::<i64>(
+                    &int.primitive,
+                    &data.context.flow,
+                    int.interval,
+                    format!("usage: {}", usage),
+                )?
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ))
+            }
+        };
+
+        let result = format!("{:.*}", *precision as usize, float.value)
+            .parse::<f64>()
+            .unwrap_or(float.value);
 
         Ok(PrimitiveFloat::get_literal(result, interval))
     }

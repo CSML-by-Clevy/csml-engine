@@ -8,9 +8,10 @@ pub mod object;
 pub mod string;
 
 pub mod tools;
-pub mod tools_time;
 pub mod tools_crypto;
 pub mod tools_jwt;
+pub mod tools_smtp;
+pub mod tools_time;
 
 use crate::data::literal::ContentType;
 pub use array::PrimitiveArray;

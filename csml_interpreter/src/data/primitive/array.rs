@@ -10,7 +10,7 @@ use crate::data::{
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::resolve_csml_object::exec_fn;
-use lazy_static::*;
+use phf::phf_map;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -32,93 +32,29 @@ type PrimitiveMethod = fn(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo>;
 
-lazy_static! {
-    static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
+const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "is_number" => (PrimitiveArray::is_number as PrimitiveMethod, Right::Read),
+    "is_int" => (PrimitiveArray::is_int as PrimitiveMethod, Right::Read),
+    "is_float" => (PrimitiveArray::is_float as PrimitiveMethod, Right::Read),
+    "type_of" => (PrimitiveArray::type_of as PrimitiveMethod, Right::Read),
+    "to_string" => (PrimitiveArray::to_string as PrimitiveMethod, Right::Read),
 
-        map.insert(
-            "is_number",
-            (PrimitiveArray::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_int",
-            (PrimitiveArray::is_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_float",
-            (PrimitiveArray::is_float as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "type_of",
-            (PrimitiveArray::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveArray::to_string as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "find",
-            (PrimitiveArray::find as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_empty",
-            (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "insert_at",
-            (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "index_of",
-            (PrimitiveArray::index_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "join",
-            (PrimitiveArray::join as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "length",
-            (PrimitiveArray::length as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "one_of",
-            (PrimitiveArray::one_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "push",
-            (PrimitiveArray::push as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "pop",
-            (PrimitiveArray::pop as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "remove_at",
-            (PrimitiveArray::remove_at as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "slice",
-            (PrimitiveArray::slice as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "shuffle",
-            (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
-        );
-
-        map.insert("map", (PrimitiveArray::map as PrimitiveMethod, Right::Read));
-        map.insert(
-            "filter",
-            (PrimitiveArray::filter as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "reduce",
-            (PrimitiveArray::reduce as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
+    "find" => (PrimitiveArray::find as PrimitiveMethod, Right::Read),
+    "is_empty" => (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read),
+    "insert_at" => (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write),
+    "index_of" => (PrimitiveArray::index_of as PrimitiveMethod, Right::Read),
+    "join" => (PrimitiveArray::join as PrimitiveMethod, Right::Read),
+    "length" => (PrimitiveArray::length as PrimitiveMethod, Right::Read),
+    "one_of" => (PrimitiveArray::one_of as PrimitiveMethod, Right::Read),
+    "push" => (PrimitiveArray::push as PrimitiveMethod, Right::Write),
+    "pop" => (PrimitiveArray::pop as PrimitiveMethod, Right::Write),
+    "remove_at" => (PrimitiveArray::remove_at as PrimitiveMethod, Right::Write),
+    "slice" => (PrimitiveArray::slice as PrimitiveMethod, Right::Read),
+    "shuffle" => (PrimitiveArray::shuffle as PrimitiveMethod, Right::Write),
+    "map" => (PrimitiveArray::map as PrimitiveMethod, Right::Read),
+    "filter" => (PrimitiveArray::filter as PrimitiveMethod, Right::Read),
+    "reduce" => (PrimitiveArray::reduce as PrimitiveMethod, Right::Read),
+};
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveArray {
@@ -129,7 +65,12 @@ pub struct PrimitiveArray {
 // METHOD FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn check_index(index: i64, length: i64, flow_name: &str, interval: Interval) -> Result<(), ErrorInfo> {
+fn check_index(
+    index: i64,
+    length: i64,
+    flow_name: &str,
+    interval: Interval,
+) -> Result<(), ErrorInfo> {
     if index.is_negative() {
         return Err(gen_error_info(
             Position::new(interval, flow_name),
@@ -358,7 +299,12 @@ impl PrimitiveArray {
             }
         };
 
-        check_index(*index, array.value.len() as i64, &data.context.flow, interval)?;
+        check_index(
+            *index,
+            array.value.len() as i64,
+            &data.context.flow,
+            interval,
+        )?;
 
         array.value.insert(*index as usize, value.clone());
 
@@ -420,7 +366,12 @@ impl PrimitiveArray {
 
         let separator = match args.get("arg0") {
             Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                Literal::get_value::<String>(&res.primitive, &data.context.flow, interval, ERROR_ARRAY_JOIN.to_owned())?
+                Literal::get_value::<String>(
+                    &res.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_ARRAY_JOIN.to_owned(),
+                )?
             }
             _ => {
                 return Err(gen_error_info(
@@ -592,7 +543,12 @@ impl PrimitiveArray {
             }
         };
 
-        check_index(*index, array.value.len() as i64, &data.context.flow, interval)?;
+        check_index(
+            *index,
+            array.value.len() as i64,
+            &data.context.flow,
+            interval,
+        )?;
 
         Ok(array.value.remove(*index as usize))
     }
@@ -763,11 +719,11 @@ impl PrimitiveArray {
                     map.insert("arg0".to_owned(), value.to_owned());
                     if closure.args.len() >= 2 {
                         map.insert(
-                            "arg1".to_owned(), 
-                            PrimitiveInt::get_literal(index as i64, interval)
+                            "arg1".to_owned(),
+                            PrimitiveInt::get_literal(index as i64, interval),
                         );
                     }
-                    
+
                     let args = ArgsType::Normal(map);
                     let result = exec_fn(
                         &closure.func,
@@ -816,10 +772,9 @@ impl PrimitiveArray {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), value.to_owned());
                     if closure.args.len() >= 2 {
-                        dbg!(index);
                         map.insert(
-                            "arg1".to_owned(), 
-                            PrimitiveInt::get_literal(index as i64, interval)
+                            "arg1".to_owned(),
+                            PrimitiveInt::get_literal(index as i64, interval),
                         );
                     }
 
@@ -877,8 +832,8 @@ impl PrimitiveArray {
 
                     if closure.args.len() >= 2 {
                         map.insert(
-                            "arg2".to_owned(), 
-                            PrimitiveInt::get_literal(index as i64, interval)
+                            "arg2".to_owned(),
+                            PrimitiveInt::get_literal(index as i64, interval),
                         );
                     }
 

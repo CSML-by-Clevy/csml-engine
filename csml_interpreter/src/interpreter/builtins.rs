@@ -3,6 +3,7 @@ pub mod crypto;
 pub mod format;
 pub mod functions;
 pub mod http;
+pub mod smtp;
 pub mod jwt;
 pub mod time;
 
@@ -20,6 +21,7 @@ use crypto::crypto;
 use format::*;
 use functions::*;
 use http::http;
+use smtp::smtp;
 use jwt::jwt;
 use time::time;
 
@@ -49,6 +51,7 @@ pub fn match_builtin(
 ) -> Result<Literal, ErrorInfo> {
     match name {
         HTTP => http(args, &data.context.flow, interval),
+        SMTP => smtp(args, &data.context.flow, interval),
         BASE64 => base64(args, &data.context.flow, interval),
         HEX => hex(args, &data.context.flow, interval),
         FN | APP => api(args, interval, data, msg_data, sender),

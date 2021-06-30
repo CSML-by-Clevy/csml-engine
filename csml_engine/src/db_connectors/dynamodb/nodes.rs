@@ -61,7 +61,12 @@ pub fn create_node(
 
     let db = get_db(&mut data.db)?;
     let future = db.client.put_item(input);
-    db.runtime.block_on(future)?;
+    match db.runtime.block_on(future) {
+        Ok(_) => (),
+        Err(e) => {
+            return Err(EngineError::Manager(format!("create_node {:?}", e)))
+        }
+    };
 
     Ok(())
 }
@@ -111,7 +116,12 @@ fn query_nodes(
     };
 
     let future = db.client.query(input);
-    let data = db.runtime.block_on(future)?;
+    let data = match db.runtime.block_on(future) {
+        Ok(data) => data,
+        Err(e) => {
+            return Err(EngineError::Manager(format!("query_nodes {:?}", e)))
+        }
+    };
 
     Ok(data)
 }

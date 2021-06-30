@@ -5,8 +5,9 @@ use crate::data::{
     literal::ContentType,
     message::Message,
     primitive::{
-        tools_time, tools_crypto, tools_jwt, Data, MessageData, Primitive, PrimitiveArray, PrimitiveBoolean,
-        PrimitiveInt, PrimitiveNull, PrimitiveString, PrimitiveType, Right, MSG,
+        tools_crypto, tools_jwt, tools_smtp, tools_time, Data, MessageData, Primitive,
+        PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
+        PrimitiveType, Right, MSG,
     },
     tokens::TYPES,
     Literal,
@@ -16,8 +17,9 @@ use crate::interpreter::{
     builtins::http::http_request, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
-use chrono::{DateTime, TimeZone, Utc, SecondsFormat};
-use lazy_static::*;
+use chrono::{DateTime, SecondsFormat, TimeZone, Utc};
+use lettre::Transport;
+use phf::phf_map;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -27,266 +29,83 @@ use std::{collections::HashMap, sync::mpsc};
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
-lazy_static! {
-    static ref FUNCTIONS_HTTP: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
+const FUNCTIONS_HTTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "set" => (PrimitiveObject::set as PrimitiveMethod, Right::Read),
+    "auth" => (PrimitiveObject::auth as PrimitiveMethod, Right::Read),
+    "query" => (PrimitiveObject::query as PrimitiveMethod, Right::Read),
+    "get" => (PrimitiveObject::get_http as PrimitiveMethod, Right::Read),
+    "post" => (PrimitiveObject::post as PrimitiveMethod, Right::Read),
+    "put" => (PrimitiveObject::put as PrimitiveMethod, Right::Read),
+    "delete" => (PrimitiveObject::delete as PrimitiveMethod, Right::Read),
+    "patch" => (PrimitiveObject::patch as PrimitiveMethod, Right::Read),
+    "send" => (PrimitiveObject::send as PrimitiveMethod, Right::Read),
+};
 
-        map.insert(
-            "set",
-            (PrimitiveObject::set as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "query",
-            (PrimitiveObject::query as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "get",
-            (PrimitiveObject::get_http as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "post",
-            (PrimitiveObject::post as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "put",
-            (PrimitiveObject::put as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "delete",
-            (PrimitiveObject::delete as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "patch",
-            (PrimitiveObject::patch as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "send",
-            (PrimitiveObject::send as PrimitiveMethod, Right::Read),
-        );
+const FUNCTIONS_SMTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "auth" => (PrimitiveObject::credentials as PrimitiveMethod, Right::Read),
+    "port" => (PrimitiveObject::port as PrimitiveMethod, Right::Read),
+    "tls" => (PrimitiveObject::smtp_tls as PrimitiveMethod, Right::Read),
+    "send" => (PrimitiveObject::smtp_send as PrimitiveMethod, Right::Read),
+};
 
-        map
-    };
-}
+const FUNCTIONS_TIME: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "at" => (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Write),
+    "unix" => (PrimitiveObject::unix as PrimitiveMethod, Right::Write),
+    "format" => (PrimitiveObject::date_format as PrimitiveMethod, Right::Read),
+    "parse" => (PrimitiveObject::parse_date as PrimitiveMethod, Right::Read),
+};
 
-lazy_static! {
-    static ref FUNCTIONS_TIME: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
+const FUNCTIONS_JWT: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "sign" => (PrimitiveObject::jwt_sign as PrimitiveMethod, Right::Read),
+    "decode" => (PrimitiveObject::jwt_decode as PrimitiveMethod, Right::Read),
+    "verify" => (PrimitiveObject::jwt_verity as PrimitiveMethod, Right::Read),
+};
 
-        map.insert(
-            "at",
-            (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Write),
-        );
+const FUNCTIONS_CRYPTO: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+        "create_hmac" => (PrimitiveObject::create_hmac as PrimitiveMethod, Right::Read),
+        "create_hash" => (PrimitiveObject::create_hash as PrimitiveMethod, Right::Read),
+        "digest" => (PrimitiveObject::digest as PrimitiveMethod, Right::Read),
+};
 
-        map.insert(
-            "unix",
-            (PrimitiveObject::unix as PrimitiveMethod, Right::Write),
-        );
+const FUNCTIONS_BASE64: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+        "encode" => (PrimitiveObject::base64_encode as PrimitiveMethod, Right::Read),
+        "decode" => (PrimitiveObject::base64_decode as PrimitiveMethod, Right::Read),
+};
 
-        map.insert(
-            "format",
-            (PrimitiveObject::date_format as PrimitiveMethod, Right::Read),
-        );
+const FUNCTIONS_HEX: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+        "encode" => (PrimitiveObject::hex_encode as PrimitiveMethod, Right::Read),
+        "decode" => (PrimitiveObject::hex_decode as PrimitiveMethod, Right::Read),
+};
 
-        map.insert(
-            "parse",
-            (PrimitiveObject::parse_date as PrimitiveMethod, Right::Read),
-        );
+const FUNCTIONS_EVENT: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "get_type" => (PrimitiveObject::get_type as PrimitiveMethod, Right::Read),
+    "get_content" => (PrimitiveObject::get_content as PrimitiveMethod, Right::Read),
+    "is_email" => (PrimitiveObject::is_email as PrimitiveMethod, Right::Read),
+    "match" => (PrimitiveObject::match_args as PrimitiveMethod, Right::Read),
+    "match_array" => (PrimitiveObject::match_array as PrimitiveMethod, Right::Read),
+};
 
-        map
-    };
-}
+const FUNCTIONS_READ: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "is_number" => (PrimitiveObject::is_number as PrimitiveMethod, Right::Read),
+    "is_int" => (PrimitiveObject::is_int as PrimitiveMethod, Right::Read),
+    "is_float" => (PrimitiveObject::is_float as PrimitiveMethod, Right::Read),
+    "type_of" => (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
+    "to_string" => (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
 
-lazy_static! {
-    static ref FUNCTIONS_JWT: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
+    "contains" => (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
+    "is_empty" => (PrimitiveObject::is_empty as PrimitiveMethod, Right::Read),
+    "length" => (PrimitiveObject::length as PrimitiveMethod, Right::Read),
+    "keys" => (PrimitiveObject::keys as PrimitiveMethod, Right::Read),
+    "values" => (PrimitiveObject::values as PrimitiveMethod, Right::Read),
+    "get" => (PrimitiveObject::get_generics as PrimitiveMethod, Right::Read),
 
-        map.insert(
-            "sign",
-            (PrimitiveObject::jwt_sign as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "decode",
-            (PrimitiveObject::jwt_decode as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "verify",
-            (PrimitiveObject::jwt_verity as PrimitiveMethod, Right::Read),
-        );
+};
 
-        map
-    };
-}
-
-lazy_static! {
-    static ref FUNCTIONS_CRYPTO: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "create_hmac",
-            (PrimitiveObject::create_hmac as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "create_hash",
-            (PrimitiveObject::create_hash as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "digest",
-            (PrimitiveObject::digest as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
-
-lazy_static! {
-    static ref FUNCTIONS_BASE64: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "encode",
-            (
-                PrimitiveObject::base64_encode as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map.insert(
-            "decode",
-            (
-                PrimitiveObject::base64_decode as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-        map
-    };
-}
-
-lazy_static! {
-    static ref FUNCTIONS_HEX: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "encode",
-            (PrimitiveObject::hex_encode as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "decode",
-            (PrimitiveObject::hex_decode as PrimitiveMethod, Right::Read),
-        );
-        map
-    };
-}
-
-lazy_static! {
-    static ref FUNCTIONS_EVENT: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "get_type",
-            (PrimitiveObject::get_type as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "get_content",
-            (PrimitiveObject::get_content as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_email",
-            (PrimitiveObject::is_email as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "match",
-            (PrimitiveObject::match_args as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "match_array",
-            (PrimitiveObject::match_array as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
-
-lazy_static! {
-    static ref FUNCTIONS_READ: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "type_of",
-            (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_number",
-            (PrimitiveObject::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_int",
-            (PrimitiveObject::is_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_float",
-            (PrimitiveObject::is_float as PrimitiveMethod, Right::Read),
-        );
-
-        map.insert(
-            "contains",
-            (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_empty",
-            (PrimitiveObject::is_empty as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "length",
-            (PrimitiveObject::length as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "keys",
-            (PrimitiveObject::keys as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "values",
-            (PrimitiveObject::values as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "get",
-            (
-                PrimitiveObject::get_generics as PrimitiveMethod,
-                Right::Read,
-            ),
-        );
-
-        map
-    };
-}
-
-lazy_static! {
-    static ref FUNCTIONS_WRITE: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "clear_values",
-            (
-                PrimitiveObject::clear_values as PrimitiveMethod,
-                Right::Write,
-            ),
-        );
-        map.insert(
-            "insert",
-            (PrimitiveObject::insert as PrimitiveMethod, Right::Write),
-        );
-        map.insert(
-            "remove",
-            (PrimitiveObject::remove as PrimitiveMethod, Right::Write),
-        );
-
-        map
-    };
-}
+const FUNCTIONS_WRITE: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "clear_values" => (PrimitiveObject::clear_values as PrimitiveMethod, Right::Write),
+    "insert" => (PrimitiveObject::insert as PrimitiveMethod, Right::Write),
+    "remove" => (PrimitiveObject::remove as PrimitiveMethod, Right::Write),
+};
 
 type PrimitiveMethod = fn(
     object: &mut PrimitiveObject,
@@ -317,7 +136,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -326,7 +145,7 @@ impl PrimitiveObject {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ));
             }
@@ -350,6 +169,73 @@ impl PrimitiveObject {
         Ok(result)
     }
 
+    fn auth(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "auth(username, password) => http object";
+
+        if args.len() < 2 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let username = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let password = match args.get("arg1") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let user_password = format!("{}:{}", username, password);
+        let authorization = format!("Basic {}", base64::encode(user_password.as_bytes()));
+
+        let mut object = object.to_owned();
+
+        let mut header = HashMap::new();
+        header.insert(
+            "Authorization".to_owned(),
+            PrimitiveString::get_literal(&authorization, interval),
+        );
+        let literal = PrimitiveObject::get_literal(&header, interval);
+
+        insert_to_object(&header, &mut object, "header", &data.context.flow, &literal);
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("http");
+
+        Ok(result)
+    }
+
     fn query(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
@@ -361,7 +247,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -370,7 +256,7 @@ impl PrimitiveObject {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ));
             }
@@ -404,7 +290,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -542,7 +428,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -561,20 +447,221 @@ impl PrimitiveObject {
                 Ok(get) if get == "get" => ureq::get,
                 _ => {
                     return Err(gen_error_info(
-                        Position::new(interval, &data.context.flow,),
+                        Position::new(interval, &data.context.flow),
                         ERROR_HTTP_UNKNOWN_METHOD.to_string(),
                     ))
                 }
             };
 
             let value = http_request(&object.value, function, &data.context.flow, interval)?;
-            return json_to_literal(&value, interval, &data.context.flow,);
+            return json_to_literal(&value, interval, &data.context.flow);
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             ERROR_HTTP_SEND.to_owned(),
         ))
+    }
+}
+
+impl PrimitiveObject {
+    fn credentials(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "credentials(username, password) => smtp object";
+
+        if args.len() < 2 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let username = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let password = match args.get("arg1") {
+            Some(lit) => Literal::get_value::<String>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "username".to_owned(),
+            PrimitiveString::get_literal(username, interval),
+        );
+
+        object.value.insert(
+            "password".to_owned(),
+            PrimitiveString::get_literal(password, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
+    fn port(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "port(port) => smtp object";
+
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let port = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<i64>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "port".to_owned(),
+            PrimitiveInt::get_literal(*port, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
+    fn smtp_tls(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "tls(BOOLEAN) => smtp object";
+
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let tls = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<bool>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "tls".to_owned(),
+            PrimitiveBoolean::get_literal(*tls, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
+    fn smtp_send(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "send(email) => smtp object";
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let csml_email = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<HashMap<String, Literal>>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ))
+            }
+        };
+
+        let email = tools_smtp::format_email(csml_email, data, interval)?;
+        let mailer = tools_smtp::get_mailer(&mut object.value, data, interval)?;
+
+        match mailer.send(&email) {
+            Ok(_) => Ok(PrimitiveBoolean::get_literal(true, interval)),
+            Err(e) => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("Could not send email: {:?}", e),
+                ))
+            }
+        }
     }
 }
 
@@ -588,32 +675,31 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let date = tools_time::get_date(args);
 
-        let date = Utc.ymd(
-            date[0] as i32, // year
-            date[1] as u32, // month
-            date[2] as u32 // day
-        ).and_hms_milli_opt(
-            date[3] as u32, // hour
-            date[4] as u32, // min
-            date[5] as u32, // sec
-            date[6] as u32, // milli
-        );
+        let date = Utc
+            .ymd(
+                date[0] as i32, // year
+                date[1] as u32, // month
+                date[2] as u32, // day
+            )
+            .and_hms_milli_opt(
+                date[3] as u32, // hour
+                date[4] as u32, // min
+                date[5] as u32, // sec
+                date[6] as u32, // milli
+            );
 
         match date {
             Some(date) => {
                 object.value.insert(
                     "milliseconds".to_owned(),
-                    PrimitiveInt::get_literal(
-                        date.timestamp_millis(),
-                        interval
-                    )
+                    PrimitiveInt::get_literal(date.timestamp_millis(), interval),
                 );
                 let mut lit = PrimitiveObject::get_literal(&object.value, interval);
                 lit.set_content_type("time");
 
                 Ok(lit)
             }
-            None => Ok(PrimitiveBoolean::get_literal(false, interval))
+            None => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 
@@ -638,10 +724,10 @@ impl PrimitiveObject {
                 let date: DateTime<Utc> = Utc.timestamp_millis(*millis);
 
                 Ok(PrimitiveInt::get_literal(date.timestamp_millis(), interval))
-            },
+            }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("{}", usage),
                 ))
             }
@@ -658,12 +744,16 @@ impl PrimitiveObject {
         match args.len() {
             1 => tools_time::parse_rfc3339(args, data, interval),
             len if len >= 2 => tools_time::pasre_from_str(args, data, interval),
-            _ => return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
-                format!("usage: expect one ore two arguments :
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!(
+                        "usage: expect one ore two arguments :
                 Time().parse(\"2020-08-13\")   or
-                Time().parse(\"1983-08-13 12:09:14.274\", \"%Y-%m-%d %H:%M:%S%.3f\")"),
-            ))
+                Time().parse(\"1983-08-13 12:09:14.274\", \"%Y-%m-%d %H:%M:%S%.3f\")"
+                    ),
+                ))
+            }
         }
     }
 
@@ -686,19 +776,17 @@ impl PrimitiveObject {
                 )?;
 
                 Utc.timestamp_millis(*millis)
-            },
+            }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ))
             }
         };
 
         let formatted_date = match args.len() {
-            0 => {
-                date.to_rfc3339_opts(SecondsFormat::Millis, true)
-            }
+            0 => date.to_rfc3339_opts(SecondsFormat::Millis, true),
             _ => {
                 let format_lit = match args.get("arg0") {
                     Some(res) => res.to_owned(),
@@ -735,7 +823,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_SIGN_ALGO.to_string(),
                 ))
             }
@@ -745,7 +833,7 @@ impl PrimitiveObject {
             Some(literal) => literal.primitive.to_json(),
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_SIGN_CLAIMS.to_string(),
                 ))
             }
@@ -764,7 +852,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_ALGO.to_string(),
                 ))
             }
@@ -778,7 +866,7 @@ impl PrimitiveObject {
             Ok(value) => Ok(PrimitiveString::get_literal(&value, interval)),
             Err(e) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("Invalid JWT encode {:?}", e.kind()),
                 ))
             }
@@ -801,7 +889,7 @@ impl PrimitiveObject {
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_TOKEN.to_string(),
                 ))
             }
@@ -813,7 +901,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_DECODE_ALGO.to_string(),
                 ))
             }
@@ -832,7 +920,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_DECODE_SECRET.to_string(),
                 ))
             }
@@ -843,10 +931,12 @@ impl PrimitiveObject {
             &key,
             &jsonwebtoken::Validation::new(algo),
         ) {
-            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, &data.context.flow, interval),
+            Ok(token_message) => {
+                tools_jwt::token_data_to_literal(token_message, &data.context.flow, interval)
+            }
             Err(e) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("Invalid JWT decode {:?}", e.kind()),
                 ))
             }
@@ -871,17 +961,19 @@ impl PrimitiveObject {
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_TOKEN.to_string(),
                 ))
             }
         };
 
         match args.get("arg0") {
-            Some(lit) => tools_jwt::get_validation(lit, &data.context.flow, interval, &mut validation)?,
+            Some(lit) => {
+                tools_jwt::get_validation(lit, &data.context.flow, interval, &mut validation)?
+            }
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_VALIDATION_CLAIMS.to_string(),
                 ))
             }
@@ -889,11 +981,15 @@ impl PrimitiveObject {
 
         match args.get("arg1") {
             Some(algo) if algo.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                validation.algorithms = vec![tools_jwt::get_algorithm(algo, &data.context.flow, interval)?];
+                validation.algorithms = vec![tools_jwt::get_algorithm(
+                    algo,
+                    &data.context.flow,
+                    interval,
+                )?];
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_VALIDATION_ALGO.to_string(),
                 ))
             }
@@ -912,17 +1008,19 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_JWT_VALIDATION_SECRETE.to_string(),
                 ))
             }
         };
 
         match jsonwebtoken::decode::<serde_json::Value>(token, &key, &validation) {
-            Ok(token_message) => tools_jwt::token_data_to_literal(token_message, &data.context.flow, interval),
+            Ok(token_message) => {
+                tools_jwt::token_data_to_literal(token_message, &data.context.flow, interval)
+            }
             Err(e) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("Invalid JWT verify {:?}", e.kind()),
                 ))
             }
@@ -941,12 +1039,15 @@ impl PrimitiveObject {
         let flow_name = &data.context.flow;
 
         let data = match object.value.get("value") {
-            Some(literal) => {
-                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_HASH.to_owned())?
-            }
+            Some(literal) => Literal::get_value::<String>(
+                &literal.primitive,
+                flow_name,
+                interval,
+                ERROR_HASH.to_owned(),
+            )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, flow_name,),
+                    Position::new(interval, flow_name),
                     ERROR_HASH.to_string(),
                 ))
             }
@@ -1010,7 +1111,12 @@ impl PrimitiveObject {
                 lit.set_content_type("crypto");
                 Ok(lit)
             }
-            Err(e) => return Err(gen_error_info(Position::new(interval, flow_name,), format!("{}", e))),
+            Err(e) => {
+                return Err(gen_error_info(
+                    Position::new(interval, flow_name),
+                    format!("{}", e),
+                ))
+            }
         }
     }
 
@@ -1024,12 +1130,15 @@ impl PrimitiveObject {
         let flow_name = &data.context.flow;
 
         let data = match object.value.get("value") {
-            Some(literal) => {
-                Literal::get_value::<String>(&literal.primitive, &data.context.flow, interval, ERROR_HASH.to_owned())?
-            }
+            Some(literal) => Literal::get_value::<String>(
+                &literal.primitive,
+                &data.context.flow,
+                interval,
+                ERROR_HASH.to_owned(),
+            )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, flow_name,),
+                    Position::new(interval, flow_name),
                     ERROR_HASH.to_string(),
                 ))
             }
@@ -1047,7 +1156,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, flow_name,),
+                    Position::new(interval, flow_name),
                     ERROR_HASH_ALGO.to_string(),
                 ))
             }
@@ -1071,7 +1180,12 @@ impl PrimitiveObject {
                 lit.set_content_type("crypto");
                 Ok(lit)
             }
-            Err(e) => return Err(gen_error_info(Position::new(interval, flow_name,), format!("{}", e))),
+            Err(e) => {
+                return Err(gen_error_info(
+                    Position::new(interval, flow_name),
+                    format!("{}", e),
+                ))
+            }
         }
     }
 
@@ -1091,7 +1205,7 @@ impl PrimitiveObject {
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_DIGEST.to_string(),
                 ))
             }
@@ -1108,7 +1222,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_DIGEST_ALGO.to_string(),
                 ))
             }
@@ -1144,7 +1258,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ))
             }
@@ -1168,7 +1282,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ))
             }
@@ -1178,7 +1292,7 @@ impl PrimitiveObject {
             Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("Base64 invalid value: {}, can't be decode", string),
                 ))
             }
@@ -1202,7 +1316,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ))
             }
@@ -1226,7 +1340,7 @@ impl PrimitiveObject {
             Some(lit) => lit.primitive.to_string(),
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ))
             }
@@ -1236,7 +1350,7 @@ impl PrimitiveObject {
             Ok(buf) => format!("{}", String::from_utf8_lossy(&buf)),
             Err(_) => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("Hex invalid value: {}, can't be decode", string),
                 ))
             }
@@ -1258,7 +1372,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1277,7 +1391,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1305,7 +1419,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1336,7 +1450,7 @@ impl PrimitiveObject {
 
         if args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1372,7 +1486,7 @@ impl PrimitiveObject {
             )?,
             None => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("expect Array value as argument usage: {}", usage),
                 ))
             }
@@ -1399,7 +1513,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1418,7 +1532,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1437,7 +1551,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1456,7 +1570,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1475,7 +1589,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1494,7 +1608,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1510,7 +1624,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_OBJECT_CONTAINS.to_owned(),
                 ));
             }
@@ -1532,7 +1646,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1553,7 +1667,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1574,7 +1688,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1599,7 +1713,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1624,7 +1738,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1640,7 +1754,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_OBJECT_GET_GENERICS.to_owned(),
                 ));
             }
@@ -1665,7 +1779,7 @@ impl PrimitiveObject {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1696,7 +1810,7 @@ impl PrimitiveObject {
 
         if args.len() != 2 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1712,7 +1826,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_OBJECT_INSERT.to_owned(),
                 ));
             }
@@ -1722,7 +1836,7 @@ impl PrimitiveObject {
             Some(res) => res,
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ));
             }
@@ -1744,7 +1858,7 @@ impl PrimitiveObject {
 
         if args.len() != 1 {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -1760,7 +1874,7 @@ impl PrimitiveObject {
             }
             _ => {
                 return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow,),
+                    Position::new(interval, &data.context.flow),
                     ERROR_OBJECT_REMOVE.to_owned(),
                 ));
             }
@@ -1796,8 +1910,6 @@ fn insert_to_object(
                 for (key, value) in src.iter() {
                     tmp.insert(key.to_owned(), value.to_owned());
                 }
-            } else {
-                unreachable!();
             }
         })
         .or_insert_with(|| literal.to_owned());
@@ -1993,18 +2105,15 @@ impl Primitive for PrimitiveObject {
         msg_data: &mut MessageData,
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
-        let event = vec![FUNCTIONS_EVENT.clone()];
-        let http = vec![
-            FUNCTIONS_HTTP.clone(),
-            FUNCTIONS_READ.clone(),
-            FUNCTIONS_WRITE.clone(),
-        ];
-        let base64 = vec![FUNCTIONS_BASE64.clone()];
-        let hex = vec![FUNCTIONS_HEX.clone()];
-        let jwt = vec![FUNCTIONS_JWT.clone()];
-        let crypto = vec![FUNCTIONS_CRYPTO.clone()];
-        let time = vec![FUNCTIONS_TIME.clone()];
-        let generics = vec![FUNCTIONS_READ.clone(), FUNCTIONS_WRITE.clone()];
+        let event = vec![FUNCTIONS_EVENT];
+        let http = vec![FUNCTIONS_HTTP, FUNCTIONS_READ, FUNCTIONS_WRITE];
+        let smtp = vec![FUNCTIONS_SMTP];
+        let base64 = vec![FUNCTIONS_BASE64];
+        let hex = vec![FUNCTIONS_HEX];
+        let jwt = vec![FUNCTIONS_JWT];
+        let crypto = vec![FUNCTIONS_CRYPTO];
+        let time = vec![FUNCTIONS_TIME];
+        let generics = vec![FUNCTIONS_READ, FUNCTIONS_WRITE];
 
         let mut is_event = false;
 
@@ -2015,6 +2124,7 @@ impl Primitive for PrimitiveObject {
                 (event_type.as_ref(), event)
             }
             ContentType::Http => ("", http),
+            ContentType::Smtp => ("", smtp),
             ContentType::Base64 => ("", base64),
             ContentType::Hex => ("", hex),
             ContentType::Jwt => ("", jwt),

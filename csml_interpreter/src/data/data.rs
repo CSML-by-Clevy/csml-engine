@@ -2,11 +2,17 @@ use crate::data::context::Context;
 use crate::data::Event;
 use crate::data::{ast::*, Literal};
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PreviousInfo {
+    pub flow: String,
+    pub step_at_flow: (String, String), // step / flow
+}
 
 #[derive(Debug)]
 pub struct Data<'a> {
@@ -22,6 +28,7 @@ pub struct Data<'a> {
     pub step_count: &'a mut i32,
 
     pub step_vars: HashMap<String, Literal>,
+    pub previous_info: PreviousInfo,
     pub custom_component: &'a serde_json::Map<String, serde_json::Value>,
     pub native_component: &'a serde_json::Map<String, serde_json::Value>,
 }
@@ -29,6 +36,24 @@ pub struct Data<'a> {
 ////////////////////////////////////////////////////////////////////////////////
 // STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+impl PreviousInfo {
+    pub fn new(flow: String, step: String) -> Self {
+        Self {
+            flow: flow.clone(),
+            step_at_flow: (step, flow),
+        }
+    }
+
+    pub fn goto(&mut self, flow: String, step: String) {
+        if self.step_at_flow.1 != flow {
+            self.flow = self.step_at_flow.1.clone();
+        }
+
+        self.step_at_flow = (step, flow);
+    }
+}
+
 impl<'a> Data<'a> {
     pub fn new(
         flows: &'a HashMap<String, Flow>,
@@ -40,6 +65,7 @@ impl<'a> Data<'a> {
         loop_index: usize,
         step_count: &'a mut i32,
         step_vars: HashMap<String, Literal>,
+        previous_info: PreviousInfo,
         custom_component: &'a serde_json::Map<String, serde_json::Value>,
         native_component: &'a serde_json::Map<String, serde_json::Value>,
     ) -> Self {
@@ -53,6 +79,7 @@ impl<'a> Data<'a> {
             loop_index,
             step_count,
             step_vars,
+            previous_info,
             custom_component,
             native_component,
         }
@@ -100,7 +127,11 @@ pub fn init_child_context(data: &Data) -> Context {
     }
 }
 
-pub fn init_child_scope<'a>(data: &'a Data, context: &'a mut Context, step_count: &'a mut i32) -> Data<'a> {
+pub fn init_child_scope<'a>(
+    data: &'a Data,
+    context: &'a mut Context,
+    step_count: &'a mut i32,
+) -> Data<'a> {
     Data::new(
         &data.flows,
         &data.flow,
@@ -111,6 +142,7 @@ pub fn init_child_scope<'a>(data: &'a Data, context: &'a mut Context, step_count
         data.loop_index,
         step_count,
         HashMap::new(),
+        data.previous_info.clone(),
         &data.custom_component,
         &data.native_component,
     )

@@ -229,3 +229,9 @@ addition_string_step_5:
 addition_string_step_6:
     say "1" + "1"
     goto end
+
+addition_parentheses_step_1:
+    do a = 1.1
+    do b = 4.4
+
+    say -(a + b)

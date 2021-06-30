@@ -68,6 +68,7 @@ pub const DEBUG_ACTION: &str = "debug";
 pub const USE: &str = "use";
 pub const HOLD: &str = "hold";
 pub const GOTO: &str = "goto";
+pub const PREVIOUS: &str = "previous";
 pub const MATCH: &str = "match";
 pub const NOT_MATCH: &str = "!match";
 pub const DEFAULT: &str = "default";
@@ -109,17 +110,18 @@ pub const TYPES: &[&str] = &[
 
 pub const RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
-    MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE, NULL, BREAK,
+    COMPONENT,
 ];
 
 pub const UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, FORGET, BREAK,
-    COMPONENT,
+    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, FORGET,
+    BREAK, COMPONENT,
 ];
 
 pub const ASSIGNATION_RESERVED: &[&str] = &[
     FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER,
-    FORGET,  _METADATA, _MEMORY, _ENV, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    FORGET, _METADATA, _MEMORY, _ENV, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 pub const TYPING: &str = "Typing";
@@ -143,6 +145,7 @@ pub const CARD: &str = "Card";
 pub const FN: &str = "Fn";
 pub const APP: &str = "App";
 pub const HTTP: &str = "HTTP";
+pub const SMTP: &str = "SMTP";
 pub const JWT: &str = "JWT";
 pub const CRYPTO: &str = "Crypto";
 pub const BASE64: &str = "Base64";
@@ -156,7 +159,7 @@ pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, APP, HTTP, OBJECT, DEBUG, UUID, BASE64, HEX,
-    JWT, CRYPTO, TIME
+    JWT, CRYPTO, TIME, SMTP,
 ];
 
 pub const FROM_FILE: &str = "FromFile";

@@ -1,7 +1,7 @@
-use crate::data::{ast::*, tokens::*};
+use crate::data::{ast::*, tokens::*, primitive::PrimitiveInt};
 use crate::error_format::{gen_nom_failure, ERROR_RIGHT_BRACKET};
 use crate::parser::{
-    operator::parse_operator,
+    operator::{parse_operator, tools::parse_item_operator},
     parse_built_in::parse_built_in,
     parse_closure::parse_closure,
     parse_comments::comment,
@@ -32,11 +32,22 @@ fn parse_condition_group<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Sp
 where
     E: ParseError<Span<'a>>,
 {
-    delimited(
-        preceded(comment, tag(L_PAREN)),
-        parse_operator,
-        parse_r_parentheses,
-    )(s)
+    let (s, interval) = get_interval(s)?;
+
+    let (s, opt) = opt(preceded(comment, parse_item_operator))(s)?;
+    let (s, expr) =  delimited(
+            preceded(comment, tag(L_PAREN)),
+            parse_operator,
+            parse_r_parentheses,
+    )(s)?;
+
+    match opt {
+        Some(infix) => {
+            let zero = Expr::LitExpr{literal: PrimitiveInt::get_literal(0,interval), in_in_substring: false};
+            Ok((s, Expr::InfixExpr(infix, Box::new(zero), Box::new(expr))))
+        },
+        None => Ok((s, expr))
+    }
 }
 
 fn parse_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>

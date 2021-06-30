@@ -9,7 +9,7 @@ use crate::data::{
     MessageData, MSG,
 };
 use crate::error_format::*;
-use lazy_static::*;
+use phf::phf_map;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
@@ -25,34 +25,13 @@ type PrimitiveMethod = fn(
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
 
-lazy_static! {
-    static ref FUNCTIONS: HashMap<&'static str, (PrimitiveMethod, Right)> = {
-        let mut map = HashMap::new();
-
-        map.insert(
-            "is_number",
-            (PrimitiveNull::is_number as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_int",
-            (PrimitiveNull::is_int as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "is_float",
-            (PrimitiveNull::is_float as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "type_of",
-            (PrimitiveNull::type_of as PrimitiveMethod, Right::Read),
-        );
-        map.insert(
-            "to_string",
-            (PrimitiveNull::to_string as PrimitiveMethod, Right::Read),
-        );
-
-        map
-    };
-}
+const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
+    "is_number" => (PrimitiveNull::is_number as PrimitiveMethod, Right::Read),
+    "is_int" => (PrimitiveNull::is_int as PrimitiveMethod, Right::Read),
+    "is_float" => (PrimitiveNull::is_float as PrimitiveMethod, Right::Read),
+    "type_of" => (PrimitiveNull::type_of as PrimitiveMethod, Right::Read),
+    "to_string" => (PrimitiveNull::to_string as PrimitiveMethod, Right::Read),
+};
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveNull {}
@@ -72,7 +51,7 @@ impl PrimitiveNull {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -90,7 +69,7 @@ impl PrimitiveNull {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -108,7 +87,7 @@ impl PrimitiveNull {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -126,7 +105,7 @@ impl PrimitiveNull {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -144,7 +123,7 @@ impl PrimitiveNull {
 
         if !args.is_empty() {
             return Err(gen_error_info(
-                Position::new(interval, &data.context.flow,),
+                Position::new(interval, &data.context.flow),
                 format!("usage: {}", usage),
             ));
         }
@@ -327,7 +306,7 @@ impl Primitive for PrimitiveNull {
         }
 
         Err(gen_error_info(
-            Position::new(interval, &data.context.flow,),
+            Position::new(interval, &data.context.flow),
             format!("[{}] {}", name, ERROR_NULL_UNKNOWN_METHOD),
         ))
     }

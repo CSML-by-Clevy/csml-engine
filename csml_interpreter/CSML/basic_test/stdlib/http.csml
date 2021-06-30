@@ -103,3 +103,9 @@ post_1:
 	}).send()
 	goto end
 	
+
+auth_0:
+	do http = HTTP("https://clevy.io")
+
+	say http.auth("user", "passwd").get()
+	goto end

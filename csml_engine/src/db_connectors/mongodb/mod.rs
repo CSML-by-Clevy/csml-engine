@@ -8,58 +8,48 @@ pub mod state;
 
 use crate::{Database, EngineError, MongoDbClient};
 
-fn init_mongo_credentials() -> Option<mongodb::options::Credential> {
-    let username = match std::env::var("MONGODB_USERNAME") {
-        Ok(var) if var.len() > 0 => Some(var),
-        _ => None,
-    };
-    let password = match std::env::var("MONGODB_PASSWORD") {
-        Ok(var) if var.len() > 0 => Some(var),
-        _ => None,
-    };
+fn create_mongodb_uri() -> Result<String, EngineError> {
+    let mut uri = "mongodb://".to_owned();
 
-    if let (&None, &None) = (&username, &password) {
-        return None;
+    match (
+        std::env::var("MONGODB_USERNAME"),
+        std::env::var("MONGODB_PASSWORD"),
+    ) {
+        (Ok(username), Ok(password)) if !username.is_empty() && !password.is_empty() => {
+            uri = format!("{}{}:{}@", uri, username, password)
+        }
+        _ => {}
     }
 
-    let credentials = mongodb::options::Credential::builder()
-        .password(password)
-        .username(username)
-        .build();
+    match std::env::var("MONGODB_HOST") {
+        Ok(host) => uri = format!("{}{}", uri, host),
+        _ => panic!("Missing MONGODB_HOST in env"),
+    }
 
-    Some(credentials)
+    match std::env::var("MONGODB_PORT") {
+        Ok(var) => match var.parse::<u16>() {
+            Ok(port) => uri = format!("{}:{}", uri, port),
+            Err(err) => return Err(EngineError::Manager(err.to_string())),
+        },
+        _ => {}
+    };
+
+    Ok(uri)
 }
 
 pub fn init() -> Result<Database, EngineError> {
-    let hostname = match std::env::var("MONGODB_HOST") {
-        Ok(var) => var,
-        _ => panic!("Missing MONGODB_HOST in env"),
-    };
-
     let dbname = match std::env::var("MONGODB_DATABASE") {
         Ok(var) => var,
         _ => panic!("Missing MONGODB_DATABASE in env"),
     };
 
-    let port: Option<u16> = match std::env::var("MONGODB_PORT") {
-        Ok(var) => match var.parse::<u16>() {
-            Ok(port) => Some(port),
-            Err(err) => return Err(EngineError::Manager(err.to_string())),
-        },
-        _ => None,
+    let uri = match std::env::var("MONGODB_URI") {
+        Ok(var) => var,
+        _ => create_mongodb_uri()?,
     };
 
-    let credentials = init_mongo_credentials();
+    let client = mongodb::sync::Client::with_uri_str(&uri)?;
 
-    let options = mongodb::options::ClientOptions::builder()
-        .hosts(vec![mongodb::options::StreamAddress {
-            hostname: hostname.into(),
-            port,
-        }])
-        .credential(credentials)
-        .build();
-
-    let client = mongodb::sync::Client::with_options(options)?;
     let db = Database::Mongo(MongoDbClient::new(client.database(&dbname)));
     Ok(db)
 }
@@ -73,7 +63,7 @@ pub fn get_db<'a>(db: &'a Database) -> Result<&'a MongoDbClient, EngineError> {
     }
 }
 
-pub fn get_pagination_key(pagination_key: Option<String>) ->  Result<Option<String>, EngineError> {
+pub fn get_pagination_key(pagination_key: Option<String>) -> Result<Option<String>, EngineError> {
     match pagination_key {
         Some(key) => {
             let base64decoded = match base64::decode(&key) {
@@ -87,7 +77,7 @@ pub fn get_pagination_key(pagination_key: Option<String>) ->  Result<Option<Stri
             };
 
             Ok(Some(key))
-        },
-        None => Ok(None)
+        }
+        None => Ok(None),
     }
 }

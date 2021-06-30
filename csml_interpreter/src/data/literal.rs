@@ -23,6 +23,7 @@ pub struct Literal {
 pub enum ContentType {
     Event(String),
     Http,
+    Smtp,
     Base64,
     Hex,
     Jwt,
@@ -44,7 +45,10 @@ impl Literal {
     ) -> Result<&'lifetime T, ErrorInfo> {
         match primitive.get_value().downcast_ref::<T>() {
             Some(sep) => Ok(sep),
-            None => Err(gen_error_info(Position::new(interval, flow_name), error_message)),
+            None => Err(gen_error_info(
+                Position::new(interval, flow_name),
+                error_message,
+            )),
         }
     }
 
@@ -56,7 +60,10 @@ impl Literal {
     ) -> Result<&'lifetime mut T, ErrorInfo> {
         match primitive.get_mut_value().downcast_mut::<T>() {
             Some(sep) => Ok(sep),
-            None => Err(gen_error_info(Position::new(interval, flow_name), error_message)),
+            None => Err(gen_error_info(
+                Position::new(interval, flow_name),
+                error_message,
+            )),
         }
     }
 
@@ -69,6 +76,7 @@ impl ContentType {
     pub fn get(literal: &Literal) -> ContentType {
         match literal.content_type.as_ref() {
             "http" => ContentType::Http,
+            "smtp" => ContentType::Smtp,
             "base64" => ContentType::Base64,
             "hex" => ContentType::Hex,
             "jwt" => ContentType::Jwt,

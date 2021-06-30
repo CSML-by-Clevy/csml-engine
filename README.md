@@ -83,7 +83,7 @@ To get started with CSML Studio: https://studio.csml.dev
 
 CSML Studio gives you a free playground to experiment with the language as well as options to deploy your chatbots at scale in one-click.
 
-## Self-hosted / local installation
+## Self-hosted / cloud / local installation
 
 CSML is available as a self-hostable web server that you can easily install with one of the options below.
 
@@ -117,6 +117,12 @@ ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encry
 DISABLE_SSL_VERIFY=false
 DEBUG=true
 ```
+
+### Deploy on Heroku
+
+<a href="https://heroku.com/deploy?template=https://github.com/CSML-by-Clevy/csml-engine/tree/masters">
+  <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy">
+</a>
 
 ### Using a ready-to-use binary (Linux and MacOS only)
 

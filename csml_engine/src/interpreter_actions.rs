@@ -69,12 +69,14 @@ pub fn interpret_step(
                 step_vars,
                 step_name,
                 flow_name,
+                previous,
             }) => {
                 let hash = get_current_step_hash(&data.context, bot)?;
                 let state_hold: Value = serde_json::json!({
                     "index": index,
                     "step_vars": step_vars,
-                    "hash": hash
+                    "hash": hash,
+                    "previous": previous
                 });
 
                 set_state_items(
@@ -88,6 +90,7 @@ pub fn interpret_step(
                     step_vars,
                     step_name,
                     flow_name,
+                    previous,
                 });
             }
             MSG::Next { flow, step } => match (flow, step) {
@@ -225,7 +228,6 @@ fn goto_step<'a>(
 
         // send end of conversation
         send_msg_to_callback_url(data, vec![], *interaction_order, *conversation_end);
-        update_conversation(data, None, Some("end".to_owned()))?;
         close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
 
         // break interpret_step loop

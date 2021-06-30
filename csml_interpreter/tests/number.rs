@@ -129,6 +129,33 @@ fn float_step_1() {
 }
 
 #[test]
+fn float_step_2() {
+    let data = r#"{
+        "memories":[
+        ],
+        "messages":[
+            {"content":{"text": "33"}, "content_type":"text"}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "float_2",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/number.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
 fn string_step_0() {
     let data = r#"{
         "memories":[
