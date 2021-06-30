@@ -228,7 +228,9 @@ pub fn get_client_conversations(
                 Some(last) => {
                     let pagination_key = base64::encode(last["version_id"].clone().to_string());
 
-                    Ok(serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}))
+                    Ok(
+                        serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}),
+                    )
                 }
                 None => Ok(serde_json::json!({ "conversations": conversations })),
             }

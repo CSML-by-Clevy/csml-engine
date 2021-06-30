@@ -1,8 +1,7 @@
 use crate::{
-    db_connectors::{mongodb::{get_db}, DbMessage},
-    encrypt::{encrypt_data, decrypt_data},
-    ConversationInfo, EngineError, Client,
-    MongoDbClient
+    db_connectors::{mongodb::get_db, DbMessage},
+    encrypt::{decrypt_data, encrypt_data},
+    Client, ConversationInfo, EngineError, MongoDbClient,
 };
 use bson::{doc, Bson, Document};
 
@@ -44,16 +43,14 @@ fn format_message(
     Ok(doc)
 }
 
-fn format_message_struct(
-    message: bson::document::Document,
-) -> Result<DbMessage, EngineError> {
+fn format_message_struct(message: bson::document::Document) -> Result<DbMessage, EngineError> {
     let encrypted_payload: String = message.get_str("payload").unwrap().to_owned();
     let payload = decrypt_data(encrypted_payload)?;
 
     Ok(DbMessage {
         id: message.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
         client: bson::from_bson(message.get("client").unwrap().to_owned())?,
-        interaction_id: message.get_str("interaction_id").unwrap().to_owned(), 
+        interaction_id: message.get_str("interaction_id").unwrap().to_owned(),
         conversation_id: message.get_str("conversation_id").unwrap().to_owned(),
         flow_id: message.get_str("flow_id").unwrap().to_owned(),
         step_id: message.get_str("step_id").unwrap().to_owned(),
