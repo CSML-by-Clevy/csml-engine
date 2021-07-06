@@ -41,6 +41,8 @@ paths:
       operationId: run
       tags:
         - chat
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -70,6 +72,8 @@ paths:
       operationId: validate
       tags:
         - lint
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -90,12 +94,150 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /bots:
+    post:
+      description: Save a new version of a bot
+      operationId: createBotVersion
+      tags:
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotModel'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewBotVersionResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bots/{bot_id}/versions:
+    get:
+      description: Get the last few versions of a bot
+      operationId: getLastBotVersions
+      tags:
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot to retrieve
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: max number of versions to retrieve
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: pagination_key
+          in: query
+          description: pagination key (if the previous request had susequent results)
+          required: false
+          schema:
+            type: string
+            default: none
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BotVersionsResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bots/{bot_id}/versions/{version_id}:
+    get:
+      description: Get the requested version
+      operationId: getBotVersion
+      tags:
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot
+          required: true
+          schema:
+            type: string
+        - name: version_id
+          in: path
+          description: ID of version
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BotVersionModel'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      description: Delete the requested version
+      operationId: deleteBotVersion
+      tags:
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot
+          required: true
+          schema:
+            type: string
+        - name: version_id
+          in: path
+          description: ID of version
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /conversations:
     get:
       description: Get all past conversations for a client
       operationId: getConversations
       tags:
         - conversations
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: query
@@ -133,6 +275,8 @@ paths:
       operationId: getOpenConversation
       tags:
         - conversations
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -158,6 +302,8 @@ paths:
       operationId: closeOpenConversations
       tags:
         - conversations
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -174,38 +320,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /bots:
-    post:
-      description: Save a new version of a bot
-      operationId: createBotVersion
-      tags:
-        - bots
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BotModel"
-      responses:
-        "201":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NewBotVersionResponse"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
   /messages:
     get:
       description: Get a client's message history
       operationId: getMessages
       tags:
         - messages
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: query
@@ -249,6 +371,8 @@ paths:
       operationId: getState
       tags:
         - state
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: query
@@ -287,6 +411,8 @@ paths:
       operationId: getMemories
       tags:
         - memory
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: query
@@ -323,6 +449,8 @@ paths:
       operationId: createMemory
       tags:
         - memory
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: query
@@ -363,6 +491,8 @@ paths:
       operationId: deleteMemories
       tags:
         - memory
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: query
@@ -395,6 +525,8 @@ paths:
       operationId: getMemory
       tags:
         - memory
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: key
           in: path
@@ -434,6 +566,8 @@ paths:
       operationId: deleteMemory
       tags:
         - memory
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: key
           in: path
@@ -469,6 +603,8 @@ paths:
     delete:
       description: Delete all the data belonging to a client
       operationId: deleteClientData
+      security:
+        - ApiKeyAuth: []
       tags:
         - data
       parameters:
@@ -503,6 +639,8 @@ paths:
       operationId: deleteBotData
       tags:
         - data
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: path
@@ -524,7 +662,9 @@ paths:
       description: Get the latest version of a bot
       operationId: getLatestBotVersion
       tags:
-        - bots
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: path
@@ -546,116 +686,16 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     delete:
+      security:
+        - ApiKeyAuth: []
       description: Delete all versions of a bot
       operationId: deleteBot
       tags:
-        - bots
+        - bot versioning
       parameters:
         - name: bot_id
           in: path
           description: ID of bot
-          required: true
-          schema:
-            type: string
-      responses:
-        "204":
-          description: ""
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /bots/{bot_id}/versions:
-    get:
-      description: Get the last few versions of a bot
-      operationId: getLastBotVersions
-      tags:
-        - bots
-      parameters:
-        - name: bot_id
-          in: path
-          description: ID of bot to retrieve
-          required: true
-          schema:
-            type: string
-        - name: limit
-          in: query
-          description: max number of versions to retrieve
-          required: false
-          schema:
-            type: integer
-            default: 20
-        - name: pagination_key
-          in: query
-          description: pagination key (if the previous request had susequent results)
-          required: false
-          schema:
-            type: string
-            default: none
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BotVersionsResponse"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /bots/{bot_id}/versions/{version_id}:
-    get:
-      description: Get the requested version
-      operationId: getBotVersion
-      tags:
-        - bots
-      parameters:
-        - name: bot_id
-          in: path
-          description: ID of bot
-          required: true
-          schema:
-            type: string
-        - name: version_id
-          in: path
-          description: ID of version
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BotVersionModel"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-    delete:
-      description: Delete the requested version
-      operationId: deleteBotVersion
-      tags:
-        - bots
-      parameters:
-        - name: bot_id
-          in: path
-          description: ID of bot
-          required: true
-          schema:
-            type: string
-        - name: version_id
-          in: path
-          description: ID of version
           required: true
           schema:
             type: string
@@ -670,6 +710,11 @@ paths:
                 $ref: "#/components/schemas/Error"
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
   schemas:
     BotModel:
       type: object
@@ -957,7 +1002,7 @@ components:
     BotVersionsResponse:
       type: object
       required:
-        - bots
+        - bot versioning
       properties:
         pagination_key:
           type: string
