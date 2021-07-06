@@ -393,19 +393,19 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
                 ready = false;
                 status.insert(
                     "Database".to_owned(),
-                    serde_json::json!(format!("{} setup error", db_name)),
+                    serde_json::json!(format!("Setup error: {}", db_name)),
                 )
             }
         },
         Err(_) => {
             ready = false;
-            status.insert("Database".to_owned(), serde_json::json!("error"))
+            status.insert("Database".to_owned(), serde_json::json!("error: no database selected"))
         }
     };
 
     match ready {
         true => status.insert("Server_Ready".to_owned(), serde_json::json!(true)),
-        false => status.insert("".to_owned(), serde_json::json!(false)),
+        false => status.insert("Server_Ready".to_owned(), serde_json::json!(false)),
     };
 
     match std::env::var("ENGINE_SERVER_PORT") {
