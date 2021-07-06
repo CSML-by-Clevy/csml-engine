@@ -388,44 +388,44 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
 
     match std::env::var("ENGINE_DB_TYPE") {
         Ok(db_name) => match init_db() {
-            Ok(_) => status.insert("Database".to_owned(), serde_json::json!(db_name)),
+            Ok(_) => status.insert("database_type".to_owned(), serde_json::json!(db_name)),
             Err(_) => {
                 ready = false;
                 status.insert(
-                    "Database".to_owned(),
+                    "database_type".to_owned(),
                     serde_json::json!(format!("Setup error: {}", db_name)),
                 )
             }
         },
         Err(_) => {
             ready = false;
-            status.insert("Database".to_owned(), serde_json::json!("error: no database selected"))
+            status.insert("database_type".to_owned(), serde_json::json!("error: no database type selected"))
         }
     };
 
     match ready {
-        true => status.insert("Server_Ready".to_owned(), serde_json::json!(true)),
-        false => status.insert("Server_Ready".to_owned(), serde_json::json!(false)),
+        true => status.insert("server_ready".to_owned(), serde_json::json!(true)),
+        false => status.insert("server_ready".to_owned(), serde_json::json!(false)),
     };
 
     match std::env::var("ENGINE_SERVER_PORT") {
-        Ok(port) => status.insert("Port".to_owned(), serde_json::json!(port)),
-        Err(_) => status.insert("Port".to_owned(), serde_json::json!(5000)), // DEFAULT
+        Ok(port) => status.insert("server_port".to_owned(), serde_json::json!(port)),
+        Err(_) => status.insert("server_port".to_owned(), serde_json::json!(5000)), // DEFAULT
+    };
+
+    match std::env::var("ENGINE_SERVER_API_KEYS") {
+        Ok(_) => status.insert("server_auth_enabled".to_owned(), serde_json::json!(true)),
+        Err(_) => status.insert("server_auth_enabled".to_owned(), serde_json::json!(false)),
     };
 
     match std::env::var("ENCRYPTION_SECRET") {
-        Ok(_) => status.insert("DB_Encryption".to_owned(), serde_json::json!(true)),
-        Err(_) => status.insert("DB_Encryption".to_owned(), serde_json::json!(false)),
+        Ok(_) => status.insert("encryption_enabled".to_owned(), serde_json::json!(true)),
+        Err(_) => status.insert("encryption_enabled".to_owned(), serde_json::json!(false)),
     };
 
     match std::env::var("DEBUG") {
-        Ok(_) => status.insert("Debug_Mode".to_owned(), serde_json::json!(true)),
-        Err(_) => status.insert("DEBUG_MODE".to_owned(), serde_json::json!(false)),
-    };
-
-    match std::env::var("API_KEY") {
-        Ok(_) => status.insert("Server_Auth".to_owned(), serde_json::json!(true)),
-        Err(_) => status.insert("Server_Auth".to_owned(), serde_json::json!(false)),
+        Ok(_) => status.insert("debug_mode_enabled".to_owned(), serde_json::json!(true)),
+        Err(_) => status.insert("debug_mode_enabled".to_owned(), serde_json::json!(false)),
     };
 
     Ok(serde_json::json!(status))
