@@ -39,7 +39,7 @@ pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>, req: act
     };
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {

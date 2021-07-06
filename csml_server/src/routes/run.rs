@@ -10,7 +10,8 @@ pub async fn handler(body: web::Json<RunRequest>, req: actix_web::HttpRequest) -
   let mut request = body.event.to_owned();
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let bot_opt = match body.get_bot_opt() {
@@ -76,7 +77,7 @@ mod tests {
                                 "channel_id": "channel_id",
                                 "bot_id": "test_run"
                             },
-                            "payload": { 
+                            "payload": {
                               "content_type": "text" ,
                               "content": {
                                 "text": "toto"

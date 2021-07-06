@@ -31,7 +31,7 @@ pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpR
     };
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {
@@ -57,7 +57,7 @@ pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpR
 pub async fn delete_bot(path: web::Path<BotIdPath>, req: actix_web::HttpRequest) -> HttpResponse {
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {

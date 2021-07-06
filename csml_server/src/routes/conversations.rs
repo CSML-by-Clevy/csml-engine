@@ -13,7 +13,8 @@ use crate::routes::tools::validate_api_key;
 pub async fn get_open(body: web::Json<Client>, req: actix_web::HttpRequest) -> HttpResponse {
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -38,7 +39,8 @@ pub async fn get_open(body: web::Json<Client>, req: actix_web::HttpRequest) -> H
 pub async fn close_user_conversations(body: web::Json<Client>, req: actix_web::HttpRequest) -> HttpResponse {
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -70,7 +72,8 @@ pub struct GetClientInfoQuery {
 pub async fn get_client_conversations(query: web::Query<GetClientInfoQuery>, req: actix_web::HttpRequest) -> HttpResponse {
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let client = Client {

@@ -42,7 +42,7 @@ pub async fn create_client_memory(
     };
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {
@@ -79,7 +79,7 @@ pub async fn delete_memory(
     };
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {
@@ -110,7 +110,7 @@ pub async fn delete_memories(query: web::Query<ClientQuery>, req: actix_web::Htt
     };
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {
@@ -141,7 +141,7 @@ pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Client
     };
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {
@@ -170,7 +170,7 @@ pub async fn get_memories(query: web::Query<ClientQuery>, req: actix_web::HttpRe
     };
 
     if let Some(value) = validate_api_key(&req) {
-        return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+        return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {

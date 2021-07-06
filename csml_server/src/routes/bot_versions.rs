@@ -19,7 +19,8 @@ pub async fn add_bot_version(body: web::Json<CsmlBot>, req: actix_web::HttpReque
   let bot = body.to_owned();
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -66,7 +67,8 @@ pub async fn get_bot_latest_version(path: web::Path<BotIdPath>, req: actix_web::
   let bot_id = path.bot_id.to_owned();
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -96,7 +98,8 @@ pub async fn delete_bot_versions(
   let bot_id = path.bot_id.to_owned();
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -139,7 +142,8 @@ pub async fn get_bot_latest_versions(path: web::Path<BotIdPath>, query: web::Que
   };
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -184,7 +188,8 @@ pub async fn get_bot_version(
   let version_id = path.version_id.to_owned();
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -214,7 +219,8 @@ pub async fn delete_bot_version(
   let version_id = path.version_id.to_owned();
 
   if let Some(value) = validate_api_key(&req) {
-    return HttpResponse::BadRequest().header("X-Api-Key", value).finish()
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
   }
 
   let res = thread::spawn(move || {
@@ -337,7 +343,7 @@ mod tests {
             App::new()
                     .service(get_bot_version)
                     .service(add_bot_version)
-                    
+
         ).await;
 
         let resp = test::TestRequest::post()
