@@ -1,15 +1,15 @@
-use crate::{data::*, delete_client_memories};
 use crate::db_connectors::{
     conversations::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
 };
 use crate::utils::*;
+use crate::{data::*, delete_client_memories};
 
 use csml_interpreter::{
     data::{ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, Event, Hold, MSG},
     interpret,
 };
-use std::collections::HashMap;
 use serde_json::{map::Map, Value};
+use std::collections::HashMap;
 use std::{env, sync::mpsc, thread, time::SystemTime};
 
 /**
@@ -41,22 +41,20 @@ pub fn interpret_step(
         match received {
             MSG::Remember(mem) => {
                 memories.insert(mem.key.clone(), mem);
-            },
-            MSG::Forget(mem) => {
-                match mem {
-                    ForgetMemory::ALL => {
-                        memories.clear();
-                        delete_client_memories(&data.client)?;
-                    },
-                    ForgetMemory::SINGLE(memory) => {
-                        memories.remove(&memory.ident);
-                        crate::delete_client_memory(&data.client, &memory.ident)?;
-                    }
-                    ForgetMemory::LIST(mem_list) => {
-                        for mem in mem_list.iter() {
-                            memories.remove(&mem.ident);
-                            crate::delete_client_memory(&data.client, &mem.ident)?;
-                        }
+            }
+            MSG::Forget(mem) => match mem {
+                ForgetMemory::ALL => {
+                    memories.clear();
+                    delete_client_memories(&data.client)?;
+                }
+                ForgetMemory::SINGLE(memory) => {
+                    memories.remove(&memory.ident);
+                    crate::delete_client_memory(&data.client, &memory.ident)?;
+                }
+                ForgetMemory::LIST(mem_list) => {
+                    for mem in mem_list.iter() {
+                        memories.remove(&mem.ident);
+                        crate::delete_client_memory(&data.client, &mem.ident)?;
                     }
                 }
             },
