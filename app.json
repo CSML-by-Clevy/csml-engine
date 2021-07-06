@@ -1,0 +1,47 @@
+{
+    "name": "CSML application",
+    "description": "",
+    "repository": "https://github.com/CSML-by-Clevy/csml-engine/tree/feat/deploy-to-heroku",
+    "success_url": "/",
+    "keywords": ["rust", "csml"],
+    "website": "https://www.csml.dev/",
+    "env": {
+        "ENGINE_DB_TYPE": {
+            "value": "mongodb",
+            "required": true
+        },
+        "MONGODB_DATABASE": "csml",
+
+        "MONGODB_HOST": {
+            "value": "localhost",
+            "required": false
+        },
+        "MONGODB_PORT": {
+            "value": "27017",
+            "required": false
+        },
+        "MONGODB_DATABASE": {
+            "value": "csml",
+            "required": false
+        },
+        "MONGODB_USERNAME": {
+            "required": false
+        },
+        "MONGODB_PASSWORD": {
+            "required": false
+        },
+
+        "MONGODB_URI": {
+            "required": false
+        },
+
+        "ENCRYPTION_SECRET": {
+            "required": false
+        }
+    },
+    "buildpacks": [
+        {
+          "url": "https://github.com/CSML-by-Clevy/heroku-buildpack-csml"
+        }
+    ]
+}

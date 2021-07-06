@@ -1,6 +1,6 @@
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
-    EngineError, MongoDbClient
+    EngineError, MongoDbClient,
 };
 use bson::{doc, Bson, Document};
 use csml_interpreter::data::Client;
