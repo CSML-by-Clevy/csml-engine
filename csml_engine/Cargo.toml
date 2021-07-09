@@ -1,6 +1,6 @@
 [package]
 name = "csml_engine"
-version = "1.6.3"
+version = "1.6.4"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "François Falala-Sechet <francois@clevy.io>",
@@ -71,7 +71,7 @@ default_features = false
 optional = true
 
 [dependencies]
-csml_interpreter = { version = "1.6.3", path = "../csml_interpreter" }
+csml_interpreter = { version = "1.6.4", path = "../csml_interpreter" }
 multimap = "0.8.2"
 md-5 = "0.9.1"
 chrono = "0.4"
