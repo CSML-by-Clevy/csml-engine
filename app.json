@@ -10,7 +10,6 @@
             "value": "mongodb",
             "required": true
         },
-        "MONGODB_DATABASE": "csml",
 
         "MONGODB_HOST": {
             "value": "localhost",
