@@ -113,6 +113,8 @@ AWS_S3_BUCKET=
 
 ENGINE_SERVER_PORT=5000
 
+ENGINE_SERVER_API_KEYS=someAuthKey4CsmlServer,someOtherAuthKey
+
 ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
 DISABLE_SSL_VERIFY=false
 DEBUG=true
@@ -127,6 +129,8 @@ DEBUG=true
 ### Using a ready-to-use binary (Linux and MacOS only)
 
 The easiest way to launch a CSML Engine on your own machine is to use one of our pre-built, optimized binaries (available for both MongoDB and Amazon DynamoDB). These binaries are available as executables on each of CSML's releases since v1.3.0.
+
+Follow the installation guide (for ubuntu, but the process will be similar on other operating systems) along on this blog post: https://blog.csml.dev/how-to-install-a-self-hosted-csml-engine-on-ubuntu-18-04/
 
 To download the latest CSML Server binaries, [head over to the latest release](https://github.com/CSML-by-Clevy/csml-engine/releases/latest) and make sure to download the right version for your architecture.
 
