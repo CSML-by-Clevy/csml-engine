@@ -18,8 +18,11 @@
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#example">Example</a> •
-  <a href="#using-csml-studio">Usage</a> •
+  <a href="#getting-started">Getting started</a> •
   <a href="#additional-information">Additional Information</a>
+</p>
+<p align="center">
+  <a href="https://play.csml.dev">Try CSML online</a>
 </p>
 
 <h2 align="center">
