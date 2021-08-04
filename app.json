@@ -1,7 +1,7 @@
 {
     "name": "CSML application",
     "description": "",
-    "repository": "https://github.com/CSML-by-Clevy/csml-engine/tree/feat/deploy-to-heroku",
+    "repository": "https://github.com/CSML-by-Clevy/csml-engine/tree/master",
     "success_url": "/",
     "keywords": ["rust", "csml"],
     "website": "https://www.csml.dev/",
