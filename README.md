@@ -125,7 +125,7 @@ DEBUG=true
 
 ### Deploy to Heroku
 
-<a href="https://heroku.com/deploy?template=https://github.com/CSML-by-Clevy/csml-engine/tree/masters">
+<a href="https://heroku.com/deploy?template=https://github.com/CSML-by-Clevy/csml-engine/tree/master">
   <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
 </a>
 
