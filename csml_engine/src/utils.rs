@@ -257,11 +257,14 @@ pub fn search_flow<'a>(
 
             let flow_trigger: FlowTrigger = serde_json::from_str(&event.content_value)?;
 
-            let flow = get_flow_by_id(&flow_trigger.flow_id, &bot.flows)?;
-
-            match flow_trigger.step_id {
-                Some(step_id) => Ok((flow, step_id)),
-                None => Ok((flow, "start".to_owned())),
+            match get_flow_by_id(&flow_trigger.flow_id, &bot.flows) {
+                Ok(flow) => {
+                    match flow_trigger.step_id {
+                        Some(step_id) => Ok((flow, step_id)),
+                        None => Ok((flow, "start".to_owned())),
+                    }
+                },
+                Err(_) => Ok((get_flow_by_id(&bot.default_flow, &bot.flows)? , "start".to_owned())),
             }
         }
         event => {
