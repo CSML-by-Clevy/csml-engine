@@ -114,6 +114,14 @@ impl<'a> Data<'a> {
             self.native_component.clone(),
         )
     }
+
+    // get permanent and temporary memories in a single hashmap
+    pub fn get_all_memories(&self) -> HashMap<String, Literal> {
+        let remember_memory = self.context.current.clone();
+        let step_memory = self.step_vars.clone();
+
+        remember_memory.into_iter().chain(step_memory).collect()
+    }
 }
 
 pub fn init_child_context(data: &Data) -> Context {

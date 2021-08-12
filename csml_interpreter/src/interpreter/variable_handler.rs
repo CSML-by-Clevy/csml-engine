@@ -486,10 +486,7 @@ pub fn get_var(
             )),
         },
         name if name == _MEMORY => {
-            let remember_memory = data.context.current.clone();
-            let step_memory = data.step_vars.clone();
-
-            let memory: HashMap<String, Literal> = remember_memory.into_iter().chain(step_memory).collect();
+            let memory: HashMap<String, Literal> = data.get_all_memories();
             let mut lit = PrimitiveObject::get_literal(&memory, var.interval);
 
             match path {

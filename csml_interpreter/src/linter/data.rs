@@ -56,7 +56,7 @@ pub struct ImportInfo<'a> {
 
 #[derive(Debug)]
 pub struct State {
-    pub in_function: bool,
+    pub in_function: i16,
     pub loop_scope: usize,
 }
 
@@ -156,7 +156,7 @@ impl<'a> StepInfo<'a> {
 }
 
 impl State {
-    pub fn new(in_function: bool) -> Self {
+    pub fn new(in_function: i16) -> Self {
         Self {
             in_function,
             loop_scope: 0,
