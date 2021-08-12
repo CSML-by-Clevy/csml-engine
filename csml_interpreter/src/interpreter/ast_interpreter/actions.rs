@@ -13,6 +13,7 @@ use crate::interpreter::variable_handler::{
     search_goto_var_memory, forget_memories::{forget_scope_memories, remove_message_data_memories}
 };
 use crate::parser::ExitCondition;
+use std::collections::HashMap;
 use std::sync::mpsc;
 
 fn get_var_info<'a>(
@@ -122,7 +123,8 @@ pub fn match_actions(
             let mut new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
-            capture_variables(&mut &mut new_value, data.step_vars.clone(), &data.context.flow);
+            let memory: HashMap<String, Literal> = data.get_all_memories();
+            capture_variables(&mut &mut new_value, memory, &data.context.flow);
 
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
             exec_path_actions(
@@ -278,7 +280,8 @@ pub fn match_actions(
                 expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
-            capture_variables(&mut &mut new_value, data.step_vars.clone(), &data.context.flow);
+            let memory: HashMap<String, Literal> = data.get_all_memories();
+            capture_variables(&mut &mut new_value, memory, &data.context.flow);
 
             msg_data.add_to_memory(&name.ident, new_value.clone());
 
