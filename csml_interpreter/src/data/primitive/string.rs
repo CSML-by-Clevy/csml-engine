@@ -809,12 +809,12 @@ impl PrimitiveString {
                     )?
                     .to_owned();
 
-                    if int_start.is_negative() {
+                    if int_start < 0 {
                         int_start = len as i64 + int_start;
                     }
 
                     let start = match int_start {
-                        value if value.is_positive() && (value as usize) < len => value as usize,
+                        value if value >= 0 && (value as usize) < len => value as usize,
                         _ => {
                             return Err(gen_error_info(
                                 Position::new(interval, &data.context.flow),
@@ -849,7 +849,7 @@ impl PrimitiveString {
                     )?
                     .to_owned();
 
-                    if int_start.is_negative() {
+                    if int_start < 0 {
                         int_start = len as i64 + int_start;
                     }
 
@@ -865,8 +865,8 @@ impl PrimitiveString {
 
                     let (start, end) = match (int_start, int_end) {
                         (start, end)
-                            if start.is_positive()
-                                && end.is_positive()
+                            if int_start >= 0
+                                && end >= 0
                                 && (start as usize) < len
                                 && (end as usize) <= len =>
                         {
