@@ -85,3 +85,7 @@ step_11:
     say toto
 
     goto end
+
+step_12_slice:
+    say "Hello World".slice(0, 3)
+    goto end
