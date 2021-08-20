@@ -298,7 +298,22 @@ pub enum Database {
     Mongo(MongoDbClient),
     #[cfg(feature = "dynamo")]
     Dynamodb(DynamoDbClient),
+    #[cfg(feature = "postgresql")]
+    Postgresql(PostgresqlClient),
     None,
+}
+
+
+#[cfg(feature = "postgresql")]
+pub struct PostgresqlClient {
+    pub client: diesel::prelude::PgConnection,
+}
+
+#[cfg(feature = "postgresql")]
+impl PostgresqlClient {
+    pub fn new(client: diesel::prelude::PgConnection) -> Self {
+        Self { client }
+    }
 }
 
 #[cfg(feature = "mongo")]
