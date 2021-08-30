@@ -23,7 +23,7 @@ fn create_mongodb_uri() -> Result<String, EngineError> {
 
     match std::env::var("MONGODB_HOST") {
         Ok(host) => uri = format!("{}{}", uri, host),
-        _ => panic!("Missing MONGODB_HOST in env"),
+        _ => return Err(EngineError::Manager(format!("Missing MONGODB_HOST in env"))),
     }
 
     match std::env::var("MONGODB_PORT") {
@@ -40,7 +40,7 @@ fn create_mongodb_uri() -> Result<String, EngineError> {
 pub fn init() -> Result<Database, EngineError> {
     let dbname = match std::env::var("MONGODB_DATABASE") {
         Ok(var) => var,
-        _ => panic!("Missing MONGODB_DATABASE in env"),
+        _ => return Err(EngineError::Manager(format!("Missing MONGODB_DATABASE in env"))),
     };
 
     let uri = match std::env::var("MONGODB_URI") {
