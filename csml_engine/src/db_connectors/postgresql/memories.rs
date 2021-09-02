@@ -1,7 +1,4 @@
 use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
-use diesel::{insert_into};
-
-use serde_json::Value;
 
 use crate::{
     db_connectors::postgresql::get_db,
@@ -12,11 +9,10 @@ use crate::{
 
 use super::{
     models,
-    schema::memories
+    schema::csml_memories
 };
 
 use std::collections::HashMap;
-use std::env;
 
 pub fn add_memories(
     data: &mut ConversationInfo,
@@ -28,56 +24,71 @@ pub fn add_memories(
 
     let db = get_db(&data.db)?;
 
-    let mut new_memories = vec!();
     for (key, mem) in memories.iter() {
-        let mem = models::NewMemory {
-            client_id: 42,
-            key,
-            value: encrypt_data(&mem.value)?,
-        };
-
-        new_memories.push(mem);
+        create_client_memory(&data.client, key, &mem.value, db)?;
     }
-
-    let instruction: models::Memory = diesel::insert_into(memories::table)
-    .values(&new_memories)
-    .get_result(&db.client)
-    .expect("Error creating memory");
 
     Ok(())
 }
 
 pub fn create_client_memory(
-    // client: &Client,
-    key: String,
-    value: serde_json::Value,
+    client: &Client,
+    key: &str,
+    value: &serde_json::Value,
     db: &PostgresqlClient,
 ) -> Result<(), EngineError> {
 
-    let new_memory = models::NewMemory {
-        client_id: 42, // client_id
-        key: &key,
-        value: encrypt_data(&value)?, // encrypted
+    let value = encrypt_data(&value)?;
+
+    let new_memories = models::NewMemory {
+        id: uuid::Uuid::new_v4(),
+        bot_id: &client.bot_id,
+        channel_id: &client.channel_id,
+        user_id: &client.user_id,
+        key,
+        value: value.clone(),
     };
 
-    let instruction: models::Memory = diesel::insert_into(memories::table)
-    .values(&new_memory)
-    .get_result(&db.client)
-    .expect("Error creating memory"); 
+    diesel::insert_into(csml_memories::table)
+    .values(&new_memories)
+    .on_conflict((csml_memories::bot_id, csml_memories::channel_id, csml_memories::user_id, csml_memories::key))
+    .do_update()
+    .set(csml_memories::value.eq(value))
+    .execute(&db.client)?;
 
     Ok(())
+}
+
+pub fn internal_use_get_memories(
+    client: &Client,
+    db: &PostgresqlClient
+) -> Result<serde_json::Value, EngineError> {
+    let memories: Vec<models::Memory> = csml_memories::table
+    .filter(csml_memories::bot_id.eq(&client.bot_id))
+    .filter(csml_memories::channel_id.eq(&client.channel_id))
+    .filter(csml_memories::user_id.eq(&client.user_id))
+    .load(&db.client)?;
+
+    let mut map = serde_json::Map::new();
+    for mem in memories {
+        if !map.contains_key(&mem.key) {
+            let value: serde_json::Value = decrypt_data(mem.value)?;
+            map.insert(mem.key, value);
+        }
+    }
+
+    Ok(serde_json::json!(map))
 }
 
 pub fn get_memories(
     client: &Client,
     db: &PostgresqlClient
 ) -> Result<serde_json::Value, EngineError> {
-    let memories: Vec<models::Memory> = memories::table.filter(memories::client_id.eq(42))
-    // .filter(memories::bot_id.eq("Sean"))
-    // .filter(memories::channel_id.eq("Sean"))
-    // .filter(memories::user_id.eq("Sean"))
-    .load(&db.client)
-    .expect("Error getting memory"); 
+    let memories: Vec<models::Memory> = csml_memories::table
+    .filter(csml_memories::bot_id.eq(&client.bot_id))
+    .filter(csml_memories::channel_id.eq(&client.channel_id))
+    .filter(csml_memories::user_id.eq(&client.user_id))
+    .load(&db.client)?;
 
     let mut vec = vec![];
     for mem in memories {
@@ -100,13 +111,12 @@ pub fn get_memory(
     db: &PostgresqlClient,
 ) -> Result<serde_json::Value, EngineError> {
 
-    let mem: models::Memory = memories::table.filter(memories::client_id.eq(42))
-    .filter(memories::key.eq(&key))
-    // .filter(memories::bot_id.eq("Sean"))
-    // .filter(memories::channel_id.eq("Sean"))
-    // .filter(memories::user_id.eq("Sean"))
-    .get_result(&db.client)
-    .expect("Error getting memory"); 
+    let mem: models::Memory = csml_memories::table
+        .filter(csml_memories::key.eq(&key))
+        .filter(csml_memories::bot_id.eq(&client.bot_id))
+        .filter(csml_memories::channel_id.eq(&client.channel_id))
+        .filter(csml_memories::user_id.eq(&client.user_id))
+        .get_result(&db.client)?;
 
     let mut memory = serde_json::Map::new();
     let value: serde_json::Value = decrypt_data(mem.value)?;
@@ -124,10 +134,12 @@ pub fn delete_client_memory(
     db: &PostgresqlClient,
 ) -> Result<(), EngineError> {
 
-    diesel::delete(memories::table
-        .filter(memories::client_id.eq(42))
-        .filter(memories::key.eq(key))
-    ).execute(&db.client);
+    diesel::delete(csml_memories::table
+        .filter(csml_memories::bot_id.eq(&client.bot_id))
+        .filter(csml_memories::channel_id.eq(&client.channel_id))
+        .filter(csml_memories::user_id.eq(&client.user_id))
+        .filter(csml_memories::key.eq(key))
+    ).execute(&db.client).ok();
 
     Ok(())
 }
@@ -136,9 +148,23 @@ pub fn delete_client_memories(
     client: &Client,
     db: &PostgresqlClient
 ) -> Result<(), EngineError> {
-    diesel::delete(memories::table
-        .filter(memories::client_id.eq(42))
-    ).execute(&db.client);
+    diesel::delete(csml_memories::table
+        .filter(csml_memories::bot_id.eq(&client.bot_id))
+        .filter(csml_memories::channel_id.eq(&client.channel_id))
+        .filter(csml_memories::user_id.eq(&client.user_id))
+    ).execute(&db.client).ok();
+
+    Ok(())
+}
+
+pub fn delete_all_bot_data(
+    bot_id: &str,
+    db: &PostgresqlClient,
+) -> Result<(), EngineError> {
+    diesel::delete(
+        csml_memories::table
+        .filter(csml_memories::bot_id.eq(bot_id))
+    ).execute(&db.client).ok();
 
     Ok(())
 }

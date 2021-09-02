@@ -1,9 +1,0 @@
-CREATE TABLE cmsl_bot (
-  id VARCHAR PRIMARY KEY,
-  version_id VARCHAR NOT NULL,
-
-  bot TEXT NOT NULL,
-  engine_version VARCHAR NOT NULL,
-
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-)

@@ -1,24 +1,14 @@
-use chrono::SecondsFormat;
-
 use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
-use diesel::{insert_into};
-
-use serde_json::Value;
 
 use crate::{
-    db_connectors::postgresql::get_db,
-    encrypt::{decrypt_data, encrypt_data},
     EngineError, PostgresqlClient,
-    ConversationInfo, Memory, Client
+    Client, DbConversation
 };
-
 use super::{
     models,
-    schema::conversations
+    schema::csml_conversations,
+    pagination::*
 };
-
-use std::collections::HashMap;
-use std::env;
 
 pub fn create_conversation(
     flow_id: &str,
@@ -27,114 +17,126 @@ pub fn create_conversation(
     db: &PostgresqlClient,
 ) -> Result<String, EngineError> {
     let new_conversation = models::NewConversation {
-        client_id: 42, // client_id
+        id: uuid::Uuid::new_v4(),
+        bot_id: &client.bot_id,
+        channel_id: &client.channel_id,
+        user_id: &client.user_id,
         flow_id,
         step_id,
         status: "OPEN"
     };
 
-    let conversation: models::Conversation = diesel::insert_into(conversations::table)
+    let conversation: models::Conversation = diesel::insert_into(csml_conversations::table)
     .values(&new_conversation)
-    .get_result(&db.client)
-    .expect("Error creating memory"); 
+    .get_result(&db.client)?;
 
     Ok(conversation.id.to_string())
 }
 
 pub fn close_conversation(
     id: &str,
-    client: &Client,
+    _client: &Client,
     status: &str,
     db: &PostgresqlClient,
 ) -> Result<(), EngineError> {
+    let id: uuid::Uuid = uuid::Uuid::parse_str(id).unwrap();
+
     diesel::update(
-        conversations::table
-        .filter(conversations::id.eq(42))
-        .filter(conversations::client_id.eq(42))
+        csml_conversations::table
+        .filter(csml_conversations::id.eq(id))
     )
-    .set(conversations::status.eq(status))
-    .execute(&db.client);
+    .set(csml_conversations::status.eq(status))
+    .execute(&db.client)?;
 
     Ok(())
 }
 
 pub fn close_all_conversations(client: &Client, db: &PostgresqlClient) -> Result<(), EngineError> {
     diesel::update(
-        conversations::table
-        .filter(conversations::client_id.eq(42))
+        csml_conversations::table
+        .filter(csml_conversations::bot_id.eq(&client.bot_id))
+        .filter(csml_conversations::channel_id.eq(&client.channel_id))
+        .filter(csml_conversations::user_id.eq(&client.user_id))
     )
-    .set(conversations::status.eq("CLOSED"))
-    .execute(&db.client);
+    .set(csml_conversations::status.eq("CLOSED"))
+    .execute(&db.client)?;
 
     Ok(())
 }
 
-// pub fn get_latest_open(
-//     client: &Client,
-//     db: &PostgresqlClient,
-// ) -> Result<Option<DbConversation>, EngineError> {
-//     let conversations: models::Conversation = conversations::table
-//         .filter(conversations::client_id.eq(42))
-//         .filter(conversations::status.eq("OPEN"))
-//         .order_by(conversations::updated_at.asc())
-//         // .filter(memories::bot_id.eq("Sean"))
-//         // .filter(memories::channel_id.eq("Sean"))
-//         // .filter(memories::user_id.eq("Sean"))
-//         .limit(1)
-//         .load(&db.client)
-//         .expect("Error getting memory");
+pub fn get_latest_open(
+    client: &Client,
+    db: &PostgresqlClient,
+) -> Result<Option<DbConversation>, EngineError> {
+    let result: Result<models::Conversation, diesel::result::Error> = csml_conversations::table
+        .filter(csml_conversations::bot_id.eq(&client.bot_id))
+        .filter(csml_conversations::channel_id.eq(&client.channel_id))
+        .filter(csml_conversations::user_id.eq(&client.user_id))
+        .filter(csml_conversations::status.eq("OPEN"))
+        .order_by(csml_conversations::updated_at.desc())
+        .limit(1)
+        .get_result(&db.client);
 
-//     // match result {
-//     //     Some(conv) => {
-//     //         let conversation = format_conversation_struct(conv)?;
-//     //         Ok(Some(conversation))
-//     //     }
-//     //     None => Ok(None),
-//     // }
+    match result {
+        Ok(conv) => {
+            let conversation = DbConversation {
+                id: conv.id.to_string(),
+                client: Client{ 
+                    bot_id: conv.bot_id,
+                    channel_id: conv.channel_id,
+                    user_id: conv.user_id
+                },
+                flow_id: conv.flow_id,
+                step_id: conv.step_id,
+                status: conv.status,
+                last_interaction_at: conv.last_interaction_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+                updated_at: conv.updated_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+                created_at: conv.created_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+            };
 
-//     Ok(None)
+            Ok(Some(conversation))
 
-//     unimplemented!()
-// }
+        }
+        Err(..) => Ok(None),
+    }
+}
 
 pub fn update_conversation(
     conversation_id: &str,
-    client: &Client,
     flow_id: Option<String>,
     step_id: Option<String>,
     db: &PostgresqlClient,
 ) -> Result<(), EngineError> {
 
+    let id: uuid::Uuid = uuid::Uuid::parse_str(conversation_id).unwrap();
+
     match (flow_id, step_id) {
         (Some(flow_id), Some(step_id)) => {
            diesel::update(
-                conversations::table
-                .filter(conversations::id.eq(42))
-                .filter(conversations::client_id.eq(42))
+                csml_conversations::table
+                .filter(csml_conversations::id.eq(&id))
             )
             .set((
-                conversations::flow_id.eq(flow_id.as_str()),
-                conversations::step_id.eq(step_id.as_str())
+                csml_conversations::flow_id.eq(flow_id.as_str()),
+                csml_conversations::step_id.eq(step_id.as_str())
             ))
-            .execute(&db.client);
+            .execute(&db.client)?;
         }
         (Some(flow_id), _) => {
             diesel::update(
-                conversations::table
-                .filter(conversations::id.eq(42))
-                .filter(conversations::client_id.eq(42))
+                csml_conversations::table
+                .filter(csml_conversations::id.eq(&id))
             )
-            .set(conversations::flow_id.eq(flow_id.as_str()))
-            .get_result::<models::Conversation>(&db.client);
+            .set(csml_conversations::flow_id.eq(flow_id.as_str()))
+            .get_result::<models::Conversation>(&db.client)?;
         }
         (_, Some(step_id)) => {
             diesel::update(
-                conversations::table
-                .filter(conversations::id.eq(42))
-                .filter(conversations::client_id.eq(42))
+                csml_conversations::table
+                .filter(csml_conversations::id.eq(&id))
             )
-            .set(conversations::step_id.eq(step_id.as_str()))
-            .get_result::<models::Conversation>(&db.client);
+            .set(csml_conversations::step_id.eq(step_id.as_str()))
+            .get_result::<models::Conversation>(&db.client)?;
         }
         _ => return Ok(())
     };
@@ -143,83 +145,81 @@ pub fn update_conversation(
 }
 
 pub fn delete_user_conversations(client: &Client, db: &PostgresqlClient) -> Result<(), EngineError> {
-    diesel::delete(conversations::table
-        .filter(conversations::client_id.eq(42))
-    ).execute(&db.client);
+    diesel::delete(csml_conversations::table
+        .filter(csml_conversations::bot_id.eq(&client.bot_id))
+        .filter(csml_conversations::channel_id.eq(&client.channel_id))
+        .filter(csml_conversations::user_id.eq(&client.user_id))
+    ).execute(&db.client).ok();
 
     Ok(())
 }
 
-// pub fn get_client_conversations(
-//     client: &Client,
-//     db: &PostgresqlClient,
-//     limit: Option<i64>,
-//     pagination_key: Option<String>,
-// ) -> Result<serde_json::Value, EngineError> {
+pub fn get_client_conversations(
+    client: &Client,
+    db: &PostgresqlClient,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
 
-//     unimplemented!()
+    let pagination_key = match pagination_key {
+        Some(paginate) => paginate.parse::<i64>().unwrap_or(1),
+        None => 1
+    };
 
-    //     let collection = db.client.collection("conversation");
+    let mut query = csml_conversations::table
+        .order_by(csml_conversations::updated_at.desc())
+        .filter(csml_conversations::bot_id.eq(&client.bot_id))
+        .filter(csml_conversations::channel_id.eq(&client.channel_id))
+        .filter(csml_conversations::user_id.eq(&client.user_id))
+        .paginate(pagination_key);
 
-//     let limit = match limit {
-//         Some(limit) if limit >= 1 => limit + 1,
-//         Some(_limit) => 21,
-//         None => 21,
-//     };
+    let limit_per_page = match limit {
+        Some(limit) => std::cmp::min(limit, 25),
+        None => 25,
+    };
+    query = query.per_page(limit_per_page);
 
-//     let filter = match pagination_key {
-//         Some(key) => {
-//             doc! {
-//                 "client": bson::to_bson(&client)?,
-//                 "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
-//             }
-//         }
-//         None => doc! {"client": bson::to_bson(&client)?},
-//     };
+    let (conversations, total_pages) =
+    query.load_and_count_pages::<models::Conversation>(&db.client)?;
 
-//     let find_options = mongodb::options::FindOptions::builder()
-//         .sort(doc! { "$natural": -1 })
-//         .batch_size(30)
-//         .limit(limit)
-//         .build();
-//     let cursor = collection.find(filter, find_options)?;
+    let mut convs = vec![];
+    for conversation in conversations {
+        let json = serde_json::json!({
+            "client": { 
+                "bot_id": conversation.bot_id,
+                "channel_id": conversation.channel_id,
+                "user_id": conversation.user_id
+            },
+            "flow_id": conversation.flow_id,
+            "step_id": conversation.step_id,
+            "status": conversation.status,
+            "last_interaction_at": conversation.last_interaction_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+            "updated_at": conversation.updated_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+            "created_at": conversation.created_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string()
+        });
 
-//     let mut conversations = vec![];
-//     for doc in cursor {
-//         match doc {
-//             Ok(conv) => {
-//                 let conversation = format_conversation_struct(conv)?;
+        convs.push(json);
+    }
 
-//                 let json = serde_json::json!({
-//                     "client": conversation.client,
-//                     "flow_id": conversation.flow_id,
-//                     "step_id": conversation.step_id,
-//                     "status": conversation.status,
-//                     "last_interaction_at": conversation.last_interaction_at,
-//                     "updated_at": conversation.updated_at,
-//                     "created_at": conversation.created_at
-//                 });
+    match pagination_key < total_pages {
+        true => {
+            let pagination_key = (pagination_key + 1).to_string();
+            Ok(
+                serde_json::json!({"conversations": convs, "pagination_key": pagination_key}),
+            )
+        }
+        false => Ok(serde_json::json!({ "conversations": convs })),
+    }
+}
 
-//                 conversations.push(json);
-//             }
-//             Err(_) => (),
-//         };
-//     }
+pub fn delete_all_bot_data(
+    bot_id: &str,
+    db: &PostgresqlClient,
+) -> Result<(), EngineError> {
+    diesel::delete(
+        csml_conversations::table
+        .filter(csml_conversations::bot_id.eq(bot_id))
+    ).execute(&db.client).ok();
 
-//     match conversations.len() == limit as usize {
-//         true => {
-//             conversations.pop();
-//             match conversations.last() {
-//                 Some(last) => {
-//                     let pagination_key = base64::encode(last["version_id"].clone().to_string());
-
-//                     Ok(
-//                         serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}),
-//                     )
-//                 }
-//                 None => Ok(serde_json::json!({ "conversations": conversations })),
-//             }
-//         }
-//         false => Ok(serde_json::json!({ "conversations": conversations })),
-//     }
-// }
+    Ok(())
+}

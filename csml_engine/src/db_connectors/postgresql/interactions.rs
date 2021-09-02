@@ -1,62 +1,86 @@
-use std::env;
-
 use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
-use diesel::{insert_into};
 
 use serde_json::Value;
 
 use crate::{
-    encrypt::encrypt_data, EngineError, PostgresqlClient
+    Client, encrypt::encrypt_data,
+    EngineError, PostgresqlClient
 };
 
 use super::{
     models::{NewInteraction, Interaction},
-    schema::interactions
+    schema::csml_interactions
 };
 
 pub fn init_interaction(
     event: Value,
-    client_id: i32,
+    client: &Client,
     db: &PostgresqlClient,
-) -> Result<Interaction, EngineError> {
+) -> Result<String, EngineError> {
 
     let e = encrypt_data(&event)?;
 
-    let new_interaction = NewInteraction{client_id, success: false, event: &e};
+    let new_interaction = NewInteraction {
+        id: uuid::Uuid::new_v4(),
+        bot_id: &client.bot_id,
+        channel_id: &client.channel_id,
+        user_id: &client.user_id,
+        success: false,
+        event: &e
+    };
 
-    let instruction: Interaction = diesel::insert_into(interactions::table)
+    let interaction: Interaction = diesel::insert_into(csml_interactions::table)
         .values(&new_interaction)
-        .get_result(&db.client)
-        .expect("Error creating instruction");
+        .get_result(&db.client)?;
 
-    Ok(instruction)
+    Ok(interaction.id.to_string())
 }
 
-use  diesel::pg::upsert::excluded;
-
 pub fn update_interaction(
-    interaction_id: i32,
+    interaction_id: &str,
     success: bool,
-    // client: &Client,
+    client: &Client,
     db: &PostgresqlClient,
 ) -> Result<(), EngineError> {
 
+    let id: uuid::Uuid = uuid::Uuid::parse_str(interaction_id).unwrap();
+
     diesel::update(
-        interactions::table.filter(interactions::id.eq(interaction_id))
+        csml_interactions::table
+        .filter(csml_interactions::bot_id.eq(&client.bot_id))
+        .filter(csml_interactions::channel_id.eq(&client.channel_id))
+        .filter(csml_interactions::user_id.eq(&client.user_id))
+        .filter(csml_interactions::id.eq(&id))
     )
-    .set(interactions::success.eq(&success))
-    .get_result::<Interaction>(&db.client);
+    .set(csml_interactions::success.eq(&success))
+    .get_result::<Interaction>(&db.client)?;
 
     Ok(())
 }
 
 pub fn delete_user_interactions(
-    client_id: i32, db: &PostgresqlClient
+    client: &Client,
+    db: &PostgresqlClient
 ) -> Result<(), EngineError> {
 
-    diesel::delete(interactions::table.filter(
-        interactions::client_id.eq(client_id))
-    ).get_result::<Interaction>(&db.client);
+    diesel::delete(
+        csml_interactions::table
+        .filter(csml_interactions::bot_id.eq(&client.bot_id))
+        .filter(csml_interactions::channel_id.eq(&client.channel_id))
+        .filter(csml_interactions::user_id.eq(&client.user_id))
+    ).get_result::<Interaction>(&db.client).ok();
+
+    Ok(())
+}
+
+pub fn delete_all_bot_data(
+    bot_id: &str,
+    db: &PostgresqlClient,
+) -> Result<(), EngineError> {
+    diesel::delete(
+        csml_interactions::table
+        .filter(csml_interactions::bot_id.eq(bot_id))
+    ).execute(&db.client).ok();
 
     Ok(())
 }

@@ -1,175 +1,144 @@
-// use crate::{
-//     db_connectors::{mongodb::get_db, DbMessage},
-//     encrypt::{decrypt_data, encrypt_data},
-//     Client, ConversationInfo, EngineError, MongoDbClient,
-// };
-// use bson::{doc, Bson, Document};
+use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
 
-// fn format_messages(
-//     data: &ConversationInfo,
-//     messages: &[serde_json::Value],
-//     interaction_order: i32,
-//     direction: &str,
-// ) -> Result<Vec<Document>, EngineError> {
-//     messages
-//         .iter()
-//         .enumerate()
-//         .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction))
-//         .collect::<Result<Vec<Document>, EngineError>>()
-// }
+use crate::{
+    db_connectors::postgresql::get_db,
+    encrypt::{encrypt_data, decrypt_data},
+    EngineError, PostgresqlClient,
+    ConversationInfo, Client
+};
 
-// fn format_message(
-//     data: &ConversationInfo,
-//     message: serde_json::Value,
-//     msg_order: i32,
-//     interaction_order: i32,
-//     direction: &str,
-// ) -> Result<Document, EngineError> {
-//     let time = Bson::DateTime(chrono::Utc::now());
-//     let doc = doc! {
-//         "client": bson::to_bson(&data.client)?,
-//         "interaction_id": &data.interaction_id,
-//         "conversation_id": &data.conversation_id,
-//         "flow_id": &data.context.flow,
-//         "step_id": &data.context.step,
-//         "message_order": msg_order,
-//         "interaction_order": interaction_order,
-//         "direction": direction,
-//         "payload": encrypt_data(&message)?, // encrypted
-//         "content_type": &message["content_type"].as_str().unwrap_or("text"),
-//         "created_at": time
-//     };
-//     Ok(doc)
-// }
+use super::{
+    models,
+    schema::{
+        csml_messages, csml_conversations
+    },
+    pagination::*
+};
 
-// fn format_message_struct(message: bson::document::Document) -> Result<DbMessage, EngineError> {
-//     let encrypted_payload: String = message.get_str("payload").unwrap().to_owned();
-//     let payload = decrypt_data(encrypted_payload)?;
+pub fn add_messages_bulk(
+    data: &ConversationInfo,
+    msgs: &[serde_json::Value],
+    interaction_order: i32,
+    direction: &str,
+) -> Result<(), EngineError> {
+    if msgs.len() == 0 {
+        return Ok(());
+    }
 
-//     Ok(DbMessage {
-//         id: message.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
-//         client: bson::from_bson(message.get("client").unwrap().to_owned())?,
-//         interaction_id: message.get_str("interaction_id").unwrap().to_owned(),
-//         conversation_id: message.get_str("conversation_id").unwrap().to_owned(),
-//         flow_id: message.get_str("flow_id").unwrap().to_owned(),
-//         step_id: message.get_str("step_id").unwrap().to_owned(),
-//         message_order: message.get_i32("message_order").unwrap(),
-//         interaction_order: message.get_i32("interaction_order").unwrap(),
-//         direction: message.get_str("direction").unwrap().to_owned(),
-//         payload,
-//         content_type: message.get_str("content_type").unwrap().to_owned(),
-//         created_at: message.get_str("created_at").unwrap().to_owned(),
-//     })
-// }
+    let db = get_db(&data.db)?;
 
+    let mut new_messages = vec!();
+    for (message_order, message) in msgs.iter().enumerate() {
 
+        let interaction_id = uuid::Uuid::parse_str(&data.interaction_id).unwrap();
+        let conversation_id = uuid::Uuid::parse_str(&data.conversation_id).unwrap();
 
+        let msg = models::NewMessages {
+            id: uuid::Uuid::new_v4(),
 
+            interaction_id,
+            conversation_id,
 
+            flow_id: &data.context.flow,
+            step_id: &data.context.step,
+            direction,
+            payload: encrypt_data(&message)?,
+            content_type: &message["content_type"].as_str().unwrap_or("text"),
+            message_order: message_order as i32,
+            interaction_order,
+        };
 
+        new_messages.push(msg);
+    }
 
+    diesel::insert_into(csml_messages::table)
+    .values(&new_messages)
+    .get_result::<models::Message>(&db.client)?;
 
+    Ok(())
+}
 
-// pub fn add_messages_bulk(
-//     data: &ConversationInfo,
-//     msgs: &[serde_json::Value],
-//     interaction_order: i32,
-//     direction: &str,
-// ) -> Result<(), EngineError> {
-//     if msgs.len() == 0 {
-//         return Ok(());
-//     }
-//     let docs = format_messages(data, msgs, interaction_order, direction)?;
-//     let db = get_db(&data.db)?;
+pub fn delete_user_messages(
+    client: &Client,
+    db: &PostgresqlClient
+) -> Result<(), EngineError> {
 
-//     let message = db.client.collection("message");
+    let conversations: Vec<models::Conversation> = csml_conversations::table
+        .filter(csml_conversations::bot_id.eq(&client.bot_id))
+        .filter(csml_conversations::channel_id.eq(&client.channel_id))
+        .filter(csml_conversations::user_id.eq(&client.user_id))
+        .load(&db.client)?;
 
-//     message.insert_many(docs, None)?;
+    for conversation in conversations {
+        diesel::delete(
+            csml_messages::table
+            .filter(csml_messages::conversation_id.eq(&conversation.id))
+        ).execute(&db.client).ok();
+    }
 
-//     Ok(())
-// }
+    Ok(())
+}
 
-// pub fn delete_user_messages(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
-//     let collection = db.client.collection("message");
+pub fn get_client_messages(
+    client: &Client,
+    db: &PostgresqlClient,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, EngineError> {
+    let pagination_key = match pagination_key {
+        Some(paginate) => paginate.parse::<i64>().unwrap_or(1),
+        None => 1
+    };
 
-//     let filter = doc! {
-//         "client": bson::to_bson(&client)?,
-//     };
+    let mut query = csml_conversations::table
+        .filter(csml_conversations::bot_id.eq(&client.bot_id))
+        .filter(csml_conversations::channel_id.eq(&client.channel_id))
+        .filter(csml_conversations::user_id.eq(&client.user_id))
+        .inner_join(csml_messages::table)
+        .select((csml_conversations::all_columns, csml_messages::all_columns))
+        .order_by(csml_messages::updated_at.desc())
+        .paginate(pagination_key);
 
-//     collection.delete_many(filter, None)?;
+    let limit_per_page = match limit {
+        Some(limit) => std::cmp::min(limit, 25),
+        None => 25,
+    };
+    query = query.per_page(limit_per_page);
 
-//     Ok(())
-// }
+    let (conversation_with_messages, total_pages) =
+        query.load_and_count_pages::<(models::Conversation, models::Message)>(&db.client)?;
+    let (_, messages): (Vec<_>, Vec<_>) = conversation_with_messages.into_iter().unzip();
 
-// pub fn get_client_messages(
-//     client: &Client,
-//     db: &MongoDbClient,
-//     limit: Option<i64>,
-//     pagination_key: Option<String>,
-// ) -> Result<serde_json::Value, EngineError> {
-//     let collection = db.client.collection("conversation");
+    let mut msgs = vec![];
+    for message in messages {
+        let json = serde_json::json!({
+            "client": { 
+                "bot_id": &client.bot_id,
+                "channel_id": &client.channel_id,
+                "user_id": &client.user_id
+            },
+            "interaction_id": message.interaction_id,
+            "conversation_id": message.conversation_id,
+            "flow_id": message.flow_id,
+            "step_id": message.step_id,
+            "direction": message.direction,
+            "payload": decrypt_data(message.payload)?,
+            "content_type": message.content_type,
 
-//     let limit = match limit {
-//         Some(limit) if limit >= 1 => limit + 1,
-//         Some(_limit) => 21,
-//         None => 21,
-//     };
+            "updated_at": message.updated_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
+            "created_at": message.created_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string()
+        });
 
-//     let filter = match pagination_key {
-//         Some(key) => {
-//             doc! {
-//                 "client": bson::to_bson(&client)?,
-//                 "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
-//             }
-//         }
-//         None => doc! {
-//             "client": bson::to_bson(&client)?,
-//         },
-//     };
+        msgs.push(json);
+    }
 
-//     let find_options = mongodb::options::FindOptions::builder()
-//         .sort(doc! { "$natural": -1 })
-//         .batch_size(30)
-//         .limit(limit)
-//         .build();
-//     let cursor = collection.find(filter, find_options)?;
-
-//     let mut messages = vec![];
-//     for doc in cursor {
-//         match doc {
-//             Ok(msg) => {
-//                 let message = format_message_struct(msg)?;
-
-//                 let json = serde_json::json!({
-//                     "client": message.client,
-//                     "interaction_id": message.interaction_id,
-//                     "conversation_id": message.conversation_id,
-//                     "flow_id": message.flow_id,
-//                     "step_id": message.step_id,
-//                     "direction": message.direction,
-//                     "payload": message.payload,
-//                     "content_type": message.content_type,
-//                     "created_at": message.created_at,
-//                 });
-
-//                 messages.push(json);
-//             }
-//             Err(_) => (),
-//         };
-//     }
-
-//     match messages.len() == limit as usize {
-//         true => {
-//             messages.pop();
-//             match messages.last() {
-//                 Some(last) => {
-//                     let pagination_key = base64::encode(last["version_id"].clone().to_string());
-
-//                     Ok(serde_json::json!({"messages": messages, "pagination_key": pagination_key}))
-//                 }
-//                 None => Ok(serde_json::json!({ "messages": messages })),
-//             }
-//         }
-//         false => Ok(serde_json::json!({ "messages": messages })),
-//     }
-// }
+    match pagination_key < total_pages {
+        true => {
+            let pagination_key = (pagination_key + 1).to_string();
+            Ok(
+                serde_json::json!({"messages": msgs, "pagination_key": pagination_key}),
+            )
+        }
+        false => Ok(serde_json::json!({ "messages": msgs })),
+    }
+}

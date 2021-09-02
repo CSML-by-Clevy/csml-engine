@@ -1,20 +1,14 @@
-use std::env;
-
-use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
-use diesel::{insert_into};
-
-use serde_json::Value;
+use diesel::{RunQueryDsl};
 
 use crate::{
     db_connectors::postgresql::get_db,
-    encrypt::encrypt_data, EngineError, PostgresqlClient, ConversationInfo
+    EngineError, ConversationInfo
 };
 
 use super::{
     models::{NewNode, Node},
-    schema::nodes
+    schema::csml_nodes
 };
-
 
 pub fn create_node(
     data: &mut ConversationInfo,
@@ -23,7 +17,6 @@ pub fn create_node(
 ) -> Result<(), EngineError> {
 
     let db = get_db(&data.db)?;
-
 
     let next_flow = match nextflow {
         Some(ref nextflow) => Some(nextflow.as_str()),
@@ -35,35 +28,23 @@ pub fn create_node(
         None => None,
     };
 
+    let interaction_id = uuid::Uuid::parse_str(&data.interaction_id).unwrap();
+    let conversation_id = uuid::Uuid::parse_str(&data.conversation_id).unwrap();
+
     let new_node = NewNode {
-        client_id: 42, // client_id
-        interaction_id: 42, // &data.interaction_id,
-        conversation_id: 42, // &data.conversation_id,
+        id: uuid::Uuid::new_v4(),
+
+        interaction_id: &interaction_id,
+        conversation_id: &conversation_id, 
         flow_id: &data.context.flow,
         step_id: &data.context.step,
         next_flow,
         next_step,
     };
 
-    let instruction: Node = diesel::insert_into(nodes::table)
+    diesel::insert_into(csml_nodes::table)
     .values(&new_node)
-    .get_result(&db.client)
-    .expect("Error creating node");
+    .get_result::<Node>(&db.client)?;
 
     Ok(())
 }
-
-pub fn delete_conversation_nodes(
-    // client: &Client,
-    client_id: i32,
-    db: &PostgresqlClient
-) -> Result<(), EngineError> {
-
-    diesel::delete(nodes::table.filter(
-        nodes::client_id.eq(client_id))
-    ).get_result::<Node>(&db.client);
-
-    Ok(())
-}
-
-

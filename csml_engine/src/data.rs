@@ -396,6 +396,9 @@ pub enum EngineError {
     SerdeDynamodb(serde_dynamodb::Error),
     #[cfg(any(feature = "dynamo"))]
     S3ErrorCode(u16),
+
+    #[cfg(any(feature = "postgresql"))]
+    PsqlErrorCode(String),
 }
 
 impl From<serde_json::Error> for EngineError {
@@ -466,5 +469,12 @@ impl<E: std::error::Error + 'static> From<rusoto_core::RusotoError<E>> for Engin
 impl From<serde_dynamodb::Error> for EngineError {
     fn from(e: serde_dynamodb::Error) -> Self {
         EngineError::SerdeDynamodb(e)
+    }
+}
+
+#[cfg(any(feature = "postgresql"))]
+impl From<diesel::result::Error> for EngineError {
+    fn from(e: diesel::result::Error) -> Self {
+        EngineError::PsqlErrorCode(e.to_string())
     }
 }

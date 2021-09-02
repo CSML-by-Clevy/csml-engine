@@ -52,6 +52,8 @@ pub mod nodes;
 pub mod state;
 pub mod user;
 
+pub mod db_test;
+
 use crate::Client;
 
 #[cfg(feature = "dynamo")]
@@ -174,14 +176,6 @@ impl BotVersion {
     }
 }
 
-#[cfg(feature = "postgresql")]
-pub fn is_postgresql() -> bool {
-    match std::env::var("ENGINE_DB_TYPE") {
-        Ok(val) => val == "dynamodb".to_owned(),
-        Err(_) => false,
-    }
-}
-
 #[cfg(feature = "mongo")]
 pub fn is_mongodb() -> bool {
     // If the env var is not set at all, use mongodb by default
@@ -195,6 +189,14 @@ pub fn is_mongodb() -> bool {
 pub fn is_dynamodb() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
         Ok(val) => val == "dynamodb".to_owned(),
+        Err(_) => false,
+    }
+}
+
+#[cfg(feature = "postgresql")]
+pub fn is_postgresql() -> bool {
+    match std::env::var("ENGINE_DB_TYPE") {
+        Ok(val) => val == "postgresql".to_owned(),
         Err(_) => false,
     }
 }
