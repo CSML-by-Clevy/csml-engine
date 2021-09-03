@@ -23,6 +23,10 @@ mod utils;
 #[macro_use]
 extern crate diesel;
 
+#[cfg(feature = "postgresql")]
+#[macro_use]
+extern crate diesel_migrations;
+
 use data::*;
 use db_connectors::{
     bot, conversations, init_db, memories, messages, state, user, BotVersion, BotVersionCreated,

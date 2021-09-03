@@ -21,7 +21,11 @@ edition = "2018"
 [features]
 mongo = ["mongodb", "bson", "futures"]
 dynamo = ["rusoto_core", "rusoto_dynamodb", "rusoto_s3", "serde_dynamodb", "log", "env_logger"]
-postgresql = ["diesel"]
+postgresql = ["diesel", "diesel_migrations"]
+
+[dependencies.diesel_migrations]
+version = "1.4.0"
+optional = true
 
 [dependencies.diesel]
 version = "1.4.7"
