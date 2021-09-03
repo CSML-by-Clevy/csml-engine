@@ -53,20 +53,6 @@ mod tests {
         })
     }
 
-    // #[test]
-    // fn test_conv() {
-    //     let client = get_client();
-    //     let mut db = init_db().unwrap();
-
-    //     let conversation = conversations::get_client_conversations(
-    //         &client, &mut db,
-    //         Some(6),
-    //         None
-    //     ).unwrap();
-
-    //     panic!("{:?}", conversation)
-    // }
-
     #[test]
     fn ok_messages() {
         let client = get_client();
