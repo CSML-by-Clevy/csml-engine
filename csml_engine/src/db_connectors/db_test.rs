@@ -115,8 +115,8 @@ mod tests {
 
         assert_eq!(2, received_msgs.len());
 
-        assert_eq!("1", received_msgs[0]["payload"]["content"]["text"]);
-        assert_eq!("2", received_msgs[1]["payload"]["content"]["text"]);
+        assert_eq!("4", received_msgs[0]["payload"]["content"]["text"].as_str().unwrap());
+        assert_eq!("3", received_msgs[1]["payload"]["content"]["text"].as_str().unwrap());
 
         user::delete_client(&client, &mut data.db).unwrap();
 
