@@ -997,6 +997,8 @@ dependencies = [
  "chrono",
  "csml_interpreter",
  "curl",
+ "diesel",
+ "diesel_migrations",
  "env_logger 0.8.4",
  "futures 0.3.16",
  "hex",
@@ -1176,6 +1178,41 @@ dependencies = [
  "quote 1.0.9",
  "rustc_version 0.3.3",
  "syn 1.0.74",
+]
+
+[[package]]
+name = "diesel"
+version = "1.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bba51ca66f57261fd17cadf8b73e4775cc307d0521d855de3f5de91a8f074e0e"
+dependencies = [
+ "bitflags",
+ "byteorder",
+ "chrono",
+ "diesel_derives",
+ "pq-sys",
+ "uuid",
+]
+
+[[package]]
+name = "diesel_derives"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45f5098f628d02a7a0f68ddba586fb61e80edec3bdc1be3b921f4ceec60858d3"
+dependencies = [
+ "proc-macro2 1.0.28",
+ "quote 1.0.9",
+ "syn 1.0.74",
+]
+
+[[package]]
+name = "diesel_migrations"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf3cde8413353dc7f5d72fa8ce0b99a560a359d2c5ef1e5817ca731cd9008f4c"
+dependencies = [
+ "migrations_internals",
+ "migrations_macros",
 ]
 
 [[package]]
@@ -2272,6 +2309,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "migrations_internals"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2b4fc84e4af020b837029e017966f86a1c2d5e83e64b589963d5047525995860"
+dependencies = [
+ "diesel",
+]
+
+[[package]]
+name = "migrations_macros"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9753f12909fd8d923f75ae5c3258cae1ed3c8ec052e1b38c93c21a6d157f789c"
+dependencies = [
+ "migrations_internals",
+ "proc-macro2 1.0.28",
+ "quote 1.0.9",
+ "syn 1.0.74",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2938,6 +2996,15 @@ name = "ppv-lite86"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
+
+[[package]]
+name = "pq-sys"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ac25eee5a0582f45a67e837e350d784e7003bd29a5f460796772061ca49ffda"
+dependencies = [
+ "vcpkg",
+]
 
 [[package]]
 name = "proc-macro-error"

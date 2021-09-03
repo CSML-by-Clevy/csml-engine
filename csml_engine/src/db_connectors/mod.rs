@@ -40,6 +40,8 @@ use serde::{Deserialize, Serialize};
 use self::dynamodb as dynamodb_connector;
 #[cfg(feature = "mongo")]
 use self::mongodb as mongodb_connector;
+#[cfg(feature = "postgresql")]
+use self::postgresql as postgresql_connector;
 
 pub mod bot;
 pub mod conversations;
@@ -50,12 +52,17 @@ pub mod nodes;
 pub mod state;
 pub mod user;
 
+pub mod db_test;
+
 use crate::Client;
 
 #[cfg(feature = "dynamo")]
 mod dynamodb;
 #[cfg(feature = "mongo")]
 mod mongodb;
+#[cfg(feature = "postgresql")]
+mod postgresql;
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbConversation {
@@ -186,6 +193,14 @@ pub fn is_dynamodb() -> bool {
     }
 }
 
+#[cfg(feature = "postgresql")]
+pub fn is_postgresql() -> bool {
+    match std::env::var("ENGINE_DB_TYPE") {
+        Ok(val) => val == "postgresql".to_owned(),
+        Err(_) => false,
+    }
+}
+
 pub fn init_db() -> Result<Database, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -195,6 +210,11 @@ pub fn init_db() -> Result<Database, EngineError> {
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         return dynamodb_connector::init();
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        return postgresql_connector::init();
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
