@@ -95,8 +95,9 @@ pub fn get_client_messages(
         .filter(csml_conversations::channel_id.eq(&client.channel_id))
         .filter(csml_conversations::user_id.eq(&client.user_id))
         .inner_join(csml_messages::table)
-        .order(csml_messages::message_order.desc())
         .select((csml_conversations::all_columns, csml_messages::all_columns))
+        .order_by(csml_messages::created_at.desc())
+        .then_order_by(csml_messages::message_order.desc())
         .paginate(pagination_key);
 
     let limit_per_page = match limit {
