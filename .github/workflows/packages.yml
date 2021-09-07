@@ -42,7 +42,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --release
+        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql  --release
 
     - uses: actions/upload-artifact@v2
       with:
