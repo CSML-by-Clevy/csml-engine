@@ -4,6 +4,7 @@ use crate::{
     Client, ConversationInfo, EngineError, MongoDbClient,
 };
 use bson::{doc, Bson, Document};
+use chrono::SecondsFormat;
 
 fn format_messages(
     data: &ConversationInfo,
@@ -59,7 +60,7 @@ fn format_message_struct(message: bson::document::Document) -> Result<DbMessage,
         direction: message.get_str("direction").unwrap().to_owned(),
         payload,
         content_type: message.get_str("content_type").unwrap().to_owned(),
-        created_at: message.get_str("created_at").unwrap().to_owned(),
+        created_at: message.get_datetime("created_at").unwrap().to_rfc3339_opts(SecondsFormat::Millis, true),
     })
 }
 
@@ -100,7 +101,7 @@ pub fn get_client_messages(
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.client.collection("conversation");
+    let collection = db.client.collection("message");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,
