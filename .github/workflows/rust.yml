@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, dev, feat/windows_build ]
   pull_request:
     branches: [ master, dev ]
 
@@ -14,74 +14,31 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15]
+        os: [ubuntu-18.04, macos-10.15, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
 
-    # for some reason cache does not work properly with macos builds
-    - name: Cache Cargo
-      if: matrix.os != 'macos-10.15'
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Install Windows dependencies
+      if: matrix.os != 'windows-latest'
+      run: |
+        echo "::set-output name=version::$(rustc --version)"
+        echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+        vcpkg install openssl:x64-windows
+
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
+      env:
+        VCPKGRS_DYNAMIC: 1
       with:
         toolchain: stable
         override: true
 
     - name: Build
       uses: actions-rs/cargo@v1
+      env:
+        VCPKGRS_DYNAMIC: 1
       with:
         command: build
         args: --verbose --manifest-path=csml_interpreter/Cargo.toml
-
-    - name: Test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --verbose --manifest-path=csml_interpreter/Cargo.toml
-
-    # Warning: only one live test can run at once!
-    - name: Test with Live DB
-      uses: actions-rs/cargo@v1
-      if: matrix.os == 'ubuntu-18.04'
-      with:
-        command: test
-        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "dynamo" -- --test-threads=1
-      env:
-        ENGINE_DB_TYPE: dynamodb
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DYNAMODB_TABLE: ${{ secrets.AWS_DYNAMODB_TABLE }}
-        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        ENGINE_SERVER_PORT: '5000'
-        ENCRYPTION_SECRET: someDefault.Secr3tValue
-        DISABLE_SSL_VERIFY: 'false'
-        DEBUG: 'true'
-
-    # Warning: only one live test can run at once!
-    - name: Test server endpoint
-      uses: actions-rs/cargo@v1
-      if: matrix.os == 'ubuntu-18.04'
-      with:
-        command: test
-        args: --verbose --manifest-path=csml_server/Cargo.toml -j 1 --features csml_engine/dynamo -- --test-threads=1
-      env:
-        ENGINE_DB_TYPE: dynamodb
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DYNAMODB_TABLE: ${{ secrets.AWS_DYNAMODB_TABLE }}
-        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        ENGINE_SERVER_PORT: '5000'
-        ENCRYPTION_SECRET: someDefault.Secr3tValue
-        DISABLE_SSL_VERIFY: 'false'
-        DEBUG: 'true'
