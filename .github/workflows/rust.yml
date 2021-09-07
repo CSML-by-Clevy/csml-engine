@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ master, dev, feat/windows_build ]
+    branches: [ master, dev , feat/add_CI_mongodb]
   pull_request:
     branches: [ master, dev ]
 
@@ -12,30 +12,47 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.11
-      # VCPKGRS_DYNAMIC: 1
     strategy:
       matrix:
-        os: [windows-latest]
+        backend: ["postgresql"]
+        os: [ubuntu-18.04, macos-10.15]
 
     steps:
     - uses: actions/checkout@v2
 
     # for some reason cache does not work properly with macos builds
-    # - name: Cache Cargo
-    #   if: matrix.os != 'macos-10.15'
-    #   uses: actions/cache@v2
-    #   with:
-    #     path: |
-    #       ~/.cargo/registry
-    #       ~/.cargo/git
-    #       target
-    #     key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Cache Cargo
+      if: matrix.os != 'macos-10.15'
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Create mongoDB Docker container
+      if: matrix.os == 'ubuntu-18.04'
+      run: sudo docker run -d -p 27017:27017 mongo:latest
 
-    # - name: Install Windows dependencies
-    #   if: matrix.os == 'windows-latest'
-    #   run: |
-    #     echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-    #     vcpkg install openssl:x64-windows
+    - name: Install postgres (Linux)
+      if: runner.os == 'Linux' && matrix.backend == 'postgresql'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev postgresql
+        echo "host    all             all             127.0.0.1/32            md5" > sudo tee -a /etc/postgresql/10/main/pg_hba.conf
+        sudo service postgresql restart && sleep 3
+        sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+        sudo service postgresql restart && sleep 3
+
+    - name: Install postgres (MacOs)
+      if: matrix.os != 'macos-10.15' && matrix.backend == 'postgres'
+      run: |
+        brew update
+        brew install postgres
+        /usr/local/opt/postgres/bin/pg_ctl -D /usr/local/var/postgres start
+        sleep 3
+        /usr/local/opt/postgres/bin/createuser -s postgres
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
@@ -51,8 +68,79 @@ jobs:
 
     - name: Test
       uses: actions-rs/cargo@v1
-      env:
-        VCPKGRS_DYNAMIC: 1
       with:
         command: test
         args: --verbose --manifest-path=csml_interpreter/Cargo.toml
+
+
+    # Warning: only one live test can run at once!
+    - name: Test csml_engine with (Mongodb)
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "mongo" -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: mongodb
+        MONGODB_DATABASE: csml
+        MONGODB_HOST: localhost
+        MONGODB_PORT: '27017'
+        MONGODB_USERNAME:
+        MONGODB_PASSWORD:
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DISABLE_SSL_VERIFY: 'false'
+        DEBUG: 'true'
+
+    # Warning: only one live test can run at once!
+    - name: Test csml_engine with (postgres)
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "postgresql" -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: postgresql
+        POSTGRESQL_URL: postgres://postgres:postgres@localhost/
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DEBUG: 'true'
+
+
+    # Warning: only one live test can run at once!
+    - name: Test csml_engine with (dynamodb)
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "dynamo" -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: dynamodb
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DYNAMODB_TABLE: ${{ secrets.AWS_DYNAMODB_TABLE }}
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DISABLE_SSL_VERIFY: 'false'
+        DEBUG: 'true'
+
+    # Warning: only one live test can run at once!
+    - name: Test csml_server endpoint (dynamodb)
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_server/Cargo.toml -j 1 --features csml_engine/dynamo -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: dynamodb
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DYNAMODB_TABLE: ${{ secrets.AWS_DYNAMODB_TABLE }}
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DISABLE_SSL_VERIFY: 'false'
+        DEBUG: 'true'
