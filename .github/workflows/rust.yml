@@ -19,12 +19,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    # for some reason cache does not work properly with macos builds
+    - name: Cache Cargo
+      if: matrix.os != 'macos-10.15'
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+
     - name: Install Windows dependencies
-      if: matrix.os != 'windows-latest'
+      if: matrix.os == 'windows-latest'
       run: |
         echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
         vcpkg install openssl:x64-windows
-
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
@@ -40,4 +50,12 @@ jobs:
         VCPKGRS_DYNAMIC: 1
       with:
         command: build
+        args: --verbose --manifest-path=csml_interpreter/Cargo.toml
+
+    - name: Test
+      uses: actions-rs/cargo@v1
+      env:
+        VCPKGRS_DYNAMIC: 1
+      with:
+        command: test
         args: --verbose --manifest-path=csml_interpreter/Cargo.toml
