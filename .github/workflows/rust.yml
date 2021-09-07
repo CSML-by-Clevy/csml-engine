@@ -63,6 +63,7 @@ jobs:
       env:
         ENGINE_DB_TYPE: mongodb
         MONGODB_DATABASE: csml
+        MONGODB_HOST: localhost
         MONGODB_PORT: '27017'
         MONGODB_USERNAME:
         MONGODB_PASSWORD:
