@@ -52,6 +52,12 @@ jobs:
         command: build
         args: --verbose --manifest-path=csml_interpreter/Cargo.toml
 
+    - name: Build Server
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo --release
+
     - name: Test
       uses: actions-rs/cargo@v1
       env:
