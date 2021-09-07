@@ -14,6 +14,7 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
+        backend: ["postgresql"]
         os: [ubuntu-18.04, macos-10.15]
 
     steps:
@@ -33,6 +34,25 @@ jobs:
     - name: Create mongoDB Docker container
       if: matrix.os == 'ubuntu-18.04'
       run: sudo docker run -d -p 27017:27017 mongo:latest
+
+    - name: Install postgres (Linux)
+      if: runner.os == 'Linux' && matrix.backend == 'postgresql'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev postgresql
+        echo "host    all             all             127.0.0.1/32            md5" > sudo tee -a /etc/postgresql/10/main/pg_hba.conf
+        sudo service postgresql restart && sleep 3
+        sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+        sudo service postgresql restart && sleep 3
+
+    - name: Install postgres (MacOs)
+      if: matrix.os != 'macos-10.15' && matrix.backend == 'postgres'
+      run: |
+        brew update
+        brew install postgres
+        /usr/local/opt/postgres/bin/pg_ctl -D /usr/local/var/postgres start
+        sleep 3
+        /usr/local/opt/postgres/bin/createuser -s postgres
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
@@ -54,7 +74,7 @@ jobs:
 
 
     # Warning: only one live test can run at once!
-    - name: Test csml_engine with Live mongodb
+    - name: Test csml_engine with (Mongodb)
       uses: actions-rs/cargo@v1
       if: matrix.os == 'ubuntu-18.04'
       with:
@@ -73,7 +93,22 @@ jobs:
         DEBUG: 'true'
 
     # Warning: only one live test can run at once!
-    - name: Test with Live DB
+    - name: Test csml_engine with (postgres)
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "postgresql" -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: postgresql
+        POSTGRESQL_URL: postgres://postgres:postgres@localhost/
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DEBUG: 'true'
+
+
+    # Warning: only one live test can run at once!
+    - name: Test csml_engine with (dynamodb)
       uses: actions-rs/cargo@v1
       if: matrix.os == 'ubuntu-18.04'
       with:
@@ -92,7 +127,7 @@ jobs:
         DEBUG: 'true'
 
     # Warning: only one live test can run at once!
-    - name: Test server endpoint
+    - name: Test csml_server endpoint (dynamodb)
       uses: actions-rs/cargo@v1
       if: matrix.os == 'ubuntu-18.04'
       with:
