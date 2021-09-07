@@ -30,11 +30,11 @@ jobs:
           target
         key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Install Windows dependencies
-      if: matrix.os == 'windows-latest'
-      run: |
-        echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-        vcpkg install openssl:x64-windows
+    # - name: Install Windows dependencies
+    #   if: matrix.os == 'windows-latest'
+    #   run: |
+    #     echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+    #     vcpkg install openssl:x64-windows
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
