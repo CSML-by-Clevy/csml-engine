@@ -277,3 +277,30 @@ fn string_step_11() {
 
     assert_eq!(v1, v2)
 }
+
+
+#[test]
+fn string_step_12_slice() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {"content_type":"text", "content":{"text": "Hel"}}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_12_slice",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

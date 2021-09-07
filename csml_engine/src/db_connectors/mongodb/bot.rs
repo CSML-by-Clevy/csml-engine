@@ -1,6 +1,6 @@
 use crate::{
+    data::{CsmlBotBincode, MongoDbClient, SerializeCsmlBot},
     db_connectors::{BotVersion, DbBot},
-    data::{SerializeCsmlBot, CsmlBotBincode, MongoDbClient},
     EngineError,
 };
 use bson::{doc, Bson};
@@ -80,13 +80,13 @@ pub fn get_bot_versions(
                 let bot_version = format_bot_struct(bot_doc)?;
 
                 let csml_bot: SerializeCsmlBot = match base64::decode(&bot_version.bot) {
-                    Ok(base64decoded) =>  {
+                    Ok(base64decoded) => {
                         match bincode::deserialize::<CsmlBotBincode>(&base64decoded[..]) {
                             Ok(bot) => bot.to_bot(),
-                            Err(_) => serde_json::from_str(&bot_version.bot).unwrap()
+                            Err(_) => serde_json::from_str(&bot_version.bot).unwrap(),
                         }
-                    },
-                    Err(_) => serde_json::from_str(&bot_version.bot).unwrap()
+                    }
+                    Err(_) => serde_json::from_str(&bot_version.bot).unwrap(),
                 };
 
                 let mut json = serde_json::json!({
@@ -145,13 +145,13 @@ pub fn get_bot_by_version_id(
             let bot = format_bot_struct(bot)?;
 
             let csml_bot: SerializeCsmlBot = match base64::decode(&bot.bot) {
-                Ok(base64decoded) =>  {
+                Ok(base64decoded) => {
                     match bincode::deserialize::<CsmlBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
-                        Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                        Err(_) => serde_json::from_str(&bot.bot).unwrap(),
                     }
-                },
-                Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                }
+                Err(_) => serde_json::from_str(&bot.bot).unwrap(),
             };
 
             Ok(Some(BotVersion {
@@ -188,10 +188,10 @@ pub fn get_last_bot_version(
                 Ok(base64decoded) => {
                     match bincode::deserialize::<CsmlBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
-                        Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                        Err(_) => serde_json::from_str(&bot.bot).unwrap(),
                     }
-                },
-                Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                }
+                Err(_) => serde_json::from_str(&bot.bot).unwrap(),
             };
 
             Ok(Some(BotVersion {
@@ -228,8 +228,11 @@ pub fn delete_bot_versions(bot_id: &str, db: &MongoDbClient) -> Result<(), Engin
     Ok(())
 }
 
-pub fn delete_all_bot_data(bot_id: &str, class: &str, db: &MongoDbClient) -> Result<(), EngineError> {
-
+pub fn delete_all_bot_data(
+    bot_id: &str,
+    class: &str,
+    db: &MongoDbClient,
+) -> Result<(), EngineError> {
     let collection = db.client.collection(class);
 
     let filter = doc! {

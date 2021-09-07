@@ -18,7 +18,9 @@ start:
 
 toto:
     hold
+    say "after hold toto say test = {{test}}"
     if (test < 2) {
         previous flow
     }
+    say "end"
     goto end

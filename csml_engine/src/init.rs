@@ -44,16 +44,14 @@ pub fn init_conversation_info<'a>(
     // or another, this takes precedence over any previously open conversation
     // and a new conversation is created with the new flow as a starting point.
     let flow_found = search_flow(event, &bot, &request.client, &mut db).ok();
-    let conversation_id = get_or_create_conversation(
-        &mut context,
-        &bot,
-        flow_found,
-        &request.client,
-        &mut db,
-    )?;
+    let conversation_id =
+        get_or_create_conversation(&mut context, &bot, flow_found, &request.client, &mut db)?;
 
     context.metadata = get_hashmap_from_json(&request.metadata, &context.flow);
-    context.current = get_hashmap_from_mem(&internal_use_get_memories(&request.client, &mut db)?, &context.flow);
+    context.current = get_hashmap_from_mem(
+        &internal_use_get_memories(&request.client, &mut db)?,
+        &context.flow,
+    );
 
     let mut data = ConversationInfo {
         conversation_id,
@@ -156,9 +154,7 @@ fn get_or_create_conversation<'a>(
                             // if flow id exist in db but not in bot close conversation
                             close_conversation(&conversation.id, &client, db)?;
                             // start new conversation at default flow
-                            return create_new_conversation(
-                                context, bot, flow_found, client, db,
-                            );
+                            return create_new_conversation(context, bot, flow_found, client, db);
                         }
                     };
 
@@ -190,8 +186,7 @@ fn create_new_conversation<'a>(
     context.step = step;
     context.flow = flow.name.to_owned();
 
-    let conversation_id =
-        create_conversation(&flow.id, &context.step, client, db)?;
+    let conversation_id = create_conversation(&flow.id, &context.step, client, db)?;
 
     Ok(conversation_id)
 }

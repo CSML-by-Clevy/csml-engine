@@ -2,6 +2,8 @@
 use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
+#[cfg(feature = "postgresql")]
+use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, EngineError};
 use csml_interpreter::data::Client;
@@ -22,6 +24,12 @@ pub fn delete_state_key(
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::state::delete_state_key(client, _type, _key, db);
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::state::delete_state_key(client, _type, _key, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -45,6 +53,12 @@ pub fn get_state_key(
         return dynamodb_connector::state::get_state_key(client, _type, _key, db);
     }
 
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::state::get_state_key(client, _type, _key, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -64,25 +78,37 @@ pub fn get_current_state(
         return dynamodb_connector::state::get_current_state(client, db);
     }
 
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::state::get_current_state(client, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
 pub fn set_state_items(
-    client: &Client,
+    _client: &Client,
     _type: &str,
-    keys_values: Vec<(&str, &serde_json::Value)>,
-    db: &mut Database,
+    _keys_values: Vec<(&str, &serde_json::Value)>,
+    _db: &mut Database,
 ) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::state::set_state_items(client, _type, keys_values, &db);
+        let db = mongodb_connector::get_db(_db)?;
+        return mongodb_connector::state::set_state_items(_client, _type, _keys_values, &db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-        let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::state::set_state_items(client, _type, keys_values, db);
+        let db = dynamodb_connector::get_db(_db)?;
+        return dynamodb_connector::state::set_state_items(_client, _type, _keys_values, db);
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(_db)?;
+        return postgresql_connector::state::set_state_items(_client, _type, _keys_values, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

@@ -126,9 +126,9 @@ fn validate_expr_literals(to_be_literal: &Expr, state: &mut State, linter_info: 
                     format!(""),
                 ) {
                     if let Expr::Scope { scope, .. } = &*closure.func {
-                        state.in_function = true;
+                        state.in_function += 1;
                         validate_scope(scope, state, linter_info, &mut None);
-                        state.in_function = false;
+                        state.in_function -= 1;
                     };
                 }
             }
@@ -174,7 +174,7 @@ fn validate_scope(
     for (action, _) in scope.commands.iter() {
         match action {
             Expr::ObjectExpr(ObjectType::Return(value)) => {
-                if !state.in_function {
+                if state.in_function == 0 {
                     linter_info.errors.push(gen_error_info(
                         Position::new(
                             interval_from_expr(value),
@@ -189,7 +189,7 @@ fn validate_scope(
                 }
             }
             Expr::ObjectExpr(ObjectType::Goto(goto, interval)) => {
-                if state.in_function {
+                if state.in_function > 0 {
                     linter_info.errors.push(gen_error_info(
                         Position::new(interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
@@ -328,7 +328,7 @@ fn validate_scope(
 
                 register_flow_breaker(step_breakers, StepBreakers::HOLD(interval.clone()));
 
-                if state.in_function {
+                if state.in_function > 0 {
                     linter_info.errors.push(gen_error_info(
                         Position::new(interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
@@ -340,7 +340,7 @@ fn validate_scope(
                 }
             }
             Expr::ObjectExpr(ObjectType::Say(value)) => {
-                if state.in_function {
+                if state.in_function > 0 {
                     linter_info.errors.push(gen_error_info(
                         Position::new(interval_from_expr(value), linter_info.flow_name,),
                         convert_error_from_interval(
@@ -377,7 +377,7 @@ fn validate_scope(
             Expr::ObjectExpr(ObjectType::Remember(ref name, value)) => {
                 register_closure(name, true,value, linter_info);
 
-                if state.in_function {
+                if state.in_function > 0 {
                     linter_info.errors.push(gen_error_info(
                         Position::new(name.interval.to_owned(), linter_info.flow_name,),
                         convert_error_from_interval(
@@ -672,7 +672,7 @@ fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
                 if let Expr::Scope { scope, range, .. } = scope {
                     let mut step_breakers  = vec!();
 
-                    validate_scope(scope, &mut State::new(false), linter_info, &mut Some(&mut step_breakers));
+                    validate_scope(scope, &mut State::new(0), linter_info, &mut Some(&mut step_breakers));
 
                     linter_info.step_list.insert(StepInfo::new(
                         &flow.flow_name,
@@ -689,7 +689,7 @@ fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
                 linter_info.scope_type = ScopeType::Function(name.to_owned());
 
                 if let Expr::Scope { scope, .. } = scope {
-                    validate_scope(scope, &mut State::new(true), linter_info, &mut None);
+                    validate_scope(scope, &mut State::new(1), linter_info, &mut None);
                 }
 
                 linter_info.scope_type = save_step_name;

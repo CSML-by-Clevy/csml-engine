@@ -1,5 +1,5 @@
 use crate::{
-    data::{ConversationInfo, Database, FlowTrigger, EngineError, DEBUG},
+    data::{ConversationInfo, Database, EngineError, FlowTrigger, DEBUG},
     db_connectors::state::delete_state_key,
     send::send_to_callback_url,
     CsmlBot, CsmlFlow,
@@ -7,10 +7,8 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    error_format::{ERROR_SIZE_IDENT, ERROR_NUMBER_AS_KEY, ERROR_KEY_ALPHANUMERIC},
-    data::{ast::Flow, Client, Context,
-        Event, Interval, Memory, Message,
-    },
+    data::{ast::Flow, Client, Context, Event, Interval, Memory, Message},
+    error_format::{ERROR_KEY_ALPHANUMERIC, ERROR_NUMBER_AS_KEY, ERROR_SIZE_IDENT},
     get_step,
     interpreter::json_to_literal,
 };
@@ -27,7 +25,7 @@ use md5::{Digest, Md5};
  * Instead, the memory is saved in bulk at the end of each step or interaction, but we still
  * must allow the user to use the `remembered` data immediately.
  */
-pub fn update_current_context(data: &mut ConversationInfo, memories: &HashMap<String, Memory> ) {
+pub fn update_current_context(data: &mut ConversationInfo, memories: &HashMap<String, Memory>) {
     for (_key, mem) in memories.iter() {
         let lit = json_to_literal(&mem.value, Interval::default(), &data.context.flow).unwrap();
 
@@ -39,23 +37,16 @@ pub fn update_current_context(data: &mut ConversationInfo, memories: &HashMap<St
  * Check if memory key is valid
  */
 pub fn validate_memory_key_format(key: &str) -> Result<(), EngineError> {
-
     if !key.chars().all(|c| c.is_alphanumeric() || c == '_') {
-        return Err(EngineError::Format(
-            ERROR_KEY_ALPHANUMERIC.to_owned(),
-        ))
+        return Err(EngineError::Format(ERROR_KEY_ALPHANUMERIC.to_owned()));
     }
 
     if key.len() > std::u8::MAX as usize {
-        return Err(EngineError::Format(
-            ERROR_SIZE_IDENT.to_owned(),
-        ))
+        return Err(EngineError::Format(ERROR_SIZE_IDENT.to_owned()));
     }
 
     if key.parse::<f64>().is_ok() {
-        return Err(EngineError::Format(
-            ERROR_NUMBER_AS_KEY.to_owned(),
-        ))
+        return Err(EngineError::Format(ERROR_NUMBER_AS_KEY.to_owned()));
     }
 
     Ok(())
@@ -246,7 +237,6 @@ pub fn get_default_flow<'a>(bot: &'a CsmlBot) -> Result<&'a CsmlFlow, EngineErro
     }
 }
 
-
 /**
  * Find a flow in a bot based on the user's input.
  * - flow_trigger events must will match a flow's id or name and reset the hold position
@@ -264,11 +254,14 @@ pub fn search_flow<'a>(
 
             let flow_trigger: FlowTrigger = serde_json::from_str(&event.content_value)?;
 
-            let flow = get_flow_by_id(&flow_trigger.flow_id, &bot.flows)?;
-
-            match flow_trigger.step_id {
-                Some(step_id) => Ok((flow, step_id)),
-                None => Ok((flow, "start".to_owned()))
+            match get_flow_by_id(&flow_trigger.flow_id, &bot.flows) {
+                Ok(flow) => {
+                    match flow_trigger.step_id {
+                        Some(step_id) => Ok((flow, step_id)),
+                        None => Ok((flow, "start".to_owned())),
+                    }
+                },
+                Err(_) => Ok((get_flow_by_id(&bot.default_flow, &bot.flows)? , "start".to_owned())),
             }
         }
         event => {
@@ -331,6 +324,7 @@ pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineE
     return Ok(());
 }
 
+#[cfg(feature = "dynamo")]
 pub fn init_logger() {
     if let Ok(debug) = env::var("DEBUG") {
         // RUST_LOG=rusoto

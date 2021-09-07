@@ -82,12 +82,10 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
         custom_components: None,
         default_flow: bot_info.default_flow.clone(),
         bot_ast: None,
-        env: Some(
-            serde_json::json!({
-                "random": "value",
-                "toto": "key",
-            })
-        )
+        env: Some(serde_json::json!({
+            "random": "value",
+            "toto": "key",
+        })),
     };
 
     Ok(bot)
@@ -281,7 +279,7 @@ fn ok_test_goto_var() {
 
     let events = &["/flow5"];
 
-    let messages = &["flow5 start","flow5 step1", "flow4"];
+    let messages = &["flow5 start", "flow5 step1", "flow4"];
 
     let channel_id = Uuid::new_v4().to_string();
     let bot_id = match std::env::var("GITHUB_SHA") {
@@ -332,7 +330,14 @@ fn ok_test_memory() {
     let bot = init_bot("goto_flow").unwrap();
 
     let events = &["/flow6"];
-    let messages = &["flow6 start","{\"val\":1}", "message", "4", "4.2", "[21,42,84]" ];
+    let messages = &[
+        "flow6 start",
+        "{\"val\":1}",
+        "message",
+        "4",
+        "4.2",
+        "[21,42,84]",
+    ];
 
     let channel_id = Uuid::new_v4().to_string();
     let bot_id = match std::env::var("GITHUB_SHA") {

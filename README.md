@@ -18,25 +18,28 @@
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#example">Example</a> •
-  <a href="#using-csml-studio">Usage</a> •
+  <a href="#getting-started">Getting started</a> •
   <a href="#additional-information">Additional Information</a>
+</p>
+<p align="center">
+  <a href="https://play.csml.dev">Try CSML online</a>
 </p>
 
 <h2 align="center">
   <img src="./images/csml-demo.png" alt="CSML-demo" width="700">
 </h2>
 
-[CSML (Conversational Standard Meta Language)](https://csml.dev) is a Domain-Specific Language designed for easily creating conversational experiences.
+[CSML (Conversational Standard Meta Language)](https://csml.dev) is both a domain-specific programming language and chatbot engine, designed to make it easy to develop complex chatbots.
 
-The purpose of this language is to simplify the creation and maintenance of rich conversational interactions between humans and machines. With a very expressive and text-only syntax, CSML flows are easy to understand, making it easy to deploy and maintain conversational agents. CSML handles short and long-term memory slots, metadata injection, and connecting to any third party API or injecting arbitrary code in any programming language thanks to its powerful runtime APIs.
+With a very expressive and text-only syntax, CSML flows are easy to understand, making it easy to deploy and maintain conversational agents. CSML handles short and long-term memory slots, metadata injection, and connecting to any third party API or injecting arbitrary code in any programming language thanks to its powerful runtime APIs.
 
 ## Key Features
 
-* Super easy syntax
-* Conversation-oriented components
-* Native bindings with functions written in other languages
-* Chatbot-specific keywords
-* Out-of-the-box short-term and long-term memory slots
+* Text-only, expressive syntax, easy to learn and develop complex chatbot scenarios with
+* Rich and extensible conversational components such as Carousel, Image, Video, Button, Card, Input, Calendar...
+* Built-in short-term and long-term memory slots: no more complex state machine boilerplate
+* Portable, fast, and easy to deploy: it only requires a MongoDB database (or AWS account for serverless version)
+* Vibrant community of over 5000 active CSML developers
 
 ## Example
 
@@ -73,7 +76,7 @@ known:
   goto end
 ```
 
-The full documentation of the project is available on https://docs.csml.dev/language.
+The full documentation is available on https://docs.csml.dev/language.
 
 # Getting Started
 
@@ -83,7 +86,7 @@ To get started with CSML Studio: https://studio.csml.dev
 
 CSML Studio gives you a free playground to experiment with the language as well as options to deploy your chatbots at scale in one-click.
 
-## Self-hosted / local installation
+## Self-hosted / cloud / local installation
 
 CSML is available as a self-hostable web server that you can easily install with one of the options below.
 
@@ -113,14 +116,24 @@ AWS_S3_BUCKET=
 
 ENGINE_SERVER_PORT=5000
 
+ENGINE_SERVER_API_KEYS=someAuthKey4CsmlServer,someOtherAuthKey
+
 ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
 DISABLE_SSL_VERIFY=false
 DEBUG=true
 ```
 
+### Deploy to Heroku
+
+<a href="https://heroku.com/deploy?template=https://github.com/CSML-by-Clevy/csml-engine/tree/master">
+  <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
+</a>
+
 ### Using a ready-to-use binary (Linux and MacOS only)
 
 The easiest way to launch a CSML Engine on your own machine is to use one of our pre-built, optimized binaries (available for both MongoDB and Amazon DynamoDB). These binaries are available as executables on each of CSML's releases since v1.3.0.
+
+Follow the installation guide (for ubuntu, but the process will be similar on other operating systems) along on this blog post: https://blog.csml.dev/how-to-install-a-self-hosted-csml-engine-on-ubuntu-18-04/
 
 To download the latest CSML Server binaries, [head over to the latest release](https://github.com/CSML-by-Clevy/csml-engine/releases/latest) and make sure to download the right version for your architecture.
 

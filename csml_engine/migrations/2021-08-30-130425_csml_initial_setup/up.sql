@@ -1,0 +1,103 @@
+
+CREATE TABLE cmsl_bot_versions (
+  id uuid PRIMARY KEY,
+  bot_id VARCHAR NOT NULL,
+
+  bot TEXT NOT NULL,
+  engine_version VARCHAR NOT NULL,
+
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE csml_conversations (
+  id uuid PRIMARY KEY,
+  bot_id VARCHAR NOT NULL,
+  channel_id VARCHAR NOT NULL,
+  user_id VARCHAR NOT NULL,
+
+  flow_id VARCHAR NOT NULL,
+  step_id VARCHAR NOT NULL,
+  status VARCHAR NOT NULL,
+
+  last_interaction_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE csml_interactions (
+  id uuid PRIMARY KEY,
+  bot_id VARCHAR NOT NULL,
+  channel_id VARCHAR NOT NULL,
+  user_id VARCHAR NOT NULL,
+
+  success BOOLEAN NOT NULL,
+  event VARCHAR NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE csml_messages (
+  id uuid PRIMARY KEY,
+  interaction_id uuid NOT NULL REFERENCES csml_interactions (id) ON DELETE CASCADE,
+  conversation_id uuid NOT NULL REFERENCES csml_conversations (id) ON DELETE CASCADE,
+
+  flow_id VARCHAR NOT NULL,
+  step_id VARCHAR NOT NULL,
+  direction VARCHAR NOT NULL,
+  payload VARCHAR NOT NULL,
+  content_type VARCHAR NOT NULL,
+
+  message_order INTEGER NOT NULL,
+  interaction_order INTEGER NOT NULL,
+
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE csml_memories (
+  id uuid PRIMARY KEY,
+  bot_id VARCHAR NOT NULL,
+  channel_id VARCHAR NOT NULL,
+  user_id VARCHAR NOT NULL,
+
+  key VARCHAR NOT NULL,
+  value VARCHAR NOT NULL,
+
+  expires_at TIMESTAMP DEFAULT NULL,
+
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX memory_client_key ON csml_memories (bot_id, channel_id, user_id, key);
+
+CREATE TABLE csml_nodes (
+  id uuid PRIMARY KEY,
+  interaction_id uuid NOT NULL REFERENCES csml_interactions (id) ON DELETE CASCADE,
+  conversation_id uuid NOT NULL REFERENCES csml_conversations (id) ON DELETE CASCADE,
+
+  flow_id VARCHAR NOT NULL,
+  step_id VARCHAR NOT NULL,
+  next_flow VARCHAR DEFAULT NULL,
+  next_step VARCHAR DEFAULT NULL,
+
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE csml_states (
+  id uuid PRIMARY KEY,
+  bot_id VARCHAR NOT NULL,
+  channel_id VARCHAR NOT NULL,
+  user_id VARCHAR NOT NULL,
+
+  type VARCHAR NOT NULL,
+  key VARCHAR NOT NULL,
+  value VARCHAR NOT NULL,
+
+  expires_at TIMESTAMP DEFAULT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

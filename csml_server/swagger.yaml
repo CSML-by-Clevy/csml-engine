@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 1.6.3
+  version: 1.6.4
   title: CSML Engine
   description: CSML Engine Server API specifications
   termsOfService: http://csml.dev/terms/
@@ -15,34 +15,56 @@ servers:
   - url: http://localhost:5000
 
 paths:
+  /status:
+    get:
+      description: Get the server status
+      operationId: status
+      tags:
+        - status
+      responses:
+        "200":
+          description: Success Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+        default:
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /run:
     post:
       description: Process an incoming client chat request
       operationId: run
       tags:
         - chat
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               oneOf:
-                - $ref: '#/components/schemas/RunRequestBot'
-                - $ref: '#/components/schemas/RunRequestLatestVersion'
-                - $ref: '#/components/schemas/RunRequestSpecificVersion'
+                - $ref: "#/components/schemas/RunRequestBot"
+                - $ref: "#/components/schemas/RunRequestLatestVersion"
+                - $ref: "#/components/schemas/RunRequestSpecificVersion"
       responses:
-        '200':
+        "200":
           description: Success Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RunResponse'
+                $ref: "#/components/schemas/RunResponse"
         default:
           description: Error Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /validate:
     post:
@@ -50,116 +72,36 @@ paths:
       operationId: validate
       tags:
         - lint
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BotModel'
+              $ref: "#/components/schemas/BotModel"
       responses:
-        '200':
+        "200":
           description: Success Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidateResponse'
+                $ref: "#/components/schemas/ValidateResponse"
         default:
           description: Error Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-
-  /conversations:
-    get:
-      description: Get all past conversations for a client
-      operationId: getConversations
-      tags:
-        - conversations
-      parameters:
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ConversationModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /conversations/open:
-    post:
-      description: Get the currently open conversation for the given client, or an empty response if there is none
-      operationId: getOpenConversation
-      tags:
-        - conversations
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientModel'
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConversationModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /conversations/close:
-    post:
-      description: Close any open conversation for the given client
-      operationId: closeOpenConversations
-      tags:
-        - conversations
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientModel'
-      responses:
-        '204':
-          description: ''
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /bots:
     post:
       description: Save a new version of a bot
       operationId: createBotVersion
       tags:
-        - bots
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
       requestBody:
         required: true
         content:
@@ -180,380 +122,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /messages:
-    get:
-      description: Get a client's message history
-      operationId: getMessages
-      tags:
-        - messages
-      parameters:
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: pagination_key
-          in: query
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StateModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /state:
-    get:
-      description: Get a client's current state
-      operationId: getState
-      tags:
-        - state
-      parameters:
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StateModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /memories:
-    get:
-      description: Get a client's current memories
-      operationId: getMemories
-      tags:
-        - memory
-      parameters:
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MemoryModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    post:
-      description: Create a new memory for a client
-      operationId: createMemory
-      tags:
-        - memory
-      parameters:
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MemoryModel'
-      responses:
-        '201':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemoryModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    delete:
-      description: Delete all memories for a client
-      operationId: deleteMemories
-      tags:
-        - memory
-      parameters:
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: ''
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /memories/{key}:
-    get:
-      description: Get a given memory for a client
-      operationId: getMemory
-      tags:
-        - memory
-      parameters:
-        - name: key
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemoryModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    delete:
-      description: Delete a given memory
-      operationId: deleteMemory
-      tags:
-        - memory
-      parameters:
-        - name: key
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: ''
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /data/clients:
-    delete:
-      description: Delete all the data belonging to a client
-      operationId: deleteClientData
-      tags:
-        - data
-      parameters:
-        - name: bot_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: user_id
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: channel_id
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: ''
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /data/bots/{bot_id}:
-    delete:
-      description: Delete all the data in a bot
-      operationId: deleteBotData
-      tags:
-        - data
-      parameters:
-        - name: bot_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: ''
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-
-  /bots/{bot_id}:
-    get:
-      description: Get the latest version of a bot
-      operationId: getLatestBotVersion
-      tags:
-        - bots
-      parameters:
-        - name: bot_id
-          in: path
-          description: ID of bot to retrieve
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BotVersionModel'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    delete:
-      description: Delete all versions of a bot
-      operationId: deleteBot
-      tags:
-        - bots
-      parameters:
-        - name: bot_id
-          in: path
-          description: ID of bot
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: ''
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
   /bots/{bot_id}/versions:
     get:
       description: Get the last few versions of a bot
       operationId: getLastBotVersions
       tags:
-        - bots
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: path
@@ -594,7 +170,9 @@ paths:
       description: Get the requested version
       operationId: getBotVersion
       tags:
-        - bots
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: path
@@ -626,7 +204,9 @@ paths:
       description: Delete the requested version
       operationId: deleteBotVersion
       tags:
-        - bots
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: bot_id
           in: path
@@ -650,8 +230,491 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /conversations:
+    get:
+      description: Get all past conversations for a client
+      operationId: getConversations
+      tags:
+        - conversations
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConversationModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /conversations/open:
+    post:
+      description: Get the currently open conversation for the given client, or an empty response if there is none
+      operationId: getOpenConversation
+      tags:
+        - conversations
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientModel"
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /conversations/close:
+    post:
+      description: Close any open conversation for the given client
+      operationId: closeOpenConversations
+      tags:
+        - conversations
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientModel"
+      responses:
+        "204":
+          description: ""
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /messages:
+    get:
+      description: Get a client's message history
+      operationId: getMessages
+      tags:
+        - messages
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: pagination_key
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StateModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /state:
+    get:
+      description: Get a client's current state
+      operationId: getState
+      tags:
+        - state
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StateModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /memories:
+    get:
+      description: Get a client's current memories
+      operationId: getMemories
+      tags:
+        - memory
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemoryModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      description: Create a new memory for a client
+      operationId: createMemory
+      tags:
+        - memory
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemoryModel"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemoryModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      description: Delete all memories for a client
+      operationId: deleteMemories
+      tags:
+        - memory
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: ""
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /memories/{key}:
+    get:
+      description: Get a given memory for a client
+      operationId: getMemory
+      tags:
+        - memory
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemoryModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      description: Delete a given memory
+      operationId: deleteMemory
+      tags:
+        - memory
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: ""
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /data/clients:
+    delete:
+      description: Delete all the data belonging to a client
+      operationId: deleteClientData
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - data
+      parameters:
+        - name: bot_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: channel_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: ""
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /data/bots/{bot_id}:
+    delete:
+      description: Delete all the data in a bot
+      operationId: deleteBotData
+      tags:
+        - data
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: ""
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /bots/{bot_id}:
+    get:
+      description: Get the latest version of a bot
+      operationId: getLatestBotVersion
+      tags:
+        - bot versioning
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotVersionModel"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      security:
+        - ApiKeyAuth: []
+      description: Delete all versions of a bot
+      operationId: deleteBot
+      tags:
+        - bot versioning
+      parameters:
+        - name: bot_id
+          in: path
+          description: ID of bot
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: ""
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
   schemas:
     BotModel:
       type: object
@@ -669,26 +732,26 @@ components:
           example: MyBot
         env:
           type: object
-          example: {"SOME_KEY": "SOME_VALUE"}
+          example: { "SOME_KEY": "SOME_VALUE" }
         default_flow:
           type: string
           example: Default
         fn_endpoint:
-          $ref: '#/components/schemas/FnEndpoint'
+          $ref: "#/components/schemas/FnEndpoint"
         flows:
           type: array
           items:
-            $ref: '#/components/schemas/FlowModel'
+            $ref: "#/components/schemas/FlowModel"
 
     BotVersionModel:
       allOf:
-        - $ref: '#/components/schemas/BotModel'
+        - $ref: "#/components/schemas/BotModel"
         - type: object
           properties:
             version_id:
               type: string
             engine_version:
-              $ref: '#/components/schemas/EngineVersion'
+              $ref: "#/components/schemas/EngineVersion"
 
     FlowModel:
       type: object
@@ -699,7 +762,7 @@ components:
       properties:
         id:
           type: string
-          example: '94c6d714-7cab-4164-9e50-ee80ec866471'
+          example: "94c6d714-7cab-4164-9e50-ee80ec866471"
         name:
           type: string
           example: Default
@@ -710,7 +773,7 @@ components:
           type: array
           items:
             type: string
-            example: 'trigger keyword'
+            example: "trigger keyword"
 
     EventModel:
       type: object
@@ -720,12 +783,12 @@ components:
       properties:
         request_id:
           type: string
-          description: 'Unique identifier for the incoming request. Will be generated if not provided.'
-          example: 'f5a727c5-a702-4896-bd0d-a45acbae0e22'
+          description: "Unique identifier for the incoming request. Will be generated if not provided."
+          example: "f5a727c5-a702-4896-bd0d-a45acbae0e22"
         client:
-          $ref: '#/components/schemas/ClientModel'
+          $ref: "#/components/schemas/ClientModel"
         payload:
-          $ref: '#/components/schemas/PayloadModel'
+          $ref: "#/components/schemas/PayloadModel"
         metadata:
           type: object
           description: Additional metadata about the context of the request. Will be available under the '_metadata' variable in the actual conversation.
@@ -749,7 +812,6 @@ components:
           type: object
           example: '{"text": "Hi from the user!"}'
 
-
     ConversationModel:
       type: object
       description: A Conversation definition
@@ -761,15 +823,15 @@ components:
       properties:
         id:
           type: string
-          example: '7db5c125-e150-4df4-8cf7-b605c4f4fdcd'
+          example: "7db5c125-e150-4df4-8cf7-b605c4f4fdcd"
         client:
-          $ref: '#/components/schemas/ClientModel'
+          $ref: "#/components/schemas/ClientModel"
         flow_id:
           type: string
-          example: 'Default'
+          example: "Default"
         step_id:
           type: string
-          example: 'start'
+          example: "start"
         last_interaction_at:
           type: string
           format: date-time
@@ -795,7 +857,6 @@ components:
             - type: object
             - type: array
 
-
     MemoryModel:
       type: object
       required:
@@ -811,7 +872,6 @@ components:
             - type: object
             - type: array
 
-
     ClientModel:
       type: object
       description: The Client object
@@ -822,13 +882,13 @@ components:
       properties:
         bot_id:
           type: string
-          example: 'MyBotId'
+          example: "MyBotId"
         channel_id:
           type: string
-          example: '4d0341db-1a13-4470-8c26-c15a03cce502'
+          example: "4d0341db-1a13-4470-8c26-c15a03cce502"
         user_id:
           type: string
-          example: '2fc4648b-a3f9-42db-a799-1f5b6852b1e3'
+          example: "2fc4648b-a3f9-42db-a799-1f5b6852b1e3"
 
     MessageModel:
       type: object
@@ -836,7 +896,7 @@ components:
         - payload
       properties:
         payload:
-          $ref: '#/components/schemas/PayloadModel'
+          $ref: "#/components/schemas/PayloadModel"
         interaction_order:
           type: integer
         conversation_id:
@@ -870,9 +930,9 @@ components:
         - event
       properties:
         bot:
-          $ref: '#/components/schemas/BotModel'
+          $ref: "#/components/schemas/BotModel"
         event:
-          $ref: '#/components/schemas/EventModel'
+          $ref: "#/components/schemas/EventModel"
     RunRequestLatestVersion:
       type: object
       description: Handle chat requests with the latest saved version of a given bot_id
@@ -884,9 +944,9 @@ components:
           type: string
           example: MyBotID
         fn_endpoint:
-          $ref: '#/components/schemas/FnEndpoint'
+          $ref: "#/components/schemas/FnEndpoint"
         event:
-          $ref: '#/components/schemas/EventModel'
+          $ref: "#/components/schemas/EventModel"
     RunRequestSpecificVersion:
       type: object
       description: Handle chat requests with a specific saved version of a given bot_id
@@ -900,11 +960,11 @@ components:
           example: MyBotID
         version_id:
           type: string
-          example: '86ba492a-b6fe-4c22-95ec-55be4e1c83f0'
+          example: "86ba492a-b6fe-4c22-95ec-55be4e1c83f0"
         fn_endpoint:
-          $ref: '#/components/schemas/FnEndpoint'
+          $ref: "#/components/schemas/FnEndpoint"
         event:
-          $ref: '#/components/schemas/EventModel'
+          $ref: "#/components/schemas/EventModel"
 
     RunResponse:
       type: object
@@ -912,21 +972,21 @@ components:
         messages:
           type: array
           items:
-            $ref: '#/components/schemas/MessageModel'
+            $ref: "#/components/schemas/MessageModel"
         conversation_end:
           type: boolean
           description: Whether the conversation ends after this (either it continues to a new flow or a goto end is found)
         request_id:
           type: string
-          example: 'cc3ecb87-68f9-4e2b-86e0-d6483210c69e'
+          example: "cc3ecb87-68f9-4e2b-86e0-d6483210c69e"
         received_at:
           type: string
           format: date-time
         interaction_id:
           type: string
-          example: '08d620f3-c2b9-4814-b228-56e7810e8e23'
+          example: "08d620f3-c2b9-4814-b228-56e7810e8e23"
         client:
-          $ref: '#/components/schemas/ClientModel'
+          $ref: "#/components/schemas/ClientModel"
 
     ValidateResponse:
       type: object
@@ -937,13 +997,12 @@ components:
         errors:
           type: array
           items:
-            $ref: '#/components/schemas/LintErrorModel'
-
+            $ref: "#/components/schemas/LintErrorModel"
 
     BotVersionsResponse:
       type: object
       required:
-        - bots
+        - bot versioning
       properties:
         pagination_key:
           type: string
@@ -959,7 +1018,7 @@ components:
               version_id:
                 type: string
               engine_version:
-                $ref: '#/components/schemas/EngineVersion'
+                $ref: "#/components/schemas/EngineVersion"
               name:
                 type: string
               default_flow:
@@ -973,9 +1032,35 @@ components:
       properties:
         version_id:
           type: string
-          example: 'c3001dfb-8a10-4815-bb4e-6cd98b0ef5e7'
+          example: "c3001dfb-8a10-4815-bb4e-6cd98b0ef5e7"
         engine_version:
-          $ref: '#/components/schemas/EngineVersion'
+          $ref: "#/components/schemas/EngineVersion"
+
+    StatusResponse:
+      type: object
+      properties:
+        server_ready:
+          type: boolean
+          description: If true, the server is ready to take requests!
+        database_type:
+          type: string
+          enum:
+            - mongodb
+            - dynamodb
+          description: The type of database configured
+        server_port:
+          type: number
+          example: 5000
+          description: The port where the server is listening on
+        server_auth_enabled:
+          type: boolean
+          description: Whether the server requires an X-Api-Key header for all requests
+        encryption_enabled:
+          type: boolean
+          description: Whether the data is encrypted in the database
+        debug_mode_enabled:
+          type: boolean
+          description: Whether the server is in debug mode
 
     FnEndpoint:
       type: string
@@ -985,7 +1070,7 @@ components:
     EngineVersion:
       type: string
       description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
-      example: '1.6.3'
+      example: "1.6.4"
 
     Error:
       type: object

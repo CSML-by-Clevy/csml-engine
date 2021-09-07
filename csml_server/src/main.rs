@@ -38,6 +38,8 @@ async fn main() -> std::io::Result<()> {
       .service(routes::index::home)
       .service(routes::validate::handler)
 
+      .service(routes::status::get_status)
+
       .service(routes::run::handler)
 
       .service(routes::sns::handler)

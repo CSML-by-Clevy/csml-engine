@@ -1,4 +1,4 @@
-use crate::{db_connectors::mongodb::get_db, ConversationInfo, EngineError, Client, MongoDbClient};
+use crate::{db_connectors::mongodb::get_db, Client, ConversationInfo, EngineError, MongoDbClient};
 use bson::{doc, Bson};
 
 pub fn create_node(

@@ -2,13 +2,20 @@ use actix_web::{get, post, web, HttpResponse};
 use csml_engine::{user_close_all_conversations, get_open_conversation, Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
+use crate::routes::tools::validate_api_key;
+
 
 /**
  * If a conversation is open, return it.
  * Otherwise, return nothing
  */
 #[post("/conversations/open")]
-pub async fn get_open(body: web::Json<Client>) -> HttpResponse {
+pub async fn get_open(body: web::Json<Client>, req: actix_web::HttpRequest) -> HttpResponse {
+
+  if let Some(value) = validate_api_key(&req) {
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
+  }
 
   let res = thread::spawn(move || {
     get_open_conversation(&body)
@@ -29,7 +36,12 @@ pub async fn get_open(body: web::Json<Client>) -> HttpResponse {
  * Close any open conversation
  */
 #[post("/conversations/close")]
-pub async fn close_user_conversations(body: web::Json<Client>) -> HttpResponse {
+pub async fn close_user_conversations(body: web::Json<Client>, req: actix_web::HttpRequest) -> HttpResponse {
+
+  if let Some(value) = validate_api_key(&req) {
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
+  }
 
   let res = thread::spawn(move || {
     user_close_all_conversations(body.clone())
@@ -57,7 +69,12 @@ pub struct GetClientInfoQuery {
  * List all the conversations of a given client
  */
 #[get("/conversations")]
-pub async fn get_client_conversations(query: web::Query<GetClientInfoQuery>) -> HttpResponse {
+pub async fn get_client_conversations(query: web::Query<GetClientInfoQuery>, req: actix_web::HttpRequest) -> HttpResponse {
+
+  if let Some(value) = validate_api_key(&req) {
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
+  }
 
   let client = Client {
     bot_id: query.bot_id.to_owned(),

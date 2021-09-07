@@ -1,9 +1,6 @@
 use serde_json::Value;
 
-use crate::{
-    Client, EngineError, MongoDbClient,
-    encrypt::encrypt_data
-};
+use crate::{encrypt::encrypt_data, Client, EngineError, MongoDbClient};
 use bson::{doc, Bson};
 
 pub fn init_interaction(
