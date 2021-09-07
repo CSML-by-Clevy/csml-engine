@@ -12,6 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.11
+      # VCPKGRS_DYNAMIC: 1
     strategy:
       matrix:
         os: [windows-latest]
@@ -20,15 +21,15 @@ jobs:
     - uses: actions/checkout@v2
 
     # for some reason cache does not work properly with macos builds
-    - name: Cache Cargo
-      if: matrix.os != 'macos-10.15'
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+    # - name: Cache Cargo
+    #   if: matrix.os != 'macos-10.15'
+    #   uses: actions/cache@v2
+    #   with:
+    #     path: |
+    #       ~/.cargo/registry
+    #       ~/.cargo/git
+    #       target
+    #     key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     # - name: Install Windows dependencies
     #   if: matrix.os == 'windows-latest'
@@ -38,25 +39,15 @@ jobs:
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
-      env:
-        VCPKGRS_DYNAMIC: 1
       with:
         toolchain: stable
         override: true
 
     - name: Build
       uses: actions-rs/cargo@v1
-      env:
-        VCPKGRS_DYNAMIC: 1
       with:
         command: build
         args: --verbose --manifest-path=csml_interpreter/Cargo.toml
-
-    - name: Build Server
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo --release
 
     - name: Test
       uses: actions-rs/cargo@v1
