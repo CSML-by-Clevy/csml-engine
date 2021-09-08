@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ master, dev , feat/add_CI_mongodb]
+    branches: [ master, dev]
   pull_request:
     branches: [ master, dev ]
 
@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         backend: ["postgresql"]
-        os: [ubuntu-18.04, macos-10.15]
+        os: [ubuntu-18.04, macos-10.15, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -93,7 +93,7 @@ jobs:
         DEBUG: 'true'
 
     # Warning: only one live test can run at once!
-    - name: Test csml_engine with (postgres)
+    - name: Test csml_engine with (Postgres)
       uses: actions-rs/cargo@v1
       if: matrix.os == 'ubuntu-18.04'
       with:
