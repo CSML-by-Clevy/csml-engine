@@ -1,0 +1,13 @@
+start:
+    say {"Hello World!": 42}
+    say Image("toto")
+
+    say Button("b1")
+
+    do b1 = Button("b1")
+    do b2 = Button("b2")
+    say 
+
+    say Question(
+        "title", buttons = [b1, b2]
+    )
