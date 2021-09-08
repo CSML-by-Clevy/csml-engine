@@ -22,7 +22,7 @@ pub struct BotIdPath {
 * {"statusCode": 204}
 *
 */
-#[delete("/data/clients)")]
+#[delete("/data/clients")]
 pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpRequest) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
