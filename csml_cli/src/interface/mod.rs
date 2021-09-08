@@ -1,6 +1,3 @@
-// pub mod ui_image;s
-// use ui_image::ImageData;
-
 pub mod chat_menu;
 pub mod init;
 pub mod main_menu;
@@ -19,7 +16,7 @@ use std::{
 };
 
 use crossterm::{
-    event::{self, Event as CEvent, KeyCode},
+    event::{self, Event as CEvent, KeyCode, KeyEvent, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 
@@ -215,8 +212,8 @@ pub fn csml_ui(start_ui: StartUI) -> Result<(), Box<dyn Error>> {
                 .checked_sub(last_tick.elapsed())
                 .unwrap_or_else(|| Duration::from_secs(0));
             if event::poll(timeout).unwrap() {
-                if let Some(CEvent::Key(key)) = event::read().ok(){
-                    tx.send(Event::Input(key.code)).ok();
+                if let Some(CEvent::Key(key_event)) = event::read().ok(){
+                    tx.send(Event::Input(key_event)).ok();
                 }
             }
             if last_tick.elapsed() >= tick_rate {
@@ -320,274 +317,306 @@ enum Exit {
 //############################# init menu
 
 fn handle_normal_mode<'a>(
-    input: KeyCode,
+    input: KeyEvent,
     app: &mut AppInit,
     bot_opt: &mut Option<BotOpt>,
     metadata: &mut Option<serde_json::Value>,
     directory_name: &mut String,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyCode::Enter => {
-            if let Some(index) = app.menu_state.selected {
-                match &app.menu_state.menu[index].element {
-                    MenuElement::List { .. } => app.menu_state.state = AppState::Selecting,
-                    MenuElement::Text(_text) => app.menu_state.state = AppState::Editing,
-                    MenuElement::Button(_accept) => {
-                        let env = app.menu_state.gen_env();
-                        let bot_name = env.bot_name.clone();
+        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+            KeyCode::Enter => {
+                if let Some(index) = app.menu_state.selected {
+                    match &app.menu_state.menu[index].element {
+                        MenuElement::List { .. } => app.menu_state.state = AppState::Selecting,
+                        MenuElement::Text(_text) => app.menu_state.state = AppState::Editing,
+                        MenuElement::Button(_accept) => {
+                            let env = app.menu_state.gen_env();
+                            let bot_name = env.bot_name.clone();
 
-                        init_with_env(env)?;
-                        *directory_name = bot_name.clone();
+                            init_with_env(env)?;
+                            *directory_name = bot_name.clone();
 
-                        *bot_opt = Some(BotOpt::CsmlBot(load_info(&bot_name).unwrap()));
-                        *metadata = load_metadata(directory_name);
+                            *bot_opt = Some(BotOpt::CsmlBot(load_info(&bot_name).unwrap()));
+                            *metadata = load_metadata(directory_name);
 
-                        //load env
-                        dotenv::from_path(&format!("{}/.env", directory_name)).ok();
+                            //load env
+                            dotenv::from_path(&format!("{}/.env", directory_name)).ok();
 
-                        app.menu_state.state = AppState::RunEditing;
+                            app.menu_state.state = AppState::RunEditing;
 
-                        return Ok(Exit::ChangeAPP(AppMode::Run(AppRun::default())));
+                            return Ok(Exit::ChangeAPP(AppMode::Run(AppRun::default())));
+                        }
+                        MenuElement::SelectableBot { .. } => {}
+                    };
+                }
+                Ok(Exit::None)
+            }
+            KeyCode::Down => {
+                app.menu_state.next();
+                Ok(Exit::None)
+            }
+            KeyCode::Up => {
+                app.menu_state.previous();
+                Ok(Exit::None)
+            }
+            KeyCode::Esc => Ok(Exit::Exit),
+
+            // KeyCode::E
+            _ => Ok(Exit::None),
+        }
+        KeyEvent{code, modifiers} => match code { 
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
+        }
+    }
+}
+
+fn handle_editing_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dyn Error>> {
+    match input {
+        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+            KeyCode::Enter => {
+                if let Some(index) = app.menu_state.selected {
+                    let item = &mut app.menu_state.menu[index];
+                    let line: String = app.input.drain(..).collect();
+                    if line.trim().is_empty() {
+                        return Ok(Exit::None);
                     }
-                    MenuElement::SelectableBot { .. } => {}
-                };
-            }
-            Ok(Exit::None)
-        }
-        KeyCode::Down => {
-            app.menu_state.next();
-            Ok(Exit::None)
-        }
-        KeyCode::Up => {
-            app.menu_state.previous();
-            Ok(Exit::None)
-        }
-        KeyCode::Esc => Ok(Exit::Exit),
-        _ => Ok(Exit::None),
-    }
-}
 
-fn handle_editing_mode(input: KeyCode, app: &mut AppInit) -> Result<Exit, Box<dyn Error>> {
-    match input {
-        KeyCode::Enter => {
-            if let Some(index) = app.menu_state.selected {
-                let item = &mut app.menu_state.menu[index];
-                let line: String = app.input.drain(..).collect();
-                if line.trim().is_empty() {
-                    return Ok(Exit::None);
-                }
-
-                item.update_value(&line);
-                app.menu_state.state = AppState::Normal;
-            }
-
-            app.menu_state.state = AppState::Normal;
-            Ok(Exit::None)
-        }
-        KeyCode::Char(c) => {
-            app.input.push(c);
-            Ok(Exit::None)
-        }
-        KeyCode::Backspace => {
-            app.input.pop();
-            Ok(Exit::None)
-        }
-        KeyCode::Esc => {
-            // clear the current input
-            app.input.clear();
-
-            app.menu_state.state = AppState::Normal;
-            Ok(Exit::None)
-        }
-        _ => Ok(Exit::None),
-    }
-}
-
-fn handle_select_mode(input: KeyCode, app: &mut AppInit) -> Result<Exit, Box<dyn Error>> {
-    match input {
-        KeyCode::Enter => {
-            if let Some(index) = app.menu_state.selected {
-                let item = &mut app.menu_state.menu[index];
-                item.update_value("");
-
-                // check if input item is de same item
-                if "mongodb" == item.get_value() || "dynamodb" == item.get_value() {
-                    app.menu_state.change_list();
+                    item.update_value(&line);
+                    app.menu_state.state = AppState::Normal;
                 }
 
                 app.menu_state.state = AppState::Normal;
+                Ok(Exit::None)
             }
-            Ok(Exit::None)
-        }
-        KeyCode::Down => {
-            if let Some(index) = app.menu_state.selected {
-                let item = &mut app.menu_state.menu[index];
+            KeyCode::Char(c) => {
+                app.input.push(c);
+                Ok(Exit::None)
+            }
+            KeyCode::Backspace => {
+                app.input.pop();
+                Ok(Exit::None)
+            }
+            KeyCode::Esc => {
+                // clear the current input
+                app.input.clear();
 
-                item.next()
+                app.menu_state.state = AppState::Normal;
+                Ok(Exit::None)
             }
-            Ok(Exit::None)
+            _ => Ok(Exit::None),
         }
-        KeyCode::Up => {
-            if let Some(index) = app.menu_state.selected {
-                let item = &mut app.menu_state.menu[index];
+        KeyEvent{code, modifiers} => match code { 
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
+        }
+    }
+}
 
-                item.previous()
+fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dyn Error>> {
+    match input {
+        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+            KeyCode::Enter => {
+                if let Some(index) = app.menu_state.selected {
+                    let item = &mut app.menu_state.menu[index];
+                    item.update_value("");
+
+                    // check if input item is de same item
+                    if "mongodb" == item.get_value() || "dynamodb" == item.get_value() {
+                        app.menu_state.change_list();
+                    }
+
+                    app.menu_state.state = AppState::Normal;
+                }
+                Ok(Exit::None)
             }
-            Ok(Exit::None)
+            KeyCode::Down => {
+                if let Some(index) = app.menu_state.selected {
+                    let item = &mut app.menu_state.menu[index];
+
+                    item.next()
+                }
+                Ok(Exit::None)
+            }
+            KeyCode::Up => {
+                if let Some(index) = app.menu_state.selected {
+                    let item = &mut app.menu_state.menu[index];
+
+                    item.previous()
+                }
+                Ok(Exit::None)
+            }
+            KeyCode::Esc => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
         }
-        KeyCode::Esc => Ok(Exit::Exit),
-        _ => Ok(Exit::None),
+        KeyEvent{code, modifiers} => match code { 
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
+        }
     }
 }
 
 //############################# run menu
 
 fn handle_run_normal_mode(
-    input: KeyCode,
+    input: KeyEvent,
     app: &mut AppRun,
     bot_opt: &mut Option<BotOpt>,
     metadata: &mut Option<serde_json::Value>,
     directory_name: &str,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyCode::Char('e') => {
-            app.input_mode = AppState::RunEditing;
+        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+            KeyCode::Char('e') => {
+                app.input_mode = AppState::RunEditing;
 
-            return Ok(Exit::None);
-        }
-        KeyCode::Char('r') => {
-            *bot_opt = Some(BotOpt::CsmlBot(load_info(directory_name).unwrap()));
-            *metadata = load_metadata(directory_name);
+                return Ok(Exit::None);
+            }
+            KeyCode::Char('r') => {
+                *bot_opt = Some(BotOpt::CsmlBot(load_info(directory_name).unwrap()));
+                *metadata = load_metadata(directory_name);
 
-            app.messages.items.push_front(
-                RawMessage {
-                    sender: "Reload Bot".to_owned(),
-                    raw_messages: vec![serde_json::json!(
-                        {
-                            "content_type": "text",
-                            "content": {
-                                "text": ""
+                app.messages.items.push_front(
+                    RawMessage {
+                        sender: "Reload Bot".to_owned(),
+                        raw_messages: vec![serde_json::json!(
+                            {
+                                "content_type": "text",
+                                "content": {
+                                    "text": ""
+                                }
                             }
-                        }
-                    )],
-                }
-            );
+                        )],
+                    }
+                );
 
-            return Ok(Exit::None);
-        }
-        KeyCode::Char('q') => return Ok(Exit::Exit),
-        KeyCode::Left => {
-            if app.scroll_x > 0 {
-                app.scroll_x -= 1;
+                return Ok(Exit::None);
             }
-            return Ok(Exit::None);
-        }
-        KeyCode::Right => {
-            app.scroll_x += 1;
-            return Ok(Exit::None);
-        }
-        KeyCode::Down => {
-            app.scroll_y += 1;
-            return Ok(Exit::None);
-        }
-        KeyCode::Up => {
-            if app.scroll_y > 0 {
-                app.scroll_y -= 1;
+            KeyCode::Char('q') => return Ok(Exit::Exit),
+            KeyCode::Left => {
+                if app.scroll_x > 0 {
+                    app.scroll_x -= 1;
+                }
+                return Ok(Exit::None);
             }
-            return Ok(Exit::None);
+            KeyCode::Right => {
+                app.scroll_x += 1;
+                return Ok(Exit::None);
+            }
+            KeyCode::Down => {
+                app.scroll_y += 1;
+                return Ok(Exit::None);
+            }
+            KeyCode::Up => {
+                if app.scroll_y > 0 {
+                    app.scroll_y -= 1;
+                }
+                return Ok(Exit::None);
+            }
+            _ => return Ok(Exit::None),
         }
-        _ => return Ok(Exit::None),
+        KeyEvent{code, modifiers} => match code { 
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
+        }
     }
 }
 
 fn handle_run_editing_mode(
-    input: KeyCode,
+    input: KeyEvent,
     app: &mut AppRun,
     bot_opt: &Option<BotOpt>,
     metadata: &mut Option<serde_json::Value>,
     request: Option<CsmlRequest>,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyCode::Enter => {
-            let mut user_input: String = app.input.drain(..).collect();
-            let raw_msg = if user_input.trim().is_empty() {
-                match app.messages.sub_item.selected {
-                    true => {
-                        user_input = app.messages.sub_item.payload.clone();
+        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+            KeyCode::Enter => {
+                let mut user_input: String = app.input.drain(..).collect();
+                let raw_msg = if user_input.trim().is_empty() {
+                    match app.messages.sub_item.selected {
+                        true => {
+                            user_input = app.messages.sub_item.payload.clone();
 
-                        let msg = RawMessage {
-                            sender: "user".to_owned(),
-                            raw_messages: vec![serde_json::json!(
-                                {
-                                    "content_type": "text",
-                                    "content": {
-                                        "text": &user_input
+                            let msg = RawMessage {
+                                sender: "user".to_owned(),
+                                raw_messages: vec![serde_json::json!(
+                                    {
+                                        "content_type": "text",
+                                        "content": {
+                                            "text": &user_input
+                                        }
                                     }
-                                }
-                            )],
-                        };
-                        // clear selected sub item container
-                        app.messages.sub_item.reset();
+                                )],
+                            };
+                            // clear selected sub item container
+                            app.messages.sub_item.reset();
 
-                        msg
-                    }
-                    false => {
-                        return Ok(Exit::None);
-                    }
-                }
-            } else {
-                RawMessage {
-                    sender: "user".to_owned(),
-                    raw_messages: vec![serde_json::json!(
-                        {
-                            "content_type": "text",
-                            "content": {
-                                "text": &user_input
-                            }
+                            msg
                         }
-                    )],
+                        false => {
+                            return Ok(Exit::None);
+                        }
+                    }
+                } else {
+                    RawMessage {
+                        sender: "user".to_owned(),
+                        raw_messages: vec![serde_json::json!(
+                            {
+                                "content_type": "text",
+                                "content": {
+                                    "text": &user_input
+                                }
+                            }
+                        )],
+                    }
+                };
+
+                app.messages.items.push_front(raw_msg);
+
+                if let Some(run_opt) = bot_opt {
+                    run_conversation(&user_input, request, run_opt.clone(), metadata.clone(), app)?;
                 }
-            };
-
-            app.messages.items.push_front(raw_msg);
-
-            if let Some(run_opt) = bot_opt {
-                run_conversation(&user_input, request, run_opt.clone(), metadata.clone(), app)?;
             }
-        }
-        KeyCode::Char(c) => {
-            app.input.push(c);
-        }
-        KeyCode::Left => {
-            app.messages.left();
-        }
-        KeyCode::Right => {
-            app.messages.right();
-        }
-        KeyCode::Down => {
-            // clear selected sub item container
-            app.messages.sub_item.reset();
+            KeyCode::Char(c) => {
+                app.input.push(c);
+            }
+            KeyCode::Left => {
+                app.messages.left();
+            }
+            KeyCode::Right => {
+                app.messages.right();
+            }
+            KeyCode::Down => {
+                // clear selected sub item container
+                app.messages.sub_item.reset();
 
-            app.scroll_x = 0;
-            app.scroll_y = 0;
-            app.messages.next();
-        }
-        KeyCode::Up => {
-            // clear selected sub item container
-            app.messages.sub_item.reset();
+                app.scroll_x = 0;
+                app.scroll_y = 0;
+                app.messages.next();
+            }
+            KeyCode::Up => {
+                // clear selected sub item container
+                app.messages.sub_item.reset();
 
-            app.scroll_x = 0;
-            app.scroll_y = 0;
-            app.messages.previous();
+                app.scroll_x = 0;
+                app.scroll_y = 0;
+                app.messages.previous();
+            }
+            KeyCode::Backspace => {
+                app.input.pop();
+                app.messages.unselect();
+            }
+            KeyCode::Esc => {
+                app.input_mode = AppState::RunNormal;
+            }
+            _ => return Ok(Exit::None),
         }
-        KeyCode::Backspace => {
-            app.input.pop();
-            app.messages.unselect();
+        KeyEvent{code, modifiers} => match code { 
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => return Ok(Exit::Exit),
+            _ =>  return Ok(Exit::None),
         }
-        KeyCode::Esc => {
-            app.input_mode = AppState::RunNormal;
-        }
-        _ => {}
     };
 
     return Ok(Exit::None);
@@ -595,92 +624,104 @@ fn handle_run_editing_mode(
 
 //############################# main
 
-fn handle_main_normal_mode<'a>(input: KeyCode, app: &mut AppMain) -> Result<Exit, Box<dyn Error>> {
+fn handle_main_normal_mode<'a>(input: KeyEvent, app: &mut AppMain) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyCode::Enter => {
-            if let Some(index) = app.menu_state.selected {
-                match &app.menu_state.menu[index].element {
-                    MenuElement::Button(button) => match button.as_str() {
-                        "csml init -- setup a new bot project" => {
-                            app.menu_state.state = AppState::Normal;
+        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+            KeyCode::Enter => {
+                if let Some(index) = app.menu_state.selected {
+                    match &app.menu_state.menu[index].element {
+                        MenuElement::Button(button) => match button.as_str() {
+                                "csml init -- setup a new bot project" => {
+                                    app.menu_state.state = AppState::Normal;
 
-                            return Ok(Exit::ChangeAPP(AppMode::Init(AppInit::default())));
-                        }
-                        "csml run -- execute your bot script" => {
-                            app.menu_state.state = AppState::Selecting;
+                                    return Ok(Exit::ChangeAPP(AppMode::Init(AppInit::default())));
+                                }
+                                "csml run -- execute your bot script" => {
+                                    app.menu_state.state = AppState::Selecting;
 
-                            return Ok(Exit::ChangeAPP(
-                                AppMode::SelectBot(AppSelectBot::default()),
-                            ));
-                        }
-                        _run => {}
-                    },
-                    _ => {}
-                };
-            }
-            Ok(Exit::None)
+                                    return Ok(Exit::ChangeAPP(
+                                        AppMode::SelectBot(AppSelectBot::default()),
+                                    ));
+                                }
+                                _run => return Ok(Exit::None)
+                            },
+                            _ => return Ok(Exit::None)
+                        };
+                    }
+                    Ok(Exit::None)
+                }
+                KeyCode::Down => {
+                    app.menu_state.next();
+                    Ok(Exit::None)
+                }
+                KeyCode::Up => {
+                    app.menu_state.previous();
+                    Ok(Exit::None)
+                }
+                KeyCode::Esc => Ok(Exit::Exit),
+                _ => Ok(Exit::None),
         }
-        KeyCode::Down => {
-            app.menu_state.next();
-            Ok(Exit::None)
+        KeyEvent{code, modifiers} => match code { 
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
         }
-        KeyCode::Up => {
-            app.menu_state.previous();
-            Ok(Exit::None)
-        }
-        KeyCode::Esc => Ok(Exit::Exit),
-        _ => Ok(Exit::None),
     }
 }
 
 //############################# select bot to run
 
 fn handle_select_bot_mode<'a>(
-    input: KeyCode,
+    input: KeyEvent,
     app: &mut AppSelectBot,
     bot_opt: &mut Option<BotOpt>,
     metadata: &mut Option<serde_json::Value>,
     directory_name: &mut String,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyCode::Enter => {
-            if let Some(index) = app.menu_state.selected {
-                match &app.menu_state.menu[index].element {
-                    MenuElement::SelectableBot { bot, path_info, .. } => {
-                        *directory_name = path_info.clone();
+        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+            KeyCode::Enter => {
+                if let Some(index) = app.menu_state.selected {
+                    match &app.menu_state.menu[index].element {
+                        MenuElement::SelectableBot { bot, path_info, .. } => {
+                            *directory_name = path_info.clone();
 
-                        //load env
-                        dotenv::from_path(&format!("{}/.env", directory_name)).ok();
+                            //load env
+                            dotenv::from_path(&format!("{}/.env", directory_name)).ok();
 
-                        *bot_opt = Some(BotOpt::CsmlBot(bot.to_owned()));
-                        *metadata = load_metadata(directory_name);
+                            *bot_opt = Some(BotOpt::CsmlBot(bot.to_owned()));
+                            *metadata = load_metadata(directory_name);
 
-                        app.menu_state.state = AppState::RunEditing;
+                            app.menu_state.state = AppState::RunEditing;
 
-                        return Ok(Exit::ChangeAPP(AppMode::Run(AppRun::default())));
-                    }
-                    MenuElement::Button(button) => match button.as_str() {
-                        "[create new bot]" => {
-                            app.menu_state.state = AppState::Normal;
-
-                            return Ok(Exit::ChangeAPP(AppMode::Init(AppInit::default())));
+                            return Ok(Exit::ChangeAPP(AppMode::Run(AppRun::default())));
                         }
-                        _run => {}
-                    },
-                    _ => {}
-                };
+                        MenuElement::Button(button) => match button.as_str() {
+                            "[create new bot]" => {
+                                app.menu_state.state = AppState::Normal;
+
+                                return Ok(Exit::ChangeAPP(AppMode::Init(AppInit::default())));
+                            }
+                            _run => {}
+                        },
+                        _ => {}
+                    };
+                }
+                Ok(Exit::None)
             }
-            Ok(Exit::None)
+            KeyCode::Down => {
+                app.menu_state.next();
+                Ok(Exit::None)
+            }
+            KeyCode::Up => {
+                app.menu_state.previous();
+                Ok(Exit::None)
+            }
+            KeyCode::Esc => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
         }
-        KeyCode::Down => {
-            app.menu_state.next();
-            Ok(Exit::None)
+        KeyEvent{code, modifiers} => match code { 
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
         }
-        KeyCode::Up => {
-            app.menu_state.previous();
-            Ok(Exit::None)
-        }
-        KeyCode::Esc => Ok(Exit::Exit),
-        _ => Ok(Exit::None),
     }
 }

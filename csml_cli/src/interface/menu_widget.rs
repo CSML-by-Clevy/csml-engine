@@ -161,12 +161,11 @@ impl<'a> StatefulWidget for Menu<'a> {
             }
             // ###########
 
-            let pos = (list_area.left(), list_area.top() + current_height);
+            let (x, y) = (list_area.left(), list_area.top() + current_height);
             current_height += item.height(mode) as u16;
 
-            let (x, y) = pos;
             // add padding for sub menus
-            let x = x + item.lvl * 2;
+            let x = x + item.lvl;
 
             let area = Rect {
                 x,
@@ -193,7 +192,6 @@ impl<'a> StatefulWidget for Menu<'a> {
             } else {
                 list_area.width as usize
             };
-
 
             let mut elem_y;
 
@@ -519,7 +517,7 @@ pub enum MenuElement<'a> {
     Text(String),
     Button(String),
     List {
-        vec: &'a [&'a str],
+        vec: &'a [&'a str], // <- payload: Option<String>
         selected: usize,
         scroll_index: usize,
     },

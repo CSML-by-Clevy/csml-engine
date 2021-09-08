@@ -27,7 +27,7 @@ pub fn init() -> Result<Database, EngineError> {
     let pg_connection = PgConnection::establish(&uri)
         .unwrap_or_else(|_| panic!("Error connecting to {}", uri));
 
-    embedded_migrations::run_with_output(&pg_connection, &mut std::io::stdout());
+    embedded_migrations::run_with_output(&pg_connection, &mut std::io::stdout())?;
 
     let db = Database::Postgresql(
         PostgresqlClient::new(pg_connection)

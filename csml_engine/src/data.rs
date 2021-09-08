@@ -399,6 +399,8 @@ pub enum EngineError {
 
     #[cfg(any(feature = "postgresql"))]
     PsqlErrorCode(String),
+    #[cfg(any(feature = "postgresql"))]
+    PsqlMigrationsError(String),
 }
 
 impl From<serde_json::Error> for EngineError {
@@ -476,5 +478,12 @@ impl From<serde_dynamodb::Error> for EngineError {
 impl From<diesel::result::Error> for EngineError {
     fn from(e: diesel::result::Error) -> Self {
         EngineError::PsqlErrorCode(e.to_string())
+    }
+}
+
+#[cfg(any(feature = "postgresql"))]
+impl From<diesel_migrations::RunMigrationsError> for EngineError {
+    fn from(e: diesel_migrations::RunMigrationsError) -> Self {
+        EngineError::PsqlMigrationsError(e.to_string())
     }
 }

@@ -21,15 +21,8 @@ pub fn draw_init(
             .margin(1)
             .constraints([Constraint::Min(3)].as_ref())
             .split(
-                Rect {
-                    x: 40,
-                    y: 0,
-                    width: 100,
-                    height: 30,
-                }, // f.size()
+             f.size()
             );
-
-        // app.menu_state.
 
         let menu = Menu::new(app.menu_state.menu.clone(), app.input.as_ref())
             .block(Block::default().borders(Borders::ALL).title("Init"))
