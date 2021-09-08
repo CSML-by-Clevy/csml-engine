@@ -4,10 +4,7 @@ use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    widgets::{
-        Block,
-        Borders,
-    },
+    widgets::{Block, Borders},
     Terminal,
 };
 

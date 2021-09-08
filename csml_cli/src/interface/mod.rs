@@ -31,8 +31,6 @@ use main_menu::{draw_main, MainMenu};
 use menu_widget::*;
 use select_bot::SelectBotMenu;
 
-
-
 use self::select_bot::draw_select_bot;
 use crate::init_package::init_with_env;
 use crate::run::load_info;
@@ -212,7 +210,7 @@ pub fn csml_ui(start_ui: StartUI) -> Result<(), Box<dyn Error>> {
                 .checked_sub(last_tick.elapsed())
                 .unwrap_or_else(|| Duration::from_secs(0));
             if event::poll(timeout).unwrap() {
-                if let Some(CEvent::Key(key_event)) = event::read().ok(){
+                if let Some(CEvent::Key(key_event)) = event::read().ok() {
                     tx.send(Event::Input(key_event)).ok();
                 }
             }
@@ -324,7 +322,7 @@ fn handle_normal_mode<'a>(
     directory_name: &mut String,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+        KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
                     match &app.menu_state.menu[index].element {
@@ -364,17 +362,17 @@ fn handle_normal_mode<'a>(
 
             // KeyCode::E
             _ => Ok(Exit::None),
-        }
-        KeyEvent{code, modifiers} => match code { 
+        },
+        KeyEvent { code, modifiers } => match code {
             KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
+        },
     }
 }
 
 fn handle_editing_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+        KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
                     let item = &mut app.menu_state.menu[index];
@@ -406,17 +404,17 @@ fn handle_editing_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<d
                 Ok(Exit::None)
             }
             _ => Ok(Exit::None),
-        }
-        KeyEvent{code, modifiers} => match code { 
+        },
+        KeyEvent { code, modifiers } => match code {
             KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
+        },
     }
 }
 
 fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+        KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
                     let item = &mut app.menu_state.menu[index];
@@ -449,11 +447,11 @@ fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dy
             }
             KeyCode::Esc => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
-        KeyEvent{code, modifiers} => match code { 
+        },
+        KeyEvent { code, modifiers } => match code {
             KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
+        },
     }
 }
 
@@ -467,7 +465,7 @@ fn handle_run_normal_mode(
     directory_name: &str,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+        KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Char('e') => {
                 app.input_mode = AppState::RunEditing;
 
@@ -477,19 +475,17 @@ fn handle_run_normal_mode(
                 *bot_opt = Some(BotOpt::CsmlBot(load_info(directory_name).unwrap()));
                 *metadata = load_metadata(directory_name);
 
-                app.messages.items.push_front(
-                    RawMessage {
-                        sender: "Reload Bot".to_owned(),
-                        raw_messages: vec![serde_json::json!(
-                            {
-                                "content_type": "text",
-                                "content": {
-                                    "text": ""
-                                }
+                app.messages.items.push_front(RawMessage {
+                    sender: "Reload Bot".to_owned(),
+                    raw_messages: vec![serde_json::json!(
+                        {
+                            "content_type": "text",
+                            "content": {
+                                "text": ""
                             }
-                        )],
-                    }
-                );
+                        }
+                    )],
+                });
 
                 return Ok(Exit::None);
             }
@@ -515,11 +511,11 @@ fn handle_run_normal_mode(
                 return Ok(Exit::None);
             }
             _ => return Ok(Exit::None),
-        }
-        KeyEvent{code, modifiers} => match code { 
+        },
+        KeyEvent { code, modifiers } => match code {
             KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
+        },
     }
 }
 
@@ -531,7 +527,7 @@ fn handle_run_editing_mode(
     request: Option<CsmlRequest>,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+        KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 let mut user_input: String = app.input.drain(..).collect();
                 let raw_msg = if user_input.trim().is_empty() {
@@ -612,11 +608,13 @@ fn handle_run_editing_mode(
                 app.input_mode = AppState::RunNormal;
             }
             _ => return Ok(Exit::None),
-        }
-        KeyEvent{code, modifiers} => match code { 
-            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => return Ok(Exit::Exit),
-            _ =>  return Ok(Exit::None),
-        }
+        },
+        KeyEvent { code, modifiers } => match code {
+            KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => {
+                return Ok(Exit::Exit)
+            }
+            _ => return Ok(Exit::None),
+        },
     };
 
     return Ok(Exit::None);
@@ -626,45 +624,45 @@ fn handle_run_editing_mode(
 
 fn handle_main_normal_mode<'a>(input: KeyEvent, app: &mut AppMain) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+        KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
                     match &app.menu_state.menu[index].element {
                         MenuElement::Button(button) => match button.as_str() {
-                                "csml init -- setup a new bot project" => {
-                                    app.menu_state.state = AppState::Normal;
+                            "csml init -- setup a new bot project" => {
+                                app.menu_state.state = AppState::Normal;
 
-                                    return Ok(Exit::ChangeAPP(AppMode::Init(AppInit::default())));
-                                }
-                                "csml run -- execute your bot script" => {
-                                    app.menu_state.state = AppState::Selecting;
+                                return Ok(Exit::ChangeAPP(AppMode::Init(AppInit::default())));
+                            }
+                            "csml run -- execute your bot script" => {
+                                app.menu_state.state = AppState::Selecting;
 
-                                    return Ok(Exit::ChangeAPP(
-                                        AppMode::SelectBot(AppSelectBot::default()),
-                                    ));
-                                }
-                                _run => return Ok(Exit::None)
-                            },
-                            _ => return Ok(Exit::None)
-                        };
-                    }
-                    Ok(Exit::None)
+                                return Ok(Exit::ChangeAPP(AppMode::SelectBot(
+                                    AppSelectBot::default(),
+                                )));
+                            }
+                            _run => return Ok(Exit::None),
+                        },
+                        _ => return Ok(Exit::None),
+                    };
                 }
-                KeyCode::Down => {
-                    app.menu_state.next();
-                    Ok(Exit::None)
-                }
-                KeyCode::Up => {
-                    app.menu_state.previous();
-                    Ok(Exit::None)
-                }
-                KeyCode::Esc => Ok(Exit::Exit),
-                _ => Ok(Exit::None),
-        }
-        KeyEvent{code, modifiers} => match code { 
+                Ok(Exit::None)
+            }
+            KeyCode::Down => {
+                app.menu_state.next();
+                Ok(Exit::None)
+            }
+            KeyCode::Up => {
+                app.menu_state.previous();
+                Ok(Exit::None)
+            }
+            KeyCode::Esc => Ok(Exit::Exit),
+            _ => Ok(Exit::None),
+        },
+        KeyEvent { code, modifiers } => match code {
             KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
+        },
     }
 }
 
@@ -678,7 +676,7 @@ fn handle_select_bot_mode<'a>(
     directory_name: &mut String,
 ) -> Result<Exit, Box<dyn Error>> {
     match input {
-        KeyEvent{ code, modifiers } if modifiers.is_empty() => match code {
+        KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
                     match &app.menu_state.menu[index].element {
@@ -718,10 +716,10 @@ fn handle_select_bot_mode<'a>(
             }
             KeyCode::Esc => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
-        KeyEvent{code, modifiers} => match code { 
+        },
+        KeyEvent { code, modifiers } => match code {
             KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Ok(Exit::Exit),
             _ => Ok(Exit::None),
-        }
+        },
     }
 }

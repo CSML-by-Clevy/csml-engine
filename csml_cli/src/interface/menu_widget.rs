@@ -186,7 +186,7 @@ impl<'a> StatefulWidget for Menu<'a> {
             } else {
                 0
             };
-             
+
             let max_element_width = if tmp > list_area.width {
                 (list_area.width - tmp) as usize
             } else {

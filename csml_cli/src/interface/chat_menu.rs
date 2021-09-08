@@ -15,8 +15,7 @@ use crate::interface::{chat_widget::*, AppRun, AppState};
 use crate::run::{init_request, init_request_flow_trigger};
 use unicode_width::UnicodeWidthStr;
 
-static HELP: &str = 
-"
+static HELP: &str = "
 [Chat Mode]
 Press Escape key to exit Chat Mode.
 Arrow keys to navigate.
@@ -28,7 +27,6 @@ Press 'r' key to reload bot.
 Press 'e' key to go back to Chat Mode
 Arrow keys to navigate Payload Debugger.
 ";
-
 
 #[derive(Debug)]
 pub struct Messages {
@@ -90,16 +88,14 @@ pub fn run_conversation(
         Err(err) => {
             let raw_msg = RawMessage {
                 sender: "Error".to_owned(),
-                raw_messages: vec!(
-                    serde_json::json!(
-                        {
-                            "payload":{
-                                "content_type": "error",
-                                "content": format!("{:?}", err)
-                            }
+                raw_messages: vec![serde_json::json!(
+                    {
+                        "payload":{
+                            "content_type": "error",
+                            "content": format!("{:?}", err)
                         }
-                    )
-                ),
+                    }
+                )],
             };
 
             app.messages.items.push_front(raw_msg);
@@ -135,7 +131,6 @@ pub fn run_conversation(
 //         )
 //         .split(popup_layout[1])[1]
 // }
-
 
 // flow: Option<&str>,
 // step: Option<&str>,
@@ -250,10 +245,7 @@ pub fn draw_run(
         let info_layout = Layout::default()
             .direction(Direction::Vertical)
             .margin(2)
-            .constraints([
-                Constraint::Min(1),
-                Constraint::Length(20)
-            ].as_ref())
+            .constraints([Constraint::Min(1), Constraint::Length(20)].as_ref())
             .split(Rect {
                 x: (s.width as f32 / 2.05) as u16,
                 y: 1,
@@ -298,10 +290,8 @@ pub fn draw_run(
 
         let help = Paragraph::new(HELP)
             .style(Style::default().fg(Color::LightBlue))
-            .block(Block::default()
-                    .borders(Borders::ALL)
-                    .title("Help")
-            ).wrap(Wrap{trim: true});
+            .block(Block::default().borders(Borders::ALL).title("Help"))
+            .wrap(Wrap { trim: true });
 
         f.render_widget(help, info_layout[1]);
     })?;

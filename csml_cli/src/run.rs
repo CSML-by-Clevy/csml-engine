@@ -72,7 +72,7 @@ pub fn load_info(directory_name: &str) -> Result<CsmlBot, Box<dyn Error>> {
             let name = dir.path().display().to_string();
             let vec = name.split('/').collect::<Vec<&str>>();
             if vec.is_empty() {
-                continue
+                continue;
             }
             let len = vec.len() - 1;
             let file_name = vec[len].split('.').collect::<Vec<&str>>();

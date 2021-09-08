@@ -6,7 +6,7 @@ use clap::{App, AppSettings, Arg, SubCommand};
 use csml_engine::data::BotOpt;
 
 // ui_image::image
-use interface::{chat_menu::format_initial_payload , StartUI};
+use interface::{chat_menu::format_initial_payload, StartUI};
 use run::load_info;
 
 fn main() {
@@ -66,7 +66,7 @@ fn main() {
                         Ok(bot) => {
                             let bot_opt = Some(BotOpt::CsmlBot(bot));
 
-                            let start = StartUI::Run {request, bot_opt};
+                            let start = StartUI::Run { request, bot_opt };
 
                             interface::csml_ui(start).unwrap();
                         }
