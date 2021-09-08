@@ -2,6 +2,9 @@
 use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
+#[cfg(feature = "postgresql")]
+use crate::db_connectors::{is_postgresql, postgresql_connector};
+
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, EngineError};
 
@@ -20,6 +23,12 @@ pub fn init_interaction(
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::interactions::init_interaction(event, client, db);
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::interactions::init_interaction(event, client, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -41,6 +50,17 @@ pub fn update_interaction(data: &mut ConversationInfo, success: bool) -> Result<
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(&mut data.db)?;
         return dynamodb_connector::interactions::update_interaction(
+            &data.interaction_id,
+            success,
+            &data.client,
+            db,
+        );
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(&mut data.db)?;
+        return postgresql_connector::interactions::update_interaction(
             &data.interaction_id,
             success,
             &data.client,

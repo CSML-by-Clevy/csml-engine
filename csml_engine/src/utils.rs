@@ -145,10 +145,7 @@ pub fn send_msg_to_callback_url(
         _ => (),
     };
 
-    match serde_json::to_string(&messages) {
-        Ok(string) => send_to_callback_url(data, string.as_bytes()),
-        Err(_err) => (),
-    };
+    send_to_callback_url(data, serde_json::json!(messages))
 }
 
 /**
@@ -257,11 +254,14 @@ pub fn search_flow<'a>(
 
             let flow_trigger: FlowTrigger = serde_json::from_str(&event.content_value)?;
 
-            let flow = get_flow_by_id(&flow_trigger.flow_id, &bot.flows)?;
-
-            match flow_trigger.step_id {
-                Some(step_id) => Ok((flow, step_id)),
-                None => Ok((flow, "start".to_owned())),
+            match get_flow_by_id(&flow_trigger.flow_id, &bot.flows) {
+                Ok(flow) => {
+                    match flow_trigger.step_id {
+                        Some(step_id) => Ok((flow, step_id)),
+                        None => Ok((flow, "start".to_owned())),
+                    }
+                },
+                Err(_) => Ok((get_flow_by_id(&bot.default_flow, &bot.flows)? , "start".to_owned())),
             }
         }
         event => {

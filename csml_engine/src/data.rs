@@ -4,7 +4,6 @@ use crate::{
     Client, Context,
 };
 use csml_interpreter::data::{CsmlBot, CsmlFlow, Message};
-use curl::easy::Easy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -298,7 +297,22 @@ pub enum Database {
     Mongo(MongoDbClient),
     #[cfg(feature = "dynamo")]
     Dynamodb(DynamoDbClient),
+    #[cfg(feature = "postgresql")]
+    Postgresql(PostgresqlClient),
     None,
+}
+
+
+#[cfg(feature = "postgresql")]
+pub struct PostgresqlClient {
+    pub client: diesel::prelude::PgConnection,
+}
+
+#[cfg(feature = "postgresql")]
+impl PostgresqlClient {
+    pub fn new(client: diesel::prelude::PgConnection) -> Self {
+        Self { client }
+    }
 }
 
 #[cfg(feature = "mongo")]
@@ -337,9 +351,9 @@ impl DynamoDbClient {
 
 pub struct ConversationInfo {
     pub request_id: String,
-    pub curl: Option<Easy>,
     pub conversation_id: String,
     pub interaction_id: String,
+    pub callback_url: Option<String>,
     pub client: Client,
     pub context: Context,
     pub metadata: Value,
@@ -381,6 +395,9 @@ pub enum EngineError {
     SerdeDynamodb(serde_dynamodb::Error),
     #[cfg(any(feature = "dynamo"))]
     S3ErrorCode(u16),
+
+    #[cfg(any(feature = "postgresql"))]
+    PsqlErrorCode(String),
 }
 
 impl From<serde_json::Error> for EngineError {
@@ -451,5 +468,12 @@ impl<E: std::error::Error + 'static> From<rusoto_core::RusotoError<E>> for Engin
 impl From<serde_dynamodb::Error> for EngineError {
     fn from(e: serde_dynamodb::Error) -> Self {
         EngineError::SerdeDynamodb(e)
+    }
+}
+
+#[cfg(any(feature = "postgresql"))]
+impl From<diesel::result::Error> for EngineError {
+    fn from(e: diesel::result::Error) -> Self {
+        EngineError::PsqlErrorCode(e.to_string())
     }
 }

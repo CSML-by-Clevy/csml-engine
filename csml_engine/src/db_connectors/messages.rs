@@ -2,6 +2,8 @@
 use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
+#[cfg(feature = "postgresql")]
+use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, ConversationInfo, EngineError, Client};
 
@@ -24,6 +26,16 @@ pub fn add_messages_bulk(
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         return dynamodb_connector::messages::add_messages_bulk(
+            data,
+            &msgs,
+            interaction_order,
+            direction,
+        );
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        return postgresql_connector::messages::add_messages_bulk(
             data,
             &msgs,
             interaction_order,
@@ -59,6 +71,18 @@ pub fn get_client_messages(
         let pagination_key = dynamodb_connector::get_pagination_key(pagination_key)?;
 
         return dynamodb_connector::messages::get_client_messages(
+            client,
+            db,
+            limit,
+            pagination_key,
+        );
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+
+        return postgresql_connector::messages::get_client_messages(
             client,
             db,
             limit,

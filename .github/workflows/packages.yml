@@ -9,14 +9,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       MACOSX_DEPLOYMENT_TARGET: 10.11
+      VCPKGRS_DYNAMIC: 1
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15]
+        os: [ubuntu-18.04, macos-10.15, windows-latest]
         include:
           - os: ubuntu-18.04
             asset_name: csml-server-linux-amd64
           - os: macos-10.15
             asset_name: csml-server-macos-amd64
+          - os: windows-latest
+            asset_name: csml-server-windows-amd64
 
     steps:
     - uses: actions/checkout@v2
@@ -42,7 +45,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --release
+        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql  --release
 
     - uses: actions/upload-artifact@v2
       with:

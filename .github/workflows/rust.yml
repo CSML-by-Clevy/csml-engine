@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, dev]
   pull_request:
     branches: [ master, dev ]
 
@@ -14,7 +14,8 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15]
+        backend: ["postgresql"]
+        os: [ubuntu-18.04, macos-10.15, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -29,6 +30,29 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Create mongoDB Docker container
+      if: matrix.os == 'ubuntu-18.04'
+      run: sudo docker run -d -p 27017:27017 mongo:latest
+
+    - name: Install postgres (Linux)
+      if: runner.os == 'Linux' && matrix.backend == 'postgresql'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev postgresql
+        echo "host    all             all             127.0.0.1/32            md5" > sudo tee -a /etc/postgresql/10/main/pg_hba.conf
+        sudo service postgresql restart && sleep 3
+        sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+        sudo service postgresql restart && sleep 3
+
+    - name: Install postgres (MacOs)
+      if: matrix.os != 'macos-10.15' && matrix.backend == 'postgres'
+      run: |
+        brew update
+        brew install postgres
+        /usr/local/opt/postgres/bin/pg_ctl -D /usr/local/var/postgres start
+        sleep 3
+        /usr/local/opt/postgres/bin/createuser -s postgres
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
@@ -48,8 +72,43 @@ jobs:
         command: test
         args: --verbose --manifest-path=csml_interpreter/Cargo.toml
 
+
     # Warning: only one live test can run at once!
-    - name: Test with Live DB
+    - name: Test csml_engine with (Mongodb)
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "mongo" -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: mongodb
+        MONGODB_DATABASE: csml
+        MONGODB_HOST: localhost
+        MONGODB_PORT: '27017'
+        MONGODB_USERNAME:
+        MONGODB_PASSWORD:
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DISABLE_SSL_VERIFY: 'false'
+        DEBUG: 'true'
+
+    # Warning: only one live test can run at once!
+    - name: Test csml_engine with (Postgres)
+      uses: actions-rs/cargo@v1
+      if: matrix.os == 'ubuntu-18.04'
+      with:
+        command: test
+        args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "postgresql" -- --test-threads=1
+      env:
+        ENGINE_DB_TYPE: postgresql
+        POSTGRESQL_URL: postgres://postgres:postgres@localhost/
+        ENGINE_SERVER_PORT: '5000'
+        ENCRYPTION_SECRET: someDefault.Secr3tValue
+        DEBUG: 'true'
+
+
+    # Warning: only one live test can run at once!
+    - name: Test csml_engine with (dynamodb)
       uses: actions-rs/cargo@v1
       if: matrix.os == 'ubuntu-18.04'
       with:
@@ -68,7 +127,7 @@ jobs:
         DEBUG: 'true'
 
     # Warning: only one live test can run at once!
-    - name: Test server endpoint
+    - name: Test csml_server endpoint (dynamodb)
       uses: actions-rs/cargo@v1
       if: matrix.os == 'ubuntu-18.04'
       with:

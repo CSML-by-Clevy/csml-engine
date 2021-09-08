@@ -10,7 +10,9 @@ start:
         say "create test"
         remember test = 1
     } else {
+        say "b test = {{test}}"
         do test = test + 1
+        say "a test = {{test}}"
     }
 
     // goto end

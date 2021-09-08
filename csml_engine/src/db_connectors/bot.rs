@@ -2,6 +2,8 @@
 use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
+#[cfg(feature = "postgresql")]
+use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{BotVersion, CsmlBot, Database, EngineError};
 
@@ -37,6 +39,22 @@ pub fn create_bot_version(
         return Ok(version_id);
     }
 
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+
+        let serializable_bot = crate::data::to_serializable_bot(&csml_bot);
+        let bot = serde_json::json!(serializable_bot).to_string();
+
+        let version_id = postgresql_connector::bot::create_bot_version(
+            bot_id.clone(),
+            bot,
+            db,
+        )?;
+
+        return Ok(version_id);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -54,6 +72,12 @@ pub fn get_last_bot_version(
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::bot::get_last_bot_version(&bot_id, db);
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::bot::get_last_bot_version(&bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -74,6 +98,12 @@ pub fn get_by_version_id(
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::bot::get_bot_by_version_id(&version_id, &_bot_id, db);
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::bot::get_bot_by_version_id(&version_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -101,6 +131,12 @@ pub fn get_bot_versions(
         return dynamodb_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
     }
 
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -121,6 +157,12 @@ pub fn delete_bot_version(
         return dynamodb_connector::bot::delete_bot_version(_bot_id, version_id, db);
     }
 
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::bot::delete_bot_version(version_id, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -135,6 +177,12 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), Engine
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
         return dynamodb_connector::bot::delete_bot_versions(bot_id, db);
+    }
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        let db = postgresql_connector::get_db(db)?;
+        return postgresql_connector::bot::delete_bot_versions(bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -158,17 +206,16 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
         return Ok(());
     }
 
-    #[cfg(feature = "dynamo")]
-    if is_dynamodb() {
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
         delete_bot_versions(bot_id, db)?;
 
-        let db = dynamodb_connector::get_db(db)?;
+        let db = postgresql_connector::get_db(db)?;
 
-        dynamodb_connector::bot::delete_all_bot_data(bot_id, "memory", db)?;
-        dynamodb_connector::bot::delete_all_bot_data(bot_id, "message", db)?;
-        dynamodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
-        dynamodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
-        dynamodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
+        postgresql_connector::conversations::delete_all_bot_data(bot_id, db)?;
+        postgresql_connector::interactions::delete_all_bot_data(bot_id, db)?;
+        postgresql_connector::memories::delete_all_bot_data(bot_id, db)?;
+        postgresql_connector::state::delete_all_bot_data(bot_id, db)?;
         return Ok(());
     }
 

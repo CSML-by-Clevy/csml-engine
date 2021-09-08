@@ -130,7 +130,8 @@ pub fn expr_to_literal(
                 sender,
             )?;
             // only for closure capture the step variables
-            capture_variables(&mut &mut new_value, data.step_vars.clone(), &data.context.flow);
+            let memory: HashMap<String, Literal> = data.get_all_memories();
+            capture_variables(&mut &mut new_value, memory, &data.context.flow);
             Ok(new_value)
         }
         Expr::IdentExpr(var, ..) => Ok(get_var(

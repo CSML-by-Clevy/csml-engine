@@ -18,25 +18,28 @@
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#example">Example</a> •
-  <a href="#using-csml-studio">Usage</a> •
+  <a href="#getting-started">Getting started</a> •
   <a href="#additional-information">Additional Information</a>
+</p>
+<p align="center">
+  <a href="https://play.csml.dev">Try CSML online</a>
 </p>
 
 <h2 align="center">
   <img src="./images/csml-demo.png" alt="CSML-demo" width="700">
 </h2>
 
-[CSML (Conversational Standard Meta Language)](https://csml.dev) is a Domain-Specific Language designed for easily creating conversational experiences.
+[CSML (Conversational Standard Meta Language)](https://csml.dev) is both a domain-specific programming language and chatbot engine, designed to make it easy to develop complex chatbots.
 
-The purpose of this language is to simplify the creation and maintenance of rich conversational interactions between humans and machines. With a very expressive and text-only syntax, CSML flows are easy to understand, making it easy to deploy and maintain conversational agents. CSML handles short and long-term memory slots, metadata injection, and connecting to any third party API or injecting arbitrary code in any programming language thanks to its powerful runtime APIs.
+With a very expressive and text-only syntax, CSML flows are easy to understand, making it easy to deploy and maintain conversational agents. CSML handles short and long-term memory slots, metadata injection, and connecting to any third party API or injecting arbitrary code in any programming language thanks to its powerful runtime APIs.
 
 ## Key Features
 
-* Super easy syntax
-* Conversation-oriented components
-* Native bindings with functions written in other languages
-* Chatbot-specific keywords
-* Out-of-the-box short-term and long-term memory slots
+* Text-only, expressive syntax, easy to learn and develop complex chatbot scenarios with
+* Rich and extensible conversational components such as Carousel, Image, Video, Button, Card, Input, Calendar...
+* Built-in short-term and long-term memory slots: no more complex state machine boilerplate
+* Portable, fast, and easy to deploy: it only requires a MongoDB database (or AWS account for serverless version)
+* Vibrant community of over 5000 active CSML developers
 
 ## Example
 
@@ -73,7 +76,7 @@ known:
   goto end
 ```
 
-The full documentation of the project is available on https://docs.csml.dev/language.
+The full documentation is available on https://docs.csml.dev/language.
 
 # Getting Started
 
@@ -122,7 +125,7 @@ DEBUG=true
 
 ### Deploy to Heroku
 
-<a href="https://heroku.com/deploy?template=https://github.com/CSML-by-Clevy/csml-engine/tree/masters">
+<a href="https://heroku.com/deploy?template=https://github.com/CSML-by-Clevy/csml-engine/tree/master">
   <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
 </a>
 
