@@ -35,9 +35,9 @@ mod tests {
     ) -> ConversationInfo {
         ConversationInfo {
             request_id: "1234".to_owned(),
-            curl: None,
             conversation_id,
             interaction_id,
+            callback_url: None,
             client: get_client(),
             context: get_context(),
             metadata: serde_json::json!({}),
