@@ -35,6 +35,38 @@ jobs:
           target
         key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    # Install Postgres for Linux, MacOs and Windows
+    - name: Install postgres (Linux)
+      if: runner.os == 'ubuntu-18.04'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev postgresql
+        echo "host    all             all             127.0.0.1/32            md5" > sudo tee -a /etc/postgresql/10/main/pg_hba.conf
+        sudo service postgresql restart && sleep 3
+        sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+        sudo service postgresql restart && sleep 3
+        echo "PG_DATABASE_URL=postgres://postgres:postgres@localhost/" >> $GITHUB_ENV
+        echo "PG_EXAMPLE_DATABASE_URL=postgres://postgres:postgres@localhost/diesel_example" >> $GITHUB_ENV
+
+    - name: Install postgres (MacOS)
+      if: runner.os == 'macos-10.15'
+      run: |
+        /usr/local/opt/postgres/bin/pg_ctl -D /usr/local/var/postgres start
+        sleep 3
+        /usr/local/opt/postgres/bin/createuser -s postgres
+        echo "PG_DATABASE_URL=postgres://postgres@localhost/" >> $GITHUB_ENV
+        echo "PG_EXAMPLE_DATABASE_URL=postgres://postgres@localhost/diesel_example" >> $GITHUB_ENV
+
+    - name: Install postgres (Windows)
+      if: runner.os == 'Windows' && matrix.backend == 'postgres'
+      shell: bash
+      run: |
+        choco install postgresql12 --force --params '/Password:root'
+        echo "C:\Program Files\PostgreSQL\12\bin" >> $GITHUB_PATH
+        echo "C:\Program Files\PostgreSQL\12\lib" >> $GITHUB_PATH
+        echo "PQ_LIB_DIR=C:\Program Files\PostgreSQL\12\lib" >> $GITHUB_ENV
+        echo "PG_DATABASE_URL=postgres://postgres:root@localhost/" >> $GITHUB_ENV
+
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
       with:
