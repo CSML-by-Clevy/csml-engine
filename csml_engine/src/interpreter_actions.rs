@@ -25,7 +25,7 @@ pub fn interpret_step(
     let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &bot.flows)?;
     let mut interaction_order = 0;
     let mut conversation_end = false;
-    let mut interaction_success = true;
+    // let mut interaction_success = true;
     let (sender, receiver) = mpsc::channel::<MSG>();
     let context = data.context.clone();
     let interpret_step = SystemTime::now();
@@ -129,7 +129,8 @@ pub fn interpret_step(
             },
             MSG::Error(err_msg) => {
                 conversation_end = true;
-                interaction_success = false;
+                // interaction_success = false;
+
                 send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
                 data.messages.push(err_msg);
                 close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
@@ -171,7 +172,7 @@ pub fn interpret_step(
         }
     }
 
-    // TODO: add in logs
+    //TODO: log update
     // update_interaction(data, interaction_success)?;
 
     Ok(messages_formater(

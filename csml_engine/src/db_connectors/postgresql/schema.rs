@@ -25,19 +25,6 @@ table! {
 }
 
 table! {
-    csml_interactions (id) {
-        id -> Uuid,
-        bot_id -> Varchar,
-        channel_id -> Varchar,
-        user_id -> Varchar,
-        success -> Bool,
-        event -> Varchar,
-        updated_at -> Timestamp,
-        created_at -> Timestamp,
-    }
-}
-
-table! {
     csml_memories (id) {
         id -> Uuid,
         bot_id -> Varchar,
@@ -54,7 +41,6 @@ table! {
 table! {
     csml_messages (id) {
         id -> Uuid,
-        interaction_id -> Uuid,
         conversation_id -> Uuid,
         flow_id -> Varchar,
         step_id -> Varchar,
@@ -63,20 +49,6 @@ table! {
         content_type -> Varchar,
         message_order -> Int4,
         interaction_order -> Int4,
-        updated_at -> Timestamp,
-        created_at -> Timestamp,
-    }
-}
-
-table! {
-    csml_nodes (id) {
-        id -> Uuid,
-        interaction_id -> Uuid,
-        conversation_id -> Uuid,
-        flow_id -> Varchar,
-        step_id -> Varchar,
-        next_flow -> Nullable<Varchar>,
-        next_step -> Nullable<Varchar>,
         updated_at -> Timestamp,
         created_at -> Timestamp,
     }
@@ -99,16 +71,11 @@ table! {
 }
 
 joinable!(csml_messages -> csml_conversations (conversation_id));
-joinable!(csml_messages -> csml_interactions (interaction_id));
-joinable!(csml_nodes -> csml_conversations (conversation_id));
-joinable!(csml_nodes -> csml_interactions (interaction_id));
 
 allow_tables_to_appear_in_same_query!(
     cmsl_bot_versions,
     csml_conversations,
-    csml_interactions,
     csml_memories,
     csml_messages,
-    csml_nodes,
     csml_states,
 );

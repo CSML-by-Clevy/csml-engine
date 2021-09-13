@@ -13,11 +13,11 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
         let db = mongodb_connector::get_db(db)?;
 
         mongodb_connector::conversations::delete_user_conversations(client, db)?;
-        mongodb_connector::interactions::delete_user_interactions(client, db)?;
+        // mongodb_connector::interactions::delete_user_interactions(client, db)?;
         mongodb_connector::memories::delete_client_memories(client, db)?;
         mongodb_connector::messages::delete_user_messages(client, db)?;
         mongodb_connector::state::delete_user_state(client, db)?;
-        mongodb_connector::nodes::delete_conversation_nodes(client, db)?;
+        // mongodb_connector::nodes::delete_conversation_nodes(client, db)?;
 
         return Ok(())
     }
@@ -28,7 +28,7 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
 
         dynamodb_connector::memories::delete_client_memories(client, db)?;
         dynamodb_connector::messages::delete_user_messages(client, db)?;
-        dynamodb_connector::interactions::delete_user_interactions(client, db)?;
+        // dynamodb_connector::interactions::delete_user_interactions(client, db)?;
         dynamodb_connector::conversations::delete_user_conversations(client, db)?;
         dynamodb_connector::state::delete_user_state(client, db)?;
 
@@ -40,7 +40,7 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
         let db = postgresql_connector::get_db(db)?;
 
         postgresql_connector::conversations::delete_user_conversations(client, db)?;
-        postgresql_connector::interactions::delete_user_interactions(client, db)?;
+        // postgresql_connector::interactions::delete_user_interactions(client, db)?;
         postgresql_connector::memories::delete_client_memories(client, db)?;
         postgresql_connector::messages::delete_user_messages(client, db)?;
         postgresql_connector::state::delete_user_state(client, db)?;

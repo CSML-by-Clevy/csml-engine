@@ -30,13 +30,11 @@ mod tests {
     fn get_conversation_info(
         messages: Vec<Message>,
         conversation_id: String,
-        interaction_id: String,
         db: Database
     ) -> ConversationInfo {
         ConversationInfo {
             request_id: "1234".to_owned(),
             conversation_id,
-            interaction_id,
             callback_url: None,
             client: get_client(),
             context: get_context(),
@@ -60,14 +58,7 @@ mod tests {
         user::delete_client(&client, &mut db).unwrap();
 
         let c_id = conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
-        let i_id = interactions::init_interaction(
-            serde_json::json!({
-                "content_type": "text",
-                "content": { "text": "hello"},
-            }),
-            &client,
-            &mut db
-        ).unwrap();
+
 
         let msgs = vec![
             gen_message("1"),
@@ -79,7 +70,6 @@ mod tests {
         let mut data = get_conversation_info(
             vec![],
             c_id,
-            i_id,
             db
         );
 

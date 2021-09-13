@@ -1,9 +1,7 @@
 pub mod bot;
 pub mod conversations;
-pub mod interactions;
 pub mod memories;
 pub mod messages;
-pub mod nodes;
 pub mod state;
 
 pub mod pagination;
@@ -15,7 +13,7 @@ use crate::{Database, EngineError, PostgresqlClient};
 
 use diesel::prelude::*;
 
-embed_migrations!("migrations");
+embed_migrations!("migrations/postgresql");
 
 pub fn init() -> Result<Database, EngineError> {
 

@@ -198,11 +198,26 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
 
         mongodb_connector::bot::delete_all_bot_data(bot_id, "memory", db)?;
         mongodb_connector::bot::delete_all_bot_data(bot_id, "message", db)?;
-        mongodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
+        // mongodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
         mongodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
         mongodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
         mongodb_connector::bot::delete_all_bot_data(bot_id, "path", db)?;
 
+        return Ok(());
+    }
+
+    
+    #[cfg(feature = "dynamo")]
+    if is_dynamodb() {
+        delete_bot_versions(bot_id, db)?;
+
+        let db = dynamodb_connector::get_db(db)?;
+
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "memory", db)?;
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "message", db)?;
+        // dynamodb_connector::bot::delete_all_bot_data(bot_id, "interaction", db)?;
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "conversation", db)?;
+        dynamodb_connector::bot::delete_all_bot_data(bot_id, "state", db)?;
         return Ok(());
     }
 
@@ -213,7 +228,6 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
         let db = postgresql_connector::get_db(db)?;
 
         postgresql_connector::conversations::delete_all_bot_data(bot_id, db)?;
-        postgresql_connector::interactions::delete_all_bot_data(bot_id, db)?;
         postgresql_connector::memories::delete_all_bot_data(bot_id, db)?;
         postgresql_connector::state::delete_all_bot_data(bot_id, db)?;
         return Ok(());
@@ -221,7 +235,3 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
-
-
-
-

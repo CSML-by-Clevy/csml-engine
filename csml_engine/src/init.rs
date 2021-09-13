@@ -38,7 +38,6 @@ pub fn init_conversation_info<'a>(
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
 
-
     //TODO: replace by logs
     // let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
 
@@ -59,7 +58,6 @@ pub fn init_conversation_info<'a>(
 
     let mut data = ConversationInfo {
         conversation_id,
-        interaction_id: "interaction_id".to_owned(),
         context,
         metadata: request.metadata.clone(), // ??
         request_id: request.request_id.clone(),

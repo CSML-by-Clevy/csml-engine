@@ -30,13 +30,11 @@ pub fn add_messages_bulk(
     let mut new_messages = vec!();
     for (message_order, message) in msgs.iter().enumerate() {
 
-        let interaction_id = uuid::Uuid::parse_str(&data.interaction_id).unwrap();
         let conversation_id = uuid::Uuid::parse_str(&data.conversation_id).unwrap();
 
         let msg = models::NewMessages {
             id: uuid::Uuid::new_v4(),
 
-            interaction_id,
             conversation_id,
 
             flow_id: &data.context.flow,
@@ -118,7 +116,6 @@ pub fn get_client_messages(
                 "channel_id": &client.channel_id,
                 "user_id": &client.user_id
             },
-            "interaction_id": message.interaction_id,
             "conversation_id": message.conversation_id,
             "flow_id": message.flow_id,
             "step_id": message.step_id,

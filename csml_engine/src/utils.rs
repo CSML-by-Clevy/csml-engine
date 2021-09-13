@@ -188,7 +188,6 @@ pub fn messages_formater(
         "received_at".to_owned(),
         json!(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
     );
-    map.insert("interaction_id".to_owned(), json!(data.interaction_id));
 
     //tmp
     let mut map_client: Map<String, Value> = Map::new();
