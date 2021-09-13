@@ -2,7 +2,7 @@ use std::{error::Error, io::Stdout};
 
 use tui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     widgets::{Block, Borders},
     Terminal,
@@ -68,12 +68,7 @@ pub fn draw_select_bot(
             .direction(Direction::Vertical)
             .margin(1)
             .constraints([Constraint::Min(3)].as_ref())
-            .split(Rect {
-                x: 40,
-                y: 0,
-                width: 100,
-                height: 30,
-            });
+            .split(f.size());
 
         let menu = Menu::new(app.menu_state.menu.clone(), app.input.as_ref())
             .block(

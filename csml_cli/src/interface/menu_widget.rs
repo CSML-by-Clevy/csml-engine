@@ -14,6 +14,62 @@ use std::iter::Iterator;
 use crate::init_package::{DataBase, DynamoRegion, Env, S3Region};
 use crate::interface::AppState;
 
+const AWS_REGIONS: &[&str] = &[
+    "US East (Ohio) us-east-2",
+    "US East (N. Virginia) us-east-1",
+    "US West (N. California) us-west-1",
+    "US West (Oregon) us-west-2",
+    "Africa (Cape Town) af-south-1",
+    "Asia Pacific (Hong Kong) ap-east-1",
+    "Asia Pacific (Mumbai) ap-south-1",
+    "Asia Pacific (Osaka) ap-northeast-3",
+    "Asia Pacific (Seoul) ap-northeast-2",
+    "Asia Pacific (Singapore) ap-southeast-1",
+    "Asia Pacific (Sydney) ap-southeast-2",
+    "Asia Pacific (Tokyo) ap-northeast-1",
+    "Canada (Central) ca-central-1",
+    "Europe (Frankfurt) eu-central-1",
+    "Europe (Ireland) eu-west-1",
+    "Europe (London) eu-west-2",
+    "Europe (Milan) eu-south-1",
+    "Europe (Paris) eu-west-3",
+    "Europe (Stockholm) eu-north-1",
+    "Middle East (Bahrain) me-south-1",
+    "South America (São Paulo) sa-east-1",
+    "AWS GovCloud (US-East) us-gov-east-1",
+    "AWS GovCloud (US-West)  us-gov-west-1",
+
+    "localhost",
+];
+
+const AWS_REGIONS_PAYLOAD: &[&str] = &[
+    "us-east-2",
+    "us-east-1",
+    "us-west-1",
+    "us-west-2",
+    "af-south-1",
+    "ap-east-1",
+    "ap-south-1",
+    "ap-northeast-3",
+    "ap-northeast-2",
+    "ap-southeast-1",
+    "ap-southeast-2",
+    "ap-northeast-1",
+    "ca-central-1",
+    "eu-central-1",
+    "eu-west-1",
+    "eu-west-2",
+    "eu-south-1",
+    "eu-west-3",
+    "eu-north-1",
+    "me-south-1",
+    "sa-east-1",
+    "us-gov-east-1",
+    "us-gov-west-1",
+
+    "localhost",
+];
+
 #[derive(Debug, Clone)]
 pub struct Menu<'a> {
     pub block: Option<Block<'a>>,
@@ -248,32 +304,7 @@ impl MenuType for InitMenu {
             dynamodb: vec![
                 MenuItem::new(
                     "DynamoDB region",
-                    MenuElement::new_list(&[
-                        "dynamodb-local",
-                        "us-east-2",
-                        "us-east-1",
-                        "us-west-1",
-                        "us-west-2",
-                        "af-south-1",
-                        "ap-east-1",
-                        "ap-south-1",
-                        "ap-northeast-3",
-                        "ap-northeast-2",
-                        "ap-southeast-1",
-                        "ap-southeast-2",
-                        "ap-northeast-1",
-                        "ca-central-1",
-                        "eu-central-1",
-                        "eu-west-1",
-                        "eu-west-2",
-                        "eu-south-1",
-                        "eu-west-3",
-                        "eu-north-1",
-                        "me-south-1",
-                        "sa-east-1",
-                        "us-gov-east-1",
-                        "us-gov-west-1",
-                    ]),
+                    MenuElement::new_list(AWS_REGIONS),
                     1,
                 ),
                 // only if localhost |
@@ -285,32 +316,7 @@ impl MenuType for InitMenu {
                 ),
                 MenuItem::new(
                     "S3 bucket Location",
-                    MenuElement::new_list(&[
-                        "localstack",
-                        "us-east-2",
-                        "us-east-1",
-                        "us-west-1",
-                        "us-west-2",
-                        "af-south-1",
-                        "ap-east-1",
-                        "ap-south-1",
-                        "ap-northeast-3",
-                        "ap-northeast-2",
-                        "ap-southeast-1",
-                        "ap-southeast-2",
-                        "ap-northeast-1",
-                        "ca-central-1",
-                        "eu-central-1",
-                        "eu-west-1",
-                        "eu-west-2",
-                        "eu-south-1",
-                        "eu-west-3",
-                        "eu-north-1",
-                        "me-south-1",
-                        "sa-east-1",
-                        "us-gov-east-1",
-                        "us-gov-west-1",
-                    ]),
+                    MenuElement::new_list(AWS_REGIONS),
                     1,
                 ),
                 // only if localhost |
@@ -517,7 +523,7 @@ pub enum MenuElement<'a> {
     Text(String),
     Button(String),
     List {
-        vec: &'a [&'a str], // <- payload: Option<String>
+        vec: &'a [&'a str],
         selected: usize,
         scroll_index: usize,
     },
@@ -527,6 +533,30 @@ pub enum MenuElement<'a> {
         text: String,
     },
 }
+
+// #[derive(Debug, Clone)]
+// pub enum MenuComponent {
+//     Text{
+//         text: String,
+//         payload: Option<String>,
+//         sub_component: Box<MenuComponent>
+//     },
+//     Button{
+//         text: String,
+//         payload: Option<String>
+//     },
+//     List {
+//         components: Vec<MenuComponent>,
+//         selected: usize,
+//         scroll_index: usize,
+//     },
+
+//     Bot {
+//         path_info: String,
+//         bot: CsmlBot,
+//         text: String,
+//     },
+// }
 
 impl<'a> MenuElement<'a> {
     pub fn new_list(vec: &'a [&'a str]) -> Self {

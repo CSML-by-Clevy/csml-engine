@@ -5,7 +5,7 @@ authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
 edition = "2018"
 
 [dependencies]
-csml_engine = { path = "../csml_engine", features = ["postgresql",]}
+csml_engine = { path = "../csml_engine", features = ["postgresql", "mongo", "dynamo"]}
 csml_interpreter = { path = "../csml_interpreter" }
 
 
@@ -13,8 +13,8 @@ serde = { version = "1.0.126", features = ["derive"] }
 serde_json = "1.0.64"
 serde_yaml = "0.8.17"
 
-crossterm = "0.20.0"
-tui = { version = "0.15", default-features = false, features = ['crossterm'] }
+crossterm = "0.21.0"
+tui = { version = "0.16", default-features = false, features = ['crossterm'] }
 unicode-width = "0.1.5"
 image = "0.23.14"
 viuer = "0.5.1"

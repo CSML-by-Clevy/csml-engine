@@ -359,8 +359,6 @@ fn handle_normal_mode<'a>(
                 Ok(Exit::None)
             }
             KeyCode::Esc => Ok(Exit::Exit),
-
-            // KeyCode::E
             _ => Ok(Exit::None),
         },
         KeyEvent { code, modifiers } => match code {
@@ -424,7 +422,8 @@ fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dy
                     if "mongodb" == item.get_value() || "dynamodb" == item.get_value() {
                         app.menu_state.change_list();
                     }
-
+                    // reset offset to 0 
+                    app.menu_state.offset = 0;
                     app.menu_state.state = AppState::Normal;
                 }
                 Ok(Exit::None)
@@ -445,7 +444,12 @@ fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dy
                 }
                 Ok(Exit::None)
             }
-            KeyCode::Esc => Ok(Exit::Exit),
+            KeyCode::Esc => {
+                // reset offset to 0 
+                app.menu_state.offset = 0;
+                app.menu_state.state = AppState::Normal;
+                Ok(Exit::None)
+            },
             _ => Ok(Exit::None),
         },
         KeyEvent { code, modifiers } => match code {
