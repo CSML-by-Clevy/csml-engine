@@ -105,7 +105,6 @@ pub struct DbMemory {
 pub struct DbMessage {
     pub id: String,
     pub client: Client,
-    pub interaction_id: String,
     pub conversation_id: String,
     pub flow_id: String,
     pub step_id: String,

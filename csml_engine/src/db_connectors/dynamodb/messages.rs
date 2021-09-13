@@ -17,7 +17,6 @@ fn format_messages(
         res.push(Message::new(
             &data.client,
             &data.conversation_id,
-            &data.interaction_id,
             &data.context.flow,
             &data.context.step,
             direction,
@@ -185,7 +184,6 @@ pub fn get_client_messages(
 
         let json = serde_json::json!({
             "client": message.client,
-            "interaction_id": message.interaction_id,
             "conversation_id": message.conversation_id,
             "flow_id": message.flow_id,
             "step_id": message.step_id,

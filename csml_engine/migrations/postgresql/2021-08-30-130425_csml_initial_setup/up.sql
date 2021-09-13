@@ -22,9 +22,23 @@ CREATE TABLE csml_conversations (
 
   last_interaction_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+  expire_at TIMESTAMP DEFAULT NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE FUNCTION expire_conversations_table() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  DELETE FROM csml_conversations WHERE timestamp < NOW();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER expire_conversations_table_trigger
+    AFTER INSERT ON csml_conversations
+    EXECUTE PROCEDURE expire_conversations_table();
 
 CREATE TABLE csml_messages (
   id uuid PRIMARY KEY,
@@ -39,9 +53,23 @@ CREATE TABLE csml_messages (
   message_order INTEGER NOT NULL,
   interaction_order INTEGER NOT NULL,
 
+  expire_at TIMESTAMP DEFAULT NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE FUNCTION expire_messages_table() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  DELETE FROM csml_messages WHERE timestamp < NOW();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER expire_messages_table_trigger
+    AFTER INSERT ON csml_messages
+    EXECUTE PROCEDURE expire_messages_table();
 
 CREATE TABLE csml_memories (
   id uuid PRIMARY KEY,
@@ -53,10 +81,22 @@ CREATE TABLE csml_memories (
   value VARCHAR NOT NULL,
 
   expires_at TIMESTAMP DEFAULT NULL,
-
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE FUNCTION expire_memories_table() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  DELETE FROM csml_memories WHERE timestamp < NOW();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER expire_memories_table_trigger
+    AFTER INSERT ON csml_memories
+    EXECUTE PROCEDURE expire_memories_table();
 
 CREATE UNIQUE INDEX memory_client_key ON csml_memories (bot_id, channel_id, user_id, key);
 
@@ -74,3 +114,16 @@ CREATE TABLE csml_states (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE FUNCTION expire_states_table() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  DELETE FROM csml_states WHERE timestamp < NOW();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER expire_states_table_trigger
+    AFTER INSERT ON csml_states
+    EXECUTE PROCEDURE expire_states_table();

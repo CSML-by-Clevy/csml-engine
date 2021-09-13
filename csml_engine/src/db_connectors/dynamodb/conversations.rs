@@ -484,9 +484,6 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
         for item in items {
             let conversation: ConversationDeleteInfo = serde_dynamodb::from_hashmap(item.to_owned())?;
 
-            // delete all conversation paths
-            super::nodes::delete_conversation_nodes(&conversation.id, db).unwrap();
-
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
                 hash: Conversation::get_hash(client),
                 range: Conversation::get_range(&conversation.status, &conversation.id),

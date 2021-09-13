@@ -29,7 +29,6 @@ fn format_message(
     let time = Bson::DateTime(chrono::Utc::now());
     let doc = doc! {
         "client": bson::to_bson(&data.client)?,
-        "interaction_id": &data.interaction_id,
         "conversation_id": &data.conversation_id,
         "flow_id": &data.context.flow,
         "step_id": &data.context.step,
@@ -51,7 +50,6 @@ fn format_message_struct(message: bson::document::Document) -> Result<DbMessage,
     Ok(DbMessage {
         id: message.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
         client: bson::from_bson(message.get("client").unwrap().to_owned())?,
-        interaction_id: message.get_str("interaction_id").unwrap().to_owned(),
         conversation_id: message.get_str("conversation_id").unwrap().to_owned(),
         flow_id: message.get_str("flow_id").unwrap().to_owned(),
         step_id: message.get_str("step_id").unwrap().to_owned(),
@@ -136,7 +134,6 @@ pub fn get_client_messages(
 
                 let json = serde_json::json!({
                     "client": message.client,
-                    "interaction_id": message.interaction_id,
                     "conversation_id": message.conversation_id,
                     "flow_id": message.flow_id,
                     "step_id": message.step_id,
