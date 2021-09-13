@@ -1,4 +1,4 @@
-use crate::db_connectors::{conversations::*, interactions::*, memories::*};
+use crate::db_connectors::{conversations::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
     utils::{get_default_flow, get_flow_by_id, search_flow},
@@ -37,7 +37,11 @@ pub fn init_conversation_info<'a>(
 ) -> Result<ConversationInfo, EngineError> {
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
-    let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
+
+
+    //TODO: replace by logs
+    // let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
+
     let mut context = init_context(default_flow, request.client.clone(), &bot.fn_endpoint);
 
     // Do we have a flow matching the request? If the user is requesting a flow in one way
@@ -55,7 +59,7 @@ pub fn init_conversation_info<'a>(
 
     let mut data = ConversationInfo {
         conversation_id,
-        interaction_id,
+        interaction_id: "interaction_id".to_owned(),
         context,
         metadata: request.metadata.clone(), // ??
         request_id: request.request_id.clone(),

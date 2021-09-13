@@ -1,5 +1,5 @@
 use crate::db_connectors::{
-    conversations::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
+    conversations::*,  memories::*, messages::*, state::*,
 };
 use crate::utils::*;
 use crate::{data::*, delete_client_memories};
@@ -171,7 +171,8 @@ pub fn interpret_step(
         }
     }
 
-    update_interaction(data, interaction_success)?;
+    // TODO: add in logs
+    // update_interaction(data, interaction_success)?;
 
     Ok(messages_formater(
         data,
@@ -192,7 +193,8 @@ fn goto_flow<'a>(
     nextflow: String,
     nextstep: String,
 ) -> Result<(), EngineError> {
-    create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
+    // TODO: add in logs
+    // create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
 
     *current_flow = get_flow_by_id(&nextflow, &bot.flows)?;
     data.context.flow = nextflow;
@@ -205,7 +207,8 @@ fn goto_flow<'a>(
     )?;
 
     *interaction_order += 1;
-    update_interaction(data, false)?;
+    // TODO: add in logs
+    // update_interaction(data, false)?;
 
     Ok(())
 }
@@ -219,7 +222,8 @@ fn goto_step<'a>(
     interaction_order: &mut i32,
     nextstep: String,
 ) -> Result<bool, EngineError> {
-    create_node(data, None, Some(nextstep.clone()))?;
+    // TODO: add in logs
+    // create_node(data, None, Some(nextstep.clone()))?;
 
     if nextstep == "end" {
         *conversation_end = true;
