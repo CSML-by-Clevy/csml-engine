@@ -3,7 +3,7 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, ConversationInfo, EngineError, MongoDbClient,
 };
-use bson::{doc, Bson, Document};
+use bson::{doc, Document};
 use chrono::SecondsFormat;
 
 fn format_messages(
@@ -11,11 +11,12 @@ fn format_messages(
     messages: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    ttl: bson::DateTime,
 ) -> Result<Vec<Document>, EngineError> {
     messages
         .iter()
         .enumerate()
-        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction))
+        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction, ttl))
         .collect::<Result<Vec<Document>, EngineError>>()
 }
 
@@ -25,8 +26,9 @@ fn format_message(
     msg_order: i32,
     interaction_order: i32,
     direction: &str,
+    ttl: bson::DateTime,
 ) -> Result<Document, EngineError> {
-    let time = Bson::DateTime(chrono::Utc::now());
+    let time = bson::DateTime::from_chrono(chrono::Utc::now());
     let doc = doc! {
         "client": bson::to_bson(&data.client)?,
         "conversation_id": &data.conversation_id,
@@ -37,6 +39,7 @@ fn format_message(
         "direction": direction,
         "payload": encrypt_data(&message)?, // encrypted
         "content_type": &message["content_type"].as_str().unwrap_or("text"),
+        "expires_at": ttl,
         "created_at": time
     };
 
@@ -58,7 +61,7 @@ fn format_message_struct(message: bson::document::Document) -> Result<DbMessage,
         direction: message.get_str("direction").unwrap().to_owned(),
         payload,
         content_type: message.get_str("content_type").unwrap().to_owned(),
-        created_at: message.get_datetime("created_at").unwrap().to_rfc3339_opts(SecondsFormat::Millis, true),
+        created_at: message.get_datetime("created_at").unwrap().to_chrono().to_rfc3339_opts(SecondsFormat::Millis, true),
     })
 }
 
@@ -67,14 +70,15 @@ pub fn add_messages_bulk(
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    ttl: bson::DateTime,
 ) -> Result<(), EngineError> {
     if msgs.len() == 0 {
         return Ok(());
     }
-    let docs = format_messages(data, msgs, interaction_order, direction)?;
+    let docs = format_messages(data, msgs, interaction_order, direction, ttl)?;
     let db = get_db(&data.db)?;
 
-    let message = db.client.collection("message");
+    let message = db.client.collection::<Document>("message");
 
     message.insert_many(docs, None)?;
 
@@ -82,7 +86,7 @@ pub fn add_messages_bulk(
 }
 
 pub fn delete_user_messages(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
-    let collection = db.client.collection("message");
+    let collection = db.client.collection::<Document>("message");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -99,7 +103,7 @@ pub fn get_client_messages(
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.client.collection("message");
+    let collection = db.client.collection::<Document>("message");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,
@@ -111,7 +115,7 @@ pub fn get_client_messages(
         Some(key) => {
             doc! {
                 "client": bson::to_bson(&client)?,
-                "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
+                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() }
             }
         }
         None => doc! {

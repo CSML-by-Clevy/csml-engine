@@ -150,6 +150,7 @@ pub struct Conversation {
     pub step_id: String,
     pub status: String,
     pub last_interaction_at: String,
+    pub ttl: i32,
     pub updated_at: String,
     pub created_at: String,
 }
@@ -199,70 +200,6 @@ impl Conversation {
     }
 }
 
-// #[derive(Serialize, Deserialize, Debug)]
-// pub struct InteractionDeleteInfo {
-//     pub id: String,
-// }
-
-// #[derive(Serialize, Deserialize, Debug)]
-// pub struct Interaction {
-//     pub hash: String,
-//     pub range: String,
-//     pub range_time: String,
-//     pub class: String,
-//     pub id: String,
-//     pub client: Option<Client>,
-//     pub bot_id: Option<String>,
-//     pub channel_id: Option<String>,
-//     pub user_id: Option<String>,
-//     pub success: bool,
-//     pub event: String,
-//     pub updated_at: String,
-//     pub created_at: String,
-// }
-
-// impl Interaction {
-//     pub fn get_hash(client: &Client) -> String {
-//         make_hash(client)
-//     }
-
-//     pub fn get_range(id: &str) -> String {
-//         make_range(&["interaction", id])
-//     }
-
-//     pub fn get_key(client: &Client, id: &str) -> DynamoDbKey {
-//         let hash = Self::get_hash(client);
-//         let range = Self::get_range(id);
-//         DynamoDbKey::new(&hash, &range)
-//     }
-
-//     /**
-//      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
-//      * range = interaction#id
-//      * range_time = interaction#timestamp#id
-//      */
-//     pub fn new(id: &Uuid, client: &Client, encrypted_event: &str) -> Self {
-//         let class_name = "interaction";
-//         let now = get_date_time();
-//         let id = id.to_string();
-//         Self {
-//             hash: Self::get_hash(client),
-//             range: Self::get_range(&id),
-//             range_time: make_range(&[class_name, &now, &id]),
-//             class: class_name.to_string(),
-//             id: id.to_owned(),
-//             client: Some(client.clone()),
-//             bot_id: Some(client.bot_id.to_owned()),
-//             channel_id: Some(client.channel_id.to_owned()),
-//             user_id: Some(client.user_id.to_owned()),
-//             success: false,
-//             event: encrypted_event.to_owned(),
-//             updated_at: now.to_owned(),
-//             created_at: now.to_owned(),
-//         }
-//     }
-// }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MemoryDeleteInfo {
     pub range: String,
@@ -286,6 +223,7 @@ pub struct Memory {
     pub user_id: Option<String>,
     pub key: String,
     pub value: Option<String>,
+    pub ttl: i32,
     pub expires_at: Option<String>,
     pub created_at: String,
 }
@@ -361,6 +299,7 @@ pub struct Message {
     pub direction: String,
     pub payload: String,
     pub content_type: String,
+    pub ttl: i32,
     pub created_at: String,
 }
 
@@ -421,71 +360,6 @@ impl Message {
     }
 }
 
-// #[derive(Serialize, Deserialize, Debug)]
-// pub struct NodeDeleteInfo {
-//     pub id: String,
-//     pub conversation_id: String,
-// }
-
-// #[derive(Serialize, Deserialize, Debug)]
-// pub struct Node {
-//     pub hash: String,
-//     pub range: String,
-//     pub range_time: String,
-//     pub class: String,
-//     pub id: String,
-//     pub client: Option<Client>,
-//     pub bot_id: Option<String>,
-//     pub channel_id: Option<String>,
-//     pub user_id: Option<String>,
-//     pub conversation_id: String,
-//     pub interaction_id: String,
-//     pub flow_id: String,
-//     pub step_id: String,
-//     pub next_flow: Option<String>,
-//     pub next_step: Option<String>,
-//     pub created_at: String,
-// }
-
-// impl Node {
-//     /**
-//      * hash = conversation:xxxx
-//      * range = path#id
-//      * range_time = path#timestamp#id
-//      */
-//     pub fn new(
-//         client: &Client,
-//         conversation_id: &str,
-//         interaction_id: &str,
-//         flow_id: &str,
-//         step_id: &str,
-//         next_flow: Option<String>,
-//         next_step: Option<String>,
-//     ) -> Self {
-//         let id = uuid::Uuid::new_v4().to_string();
-//         let class_name = "path";
-//         let now = get_date_time();
-//         Self {
-//             hash: make_range(&["conversation", conversation_id]),
-//             range: make_range(&[class_name, &id]),
-//             range_time: make_range(&[class_name, &now, &id]),
-//             class: class_name.to_owned(),
-//             id: id.to_owned(),
-//             client: Some(client.to_owned()),
-//             bot_id: Some(client.bot_id.to_owned()),
-//             channel_id: Some(client.channel_id.to_owned()),
-//             user_id: Some(client.user_id.to_owned()),
-//             conversation_id: conversation_id.to_owned(),
-//             interaction_id: interaction_id.to_owned(),
-//             flow_id: flow_id.to_owned(),
-//             step_id: step_id.to_owned(),
-//             next_flow: next_flow.clone(),
-//             next_step: next_step.clone(),
-//             created_at: now.to_owned(),
-//         }
-//     }
-// }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StatDeleteInfo {
     #[serde(rename = "type")]
@@ -507,6 +381,7 @@ pub struct State {
     pub _type: String,
     pub key: String,
     pub value: String,
+    pub ttl: i32,
     pub expires_at: Option<String>,
     pub created_at: String,
 }

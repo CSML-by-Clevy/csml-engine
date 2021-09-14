@@ -96,7 +96,7 @@ pub fn set_state_items(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(_db)?;
-        return mongodb_connector::state::set_state_items(_client, _type, _keys_values, &db);
+        return mongodb_connector::state::set_state_items(_client, _type, _keys_values, bson::DateTime::from_chrono(chrono::Utc::now()),&db);
     }
 
     #[cfg(feature = "dynamo")]

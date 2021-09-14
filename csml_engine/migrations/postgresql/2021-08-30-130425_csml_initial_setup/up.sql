@@ -31,7 +31,7 @@ CREATE FUNCTION expire_conversations_table() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  DELETE FROM csml_conversations WHERE timestamp < NOW();
+  DELETE FROM csml_conversations WHERE expire_at < NOW();
   RETURN NEW;
 END;
 $$;
@@ -62,7 +62,7 @@ CREATE FUNCTION expire_messages_table() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  DELETE FROM csml_messages WHERE timestamp < NOW();
+  DELETE FROM csml_messages WHERE expire_at < NOW();
   RETURN NEW;
 END;
 $$;
@@ -89,7 +89,7 @@ CREATE FUNCTION expire_memories_table() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  DELETE FROM csml_memories WHERE timestamp < NOW();
+  DELETE FROM csml_memories WHERE expire_at < NOW();
   RETURN NEW;
 END;
 $$;
@@ -119,7 +119,7 @@ CREATE FUNCTION expire_states_table() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  DELETE FROM csml_states WHERE timestamp < NOW();
+  DELETE FROM csml_states WHERE expire_at < NOW();
   RETURN NEW;
 END;
 $$;

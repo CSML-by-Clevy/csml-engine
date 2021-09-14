@@ -3,7 +3,7 @@ use crate::{
     db_connectors::{BotVersion, DbBot},
     EngineError,
 };
-use bson::{doc, Bson};
+use bson::{doc, Document};
 use chrono::SecondsFormat;
 
 fn format_bot_struct(bot: bson::document::Document) -> Result<DbBot, EngineError> {
@@ -15,6 +15,7 @@ fn format_bot_struct(bot: bson::document::Document) -> Result<DbBot, EngineError
         created_at: bot
             .get_datetime("created_at")
             .unwrap()
+            .to_chrono()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
     })
 }
@@ -24,8 +25,8 @@ pub fn create_bot_version(
     bot: String,
     db: &MongoDbClient,
 ) -> Result<String, EngineError> {
-    let collection = db.client.collection("bot");
-    let time = Bson::DateTime(chrono::Utc::now());
+    let collection = db.client.collection::<Document>("bot");
+    let time = bson::DateTime::from_chrono(chrono::Utc::now());
 
     let bot = doc! {
         "bot_id": bot_id,
@@ -47,7 +48,7 @@ pub fn get_bot_versions(
     pagination_key: Option<String>,
     db: &MongoDbClient,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.client.collection("bot");
+    let collection = db.client.collection::<Document>("bot");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,
@@ -59,7 +60,7 @@ pub fn get_bot_versions(
         Some(key) => {
             doc! {
                 "bot_id": bot_id,
-                "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
+                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() }
             }
         }
         None => doc! {"bot_id": bot_id },
@@ -128,10 +129,10 @@ pub fn get_bot_by_version_id(
     id: &str,
     db: &MongoDbClient,
 ) -> Result<Option<BotVersion>, EngineError> {
-    let collection = db.client.collection("bot");
+    let collection = db.client.collection::<Document>("bot");
 
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(id).unwrap()
+        "_id": bson::oid::ObjectId::parse_str(id).unwrap()
     };
 
     let find_options = mongodb::options::FindOneOptions::builder()
@@ -168,7 +169,7 @@ pub fn get_last_bot_version(
     bot_id: &str,
     db: &MongoDbClient,
 ) -> Result<Option<BotVersion>, EngineError> {
-    let collection = db.client.collection("bot");
+    let collection = db.client.collection::<Document>("bot");
 
     let filter = doc! {
         "bot_id": bot_id,
@@ -205,10 +206,10 @@ pub fn get_last_bot_version(
 }
 
 pub fn delete_bot_version(version_id: &str, db: &MongoDbClient) -> Result<(), EngineError> {
-    let collection = db.client.collection("bot");
+    let collection = db.client.collection::<Document>("bot");
 
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(version_id).unwrap()
+        "_id": bson::oid::ObjectId::parse_str(version_id).unwrap()
     };
 
     collection.delete_one(filter, None)?;
@@ -217,7 +218,7 @@ pub fn delete_bot_version(version_id: &str, db: &MongoDbClient) -> Result<(), En
 }
 
 pub fn delete_bot_versions(bot_id: &str, db: &MongoDbClient) -> Result<(), EngineError> {
-    let collection = db.client.collection("bot");
+    let collection = db.client.collection::<Document>("bot");
 
     let filter = doc! {
         "bot_id": bot_id,
@@ -233,7 +234,7 @@ pub fn delete_all_bot_data(
     class: &str,
     db: &MongoDbClient,
 ) -> Result<(), EngineError> {
-    let collection = db.client.collection(class);
+    let collection = db.client.collection::<Document>(class);
 
     let filter = doc! {
         "client.bot_id": bot_id,

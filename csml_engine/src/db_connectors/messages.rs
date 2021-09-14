@@ -20,6 +20,7 @@ pub fn add_messages_bulk(
             &msgs,
             interaction_order,
             direction,
+            bson::DateTime::from_chrono(chrono::Utc::now())
         );
     }
 

@@ -33,7 +33,7 @@ optional = true
 features = ["postgres", "chrono", "uuidv07"]
 
 [dependencies.mongodb]
-version = "1.2.1"
+version = "2.0.0"
 optional = true
 default-features = false
 features = ["sync"]
@@ -43,7 +43,8 @@ version = "0.3.15"
 optional = true
 
 [dependencies.bson]
-version = "1.2.2"
+version = "2.0.0"
+features = ["chrono-0_4"]
 optional = true
 
 [dependencies.serde_dynamodb]

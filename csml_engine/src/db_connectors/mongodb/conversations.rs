@@ -1,5 +1,5 @@
 use crate::{db_connectors::DbConversation, Client, EngineError, MongoDbClient};
-use bson::{doc, Bson};
+use bson::{doc, Document};
 use chrono::SecondsFormat;
 
 fn format_conversation_struct(
@@ -14,14 +14,17 @@ fn format_conversation_struct(
         last_interaction_at: conversation
             .get_datetime("last_interaction_at")
             .unwrap()
+            .to_chrono()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
         updated_at: conversation
             .get_datetime("updated_at")
             .unwrap()
+            .to_chrono()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
         created_at: conversation
             .get_datetime("created_at")
             .unwrap()
+            .to_chrono()
             .to_rfc3339_opts(SecondsFormat::Millis, true),
     })
 }
@@ -29,11 +32,12 @@ fn format_conversation_struct(
 pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
+    ttl: bson::DateTime,
     client: &Client,
     db: &MongoDbClient,
 ) -> Result<String, EngineError> {
-    let collection = db.client.collection("conversation");
-    let time = Bson::DateTime(chrono::Utc::now());
+    let collection = db.client.collection::<Document>("conversation");
+    let time = bson::DateTime::from_chrono(chrono::Utc::now());
 
     let conversation = doc! {
         "client": bson::to_bson(&client)?,
@@ -41,6 +45,7 @@ pub fn create_conversation(
         "step_id": step_id,
         "status": "OPEN",
         "last_interaction_at": &time,
+        "expires_at": ttl,
         "updated_at": &time,
         "created_at": &time
     };
@@ -58,10 +63,10 @@ pub fn close_conversation(
     status: &str,
     db: &MongoDbClient,
 ) -> Result<(), EngineError> {
-    let collection = db.client.collection("conversation");
+    let collection = db.client.collection::<Document>("conversation");
 
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(id).unwrap(),
+        "_id": bson::oid::ObjectId::parse_str(id).unwrap(),
         "client": bson::to_bson(&client)?,
     };
 
@@ -77,7 +82,7 @@ pub fn close_conversation(
 }
 
 pub fn close_all_conversations(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
-    let collection = db.client.collection("conversation");
+    let collection = db.client.collection::<Document>("conversation");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -99,7 +104,7 @@ pub fn get_latest_open(
     client: &Client,
     db: &MongoDbClient,
 ) -> Result<Option<DbConversation>, EngineError> {
-    let collection = db.client.collection("conversation");
+    let collection = db.client.collection::<Document>("conversation");
 
     let filter = doc! {
         "status": "OPEN",
@@ -126,10 +131,10 @@ pub fn update_conversation(
     step_id: Option<String>,
     db: &MongoDbClient,
 ) -> Result<(), EngineError> {
-    let collection = db.client.collection("conversation");
+    let collection = db.client.collection::<Document>("conversation");
 
     let filter = doc! {
-        "_id": bson::oid::ObjectId::with_string(conversation_id).unwrap(),
+        "_id": bson::oid::ObjectId::parse_str(conversation_id).unwrap(),
         "client": bson::to_bson(&client)?,
     };
 
@@ -157,7 +162,7 @@ pub fn update_conversation(
 }
 
 pub fn delete_user_conversations(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
-    let collection = db.client.collection("conversation");
+    let collection = db.client.collection::<Document>("conversation");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -174,7 +179,7 @@ pub fn get_client_conversations(
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.client.collection("conversation");
+    let collection = db.client.collection::<Document>("conversation");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,
@@ -186,7 +191,7 @@ pub fn get_client_conversations(
         Some(key) => {
             doc! {
                 "client": bson::to_bson(&client)?,
-                "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
+                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() }
             }
         }
         None => doc! {"client": bson::to_bson(&client)?},

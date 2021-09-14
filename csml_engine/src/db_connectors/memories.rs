@@ -15,7 +15,7 @@ pub fn add_memories(
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        return mongodb_connector::memories::add_memories(data, &memories);
+        return mongodb_connector::memories::add_memories(data, &memories, bson::DateTime::from_chrono(chrono::Utc::now()));
     }
 
     #[cfg(feature = "dynamo")]
@@ -40,7 +40,7 @@ pub fn create_client_memory(
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::memories::create_client_memory(client, key, value, db);
+        return mongodb_connector::memories::create_client_memory(client, key, value, bson::DateTime::from_chrono(chrono::Utc::now()),db);
     }
 
     #[cfg(feature = "dynamo")]

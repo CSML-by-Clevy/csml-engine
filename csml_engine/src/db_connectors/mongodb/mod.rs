@@ -5,6 +5,9 @@ pub mod messages;
 pub mod state;
 
 use crate::{Database, EngineError, MongoDbClient};
+use bson::{doc, Document};
+use core::time::Duration as CoreDuration;
+use mongodb::{IndexModel, options::IndexOptions};
 
 fn create_mongodb_uri() -> Result<String, EngineError> {
     let mut uri = "mongodb://".to_owned();
@@ -47,8 +50,11 @@ pub fn init() -> Result<Database, EngineError> {
     };
 
     let client = mongodb::sync::Client::with_uri_str(&uri)?;
+    let mongodb_client = MongoDbClient::new(client.database(&dbname));
+    create_ttl_indexes(&mongodb_client);
 
-    let db = Database::Mongo(MongoDbClient::new(client.database(&dbname)));
+    let db = Database::Mongo(mongodb_client);
+
     Ok(db)
 }
 
@@ -78,4 +84,58 @@ pub fn get_pagination_key(pagination_key: Option<String>) -> Result<Option<Strin
         }
         None => Ok(None),
     }
+}
+
+fn create_ttl_indexes(
+    db: &MongoDbClient,
+) {
+    // create index expires_at for conversation
+    let conversation = db.client.collection::<Document>("conversation");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "expires_at": 1
+        }
+    )
+    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
+    .build();
+    conversation.create_index(index, None).ok();
+
+    // create index expires_at for memory
+    let memory = db.client.collection::<Document>("memory");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "expires_at": 1
+        }
+    )
+    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
+    .build();
+
+    memory.create_index(index,None).ok();
+
+
+    // create index expires_at for message
+    let message = db.client.collection::<Document>("message");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "expires_at": 1
+        }
+    )
+    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
+    .build();
+    message.create_index(index,None).ok();
+
+    // create index expires_at for state
+    let state = db.client.collection::<Document>("state");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "expires_at": 1
+        }
+    )
+    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
+    .build();
+    state.create_index(index,None).ok();
 }

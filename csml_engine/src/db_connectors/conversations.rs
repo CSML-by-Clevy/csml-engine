@@ -18,7 +18,7 @@ pub fn create_conversation(
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
         return mongodb_connector::conversations::create_conversation(
-            flow_id, step_id, client, db,
+            flow_id, step_id, bson::DateTime::from_chrono(chrono::Utc::now()),client, db,
         );
     }
 
