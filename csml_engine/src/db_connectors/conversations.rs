@@ -7,6 +7,7 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, DbConversation, EngineError};
+use chrono::{DateTime, Utc, Duration};
 
 pub fn create_conversation(
     flow_id: &str,
@@ -34,7 +35,7 @@ pub fn create_conversation(
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::conversations::create_conversation(
-            flow_id, step_id, client, db,
+            flow_id, step_id, client, chrono::Utc::now().naive_utc() ,db,
         );
     }
 

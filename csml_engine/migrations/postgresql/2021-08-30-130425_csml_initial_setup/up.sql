@@ -22,7 +22,7 @@ CREATE TABLE csml_conversations (
 
   last_interaction_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-  expire_at TIMESTAMP DEFAULT NULL,
+  expires_at TIMESTAMP DEFAULT NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -31,7 +31,7 @@ CREATE FUNCTION expire_conversations_table() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  DELETE FROM csml_conversations WHERE expire_at < NOW();
+  DELETE FROM csml_conversations WHERE expires_at < NOW();
   RETURN NEW;
 END;
 $$;
@@ -53,23 +53,24 @@ CREATE TABLE csml_messages (
   message_order INTEGER NOT NULL,
   interaction_order INTEGER NOT NULL,
 
-  expire_at TIMESTAMP DEFAULT NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+  -- expires_at TIMESTAMP,
 
-CREATE FUNCTION expire_messages_table() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  DELETE FROM csml_messages WHERE expire_at < NOW();
-  RETURN NEW;
-END;
-$$;
 
-CREATE TRIGGER expire_messages_table_trigger
-    AFTER INSERT ON csml_messages
-    EXECUTE PROCEDURE expire_messages_table();
+-- CREATE FUNCTION expire_messages_table() RETURNS trigger
+--     LANGUAGE plpgsql
+--     AS $$
+-- BEGIN
+--   DELETE FROM csml_messages WHERE expires_at < NOW();
+--   RETURN NEW;
+-- END;
+-- $$;
+
+-- CREATE TRIGGER expire_messages_table_trigger
+--     AFTER INSERT ON csml_messages
+--     EXECUTE PROCEDURE expire_messages_table();
 
 CREATE TABLE csml_memories (
   id uuid PRIMARY KEY,
@@ -89,7 +90,7 @@ CREATE FUNCTION expire_memories_table() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  DELETE FROM csml_memories WHERE expire_at < NOW();
+  DELETE FROM csml_memories WHERE expires_at < NOW();
   RETURN NEW;
 END;
 $$;
@@ -119,7 +120,7 @@ CREATE FUNCTION expire_states_table() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-  DELETE FROM csml_states WHERE expire_at < NOW();
+  DELETE FROM csml_states WHERE expires_at < NOW();
   RETURN NEW;
 END;
 $$;

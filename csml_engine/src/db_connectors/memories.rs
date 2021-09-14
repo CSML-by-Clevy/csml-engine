@@ -7,6 +7,7 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, EngineError, Memory};
 use std::collections::HashMap;
+use chrono::{DateTime, Utc, Duration};
 
 pub fn add_memories(
     data: &mut ConversationInfo,
@@ -25,7 +26,7 @@ pub fn add_memories(
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
-        return postgresql_connector::memories::add_memories(data, &memories);
+        return postgresql_connector::memories::add_memories(data, &memories, chrono::Utc::now().naive_utc());
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -53,7 +54,7 @@ pub fn create_client_memory(
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
-        return postgresql_connector::memories::create_client_memory(client, &key, &value, db);
+        return postgresql_connector::memories::create_client_memory(client, &key, &value, chrono::Utc::now().naive_utc(),db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

@@ -41,6 +41,7 @@ pub fn add_messages_bulk(
             &msgs,
             interaction_order,
             direction,
+            chrono::Utc::now().naive_utc(),
         );
     }
 

@@ -14,12 +14,14 @@ use super::{
     },
     pagination::*
 };
+use chrono::{NaiveDateTime, Duration};
 
 pub fn add_messages_bulk(
     data: &ConversationInfo,
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    expires_at: NaiveDateTime,
 ) -> Result<(), EngineError> {
     if msgs.len() == 0 {
         return Ok(());
@@ -42,8 +44,10 @@ pub fn add_messages_bulk(
             direction,
             payload: encrypt_data(&message)?,
             content_type: &message["content_type"].as_str().unwrap_or("text"),
+
             message_order: message_order as i32,
             interaction_order,
+            expires_at: Some(expires_at),
         };
 
         new_messages.push(msg);

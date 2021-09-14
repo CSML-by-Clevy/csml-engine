@@ -7,6 +7,7 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, EngineError};
 use csml_interpreter::data::Client;
+use chrono::{DateTime, Utc, Duration};
 
 pub fn delete_state_key(
     client: &Client,
@@ -108,7 +109,7 @@ pub fn set_state_items(
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(_db)?;
-        return postgresql_connector::state::set_state_items(_client, _type, _keys_values, db);
+        return postgresql_connector::state::set_state_items(_client, _type, _keys_values, chrono::Utc::now().naive_utc(), db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

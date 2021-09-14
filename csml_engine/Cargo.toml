@@ -85,11 +85,12 @@ optional = true
 csml_interpreter = { version = "1.6.4", path = "../csml_interpreter" }
 multimap = "0.8.2"
 md-5 = "0.9.1"
-chrono = "0.4"
+chrono = { version = "0.4.19", features = ["serde"]}
 rand = "0.7.3"
 uuid = { version = "0.8.2", features = ["serde", "v4"] }
-serde = { version = "1.0.126", features = ["derive"] }
-serde_json = "1.0.64"
+serde = { version = "1.0.130", features = ["derive"] }
+serde_derive = "1.0.130"
+serde_json = "1.0.67"
 openssl = { version = "0.10.35", features = ["vendored"] }
 base64 = "0.13.0"
 hex = "0.4.2"

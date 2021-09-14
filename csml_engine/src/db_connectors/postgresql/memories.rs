@@ -12,11 +12,13 @@ use super::{
     schema::csml_memories
 };
 
+use chrono::{NaiveDateTime, Duration};
 use std::collections::HashMap;
 
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &HashMap<String, Memory>,
+    expires_at: NaiveDateTime,
 ) -> Result<(), EngineError> {
     if memories.is_empty() {
         return Ok(());
@@ -25,7 +27,7 @@ pub fn add_memories(
     let db = get_db(&data.db)?;
 
     for (key, mem) in memories.iter() {
-        create_client_memory(&data.client, key, &mem.value, db)?;
+        create_client_memory(&data.client, key, &mem.value, expires_at, db)?;
     }
 
     Ok(())
@@ -35,6 +37,7 @@ pub fn create_client_memory(
     client: &Client,
     key: &str,
     value: &serde_json::Value,
+    expires_at: NaiveDateTime,
     db: &PostgresqlClient,
 ) -> Result<(), EngineError> {
 
@@ -47,6 +50,7 @@ pub fn create_client_memory(
         user_id: &client.user_id,
         key,
         value: value.clone(),
+        expires_at: Some(expires_at),
     };
 
     diesel::insert_into(csml_memories::table)

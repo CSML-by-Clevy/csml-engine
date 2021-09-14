@@ -40,8 +40,8 @@ pub struct Conversation {
     pub step_id: String,
     pub status: String,
 
-    pub expires_at: Option<NaiveDateTime>,
     pub last_interaction_at: NaiveDateTime,
+    pub expires_at: Option<NaiveDateTime>,
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
 }
@@ -107,10 +107,10 @@ pub struct Message {
     pub message_order: i32,
     pub interaction_order: i32,
 
-    pub expires_at: Option<NaiveDateTime>,
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
 }
+// pub expires_at: Option<NaiveDateTime>,
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "csml_messages"]
@@ -126,9 +126,8 @@ pub struct NewMessages<'a> {
 
     pub message_order: i32,
     pub interaction_order: i32,
-
-    pub expires_at: Option<NaiveDateTime>,
 }
+// pub expires_at: Option<NaiveDateTime>,
 
 #[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "csml_states"]
@@ -162,3 +161,32 @@ pub struct NewState<'a> {
 
     pub expires_at: Option<NaiveDateTime>,
 }
+
+
+
+
+
+// use serde::{ Deserializer};
+// use serde_derive::{Serialize,Deserialize};
+
+// const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+// fn datefmt<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
+//     where
+//         D: Deserializer<'de>,
+// {
+//     let s = String::deserialize(deserializer)?;
+//     Utc.datetime_from_str(&s, FORMAT)
+//         .map_err(serde::de::Error::custom)
+// }
+
+// fn option_datefmt<'de, D>(deserializer: D) -> Result<Option<NaiveDateTime>, D::Error>
+//     where
+//         D: Deserializer<'de>,
+// {
+//     #[derive(Deserialize)]
+//     struct Wrapper(#[serde(deserialize_with = "datefmt")] NaiveDateTime);
+
+//     let v = Option::deserialize(deserializer)?;
+//     Ok(v.map(|Wrapper(a)| a))
+// }
