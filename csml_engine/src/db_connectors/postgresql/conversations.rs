@@ -14,6 +14,7 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
+    // ttl:
     db: &PostgresqlClient,
 ) -> Result<String, EngineError> {
     let new_conversation = models::NewConversation {
@@ -23,7 +24,8 @@ pub fn create_conversation(
         user_id: &client.user_id,
         flow_id,
         step_id,
-        status: "OPEN"
+        status: "OPEN",
+        expires_at: Some(NaiveDateTime::),
     };
 
     let conversation: models::Conversation = diesel::insert_into(csml_conversations::table)

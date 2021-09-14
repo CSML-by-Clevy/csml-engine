@@ -19,6 +19,7 @@ table! {
         step_id -> Varchar,
         status -> Varchar,
         last_interaction_at -> Timestamp,
+        expire_at -> Nullable<Timestamp>,
         updated_at -> Timestamp,
         created_at -> Timestamp,
     }
@@ -49,6 +50,7 @@ table! {
         content_type -> Varchar,
         message_order -> Int4,
         interaction_order -> Int4,
+        expire_at -> Nullable<Timestamp>,
         updated_at -> Timestamp,
         created_at -> Timestamp,
     }

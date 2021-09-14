@@ -40,6 +40,7 @@ pub struct Conversation {
     pub step_id: String,
     pub status: String,
 
+    pub expires_at: Option<NaiveDateTime>,
     pub last_interaction_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
@@ -56,6 +57,8 @@ pub struct NewConversation<'a> {
     pub flow_id: &'a str,
     pub step_id: &'a str,
     pub status: &'a str,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
@@ -84,6 +87,8 @@ pub struct NewMemory<'a> {
 
     pub key: &'a str,
     pub value: String, //serde_json::Value,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
@@ -102,6 +107,7 @@ pub struct Message {
     pub message_order: i32,
     pub interaction_order: i32,
 
+    pub expires_at: Option<NaiveDateTime>,
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
 }
@@ -120,6 +126,8 @@ pub struct NewMessages<'a> {
 
     pub message_order: i32,
     pub interaction_order: i32,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
@@ -151,4 +159,6 @@ pub struct NewState<'a> {
     pub type_: &'a str,
     pub key: &'a str,
     pub value: String,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
