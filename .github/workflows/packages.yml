@@ -58,7 +58,7 @@ jobs:
         echo "PG_EXAMPLE_DATABASE_URL=postgres://postgres@localhost/diesel_example" >> $GITHUB_ENV
 
     - name: Install postgres (Windows)
-      if: runner.os == 'Windows' && matrix.backend == 'postgres'
+      if: runner.os == 'windows-latest'
       shell: bash
       run: |
         choco install postgresql12 --force --params '/Password:root'
