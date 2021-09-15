@@ -40,6 +40,8 @@ mod tests {
             context: get_context(),
             metadata: serde_json::json!({}),
             messages,
+            ttl: None,
+            low_data: false,
             db,
         }
     }
@@ -57,8 +59,7 @@ mod tests {
         let mut db = init_db().unwrap();
         user::delete_client(&client, &mut db).unwrap();
 
-        let c_id = conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
-
+        let c_id = conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
 
         let msgs = vec![
             gen_message("1"),
@@ -114,9 +115,9 @@ mod tests {
 
         user::delete_client(&client, &mut db).unwrap();
 
-        conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
-        conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
-        conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
+        conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
+        conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
+        conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
 
         let response = conversations::get_client_conversations(
             &client, &mut db,
@@ -153,7 +154,7 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), &mut db).unwrap();
+            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
         }
 
         let response = memories::internal_use_get_memories(&client, &mut db).unwrap();
@@ -187,7 +188,7 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), &mut db).unwrap();
+            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
         }
 
         let response = memories::internal_use_get_memories(&client, &mut db).unwrap();
@@ -234,7 +235,7 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), &mut db).unwrap();
+            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
         }
 
         let response = memories::get_memory(&client, "my_key", &mut db).unwrap();

@@ -4,7 +4,7 @@ use crate::{
     EngineError, PostgresqlClient,
     Client, DbConversation
 };
-use chrono::{NaiveDateTime, Duration};
+use chrono::{NaiveDateTime};
 
 use super::{
     models,
@@ -16,7 +16,7 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
-    expires_at: NaiveDateTime,
+    expires_at: Option<NaiveDateTime>,
     db: &PostgresqlClient,
 ) -> Result<String, EngineError> {
     let new_conversation = models::NewConversation {
@@ -27,7 +27,7 @@ pub fn create_conversation(
         flow_id,
         step_id,
         status: "OPEN",
-        expires_at: Some(expires_at),
+        expires_at,
     };
 
     let conversation: models::Conversation = diesel::insert_into(csml_conversations::table)

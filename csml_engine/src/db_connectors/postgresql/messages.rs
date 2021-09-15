@@ -14,14 +14,14 @@ use super::{
     },
     pagination::*
 };
-use chrono::{NaiveDateTime, Duration};
+use chrono::{NaiveDateTime};
 
 pub fn add_messages_bulk(
     data: &ConversationInfo,
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
-    expires_at: NaiveDateTime,
+    expires_at: Option<NaiveDateTime>,
 ) -> Result<(), EngineError> {
     if msgs.len() == 0 {
         return Ok(());
@@ -36,7 +36,6 @@ pub fn add_messages_bulk(
 
         let msg = models::NewMessages {
             id: uuid::Uuid::new_v4(),
-
             conversation_id,
 
             flow_id: &data.context.flow,
@@ -47,7 +46,7 @@ pub fn add_messages_bulk(
 
             message_order: message_order as i32,
             interaction_order,
-            expires_at: Some(expires_at),
+            expires_at,
         };
 
         new_messages.push(msg);

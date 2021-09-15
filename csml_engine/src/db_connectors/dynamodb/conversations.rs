@@ -13,9 +13,10 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
+    expires_at: Option<i64>,
     db: &mut DynamoDbClient,
 ) -> Result<String, EngineError> {
-    let data = Conversation::new(client, flow_id, step_id);
+    let data = Conversation::new(client, flow_id, step_id, expires_at);
     let input = PutItemInput {
         item: serde_dynamodb::to_hashmap(&data)?,
         table_name: get_table_name()?,

@@ -150,7 +150,7 @@ pub struct Conversation {
     pub step_id: String,
     pub status: String,
     pub last_interaction_at: String,
-    pub ttl: i32,
+    pub expires_at: Option<i64>,
     pub updated_at: String,
     pub created_at: String,
 }
@@ -175,7 +175,7 @@ impl Conversation {
      * range = conversation#OPEN|CLOSED#id
      * range_time = conversation#OPEN|CLOSED#timestamp#id
      */
-    pub fn new(client: &Client, flow_id: &str, step_id: &str) -> Self {
+    pub fn new(client: &Client, flow_id: &str, step_id: &str, expires_at: Option<i64>) -> Self {
         let id = Uuid::new_v4().to_string();
         let now = get_date_time();
         let status = "OPEN";
@@ -194,6 +194,7 @@ impl Conversation {
             step_id: step_id.to_owned(),
             status: status.to_owned(),
             last_interaction_at: now.to_owned(),
+            expires_at,
             updated_at: now.to_owned(),
             created_at: now.to_owned(),
         }
@@ -223,8 +224,7 @@ pub struct Memory {
     pub user_id: Option<String>,
     pub key: String,
     pub value: Option<String>,
-    pub ttl: i32,
-    pub expires_at: Option<String>,
+    pub expires_at: Option<i64>,
     pub created_at: String,
 }
 
@@ -246,6 +246,7 @@ impl Memory {
         client: &Client,
         key: &str,
         encrypted_value: Option<String>,
+        expires_at: Option<i64>,
     ) -> Self {
         let hash = Self::get_hash(client);
         let range = Self::get_range(key);
@@ -267,7 +268,7 @@ impl Memory {
             user_id: Some(client.user_id.to_owned()),
             key: key.to_owned(),
             value: encrypted_value.clone(),
-            expires_at: None,
+            expires_at,
             created_at: now.to_owned(),
         }
     }
@@ -299,7 +300,7 @@ pub struct Message {
     pub direction: String,
     pub payload: String,
     pub content_type: String,
-    pub ttl: i32,
+    pub expires_at: Option<i64>,
     pub created_at: String,
 }
 
@@ -327,6 +328,7 @@ impl Message {
         message_order: i32,
         payload: &str,
         content_type: &str,
+        expires_at: Option<i64>,
     ) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
         let class_name = "message";
@@ -355,6 +357,7 @@ impl Message {
             direction: direction.to_owned(),
             payload: payload.to_owned(),
             content_type: content_type.to_owned(),
+            expires_at,
             created_at: now.to_owned(),
         }
     }
@@ -381,8 +384,7 @@ pub struct State {
     pub _type: String,
     pub key: String,
     pub value: String,
-    pub ttl: i32,
-    pub expires_at: Option<String>,
+    pub expires_at: Option<i64>,
     pub created_at: String,
 }
 
@@ -399,7 +401,7 @@ impl State {
      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
      * range = mem_state#id
      */
-    pub fn new(client: &Client, _type: &str, key: &str, encrypted_value: &str) -> Self {
+    pub fn new(client: &Client, _type: &str, key: &str, encrypted_value: &str, expires_at: Option<i64>,) -> Self {
         let class_name = "state";
         let id = uuid::Uuid::new_v4().to_string();
         let now = get_date_time();
@@ -415,7 +417,7 @@ impl State {
             _type: _type.to_string(),
             key: key.to_owned(),
             value: encrypted_value.to_owned(),
-            expires_at: None,
+            expires_at,
             created_at: now.to_string(),
         }
     }

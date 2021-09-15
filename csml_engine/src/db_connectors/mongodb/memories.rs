@@ -9,7 +9,7 @@ use std::collections::HashMap;
 fn format_memories(
     data: &mut ConversationInfo,
     memories: &HashMap<String, Memory>,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<Vec<bson::Document>, EngineError> {
     let client = bson::to_bson(&data.client)?;
 
@@ -24,7 +24,7 @@ fn format_memories(
             "key": &mem.key,
             "value": value, // encrypted
             "expires_at": Bson::Null,
-            "expires_at": ttl,
+            "expires_at": expires_at,
             "created_at": time.clone(),
             "updated_at": time
         });
@@ -35,13 +35,13 @@ fn format_memories(
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &HashMap<String, Memory>,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<(), EngineError> {
     if memories.is_empty() {
         return Ok(());
     }
 
-    let mem = format_memories(data, memories, ttl)?;
+    let mem = format_memories(data, memories, expires_at)?;
     let db = get_db(&data.db)?;
 
     let collection = db.client.collection::<Document>("memory");
@@ -54,7 +54,7 @@ pub fn create_client_memory(
     client: &Client,
     key: String,
     value: serde_json::Value,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
     db: &MongoDbClient,
 ) -> Result<(), EngineError> {
     let time = bson::DateTime::from_chrono(chrono::Utc::now());
@@ -62,7 +62,7 @@ pub fn create_client_memory(
         "client": bson::to_bson(&client)?,
         "key": key,
         "value": encrypt_data(&value)?, // encrypted
-        "expires_at": ttl,
+        "expires_at": expires_at,
         "created_at": &time,
         "updated_at": time
     };

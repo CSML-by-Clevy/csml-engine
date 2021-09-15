@@ -59,6 +59,7 @@ pub fn interpret_step(
                 }
             },
             MSG::Message(msg) => {
+                dbg!(&msg);
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -81,6 +82,7 @@ pub fn interpret_step(
                     &data.client,
                     "hold",
                     vec![("position", &state_hold)],
+                    data.ttl,
                     &mut data.db,
                 )?;
                 data.context.hold = Some(Hold {
@@ -158,7 +160,9 @@ pub fn interpret_step(
         .map(|var| var.clone().message_to_json())
         .collect();
 
-    add_messages_bulk(data, msgs, interaction_order, "SEND")?;
+    if !data.low_data {
+        add_messages_bulk(data, msgs, interaction_order, "SEND")?;
+    }
     add_memories(data, &memories)?;
 
     if let Ok(var) = env::var(DEBUG) {

@@ -48,7 +48,10 @@ pub mod conversations;
 pub mod memories;
 pub mod messages;
 pub mod state;
+
 pub mod user;
+pub mod clean_db;
+pub mod utils;
 
 pub mod db_test;
 
@@ -71,16 +74,6 @@ pub struct DbConversation {
     // pub metadata: serde_json::Value,
     pub status: String,
     pub last_interaction_at: String,
-    pub updated_at: String,
-    pub created_at: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct DbInteraction {
-    pub id: String,
-    pub client: Client,
-    pub success: bool,
-    pub event: serde_json::Value,
     pub updated_at: String,
     pub created_at: String,
 }
@@ -113,19 +106,6 @@ pub struct DbMessage {
     pub direction: String,
     pub payload: serde_json::Value,
     pub content_type: String,
-    pub created_at: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct DbNode {
-    pub id: String,
-    pub client: Client,
-    pub interaction_id: String,
-    pub conversation_id: String,
-    pub flow_id: String,
-    pub step_id: String,
-    pub next_step: Option<String>,
-    pub next_flow: Option<String>,
     pub created_at: String,
 }
 

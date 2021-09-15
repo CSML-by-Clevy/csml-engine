@@ -32,8 +32,8 @@ fn format_conversation_struct(
 pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
-    ttl: bson::DateTime,
     client: &Client,
+    expires_at: Option<bson::DateTime>,
     db: &MongoDbClient,
 ) -> Result<String, EngineError> {
     let collection = db.client.collection::<Document>("conversation");
@@ -45,7 +45,7 @@ pub fn create_conversation(
         "step_id": step_id,
         "status": "OPEN",
         "last_interaction_at": &time,
-        "expires_at": ttl,
+        "expires_at": expires_at,
         "updated_at": &time,
         "created_at": &time
     };

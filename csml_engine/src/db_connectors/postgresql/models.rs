@@ -41,9 +41,10 @@ pub struct Conversation {
     pub status: String,
 
     pub last_interaction_at: NaiveDateTime,
-    pub expires_at: Option<NaiveDateTime>,
+
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
@@ -109,8 +110,9 @@ pub struct Message {
 
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
-// pub expires_at: Option<NaiveDateTime>,
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "csml_messages"]
@@ -126,8 +128,9 @@ pub struct NewMessages<'a> {
 
     pub message_order: i32,
     pub interaction_order: i32,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
-// pub expires_at: Option<NaiveDateTime>,
 
 #[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "csml_states"]

@@ -9,7 +9,7 @@ pub fn format_state_data(
     client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<Vec<Document>, EngineError> {
     let client = bson::to_bson(client)?;
 
@@ -24,7 +24,7 @@ pub fn format_state_data(
             "type": _type,
             "key": key,
             "value": value,
-            "expires_at": ttl,
+            "expires_at": expires_at,
             "created_at": time
         });
         Ok(vec)
@@ -107,14 +107,14 @@ pub fn set_state_items(
     client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
     db: &MongoDbClient,
 ) -> Result<(), EngineError> {
     if keys_values.len() == 0 {
         return Ok(());
     }
 
-    let state_data = format_state_data(client, _type, keys_values, ttl)?;
+    let state_data = format_state_data(client, _type, keys_values, expires_at)?;
     let state = db.client.collection::<Document>("state");
     state.insert_many(state_data, None)?;
 

@@ -11,12 +11,12 @@ fn format_messages(
     messages: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<Vec<Document>, EngineError> {
     messages
         .iter()
         .enumerate()
-        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction, ttl))
+        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction, expires_at))
         .collect::<Result<Vec<Document>, EngineError>>()
 }
 
@@ -26,7 +26,7 @@ fn format_message(
     msg_order: i32,
     interaction_order: i32,
     direction: &str,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<Document, EngineError> {
     let time = bson::DateTime::from_chrono(chrono::Utc::now());
     let doc = doc! {
@@ -39,7 +39,7 @@ fn format_message(
         "direction": direction,
         "payload": encrypt_data(&message)?, // encrypted
         "content_type": &message["content_type"].as_str().unwrap_or("text"),
-        "expires_at": ttl,
+        "expires_at": expires_at,
         "created_at": time
     };
 
@@ -70,12 +70,12 @@ pub fn add_messages_bulk(
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
-    ttl: bson::DateTime,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<(), EngineError> {
     if msgs.len() == 0 {
         return Ok(());
     }
-    let docs = format_messages(data, msgs, interaction_order, direction, ttl)?;
+    let docs = format_messages(data, msgs, interaction_order, direction, expires_at)?;
     let db = get_db(&data.db)?;
 
     let message = db.client.collection::<Document>("message");

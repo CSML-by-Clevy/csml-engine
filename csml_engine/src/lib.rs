@@ -29,7 +29,8 @@ extern crate diesel_migrations;
 
 use data::*;
 use db_connectors::{
-    bot, conversations, init_db, memories, messages, state, user, BotVersion, BotVersionCreated,
+    bot, conversations, init_db, memories, messages, state, user,
+    clean_db, BotVersion, BotVersionCreated,
     DbConversation,
 };
 use init::*;
@@ -78,7 +79,9 @@ pub fn start_conversation(
 
     // save event in db as message RECEIVE
     let msgs = vec![request.payload.to_owned()];
-    messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+    if !data.low_data {
+        messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+    }
 
     check_for_hold(&mut data, &bot)?;
 
@@ -169,7 +172,9 @@ pub fn create_client_memory(
     init_logger();
     validate_memory_key_format(&key)?;
 
-    memories::create_client_memory(client, key, value, &mut db)
+    let ttl = get_tll_value(None);
+
+    memories::create_client_memory(client, key, value, ttl, &mut db)
 }
 
 /**
@@ -456,4 +461,13 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
     };
 
     Ok(serde_json::json!(status))
+}
+
+/**
+ * delete expired data 
+ */
+pub fn delete_expired_data() -> Result<(), EngineError> {
+    let mut db = init_db()?;
+
+    clean_db::delete_expired_data(&mut db)
 }
