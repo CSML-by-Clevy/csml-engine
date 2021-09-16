@@ -1,7 +1,7 @@
-use crate::db_connectors::{conversations::*, interactions::*, memories::*};
+use crate::db_connectors::{conversations::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
-    utils::{get_default_flow, get_flow_by_id, search_flow},
+    utils::{get_default_flow, get_flow_by_id, search_flow, get_tll_value, get_low_data_value},
     Context, CsmlBot, CsmlFlow, CsmlResult,
 };
 
@@ -37,15 +37,20 @@ pub fn init_conversation_info<'a>(
 ) -> Result<ConversationInfo, EngineError> {
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
-    let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
+
+    //TODO: replace by logs
+    // let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
+
     let mut context = init_context(default_flow, request.client.clone(), &bot.fn_endpoint);
+    let ttl = get_tll_value(Some(event));
+    let low_data = get_low_data_value(event);
 
     // Do we have a flow matching the request? If the user is requesting a flow in one way
     // or another, this takes precedence over any previously open conversation
     // and a new conversation is created with the new flow as a starting point.
     let flow_found = search_flow(event, &bot, &request.client, &mut db).ok();
     let conversation_id =
-        get_or_create_conversation(&mut context, &bot, flow_found, &request.client, &mut db)?;
+        get_or_create_conversation(&mut context, &bot, flow_found, &request.client, ttl, &mut db)?;
 
     context.metadata = get_hashmap_from_json(&request.metadata, &context.flow);
     context.current = get_hashmap_from_mem(
@@ -55,13 +60,14 @@ pub fn init_conversation_info<'a>(
 
     let mut data = ConversationInfo {
         conversation_id,
-        interaction_id,
         context,
         metadata: request.metadata.clone(), // ??
         request_id: request.request_id.clone(),
         callback_url: request.callback_url.clone(),
         client: request.client.clone(),
         messages: vec![],
+        ttl,
+        low_data,
         db,
     };
 
@@ -138,6 +144,7 @@ fn get_or_create_conversation<'a>(
     bot: &'a CsmlBot,
     flow_found: Option<(&'a CsmlFlow, String)>,
     client: &Client,
+    ttl: Option<chrono::Duration>,
     db: &mut Database,
 ) -> Result<String, EngineError> {
     match get_latest_open(client, db)? {
@@ -154,7 +161,7 @@ fn get_or_create_conversation<'a>(
                             // if flow id exist in db but not in bot close conversation
                             close_conversation(&conversation.id, &client, db)?;
                             // start new conversation at default flow
-                            return create_new_conversation(context, bot, flow_found, client, db);
+                            return create_new_conversation(context, bot, flow_found, client, ttl, db);
                         }
                     };
 
@@ -165,7 +172,7 @@ fn get_or_create_conversation<'a>(
 
             Ok(conversation.id)
         }
-        None => create_new_conversation(context, bot, flow_found, client, db),
+        None => create_new_conversation(context, bot, flow_found, client, ttl, db),
     }
 }
 
@@ -177,6 +184,7 @@ fn create_new_conversation<'a>(
     bot: &'a CsmlBot,
     flow_found: Option<(&'a CsmlFlow, String)>,
     client: &Client,
+    ttl: Option<chrono::Duration>,
     db: &mut Database,
 ) -> Result<String, EngineError> {
     let (flow, step) = match flow_found {
@@ -186,7 +194,7 @@ fn create_new_conversation<'a>(
     context.step = step;
     context.flow = flow.name.to_owned();
 
-    let conversation_id = create_conversation(&flow.id, &context.step, client, db)?;
+    let conversation_id = create_conversation(&flow.id, &context.step, client, ttl, db)?;
 
     Ok(conversation_id)
 }

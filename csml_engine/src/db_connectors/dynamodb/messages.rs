@@ -10,6 +10,7 @@ fn format_messages(
     messages: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    expires_at: Option<i64>,
 ) -> Result<Vec<Message>, EngineError> {
     let mut res = vec![];
 
@@ -17,7 +18,6 @@ fn format_messages(
         res.push(Message::new(
             &data.client,
             &data.conversation_id,
-            &data.interaction_id,
             &data.context.flow,
             &data.context.step,
             direction,
@@ -25,6 +25,7 @@ fn format_messages(
             i as i32,
             &encrypt_data(&message)?,
             &message["content_type"].to_string(),
+            expires_at
         ));
     }
 
@@ -71,12 +72,13 @@ pub fn add_messages_bulk(
     messages: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    expires_at: Option<i64>,
 ) -> Result<(), EngineError> {
     if messages.len() == 0 {
         return Ok(());
     }
 
-    let messages = format_messages(data, messages, interaction_order, direction)?;
+    let messages = format_messages(data, messages, interaction_order, direction, expires_at)?;
     let db = get_db(&mut data.db)?;
 
     write_messages_batch(&messages, db)
@@ -185,7 +187,6 @@ pub fn get_client_messages(
 
         let json = serde_json::json!({
             "client": message.client,
-            "interaction_id": message.interaction_id,
             "conversation_id": message.conversation_id,
             "flow_id": message.flow_id,
             "step_id": message.step_id,

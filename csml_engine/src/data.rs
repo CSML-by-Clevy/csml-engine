@@ -352,12 +352,13 @@ impl DynamoDbClient {
 pub struct ConversationInfo {
     pub request_id: String,
     pub conversation_id: String,
-    pub interaction_id: String,
     pub callback_url: Option<String>,
     pub client: Client,
     pub context: Context,
     pub metadata: Value,
     pub messages: Vec<Message>,
+    pub ttl: Option<chrono::Duration>,
+    pub low_data: bool,
     pub db: Database,
 }
 

@@ -30,18 +30,18 @@ mod tests {
     fn get_conversation_info(
         messages: Vec<Message>,
         conversation_id: String,
-        interaction_id: String,
         db: Database
     ) -> ConversationInfo {
         ConversationInfo {
             request_id: "1234".to_owned(),
             conversation_id,
-            interaction_id,
             callback_url: None,
             client: get_client(),
             context: get_context(),
             metadata: serde_json::json!({}),
             messages,
+            ttl: None,
+            low_data: false,
             db,
         }
     }
@@ -59,15 +59,7 @@ mod tests {
         let mut db = init_db().unwrap();
         user::delete_client(&client, &mut db).unwrap();
 
-        let c_id = conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
-        let i_id = interactions::init_interaction(
-            serde_json::json!({
-                "content_type": "text",
-                "content": { "text": "hello"},
-            }),
-            &client,
-            &mut db
-        ).unwrap();
+        let c_id = conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
 
         let msgs = vec![
             gen_message("1"),
@@ -79,7 +71,6 @@ mod tests {
         let mut data = get_conversation_info(
             vec![],
             c_id,
-            i_id,
             db
         );
 
@@ -124,9 +115,9 @@ mod tests {
 
         user::delete_client(&client, &mut db).unwrap();
 
-        conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
-        conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
-        conversations::create_conversation("Default", "start", &client, &mut db).unwrap();
+        conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
+        conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
+        conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
 
         let response = conversations::get_client_conversations(
             &client, &mut db,
@@ -163,7 +154,7 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), &mut db).unwrap();
+            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
         }
 
         let response = memories::internal_use_get_memories(&client, &mut db).unwrap();
@@ -197,7 +188,7 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), &mut db).unwrap();
+            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
         }
 
         let response = memories::internal_use_get_memories(&client, &mut db).unwrap();
@@ -244,7 +235,7 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), &mut db).unwrap();
+            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
         }
 
         let response = memories::get_memory(&client, "my_key", &mut db).unwrap();

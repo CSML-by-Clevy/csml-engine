@@ -1,6 +1,6 @@
 use csml_engine::{
     data::{BotOpt, CsmlRequest},
-    start_conversation,
+    start_conversation, delete_expired_data,
 };
 use csml_interpreter::{
     data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
@@ -94,4 +94,6 @@ fn main() {
         }
         line.clear();
     }
+
+    delete_expired_data().ok();
 }

@@ -106,11 +106,12 @@ fn format_state_data(
     client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
+    expires_at: Option<i64>,
 ) -> Result<Vec<State>, EngineError> {
     let mut vec = vec![];
     for (key, value) in keys_values.iter() {
         let encrypted_value = encrypt_data(value)?;
-        vec.push(State::new(client, _type, *key, &encrypted_value));
+        vec.push(State::new(client, _type, *key, &encrypted_value, expires_at));
     }
     Ok(vec)
 }
@@ -119,9 +120,10 @@ pub fn set_state_items(
     client: &Client,
     _type: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
+    expires_at: Option<i64>,
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
-    let states = format_state_data(&client, _type, keys_values)?;
+    let states = format_state_data(&client, _type, keys_values, expires_at)?;
 
     // We can only use BatchWriteItem on up to 25 items at once,
     // so we need to split the memories to write into chunks of max

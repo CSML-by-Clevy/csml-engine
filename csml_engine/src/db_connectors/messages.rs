@@ -6,6 +6,8 @@ use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, ConversationInfo, EngineError, Client};
+use crate::db_connectors::utils::*;
+
 
 pub fn add_messages_bulk(
     data: &mut ConversationInfo,
@@ -15,31 +17,40 @@ pub fn add_messages_bulk(
 ) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
+        let expires_at = get_expires_at_for_mongodb(data.ttl);
+
         return mongodb_connector::messages::add_messages_bulk(
             data,
             &msgs,
             interaction_order,
             direction,
+            expires_at
         );
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
+        let expires_at = get_expires_at_for_dynamodb(data.ttl);
+
         return dynamodb_connector::messages::add_messages_bulk(
             data,
             &msgs,
             interaction_order,
             direction,
+            expires_at,
         );
     }
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
+        let expires_at = get_expires_at_for_postgresql(data.ttl);
+
         return postgresql_connector::messages::add_messages_bulk(
             data,
             &msgs,
             interaction_order,
             direction,
+            expires_at,
         );
     }
 

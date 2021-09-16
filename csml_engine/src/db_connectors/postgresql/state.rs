@@ -10,6 +10,7 @@ use super::{
     models,
     schema::csml_states
 };
+use chrono::{NaiveDateTime};
 
 pub fn delete_state_key(
     client: &Client,
@@ -88,6 +89,7 @@ pub fn set_state_items(
     client: &Client,
     type_: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
+    expires_at: Option<NaiveDateTime>,
     db: &PostgresqlClient,
 ) -> Result<(), EngineError> {
     if keys_values.len() == 0 {
@@ -108,6 +110,7 @@ pub fn set_state_items(
             type_,
             key,
             value,
+            expires_at,
         };
 
         new_states.push(mem);

@@ -13,9 +13,10 @@ pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
+    expires_at: Option<i64>,
     db: &mut DynamoDbClient,
 ) -> Result<String, EngineError> {
-    let data = Conversation::new(client, flow_id, step_id);
+    let data = Conversation::new(client, flow_id, step_id, expires_at);
     let input = PutItemInput {
         item: serde_dynamodb::to_hashmap(&data)?,
         table_name: get_table_name()?,
@@ -483,9 +484,6 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
 
         for item in items {
             let conversation: ConversationDeleteInfo = serde_dynamodb::from_hashmap(item.to_owned())?;
-
-            // delete all conversation paths
-            super::nodes::delete_conversation_nodes(&conversation.id, db).unwrap();
 
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
                 hash: Conversation::get_hash(client),

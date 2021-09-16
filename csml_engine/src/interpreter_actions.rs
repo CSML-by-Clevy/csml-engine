@@ -1,5 +1,5 @@
 use crate::db_connectors::{
-    conversations::*, interactions::*, memories::*, messages::*, nodes::*, state::*,
+    conversations::*,  memories::*, messages::*, state::*,
 };
 use crate::utils::*;
 use crate::{data::*, delete_client_memories};
@@ -25,7 +25,7 @@ pub fn interpret_step(
     let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &bot.flows)?;
     let mut interaction_order = 0;
     let mut conversation_end = false;
-    let mut interaction_success = true;
+    // let mut interaction_success = true;
     let (sender, receiver) = mpsc::channel::<MSG>();
     let context = data.context.clone();
     let interpret_step = SystemTime::now();
@@ -59,6 +59,7 @@ pub fn interpret_step(
                 }
             },
             MSG::Message(msg) => {
+                dbg!(&msg);
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -81,6 +82,7 @@ pub fn interpret_step(
                     &data.client,
                     "hold",
                     vec![("position", &state_hold)],
+                    data.ttl,
                     &mut data.db,
                 )?;
                 data.context.hold = Some(Hold {
@@ -129,7 +131,8 @@ pub fn interpret_step(
             },
             MSG::Error(err_msg) => {
                 conversation_end = true;
-                interaction_success = false;
+                // interaction_success = false;
+
                 send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
                 data.messages.push(err_msg);
                 close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
@@ -157,7 +160,9 @@ pub fn interpret_step(
         .map(|var| var.clone().message_to_json())
         .collect();
 
-    add_messages_bulk(data, msgs, interaction_order, "SEND")?;
+    if !data.low_data {
+        add_messages_bulk(data, msgs, interaction_order, "SEND")?;
+    }
     add_memories(data, &memories)?;
 
     if let Ok(var) = env::var(DEBUG) {
@@ -171,7 +176,8 @@ pub fn interpret_step(
         }
     }
 
-    update_interaction(data, interaction_success)?;
+    //TODO: log update
+    // update_interaction(data, interaction_success)?;
 
     Ok(messages_formater(
         data,
@@ -192,7 +198,8 @@ fn goto_flow<'a>(
     nextflow: String,
     nextstep: String,
 ) -> Result<(), EngineError> {
-    create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
+    // TODO: add in logs
+    // create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
 
     *current_flow = get_flow_by_id(&nextflow, &bot.flows)?;
     data.context.flow = nextflow;
@@ -205,7 +212,8 @@ fn goto_flow<'a>(
     )?;
 
     *interaction_order += 1;
-    update_interaction(data, false)?;
+    // TODO: add in logs
+    // update_interaction(data, false)?;
 
     Ok(())
 }
@@ -219,7 +227,8 @@ fn goto_step<'a>(
     interaction_order: &mut i32,
     nextstep: String,
 ) -> Result<bool, EngineError> {
-    create_node(data, None, Some(nextstep.clone()))?;
+    // TODO: add in logs
+    // create_node(data, None, Some(nextstep.clone()))?;
 
     if nextstep == "end" {
         *conversation_end = true;

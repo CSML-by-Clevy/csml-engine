@@ -38,7 +38,7 @@ pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>, req: act
         None => None,
     };
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 

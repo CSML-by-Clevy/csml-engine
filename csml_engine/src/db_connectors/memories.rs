@@ -7,6 +7,7 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, EngineError, Memory};
 use std::collections::HashMap;
+use crate::db_connectors::utils::*;
 
 pub fn add_memories(
     data: &mut ConversationInfo,
@@ -15,17 +16,20 @@ pub fn add_memories(
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-        return mongodb_connector::memories::add_memories(data, &memories);
+        let expires_at = get_expires_at_for_mongodb(data.ttl);
+        return mongodb_connector::memories::add_memories(data, &memories, expires_at);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-        return dynamodb_connector::memories::add_memories(data, &memories);
+        let expires_at = get_expires_at_for_dynamodb(data.ttl);
+        return dynamodb_connector::memories::add_memories(data, &memories, expires_at);
     }
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
-        return postgresql_connector::memories::add_memories(data, &memories);
+        let expires_at = get_expires_at_for_postgresql(data.ttl);
+        return postgresql_connector::memories::add_memories(data, &memories, expires_at);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -35,25 +39,29 @@ pub fn create_client_memory(
     client: &Client,
     key: String,
     value: serde_json::Value,
+    ttl: Option<chrono::Duration>,
     db: &mut Database
 ) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::memories::create_client_memory(client, key, value, db);
+        let expires_at = get_expires_at_for_mongodb(ttl);
+        return mongodb_connector::memories::create_client_memory(client, key, value, expires_at, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
+        let expires_at = get_expires_at_for_dynamodb(ttl);
 
-        return dynamodb_connector::memories::create_client_memory(client, key, value, db);
+        return dynamodb_connector::memories::create_client_memory(client, key, value, expires_at, db);
     }
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
-        return postgresql_connector::memories::create_client_memory(client, &key, &value, db);
+        let expires_at = get_expires_at_for_postgresql(ttl);
+        return postgresql_connector::memories::create_client_memory(client, &key, &value, expires_at,db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

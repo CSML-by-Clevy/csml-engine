@@ -27,33 +27,6 @@ pub struct NewBot<'a> {
     pub engine_version: &'a str,
 }
 
-#[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_interactions"]
-pub struct Interaction {
-    pub id: Uuid,
-
-    pub bot_id: String,
-    pub channel_id: String,
-    pub user_id: String,
-
-    pub success: bool,
-    pub event: String, //serde_json::Value,
-    pub updated_at: NaiveDateTime,
-    pub created_at: NaiveDateTime,
-}
-
-#[derive(Queryable, Insertable, Associations, PartialEq, Debug)]
-#[table_name = "csml_interactions"]
-pub struct NewInteraction<'a> {
-    pub id: Uuid,
-    pub bot_id: &'a str,
-    pub channel_id: &'a str,
-    pub user_id: &'a str,
-
-    pub success: bool,
-    pub event: &'a str, //serde_json::Value,
-}
-
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "csml_conversations"]
 pub struct Conversation {
@@ -68,8 +41,10 @@ pub struct Conversation {
     pub status: String,
 
     pub last_interaction_at: NaiveDateTime,
+
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
@@ -83,6 +58,8 @@ pub struct NewConversation<'a> {
     pub flow_id: &'a str,
     pub step_id: &'a str,
     pub status: &'a str,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
@@ -111,14 +88,15 @@ pub struct NewMemory<'a> {
 
     pub key: &'a str,
     pub value: String, //serde_json::Value,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
-#[belongs_to(Interaction, Conversation)]
+#[belongs_to(Conversation)]
 #[table_name = "csml_messages"]
 pub struct Message {
     pub id: Uuid,
-    pub interaction_id: Uuid,
     pub conversation_id: Uuid,
 
     pub flow_id: String,
@@ -132,13 +110,14 @@ pub struct Message {
 
     pub updated_at: NaiveDateTime,
     pub created_at: NaiveDateTime,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
 #[table_name = "csml_messages"]
 pub struct NewMessages<'a> {
     pub id: Uuid,
-    pub interaction_id: Uuid,
     pub conversation_id: Uuid,
 
     pub flow_id: &'a str,
@@ -149,36 +128,8 @@ pub struct NewMessages<'a> {
 
     pub message_order: i32,
     pub interaction_order: i32,
-}
 
-#[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
-#[belongs_to(Interaction, Conversation)]
-#[table_name = "csml_nodes"]
-pub struct Node {
-    pub id: Uuid,
-    pub conversation_id: Uuid,
-    pub interaction_id: Uuid,
-
-    pub flow_id: String,
-    pub step_id: String,
-    pub next_flow: Option<String>,
-    pub next_step: Option<String>,
-
-    pub updated_at: NaiveDateTime,
-    pub created_at: NaiveDateTime,
-}
-
-#[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_nodes"]
-pub struct NewNode<'a> {
-    pub id: Uuid,
-    pub conversation_id: &'a Uuid,
-    pub interaction_id: &'a Uuid,
-
-    pub flow_id: &'a str,
-    pub step_id: &'a str,
-    pub next_flow: Option<&'a str>,
-    pub next_step: Option<&'a str>,
+    pub expires_at: Option<NaiveDateTime>,
 }
 
 #[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
@@ -210,4 +161,35 @@ pub struct NewState<'a> {
     pub type_: &'a str,
     pub key: &'a str,
     pub value: String,
+
+    pub expires_at: Option<NaiveDateTime>,
 }
+
+
+
+
+
+// use serde::{ Deserializer};
+// use serde_derive::{Serialize,Deserialize};
+
+// const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+// fn datefmt<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
+//     where
+//         D: Deserializer<'de>,
+// {
+//     let s = String::deserialize(deserializer)?;
+//     Utc.datetime_from_str(&s, FORMAT)
+//         .map_err(serde::de::Error::custom)
+// }
+
+// fn option_datefmt<'de, D>(deserializer: D) -> Result<Option<NaiveDateTime>, D::Error>
+//     where
+//         D: Deserializer<'de>,
+// {
+//     #[derive(Deserialize)]
+//     struct Wrapper(#[serde(deserialize_with = "datefmt")] NaiveDateTime);
+
+//     let v = Option::deserialize(deserializer)?;
+//     Ok(v.map(|Wrapper(a)| a))
+// }
