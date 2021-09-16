@@ -90,13 +90,13 @@ CSML Studio gives you a free playground to experiment with the language as well 
 
 CSML is available as a self-hostable web server that you can easily install with one of the options below.
 
-Note that you will need a database. The default choice is **MongoDB**, but **Amazon DynamoDB**
-is also available by choosing the `dynamodb` engine DB type with a slightly different set of environment variables.
+Note that you will need a database. The default choice is **MongoDB**, but **Amazon DynamoDB** and **PostgreSQL*
+are also available by choosing the `dynamodb` or `postgresql` engine DB type with a slightly different set of environment variables.
 
 Before you start, make sure that you have the environment set with following options:
 
 ```
-ENGINE_DB_TYPE=mongodb # or dynamodb
+ENGINE_DB_TYPE=mongodb # must be one of mongodb|dynamodb|postgresql
 
 # for mongodb
 MONGODB_HOST=localhost
@@ -114,12 +114,19 @@ AWS_DYNAMODB_TABLE=
 AWS_S3_ENDPOINT= # optional, defaults to the default S3 endpoint for the given region
 AWS_S3_BUCKET=
 
+# for postgresql
+POSTGRESQL_URL=postgres://user:password@hostname:port/database
+
 ENGINE_SERVER_PORT=5000
 
 ENGINE_SERVER_API_KEYS=someAuthKey4CsmlServer,someOtherAuthKey
 
 ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
 DISABLE_SSL_VERIFY=false
+
+TTL_DURATION=30 # defaults to none. Auto-remove user data after X days
+LOW_DATA_MODE=true # defaults to false. Do not store contents of sent/received messages
+
 DEBUG=true
 ```
 

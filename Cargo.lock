@@ -974,7 +974,7 @@ checksum = "697c714f50560202b1f4e2e09cd50a421881c83e9025db75d15f276616f04f40"
 
 [[package]]
 name = "csml_engine"
-version = "1.6.4"
+version = "1.7.0-beta2"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -1006,7 +1006,7 @@ dependencies = [
 
 [[package]]
 name = "csml_engine_node"
-version = "1.6.4"
+version = "1.7.0-beta2"
 dependencies = [
  "csml_engine",
  "csml_interpreter",
@@ -1019,7 +1019,7 @@ dependencies = [
 
 [[package]]
 name = "csml_interpreter"
-version = "1.6.4"
+version = "1.7.0-beta2"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -1043,7 +1043,7 @@ dependencies = [
 
 [[package]]
 name = "csml_server"
-version = "1.6.4"
+version = "1.7.0-beta2"
 dependencies = [
  "actix-cors",
  "actix-files",
