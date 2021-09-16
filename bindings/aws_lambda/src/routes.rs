@@ -9,6 +9,8 @@ pub mod memories;
 pub mod messages;
 pub mod state;
 
+pub mod clean_data;
+
 use csml_engine::{data::{RunRequest}};
 use serde::{Deserialize, Serialize};
 

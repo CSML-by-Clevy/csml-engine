@@ -65,6 +65,7 @@ async fn main() -> std::io::Result<()> {
 
       .service(routes::state::get_client_current_state)
 
+      .service(routes::data::delete_expired_data)
       .service(routes::data::delete_bot)
       .service(routes::data::delete_client)
 

@@ -1,4 +1,4 @@
-use actix_web::{delete, web, HttpResponse};
+use actix_web::{delete, post, web, HttpResponse};
 use csml_interpreter::data::{Client};
 use serde::{Deserialize, Serialize};
 use std::thread;
@@ -30,7 +30,7 @@ pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpR
         bot_id: query.bot_id.clone(),
     };
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 
@@ -56,7 +56,7 @@ pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpR
 #[delete("/data/bots/{bot_id}")]
 pub async fn delete_bot(path: web::Path<BotIdPath>, req: actix_web::HttpRequest) -> HttpResponse {
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 
@@ -71,4 +71,27 @@ pub async fn delete_bot(path: web::Path<BotIdPath>, req: actix_web::HttpRequest)
             HttpResponse::InternalServerError().finish()
         }
     }
+}
+
+
+/**
+ * Delete all expired data in db (Conversation, Messages, Memory and State)
+ *
+ * {"statusCode": 204}
+ *
+ */
+#[post("/data/cleanup")]
+pub async fn delete_expired_data() -> HttpResponse {
+
+    let res = thread::spawn(move || {
+        csml_engine::delete_expired_data()
+    }).join().unwrap();
+
+    match res {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(err) => {
+            eprintln!("EngineError: {:?}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+   }
 }
