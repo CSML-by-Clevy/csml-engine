@@ -41,7 +41,7 @@ pub async fn create_client_memory(
         bot_id: query.bot_id.clone(),
     };
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 
@@ -78,7 +78,7 @@ pub async fn delete_memory(
         bot_id: query.bot_id.clone(),
     };
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 
@@ -109,7 +109,7 @@ pub async fn delete_memories(query: web::Query<ClientQuery>, req: actix_web::Htt
         bot_id: query.bot_id.clone(),
     };
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 
@@ -140,7 +140,7 @@ pub async fn get_memory(path: web::Path<MemoryKeyPath>, query: web::Query<Client
         bot_id: query.bot_id.clone(),
     };
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 
@@ -169,7 +169,7 @@ pub async fn get_memories(query: web::Query<ClientQuery>, req: actix_web::HttpRe
         bot_id: query.bot_id.clone(),
     };
 
-    if let Some(value) = validate_api_key(&req) {
+    if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 

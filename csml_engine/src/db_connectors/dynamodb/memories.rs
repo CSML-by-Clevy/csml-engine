@@ -13,6 +13,7 @@ use crate::db_connectors::dynamodb::utils::*;
 fn format_memories(
     data: &ConversationInfo,
     memories: &HashMap<String, InterpreterMemory>,
+    expires_at: Option<i64>,
 ) -> Result<Vec<Memory>, EngineError> {
     let mut res = vec![];
 
@@ -21,6 +22,7 @@ fn format_memories(
             &data.client,
             &mem.key,
             Some(encrypt_data(&mem.value)?),
+            expires_at,
         ));
     }
 
@@ -30,12 +32,13 @@ fn format_memories(
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &HashMap<String, InterpreterMemory>,
+    expires_at: Option<i64>,
 ) -> Result<(), EngineError> {
     if memories.len() == 0 {
         return Ok(());
     }
 
-    let memories = format_memories(data, memories)?;
+    let memories = format_memories(data, memories, expires_at)?;
 
     // We can only use BatchWriteItem on up to 25 items at once,
     // so we need to split the memories to write into chunks of max
@@ -74,12 +77,14 @@ pub fn create_client_memory(
     client: &Client,
     key: String,
     value: serde_json::Value,
+    expires_at: Option<i64>,
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
     let memories = Memory::new(
         client,
         &key,
         Some(encrypt_data(&value)?),
+        expires_at,
     );
 
     let input = PutItemInput {

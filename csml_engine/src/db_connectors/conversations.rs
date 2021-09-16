@@ -7,34 +7,40 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, DbConversation, EngineError};
+use crate::db_connectors::utils::*;
 
 pub fn create_conversation(
     flow_id: &str,
     step_id: &str,
     client: &Client,
+    ttl: Option<chrono::Duration>,
     db: &mut Database,
 ) -> Result<String, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
+
+        let expires_at = get_expires_at_for_mongodb(ttl);
         return mongodb_connector::conversations::create_conversation(
-            flow_id, step_id, client, db,
+            flow_id, step_id, client, expires_at, db,
         );
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
+        let expires_at = get_expires_at_for_dynamodb(ttl);
         return dynamodb_connector::conversations::create_conversation(
-            flow_id, step_id, client, db,
+            flow_id, step_id, client, expires_at, db,
         );
     }
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
+        let expires_at = get_expires_at_for_postgresql(ttl);
         return postgresql_connector::conversations::create_conversation(
-            flow_id, step_id, client, db,
+            flow_id, step_id, client, expires_at, db,
         );
     }
 

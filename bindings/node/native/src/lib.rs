@@ -505,6 +505,30 @@ fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
+/*
+* Remove all data associated with a given bot:
+* conversations, messages, memories, interactions, states, path, versions
+*/
+fn delete_expired_data(mut cx: FunctionContext) -> JsResult<JsValue> {
+
+    match csml_engine::delete_expired_data() {
+        Ok(value) => {
+            let value= serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
 fn get_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
@@ -646,6 +670,8 @@ register_module!(mut cx, {
     cx.export_function("deleteMemories", delete_client_memories)?;
     cx.export_function("deleteClientData", delete_client_data)?;
     cx.export_function("deleteBotData", delete_bot_data)?;
+
+    cx.export_function("deleteExpiredData", delete_expired_data)?;
 
     cx.export_function("run", run_bot)?;
 

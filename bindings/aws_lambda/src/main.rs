@@ -15,6 +15,7 @@ use routes::{
     delete_memories, delete_memory},
     messages::get_client_messages,
     state::get_client_current_state,
+    clean_data::delete_expired_data,
     run, sns, validate
 };
 
@@ -431,6 +432,18 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             delete_bot_version(path_params.bot_id, path_params.version_id)
         }
 
+
+        /*
+         * Delete all expired data in db (Conversation, Messages, Memory and State)
+         */
+        LambdaRequest {
+            path,
+            http_method,
+            ..
+        } if path.ends_with("/data/cleanup") && http_method == "POST" => {
+
+            delete_expired_data()
+        }
 
         /*
          * CATCHALL

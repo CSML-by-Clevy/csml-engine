@@ -1,9 +1,7 @@
 pub mod bot;
 pub mod conversations;
-pub mod interactions;
 pub mod memories;
 pub mod messages;
-pub mod nodes;
 pub mod state;
 
 pub mod pagination;
@@ -11,11 +9,13 @@ pub mod pagination;
 pub mod schema;
 pub mod models;
 
+pub mod expired_data;
+
 use crate::{Database, EngineError, PostgresqlClient};
 
 use diesel::prelude::*;
 
-embed_migrations!("migrations");
+embed_migrations!("migrations/postgresql");
 
 pub fn init() -> Result<Database, EngineError> {
 
@@ -27,7 +27,7 @@ pub fn init() -> Result<Database, EngineError> {
     let pg_connection = PgConnection::establish(&uri)
         .unwrap_or_else(|_| panic!("Error connecting to {}", uri));
 
-    embedded_migrations::run_with_output(&pg_connection, &mut std::io::stdout());
+    embedded_migrations::run_with_output(&pg_connection, &mut std::io::stdout())?;
 
     let db = Database::Postgresql(
         PostgresqlClient::new(pg_connection)

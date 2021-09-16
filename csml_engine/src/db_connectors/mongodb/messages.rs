@@ -3,7 +3,7 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, ConversationInfo, EngineError, MongoDbClient,
 };
-use bson::{doc, Bson, Document};
+use bson::{doc, Document};
 use chrono::SecondsFormat;
 
 fn format_messages(
@@ -11,11 +11,12 @@ fn format_messages(
     messages: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<Vec<Document>, EngineError> {
     messages
         .iter()
         .enumerate()
-        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction))
+        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction, expires_at))
         .collect::<Result<Vec<Document>, EngineError>>()
 }
 
@@ -25,11 +26,11 @@ fn format_message(
     msg_order: i32,
     interaction_order: i32,
     direction: &str,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<Document, EngineError> {
-    let time = Bson::DateTime(chrono::Utc::now());
+    let time = bson::DateTime::from_chrono(chrono::Utc::now());
     let doc = doc! {
         "client": bson::to_bson(&data.client)?,
-        "interaction_id": &data.interaction_id,
         "conversation_id": &data.conversation_id,
         "flow_id": &data.context.flow,
         "step_id": &data.context.step,
@@ -38,6 +39,7 @@ fn format_message(
         "direction": direction,
         "payload": encrypt_data(&message)?, // encrypted
         "content_type": &message["content_type"].as_str().unwrap_or("text"),
+        "expires_at": expires_at,
         "created_at": time
     };
 
@@ -51,7 +53,6 @@ fn format_message_struct(message: bson::document::Document) -> Result<DbMessage,
     Ok(DbMessage {
         id: message.get_object_id("_id").unwrap().to_hex(), // to_hex bson::oid::ObjectId
         client: bson::from_bson(message.get("client").unwrap().to_owned())?,
-        interaction_id: message.get_str("interaction_id").unwrap().to_owned(),
         conversation_id: message.get_str("conversation_id").unwrap().to_owned(),
         flow_id: message.get_str("flow_id").unwrap().to_owned(),
         step_id: message.get_str("step_id").unwrap().to_owned(),
@@ -60,7 +61,7 @@ fn format_message_struct(message: bson::document::Document) -> Result<DbMessage,
         direction: message.get_str("direction").unwrap().to_owned(),
         payload,
         content_type: message.get_str("content_type").unwrap().to_owned(),
-        created_at: message.get_datetime("created_at").unwrap().to_rfc3339_opts(SecondsFormat::Millis, true),
+        created_at: message.get_datetime("created_at").unwrap().to_chrono().to_rfc3339_opts(SecondsFormat::Millis, true),
     })
 }
 
@@ -69,14 +70,15 @@ pub fn add_messages_bulk(
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    expires_at: Option<bson::DateTime>,
 ) -> Result<(), EngineError> {
     if msgs.len() == 0 {
         return Ok(());
     }
-    let docs = format_messages(data, msgs, interaction_order, direction)?;
+    let docs = format_messages(data, msgs, interaction_order, direction, expires_at)?;
     let db = get_db(&data.db)?;
 
-    let message = db.client.collection("message");
+    let message = db.client.collection::<Document>("message");
 
     message.insert_many(docs, None)?;
 
@@ -84,7 +86,7 @@ pub fn add_messages_bulk(
 }
 
 pub fn delete_user_messages(client: &Client, db: &MongoDbClient) -> Result<(), EngineError> {
-    let collection = db.client.collection("message");
+    let collection = db.client.collection::<Document>("message");
 
     let filter = doc! {
         "client": bson::to_bson(&client)?,
@@ -101,7 +103,7 @@ pub fn get_client_messages(
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
-    let collection = db.client.collection("message");
+    let collection = db.client.collection::<Document>("message");
 
     let limit = match limit {
         Some(limit) if limit >= 1 => limit + 1,
@@ -113,7 +115,7 @@ pub fn get_client_messages(
         Some(key) => {
             doc! {
                 "client": bson::to_bson(&client)?,
-                "_id": {"$gt": bson::oid::ObjectId::with_string(&key).unwrap() }
+                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() }
             }
         }
         None => doc! {
@@ -136,7 +138,6 @@ pub fn get_client_messages(
 
                 let json = serde_json::json!({
                     "client": message.client,
-                    "interaction_id": message.interaction_id,
                     "conversation_id": message.conversation_id,
                     "flow_id": message.flow_id,
                     "step_id": message.step_id,

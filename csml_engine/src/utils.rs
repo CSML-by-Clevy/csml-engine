@@ -119,10 +119,13 @@ pub fn format_event(json_event: serde_json::Value) -> Result<Event, EngineError>
     let content = json_event["payload"]["content"].to_owned();
 
     let content_value = get_event_content(&content_type, &content)?;
+
     Ok(Event {
         content_type,
         content_value,
         content,
+        ttl: json_event["payload"]["tll"].as_i64(),
+        low_data: json_event["payload"]["tll"].as_bool(),
     })
 }
 
@@ -188,7 +191,6 @@ pub fn messages_formater(
         "received_at".to_owned(),
         json!(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
     );
-    map.insert("interaction_id".to_owned(), json!(data.interaction_id));
 
     //tmp
     let mut map_client: Map<String, Value> = Map::new();
@@ -336,4 +338,35 @@ pub fn init_logger() {
             let _ = env_logger::try_init();
         }
     };
+}
+
+pub fn get_tll_value(event: Option<&Event>) -> Option<chrono::Duration> {
+
+    if let Some(event) = event {
+        if let Some(ttl) = event.ttl {
+            return Some(chrono::Duration::days(ttl))
+        }
+    }
+
+    if let Ok(ttl) = env::var("TTL") {
+        if let Some(ttl) = ttl.parse::<i64>().ok() {
+            return Some(chrono::Duration::days(ttl))
+        }
+    }
+
+    return None
+}
+
+pub fn get_low_data_value(event: &Event) -> bool {
+    if let Some(low_data) = event.low_data {
+        return low_data;
+    }
+
+    if let Ok(ttl) = env::var("LOW_DATA") {
+        if let Ok(low_data) = ttl.parse::<bool>() {
+            return low_data;
+        }
+    }
+
+    return false
 }

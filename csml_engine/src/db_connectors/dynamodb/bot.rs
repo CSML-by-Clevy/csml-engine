@@ -1,6 +1,6 @@
 use crate::data::{DynamoDbClient, DynamoBot, DynamoBotBincode, };
 use crate::db_connectors::{
-    dynamodb::{nodes::delete_conversation_nodes ,aws_s3, Bot, Conversation, DynamoDbKey, Class},
+    dynamodb::{aws_s3, Bot, DynamoDbKey, Class},
     BotVersion,
 };
 use csml_interpreter::data::{csml_flow::CsmlFlow};
@@ -460,13 +460,6 @@ pub fn delete_all_bot_data(
         let mut write_requests = vec![];
         for item in items {
             let class: Class = serde_dynamodb::from_hashmap(item.to_owned())?;
-
-            // only for class 'conversation' we need to get the conversation id in order to delete the path class 
-            // witch 'hash' is base in the conversation id
-            if class.class == "conversation" {
-                let conversation_id = Conversation::get_conversation_id_from_range(&class.range);
-                delete_conversation_nodes(&conversation_id, db)?;
-            }
 
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
                 hash: class.hash,

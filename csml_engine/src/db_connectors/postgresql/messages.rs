@@ -14,12 +14,14 @@ use super::{
     },
     pagination::*
 };
+use chrono::{NaiveDateTime};
 
 pub fn add_messages_bulk(
     data: &ConversationInfo,
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
+    expires_at: Option<NaiveDateTime>,
 ) -> Result<(), EngineError> {
     if msgs.len() == 0 {
         return Ok(());
@@ -30,13 +32,10 @@ pub fn add_messages_bulk(
     let mut new_messages = vec!();
     for (message_order, message) in msgs.iter().enumerate() {
 
-        let interaction_id = uuid::Uuid::parse_str(&data.interaction_id).unwrap();
         let conversation_id = uuid::Uuid::parse_str(&data.conversation_id).unwrap();
 
         let msg = models::NewMessages {
             id: uuid::Uuid::new_v4(),
-
-            interaction_id,
             conversation_id,
 
             flow_id: &data.context.flow,
@@ -44,8 +43,10 @@ pub fn add_messages_bulk(
             direction,
             payload: encrypt_data(&message)?,
             content_type: &message["content_type"].as_str().unwrap_or("text"),
+
             message_order: message_order as i32,
             interaction_order,
+            expires_at,
         };
 
         new_messages.push(msg);
@@ -118,7 +119,6 @@ pub fn get_client_messages(
                 "channel_id": &client.channel_id,
                 "user_id": &client.user_id
             },
-            "interaction_id": message.interaction_id,
             "conversation_id": message.conversation_id,
             "flow_id": message.flow_id,
             "step_id": message.step_id,

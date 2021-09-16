@@ -6,6 +6,7 @@ use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, EngineError};
+use crate::db_connectors::utils::*;
 use csml_interpreter::data::Client;
 
 pub fn delete_state_key(
@@ -91,24 +92,31 @@ pub fn set_state_items(
     _client: &Client,
     _type: &str,
     _keys_values: Vec<(&str, &serde_json::Value)>,
+    ttl: Option<chrono::Duration>,
     _db: &mut Database,
 ) -> Result<(), EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(_db)?;
-        return mongodb_connector::state::set_state_items(_client, _type, _keys_values, &db);
+        let expires_at = get_expires_at_for_mongodb(ttl);
+
+        return mongodb_connector::state::set_state_items(_client, _type, _keys_values, expires_at, &db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(_db)?;
-        return dynamodb_connector::state::set_state_items(_client, _type, _keys_values, db);
+        let expires_at = get_expires_at_for_dynamodb(ttl);
+
+        return dynamodb_connector::state::set_state_items(_client, _type, _keys_values, expires_at, db);
     }
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(_db)?;
-        return postgresql_connector::state::set_state_items(_client, _type, _keys_values, db);
+        let expires_at = get_expires_at_for_postgresql(ttl);
+
+        return postgresql_connector::state::set_state_items(_client, _type, _keys_values, expires_at, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -148,7 +156,7 @@ mod tests {
             "hash": hash
         });
 
-        set_state_items(&client, "hold", vec![("position", &state_hold)], &mut db).unwrap();
+        set_state_items(&client, "hold", vec![("position", &state_hold)], None, &mut db).unwrap();
 
         let hold = get_state_key(&client, "hold", "position", &mut db)
             .unwrap()

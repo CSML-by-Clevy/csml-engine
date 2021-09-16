@@ -40,6 +40,8 @@ fn main() {
         content_type: "payload".to_owned(), // text
         content_value: "4".to_owned(),
         content: serde_json::json!({"payload":"4"}),
+        ttl: None,
+        low_data: None,
     };
 
     // Create context
