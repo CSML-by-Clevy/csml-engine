@@ -348,7 +348,7 @@ pub fn get_tll_value(event: Option<&Event>) -> Option<chrono::Duration> {
         }
     }
 
-    if let Ok(ttl) = env::var("TTL") {
+    if let Ok(ttl) = env::var("TTL_DURATION") {
         if let Some(ttl) = ttl.parse::<i64>().ok() {
             return Some(chrono::Duration::days(ttl))
         }
@@ -362,7 +362,7 @@ pub fn get_low_data_value(event: &Event) -> bool {
         return low_data;
     }
 
-    if let Ok(ttl) = env::var("LOW_DATA") {
+    if let Ok(ttl) = env::var("LOW_DATA_MODE") {
         if let Ok(low_data) = ttl.parse::<bool>() {
             return low_data;
         }
