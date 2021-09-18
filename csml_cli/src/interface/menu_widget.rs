@@ -73,7 +73,7 @@ const AWS_REGIONS_PAYLOAD: &[&str] = &[
 #[derive(Debug, Clone)]
 pub struct Menu<'a> {
     pub block: Option<Block<'a>>,
-    pub items: Vec<MenuItem<'a>>,
+    pub items: Vec<MenuItem>,
 
     pub input: &'a str,
     /// Style used as a base style for the widget
@@ -88,7 +88,7 @@ pub struct Menu<'a> {
 impl<'a> Menu<'a> {
     pub fn new<T>(items: T, input: &'a str) -> Menu<'a>
     where
-        T: Into<Vec<MenuItem<'a>>>,
+        T: Into<Vec<MenuItem>>,
     {
         Menu {
             block: None,
@@ -188,33 +188,33 @@ impl<'a> StatefulWidget for Menu<'a> {
         {
             // ########### skip sub menus
             // ## 3 -> 4
-            if i == 3 {
-                if let MenuElement::List { selected, vec, .. } = &item.element {
-                    let val = vec[*selected];
-                    if val != "dynamodb-local" {
-                        state.skip_4 = true;
-                    } else {
-                        state.skip_4 = false;
-                    }
-                };
-            }
-            if i == 4 && state.skip_4 {
-                continue;
-            }
-            // ## 6 -> 7
-            if i == 6 {
-                if let MenuElement::List { selected, vec, .. } = &item.element {
-                    let val = vec[*selected];
-                    if val != "localstack" {
-                        state.skip_7 = true;
-                    } else {
-                        state.skip_7 = false;
-                    }
-                };
-            }
-            if i == 7 && state.skip_7 {
-                continue;
-            }
+            // if i == 3 {
+            //     if let MenuComponent::List { selected, components, .. } = &item.component {
+            //         let val = components[*selected];
+            //         if val != "dynamodb-local" {
+            //             state.skip_4 = true;
+            //         } else {
+            //             state.skip_4 = false;
+            //         }
+            //     };
+            // }
+            // if i == 4 && state.skip_4 {
+            //     continue;
+            // }
+            // // ## 6 -> 7
+            // if i == 6 {
+            //     if let MenuComponent::List { selected, components, .. } = &item.component {
+            //         let val = components[*selected];
+            //         if val != "localstack" {
+            //             state.skip_7 = true;
+            //         } else {
+            //             state.skip_7 = false;
+            //         }
+            //     };
+            // }
+            // if i == 7 && state.skip_7 {
+            //     continue;
+            // }
             // ###########
 
             let (x, y) = (list_area.left(), list_area.top() + current_height);
@@ -261,7 +261,7 @@ impl<'a> StatefulWidget for Menu<'a> {
 }
 
 pub trait MenuType {
-    fn generate_menu(&mut self, menu: &Vec<MenuItem<'static>>) -> Vec<MenuItem<'static>>;
+    fn generate_menu(&mut self, menu: &Vec<MenuItem>) -> Vec<MenuItem>;
 
     fn init() -> Box<dyn MenuType>
     where
@@ -274,64 +274,90 @@ pub trait MenuType {
 
 #[derive(Debug, Clone)]
 pub struct InitMenu {
-    pub start: Vec<MenuItem<'static>>,
-    pub mongodb: Vec<MenuItem<'static>>,
-    pub dynamodb: Vec<MenuItem<'static>>,
-    pub end: Vec<MenuItem<'static>>,
+    pub start: Vec<MenuItem>,
 }
 
 impl MenuType for InitMenu {
     fn init() -> Box<dyn MenuType> {
+        let mongodb_sub_menu = vec![
+            MenuItem::new(
+                "MongoDB Connection String URI",
+                MenuComponent::Text{text: "mongodb://localhost:27017".to_owned(), payload: None, sub_component: vec![]},
+                1,
+            )
+        ];
+
+        let dynamodb_sub_menu = vec![
+            MenuItem::new(
+                "DynamoDB region",
+                MenuComponent::List {
+                    components: vec![],//AWS_REGIONS,
+                    selected: 0,
+                    scroll_index: 0,
+                    sub_component: vec![
+                        // only if localhost |
+                        MenuItem::new("Dynamodb port", MenuComponent::Text{text: "8000".to_owned(), payload: None, sub_component: vec![]}, 1)
+                    ]
+                },
+                1,
+            ),
+            MenuItem::new(
+                "Dynamodb table name",
+                MenuComponent::Text{text: "csml-engine-db-local".to_owned(), payload: None, sub_component: vec![]},
+                1,
+            ),
+            MenuItem::new(
+                "S3 bucket Location",
+                MenuComponent::List {
+                    components: vec![],//AWS_REGIONS,
+                    selected: 0,
+                    scroll_index: 0,
+                    sub_component: vec![
+                        // only if localhost |
+                        MenuItem::new("Localstack port", MenuComponent::Text{text: "8000".to_owned(), payload: None, sub_component: vec![]}, 2),
+                    ]
+                },
+                1,
+            ),
+            MenuItem::new(
+                "S3 bucket name",
+                MenuComponent::Text{text: "csml-engine-bucket".to_owned(), payload: None, sub_component: vec![]},
+                1,
+            ),
+        ];
+
         let init = InitMenu {
             start: vec![
-                MenuItem::new("Chatbot name", MenuElement::Text("bot".to_owned()), 0),
+                MenuItem::new("Chatbot name", MenuComponent::Text{text: "bot".to_owned(), payload: None, sub_component: vec![]}, 0),
                 MenuItem::new(
                     "Enable variable encryption",
-                    MenuElement::new_list(&["yes", "no"]),
+                    MenuComponent::List {
+                        components: vec![
+                                MenuComponent::Text{text: "yes".to_owned(), payload: None, sub_component: vec![]},
+                                MenuComponent::Text{text: "no".to_owned(), payload: None, sub_component: vec![]}
+                            ],
+                        selected: 0,
+                        scroll_index: 0,
+                        sub_component: vec![]
+                    },
                     0,
                 ),
                 MenuItem::new(
                     "Database type",
-                    MenuElement::new_list(&["mongodb", "dynamodb"]),
+                    MenuComponent::List {
+                        components: vec![
+                                MenuComponent::Text{text: "mongodb".to_owned(), payload: None, sub_component: mongodb_sub_menu },
+                                MenuComponent::Text{text: "dynamodb".to_owned(), payload: None, sub_component: dynamodb_sub_menu}
+                            ],
+                        selected: 0,
+                        scroll_index: 0,
+                        sub_component: vec![],
+                    },
                     0,
                 ),
-            ],
-            mongodb: vec![MenuItem::new(
-                "MongoDB Connection String URI",
-                MenuElement::Text("mongodb://localhost:27017".to_owned()),
-                1,
-            )],
-            dynamodb: vec![
-                MenuItem::new(
-                    "DynamoDB region",
-                    MenuElement::new_list(AWS_REGIONS),
-                    1,
-                ),
-                // only if localhost |
-                MenuItem::new("Dynamodb port", MenuElement::Text("8000".to_owned()), 2),
-                MenuItem::new(
-                    "Dynamodb table name",
-                    MenuElement::Text("csml-engine-db-local".to_owned()),
-                    1,
-                ),
-                MenuItem::new(
-                    "S3 bucket Location",
-                    MenuElement::new_list(AWS_REGIONS),
-                    1,
-                ),
-                // only if localhost |
-                MenuItem::new("Localstack port", MenuElement::Text("8000".to_owned()), 2),
-                MenuItem::new(
-                    "S3 bucket name",
-                    MenuElement::Text("csml-engine-bucket".to_owned()),
-                    1,
-                ),
-            ],
-            end: vec![
-                // if button center
                 MenuItem::new(
                     "",
-                    MenuElement::Button("               [Validate]".to_owned()),
+                    MenuComponent::Button{text: "               [Validate]".to_owned(), payload: None},
                     0,
                 ),
             ],
@@ -344,13 +370,13 @@ impl MenuType for InitMenu {
         AppState::Normal
     }
 
-    fn generate_menu(&mut self, menu: &Vec<MenuItem<'static>>) -> Vec<MenuItem<'static>> {
+    fn generate_menu(&mut self, menu: &Vec<MenuItem>) -> Vec<MenuItem> {
         let mut new_menu = vec![];
 
         if menu.is_empty() {
             new_menu.append(&mut self.start.clone());
-            new_menu.append(&mut self.mongodb.clone());
-            new_menu.append(&mut self.end.clone());
+            // new_menu.append(&mut self.mongodb.clone());
+            // new_menu.append(&mut self.end.clone());
         } else {
             let name = &menu[0];
             let encryption = &menu[1];
@@ -361,15 +387,15 @@ impl MenuType for InitMenu {
                     new_menu.push(name.clone());
                     new_menu.push(encryption.clone());
                     new_menu.push(db.clone());
-                    new_menu.append(&mut self.mongodb.clone());
-                    new_menu.append(&mut self.end.clone());
+                    // new_menu.append(&mut self.mongodb.clone());
+                    // new_menu.append(&mut self.end.clone());
                 }
                 _dynamodb => {
                     new_menu.push(name.clone());
                     new_menu.push(encryption.clone());
                     new_menu.push(db.clone());
-                    new_menu.append(&mut self.dynamodb.clone());
-                    new_menu.append(&mut self.end.clone());
+                    // new_menu.append(&mut self.dynamodb.clone());
+                    // new_menu.append(&mut self.end.clone());
                 }
             }
         };
@@ -381,7 +407,7 @@ impl MenuType for InitMenu {
 pub struct MenuState {
     pub offset: usize,
     pub selected: Option<usize>,
-    pub menu: Vec<MenuItem<'static>>,
+    pub menu: Vec<MenuItem>,
     pub menu_type: Box<dyn MenuType>,
     pub state: AppState,
 
@@ -518,69 +544,101 @@ impl MenuState {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum MenuElement<'a> {
-    Text(String),
-    Button(String),
-    List {
-        vec: &'a [&'a str],
-        selected: usize,
-        scroll_index: usize,
-    },
-    SelectableBot {
-        path_info: String,
-        bot: CsmlBot,
-        text: String,
-    },
-}
-
 // #[derive(Debug, Clone)]
-// pub enum MenuComponent {
-//     Text{
-//         text: String,
-//         payload: Option<String>,
-//         sub_component: Box<MenuComponent>
-//     },
-//     Button{
-//         text: String,
-//         payload: Option<String>
-//     },
+// pub enum MenuElement<'a> {
+//     Text(String),
+//     Button(String),
 //     List {
-//         components: Vec<MenuComponent>,
+//         vec: &'a [&'a str],
 //         selected: usize,
 //         scroll_index: usize,
 //     },
-
-//     Bot {
+//     SelectableBot {
 //         path_info: String,
 //         bot: CsmlBot,
 //         text: String,
 //     },
 // }
 
-impl<'a> MenuElement<'a> {
-    pub fn new_list(vec: &'a [&'a str]) -> Self {
-        Self::List {
-            vec,
-            selected: 0,
-            scroll_index: 0,
-        }
-    }
+// impl<'a> MenuElement<'a> {
+//     pub fn new_list(vec: &'a [&'a str]) -> Self {
+//         Self::List {
+//             vec,
+//             selected: 0,
+//             scroll_index: 0,
+//         }
+//     }
+
+//     pub fn height(&self) -> usize {
+//         match &self {
+//             Self::Text(_) => 2,
+//             Self::Button(_) => 1,
+//             Self::List { vec, .. } => vec.len() + 2,
+//             Self::SelectableBot { .. } => 1,
+//         }
+//     }
+// }
+
+#[derive(Debug, Clone)]
+pub enum MenuComponent {
+    Text{
+        text: String,
+        payload: Option<String>,
+        sub_component: Vec<MenuItem>
+    },
+    Button{
+        text: String,
+        payload: Option<String>
+    },
+    List {
+        components: Vec<MenuComponent>,
+        selected: usize,
+        scroll_index: usize,
+        sub_component: Vec<MenuItem>,
+    },
+
+    Bot {
+        path_info: String,
+        bot: CsmlBot,
+        text: String,
+    },
+}
+
+impl MenuComponent {
+    // pub fn new_list(vec: &'a [&'a str]) -> Self {
+    //     Self::List {
+    //         vec,
+    //         selected: 0,
+    //         scroll_index: 0,
+    //     }
+    // }
 
     pub fn height(&self) -> usize {
         match &self {
-            Self::Text(_) => 2,
-            Self::Button(_) => 1,
-            Self::List { vec, .. } => vec.len() + 2,
-            Self::SelectableBot { .. } => 1,
+            Self::Text{..} => 2,
+            Self::Button{..} => 1,
+            Self::List { components, .. } => components.len() + 2,
+            Self::Bot { .. } => 1,
         }
     }
+
+    pub fn get_value(&self) -> String {
+        match &self {
+            MenuComponent::List { selected, components, ..} => components[*selected].get_value(),
+            MenuComponent::Text{payload: Some(value), ..} => value.to_owned(),
+            MenuComponent::Text{text: value, ..} => value.to_owned(),
+            MenuComponent::Button{payload: Some(value), ..} => value.to_owned(),
+            MenuComponent::Button{text: value, ..} => value.to_owned(),
+            MenuComponent::Bot { path_info, ..} => path_info.to_owned(),
+        }
+    }
+
 }
 
 #[derive(Debug, Clone)]
-pub struct MenuItem<'a> {
-    pub text: &'a str,
-    pub element: MenuElement<'a>,
+pub struct MenuItem {
+    pub text: String,
+    pub component: MenuComponent,
 
     pub lvl: u16,
     pub value: String,
@@ -589,11 +647,11 @@ pub struct MenuItem<'a> {
     pub style: Style,
 }
 
-impl<'a> MenuItem<'a> {
-    pub fn new(text: &'a str, elem: MenuElement<'a>, lvl: u16) -> MenuItem<'a> {
+impl MenuItem {
+    pub fn new(text: &str, component: MenuComponent, lvl: u16) -> MenuItem {
         MenuItem {
-            text,
-            element: elem,
+            text: text.to_owned(),
+            component,
             lvl,
             value: String::new(),
             selected: false,
@@ -602,51 +660,57 @@ impl<'a> MenuItem<'a> {
     }
 
     pub fn get_value(&self) -> String {
-        match &self.element {
-            MenuElement::List { selected, vec, .. } => vec[*selected].to_owned(),
-            MenuElement::Text(value) => value.to_owned(),
-            MenuElement::Button(value) => value.to_owned(),
-            MenuElement::SelectableBot { path_info, .. } => path_info.to_owned(),
+        match &self.component {
+            MenuComponent::List { selected, components, ..} => components[*selected].get_value(),
+            MenuComponent::Text{payload: Some(value), ..} => value.to_owned(),
+            MenuComponent::Text{text: value, ..} => value.to_owned(),
+            MenuComponent::Button{payload: Some(value), ..} => value.to_owned(),
+            MenuComponent::Button{text: value, ..} => value.to_owned(),
+            MenuComponent::Bot { path_info, ..} => path_info.to_owned(),
         }
     }
 
     pub fn update_value(&mut self, value: &str) {
-        match &mut self.element {
-            MenuElement::List {
+        match &mut self.component {
+            MenuComponent::List {
                 selected,
                 scroll_index,
                 ..
             } => {
                 *selected = *scroll_index;
             }
-            MenuElement::Text(old_value) => {
-                *old_value = value.to_owned();
+            MenuComponent::Text{ text: old_value , payload, ..} => {
+                if let Some(payload) = payload {
+                    *payload = value.to_string();
+                };
+
+                *old_value = value.to_string();
             }
-            MenuElement::Button(_) => {}
-            MenuElement::SelectableBot { .. } => {}
+            MenuComponent::Button{ .. } => {}
+            MenuComponent::Bot { .. } => {}
         }
     }
 
     pub fn next(&mut self) {
-        if let MenuElement::List {
-            scroll_index, vec, ..
-        } = &mut self.element
+        if let MenuComponent::List {
+            scroll_index, components, ..
+        } = &mut self.component
         {
-            if *scroll_index < vec.len() - 1 {
+            if *scroll_index < components.len() - 1 {
                 *scroll_index += 1;
             }
         }
     }
 
     pub fn previous(&mut self) {
-        if let MenuElement::List { scroll_index, .. } = &mut self.element {
+        if let MenuComponent::List { scroll_index, .. } = &mut self.component {
             if *scroll_index > 0 {
                 *scroll_index -= 1;
             }
         }
     }
 
-    pub fn gen_content(&'a self, input: &'a str, mode: &AppState) -> Text<'a> {
+    pub fn gen_content(&self, input: &str, mode: &AppState) -> Text {
         let text = if !self.text.is_empty() {
             if self.lvl == 0 {
                 format!("{}: ", self.text.to_owned())
@@ -659,14 +723,15 @@ impl<'a> MenuItem<'a> {
 
         let mut additional_info = None;
 
-        let elem = match &self.element {
-            MenuElement::Text(_) if self.selected && *mode == AppState::Editing => input,
-            MenuElement::Text(text) => text,
-            MenuElement::List {
-                vec, scroll_index, ..
+        let elem: String = match &self.component {
+            MenuComponent::Text{..} if self.selected && *mode == AppState::Editing => input.to_owned(),
+            MenuComponent::Text{payload: Some(text), ..} => text.to_owned(),
+            MenuComponent::Text{text, ..} => text.to_owned(),
+            MenuComponent::List {
+                components, scroll_index, ..
             } if self.selected && *mode == AppState::Selecting => {
                 additional_info = Some(
-                    vec.iter()
+                    components.iter()
                         .enumerate()
                         .map(|(i, value)| {
                             let symbol = if *mode == AppState::Selecting && i == *scroll_index {
@@ -676,18 +741,19 @@ impl<'a> MenuItem<'a> {
                             };
 
                             Spans::from(vec![Span::styled(
-                                format!("{}  |-- {}", symbol, value),
+                                format!("{}  |-- {}", symbol, value.get_value()),
                                 Style::default().fg(Color::LightYellow),
                             )])
                         })
                         .collect::<Vec<Spans>>(),
                 );
 
-                ""
+                "".to_owned()
             }
-            MenuElement::List { selected, vec, .. } => vec[*selected],
-            MenuElement::Button(text) => text,
-            MenuElement::SelectableBot { text, .. } => {
+            MenuComponent::List { selected, components, .. } => components[*selected].get_value(),
+            MenuComponent::Button{payload: Some(text), ..} => text.to_owned(),
+            MenuComponent::Button{text, ..} => text.to_owned(),
+            MenuComponent::Bot { text, .. } => {
                 // additional_info = Some(
                 //     vec![
                 //         Spans::from(Span::from(format!("Path: {}", path_info))),
@@ -695,7 +761,7 @@ impl<'a> MenuItem<'a> {
                 //     ]
                 // );
 
-                text
+                text.to_owned()
             }
         };
 
@@ -736,7 +802,7 @@ impl<'a> MenuItem<'a> {
 
     pub fn height(&self, mode: &AppState) -> usize {
         match self.selected && *mode == AppState::Selecting {
-            true => self.element.height(),
+            true => self.component.height(),
             false => 1,
         }
     }

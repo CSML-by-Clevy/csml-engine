@@ -12,7 +12,7 @@ use crate::interface::{menu_widget::*, AppMain, AppState};
 
 #[derive(Debug, Clone)]
 pub struct MainMenu {
-    pub options: Vec<MenuItem<'static>>,
+    pub options: Vec<MenuItem>,
 }
 
 impl MenuType for MainMenu {
@@ -21,12 +21,12 @@ impl MenuType for MainMenu {
             options: vec![
                 MenuItem::new(
                     "",
-                    MenuElement::Button("csml init -- setup a new bot project".to_owned()),
+                    MenuComponent::Button{text: "csml init -- setup a new bot project".to_owned(), payload: None},
                     0,
                 ),
                 MenuItem::new(
                     "",
-                    MenuElement::Button("csml run -- execute your bot script".to_owned()),
+                    MenuComponent::Button{text: "csml run -- execute your bot script".to_owned(), payload: None},
                     0,
                 ),
             ],
@@ -35,7 +35,7 @@ impl MenuType for MainMenu {
         Box::new(main)
     }
 
-    fn generate_menu(&mut self, _menu: &Vec<MenuItem<'static>>) -> Vec<MenuItem<'static>> {
+    fn generate_menu(&mut self, _menu: &Vec<MenuItem>) -> Vec<MenuItem> {
         self.options.clone()
     }
 

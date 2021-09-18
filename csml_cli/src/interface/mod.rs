@@ -325,10 +325,10 @@ fn handle_normal_mode<'a>(
         KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
-                    match &app.menu_state.menu[index].element {
-                        MenuElement::List { .. } => app.menu_state.state = AppState::Selecting,
-                        MenuElement::Text(_text) => app.menu_state.state = AppState::Editing,
-                        MenuElement::Button(_accept) => {
+                    match &app.menu_state.menu[index].component {
+                        MenuComponent::List { .. } => app.menu_state.state = AppState::Selecting,
+                        MenuComponent::Text{..} => app.menu_state.state = AppState::Editing,
+                        MenuComponent::Button{..} => {
                             let env = app.menu_state.gen_env();
                             let bot_name = env.bot_name.clone();
 
@@ -345,7 +345,7 @@ fn handle_normal_mode<'a>(
 
                             return Ok(Exit::ChangeAPP(AppMode::Run(AppRun::default())));
                         }
-                        MenuElement::SelectableBot { .. } => {}
+                        MenuComponent::Bot { .. } => {}
                     };
                 }
                 Ok(Exit::None)
@@ -631,8 +631,8 @@ fn handle_main_normal_mode<'a>(input: KeyEvent, app: &mut AppMain) -> Result<Exi
         KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
-                    match &app.menu_state.menu[index].element {
-                        MenuElement::Button(button) => match button.as_str() {
+                    match &app.menu_state.menu[index].component {
+                        MenuComponent::Button{text, ..} => match text.as_str() {
                             "csml init -- setup a new bot project" => {
                                 app.menu_state.state = AppState::Normal;
 
@@ -683,8 +683,8 @@ fn handle_select_bot_mode<'a>(
         KeyEvent { code, modifiers } if modifiers.is_empty() => match code {
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
-                    match &app.menu_state.menu[index].element {
-                        MenuElement::SelectableBot { bot, path_info, .. } => {
+                    match &app.menu_state.menu[index].component {
+                        MenuComponent::Bot { bot, path_info, .. } => {
                             *directory_name = path_info.clone();
 
                             //load env
@@ -697,7 +697,7 @@ fn handle_select_bot_mode<'a>(
 
                             return Ok(Exit::ChangeAPP(AppMode::Run(AppRun::default())));
                         }
-                        MenuElement::Button(button) => match button.as_str() {
+                        MenuComponent::Button{text, ..} => match text.as_str() {
                             "[create new bot]" => {
                                 app.menu_state.state = AppState::Normal;
 

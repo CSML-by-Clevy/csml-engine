@@ -14,13 +14,13 @@ use crate::{
 };
 
 use crate::interface::{
-    menu_widget::{MenuElement, MenuItem},
+    menu_widget::{MenuComponent, MenuItem},
     AppSelectBot,
 };
 
 #[derive(Debug, Clone)]
 pub struct SelectBotMenu {
-    pub options: Vec<MenuItem<'static>>,
+    pub options: Vec<MenuItem>,
 }
 
 impl MenuType for SelectBotMenu {
@@ -29,18 +29,18 @@ impl MenuType for SelectBotMenu {
         let mut options = list
             .iter()
             .map(|(path, bot)| {
-                let bot_element = MenuElement::SelectableBot {
+                let bot_component = MenuComponent::Bot {
                     path_info: path.to_owned(),
                     bot: bot.to_owned(),
                     text: format!(" {}({})", bot.name, path),
                 };
-                MenuItem::new("", bot_element, 0)
+                MenuItem::new("", bot_component, 0)
             })
             .collect::<Vec<MenuItem>>();
 
         options.push(MenuItem::new(
             "",
-            MenuElement::Button("[create new bot]".to_owned()),
+            MenuComponent::Button{text:"[create new bot]".to_owned(), payload: None},
             0,
         ));
 
@@ -49,7 +49,7 @@ impl MenuType for SelectBotMenu {
         Box::new(select_bot_menu)
     }
 
-    fn generate_menu(&mut self, _menu: &Vec<MenuItem<'static>>) -> Vec<MenuItem<'static>> {
+    fn generate_menu(&mut self, _menu: &Vec<MenuItem>) -> Vec<MenuItem> {
         self.options.clone()
     }
 
