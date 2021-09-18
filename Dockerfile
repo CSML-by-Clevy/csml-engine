@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-RUN apt update && apt install -y ca-certificates postgresql libpq-dev && apt clean
+RUN apt update && apt install -y ca-certificates libpq-dev && apt clean
 RUN update-ca-certificates
 
 WORKDIR /usr/src/csml
