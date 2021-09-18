@@ -65,8 +65,8 @@ AWS_S3_BUCKET=
 POSTGRESQL_URL=postgres://user:password@hostname:port/database
 
 # CSML Server configuration
-ENGINE_SERVER_PORT=5000
-ENGINE_SERVER_API_KEYS=someAuthKey4CsmlServer,someOtherAuthKey
+ENGINE_SERVER_PORT=5000 # defaults to 5000
+ENGINE_SERVER_API_KEYS=my-key-1,my-key-2 # comma-separated list of accepted server auth keys
 
 # Other optional engine configuration
 ENGINE_ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
