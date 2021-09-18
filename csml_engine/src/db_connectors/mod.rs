@@ -20,9 +20,9 @@
  *   - AWS_ACCESS_KEY_ID
  *   - AWS_SECRET_ACCESS_KEY
  *   - AWS_DYNAMODB_TABLE
- *   - AWS_DYNAMODB_ENDPOINT optional, defaults to the default dynamodb endpoint for the given region.
+ *   - AWS_DYNAMODB_ENDPOINT optional, defaults to the dynamodb endpoint for the given region.
  *   - AWS_S3_BUCKET
- *   - AWS_S3_ENDPOINT optional, defaults to the default S3 endpoint for the given region
+ *   - AWS_S3_ENDPOINT optional, defaults to the S3 endpoint for the given region
  * Both AWS_REGION AND AWS_DYNAMODB_ENDPOINT must be set to use a custom dynamodb-compatible DB.
  *
  * If the ENGINE_DB_TYPE env var is not set, mongodb is used by default.
