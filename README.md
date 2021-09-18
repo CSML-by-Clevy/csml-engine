@@ -117,17 +117,16 @@ AWS_S3_BUCKET=
 # for postgresql
 POSTGRESQL_URL=postgres://user:password@hostname:port/database
 
+# CSML Server configuration
 ENGINE_SERVER_PORT=5000
-
 ENGINE_SERVER_API_KEYS=someAuthKey4CsmlServer,someOtherAuthKey
 
-ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
-DISABLE_SSL_VERIFY=false
-
-TTL_DURATION=30 # defaults to none. Auto-remove user data after X days
-LOW_DATA_MODE=true # defaults to false. Do not store contents of sent/received messages
-
-DEBUG=true
+# Other optional engine configuration
+ENGINE_ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
+TTL_DURATION=30 # auto-remove chatbot user data after X days
+LOW_DATA_MODE=true # do not store contents of sent/received messages
+DISABLE_SSL_VERIFY=false # reach trusted endpoints with known invalid certificates
+DEBUG=true # print debug output in console
 ```
 
 ### Deploy to Heroku
