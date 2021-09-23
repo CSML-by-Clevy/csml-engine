@@ -90,7 +90,7 @@ CSML Studio gives you a free playground to experiment with the language as well 
 
 CSML is available as a self-hostable web server that you can easily install with one of the options below.
 
-Note that you will need a database. The default choice is **MongoDB**, but **Amazon DynamoDB** and **PostgreSQL*
+Note that you will need a database. The default choice is **MongoDB**, but **Amazon DynamoDB** and **PostgreSQL**
 are also available by choosing the `dynamodb` or `postgresql` engine DB type with a slightly different set of environment variables.
 
 Before you start, make sure that you have the environment set with following options:
