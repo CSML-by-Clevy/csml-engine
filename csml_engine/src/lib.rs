@@ -172,7 +172,7 @@ pub fn create_client_memory(
     init_logger();
     validate_memory_key_format(&key)?;
 
-    let ttl = get_tll_value(None);
+    let ttl = get_ttl_duration_value(None);
 
     memories::create_client_memory(client, key, value, ttl, &mut db)
 }
@@ -464,7 +464,7 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
 }
 
 /**
- * delete expired data 
+ * delete expired data
  */
 pub fn delete_expired_data() -> Result<(), EngineError> {
     let mut db = init_db()?;

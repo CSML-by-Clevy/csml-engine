@@ -124,8 +124,8 @@ pub fn format_event(json_event: serde_json::Value) -> Result<Event, EngineError>
         content_type,
         content_value,
         content,
-        ttl: json_event["payload"]["tll"].as_i64(),
-        low_data: json_event["payload"]["tll"].as_bool(),
+        ttl_duration: json_event["payload"]["ttl_duration"].as_i64(),
+        low_data_mode: json_event["payload"]["low_data_mode"].as_bool(),
     })
 }
 
@@ -340,10 +340,10 @@ pub fn init_logger() {
     };
 }
 
-pub fn get_tll_value(event: Option<&Event>) -> Option<chrono::Duration> {
+pub fn get_ttl_duration_value(event: Option<&Event>) -> Option<chrono::Duration> {
 
     if let Some(event) = event {
-        if let Some(ttl) = event.ttl {
+        if let Some(ttl) = event.ttl_duration {
             return Some(chrono::Duration::days(ttl))
         }
     }
@@ -357,13 +357,13 @@ pub fn get_tll_value(event: Option<&Event>) -> Option<chrono::Duration> {
     return None
 }
 
-pub fn get_low_data_value(event: &Event) -> bool {
-    if let Some(low_data) = event.low_data {
+pub fn get_low_data_mode_value(event: &Event) -> bool {
+    if let Some(low_data) = event.low_data_mode {
         return low_data;
     }
 
-    if let Ok(ttl) = env::var("LOW_DATA_MODE") {
-        if let Ok(low_data) = ttl.parse::<bool>() {
+    if let Ok(low_data) = env::var("LOW_DATA_MODE") {
+        if let Ok(low_data) = low_data.parse::<bool>() {
             return low_data;
         }
     }
