@@ -144,8 +144,8 @@ pub fn get_distance_brace(s: &Span, key: char) -> Option<usize> {
     let mut expand: bool = false;
     let mut substring: bool = false;
 
-    for (i, c) in s.as_bytes().iter().enumerate() {
-        if *c as char == key && !escape && !substring {
+    for (i, c) in s.chars().enumerate() {
+        if c == key && !escape && !substring {
             if let Some(c) = s.as_bytes().iter().nth(i + 1) {
                 if *c as char == key {
                     return Some(i);
