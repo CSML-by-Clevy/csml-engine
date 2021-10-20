@@ -1,10 +1,5 @@
 start:
 
-    // say "Hello World 😆"
-    do var = 4
-    while (var > 1) {
-        say var
-        do var = var - 1
-    }
+    say "Hello World 😆"
 
     goto end
