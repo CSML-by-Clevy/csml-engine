@@ -154,12 +154,13 @@ pub const FILE: &str = "File";
 pub const DEBUG: &str = "Debug";
 pub const UUID: &str = "UUID";
 pub const TIME: &str = "Time";
+pub const EXISTS: &str = "Exists";
 
 pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, APP, HTTP, OBJECT, DEBUG, UUID, BASE64, HEX,
-    JWT, CRYPTO, TIME, SMTP,
+    JWT, CRYPTO, TIME, SMTP, EXISTS,
 ];
 
 pub const FROM_FILE: &str = "FromFile";
