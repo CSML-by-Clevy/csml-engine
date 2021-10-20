@@ -245,6 +245,7 @@ pub enum Expr {
         range: Interval,
     },
     ForEachExpr(Identifier, Option<Identifier>, Box<Expr>, Block, Interval),
+    WhileExpr(Box<Expr>, Block, Interval),
     ComplexLiteral(Vec<Expr>, Interval),
     MapExpr {
         object: HashMap<String, Expr>,

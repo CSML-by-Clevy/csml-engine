@@ -16,6 +16,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
         Expr::PathExpr { literal, .. } => interval_from_expr(literal),
         Expr::ForEachExpr(_, _, _, _, range_interval) => *range_interval,
+        Expr::WhileExpr(_, _, range_interval) => *range_interval,
         Expr::IdentExpr(ident) => ident.interval.to_owned(),
         Expr::LitExpr { literal, .. } => literal.interval.to_owned(),
         Expr::IfExpr(ifstmt) => interval_from_if_stmt(ifstmt),
