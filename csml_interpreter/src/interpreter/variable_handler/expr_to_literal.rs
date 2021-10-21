@@ -10,6 +10,7 @@ use crate::interpreter::{
     variable_handler::{
         exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
         resolve_csml_object::resolve_object, resolve_path,
+        operations::{evaluate_postfix},
     },
 };
 use std::{collections::HashMap, sync::mpsc};
@@ -114,6 +115,10 @@ pub fn expr_to_literal(
                 )?)
             }
             let mut literal = PrimitiveArray::get_literal(&array, range_interval.to_owned());
+            exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
+        }
+        Expr::PostfixExpr(postfix, expr) => {
+            let mut literal = evaluate_postfix(postfix, expr, data, msg_data, sender)?;
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
         Expr::InfixExpr(infix, exp_1, exp_2) => {

@@ -10,7 +10,7 @@ use crate::parser::parse_var_types::parse_basic_expr;
 use nom::{
     branch::alt,
     error::ParseError,
-    multi::fold_many0,
+    multi::{fold_many0, many1},
     sequence::{preceded, tuple},
     *,
 };
@@ -49,12 +49,13 @@ fn parse_postfix_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, operator) = preceded(comment, parse_not_operator)(s)?;
+    let (s, vec) = preceded(comment, many1(parse_not_operator))(s)?;
     let (s, expr) = parse_item(s)?;
+
     Ok((
         s,
         // TODO: InfixExpr clone in not operator or create a new expr for not??
-        Expr::InfixExpr(operator, Box::new(expr.clone()), Box::new(expr)),
+        Expr::PostfixExpr(vec, Box::new(expr)),
     ))
 }
 

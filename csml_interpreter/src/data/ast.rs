@@ -253,6 +253,7 @@ pub enum Expr {
     },
     VecExpr(Vec<Expr>, Interval),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
+    PostfixExpr(Vec<Postfix>, Box<Expr>),
     ObjectExpr(ObjectType),
     IfExpr(IfStatement),
 
@@ -282,7 +283,6 @@ pub enum Infix {
     Multiply,
     Remainder,
 
-    Not,
     Match,
     NotMatch,
 
@@ -295,6 +295,11 @@ pub enum Infix {
 
     And,
     Or,
+}
+
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+pub enum Postfix {
+    Not,
 }
 
 #[derive(PartialEq, Debug, Clone, Eq, Hash, Copy, Serialize, Deserialize)]
