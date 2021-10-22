@@ -61,6 +61,7 @@ where
     Ok((
         s,
         Expr::ObjectExpr(ObjectType::Assign(
+            AssignType::Assignment,
             Box::new(Expr::IdentExpr(name)),
             Box::new(expr),
         )),
