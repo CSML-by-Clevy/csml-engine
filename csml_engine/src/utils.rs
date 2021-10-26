@@ -17,6 +17,7 @@ use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::env;
 
+use regex::Regex;
 use md5::{Digest, Md5};
 
 /**
@@ -82,6 +83,15 @@ pub fn get_event_content(content_type: &str, metadata: &Value) -> Result<String,
             } else {
                 Err(EngineError::Interpreter(
                     "no text content in event".to_owned(),
+                ))
+            }
+        }
+        regex if regex == "regex" => {
+            if let Some(val) = metadata["payload"].as_str() {
+                Ok(val.to_string())
+            } else {
+                Err(EngineError::Interpreter(
+                    "invalid payload for event type regex".to_owned(),
                 ))
             }
         }
@@ -264,6 +274,37 @@ pub fn search_flow<'a>(
                     }
                 },
                 Err(_) => Ok((get_flow_by_id(&bot.default_flow, &bot.flows)? , "start".to_owned())),
+            }
+        }
+        event if event.content_type == "regex" => {
+            let mut random_flows = vec![];
+
+            for flow in bot.flows.iter() {
+                let contains_command = flow
+                    .commands
+                    .iter()
+                    .any(|cmd| {
+                        if let Ok(action) = Regex::new(&event.content_value) {
+                            action.is_match(&cmd)
+                        } else {
+                            false
+                        }
+                    });
+
+                if contains_command {
+                    random_flows.push(flow)
+                }
+            }
+
+            match random_flows.choose(&mut rand::thread_rng()) {
+                Some(flow) => {
+                    delete_state_key(&client, "hold", "position", db)?;
+                    Ok((flow, "start".to_owned()))
+                }
+                None => Err(EngineError::Interpreter(format!(
+                    "no match found for regex: {}",
+                    event.content_value
+                ))),
             }
         }
         event => {
