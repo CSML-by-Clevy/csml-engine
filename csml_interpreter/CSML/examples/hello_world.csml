@@ -17,9 +17,3 @@ do res = HTTP("https://uat-hrstd.neocasedemo.com/restapi/contact?contact.identif
 
 goto end
 
-
-// toto:
-// if (next) goto $var@$plop
-// else goto random
-// random:
-// goto end//start@default
