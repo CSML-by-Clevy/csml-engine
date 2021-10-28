@@ -1,5 +1,25 @@
+
 start:
 
-    say "Hello World 😆"
+do token = "3350ec0f-d972-45df-8e9e-1ce2f18995d1"
+do matricule = "UKCCEDIR01"
 
-    goto end
+do res = HTTP("https://uat-hrstd.neocasedemo.com/restapi/contact?contact.identifier={{matricule}}&contact.detailsLevel=Low")
+  .get()
+  .set({
+    "Neocase-token": token,
+    "Neocase-api-version": "2.0",
+    "Cookie": "ARRAffinity=e82efc58e12c6b372e27f4b20c57351bc261d4e90e5c2378dd9db9331dfcf372",
+  })
+  .send()
+
+  say res
+
+goto end
+
+
+// toto:
+// if (next) goto $var@$plop
+// else goto random
+// random:
+// goto end//start@default

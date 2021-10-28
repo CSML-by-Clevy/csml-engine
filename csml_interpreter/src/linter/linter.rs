@@ -779,6 +779,9 @@ pub fn lint_bot(
     validate_imports(&mut linter_info);
     validate_functions(&mut linter_info);
 
+    println!("{:?}", linter_info.goto_list);
+    println!("{:?}", linter_info.import_list);
+
     match infinite_loop_check(&linter_info, vec![], &mut vec![], default_flow.to_owned(), "start".to_owned()) {
         Some((infinite_loop, interval, flow)) => {
             linter_info.warnings.push(gen_warning_info(

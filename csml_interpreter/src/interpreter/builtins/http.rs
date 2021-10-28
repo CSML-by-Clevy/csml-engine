@@ -27,7 +27,11 @@ fn get_value<'lifetime, T: 'static>(
     }
 }
 
-fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Interval) -> Result<String, ErrorInfo> {
+////////////////////////////////////////////////////////////////////////////////
+/// PUBLIC FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Interval) -> Result<String, ErrorInfo> {
     let url = &mut get_value::<String>("url", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?.to_owned();
     let query =
         get_value::<HashMap<String, Literal>>("query", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?;
@@ -53,13 +57,9 @@ fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Interva
     Ok(url.to_owned())
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// PUBLIC FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
-
 pub fn http_request(
     object: &HashMap<String, Literal>,
-    function: fn(&str) -> ureq::Request,
+    method: &str, // function: fn(&str) -> ureq::Request,
     flow_name: &str,
     interval: Interval,
 ) -> Result<serde_json::Value, ErrorInfo> {
@@ -68,12 +68,24 @@ pub fn http_request(
     let header =
         get_value::<HashMap<String, Literal>>("header", object, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
 
-    let mut request = function(&url);
+    let mut request =  match method {
+        delete if delete == "delete" => ureq::delete(&url),
+        put if put == "put" => ureq::put(&url),
+        patch if patch == "patch" => ureq::request("PATCH",&url),
+        post if post == "post" => ureq::post(&url),
+        get if get == "get" => ureq::get(&url),
+        _ => {
+            return Err(gen_error_info(
+                Position::new(interval, flow_name),
+                ERROR_HTTP_UNKNOWN_METHOD.to_string(),
+            ))
+        }
+    };
 
     for key in header.keys() {
         let value = get_value::<String>(key, header, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
 
-        request.set(key, value);
+        request = request.set(key, value);
     }
 
     let response = match object.get("body") {
@@ -81,21 +93,24 @@ pub fn http_request(
         None => request.call(),
     };
 
-    if let Some(err) = response.synthetic_error() {
-        if let Ok(var) = env::var("DEBUG") {
-            if var == "true" {
-                eprintln!("FN request failed: {:?}", err.body_text());
+    match response {
+        Ok(response) => {
+            match response.into_json() {
+                Ok(value) => Ok(value),
+                Err(_) => Err(gen_error_info(
+                    Position::new(interval, flow_name),
+                    ERROR_FAIL_RESPONSE_JSON.to_owned(),
+                )),
             }
         }
-        return Err(gen_error_info(Position::new(interval, flow_name), err.body_text()));
-    }
-
-    match response.into_json() {
-        Ok(value) => Ok(value),
-        Err(_) => Err(gen_error_info(
-            Position::new(interval, flow_name),
-            ERROR_FAIL_RESPONSE_JSON.to_owned(),
-        )),
+        Err(err) => {
+            if let Ok(var) = env::var("DEBUG") {
+                if var == "true" {
+                    eprintln!("FN request failed: {:?}", err.to_string());
+                }
+            }
+            return Err(gen_error_info(Position::new(interval, flow_name), err.to_string()));
+        }
     }
 }
 
