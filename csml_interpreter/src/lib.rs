@@ -2,6 +2,7 @@ pub mod data;
 pub mod error_format;
 pub mod interpreter;
 pub mod linter;
+pub mod fold_bot;
 pub mod parser;
 
 use data::data::PreviousInfo;
@@ -22,6 +23,7 @@ use data::CsmlResult;
 use data::{Context, Data, Position, STEP_LIMIT};
 use error_format::*;
 use linter::{linter::lint_bot, FlowToValidate};
+use fold_bot::fold_bot as fold;
 use parser::ExitCondition;
 
 use std::collections::HashMap;
@@ -153,6 +155,45 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     }
 
     CsmlResult::new(FlowToValidate::get_bot(flows), warnings, errors)
+}
+
+pub fn fold_bot(bot: &CsmlBot) -> String {
+    let mut flows = vec![];
+    let mut errors = Vec::new();
+    let mut imports = Vec::new();
+
+    for flow in bot.flows.iter() {
+        match parse_flow(&flow.content, &flow.name) {
+            Ok(ast_flow) => {
+                for (scope, ..) in ast_flow.flow_instructions.iter() {
+                    if let InstructionScope::ImportScope(import_scope) = scope {
+                        imports.push(import_scope.clone());
+                    }
+                }
+
+                // flows.insert(flow.name.to_owned(), ast_flow);
+                flows.push(FlowToValidate {
+                    flow_name: flow.name.to_owned(),
+                    ast: ast_flow,
+                    raw_flow: &flow.content,
+                });
+            }
+            Err(error) => {
+                errors.push(error);
+            }
+        }
+    }
+
+    let mut warnings = vec![];
+    // only use the fold if there is no error in the paring otherwise the linter will catch false errors
+
+    fold(
+        &flows,
+        &mut errors,
+        &mut warnings,
+        &bot.native_components,
+        &bot.default_flow,
+    )
 }
 
 fn get_flows(bot: &CsmlBot) -> HashMap<String, Flow> {

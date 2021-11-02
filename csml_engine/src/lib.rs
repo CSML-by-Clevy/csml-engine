@@ -346,6 +346,25 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
 }
 
 /**
+ * fold CSML bot in one single flow.
+ * Rename all existing steps, goto and functions in order to match their origin flow.
+ * Examples:
+ *  step_name: -> flow_name_step_name:
+ *  goto step_name -> goto flow_name_step_name
+ */
+pub fn fold_bot(mut bot: CsmlBot) -> Result<String, EngineError> {
+    // load native components into the bot
+    bot.native_components = match load_components() {
+        Ok(components) => Some(components),
+        Err(err) => {
+            return Err(EngineError::Parring(err.format_error()))
+        }
+    };
+
+    Ok(csml_interpreter::fold_bot(&bot))
+}
+
+/**
  * Close any open conversation a given client may currently have.
  * We also need to both clean the hold/local memory state to make sure
  * that outdated variables or hold positions are not loaded into the next open conversation.

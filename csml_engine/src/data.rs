@@ -379,6 +379,7 @@ pub enum EngineError {
     Manager(String),
     Format(String),
     Interpreter(String),
+    Parring(String),
     Time(std::time::SystemTimeError),
     Openssl(openssl::error::ErrorStack),
     Base64(base64::DecodeError),
