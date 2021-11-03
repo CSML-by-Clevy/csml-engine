@@ -273,9 +273,16 @@ fn remove_imports<'a>(
     flow: &mut Vec<String>,
     flow_imports: &Vec<&ImportInfo<'a>>,
 ) {
+    let mut index_corrector = 1;
     for import in flow_imports.iter() {
-        let line = (import.interval.start_line - 1) as usize;
+        let mut line = import.interval.start_line as i32 - index_corrector as i32;
 
-        flow.remove(line);
+        if line < 0 {
+            line = 0;
+        }
+
+        flow.remove(line as usize);
+
+        index_corrector += 1;
     }
 }
