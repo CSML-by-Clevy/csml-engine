@@ -1,12 +1,40 @@
 use actix_web::{post, get, delete, web, HttpResponse};
 use csml_engine::{
   create_bot_version, get_bot_by_version_id, get_bot_versions, get_last_bot_version,
-  delete_all_bot_versions, delete_bot_version_id
+  delete_all_bot_versions, delete_bot_version_id, fold_bot
 };
 use csml_interpreter::data::csml_bot::CsmlBot;
 use serde::{Deserialize, Serialize};
 use std::thread;
 use crate::routes::tools::validate_api_key;
+
+/**
+ * fold bot into a single flow
+ *
+ * {"statusCode": 200,"body": {"flow": String} }
+ *
+ */
+#[post("/bots/fold")]
+pub async fn make_bot_fold(body: web::Json<CsmlBot>, req: actix_web::HttpRequest) -> HttpResponse {
+  let bot = body.to_owned();
+
+  if let Some(value) = validate_api_key(&req) {
+    eprintln!("AuthError: {:?}", value);
+    return HttpResponse::Forbidden().finish()
+  }
+
+  let res = thread::spawn(move || {
+    fold_bot(bot)
+  }).join().unwrap();
+
+  match res {
+    Ok(flow) => HttpResponse::Created().json(serde_json::json!({"flow": flow})),
+    Err(err) => {
+      eprintln!("EngineError: {:?}", err);
+      HttpResponse::InternalServerError().finish()
+    }
+  }
+}
 
 /**
  * create bot version
