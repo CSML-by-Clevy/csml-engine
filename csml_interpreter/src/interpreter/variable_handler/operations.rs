@@ -1,14 +1,23 @@
-use crate::data::position::Position;
-use crate::data::primitive::boolean::PrimitiveBoolean;
-use crate::data::{ast::{Infix}, Literal};
 use crate::error_format::{gen_error_info, ErrorInfo};
-use crate::interpreter::variable_handler::match_literals::match_obj;
+use crate::data::{
+    ast::{Expr, Postfix, Infix},
+    Literal, Data, MessageData, MSG,
+    primitive::boolean::PrimitiveBoolean,
+    position::Position,
+};
+use crate::interpreter::{
+    variable_handler::{
+        expr_to_literal, interval::interval_from_expr,
+        match_literals::match_obj
+    },
+};
+use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn evaluate(
+pub fn evaluate_infix(
     flow_name: &str,
     infix: &Infix,
     lhs: Result<Literal, ErrorInfo>,
@@ -117,11 +126,30 @@ pub fn evaluate(
             !match_obj(lhs, rhs),
             lhs.interval,
         )),
-        // TODO: [+] Handle Infix::NOT as Prefix !
-        (Infix::Not, Ok(lhs), ..) => Ok(PrimitiveBoolean::get_literal(
-            !lhs.primitive.as_bool(),
-            lhs.interval,
-        )),
         (_, Err(e), ..) | (.., Err(e)) => Err(e),
+    }
+}
+
+pub fn evaluate_postfix(
+    postfixes: &[Postfix],
+    expr: &Box<Expr>,
+    data: &mut Data,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+)  -> Result<Literal, ErrorInfo> {
+    let value = valid_literal(expr_to_literal(expr, true, None, data, msg_data, sender));
+    let interval = interval_from_expr(expr);
+
+    if postfixes.len() % 2  == 0 {
+        Ok(PrimitiveBoolean::get_literal(value, interval))
+    } else {
+        Ok(PrimitiveBoolean::get_literal(!value, interval))
+    }
+}
+
+pub fn valid_literal(result: Result<Literal, ErrorInfo>) -> bool {
+    match result {
+        Ok(literal) => literal.primitive.as_bool(),
+        Err(_) => false,
     }
 }

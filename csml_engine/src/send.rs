@@ -3,13 +3,13 @@ use crate::data::{ConversationInfo};
 fn format_and_transfer(callback_url: &str, msg: serde_json::Value) {
     let mut request = ureq::post(callback_url);
 
-    request.set("Accept", "application/json");
-    request.set("Content-Type", "application/json");
+    request = request.set("Accept", "application/json")
+                    .set("Content-Type", "application/json");
 
     let response = request.send_json(msg);
 
-    if let Some(err) = response.synthetic_error() {
-        eprintln!("callback_url call failed: {:?}", err.body_text());
+    if let Err(err) = response{
+        eprintln!("callback_url call failed: {:?}", err.to_string());
     }
 }
 

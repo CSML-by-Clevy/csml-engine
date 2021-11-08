@@ -110,7 +110,7 @@ pub fn api(
     http.insert("query".to_owned(), lit_query);
     http.insert("body".to_owned(), body);
 
-    match http_request(&http, ureq::post, &data.context.flow, interval) {
+    match http_request(&http, "post", &data.context.flow, interval) {
         Ok(value) => match value.get("data") {
             Some(value) => interpolate(value, interval, data, msg_data, sender),
             None => {

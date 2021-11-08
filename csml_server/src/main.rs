@@ -1,6 +1,7 @@
 use actix_cors::Cors;
 use actix_web::{middleware, web, App, HttpServer, http::header};
 use actix_files as fs;
+use csml_engine::make_migrations;
 
 mod routes;
 
@@ -16,6 +17,12 @@ async fn main() -> std::io::Result<()> {
     Err(_) => "5000".to_owned(),
   };
   println!("CSML Server listening on port {}", server_port);
+
+  // make migrations for PgSQL and do nothing for MongoDB and DynamoDB
+  match make_migrations() {
+    Ok(_) => (),
+    Err(err) => panic!("PgSQL Migration ERROR: {:?}", err)
+  };
 
   HttpServer::new(|| {
     App::new()
