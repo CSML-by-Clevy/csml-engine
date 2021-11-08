@@ -30,8 +30,8 @@ pub fn for_loop(
     let literal = expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
     let mut array = get_array(literal, &data.context.flow, ERROR_FOREACH.to_owned())?;
 
-    let mut skip_value = 0;
-    let array = hold_index_start_loop(data, &mut array, &mut skip_value);
+    let mut value_skipped = 0;
+    let array = hold_index_start_loop(data, &mut array, &mut value_skipped);
 
     for (for_loop_index, elem) in array.iter().enumerate() {
         data.step_vars
@@ -39,11 +39,11 @@ pub fn for_loop(
         if let Some(index) = index {
             data.step_vars.insert(
                 index.ident.to_owned(),
-                PrimitiveInt::get_literal(for_loop_index as i64, elem.interval.to_owned()),
+                PrimitiveInt::get_literal((for_loop_index + value_skipped) as i64, elem.interval.to_owned()),
             );
         };
 
-        hold_loop_incrs_index(data, for_loop_index + skip_value);
+        hold_loop_incrs_index(data, for_loop_index + value_skipped);
         msg_data = msg_data + interpret_scope(block, data, sender)?;
         hold_loop_decrs_index(data);
 
