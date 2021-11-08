@@ -1,9 +1,19 @@
-use crate::data::{ast::*, tokens::*};
+use crate::{
+    data::{ast::*, tokens::*},
+};
 use nom::{branch::alt, bytes::complete::tag, error::ParseError, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+pub fn parse_not_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Postfix, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (rest, ..) = tag(NOT)(s)?;
+    Ok((rest, Postfix::Not))
+}
 
 pub fn addition_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
@@ -19,14 +29,6 @@ where
 {
     let (s, _) = tag(SUBTRACTION)(s)?;
     Ok((s, Infix::Subtraction))
-}
-
-pub fn parse_not_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
-where
-    E: ParseError<Span<'a>>,
-{
-    let (rest, ..) = tag(NOT)(s)?;
-    Ok((rest, Infix::Not))
 }
 
 pub fn and_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
