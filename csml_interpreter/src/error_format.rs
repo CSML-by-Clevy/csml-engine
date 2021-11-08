@@ -117,6 +117,7 @@ pub const ERROR_CAROUSEL: &str =
     "argument 'cards' in Carousel component must be of type Array<Card>";
 pub const ERROR_ONE_OF: &str =
     "OneOf builtin expects one value of type Array. Example: OneOf( [1, 2, 3] )";
+pub const ERROR_VAR_EXISTS: &str = "Exists builtin expects one value of type String. Example: Exists( \"var_name\" )";
 pub const ERROR_SHUFFLE: &str =
     "Shuffle builtin expects one value of type Array. Example: Shuffle( [1, 2, 3] )";
 pub const ERROR_LENGTH: &str =
@@ -190,6 +191,12 @@ pub const ERROR_STRING_APPEND: &str =
     "[append] takes one parameter of type String. Usage: string.append(\"text to append\")";
 pub const ERROR_STRING_CONTAINS: &str =
     "[contains] takes one parameter of type String. Usage: string.contains(\"word\")";
+pub const ERROR_STRING_REPLACE: &str =
+    "[replace] takes tow parameter of type String. Usage: \"this is old\".replace(\"old\", \"new\")";
+pub const ERROR_STRING_REPLACE_ALL: &str =
+    "[replace_all] takes tow parameter of type String. Usage: \"old old old old\".replace_all(\"old\", \"new\")";
+pub const ERROR_STRING_REPLACE_REGEX: &str =
+    "[replace_regex] takes tow parameter of type String. Usage: \"hello world\".replace_regex(\"world\", \"Clevy\")";
 pub const ERROR_STRING_CONTAINS_REGEX: &str =
     "[contains_regex] takes one parameter of type String. Usage: string.contains_regex(\"regex\")";
 pub const ERROR_STRING_VALID_REGEX: &str = "parameter must be a valid regex expression"; // link to docs

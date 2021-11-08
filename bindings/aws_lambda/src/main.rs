@@ -16,10 +16,11 @@ use routes::{
     messages::get_client_messages,
     state::get_client_current_state,
     clean_data::delete_expired_data,
+    migrations::make_migrations,
     run, sns, validate
 };
 
-use csml_engine::{data::RunRequest, Client};
+use csml_engine::{Client, data::RunRequest};
 use csml_interpreter::data::csml_bot::CsmlBot;
 use helpers::{format_response, format_csml_client};
 
@@ -444,6 +445,20 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
 
             delete_expired_data()
         }
+
+
+        /*
+         * make migrations 
+         */
+        LambdaRequest {
+            path,
+            http_method,
+            ..
+        } if path.ends_with("/migrations") && http_method == "POST" => {
+
+            make_migrations()
+        }
+
 
         /*
          * CATCHALL

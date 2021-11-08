@@ -88,7 +88,7 @@ fn main() {
                 }
             }
             Err(err) => {
-                println!("{:?}", err);
+                eprintln!("{:?}", err);
                 break;
             }
         }
