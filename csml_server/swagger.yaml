@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 1.7.0
+  version: 1.8.0
   title: CSML Engine
   description: CSML Engine Server API specifications
   termsOfService: http://csml.dev/terms/
@@ -1077,7 +1077,7 @@ components:
     EngineVersion:
       type: string
       description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
-      example: "1.7.0"
+      example: "1.8.0"
 
     Error:
       type: object

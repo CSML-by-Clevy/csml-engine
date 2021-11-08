@@ -1,3 +1,4 @@
+use crate::data::data::PreviousInfo;
 use crate::data::position::Position;
 use crate::data::{
     ast::*,
@@ -204,7 +205,15 @@ pub fn match_actions(
             );
 
             // previous flow/step
-            data.previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+            match data.previous_info {
+                Some(ref mut previous_info) => {
+                    previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+                }
+                None => {
+                    data.previous_info = Some(PreviousInfo::new(data.context.flow.clone(), data.context.step.clone()))
+                }
+            }
+
             // current flow/step
             data.context.step = step.to_string();
             msg_data.exit_condition = Some(ExitCondition::Goto);
@@ -227,7 +236,14 @@ pub fn match_actions(
             );
 
             // previous flow/step
-            data.previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+            match data.previous_info {
+                Some(ref mut previous_info) => {
+                    previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+                }
+                None => {
+                    data.previous_info = Some(PreviousInfo::new(data.context.flow.clone(), data.context.step.clone()))
+                }
+            }
             // current flow/step
             data.context.step = "start".to_string();
             data.context.flow = flow.to_string();
@@ -264,7 +280,15 @@ pub fn match_actions(
             );
 
             // previous flow/step
-            data.previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+            match data.previous_info {
+                Some(ref mut previous_info) => {
+                    previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+                }
+                None => {
+                    data.previous_info = Some(PreviousInfo::new(data.context.flow.clone(), data.context.step.clone()))
+                }
+            }
+
             // current flow/step
             data.context.flow = flow.to_string();
             data.context.step = step.to_string();
@@ -275,29 +299,35 @@ pub fn match_actions(
             let flow_opt;
             let mut step_opt = None;
 
-            match previous_type {
-                PreviousType::Flow(_interval) => {
-                    let tmp_f = data.previous_info.flow.clone();
+            match (previous_type, &mut data.previous_info) {
+                (PreviousType::Flow(_interval), Some(ref mut previous_info)) => {
+                    let tmp_f = previous_info.flow.clone();
                     flow_opt = Some(tmp_f.clone());
 
-                    data.previous_info.flow = data.context.flow.clone();
-                    data.previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
+                    previous_info.flow = data.context.flow.clone();
+                    previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
 
                     data.context.flow = tmp_f;
                     data.context.step = "start".to_string();
                 },
-                PreviousType::Step(_interval) => {
-                    let (tmp_s, tmp_f) = data.previous_info.step_at_flow.clone();
+                (PreviousType::Step(_interval), Some(ref mut previous_info)) => {
+                    let (tmp_s, tmp_f) = previous_info.step_at_flow.clone();
                     flow_opt = Some(tmp_f.clone());
                     step_opt = Some(tmp_s.clone());
 
                     if data.context.flow != tmp_f {
-                        data.previous_info.flow = tmp_f.clone();
+                        previous_info.flow = tmp_f.clone();
                     }
-                    data.previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
+                    previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
 
                     data.context.flow = tmp_f;
                     data.context.step = tmp_s;
+                }
+                (_, None) => {
+                    flow_opt = None;
+                    step_opt = Some("end".to_owned());
+
+                    data.context.step = "end".to_string();
                 }
             }
 

@@ -398,7 +398,7 @@ impl PrimitiveString {
             }
         };
 
-        let new_string = string.value.replace(to_replace, replace_by);
+        let new_string = string.value.replacen(to_replace, replace_by, 1);
 
         Ok(PrimitiveString::get_literal(&new_string, interval))
     }

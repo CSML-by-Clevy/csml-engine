@@ -5,7 +5,6 @@ pub mod linter;
 pub mod fold_bot;
 pub mod parser;
 
-use data::data::PreviousInfo;
 pub use interpreter::components::load_components;
 pub use parser::step_checksum::get_step;
 
@@ -249,10 +248,10 @@ pub fn interpret(
 
     let mut previous_info = match &context.hold {
         Some(hold) => match &hold.previous {
-            Some(previous) => previous.clone(),
-            None => PreviousInfo::new(flow.clone(), step.clone()),
+            Some(previous) => Some(previous.clone()),
+            None => None,
         },
-        None => PreviousInfo::new(flow.clone(), step.clone()),
+        None => None,
     };
 
     while msg_data.exit_condition.is_none() {
