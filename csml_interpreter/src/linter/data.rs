@@ -6,7 +6,7 @@ use crate::error_format::{ErrorInfo};
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum StepBreakers {
     HOLD(Interval),
     GOTO {
@@ -16,7 +16,7 @@ pub enum StepBreakers {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StepInfo<'a> {
     pub flow: String,
     pub step: String,
@@ -44,7 +44,7 @@ pub struct FunctionInfo<'a> {
     pub interval: Interval,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ImportInfo<'a> {
     pub as_name: String,
     pub original_name: Option<String>,

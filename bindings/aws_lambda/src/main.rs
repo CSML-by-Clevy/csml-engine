@@ -7,9 +7,8 @@ use routes::{
     bot_versions::{
         add_bot_version, get_bot_latest_version, get_bot_latest_versions, get_bot_version,
         delete_bot_versions, delete_bot_version
-
     },
-    bots::delete_bot_data, clients::delete_client_data,
+    bots::{delete_bot_data, fold_bot}, clients::delete_client_data,
     conversations::{close_user_conversations, get_open, get_client_conversations},
     memories::{create_client_memory, get_memory, get_memories,
     delete_memories, delete_memory},
@@ -431,6 +430,21 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
             };
 
             delete_bot_version(path_params.bot_id, path_params.version_id)
+        }
+
+
+        LambdaRequest {
+            path,
+            http_method,
+            body: Some(body),
+            ..
+        } if path.ends_with("/bots/fold") && http_method == "POST" => {
+            let bot: CsmlBot = match serde_json::from_str(&body) {
+                Ok(body) => body,
+                Err(_err) => return Ok(format_response(400, serde_json::json!("Body bad format")))
+            };
+
+            fold_bot(bot)
         }
 
 
