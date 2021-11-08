@@ -117,6 +117,7 @@ pub const ERROR_CAROUSEL: &str =
     "argument 'cards' in Carousel component must be of type Array<Card>";
 pub const ERROR_ONE_OF: &str =
     "OneOf builtin expects one value of type Array. Example: OneOf( [1, 2, 3] )";
+pub const ERROR_VAR_EXISTS: &str = "Exists builtin expects one value of type String. Example: Exists( \"var_name\" )";
 pub const ERROR_SHUFFLE: &str =
     "Shuffle builtin expects one value of type Array. Example: Shuffle( [1, 2, 3] )";
 pub const ERROR_LENGTH: &str =

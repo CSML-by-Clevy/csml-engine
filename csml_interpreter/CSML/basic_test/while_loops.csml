@@ -1,0 +1,9 @@
+start:
+    do var = 0
+    while (var < 5) {
+        say var
+        do var = var + 1
+    }
+
+    goto end
+
