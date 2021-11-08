@@ -1505,25 +1505,34 @@ impl Primitive for PrimitiveString {
             }
         };
 
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs + rhs)))
+        if let Ok(number) = get_integer(&self.value) {
+            match (number, get_integer(&rhs.value)) {
+                (Integer::Int(lhs), Ok(Integer::Int(rhs))) => {
+                    Ok(Box::new(PrimitiveInt::new(lhs + rhs)))
+                }
+                (Integer::Float(lhs), Ok(Integer::Float(rhs))) => {
+                    Ok(Box::new(PrimitiveFloat::new(lhs + rhs)))
+                }
+                (Integer::Int(lhs), Ok(Integer::Float(rhs))) => {
+                    Ok(Box::new(PrimitiveFloat::new(lhs as f64 + rhs)))
+                }
+                (Integer::Float(lhs), Ok(Integer::Int(rhs))) => {
+                    Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
+                }
+                _ => Err(format!(
+                    "{} {:?} + {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                )),
             }
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs + rhs)))
-            }
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs as f64 + rhs)))
-            }
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
-            }
-            _ => Err(format!(
-                "{} {:?} + {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )),
+        }
+        else {
+            let mut new_string = self.value.clone();
+
+            new_string.push_str(&rhs.value);
+
+            Ok(Box::new(PrimitiveString::new(&new_string)))
         }
     }
 
