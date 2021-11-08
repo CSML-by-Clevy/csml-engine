@@ -108,8 +108,8 @@ fn get_http_request(
     interval: Interval,
 ) -> Result<Request, ErrorInfo> {
 
-    if let Ok(low_data) = env::var("DISABLE_SSL_VERIFY") {
-        match low_data.parse::<bool>() {
+    if let Ok(disable_ssl_verify) = env::var("DISABLE_SSL_VERIFY") {
+        match disable_ssl_verify.parse::<bool>() {
             Ok(low_data) if low_data => {
                 let agent = get_no_certificate_verifier_agent();
 
