@@ -4,7 +4,7 @@ use crate::data::{
     data::Data,
     literal::ContentType,
     message::*,
-    primitive::{closure::capture_variables, PrimitiveNull},
+    primitive::{closure::capture_variables, PrimitiveNull, PrimitiveString},
     Literal, Memory, MemoryType, MessageData, MSG
 };
 use crate::error_format::*;
@@ -86,7 +86,7 @@ pub fn match_actions(
             expr_to_literal(arg, false, None, data, &mut msg_data, sender)?;
             Ok(msg_data)
         }
-        ObjectType::Do(DoType::Update(old, new)) => {
+        ObjectType::Do(DoType::Update(assign_type, old, new)) => {
             // ######################
             // TODO:
             // create a temporary scope, this is necessary in order to bypass de borrow checker
@@ -120,6 +120,7 @@ pub fn match_actions(
                 &tmp_native_component,
             );
             // #####################
+
             let mut new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
@@ -127,6 +128,43 @@ pub fn match_actions(
             capture_variables(&mut &mut new_value, memory, &data.context.flow);
 
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
+            match assign_type {
+                AssignType::AdditionAssignment => {
+                    let primitive = lit.primitive.clone() + new_value.primitive;
+
+                    match primitive {
+                        Ok(primitive) => {
+                            new_value = Literal {
+                                content_type: new_value.content_type,
+                                interval: new_value.interval,
+                                primitive
+                            };
+                        }
+                        Err(err) => {
+                            new_value = PrimitiveString::get_literal(&err, lit.interval)
+                        }
+                    }
+                }
+                AssignType::SubtractionAssignment => {
+                    let primitive = lit.primitive.clone() - new_value.primitive;
+
+                    match primitive {
+                        Ok(primitive) => {
+                            new_value = Literal {
+                                content_type: new_value.content_type,
+                                interval: new_value.interval,
+                                primitive
+                            };
+                        }
+                        Err(err) => {
+                            new_value = PrimitiveString::get_literal(&err, lit.interval)
+                        }
+                    }
+                }
+                _ => {}
+            };
+            
+
             exec_path_actions(
                 lit,
                 false,
