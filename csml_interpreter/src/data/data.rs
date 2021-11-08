@@ -28,7 +28,7 @@ pub struct Data<'a> {
     pub step_count: &'a mut i32,
 
     pub step_vars: HashMap<String, Literal>,
-    pub previous_info: PreviousInfo,
+    pub previous_info: Option<PreviousInfo>,
     pub custom_component: &'a serde_json::Map<String, serde_json::Value>,
     pub native_component: &'a serde_json::Map<String, serde_json::Value>,
 }
@@ -65,7 +65,7 @@ impl<'a> Data<'a> {
         loop_index: usize,
         step_count: &'a mut i32,
         step_vars: HashMap<String, Literal>,
-        previous_info: PreviousInfo,
+        previous_info: Option<PreviousInfo>,
         custom_component: &'a serde_json::Map<String, serde_json::Value>,
         native_component: &'a serde_json::Map<String, serde_json::Value>,
     ) -> Self {

@@ -418,14 +418,17 @@ fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Lite
         PrimitiveString::get_literal(&data.context.flow, interval)
     );
 
-    flow_context.insert(
-        "previous_step".to_owned(),
-        PrimitiveString::get_literal(&data.previous_info.step_at_flow.0, interval)
-    );
-    flow_context.insert(
-        "previous_flow".to_owned(),
-        PrimitiveString::get_literal(&data.previous_info.step_at_flow.1, interval)
-    );
+    if let Some(previous_info) = &data.previous_info {
+        flow_context.insert(
+            "previous_step".to_owned(),
+            PrimitiveString::get_literal(&previous_info.step_at_flow.0, interval)
+        );
+        flow_context.insert(
+            "previous_flow".to_owned(),
+            PrimitiveString::get_literal(&previous_info.step_at_flow.1, interval)
+        );
+    }
+    
 
     flow_context
 }
