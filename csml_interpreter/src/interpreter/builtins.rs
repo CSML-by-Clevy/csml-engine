@@ -6,6 +6,7 @@ pub mod http;
 pub mod smtp;
 pub mod jwt;
 pub mod time;
+pub mod exists;
 
 pub mod tools;
 
@@ -24,6 +25,7 @@ use http::http;
 use smtp::smtp;
 use jwt::jwt;
 use time::time;
+use exists::exists;
 
 pub fn match_native_builtin(
     name: &str,
@@ -66,6 +68,7 @@ pub fn match_builtin(
         JWT => jwt(args, &data.context.flow, interval),
         CRYPTO => crypto(args, &data.context.flow, interval),
         TIME => time(args, &data.context.flow, interval),
+        EXISTS => exists(args, data, interval),
 
         //old builtin
         _object => object(args, &data.context.flow, interval),
