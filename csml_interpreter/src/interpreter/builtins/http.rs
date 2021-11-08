@@ -6,6 +6,35 @@ use crate::error_format::*;
 use std::collections::HashMap;
 use std::env;
 
+use ureq::{Request};
+use std::sync::Arc;
+
+use rustls::{
+    Certificate,
+    client::{ServerCertVerified, ServerName, ServerCertVerifier}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// DATA TYPES
+////////////////////////////////////////////////////////////////////////////////
+
+pub(crate) struct NoVerifier;
+
+impl ServerCertVerifier for NoVerifier {
+    fn verify_server_cert(
+        &self,
+        _end_entity: &Certificate,
+        _intermediates: &[Certificate],
+        _server_name: &ServerName,
+        _scts: &mut dyn Iterator<Item = &[u8]>,
+        _ocsp_response: &[u8],
+        _now: std::time::SystemTime
+    ) -> Result<ServerCertVerified, rustls::Error> {
+        Ok(ServerCertVerified::assertion())
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,52 +86,69 @@ pub fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Int
     Ok(url.to_owned())
 }
 
-use ureq::{Agent, AgentBuilder};
-use std::time::Duration;
-use std::sync::Arc;
+fn get_no_certificate_verifier_agent() -> ureq::Agent {
+    let root_store = rustls::RootCertStore::empty();
 
-use rustls::{
-    ClientConfig, Certificate,
-    RootCertStore, TLSError,
-    client::{ServerCertVerified, ServerName, ServerCertVerifier}
-};
-// use webpki::DNSNameRef;
-// use webpki_roots::TLS_SERVER_ROOTS;
+    let mut tls_config = rustls::ClientConfig::builder()
+    .with_safe_defaults()
+    .with_root_certificates(root_store)
+    .with_no_client_auth();
 
-// NoVerifiger taken from https://github.com/seanmonstar/reqwest/blob/a2acf91d9bc43605c1e1d2bb73953dacb02a51c8/src/tls.rs#L320
-pub(crate) struct NoVerifier;
+    tls_config.dangerous().set_certificate_verifier(Arc::new(NoVerifier));
 
-impl ServerCertVerifier for NoVerifier {
-    fn verify_server_cert(
-        &self,
-        _end_entity: &Certificate,
-        _intermediates: &[Certificate],
-        _server_name: &ServerName,
-        _scts: &mut dyn Iterator<Item = &[u8]>,
-        _ocsp_response: &[u8],
-        _now: std::time::SystemTime
-    ) -> Result<ServerCertVerified, rustls::Error> {
-        Ok(ServerCertVerified::assertion())
-    }
+    ureq::AgentBuilder::new()
+    .tls_config(Arc::new(tls_config))
+    .build()
 }
 
-// pub fn call_danger_accept_invalid_certs(url: &str) -> Result<attohttpc::Response> {
-//     let mut client_config = ClientConfig::new();
+fn get_http_request(
+    method: &str,
+    url: &str,
+    flow_name: &str,
+    interval: Interval,
+) -> Result<Request, ErrorInfo> {
 
-//     // add cert store
-//     client_config
-//         .root_store
-//         .add_server_trust_anchors(&TLS_SERVER_ROOTS);
+    if let Ok(low_data) = env::var("DISABLE_SSL_VERIFY") {
+        match low_data.parse::<bool>() {
+            Ok(low_data) if low_data => {
+                let agent = get_no_certificate_verifier_agent();
 
-//     // disable cert verification
-//     client_config
-//         .dangerous()
-//         .set_certificate_verifier(Arc::new(NoVerifier));
+                let request = match method {
+                    delete if delete == "delete" => agent.delete(url),
+                    put if put == "put" => agent.put(url),
+                    patch if patch == "patch" => agent.request("PATCH",url),
+                    post if post == "post" => agent.post(url),
+                    get if get == "get" => agent.get(url),
+                    _ => {
+                        return Err(gen_error_info(
+                            Position::new(interval, flow_name),
+                            ERROR_HTTP_UNKNOWN_METHOD.to_string(),
+                        ))
+                    }
+                };
 
-//     let response = attohttpc::get(url).client_config(client_config).send()?;
+                return Ok(request)
+            }
+            _ => {}
+        }
+    }
 
-//     Ok(response)
-// }
+    let request = match method {
+        delete if delete == "delete" => ureq::delete(url),
+        put if put == "put" => ureq::put(url),
+        patch if patch == "patch" => ureq::request("PATCH",url),
+        post if post == "post" => ureq::post(url),
+        get if get == "get" => ureq::get(url),
+        _ => {
+            return Err(gen_error_info(
+                Position::new(interval, flow_name),
+                ERROR_HTTP_UNKNOWN_METHOD.to_string(),
+            ))
+        }
+    };
+
+    Ok(request)
+}
 
 pub fn http_request(
     object: &HashMap<String, Literal>,
@@ -115,46 +161,7 @@ pub fn http_request(
     let header =
         get_value::<HashMap<String, Literal>>("header", object, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
 
-    let root_store = rustls::RootCertStore::empty();
-
-    let mut tls_config = rustls::ClientConfig::builder()
-    .with_safe_defaults()
-    .with_root_certificates(root_store)
-    .with_no_client_auth();
-
-    tls_config.dangerous().set_certificate_verifier(Arc::new(NoVerifier));
-
-    let agent: ureq::Agent = ureq::AgentBuilder::new()
-    .tls_config(Arc::new(tls_config))
-    .build();
-
-    // let mut request =  match method {
-    //     delete if delete == "delete" => ureq::delete(&url),
-    //     put if put == "put" => ureq::put(&url),
-    //     patch if patch == "patch" => ureq::request("PATCH",&url),
-    //     post if post == "post" => ureq::post(&url),
-    //     get if get == "get" => ureq::get(&url),
-    //     _ => {
-    //         return Err(gen_error_info(
-    //             Position::new(interval, flow_name),
-    //             ERROR_HTTP_UNKNOWN_METHOD.to_string(),
-    //         ))
-    //     }
-    // };
-
-    let mut request =  match method {
-        delete if delete == "delete" => agent.delete(&url),
-        put if put == "put" => agent.put(&url),
-        patch if patch == "patch" => agent.request("PATCH",&url),
-        post if post == "post" => agent.post(&url),
-        get if get == "get" => agent.get(&url),
-        _ => {
-            return Err(gen_error_info(
-                Position::new(interval, flow_name),
-                ERROR_HTTP_UNKNOWN_METHOD.to_string(),
-            ))
-        }
-    };
+    let mut request = get_http_request(method, &url, flow_name, interval)?;
 
     for key in header.keys() {
         let value = get_value::<String>(key, header, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
