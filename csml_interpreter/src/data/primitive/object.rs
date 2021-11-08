@@ -51,6 +51,8 @@ const FUNCTIONS_SMTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map
 const FUNCTIONS_TIME: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "at" => (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Write),
     "unix" => (PrimitiveObject::unix as PrimitiveMethod, Right::Write),
+    "add" => (PrimitiveObject::add_time as PrimitiveMethod, Right::Write),
+    "sub" => (PrimitiveObject::sub_time as PrimitiveMethod, Right::Write),
     "format" => (PrimitiveObject::date_format as PrimitiveMethod, Right::Read),
     "parse" => (PrimitiveObject::parse_date as PrimitiveMethod, Right::Read),
 };
@@ -706,12 +708,29 @@ impl PrimitiveObject {
 
     fn unix(
         object: &mut PrimitiveObject,
-        _args: &HashMap<String, Literal>,
+        args: &HashMap<String, Literal>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "invalid value, use 'Time()' built-in to create a valid 'time' object";
+        let usage = "unix(type_of_time) expect string argument \"m\" || \"s\" => int(time in seconds or milliseconds)";
+
+        let time_type = match args.get("arg0") {
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let time_value = Literal::get_value::<String>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                match time_value {
+                    t_val if t_val == "s" => t_val.to_owned(),
+                    _  => "m".to_owned()
+                }
+            }
+            _ => "m".to_owned()
+        };
 
         match object.value.get("milliseconds") {
             Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
@@ -724,7 +743,12 @@ impl PrimitiveObject {
 
                 let date: DateTime<Utc> = Utc.timestamp_millis(*millis);
 
-                Ok(PrimitiveInt::get_literal(date.timestamp_millis(), interval))
+                let duration = match time_type {
+                    t_val if t_val == "s" => date.timestamp(),
+                    _  => date.timestamp_millis()
+                };
+
+                Ok(PrimitiveInt::get_literal(duration, interval))
             }
             _ => {
                 return Err(gen_error_info(
@@ -732,6 +756,104 @@ impl PrimitiveObject {
                     format!("{}", usage),
                 ))
             }
+        }
+    }
+
+    fn add_time(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "add(time_in_seconds: int) => Time Object";
+
+        let mut final_time = 0;
+
+        if let Some(time_value) = object.value.get_mut("milliseconds") {
+            let time = Literal::get_value::<i64>(
+                &time_value.primitive,
+                &data.context.flow,
+                interval,
+                "".to_string(),
+            )?;
+
+            final_time += *time;
+        }
+
+        match args.get("arg0") {
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let add_time = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                final_time += add_time * 1000;
+
+                object.value.insert(
+                    "milliseconds".to_owned(),
+                    PrimitiveInt::get_literal(final_time, interval),
+                );
+                let mut lit = PrimitiveObject::get_literal(&object.value, interval);
+                lit.set_content_type("time");
+
+                Ok(lit)
+            }
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ))
+        }
+    }
+
+    fn sub_time(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "sub(time_in_seconds: int) => Time Object";
+
+        let mut final_time = 0;
+
+        if let Some(time_value) = object.value.get_mut("milliseconds") {
+            let time = Literal::get_value::<i64>(
+                &time_value.primitive,
+                &data.context.flow,
+                interval,
+                "".to_string(),
+            )?;
+
+            final_time += *time;
+        }
+
+        match args.get("arg0") {
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let add_time = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                final_time -= add_time * 1000;
+
+                object.value.insert(
+                    "milliseconds".to_owned(),
+                    PrimitiveInt::get_literal(final_time, interval),
+                );
+                let mut lit = PrimitiveObject::get_literal(&object.value, interval);
+                lit.set_content_type("time");
+
+                Ok(lit)
+            }
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ))
         }
     }
 
