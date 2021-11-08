@@ -195,7 +195,6 @@ where
     match s.find_substring("\\\"") {
         Some(distance) => {
             let (rest, string) = s.take_split(distance);
-
             Ok((
                 rest,
                 Expr::LitExpr {

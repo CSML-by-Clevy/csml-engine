@@ -6,6 +6,7 @@ use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,
     parse_foreach::parse_foreach,
+    parse_while_loop::parse_while,
     parse_goto::parse_goto,
     parse_previous::parse_previous,
     parse_idents::{parse_idents_assignation, parse_idents_usage},
@@ -347,6 +348,7 @@ where
         parse_debug,
         parse_if,
         parse_foreach,
+        parse_while,
         // only accessible inside foreach or if scopes
         parse_break,
         parse_continue,

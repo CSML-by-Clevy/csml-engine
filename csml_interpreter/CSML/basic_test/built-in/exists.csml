@@ -1,0 +1,16 @@
+start:
+    goto end
+
+exists_true_tmp_memory:
+    do toto = 42
+    say Exists("toto")
+    goto end
+
+exists_true_permanent_memory:
+    remember toto = 42
+    say Exists("toto")
+    goto end
+
+exists_false:
+    say Exists("toto")
+    goto end
