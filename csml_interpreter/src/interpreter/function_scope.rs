@@ -3,7 +3,7 @@ use crate::data::position::Position;
 use crate::data::{ast::*, primitive::PrimitiveNull, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
-    ast_interpreter::{for_loop, match_actions, solve_if_statement},
+    ast_interpreter::{for_loop, while_loop, match_actions, solve_if_statement},
     variable_handler::{expr_to_literal, interval::interval_from_expr},
 };
 use crate::parser::ExitCondition;
@@ -35,6 +35,9 @@ fn interpret_function_scope(
             }
             Expr::ForEachExpr(ident, i, expr, block, range) => {
                 message_data = for_loop(ident, i, expr, block, range, message_data, data, sender)?
+            }
+            Expr::WhileExpr(expr, block, range) => {
+                message_data = while_loop(expr, block, range, message_data, data, sender)?
             }
             e => {
                 return Err(gen_error_info(

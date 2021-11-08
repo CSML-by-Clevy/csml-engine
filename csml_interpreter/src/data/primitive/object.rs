@@ -14,7 +14,7 @@ use crate::data::{
 };
 use crate::error_format::*;
 use crate::interpreter::{
-    builtins::http::http_request, json_to_rust::json_to_literal,
+    builtins::http::{http_request}, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
 use chrono::{DateTime, SecondsFormat, TimeZone, Utc};
@@ -434,26 +434,27 @@ impl PrimitiveObject {
         }
 
         if let Some(literal) = object.value.get("method") {
-            let function = match Literal::get_value::<String>(
+
+            let method =  match Literal::get_value::<String>(
                 &literal.primitive,
                 &data.context.flow,
                 interval,
                 ERROR_HTTP_UNKNOWN_METHOD.to_string(),
             ) {
-                Ok(delete) if delete == "delete" => ureq::delete,
-                Ok(put) if put == "put" => ureq::put,
-                Ok(patch) if patch == "patch" => ureq::patch,
-                Ok(post) if post == "post" => ureq::post,
-                Ok(get) if get == "get" => ureq::get,
+                Ok(delete) if delete == "delete" => "delete",
+                Ok(put) if put == "put" => "put",
+                Ok(patch) if patch == "patch" => "patch",
+                Ok(post) if post == "post" => "post",
+                Ok(get) if get == "get" => "get",
                 _ => {
                     return Err(gen_error_info(
-                        Position::new(interval, &data.context.flow),
+                        Position::new(interval, &data.context.flow,),
                         ERROR_HTTP_UNKNOWN_METHOD.to_string(),
                     ))
                 }
             };
 
-            let value = http_request(&object.value, function, &data.context.flow, interval)?;
+            let value = http_request(&object.value, method, &data.context.flow, interval)?;
             return json_to_literal(&value, interval, &data.context.flow);
         }
 
