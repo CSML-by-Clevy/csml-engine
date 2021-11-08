@@ -616,6 +616,26 @@ fn get_client_conversations(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
+fn make_migrations(mut cx: FunctionContext) -> JsResult<JsValue> {
+
+    match csml_engine::make_migrations() {
+        Ok(value) => {
+            let value = serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
 /*
 * Get the last 20 versions of the bot if no limit is set
 *
@@ -672,6 +692,8 @@ register_module!(mut cx, {
     cx.export_function("deleteBotData", delete_bot_data)?;
 
     cx.export_function("deleteExpiredData", delete_expired_data)?;
+
+    cx.export_function("migrations", make_migrations)?;
 
     cx.export_function("run", run_bot)?;
 

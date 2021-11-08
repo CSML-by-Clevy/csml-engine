@@ -196,3 +196,13 @@ pub fn init_db() -> Result<Database, EngineError> {
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
+
+pub fn make_migrations() -> Result<(), EngineError> {
+
+    #[cfg(feature = "postgresql")]
+    if is_postgresql() {
+        return self::postgresql::make_migrations();
+    }
+
+    Ok(())
+}
