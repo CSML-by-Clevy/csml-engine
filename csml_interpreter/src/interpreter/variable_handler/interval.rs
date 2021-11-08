@@ -14,6 +14,7 @@ pub fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::VecExpr(_e, range_interval) => *range_interval,
         Expr::ObjectExpr(fnexpr) => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
+        Expr::PostfixExpr(_p, expr) => interval_from_expr(expr), // RangeInterval ?
         Expr::PathExpr { literal, .. } => interval_from_expr(literal),
         Expr::ForEachExpr(_, _, _, _, range_interval) => *range_interval,
         Expr::IdentExpr(ident) => ident.interval.to_owned(),
