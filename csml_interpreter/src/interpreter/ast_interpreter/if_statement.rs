@@ -17,7 +17,7 @@ use std::sync::mpsc;
 ////////////////////////////////////////////////////////////////////////////////
 
 //TODO: add warning when comparing some objects
-fn valid_condition(
+pub fn valid_condition(
     expr: &Expr,
     data: &mut Data,
     msg_data: &mut MessageData,
