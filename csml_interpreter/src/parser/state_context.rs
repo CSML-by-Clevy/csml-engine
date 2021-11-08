@@ -63,6 +63,10 @@ pub fn count_commands(command: &mut Expr, index: &mut usize, info: &mut Instruct
             info.index = *index;
             count_scope_commands(block, index)
         }
+        Expr::WhileExpr(_expr, block, _range) => {
+            info.index = *index;
+            count_scope_commands(block, index)
+        }
         _ => {}
     }
 
