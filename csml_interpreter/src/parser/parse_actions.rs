@@ -29,6 +29,30 @@ use nom::{
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+fn addition_assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (rest, ..) = tag(ADDITION_ASSIGNMENT)(s)?;
+    Ok((rest, AssignType::AdditionAssignment))
+}
+
+fn subtraction_assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (rest, ..) = tag(SUBTRACTION_ASSIGNMENT)(s)?;
+    Ok((rest, AssignType::SubtractionAssignment))
+}
+
+fn assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
+where
+    E: ParseError<Span<'a>>,
+{
+    let (rest, ..) = tag(ASSIGN)(s)?;
+    Ok((rest, AssignType::Assignment))
+}
+
 fn parse_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<Expr>), E>
 where
     E: ParseError<Span<'a>>,
@@ -47,12 +71,12 @@ where
     let (s, name) = parse_idents_assignation(s)?;
     let (s, ident) = parse_path(s, Expr::IdentExpr(name))?;
 
-    let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
+    let (s, assign_type) = preceded(comment, alt((addition_assignment, subtraction_assignment, assignment)))(s)?;
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 
     Ok((
         s,
-        Expr::ObjectExpr(ObjectType::Assign(Box::new(ident), Box::new(expr))),
+        Expr::ObjectExpr(ObjectType::Assign(assign_type, Box::new(ident), Box::new(expr))),
     ))
 }
 
@@ -134,9 +158,9 @@ where
 
     let (s, do_type) = match expr {
         Expr::ObjectExpr(ObjectType::As(ident, expr)) => {
-            (s, DoType::Update(Box::new(Expr::IdentExpr(ident)), expr))
+            (s, DoType::Update(AssignType::Assignment, Box::new(Expr::IdentExpr(ident)), expr))
         }
-        Expr::ObjectExpr(ObjectType::Assign(ident, expr)) => (s, DoType::Update(ident, expr)),
+        Expr::ObjectExpr(ObjectType::Assign(assign_type, ident, expr)) => (s, DoType::Update(assign_type, ident, expr)),
         _ => (s, DoType::Exec(Box::new(expr))),
     };
 

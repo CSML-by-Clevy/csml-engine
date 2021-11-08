@@ -141,7 +141,7 @@ pub enum GotoType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DoType {
-    Update(Box<Expr>, Box<Expr>),
+    Update(AssignType, Box<Expr>, Box<Expr>),
     Exec(Box<Expr>),
 }
 
@@ -161,11 +161,18 @@ pub enum ForgetMemory {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-
 pub enum PreviousType {
     Step(Interval),
     Flow(Interval),
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AssignType {
+    Assignment,
+    AdditionAssignment,
+    SubtractionAssignment,
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObjectType {
@@ -179,7 +186,7 @@ pub enum ObjectType {
     Use(Box<Expr>),
 
     Remember(Identifier, Box<Expr>),
-    Assign(Box<Expr>, Box<Expr>),
+    Assign(AssignType, Box<Expr>, Box<Expr>),
     Forget(ForgetMemory, Interval),
 
     As(Identifier, Box<Expr>),

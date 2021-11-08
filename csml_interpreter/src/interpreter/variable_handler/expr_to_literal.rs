@@ -168,7 +168,7 @@ pub fn resolve_fn_args(
 
             for (index, value) in vec.iter().enumerate() {
                 match value {
-                    Expr::ObjectExpr(ObjectType::Assign(name, var)) => {
+                    Expr::ObjectExpr(ObjectType::Assign(_assign_type, name, var)) => {
                         let name = match **name {
                             Expr::IdentExpr(ref var, ..) => var,
                             _ => {

@@ -133,7 +133,7 @@ fn validate_expr_literals(to_be_literal: &Expr, state: &mut State, linter_info: 
                 }
             }
         }
-        Expr::ObjectExpr(ObjectType::Assign(target, new)) => {
+        Expr::ObjectExpr(ObjectType::Assign(_assign, target, new)) => {
             validate_expr_literals(target, state, linter_info);
             validate_expr_literals(new, state, linter_info);
         }
@@ -361,7 +361,7 @@ fn validate_scope(
                 validate_expr_literals(value, state, linter_info);
             }
 
-            Expr::ObjectExpr(ObjectType::Do(DoType::Update(target, new))) => {
+            Expr::ObjectExpr(ObjectType::Do(DoType::Update(_assign, target, new))) => {
 
                 if let Expr::IdentExpr(name) = &**target {
                     register_closure(name, false,new, linter_info);
