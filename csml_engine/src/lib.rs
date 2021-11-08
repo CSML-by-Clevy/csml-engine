@@ -8,11 +8,11 @@ pub use csml_interpreter::{
     },
     load_components,
 };
+
 use serde_json::json;
 
-mod db_connectors;
 mod error_messages;
-
+mod db_connectors;
 mod encrypt;
 mod init;
 mod interpreter_actions;
@@ -480,6 +480,13 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
     };
 
     Ok(serde_json::json!(status))
+}
+
+/**
+ * Make migrations for PgSQL and do nothing for MongoDB and DynamoDB
+ */
+pub fn make_migrations() -> Result<(), EngineError> {
+    db_connectors::make_migrations()
 }
 
 /**

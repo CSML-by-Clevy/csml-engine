@@ -8,6 +8,7 @@ pub mod clients;
 pub mod memories;
 pub mod messages;
 pub mod state;
+pub mod migrations;
 
 pub mod clean_data;
 

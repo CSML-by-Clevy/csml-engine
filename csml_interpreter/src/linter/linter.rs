@@ -665,6 +665,11 @@ fn validate_scope(
                 validate_scope(block, state, linter_info, step_breakers);
                 state.exit_loop();
             }
+            Expr::WhileExpr(_expr, block, _range) => {
+                state.enter_loop();
+                validate_scope(block, state, linter_info, step_breakers);
+                state.exit_loop();
+            }
             _ => {}
         }
     }

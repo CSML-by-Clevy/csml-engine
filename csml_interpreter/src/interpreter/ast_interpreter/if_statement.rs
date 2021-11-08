@@ -1,4 +1,3 @@
-use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::{
     ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
     Data, Literal, MessageData, MSG,
@@ -7,7 +6,8 @@ use crate::error_format::*;
 use crate::interpreter::{
     interpret_scope,
     variable_handler::{
-        expr_to_literal, get_var, interval::interval_from_expr, operations::evaluate,
+        expr_to_literal, get_var,
+        operations::{evaluate_infix, evaluate_postfix, valid_literal},
     },
 };
 use std::sync::mpsc;
@@ -16,15 +16,8 @@ use std::sync::mpsc;
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-fn valid_literal(result: Result<Literal, ErrorInfo>) -> bool {
-    match result {
-        Ok(literal) => literal.primitive.as_bool(),
-        Err(_) => false,
-    }
-}
-
 //TODO: add warning when comparing some objects
-fn valid_condition(
+pub fn valid_condition(
     expr: &Expr,
     data: &mut Data,
     msg_data: &mut MessageData,
@@ -40,6 +33,10 @@ fn valid_condition(
             msg_data,
             sender,
         )),
+        Expr::PostfixExpr(post, exp) => valid_literal(evaluate_postfix(
+            post, exp, data, msg_data, sender,
+            ))
+        ,
         Expr::InfixExpr(inf, exp_1, exp_2) => valid_literal(evaluate_condition(
             inf, exp_1, exp_2, data, msg_data, sender,
         )),
@@ -82,30 +79,25 @@ pub fn evaluate_condition(
     let flow_name = &data.context.flow.clone();
 
     match (expr1, expr2) {
-        (exp_1, ..) if Infix::Not == *infix => {
-            let value = !valid_literal(expr_to_literal(exp_1, true, None, data, msg_data, sender));
-            let interval = interval_from_expr(exp_1);
-            Ok(PrimitiveBoolean::get_literal(value, interval))
-        }
-        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate(
+        (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate_infix(
             &flow_name,
             infix,
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
             evaluate_condition(i2, exp_1, exp_2, data, msg_data, sender),
         ),
-        (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate(
+        (Expr::InfixExpr(i1, ex1, ex2), exp) => evaluate_infix(
             &flow_name,
             infix,
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
             expr_to_literal(exp, true, None, data, msg_data, sender),
         ),
-        (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate(
+        (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate_infix(
             &flow_name,
             infix,
             expr_to_literal(exp, true, None, data, msg_data, sender),
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
         ),
-        (exp_1, exp_2) => evaluate(
+        (exp_1, exp_2) => evaluate_infix(
             &flow_name,
             infix,
             expr_to_literal(exp_1, true, None, data, msg_data, sender),
