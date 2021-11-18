@@ -106,38 +106,6 @@ pub fn run_conversation(
     }
 }
 
-// fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-//     let popup_layout = Layout::default()
-//         .direction(Direction::Vertical)
-//         .constraints(
-//             [
-//                 Constraint::Percentage((100 - percent_y) / 2),
-//                 Constraint::Percentage(percent_y),
-//                 Constraint::Percentage((100 - percent_y) / 2),
-//             ]
-//             .as_ref(),
-//         )
-//         .split(r);
-
-//     Layout::default()
-//         .direction(Direction::Horizontal)
-//         .constraints(
-//             [
-//                 Constraint::Percentage((100 - percent_x) / 2),
-//                 Constraint::Percentage(percent_x),
-//                 Constraint::Percentage((100 - percent_x) / 2),
-//             ]
-//             .as_ref(),
-//         )
-//         .split(popup_layout[1])[1]
-// }
-
-// flow: Option<&str>,
-// step: Option<&str>,
-// text: Option<&str>,
-// let run_opt = BotOpt::CsmlBot(load_info());
-// let mut start_payload = format_initial_payload(flow, step, text);
-
 pub fn draw_run(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     app: &mut AppRun,
@@ -487,7 +455,22 @@ pub fn bot_message_to_raw_msg<'a>(
 
             let content_type: String = chars.into_iter().collect();
 
-            let line = format!("💬 {}(...)", content_type);
+            let content: String = match message["content"].get("error") {
+                Some(error) => {
+                    error.as_str()
+                    .unwrap_or(" ")
+                    .to_owned()
+                }
+                None => {
+                    message["content"]
+                    .as_str()
+                    .unwrap_or(" ")
+                    .to_owned()
+                }
+            };
+             
+
+            let line = format!("💬 {}({})", content_type, content);
 
             add_line_to_span(&line, spans, None, window_length, true);
         }
