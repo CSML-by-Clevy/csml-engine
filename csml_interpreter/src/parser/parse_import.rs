@@ -93,7 +93,7 @@ pub fn parse_import_prototype<'a, E>(
 where
     E: ParseError<Span<'a>>,
 {
-    let (s, start) = get_interval(s)?;
+    let (s, start) =  preceded(comment,get_interval)(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
 
     let (s, ..) = get_tag(name, IMPORT)(s)?;

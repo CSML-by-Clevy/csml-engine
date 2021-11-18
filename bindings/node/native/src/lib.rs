@@ -405,6 +405,38 @@ fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 }
 
 /*
+* fold bot into a single flow
+*
+* {"flow": String}
+*
+*/
+fn fold_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let raw_bot = cx.argument::<JsValue>(0)?;
+
+    let json_bot: Value = neon_serde::from_value(&mut cx, raw_bot)?;
+
+    let bot: CsmlBot = match serde_json::from_value(json_bot) {
+        Err(err) => panic!("Bad bot format: {:?}", err),
+        Ok(bot) => bot,
+    };
+
+    match csml_engine::fold_bot(bot) {
+        Ok(flow) => {
+            let value = serde_json::json!({"flow": flow});
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
+/*
 * Delete client memory
 */
 fn delete_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
@@ -616,6 +648,26 @@ fn get_client_conversations(mut cx: FunctionContext) -> JsResult<JsValue> {
     }
 }
 
+fn make_migrations(mut cx: FunctionContext) -> JsResult<JsValue> {
+
+    match csml_engine::make_migrations() {
+        Ok(value) => {
+            let value = serde_json::json!(
+                value
+            );
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+        Err(err) => {
+            let value = serde_json::json!({
+                "error": format!("{:?}", err),
+            });
+
+            Ok(neon_serde::to_value(&mut cx, &value)?)
+        },
+    }
+}
+
 /*
 * Get the last 20 versions of the bot if no limit is set
 *
@@ -659,6 +711,7 @@ register_module!(mut cx, {
     cx.export_function("getBotVersionsLimit", get_bot_versions_limit)?;
     cx.export_function("deleteBotVersion", delete_bot_version)?;
     cx.export_function("deleteBotVersions", delete_bot_versions)?;
+    cx.export_function("foldBot", fold_bot)?;
 
     cx.export_function("createClientMemory ", create_client_memory)?;
     cx.export_function("getClientMemories", get_client_memories)?;
@@ -672,6 +725,8 @@ register_module!(mut cx, {
     cx.export_function("deleteBotData", delete_bot_data)?;
 
     cx.export_function("deleteExpiredData", delete_expired_data)?;
+
+    cx.export_function("migrations", make_migrations)?;
 
     cx.export_function("run", run_bot)?;
 

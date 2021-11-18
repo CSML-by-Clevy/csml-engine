@@ -10,6 +10,7 @@ use crate::interpreter::{
     variable_handler::{
         exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
         resolve_csml_object::resolve_object, resolve_path,
+        operations::{evaluate_postfix},
     },
 };
 use std::{collections::HashMap, sync::mpsc};
@@ -116,6 +117,10 @@ pub fn expr_to_literal(
             let mut literal = PrimitiveArray::get_literal(&array, range_interval.to_owned());
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
         }
+        Expr::PostfixExpr(postfix, expr) => {
+            let mut literal = evaluate_postfix(postfix, expr, data, msg_data, sender)?;
+            exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
+        }
         Expr::InfixExpr(infix, exp_1, exp_2) => {
             let mut literal = evaluate_condition(infix, exp_1, exp_2, data, msg_data, sender)?;
             exec_path_literal(&mut literal, condition, path, data, msg_data, sender)
@@ -163,7 +168,7 @@ pub fn resolve_fn_args(
 
             for (index, value) in vec.iter().enumerate() {
                 match value {
-                    Expr::ObjectExpr(ObjectType::Assign(name, var)) => {
+                    Expr::ObjectExpr(ObjectType::Assign(_assign_type, name, var)) => {
                         let name = match **name {
                             Expr::IdentExpr(ref var, ..) => var,
                             _ => {

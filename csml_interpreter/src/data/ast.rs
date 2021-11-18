@@ -141,7 +141,7 @@ pub enum GotoType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DoType {
-    Update(Box<Expr>, Box<Expr>),
+    Update(AssignType, Box<Expr>, Box<Expr>),
     Exec(Box<Expr>),
 }
 
@@ -161,11 +161,18 @@ pub enum ForgetMemory {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-
 pub enum PreviousType {
     Step(Interval),
     Flow(Interval),
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AssignType {
+    Assignment,
+    AdditionAssignment,
+    SubtractionAssignment,
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObjectType {
@@ -179,7 +186,7 @@ pub enum ObjectType {
     Use(Box<Expr>),
 
     Remember(Identifier, Box<Expr>),
-    Assign(Box<Expr>, Box<Expr>),
+    Assign(AssignType, Box<Expr>, Box<Expr>),
     Forget(ForgetMemory, Interval),
 
     As(Identifier, Box<Expr>),
@@ -245,6 +252,7 @@ pub enum Expr {
         range: Interval,
     },
     ForEachExpr(Identifier, Option<Identifier>, Box<Expr>, Block, Interval),
+    WhileExpr(Box<Expr>, Block, Interval),
     ComplexLiteral(Vec<Expr>, Interval),
     MapExpr {
         object: HashMap<String, Expr>,
@@ -253,6 +261,7 @@ pub enum Expr {
     },
     VecExpr(Vec<Expr>, Interval),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
+    PostfixExpr(Vec<Postfix>, Box<Expr>),
     ObjectExpr(ObjectType),
     IfExpr(IfStatement),
 
@@ -282,7 +291,6 @@ pub enum Infix {
     Multiply,
     Remainder,
 
-    Not,
     Match,
     NotMatch,
 
@@ -295,6 +303,11 @@ pub enum Infix {
 
     And,
     Or,
+}
+
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+pub enum Postfix {
+    Not,
 }
 
 #[derive(PartialEq, Debug, Clone, Eq, Hash, Copy, Serialize, Deserialize)]

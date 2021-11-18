@@ -8,11 +8,11 @@ pub use csml_interpreter::{
     },
     load_components,
 };
+
 use serde_json::json;
 
-mod db_connectors;
 mod error_messages;
-
+mod db_connectors;
 mod encrypt;
 mod init;
 mod interpreter_actions;
@@ -172,7 +172,7 @@ pub fn create_client_memory(
     init_logger();
     validate_memory_key_format(&key)?;
 
-    let ttl = get_tll_value(None);
+    let ttl = get_ttl_duration_value(None);
 
     memories::create_client_memory(client, key, value, ttl, &mut db)
 }
@@ -346,6 +346,25 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
 }
 
 /**
+ * fold CSML bot in one single flow.
+ * Rename all existing steps, goto and functions in order to match their origin flow.
+ * Examples:
+ *  step_name: -> flow_name_step_name:
+ *  goto step_name -> goto flow_name_step_name
+ */
+pub fn fold_bot(mut bot: CsmlBot) -> Result<String, EngineError> {
+    // load native components into the bot
+    bot.native_components = match load_components() {
+        Ok(components) => Some(components),
+        Err(err) => {
+            return Err(EngineError::Parring(err.format_error()))
+        }
+    };
+
+    Ok(csml_interpreter::fold_bot(&bot))
+}
+
+/**
  * Close any open conversation a given client may currently have.
  * We also need to both clean the hold/local memory state to make sure
  * that outdated variables or hold positions are not loaded into the next open conversation.
@@ -464,7 +483,14 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
 }
 
 /**
- * delete expired data 
+ * Make migrations for PgSQL and do nothing for MongoDB and DynamoDB
+ */
+pub fn make_migrations() -> Result<(), EngineError> {
+    db_connectors::make_migrations()
+}
+
+/**
+ * delete expired data
  */
 pub fn delete_expired_data() -> Result<(), EngineError> {
     let mut db = init_db()?;

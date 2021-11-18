@@ -2,7 +2,7 @@ pub mod data;
 pub mod linter;
 
 use crate::data::ast::Flow;
-use data::{
+pub use data::{
     FunctionCallInfo, FunctionInfo, ImportInfo, LinterInfo, ScopeType, State, StepBreakers,
     StepInfo,
 };

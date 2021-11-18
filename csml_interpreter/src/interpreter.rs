@@ -12,7 +12,7 @@ use crate::data::position::Position;
 use crate::data::{ast::*, Data, Hold, IndexInfo, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
-    ast_interpreter::{for_loop, match_actions, solve_if_statement},
+    ast_interpreter::{for_loop, while_loop, match_actions, solve_if_statement},
     variable_handler::{expr_to_literal, interval::interval_from_expr},
 };
 use crate::parser::ExitCondition;
@@ -91,7 +91,7 @@ pub fn interpret_scope(
                     step_vars_to_json(map),
                     data.context.step.clone(),
                     data.context.flow.clone(),
-                    Some(data.previous_info.clone()),
+                    data.previous_info.clone(),
                 );
 
                 message_data.hold = Some(hold.to_owned());
@@ -116,6 +116,16 @@ pub fn interpret_scope(
                 message_data = for_loop(
                     ident,
                     index,
+                    expr,
+                    block,
+                    range,
+                    message_data,
+                    data,
+                    &sender,
+                )?
+            }
+            Expr::WhileExpr(expr, block, range) => {
+                message_data = while_loop(
                     expr,
                     block,
                     range,

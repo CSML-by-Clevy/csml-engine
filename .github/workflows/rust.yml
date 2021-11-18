@@ -29,7 +29,7 @@ jobs:
           ~/.cargo/git
           target
         key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
-    
+
     - name: Create mongoDB Docker container
       if: matrix.os == 'ubuntu-18.04'
       run: sudo docker run -d -p 27017:27017 mongo:latest
@@ -75,8 +75,8 @@ jobs:
         MONGODB_DATABASE: csml
         MONGODB_HOST: localhost
         MONGODB_PORT: '27017'
-        MONGODB_USERNAME:
-        MONGODB_PASSWORD:
+        MONGODB_USERNAME: ''
+        MONGODB_PASSWORD: ''
         ENGINE_SERVER_PORT: '5000'
         ENCRYPTION_SECRET: someDefault.Secr3tValue
         DISABLE_SSL_VERIFY: 'false'

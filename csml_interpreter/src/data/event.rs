@@ -7,8 +7,8 @@ pub struct Event {
     pub content_type: String,
     pub content_value: String,
     pub content: serde_json::Value,
-    pub ttl: Option<i64>,
-    pub low_data: Option<bool>,
+    pub ttl_duration: Option<i64>,
+    pub low_data_mode: Option<bool>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,8 +21,8 @@ impl Default for Event {
             content_type: String::default(),
             content_value: String::default(),
             content: serde_json::json!({}),
-            ttl: None,
-            low_data: None,
+            ttl_duration: None,
+            low_data_mode: None,
         }
     }
 }
@@ -37,8 +37,8 @@ impl Event {
             content_type: content_type.to_owned(),
             content_value: content_value.to_owned(),
             content,
-            ttl: None,
-            low_data: None,
+            ttl_duration: None,
+            low_data_mode: None,
         }
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "csml_interpreter"
-version = "1.7.0-beta2"
+version = "1.8.0"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "François Falala-Sechet <francois@clevy.io>",
@@ -33,7 +33,9 @@ serde_json = "1.0"
 libc = "0.2.79"
 phf = { version = "0.8", features = ["macros"]}
 regex = "1.4.1"
-ureq = { version = "1.5.1", features = ["json"] }
+ureq = { version = "2.3.0", features = ["json"] }
+rustls = { version = "0.20.0", features = ["dangerous_configuration"] }
+
 lettre = "0.10.0-rc.3"
 
 typetag = "0.1"

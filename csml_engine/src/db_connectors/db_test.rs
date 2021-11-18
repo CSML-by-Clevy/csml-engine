@@ -5,7 +5,7 @@ mod tests {
 
     use crate::{
         Client, ConversationInfo, Context,
-        init_db, db_connectors::*
+        init_db, db_connectors::*, make_migrations
     };
 
     fn get_client() -> Client {
@@ -55,6 +55,8 @@ mod tests {
 
     #[test]
     fn ok_messages() {
+        make_migrations();
+
         let client = get_client();
         let mut db = init_db().unwrap();
         user::delete_client(&client, &mut db).unwrap();
@@ -110,6 +112,8 @@ mod tests {
 
     #[test]
     fn ok_conversation() {
+        make_migrations();
+
         let client = get_client();
         let mut db = init_db().unwrap();
 
@@ -143,6 +147,8 @@ mod tests {
 
     #[test]
     fn ok_memories() {
+        make_migrations();
+
         let client = get_client();
         let mut db = init_db().unwrap();
 
@@ -176,6 +182,8 @@ mod tests {
 
     #[test]
     fn ok_memory() {
+        make_migrations();
+
         let client = get_client();
         let mut db = init_db().unwrap();
 
@@ -223,6 +231,8 @@ mod tests {
 
     #[test]
     fn ok_get_memory() {
+        make_migrations();
+
         let client = get_client();
         let mut db = init_db().unwrap();
 

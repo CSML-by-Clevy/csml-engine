@@ -5,6 +5,7 @@ pub mod parse_built_in;
 pub mod parse_closure;
 pub mod parse_comments;
 pub mod parse_foreach;
+pub mod parse_while_loop;
 pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;

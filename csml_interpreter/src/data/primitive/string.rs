@@ -43,6 +43,10 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "append" => (PrimitiveString::append as PrimitiveMethod, Right::Read),
     "contains" => (PrimitiveString::contains as PrimitiveMethod, Right::Read),
     "contains_regex" => (PrimitiveString::contains_regex as PrimitiveMethod, Right::Read),
+    "replace_regex" => (PrimitiveString::replace_regex as PrimitiveMethod, Right::Read),
+    "replace_all" => (PrimitiveString::replace_all as PrimitiveMethod, Right::Read),
+    "replace" => (PrimitiveString::replace as PrimitiveMethod, Right::Read),
+
     "ends_with" => (PrimitiveString::ends_with as PrimitiveMethod, Right::Read),
     "ends_with_regex" => (PrimitiveString::ends_with_regex as PrimitiveMethod, Right::Read),
     "from_json" => (PrimitiveString::from_json as PrimitiveMethod, Right::Read),
@@ -57,6 +61,7 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "capitalize" => (PrimitiveString::capitalize as PrimitiveMethod, Right::Read),
     "slice" => (PrimitiveString::slice as PrimitiveMethod, Right::Read),
     "split" => (PrimitiveString::split as PrimitiveMethod, Right::Read),
+
     "abs" => (PrimitiveString::abs as PrimitiveMethod, Right::Read),
     "cos" => (PrimitiveString::cos as PrimitiveMethod, Right::Read),
     "ceil" =>(PrimitiveString::ceil as PrimitiveMethod, Right::Read),
@@ -347,6 +352,163 @@ impl PrimitiveString {
         let result = action.is_match(&string.value);
 
         Ok(PrimitiveBoolean::get_literal(result, interval))
+    }
+
+    fn replace(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "replace(value_to_replace: string, replace_by: string) => string";
+
+        if args.len() != 2 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let (to_replace, replace_by) = match (args.get("arg0"), args.get("arg1")) {
+            (Some(old), Some(new)) 
+                if old.primitive.get_type() == PrimitiveType::PrimitiveString &&
+                new.primitive.get_type() == PrimitiveType::PrimitiveString 
+            => {
+
+                (Literal::get_value::<String>(
+                    &old.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_STRING_REPLACE.to_owned(),
+                )?,
+                Literal::get_value::<String>(
+                    &new.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_STRING_REPLACE.to_owned(),
+                )?)
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_STRING_REPLACE.to_owned(),
+                ));
+            }
+        };
+
+        let new_string = string.value.replacen(to_replace, replace_by, 1);
+
+        Ok(PrimitiveString::get_literal(&new_string, interval))
+    }
+
+    fn replace_all(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "replace_all(value_to_replace: string, replace_by: string) => string";
+
+        if args.len() != 2 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let (to_replace, replace_by) = match (args.get("arg0"), args.get("arg1")) {
+            (Some(old), Some(new)) 
+                if old.primitive.get_type() == PrimitiveType::PrimitiveString &&
+                new.primitive.get_type() == PrimitiveType::PrimitiveString 
+            => {
+
+                (Literal::get_value::<String>(
+                    &old.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_STRING_REPLACE_ALL.to_owned(),
+                )?,
+                Literal::get_value::<String>(
+                    &new.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_STRING_REPLACE_ALL.to_owned(),
+                )?)
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_STRING_REPLACE_ALL.to_owned(),
+                ));
+            }
+        };
+
+        let new_string = string.value.replace(to_replace, replace_by);
+
+        Ok(PrimitiveString::get_literal(&new_string, interval))
+    }
+
+    fn replace_regex(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "replace_regex(regex: string, replace_by: string) => string";
+
+        if args.len() != 2 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let (regex, replace_by) = match (args.get("arg0"), args.get("arg1")) {
+            (Some(old), Some(new)) 
+                if old.primitive.get_type() == PrimitiveType::PrimitiveString &&
+                new.primitive.get_type() == PrimitiveType::PrimitiveString 
+            => {
+
+                (Literal::get_value::<String>(
+                    &old.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_STRING_REPLACE_REGEX.to_owned(),
+                )?,
+                Literal::get_value::<String>(
+                    &new.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_STRING_REPLACE_REGEX.to_owned(),
+                )?)
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_STRING_REPLACE_REGEX.to_owned(),
+                ));
+            }
+        };
+
+        let reg = match Regex::new(regex) {
+            Ok(res) => res,
+            Err(_) => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_STRING_REPLACE_REGEX.to_owned(),
+                ));
+            }
+        };
+
+        let new_string = reg.replace_all(&string.value, replace_by);
+
+        Ok(PrimitiveString::get_literal(&new_string, interval))
     }
 
     fn ends_with(
@@ -1505,25 +1667,34 @@ impl Primitive for PrimitiveString {
             }
         };
 
-        match (get_integer(&self.value), get_integer(&rhs.value)) {
-            (Ok(Integer::Int(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveInt::new(lhs + rhs)))
+        if let Ok(number) = get_integer(&self.value) {
+            match (number, get_integer(&rhs.value)) {
+                (Integer::Int(lhs), Ok(Integer::Int(rhs))) => {
+                    Ok(Box::new(PrimitiveInt::new(lhs + rhs)))
+                }
+                (Integer::Float(lhs), Ok(Integer::Float(rhs))) => {
+                    Ok(Box::new(PrimitiveFloat::new(lhs + rhs)))
+                }
+                (Integer::Int(lhs), Ok(Integer::Float(rhs))) => {
+                    Ok(Box::new(PrimitiveFloat::new(lhs as f64 + rhs)))
+                }
+                (Integer::Float(lhs), Ok(Integer::Int(rhs))) => {
+                    Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
+                }
+                _ => Err(format!(
+                    "{} {:?} + {:?}",
+                    ERROR_ILLEGAL_OPERATION,
+                    self.get_type(),
+                    other.get_type()
+                )),
             }
-            (Ok(Integer::Float(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs + rhs)))
-            }
-            (Ok(Integer::Int(lhs)), Ok(Integer::Float(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs as f64 + rhs)))
-            }
-            (Ok(Integer::Float(lhs)), Ok(Integer::Int(rhs))) => {
-                Ok(Box::new(PrimitiveFloat::new(lhs + rhs as f64)))
-            }
-            _ => Err(format!(
-                "{} {:?} + {:?}",
-                ERROR_ILLEGAL_OPERATION,
-                self.get_type(),
-                other.get_type()
-            )),
+        }
+        else {
+            let mut new_string = self.value.clone();
+
+            new_string.push_str(&rhs.value);
+
+            Ok(Box::new(PrimitiveString::new(&new_string)))
         }
     }
 

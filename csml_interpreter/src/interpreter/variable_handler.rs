@@ -404,6 +404,75 @@ pub fn exec_path_actions(
     }
 }
 
+
+fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Literal> {
+
+    let mut flow_context = HashMap::new();
+
+    flow_context.insert(
+        "current_step".to_owned(),
+        PrimitiveString::get_literal(&data.context.step, interval)
+    );
+    flow_context.insert(
+        "current_flow".to_owned(),
+        PrimitiveString::get_literal(&data.context.flow, interval)
+    );
+
+    if let Some(previous_info) = &data.previous_info {
+        flow_context.insert(
+            "previous_step".to_owned(),
+            PrimitiveString::get_literal(&previous_info.step_at_flow.0, interval)
+        );
+        flow_context.insert(
+            "previous_flow".to_owned(),
+            PrimitiveString::get_literal(&previous_info.step_at_flow.1, interval)
+        );
+    }
+    
+
+    flow_context
+}
+
+pub fn get_metadata_context_literal(
+    path: &[(Interval, PathLiteral)],
+    interval: Interval,
+    condition: bool,
+    data: &mut Data,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    let flow_context = get_flow_context(data, interval);
+    let mut path_skip = 1;
+
+    // get flow context current_flow / previous_flow / current_step / previous_step
+    let mut lit = match path.get(1) {
+        Some((interval, PathLiteral::MapIndex(context_name))) => {
+            match flow_context.get(context_name) {
+                Some(lit) => {
+                    path_skip += 1;
+
+                    lit.to_owned()
+                },
+                None => PrimitiveObject::get_literal(&flow_context, *interval),
+            }
+        },
+        _ => PrimitiveObject::get_literal(&flow_context, interval)
+    };
+
+    let content_type = ContentType::get(&lit);
+    let (lit, _tmp_mem_update) = exec_path_actions(
+        &mut lit,
+        condition,
+        None,
+        &Some(path[path_skip..].to_owned()),
+        &content_type,
+        data,
+        msg_data,
+        sender,
+    )?;
+    Ok(lit)
+}
+
 pub fn get_literal_from_metadata(
     path: &[(Interval, PathLiteral)],
     condition: bool,
@@ -412,6 +481,9 @@ pub fn get_literal_from_metadata(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let mut lit = match path.get(0) {
+        Some((interval, PathLiteral::MapIndex(name))) if name == "_context" => {
+            return get_metadata_context_literal(path, *interval, condition, data, msg_data, sender);
+        },
         Some((interval, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
             Some(lit) => lit.to_owned(),
             None => PrimitiveNull::get_literal(interval.to_owned()),

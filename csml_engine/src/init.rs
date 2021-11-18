@@ -1,7 +1,7 @@
 use crate::db_connectors::{conversations::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
-    utils::{get_default_flow, get_flow_by_id, search_flow, get_tll_value, get_low_data_value},
+    utils::{get_default_flow, get_flow_by_id, search_flow, get_ttl_duration_value, get_low_data_mode_value},
     Context, CsmlBot, CsmlFlow, CsmlResult,
 };
 
@@ -42,8 +42,8 @@ pub fn init_conversation_info<'a>(
     // let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
 
     let mut context = init_context(default_flow, request.client.clone(), &bot.fn_endpoint);
-    let ttl = get_tll_value(Some(event));
-    let low_data = get_low_data_value(event);
+    let ttl = get_ttl_duration_value(Some(event));
+    let low_data = get_low_data_mode_value(event);
 
     // Do we have a flow matching the request? If the user is requesting a flow in one way
     // or another, this takes precedence over any previously open conversation

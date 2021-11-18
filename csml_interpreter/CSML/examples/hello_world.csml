@@ -1,5 +1,11 @@
 start:
 
-    say "Hello World 😆"
+    // say "Hello World 😆"
 
-    goto end
+    say _metadata._context
+
+    goto toto
+
+toto:
+
+    say _metadata._context

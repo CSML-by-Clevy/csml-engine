@@ -26,6 +26,9 @@ pub const ASSIGN: &str = "=";
 pub const OR: &str = "||";
 pub const AND: &str = "&&";
 
+pub const SUBTRACTION_ASSIGNMENT: &str = "-=";
+pub const ADDITION_ASSIGNMENT: &str = "+=";
+
 pub const GREATER_THAN_EQUAL: &str = ">=";
 pub const LESS_THAN_EQUAL: &str = "<=";
 pub const GREATER_THAN: &str = ">";
@@ -50,6 +53,7 @@ pub const L2_BRACE: &str = "{{";
 pub const R2_BRACE: &str = "}}";
 
 pub const FOREACH: &str = "foreach";
+pub const WHILE: &str = "while";
 pub const IF: &str = "if";
 pub const ELSE: &str = "else";
 
@@ -109,18 +113,18 @@ pub const TYPES: &[&str] = &[
 ];
 
 pub const RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
+    FOREACH, WHILE, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, GOTO,
     MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE, NULL, BREAK,
     COMPONENT,
 ];
 
 pub const UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, FORGET,
+    FOREACH, WHILE, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER, FORGET,
     BREAK, COMPONENT,
 ];
 
 pub const ASSIGNATION_RESERVED: &[&str] = &[
-    FOREACH, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER,
+    FOREACH, WHILE , IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH, REMEMBER,
     FORGET, _METADATA, _MEMORY, _ENV, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
@@ -154,12 +158,13 @@ pub const FILE: &str = "File";
 pub const DEBUG: &str = "Debug";
 pub const UUID: &str = "UUID";
 pub const TIME: &str = "Time";
+pub const EXISTS: &str = "Exists";
 
 pub const OBJECT: &str = "Object";
 
 pub const BUILT_IN: &[&str] = &[
     ONE_OF, SHUFFLE, LENGTH, FIND, RANDOM, FLOOR, FN, APP, HTTP, OBJECT, DEBUG, UUID, BASE64, HEX,
-    JWT, CRYPTO, TIME, SMTP,
+    JWT, CRYPTO, TIME, SMTP, EXISTS,
 ];
 
 pub const FROM_FILE: &str = "FromFile";

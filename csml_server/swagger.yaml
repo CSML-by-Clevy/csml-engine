@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 1.7.0-beta2
+  version: 1.8.0
   title: CSML Engine
   description: CSML Engine Server API specifications
   termsOfService: http://csml.dev/terms/
@@ -107,20 +107,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BotModel'
+              $ref: "#/components/schemas/BotModel"
       responses:
-        '201':
-          description: ''
+        "201":
+          description: ""
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NewBotVersionResponse'
+                $ref: "#/components/schemas/NewBotVersionResponse"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /bots/{bot_id}/versions:
     get:
@@ -152,18 +152,18 @@ paths:
             type: string
             default: none
       responses:
-        '200':
-          description: ''
+        "200":
+          description: ""
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BotVersionsResponse'
+                $ref: "#/components/schemas/BotVersionsResponse"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /bots/{bot_id}/versions/{version_id}:
     get:
@@ -187,18 +187,18 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: ''
+        "200":
+          description: ""
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BotVersionModel'
+                $ref: "#/components/schemas/BotVersionModel"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     delete:
       description: Delete the requested version
@@ -221,14 +221,14 @@ paths:
           schema:
             type: string
       responses:
-        '204':
-          description: ''
+        "204":
+          description: ""
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /conversations:
     get:
@@ -797,6 +797,13 @@ components:
           type: string
           example: ""
           description: if defined, all messages will be POSTed to this URL as they are emitted by the CSML engine
+        ttl_duration:
+          type: integer
+          example: 30
+          description: number of days after which to expire chatbot usage data. Don't expire data if not set. Overrides corresponding engine environment variable
+        low_data_mode:
+          type: boolean
+          description: if set to true, the chatbot will not store the contents of sent/received messages. Overrides corresponding engine environment variable
 
     PayloadModel:
       type: object
@@ -1070,7 +1077,7 @@ components:
     EngineVersion:
       type: string
       description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
-      example: "1.7.0-beta2"
+      example: "1.8.0"
 
     Error:
       type: object
