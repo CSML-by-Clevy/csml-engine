@@ -30,13 +30,14 @@ extern crate diesel_migrations;
 use data::*;
 use db_connectors::{
     bot, conversations, init_db, memories, messages, state, user,
-    clean_db, BotVersion, BotVersionCreated,
+    state::{set_state_items, delete_state_key}, clean_db, BotVersion, BotVersionCreated,
     DbConversation,
 };
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
 
+use chrono::prelude::*;
 use csml_interpreter::data::{
     csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory,
 };
@@ -83,9 +84,41 @@ pub fn start_conversation(
         messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
     }
 
+    //TODO: start delay
+    ///////////////////////////////////////
+    if let Some(delay) = bot.no_interruption_delay {
+        if let Some(delay) = state::get_state_key(&data.client, "hold", "position", &mut data.db)? {
+            match (delay["delay_value"].as_i64(), delay["timestamp"].as_i64()) {
+                (Some(delay), Some(timestamp)) if timestamp + delay <= Utc::now().timestamp() => {
+                    return Ok(serde_json::Map::new())
+                }
+                _ => {}
+            }
+        }
+
+        let delay: serde_json::Value = serde_json::json!({
+            "delay_value": delay,
+            "timestamp": Utc::now().timestamp()
+        });
+
+        set_state_items(
+            &data.client,
+            "delay",
+            vec![("content", &delay)],
+            data.ttl,
+            &mut data.db,
+        )?;
+    }
+    //////////////////////////////////////
+
     check_for_hold(&mut data, &bot)?;
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
+
+    //end delay
+    if let Some(_) = bot.no_interruption_delay {
+        delete_state_key(&data.client, "delay", "content", &mut data.db)?;
+    }
 
     if let Ok(var) = env::var(DEBUG) {
         if var == "true" {
