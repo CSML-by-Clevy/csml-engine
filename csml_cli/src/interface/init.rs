@@ -7,6 +7,7 @@ use tui::{
     widgets::{Block, Borders},
     Terminal,
 };
+use crate::interface::AppState;
 
 use crate::interface::{menu_widget::*, AppInit};
 
@@ -27,6 +28,20 @@ pub fn draw_init(
             .highlight_style(Style::default().bg(Color::DarkGray));
 
         f.render_stateful_widget(menu, chunks[0], &mut app.menu_state);
+
+        if let AppState::Editing = app.menu_state.state.clone() {
+            if let Some(index) = app.menu_state.selected {
+                let item = &mut app.menu_state.menu[index];
+                let padding = item.lvl * 5;
+
+                f.set_cursor(
+                    // Put cursor past the end of the input text
+                    chunks[0].x + 6 + padding + item.text.len() as u16 + app.input.len() as u16,
+                    // Move one line down, from the border to the input line
+                    chunks[0].y + 1 + index as u16,
+                )
+            }
+        }
     })?;
 
     Ok(())

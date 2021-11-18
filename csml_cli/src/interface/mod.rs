@@ -1,5 +1,6 @@
-pub mod chat_menu;
 pub mod init;
+pub mod init_menu;
+pub mod chat_menu;
 pub mod main_menu;
 pub mod select_bot;
 
@@ -25,6 +26,7 @@ use tui::{backend::CrosstermBackend, Terminal};
 use csml_engine::data::{BotOpt, CsmlRequest};
 
 use chat_menu::{draw_run, run_conversation};
+use init_menu::{InitMenu};
 use chat_widget::{RawMessage, StatefulList};
 use init::draw_init;
 use main_menu::{draw_main, MainMenu};
@@ -419,9 +421,11 @@ fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dy
                     item.update_value("");
 
                     // check if input item is de same item
-                    if "mongodb" == item.get_value() || "dynamodb" == item.get_value() {
-                        app.menu_state.change_list();
-                    }
+                    // if "mongodb" == item.get_value() || "dynamodb" == item.get_value() {
+                    let lvl = item.lvl;
+                    app.menu_state.change_list(Some((lvl, index)));
+                    // }
+
                     // reset offset to 0 
                     app.menu_state.offset = 0;
                     app.menu_state.state = AppState::Normal;

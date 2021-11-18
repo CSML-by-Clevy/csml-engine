@@ -142,6 +142,11 @@ pub fn draw_run(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     app: &mut AppRun,
 ) -> Result<(), Box<dyn Error>> {
+    match terminal.size() {
+        Ok(size) if size.width > 30 && size.height > 20 => {}
+        _ => return Ok(())
+    };
+
     // Draw UI
     terminal.draw(|f| {
         let s = f.size();

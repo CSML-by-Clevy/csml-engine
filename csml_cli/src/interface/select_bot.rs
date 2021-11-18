@@ -49,7 +49,7 @@ impl MenuType for SelectBotMenu {
         Box::new(select_bot_menu)
     }
 
-    fn generate_menu(&mut self, _menu: &Vec<MenuItem>) -> Vec<MenuItem> {
+    fn generate_menu(&mut self) -> Vec<MenuItem> {
         self.options.clone()
     }
 

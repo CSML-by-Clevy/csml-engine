@@ -13,6 +13,9 @@ pub enum DataBase {
     MongoDB {
         uri: String,
     },
+    Postgres {
+        uri: String,
+    },
     DynamoDB {
         dynamodb_region: DynamoRegion,
         dynamodb_table: String,
@@ -51,6 +54,18 @@ impl Env {
             DataBase::MongoDB { uri } => {
                 let mut env = format!(
                     "ENGINE_DB_TYPE=mongodb\nMONGODB_DATABASE=csml\nMONGODB_URI={}",
+                    uri
+                );
+
+                if let Some(encryption) = &self.encryption {
+                    env.push_str(&format!("\n\nENCRYPTION_SECRET={}", encryption));
+                }
+
+                env
+            }
+            DataBase::Postgres { uri } => { 
+                let mut env = format!(
+                    "ENGINE_DB_TYPE=postgresql\nPOSTGRESQL_URL={}",
                     uri
                 );
 

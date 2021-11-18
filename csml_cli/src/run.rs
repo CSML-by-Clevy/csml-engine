@@ -5,8 +5,6 @@ use csml_interpreter::{
 };
 
 use std::error::Error;
-// use git2::Error;
-
 use crate::init_package::Manifest;
 
 use serde_json::json;

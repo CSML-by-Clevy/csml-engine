@@ -1,5 +1,6 @@
 use std::{error::Error, io::Stdout};
 
+// use image::GenericImageView;
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -35,7 +36,7 @@ impl MenuType for MainMenu {
         Box::new(main)
     }
 
-    fn generate_menu(&mut self, _menu: &Vec<MenuItem>) -> Vec<MenuItem> {
+    fn generate_menu(&mut self) -> Vec<MenuItem> {
         self.options.clone()
     }
 
@@ -48,6 +49,12 @@ pub fn draw_main(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     app: &mut AppMain,
 ) -> Result<(), Box<dyn Error>> {
+
+    match terminal.size() {
+        Ok(size) if size.width > 30 && size.height > 20 => {}
+        _ => return Ok(())
+    };
+
     // Draw Main UI
     terminal.draw(|f| {
         let size = f.size();
