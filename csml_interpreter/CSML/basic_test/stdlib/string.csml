@@ -89,3 +89,6 @@ step_11:
 step_12_slice:
     say "Hello World".slice(0, 3)
     goto end
+
+step_13_to_string:
+    say "\"4\"".to_string()
