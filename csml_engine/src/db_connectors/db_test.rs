@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn ok_messages() {
-        make_migrations();
+        make_migrations().unwrap_or({});
 
         let client = get_client();
         let mut db = init_db().unwrap();
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn ok_conversation() {
-        make_migrations();
+        make_migrations().unwrap_or({});
 
         let client = get_client();
         let mut db = init_db().unwrap();
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn ok_memories() {
-        make_migrations();
+        make_migrations().unwrap_or({});
 
         let client = get_client();
         let mut db = init_db().unwrap();
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn ok_memory() {
-        make_migrations();
+        make_migrations().unwrap_or({});
 
         let client = get_client();
         let mut db = init_db().unwrap();
@@ -231,7 +231,7 @@ mod tests {
 
     #[test]
     fn ok_get_memory() {
-        make_migrations();
+        make_migrations().unwrap_or({});
 
         let client = get_client();
         let mut db = init_db().unwrap();
