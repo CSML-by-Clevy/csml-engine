@@ -84,12 +84,11 @@ pub fn start_conversation(
         messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
     }
 
-    //TODO: start delay
-    ///////////////////////////////////////
+    // block user event if delay variable si on and delay_time is bigger than current time
     if let Some(delay) = bot.no_interruption_delay {
-        if let Some(delay) = state::get_state_key(&data.client, "hold", "position", &mut data.db)? {
+        if let Some(delay) = state::get_state_key(&data.client, "delay", "content", &mut data.db)? {
             match (delay["delay_value"].as_i64(), delay["timestamp"].as_i64()) {
-                (Some(delay), Some(timestamp)) if timestamp + delay <= Utc::now().timestamp() => {
+                (Some(delay), Some(timestamp)) if timestamp + delay >= Utc::now().timestamp() => {
                     return Ok(serde_json::Map::new())
                 }
                 _ => {}
