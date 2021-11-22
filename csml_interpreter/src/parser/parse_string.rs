@@ -248,7 +248,7 @@ pub fn interpolate_string(
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
-    let string_formatted = format!("\"{}\"", string);
+    let string_formatted = format!("{:?}", string);
     let span = Span::new(&string_formatted);
 
     match parse_string::<CustomError<Span>>(span) {

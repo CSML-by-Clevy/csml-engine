@@ -200,7 +200,7 @@ impl SerializeCsmlBot {
             default_flow: self.default_flow.to_owned(),
             bot_ast: None,
             no_interruption_delay: self.no_interruption_delay,
-            env: match self.custom_components.to_owned() {
+            env: match self.env.to_owned() {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,
             },
