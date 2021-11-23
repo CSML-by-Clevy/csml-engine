@@ -742,6 +742,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FlowModel"
+        no_interruption_delay:
+          type: integer
+          example: 30
+          description: number of seconds after which the user can send a new event while the bot is speaking
 
     BotVersionModel:
       allOf:
