@@ -6,8 +6,9 @@ use crate::error_format::*;
 use std::collections::HashMap;
 use std::env;
 
-use ureq::{Request};
 use std::sync::Arc;
+use ureq::{Request};
+use log::{debug, error, info,};
 
 use rustls::{
     Certificate,
@@ -171,6 +172,9 @@ pub fn http_request(
         request = request.set(key, value);
     }
 
+    info!("Make Http call");
+    debug!("Make Http call request info: {:?}", request);
+
     let response = match object.get("body") {
         Some(body) => request.send_json(body.primitive.to_json()),
         None => request.call(),
@@ -187,11 +191,7 @@ pub fn http_request(
             }
         }
         Err(err) => {
-            if let Ok(var) = env::var("DEBUG") {
-                if var == "true" {
-                    eprintln!("FN request failed: {:?}", err.to_string());
-                }
-            }
+            error!("Http call failed: {:?}", err);
             return Err(gen_error_info(Position::new(interval, flow_name), err.to_string()));
         }
     }

@@ -97,6 +97,8 @@ fn execute_step(
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
+    let _ = env_logger::try_init();
+
     let mut result = HashMap::new();
 
     for flow in bot.flows.iter() {
@@ -115,6 +117,8 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
 }
 
 pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
+    let _ = env_logger::try_init();
+
     let mut flows = vec![];
     let mut errors = Vec::new();
     let mut imports = Vec::new();
@@ -157,6 +161,8 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
 }
 
 pub fn fold_bot(bot: &CsmlBot) -> String {
+    let _ = env_logger::try_init();
+
     let mut flows = vec![];
     let mut errors = Vec::new();
     let mut imports = Vec::new();
@@ -217,6 +223,8 @@ pub fn interpret(
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
+    let _ = env_logger::try_init();
+
     let mut msg_data = MessageData::default();
 
     let mut flow = context.flow.to_owned();

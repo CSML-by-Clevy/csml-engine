@@ -8,6 +8,7 @@ use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, ConversationInfo, EngineError, Client};
 use crate::db_connectors::utils::*;
 
+use log::{debug, info,};
 
 pub fn add_messages_bulk(
     data: &mut ConversationInfo,
@@ -15,6 +16,9 @@ pub fn add_messages_bulk(
     interaction_order: i32,
     direction: &str,
 ) -> Result<(), EngineError> {
+    info!("db call save messages {:?}", msgs);
+    debug!("db call save messages {:?} client {:?}", msgs, data.client);
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let expires_at = get_expires_at_for_mongodb(data.ttl);
@@ -63,6 +67,9 @@ pub fn get_client_messages(
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
+    info!("db call get messages");
+    debug!("db call get messages client {:?}", client);
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
