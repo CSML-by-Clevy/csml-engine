@@ -17,14 +17,12 @@ fn http_http_0() {
                 "key":"http",
                 "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                     },
                     "_content_type":"http"
@@ -34,14 +32,12 @@ fn http_http_0() {
         "messages":[
             {
                 "content":{
-                    "body": {},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -67,14 +63,12 @@ fn http_get_0() {
                 "key":"http",
                 "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                     },
                     "_content_type":"http"
@@ -85,12 +79,11 @@ fn http_get_0() {
             {
                 "content":{
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -115,14 +108,12 @@ fn http_set_0() {
             {
                 "key":"http", "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                     },
                     "_content_type":"http"
@@ -132,29 +123,25 @@ fn http_set_0() {
         "messages":[
             {
                 "content":{
-                    "body": {},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1",
                         "hello":"world"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
             },
             {
                 "content":{
-                    "body": {},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -180,14 +167,12 @@ fn http_query_0() {
                 "key":"http",
                 "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                     },
                     "_content_type":"http"
@@ -197,10 +182,9 @@ fn http_query_0() {
         "messages":[
             {
                 "content":{
-                    "body": {},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
@@ -213,14 +197,12 @@ fn http_query_0() {
             },
             {
                 "content":{
-                    "body": {},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -253,14 +235,12 @@ fn http_delete_0() {
                 "key":"http",
                 "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                     },
                     "_content_type":"http"
@@ -271,12 +251,11 @@ fn http_delete_0() {
             {
                 "content":{
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"delete",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -284,12 +263,11 @@ fn http_delete_0() {
             {
                 "content":{
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -321,14 +299,12 @@ fn http_put_0() {
             {
                 "key":"http", "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                     },
                     "_content_type":"http"
@@ -342,12 +318,11 @@ fn http_put_0() {
                         "hello":"world"
                     },
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"put",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -356,12 +331,11 @@ fn http_put_0() {
                 "content":{
                     "body": {"hello":"world"},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -387,14 +361,12 @@ fn http_patch_0() {
                 "key":"http",
                 "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                     },
                     "_content_type":"http"
@@ -408,26 +380,23 @@ fn http_patch_0() {
                         "hello":"world"
                     },
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"patch",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
             },
             {
                 "content":{
-                    "body": {},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -459,14 +428,12 @@ fn http_post_0() {
             {
                 "key":"http", "value":{
                     "_content":{
-                        "body":{},
                         "header":{
-                            "accept":"application/json,text/*",
-                            "content-type":"application/json",
+                            "Accept":"application/json,text/*",
+                            "Content-Type":"application/json",
                             "User-Agent": "csml/v1"
                         },
                         "method":"get",
-                        "query":{},
                         "url":"https://clevy.io"
                         },
                     "_content_type":"http"
@@ -480,12 +447,11 @@ fn http_post_0() {
                             "hello":"world"
                     },
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"post",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -494,12 +460,11 @@ fn http_post_0() {
                 "content":{
                     "body": {"hello":"world"},
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1"
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
@@ -527,13 +492,12 @@ fn http_auth_0() {
             {
                 "content":{
                     "header":{
-                        "accept":"application/json,text/*",
-                        "content-type":"application/json",
+                        "Accept":"application/json,text/*",
+                        "Content-Type":"application/json",
                         "User-Agent": "csml/v1",
                         "Authorization": "Basic dXNlcjpwYXNzd2Q="
                     },
                     "method":"get",
-                    "query":{},
                     "url":"https://clevy.io"
                 },
                 "content_type":"http"
