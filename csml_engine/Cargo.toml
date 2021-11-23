@@ -28,7 +28,7 @@ version = "1.4.0"
 optional = true
 
 [dependencies.diesel]
-version = "1.4.7"
+version = "1.4.8"
 optional = true
 features = ["postgres", "chrono", "uuidv07"]
 

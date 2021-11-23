@@ -41,7 +41,7 @@ use chrono::prelude::*;
 use csml_interpreter::data::{
     csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory,
 };
-use std::{collections::HashMap, env, time::SystemTime};
+use std::{collections::HashMap, env};
 
 /**
  * Initiate a CSML chat request.
