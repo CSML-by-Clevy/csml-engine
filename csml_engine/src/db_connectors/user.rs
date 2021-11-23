@@ -6,8 +6,13 @@ use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, Database, EngineError};
+use log::{debug, info,};
+
 
 pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineError> {
+    info!("db call delete client");
+    debug!("db call delete client: {:?}", client);
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;

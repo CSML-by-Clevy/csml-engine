@@ -20,7 +20,7 @@ edition = "2018"
 
 [features]
 mongo = ["mongodb", "bson", "futures"]
-dynamo = ["rusoto_core", "rusoto_dynamodb", "rusoto_s3", "serde_dynamodb", "log", "env_logger"]
+dynamo = ["rusoto_core", "rusoto_dynamodb", "rusoto_s3", "serde_dynamodb"]
 postgresql = ["diesel", "diesel_migrations"]
 
 [dependencies.diesel_migrations]
@@ -71,16 +71,6 @@ default_features = false
 features = ["rustls"]
 optional = true
 
-[dependencies.log]
-version = "0.4.0"
-default_features = false
-optional = true
-
-[dependencies.env_logger]
-version = "0.8.4"
-default_features = false
-optional = true
-
 [dependencies]
 csml_interpreter = { version = "1.8.0", path = "../csml_interpreter" }
 multimap = "0.8.2"
@@ -99,6 +89,8 @@ tokio = "1.4.0"
 
 ureq = { version = "2.3.0", features = ["json"] }
 bincode = "1.3.1"
+log = "0.4.14"
+env_logger= "0.9.0"
 
 [[example]]
 name = "command_line"
