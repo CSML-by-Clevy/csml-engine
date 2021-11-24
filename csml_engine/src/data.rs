@@ -110,6 +110,7 @@ pub struct SerializeCsmlBot {
     pub native_components: Option<String>, // serde_json::Map<String, serde_json::Value>
     pub custom_components: Option<String>, // serde_json::Value
     pub default_flow: String,
+    pub no_interruption_delay: Option<i32>,
     pub env: Option<String>,
 }
 
@@ -139,6 +140,7 @@ impl CsmlBotBincode {
             native_components: self.native_components,
             custom_components: self.custom_components,
             default_flow: self.default_flow,
+            no_interruption_delay: None,
             env: None,
         }
     }
@@ -162,6 +164,7 @@ pub fn to_serializable_bot(bot: &CsmlBot) -> SerializeCsmlBot {
             }
         },
         default_flow: bot.default_flow.to_owned(),
+        no_interruption_delay: bot.no_interruption_delay,
         env: match &bot.env {
             Some(value) => encrypt_data(value).ok(),
             None => None,
@@ -196,7 +199,8 @@ impl SerializeCsmlBot {
             },
             default_flow: self.default_flow.to_owned(),
             bot_ast: None,
-            env: match self.custom_components.to_owned() {
+            no_interruption_delay: self.no_interruption_delay,
+            env: match self.env.to_owned() {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,
             },
@@ -210,6 +214,7 @@ pub struct DynamoBot {
     pub name: String,
     pub custom_components: Option<String>,
     pub default_flow: String,
+    pub no_interruption_delay: Option<i32>,
     pub env: Option<String>,
 }
 
@@ -235,6 +240,7 @@ impl DynamoBotBincode {
             name: self.name,
             custom_components: self.custom_components,
             default_flow: self.default_flow,
+            no_interruption_delay: None,
             env: None,
         }
     }
@@ -249,6 +255,7 @@ pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
             None => None,
         },
         default_flow: csml_bot.default_flow.to_owned(),
+        no_interruption_delay: csml_bot.no_interruption_delay,
         env: match &csml_bot.env {
             Some(value) => encrypt_data(value).ok(),
             None => None,
@@ -275,6 +282,7 @@ impl DynamoBot {
             },
             default_flow: self.default_flow.to_owned(),
             bot_ast: None,
+            no_interruption_delay: self.no_interruption_delay,
             env: match self.env.to_owned() {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,

@@ -106,8 +106,6 @@ pub fn api(
 
     let lit_header = PrimitiveObject::get_literal(&header, interval);
     http.insert("header".to_owned(), lit_header);
-    let lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
-    http.insert("query".to_owned(), lit_query);
     http.insert("body".to_owned(), body);
 
     match http_request(&http, "post", &data.context.flow, interval) {

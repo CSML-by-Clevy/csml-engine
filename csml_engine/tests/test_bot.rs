@@ -82,6 +82,7 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
         custom_components: None,
         default_flow: bot_info.default_flow.clone(),
         bot_ast: None,
+        no_interruption_delay: None,
         env: Some(serde_json::json!({
             "random": "value",
             "toto": "key",

@@ -9,28 +9,33 @@ use crate::{Database, EngineError};
 use crate::db_connectors::utils::*;
 use csml_interpreter::data::Client;
 
+use log::{debug, info,};
+
 pub fn delete_state_key(
     client: &Client,
     _type: &str,
-    _key: &str,
+    key: &str,
     db: &mut Database,
 ) -> Result<(), EngineError> {
+    info!("db call delete state key: {:?}, type: {:?}", key, _type);
+    debug!("db call delete state key: {:?}, type: {:?}, client {:?}", key, _type, client);
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
-        return mongodb_connector::state::delete_state_key(client, _type, _key, db);
+        return mongodb_connector::state::delete_state_key(client, _type, key, db);
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
         let db = dynamodb_connector::get_db(db)?;
-        return dynamodb_connector::state::delete_state_key(client, _type, _key, db);
+        return dynamodb_connector::state::delete_state_key(client, _type, key, db);
     }
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
-        return postgresql_connector::state::delete_state_key(client, _type, _key, db);
+        return postgresql_connector::state::delete_state_key(client, _type, key, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -42,6 +47,9 @@ pub fn get_state_key(
     _key: &str,
     db: &mut Database,
 ) -> Result<Option<serde_json::Value>, EngineError> {
+    info!("db call get state key: {:?}, type: {:?}", _key, _type);
+    debug!("db call get state key: {:?}, type: {:?}, client {:?}", _key, _type, client);
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -67,6 +75,9 @@ pub fn get_current_state(
     client: &Client,
     db: &mut Database,
 ) -> Result<Option<serde_json::Value>, EngineError> {
+    info!("db call get current state");
+    debug!("db call get current state client {:?}", client);
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
@@ -95,6 +106,9 @@ pub fn set_state_items(
     ttl: Option<chrono::Duration>,
     _db: &mut Database,
 ) -> Result<(), EngineError> {
+    info!("db call set state type: {:?}, keys and values {:?}", _type, _keys_values);
+    debug!("db call set state type: {:?}, keys and values {:?}, client: {:?}", _type, _keys_values, _client);
+
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(_db)?;

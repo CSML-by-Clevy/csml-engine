@@ -94,6 +94,7 @@ fn main() {
         DEFAULT_FLOW_NAME,
         None,
         None,
+        None,
     );
 
     // Create an Event

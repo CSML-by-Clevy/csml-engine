@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 1.8.0
+  version: 1.8.1
   title: CSML Engine
   description: CSML Engine Server API specifications
   termsOfService: http://csml.dev/terms/
@@ -742,6 +742,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FlowModel"
+        no_interruption_delay:
+          type: integer
+          example: 30
+          description: number of seconds after which the user can send a new event while the bot is speaking
 
     BotVersionModel:
       allOf:
@@ -1077,7 +1081,7 @@ components:
     EngineVersion:
       type: string
       description: The version of the engine this resource was handled with. Can be used for compatibility checks later on.
-      example: "1.8.0"
+      example: "1.8.1"
 
     Error:
       type: object

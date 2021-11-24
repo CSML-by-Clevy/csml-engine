@@ -6,8 +6,9 @@ use crate::error_format::*;
 use std::collections::HashMap;
 use std::env;
 
-use ureq::{Request};
 use std::sync::Arc;
+use ureq::{Request};
+use log::{debug, error, info,};
 
 use rustls::{
     Certificate,
@@ -62,23 +63,25 @@ fn get_value<'lifetime, T: 'static>(
 
 pub fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Interval) -> Result<String, ErrorInfo> {
     let url = &mut get_value::<String>("url", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?.to_owned();
-    let query =
-        get_value::<HashMap<String, Literal>>("query", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?;
 
-    if !query.is_empty() {
+    if object.get("query").is_some() {
+        let query =
+            get_value::<HashMap<String, Literal>>("query", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?;
+
         let length = query.len();
+        if length > 0 {
+            url.push_str("?");
 
-        url.push_str("?");
-
-        for (index, key) in query.keys().enumerate() {
-            let value = get_value::<String>(key, query, flow_name, interval, ERROR_HTTP_QUERY_VALUES)?;
-
-            url.push_str(key);
-            url.push_str("=");
-            url.push_str(value);
-
-            if index + 1 < length {
-                url.push_str("&");
+            for (index, key) in query.keys().enumerate() {
+                let value = get_value::<String>(key, query, flow_name, interval, ERROR_HTTP_QUERY_VALUES)?;
+    
+                url.push_str(key);
+                url.push_str("=");
+                url.push_str(value);
+    
+                if index + 1 < length {
+                    url.push_str("&");
+                }
             }
         }
     }
@@ -169,6 +172,9 @@ pub fn http_request(
         request = request.set(key, value);
     }
 
+    info!("Make Http call");
+    debug!("Make Http call request info: {:?}", request);
+
     let response = match object.get("body") {
         Some(body) => request.send_json(body.primitive.to_json()),
         None => request.call(),
@@ -185,11 +191,7 @@ pub fn http_request(
             }
         }
         Err(err) => {
-            if let Ok(var) = env::var("DEBUG") {
-                if var == "true" {
-                    eprintln!("FN request failed: {:?}", err.to_string());
-                }
-            }
+            error!("Http call failed: {:?}", err);
             return Err(gen_error_info(Position::new(interval, flow_name), err.to_string()));
         }
     }
@@ -202,11 +204,11 @@ pub fn http(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Liter
     match args.get("url", 0) {
         Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
             header.insert(
-                "content-type".to_owned(),
+                "Content-Type".to_owned(),
                 PrimitiveString::get_literal("application/json", interval),
             );
             header.insert(
-                "accept".to_owned(),
+                "Accept".to_owned(),
                 PrimitiveString::get_literal("application/json,text/*", interval),
             );
             header.insert(
@@ -222,10 +224,6 @@ pub fn http(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Liter
 
             let lit_header = PrimitiveObject::get_literal(&header, interval);
             http.insert("header".to_owned(), lit_header);
-            let lit_query = PrimitiveObject::get_literal(&HashMap::default(), interval);
-            http.insert("query".to_owned(), lit_query);
-            let lit_body = PrimitiveObject::get_literal(&HashMap::default(), interval);
-            http.insert("body".to_owned(), lit_body);
 
             args.populate(&mut http, &["url", "header", "query", "body"], flow_name, interval)?;
 
