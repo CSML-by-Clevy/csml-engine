@@ -1,5 +1,5 @@
 use crate::{
-    data::{ConversationInfo, Database, EngineError, FlowTrigger, DEBUG},
+    data::{ConversationInfo, Database, EngineError, FlowTrigger},
     db_connectors::state::delete_state_key,
     send::send_to_callback_url,
     CsmlBot, CsmlFlow,
@@ -17,6 +17,7 @@ use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::env;
 
+use log::{debug};
 use regex::Regex;
 use md5::{Digest, Md5};
 
@@ -151,12 +152,7 @@ pub fn send_msg_to_callback_url(
 ) {
     let messages = messages_formater(data, msg, interaction_order, end);
 
-    match env::var(DEBUG) {
-        Ok(ref var) if var == "true" => {
-            println!("conversation_end => {}", messages["conversation_end"]);
-        }
-        _ => (),
-    };
+    debug!("conversation_end: {:?}", messages["conversation_end"]);
 
     send_to_callback_url(data, serde_json::json!(messages))
 }
@@ -367,15 +363,12 @@ pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineE
     return Ok(());
 }
 
-#[cfg(feature = "dynamo")]
 pub fn init_logger() {
     if let Ok(debug) = env::var("DEBUG") {
         // RUST_LOG=rusoto
         // hyper=debug
         if &debug == "true" {
-            env::set_var("RUST_LOG", "rusoto");
             env::set_var("hyper", "debug");
-
             let _ = env_logger::try_init();
         }
     };

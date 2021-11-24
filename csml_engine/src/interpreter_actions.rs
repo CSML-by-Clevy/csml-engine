@@ -10,7 +10,9 @@ use csml_interpreter::{
 };
 use serde_json::{map::Map, Value};
 use std::collections::HashMap;
-use std::{env, sync::mpsc, thread, time::SystemTime};
+use std::{sync::mpsc, thread};
+
+use log::{debug, error, info,};
 
 /**
  * This is the CSML Engine action.
@@ -25,11 +27,11 @@ pub fn interpret_step(
     let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &bot.flows)?;
     let mut interaction_order = 0;
     let mut conversation_end = false;
-    // let mut interaction_success = true;
     let (sender, receiver) = mpsc::channel::<MSG>();
     let context = data.context.clone();
-    let interpret_step = SystemTime::now();
 
+    info!("interpreter: start interpretations of bot {:?}", bot.id);
+    debug!("interpreter: client {:?} start interpretations of bot {:?}, with ", data.client, bot);
     let new_bot = bot.clone();
     thread::spawn(move || {
         interpret(new_bot, context, event, Some(sender));
@@ -59,6 +61,9 @@ pub fn interpret_step(
                 }
             },
             MSG::Message(msg) => {
+                info!("sending message");
+                debug!("sending message {:?}, client: {:?}", msg, data.client);
+
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -77,6 +82,9 @@ pub fn interpret_step(
                     "previous": previous
                 });
 
+                info!("hold bot");
+                debug!("hold bot, state_hold {:?}, client {:?}", state_hold, data.client);
+
                 set_state_items(
                     &data.client,
                     "hold",
@@ -94,6 +102,7 @@ pub fn interpret_step(
             }
             MSG::Next { flow, step } => match (flow, step) {
                 (Some(flow), Some(step)) => {
+                    debug!("goto flow: {}, step: {} from: flow: {} step: {}, client: {:?}", flow, step, data.context.flow, data.context.step, data.client);
                     update_current_context(data, &memories);
                     goto_flow(
                         data,
@@ -105,6 +114,7 @@ pub fn interpret_step(
                     )?
                 }
                 (Some(flow), None) => {
+                    debug!("goto flow: {}, step: start from: flow: {} step: {}, client: {:?}", flow, data.context.flow, data.context.step, data.client);
                     update_current_context(data, &memories);
                     let step = "start".to_owned();
                     goto_flow(
@@ -117,11 +127,13 @@ pub fn interpret_step(
                     )?
                 }
                 (None, Some(step)) => {
+                    debug!("goto flow: {}, step: {} from: flow: {} step: {}, client: {:?}", data.context.flow, step, data.context.flow, data.context.step, data.client);
                     if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
                         break;
                     }
                 }
                 (None, None) => {
+                    debug!("goto end from: flow: {} step: {}, client: {:?}", data.context.flow, data.context.step, data.client);
                     let step = "end".to_owned();
                     if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
                         break;
@@ -130,7 +142,7 @@ pub fn interpret_step(
             },
             MSG::Error(err_msg) => {
                 conversation_end = true;
-                // interaction_success = false;
+                error!("interpreter error: {:?}, client: {:?}", err_msg, data.client);
 
                 send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
                 data.messages.push(err_msg);
@@ -139,19 +151,6 @@ pub fn interpret_step(
         }
     }
 
-    if let Ok(var) = env::var(DEBUG) {
-        if var == "true" {
-            let el = interpret_step.elapsed()?;
-            eprintln!(
-                "Total Time interpret step {} - {}.{}",
-                data.context.step,
-                el.as_secs(),
-                el.as_millis()
-            );
-        }
-    }
-
-    let now = SystemTime::now();
     // save in db
     let msgs: Vec<serde_json::Value> = data
         .messages
@@ -163,20 +162,6 @@ pub fn interpret_step(
         add_messages_bulk(data, msgs, interaction_order, "SEND")?;
     }
     add_memories(data, &memories)?;
-
-    if let Ok(var) = env::var(DEBUG) {
-        if var == "true" {
-            let el = now.elapsed()?;
-            eprintln!(
-                "Save message & memories bulk at the end of step - {}.{}",
-                el.as_secs(),
-                el.as_millis()
-            );
-        }
-    }
-
-    //TODO: log update
-    // update_interaction(data, interaction_success)?;
 
     Ok(messages_formater(
         data,
@@ -197,9 +182,6 @@ fn goto_flow<'a>(
     nextflow: String,
     nextstep: String,
 ) -> Result<(), EngineError> {
-    // TODO: add in logs
-    // create_node(data, Some(nextflow.clone()), Some(nextstep.clone()))?;
-
     *current_flow = get_flow_by_id(&nextflow, &bot.flows)?;
     data.context.flow = nextflow;
     data.context.step = nextstep;
@@ -211,8 +193,6 @@ fn goto_flow<'a>(
     )?;
 
     *interaction_order += 1;
-    // TODO: add in logs
-    // update_interaction(data, false)?;
 
     Ok(())
 }
@@ -226,9 +206,6 @@ fn goto_step<'a>(
     interaction_order: &mut i32,
     nextstep: String,
 ) -> Result<bool, EngineError> {
-    // TODO: add in logs
-    // create_node(data, None, Some(nextstep.clone()))?;
-
     if nextstep == "end" {
         *conversation_end = true;
 
