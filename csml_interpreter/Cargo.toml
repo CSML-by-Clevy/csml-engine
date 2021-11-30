@@ -1,6 +1,6 @@
 [package]
 name = "csml_interpreter"
-version = "1.8.0"
+version = "1.8.1"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "François Falala-Sechet <francois@clevy.io>",
@@ -44,6 +44,8 @@ base64 = "0.13.0"
 hex = "0.4.2"
 openssl = { version = "0.10.35", features = ["vendored"] }
 uuid = { version = "0.8.2", features = ["serde", "v4", "v1"] }
+log = "0.4.14"
+env_logger= "0.9.0"
 
 [[example]]
 name = "hello_world"

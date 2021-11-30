@@ -43,6 +43,7 @@ fn format_message(
         DEFAULT_FLOW_NAME,
         None,
         None,
+        None,
     );
 
     interpret(bot, context, event, None)

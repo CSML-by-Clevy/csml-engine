@@ -17,6 +17,7 @@ pub struct CsmlBot {
     pub custom_components: Option<serde_json::Value>,                          // serde_json::Value
     pub default_flow: String,
     pub bot_ast: Option<String>,
+    pub no_interruption_delay: Option<i32>,
     pub env: Option<serde_json::Value>,
 }
 
@@ -34,6 +35,7 @@ impl CsmlBot {
         custom_components: Option<serde_json::Value>,
         default_flow: &str,
         bot_ast: Option<String>,
+        no_interruption_delay: Option<i32>,
         env: Option<serde_json::Value>,
     ) -> Self {
         Self {
@@ -45,6 +47,7 @@ impl CsmlBot {
             custom_components,
             default_flow: default_flow.to_owned(),
             bot_ast,
+            no_interruption_delay,
             env,
         }
     }

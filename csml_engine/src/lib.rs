@@ -30,17 +30,18 @@ extern crate diesel_migrations;
 use data::*;
 use db_connectors::{
     bot, conversations, init_db, memories, messages, state, user,
-    clean_db, BotVersion, BotVersionCreated,
+    state::{set_state_items, delete_state_key}, clean_db, BotVersion, BotVersionCreated,
     DbConversation,
 };
 use init::*;
 use interpreter_actions::interpret_step;
 use utils::*;
 
+use chrono::prelude::*;
 use csml_interpreter::data::{
     csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory,
 };
-use std::{collections::HashMap, env, time::SystemTime};
+use std::{collections::HashMap, env};
 
 /**
  * Initiate a CSML chat request.
@@ -59,8 +60,6 @@ pub fn start_conversation(
     request: CsmlRequest,
     bot_opt: BotOpt,
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
-    let now = SystemTime::now();
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     let formatted_event = format_event(json!(request))?;
@@ -83,16 +82,41 @@ pub fn start_conversation(
         messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
     }
 
+    // block user event if delay variable si on and delay_time is bigger than current time
+    if let Some(delay) = bot.no_interruption_delay {
+        if let Some(delay) = state::get_state_key(&data.client, "delay", "content", &mut data.db)? {
+            match (delay["delay_value"].as_i64(), delay["timestamp"].as_i64()) {
+                (Some(delay), Some(timestamp)) if timestamp + delay >= Utc::now().timestamp() => {
+                    return Ok(serde_json::Map::new())
+                }
+                _ => {}
+            }
+        }
+
+        let delay: serde_json::Value = serde_json::json!({
+            "delay_value": delay,
+            "timestamp": Utc::now().timestamp()
+        });
+
+        set_state_items(
+            &data.client,
+            "delay",
+            vec![("content", &delay)],
+            data.ttl,
+            &mut data.db,
+        )?;
+    }
+    //////////////////////////////////////
+
     check_for_hold(&mut data, &bot)?;
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
-    if let Ok(var) = env::var(DEBUG) {
-        if var == "true" {
-            let el = now.elapsed()?;
-            println!("Total time Manager - {}.{}", el.as_secs(), el.as_millis());
-        }
+    //end delay
+    if let Some(_) = bot.no_interruption_delay {
+        delete_state_key(&data.client, "delay", "content", &mut data.db)?;
     }
+
     res
 }
 
@@ -102,7 +126,6 @@ pub fn start_conversation(
  */
 pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     conversations::get_latest_open(client, &mut db)
@@ -110,7 +133,6 @@ pub fn get_open_conversation(client: &Client) -> Result<Option<DbConversation>, 
 
 pub fn get_client_memories(client: &Client) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     memories::get_memories(client, &mut db)
@@ -118,7 +140,6 @@ pub fn get_client_memories(client: &Client) -> Result<serde_json::Value, EngineE
 
 pub fn get_client_memory(client: &Client, key: &str) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     memories::get_memory(client, key, &mut db)
@@ -130,7 +151,6 @@ pub fn get_client_messages(
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     messages::get_client_messages(client, &mut db, limit, pagination_key)
@@ -142,7 +162,6 @@ pub fn get_client_conversations(
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     conversations::get_client_conversations(client, &mut db, limit, pagination_key)
@@ -153,7 +172,6 @@ pub fn get_client_conversations(
  */
 pub fn get_current_state(client: &Client) -> Result<Option<serde_json::Value>, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     state::get_current_state(client, &mut db)
@@ -168,7 +186,6 @@ pub fn create_client_memory(
     value: serde_json::Value,
 ) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
     validate_memory_key_format(&key)?;
 
@@ -182,7 +199,6 @@ pub fn create_client_memory(
  */
 pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     let bot_id = csml_bot.id.clone();
@@ -209,7 +225,6 @@ pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, Engine
  */
 pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     bot::get_last_bot_version(bot_id, &mut db)
@@ -220,7 +235,6 @@ pub fn get_last_bot_version(bot_id: &str) -> Result<Option<BotVersion>, EngineEr
  */
 pub fn get_bot_by_version_id(id: &str, bot_id: &str) -> Result<Option<BotVersion>, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     bot::get_by_version_id(id, bot_id, &mut db)
@@ -245,7 +259,6 @@ pub fn get_bot_versions(
     last_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     bot::get_bot_versions(bot_id, limit, last_key, &mut db)
@@ -256,7 +269,6 @@ pub fn get_bot_versions(
  */
 pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     bot::delete_bot_version(bot_id, id, &mut db)
@@ -267,7 +279,6 @@ pub fn delete_bot_version_id(id: &str, bot_id: &str) -> Result<(), EngineError> 
  */
 pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     bot::delete_bot_versions(bot_id, &mut db)
@@ -278,7 +289,6 @@ pub fn delete_all_bot_versions(bot_id: &str) -> Result<(), EngineError> {
  */
 pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     bot::delete_all_bot_data(bot_id, &mut db)
@@ -289,7 +299,6 @@ pub fn delete_all_bot_data(bot_id: &str) -> Result<(), EngineError> {
  */
 pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     memories::delete_client_memories(client, &mut db)
@@ -300,7 +309,6 @@ pub fn delete_client_memories(client: &Client) -> Result<(), EngineError> {
  */
 pub fn delete_client_memory(client: &Client, memory_name: &str) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     memories::delete_client_memory(client, memory_name, &mut db)
@@ -311,7 +319,6 @@ pub fn delete_client_memory(client: &Client, memory_name: &str) -> Result<(), En
  */
 pub fn delete_client(client: &Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     user::delete_client(client, &mut db)
@@ -371,7 +378,6 @@ pub fn fold_bot(mut bot: CsmlBot) -> Result<String, EngineError> {
  */
 pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
     let mut db = init_db()?;
-    #[cfg(feature = "dynamo")]
     init_logger();
 
     state::delete_state_key(&client, "hold", "position", &mut db)?;
