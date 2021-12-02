@@ -51,7 +51,10 @@ impl MSG {
                     sender.send(msg).unwrap();
                 }
 
-                PrimitiveNull::get_literal(err.position.interval)
+                let mut error_lit = PrimitiveNull::get_literal(err.position.interval);
+                error_lit.additional_info = err.additional_info;
+
+                error_lit
             }
         }
     }

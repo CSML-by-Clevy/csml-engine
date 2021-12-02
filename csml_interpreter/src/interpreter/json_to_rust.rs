@@ -97,36 +97,71 @@ pub fn memory_to_literal(
 
             Ok(PrimitiveArray::get_literal(&vec, interval))
         }
-        serde_json::Value::Object(val) => {
-            let mut map = HashMap::new();
 
-            match (
-                val.get("_content"),
-                val.get("_content_type"),
-                val.get("_closure"),
+        serde_json::Value::Object(map) if map.contains_key("_additional_info") => {
+            if let (
+                Some(value),
+                Some(serde_json::Value::Object(additional_info))
+            ) = (
+                map.get("value"),
+                map.get("_additional_info")
             ) {
-                (Some(content), Some(serde_json::Value::String(conent_type)), _) => {
-                    let mut literal = memory_to_literal(content, interval, flow_name)?;
-                    literal.set_content_type(&conent_type);
-                    Ok(literal)
-                }
-                (_, _, Some(closure_json)) => {
-                    let closure: PrimitiveClosure =
-                        serde_json::from_value(closure_json.to_owned())?;
+                let mut literal = memory_to_literal(value, interval, flow_name)?;
 
-                    Ok(Literal {
-                        content_type: "closure".to_owned(),
-                        primitive: Box::new(closure),
-                        interval,
-                    })
+                let mut obj = HashMap::new();
+                for (k, v) in additional_info.iter() {
+                    obj.insert(k.to_owned(), memory_to_literal(v, interval, flow_name)?);
                 }
-                (_, _, _) => {
-                    for (k, v) in val.iter() {
-                        map.insert(k.to_owned(), memory_to_literal(v, interval, flow_name)?);
-                    }
-                    Ok(PrimitiveObject::get_literal(&map, interval))
-                }
+
+                literal.add_info(obj);
+
+                Ok(literal)
+            } else {
+                Ok(PrimitiveNull::get_literal(interval))
             }
+        }
+
+        serde_json::Value::Object(map) if map.contains_key("_content") && map.contains_key("_content_type") => {
+            if let (
+                Some(content), 
+                Some(serde_json::Value::String(conent_type))
+            ) = (
+                map.get("_content"),
+                map.get("_content_type")
+            ) {
+                let mut literal = memory_to_literal(content, interval, flow_name)?;
+                literal.set_content_type(&conent_type);
+                Ok(literal)
+            } else {
+                Ok(PrimitiveNull::get_literal(interval))
+            }
+        }
+
+        serde_json::Value::Object(map) if map.contains_key("_closure") => {
+
+            if let Some(closure_json) = map.get("_closure"){
+                let closure: PrimitiveClosure =
+                serde_json::from_value(closure_json.to_owned())?;
+
+                Ok(Literal {
+                    content_type: "closure".to_owned(),
+                    primitive: Box::new(closure),
+                    additional_info: None,
+                    interval,
+                })
+            }
+            else {
+                Ok(PrimitiveNull::get_literal(interval))
+            }
+        }
+
+        serde_json::Value::Object(map) => {
+            let mut obj = HashMap::new();
+
+            for (k, v) in map.iter() {
+                obj.insert(k.to_owned(), memory_to_literal(v, interval, flow_name)?);
+            }
+            Ok(PrimitiveObject::get_literal(&obj, interval))
         }
     }
 }

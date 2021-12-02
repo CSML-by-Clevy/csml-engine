@@ -1,9 +1,10 @@
 use crate::data::{
     ast::*,
-    data::{init_child_context, init_child_scope, Data},
-    error_info::ErrorInfo,
-    primitive::PrimitiveClosure,
     tokens::*,
+    error_info::ErrorInfo,
+    literal::create_error_info,
+    primitive::PrimitiveClosure,
+    data::{init_child_context, init_child_scope, Data},
     ArgsType, Literal, MemoryType, MessageData, Position, MSG,
 };
 use crate::error_format::*;
@@ -50,21 +51,32 @@ fn search_function<'a>(
     match &import.from_flow {
         Some(flow_name) => match bot.get(flow_name) {
             Some(flow) => {
-                get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
-                    position: Position::new(import.interval, origin_flow_name),
-                    message: format!(
-                        "function '{}' not found in '{}' flow",
-                        import.name, flow_name
-                    ),
-                })
-            }
-            None => Err(ErrorInfo {
-                position: Position::new(import.interval, origin_flow_name),
-                message: format!(
+                let error_message = format!(
                     "function '{}' not found in '{}' flow",
                     import.name, flow_name
-                ),
-            }),
+                );
+                let error_info = create_error_info(&error_message, Interval::default());
+
+                get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
+                    position: Position::new(import.interval, origin_flow_name),
+                    message: error_message,
+                    additional_info: Some(error_info)
+                })
+            }
+            None => {
+                let error_message = format!(
+                    "function '{}' not found in '{}' flow",
+                    import.name, flow_name
+                );
+                let error_info = create_error_info(&error_message, Interval::default());
+
+
+                Err(ErrorInfo {
+                    position: Position::new(import.interval, origin_flow_name),
+                    message: error_message,
+                    additional_info: Some(error_info)
+                })
+            },
         },
         None => {
             for (_name, flow) in bot.iter() {
@@ -72,10 +84,13 @@ fn search_function<'a>(
                     return Ok(values);
                 }
             }
+            let error_message = format!("function '{}' not found in bot", import.name);
+            let error_info = create_error_info(&error_message, Interval::default());
 
             Err(ErrorInfo {
                 position: Position::new(import.interval, origin_flow_name),
-                message: format!("function '{}' not found in bot", import.name),
+                message: error_message,
+                additional_info: Some(error_info)
             })
         }
     }

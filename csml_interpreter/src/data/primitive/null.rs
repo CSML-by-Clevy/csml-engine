@@ -4,6 +4,7 @@ use crate::data::primitive::{
     boolean::PrimitiveBoolean, object::PrimitiveObject, string::PrimitiveString, Primitive,
     PrimitiveType, Right,
 };
+use crate::data::{literal};
 use crate::data::{
     ast::Interval, literal::ContentType, message::Message, tokens::NULL, Data, Literal,
     MessageData, MSG,
@@ -21,6 +22,7 @@ use std::{collections::HashMap, sync::mpsc};
 type PrimitiveMethod = fn(
     null: &mut PrimitiveNull,
     args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
     data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
@@ -30,7 +32,10 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_int" => (PrimitiveNull::is_int as PrimitiveMethod, Right::Read),
     "is_float" => (PrimitiveNull::is_float as PrimitiveMethod, Right::Read),
     "type_of" => (PrimitiveNull::type_of as PrimitiveMethod, Right::Read),
+    "get_info" => (PrimitiveNull::get_info as PrimitiveMethod, Right::Read),
+    "is_error" => (PrimitiveNull::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveNull::to_string as PrimitiveMethod, Right::Read),
+
 };
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -44,6 +49,7 @@ impl PrimitiveNull {
     fn is_number(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -62,6 +68,7 @@ impl PrimitiveNull {
     fn is_int(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -80,6 +87,7 @@ impl PrimitiveNull {
     fn is_float(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -98,6 +106,7 @@ impl PrimitiveNull {
     fn type_of(
         _null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -113,9 +122,35 @@ impl PrimitiveNull {
         Ok(PrimitiveString::get_literal("Null", interval))
     }
 
+    fn get_info(
+        _null: &mut PrimitiveNull,
+        args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        literal::get_info(args, additional_info, interval, data)
+    }
+
+    fn is_error(
+        _null: &mut PrimitiveNull,
+        _args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        _data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        match additional_info {
+            Some(map) if map.contains_key("error") => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
     fn to_string(
         null: &mut PrimitiveNull,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -149,6 +184,7 @@ impl PrimitiveNull {
         Literal {
             content_type: "null".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         }
     }
@@ -261,6 +297,7 @@ impl Primitive for PrimitiveNull {
             Literal {
                 content_type: "text".to_owned(),
                 primitive: Box::new(PrimitiveNull::default()),
+                additional_info: None,
                 interval: Interval {
                     start_column: 0,
                     start_line: 0,
@@ -293,6 +330,7 @@ impl Primitive for PrimitiveNull {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
         data: &mut Data,
@@ -300,7 +338,7 @@ impl Primitive for PrimitiveNull {
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, data, interval)?;
+            let res = f(self, args, additional_info, data, interval)?;
 
             return Ok((res, *right));
         }
