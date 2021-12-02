@@ -1,5 +1,5 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::literal::ContentType;
+use crate::data::{literal, literal::ContentType};
 use crate::data::position::Position;
 use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::string::PrimitiveString;
@@ -19,6 +19,7 @@ use std::{collections::HashMap, sync::mpsc};
 type PrimitiveMethod = fn(
     boolean: &mut PrimitiveBoolean,
     args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
     data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
@@ -28,6 +29,8 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_int" => (PrimitiveBoolean::is_int as PrimitiveMethod, Right::Read),
     "is_float" => (PrimitiveBoolean::is_float as PrimitiveMethod, Right::Read),
     "type_of" => (PrimitiveBoolean::type_of as PrimitiveMethod, Right::Read),
+    "is_error" => (PrimitiveBoolean::is_error as PrimitiveMethod, Right::Read),
+    "get_info" => (PrimitiveBoolean::get_info as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveBoolean::to_string as PrimitiveMethod, Right::Read),
 };
 
@@ -44,6 +47,7 @@ impl PrimitiveBoolean {
     fn is_number(
         _boolean: &mut PrimitiveBoolean,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -62,6 +66,7 @@ impl PrimitiveBoolean {
     fn is_int(
         _boolean: &mut PrimitiveBoolean,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -80,6 +85,7 @@ impl PrimitiveBoolean {
     fn is_float(
         _boolean: &mut PrimitiveBoolean,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -98,6 +104,7 @@ impl PrimitiveBoolean {
     fn type_of(
         _boolean: &mut PrimitiveBoolean,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -113,9 +120,35 @@ impl PrimitiveBoolean {
         Ok(PrimitiveString::get_literal("boolean", interval))
     }
 
+    fn get_info(
+        _boolean: &mut PrimitiveBoolean,
+        args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        literal::get_info(args, additional_info, interval, data)
+    }
+
+    fn is_error(
+        _boolean: &mut PrimitiveBoolean,
+        _args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        _data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        match additional_info {
+            Some(map) if map.contains_key("error") => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
     fn to_string(
         boolean: &mut PrimitiveBoolean,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -147,6 +180,7 @@ impl PrimitiveBoolean {
         Literal {
             content_type: "boolean".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         }
     }
@@ -162,6 +196,7 @@ impl Primitive for PrimitiveBoolean {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
         data: &mut Data,
@@ -169,7 +204,7 @@ impl Primitive for PrimitiveBoolean {
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, data, interval)?;
+            let res = f(self, args, additional_info, data, interval)?;
 
             return Ok((res, *right));
         }
@@ -289,6 +324,7 @@ impl Primitive for PrimitiveBoolean {
             Literal {
                 content_type: "boolean".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.to_string())),
+                additional_info: None,
                 interval: Interval {
                     start_column: 0,
                     start_line: 0,

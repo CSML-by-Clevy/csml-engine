@@ -55,6 +55,7 @@ pub fn evaluate_infix(
                 Ok(primitive) => Ok(Literal {
                     content_type: primitive.get_type().to_string(),
                     primitive,
+                    additional_info: None,
                     interval: lhs.interval,
                 }),
                 Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
@@ -67,6 +68,7 @@ pub fn evaluate_infix(
                 Ok(primitive) => Ok(Literal {
                     content_type: primitive.get_type().to_string(),
                     primitive,
+                    additional_info: None,
                     interval: lhs.interval,
                 }),
                 Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
@@ -79,6 +81,7 @@ pub fn evaluate_infix(
                 Ok(primitive) => Ok(Literal {
                     content_type: primitive.get_type().to_string(),
                     primitive,
+                    additional_info: None,
                     interval: lhs.interval,
                 }),
                 Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
@@ -92,6 +95,7 @@ pub fn evaluate_infix(
                 Ok(primitive) => Ok(Literal {
                     content_type: primitive.get_type().to_string(),
                     primitive,
+                    additional_info: None,
                     interval: lhs.interval,
                 }),
                 Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),
@@ -104,6 +108,7 @@ pub fn evaluate_infix(
                 Ok(primitive) => Ok(Literal {
                     content_type: primitive.get_type().to_string(),
                     primitive,
+                    additional_info: None,
                     interval: lhs.interval,
                 }),
                 Err(err) => Err(gen_error_info(Position::new(lhs.interval, flow_name), err)),

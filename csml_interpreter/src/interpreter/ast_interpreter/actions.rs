@@ -138,6 +138,7 @@ pub fn match_actions(
                             new_value = Literal {
                                 content_type: new_value.content_type,
                                 interval: new_value.interval,
+                                additional_info: None,
                                 primitive
                             };
                         }
@@ -154,6 +155,7 @@ pub fn match_actions(
                             new_value = Literal {
                                 content_type: new_value.content_type,
                                 interval: new_value.interval,
+                                additional_info: None,
                                 primitive
                             };
                         }
