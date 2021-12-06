@@ -1,5 +1,6 @@
 use crate::data::position::Position;
 use crate::data::{
+    literal,
     literal::ContentType,
     primitive::{
         Primitive, PrimitiveBoolean, PrimitiveClosure, PrimitiveInt, PrimitiveNull,
@@ -26,6 +27,7 @@ use std::{collections::HashMap, sync::mpsc};
 type PrimitiveMethod = fn(
     array: &mut PrimitiveArray,
     args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
     interval: Interval,
     data: &mut Data,
     msg_data: &mut MessageData,
@@ -37,8 +39,10 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_int" => (PrimitiveArray::is_int as PrimitiveMethod, Right::Read),
     "is_float" => (PrimitiveArray::is_float as PrimitiveMethod, Right::Read),
     "type_of" => (PrimitiveArray::type_of as PrimitiveMethod, Right::Read),
+    "get_info" => (PrimitiveArray::get_info as PrimitiveMethod, Right::Read),
+    "is_error" => (PrimitiveArray::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveArray::to_string as PrimitiveMethod, Right::Read),
-
+    
     "find" => (PrimitiveArray::find as PrimitiveMethod, Right::Read),
     "is_empty" => (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read),
     "insert_at" => (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write),
@@ -92,6 +96,7 @@ impl PrimitiveArray {
     fn is_number(
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -112,6 +117,7 @@ impl PrimitiveArray {
     fn is_int(
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -132,6 +138,7 @@ impl PrimitiveArray {
     fn is_float(
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -152,6 +159,7 @@ impl PrimitiveArray {
     fn type_of(
         _array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -169,9 +177,39 @@ impl PrimitiveArray {
         Ok(PrimitiveString::get_literal("array", interval))
     }
 
+    fn get_info(
+        _array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        literal::get_info(args, additional_info, interval, data)
+    }
+
+    fn is_error(
+        _array: &mut PrimitiveArray,
+        _args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        match additional_info {
+            Some(map) if map.contains_key("error") => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
     fn to_string(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -194,6 +232,7 @@ impl PrimitiveArray {
     fn find(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -236,6 +275,7 @@ impl PrimitiveArray {
     fn is_empty(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -258,6 +298,7 @@ impl PrimitiveArray {
     fn insert_at(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -314,6 +355,7 @@ impl PrimitiveArray {
     fn index_of(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -350,6 +392,7 @@ impl PrimitiveArray {
     fn join(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -398,6 +441,7 @@ impl PrimitiveArray {
     fn length(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -420,6 +464,7 @@ impl PrimitiveArray {
     fn one_of(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -447,6 +492,7 @@ impl PrimitiveArray {
     fn push(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -486,6 +532,7 @@ impl PrimitiveArray {
     fn pop(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -512,6 +559,7 @@ impl PrimitiveArray {
     fn remove_at(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -556,6 +604,7 @@ impl PrimitiveArray {
     fn shuffle(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -580,6 +629,7 @@ impl PrimitiveArray {
     fn slice(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -696,6 +746,7 @@ impl PrimitiveArray {
     fn map(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -750,6 +801,7 @@ impl PrimitiveArray {
     fn filter(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -807,6 +859,7 @@ impl PrimitiveArray {
     fn reduce(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -878,6 +931,7 @@ impl PrimitiveArray {
         Literal {
             content_type: "array".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         }
     }
@@ -1032,6 +1086,7 @@ impl Primitive for PrimitiveArray {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
         data: &mut Data,
@@ -1039,7 +1094,7 @@ impl Primitive for PrimitiveArray {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval, data, msg_data, sender)?;
+            let res = f(self, args, additional_info, interval, data, msg_data, sender)?;
 
             return Ok((res, *right));
         }

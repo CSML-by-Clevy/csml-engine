@@ -113,6 +113,7 @@ fn loop_path(
                     lit.primitive.exec(
                         "insert",
                         &args,
+                        &lit.additional_info,
                         interval.to_owned(),
                         content_type,
                         &mut false,
@@ -164,6 +165,7 @@ fn loop_path(
                 let mut return_lit = match lit.primitive.exec(
                     name,
                     args,
+                    &lit.additional_info,
                     *interval,
                     content_type,
                     &mut tmp_update_var,

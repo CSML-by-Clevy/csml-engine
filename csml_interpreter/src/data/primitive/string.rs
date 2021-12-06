@@ -1,5 +1,5 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::literal::ContentType;
+use crate::data::{literal, literal::ContentType};
 use crate::data::position::Position;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
@@ -26,6 +26,7 @@ use std::{collections::HashMap, sync::mpsc};
 type PrimitiveMethod = fn(
     string: &mut PrimitiveString,
     args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
     interval: Interval,
     data: &mut Data,
     msg_data: &mut MessageData,
@@ -37,6 +38,8 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_int" => (PrimitiveString::is_int as PrimitiveMethod, Right::Read),
     "is_float" => (PrimitiveString::is_float as PrimitiveMethod, Right::Read),
     "type_of" => (PrimitiveString::type_of as PrimitiveMethod, Right::Read),
+    "get_info" => (PrimitiveString::get_info as PrimitiveMethod, Right::Read),
+    "is_error" => (PrimitiveString::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
 
     "is_email" => (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
@@ -88,6 +91,7 @@ impl PrimitiveString {
     fn is_number(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -110,6 +114,7 @@ impl PrimitiveString {
     fn is_int(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -132,6 +137,7 @@ impl PrimitiveString {
     fn is_float(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -159,6 +165,7 @@ impl PrimitiveString {
     fn is_email(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -186,6 +193,7 @@ impl PrimitiveString {
     fn type_of(
         _string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -203,9 +211,39 @@ impl PrimitiveString {
         Ok(PrimitiveString::get_literal("string", interval))
     }
 
+    fn get_info(
+        _string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        literal::get_info(args, additional_info, interval, data)
+    }
+
+    fn is_error(
+        _string: &mut PrimitiveString,
+        _args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        _data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        match additional_info {
+            Some(map) if map.contains_key("error") => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
     fn to_string(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -228,6 +266,7 @@ impl PrimitiveString {
     fn append(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -269,6 +308,7 @@ impl PrimitiveString {
     fn contains(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -308,6 +348,7 @@ impl PrimitiveString {
     fn contains_regex(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -357,6 +398,7 @@ impl PrimitiveString {
     fn replace(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -406,6 +448,7 @@ impl PrimitiveString {
     fn replace_all(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -455,6 +498,7 @@ impl PrimitiveString {
     fn replace_regex(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -514,6 +558,7 @@ impl PrimitiveString {
     fn ends_with(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -553,6 +598,7 @@ impl PrimitiveString {
     fn ends_with_regex(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -606,6 +652,7 @@ impl PrimitiveString {
     fn from_json(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -636,6 +683,7 @@ impl PrimitiveString {
     fn is_empty(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -658,6 +706,7 @@ impl PrimitiveString {
     fn length(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -680,6 +729,7 @@ impl PrimitiveString {
     fn do_match(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -727,6 +777,7 @@ impl PrimitiveString {
     fn do_match_regex(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -789,6 +840,7 @@ impl PrimitiveString {
     fn starts_with(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -828,6 +880,7 @@ impl PrimitiveString {
     fn starts_with_regex(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -881,6 +934,7 @@ impl PrimitiveString {
     fn to_lowercase(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -902,6 +956,7 @@ impl PrimitiveString {
     fn to_uppercase(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -923,6 +978,7 @@ impl PrimitiveString {
     fn capitalize(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -951,6 +1007,7 @@ impl PrimitiveString {
     fn slice(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -1060,6 +1117,7 @@ impl PrimitiveString {
     fn split(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         _msg_data: &mut MessageData,
@@ -1105,6 +1163,7 @@ impl PrimitiveString {
     fn abs(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1116,6 +1175,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "abs",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1131,6 +1191,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "abs",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1150,6 +1211,7 @@ impl PrimitiveString {
     fn cos(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1161,6 +1223,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "cos",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1177,6 +1240,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "cos",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1196,6 +1260,7 @@ impl PrimitiveString {
     fn ceil(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1207,6 +1272,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "ceil",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1222,6 +1288,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "ceil",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1241,6 +1308,7 @@ impl PrimitiveString {
     fn pow(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1252,6 +1320,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "pow",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1267,6 +1336,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "pow",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1286,6 +1356,7 @@ impl PrimitiveString {
     fn floor(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1297,6 +1368,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "floor",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1312,6 +1384,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "floor",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1331,6 +1404,7 @@ impl PrimitiveString {
     fn round(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1342,6 +1416,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "round",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1357,6 +1432,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "round",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1376,6 +1452,7 @@ impl PrimitiveString {
     fn sin(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1387,6 +1464,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sin",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1402,6 +1480,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sin",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1421,6 +1500,7 @@ impl PrimitiveString {
     fn sqrt(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1432,6 +1512,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sqrt",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1447,6 +1528,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sqrt",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1466,6 +1548,7 @@ impl PrimitiveString {
     fn tan(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1477,6 +1560,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "tan",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1492,6 +1576,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "tan",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1511,6 +1596,7 @@ impl PrimitiveString {
     fn to_int(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1522,6 +1608,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_int",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1537,6 +1624,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_int",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1556,6 +1644,7 @@ impl PrimitiveString {
     fn to_float(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         data: &mut Data,
         msg_data: &mut MessageData,
@@ -1567,6 +1656,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_float",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1582,6 +1672,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_float",
                 args,
+                additional_info,
                 interval,
                 &ContentType::Primitive,
                 data,
@@ -1616,6 +1707,7 @@ impl PrimitiveString {
         Literal {
             content_type: "string".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         }
     }
@@ -1874,6 +1966,7 @@ impl Primitive for PrimitiveString {
             Literal {
                 content_type: "string".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.value)),
+                additional_info: None,
                 interval: Interval {
                     start_column: 0,
                     start_line: 0,
@@ -1906,6 +1999,7 @@ impl Primitive for PrimitiveString {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
         data: &mut Data,
@@ -1913,7 +2007,7 @@ impl Primitive for PrimitiveString {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, interval, data, msg_data, sender)?;
+            let res = f(self, args, additional_info, interval, data, msg_data, sender)?;
 
             return Ok((res, *right));
         }

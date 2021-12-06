@@ -1,5 +1,6 @@
 use crate::data::primitive::tools::check_division_by_zero_f64;
 use crate::data::{
+    literal,
     ast::Interval,
     error_info::ErrorInfo,
     literal::ContentType,
@@ -24,6 +25,7 @@ use std::{collections::HashMap, sync::mpsc};
 type PrimitiveMethod = fn(
     float: &mut PrimitiveFloat,
     args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
     data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
@@ -33,6 +35,8 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_int" => (PrimitiveFloat::is_int as PrimitiveMethod, Right::Read),
     "is_float" => (PrimitiveFloat::is_float as PrimitiveMethod, Right::Read),
     "type_of" => (PrimitiveFloat::type_of as PrimitiveMethod, Right::Read),
+    "is_error" => (PrimitiveFloat::is_error as PrimitiveMethod, Right::Read),
+    "get_info" => (PrimitiveFloat::get_info as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveFloat::to_string as PrimitiveMethod, Right::Read),
 
     "precision" => (PrimitiveFloat::precision as PrimitiveMethod, Right::Read),
@@ -61,6 +65,7 @@ impl PrimitiveFloat {
     fn is_number(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -79,6 +84,7 @@ impl PrimitiveFloat {
     fn is_int(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -97,6 +103,7 @@ impl PrimitiveFloat {
     fn is_float(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -115,6 +122,7 @@ impl PrimitiveFloat {
     fn type_of(
         _float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -130,9 +138,35 @@ impl PrimitiveFloat {
         Ok(PrimitiveString::get_literal("float", interval))
     }
 
+    fn get_info(
+        _float: &mut PrimitiveFloat,
+        args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        literal::get_info(args, additional_info, interval, data)
+    }
+
+    fn is_error(
+        _float: &mut PrimitiveFloat,
+        _args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        _data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        match additional_info {
+            Some(map) if map.contains_key("error") => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
     fn to_string(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -153,6 +187,7 @@ impl PrimitiveFloat {
     fn abs(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -173,6 +208,7 @@ impl PrimitiveFloat {
     fn cos(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -193,6 +229,7 @@ impl PrimitiveFloat {
     fn ceil(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -213,6 +250,7 @@ impl PrimitiveFloat {
     fn precision(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -245,6 +283,7 @@ impl PrimitiveFloat {
     fn floor(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -265,6 +304,7 @@ impl PrimitiveFloat {
     fn pow(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -328,6 +368,7 @@ impl PrimitiveFloat {
     fn round(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -348,6 +389,7 @@ impl PrimitiveFloat {
     fn sin(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -368,6 +410,7 @@ impl PrimitiveFloat {
     fn sqrt(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -388,6 +431,7 @@ impl PrimitiveFloat {
     fn tan(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -408,6 +452,7 @@ impl PrimitiveFloat {
     fn to_int(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -426,6 +471,7 @@ impl PrimitiveFloat {
     fn to_float(
         float: &mut PrimitiveFloat,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -457,6 +503,7 @@ impl PrimitiveFloat {
         Literal {
             content_type: "float".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         }
     }
@@ -644,6 +691,7 @@ impl Primitive for PrimitiveFloat {
             Literal {
                 content_type: "float".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.to_string())),
+                additional_info: None,
                 interval: Interval {
                     start_column: 0,
                     start_line: 0,
@@ -676,6 +724,7 @@ impl Primitive for PrimitiveFloat {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
         data: &mut Data,
@@ -683,7 +732,7 @@ impl Primitive for PrimitiveFloat {
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, data, interval)?;
+            let res = f(self, args, additional_info, data, interval)?;
 
             return Ok((res, *right));
         }

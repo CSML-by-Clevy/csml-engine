@@ -1,10 +1,11 @@
 use crate::data::position::Position;
-use crate::data::primitive::Primitive;
-use crate::data::Interval;
+use crate::data::primitive::{Primitive, PrimitiveString, PrimitiveObject};
+use crate::data::{Interval, Data};
 use crate::error_format::*;
 
 use std::cmp::Ordering;
 use std::ops::Add;
+use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -16,6 +17,8 @@ use serde::{Deserialize, Serialize};
 pub struct Literal {
     pub content_type: String,
     pub primitive: Box<dyn Primitive>,
+    // this adds complementary information about the origin of the variable
+    pub additional_info: Option<HashMap<String, Literal>>,
     pub interval: Interval,
 }
 
@@ -34,6 +37,59 @@ pub enum ContentType {
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+pub fn get_info(
+    args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
+    interval: Interval,
+    data: &mut Data,
+) -> Result<Literal, ErrorInfo> {
+    let usage = "get_info(Optional<String: search_key>) => Literal";
+
+    match (additional_info, args.get("arg0")) {
+
+        (Some(map), None) => Ok(PrimitiveObject::get_literal(map, interval)),
+
+        (Some(map), Some(key)) => {
+            let key = Literal::get_value::<String>(
+                &key.primitive,
+                &data.context.flow,
+                interval,
+                usage.to_owned(),
+            )?;
+
+            match map.get(key) {
+                Some(value) => Ok(value.to_owned()),
+                None => {
+                    let mut lit = PrimitiveObject::get_literal(map, interval);
+                    let error_msg = format!("get_info() failed, key '{}' not found", key);
+
+                    // add error message in additional info
+                    lit.add_error_to_info(&error_msg);
+
+                    Ok(lit)
+                }
+            }
+        },
+
+        _ => Ok(PrimitiveString::get_literal("Null", interval))
+    }
+}
+
+pub fn create_error_info(error_msg: &str, interval: Interval) -> HashMap<String, Literal> {
+    let mut map = HashMap::new();
+
+    map.insert(
+        "error".to_owned(),
+        PrimitiveString::get_literal(error_msg, interval)
+    );
+
+    map
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Implementations
 ////////////////////////////////////////////////////////////////////////////////
 
 impl Literal {
@@ -69,6 +125,37 @@ impl Literal {
 
     pub fn set_content_type(&mut self, content_type: &str) {
         self.content_type = content_type.to_owned();
+    }
+
+    pub fn add_info(&mut self, additional_info: HashMap<String, Literal>) {
+        self.additional_info = Some(additional_info);
+    }
+
+    pub fn add_error_to_info(&mut self, error_msg: &str) {
+        match self.additional_info {
+            Some(ref mut map) => {
+                map.insert(
+                    "error".to_owned(),
+                    PrimitiveString::get_literal(error_msg, self.interval)
+                );
+            }
+            None => {
+                let error_info = create_error_info(error_msg, self.interval);
+                self.additional_info = Some(error_info);
+            }
+        }
+    }
+
+    pub fn add_literal_to_info(&mut self, key: String, lit: Literal) {
+        match self.additional_info {
+            Some(ref mut map) => {map.insert(key,lit);},
+            None => {
+                let mut map = HashMap::new();
+                map.insert(key,lit);
+
+                self.additional_info = Some(map);
+            }
+        }
     }
 }
 
