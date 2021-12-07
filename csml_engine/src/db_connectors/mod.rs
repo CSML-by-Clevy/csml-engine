@@ -144,7 +144,7 @@ pub struct BotVersionCreated {
 
 impl BotVersion {
     pub fn flatten(&self) -> serde_json::Value {
-        let mut value = serde_json::json!(self.bot);
+        let mut value = self.bot.to_json();
 
         value["version_id"] = serde_json::json!(self.version_id);
         value["engine_version"] = serde_json::json!(self.engine_version);

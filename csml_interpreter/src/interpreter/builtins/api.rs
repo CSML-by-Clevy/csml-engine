@@ -8,7 +8,7 @@ use crate::interpreter::{
     json_to_rust::interpolate,
 };
 
-use std::{collections::HashMap, env, sync::mpsc};
+use std::{collections::HashMap, sync::mpsc};
 
 fn format_body(args: &ArgsType, flow_name: &str, interval: Interval, client: Client) -> Result<Literal, ErrorInfo> {
     let mut map: HashMap<String, Literal> = HashMap::new();
@@ -62,16 +62,6 @@ fn format_headers(interval: Interval) -> HashMap<String, Literal> {
         PrimitiveString::get_literal("application/json,text/*", interval),
     );
 
-    match env::var("FN_X_API_KEY") {
-        Ok(value) => {
-            header.insert(
-                "X-Api-Key".to_owned(),
-                PrimitiveString::get_literal(&value, interval),
-            );
-        }
-        Err(_e) => {}
-    };
-
     header
 }
 
@@ -85,8 +75,8 @@ pub fn api(
     let (client, url) = match &data.context.api_info {
         Some(ApiInfo {
             client,
-            fn_endpoint,
-        }) => (client.to_owned(), fn_endpoint.to_owned()),
+            apps_endpoint,
+        }) => (client.to_owned(), apps_endpoint.to_owned()),
         None => {
             return Err(gen_error_info(
                 Position::new(interval, &data.context.flow),

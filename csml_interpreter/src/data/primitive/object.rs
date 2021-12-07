@@ -32,6 +32,7 @@ use std::{collections::HashMap, sync::mpsc};
 
 const FUNCTIONS_HTTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "set" => (PrimitiveObject::set as PrimitiveMethod, Right::Read),
+    "disable_ssl_verify" => (PrimitiveObject::disable_ssl_verify as PrimitiveMethod, Right::Read),
     "auth" => (PrimitiveObject::auth as PrimitiveMethod, Right::Read),
     "query" => (PrimitiveObject::query as PrimitiveMethod, Right::Read),
     "get" => (PrimitiveObject::get_http as PrimitiveMethod, Right::Read),
@@ -171,6 +172,25 @@ impl PrimitiveObject {
 
         let mut result = PrimitiveObject::get_literal(&object.value, interval);
 
+        result.set_content_type("http");
+
+        Ok(result)
+    }
+
+    fn disable_ssl_verify(
+        object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let mut object = object.to_owned();
+
+        let value = PrimitiveBoolean::get_literal(true, interval);
+        object.value.insert("disable_ssl_verify".to_owned(), value);
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
         result.set_content_type("http");
 
         Ok(result)
