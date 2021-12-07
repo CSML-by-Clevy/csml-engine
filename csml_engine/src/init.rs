@@ -38,9 +38,6 @@ pub fn init_conversation_info<'a>(
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
 
-    //TODO: replace by logs
-    // let interaction_id = init_interaction(request.payload.clone(), &request.client, &mut db)?;
-
     let mut context = init_context(default_flow, request.client.clone(), &bot.fn_endpoint);
     let ttl = get_ttl_duration_value(Some(event));
     let low_data = get_low_data_mode_value(event);
@@ -117,11 +114,11 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
 /**
  * Initialize the context object for incoming requests
  */
-pub fn init_context(flow: String, client: Client, fn_endpoint: &Option<String>) -> Context {
-    let api_info = match fn_endpoint {
+pub fn init_context(flow: String, client: Client, apps_endpoint: &Option<String>) -> Context {
+    let api_info = match apps_endpoint {
         Some(value) => Some(ApiInfo {
             client,
-            fn_endpoint: value.to_owned(),
+            apps_endpoint: value.to_owned(),
         }),
         None => None,
     };

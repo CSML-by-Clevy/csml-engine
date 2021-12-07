@@ -81,7 +81,7 @@ pub const ERROR_COMPONENT_UNKNOWN: &str = "function does not exist for component
 
 // Fn API
 pub const ERROR_FN_ID: &str = "App name must be of type string";
-pub const ERROR_FN_ENDPOINT: &str = "App can not be called because fn_endpoint is not set in bot";
+pub const ERROR_FN_ENDPOINT: &str = "App can not be called because apps_endpoint is not set in bot";
 pub const ERROR_FAIL_RESPONSE_JSON: &str = "failed to read response as JSON";
 
 // ### Import
