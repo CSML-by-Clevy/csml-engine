@@ -89,6 +89,14 @@ fn set_http_error_info(
     error
 }
 
+pub fn get_ssl_state(object: &HashMap<String, Literal>) -> bool {
+    match object.get("disable_ssl_verify") {
+        Some(val) 
+        if val.primitive.get_type() == PrimitiveType::PrimitiveBoolean => val.primitive.as_bool(),
+        _ => false
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,11 +149,12 @@ fn get_http_request(
     url: &str,
     flow_name: &str,
     interval: Interval,
+    is_ssl_disable: bool
 ) -> Result<Request, ErrorInfo> {
 
     if let Ok(disable_ssl_verify) = env::var("DISABLE_SSL_VERIFY") {
         match disable_ssl_verify.parse::<bool>() {
-            Ok(low_data) if low_data => {
+            Ok(low_data) if low_data || is_ssl_disable => {
                 let agent = get_no_certificate_verifier_agent();
 
                 let request = match method {
@@ -192,11 +201,12 @@ pub fn http_request(
     interval: Interval,
 ) -> Result<serde_json::Value, ErrorInfo> {
     let url = get_url(object, flow_name, interval)?;
+    let is_ssl_disable = get_ssl_state(object);
 
     let header =
         get_value::<HashMap<String, Literal>>("header", object, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
 
-    let mut request = get_http_request(method, &url, flow_name, interval)?;
+    let mut request = get_http_request(method, &url, flow_name, interval, is_ssl_disable)?;
 
     for key in header.keys() {
         let value = get_value::<String>(key, header, flow_name, interval, ERROR_HTTP_GET_VALUE)?;

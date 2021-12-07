@@ -14,7 +14,7 @@ use nom::lib::std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct ApiInfo {
     pub client: Client,
-    pub fn_endpoint: String,
+    pub apps_endpoint: String,
 }
 
 #[derive(Debug, Clone)]
