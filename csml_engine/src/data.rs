@@ -21,35 +21,42 @@ pub struct RunRequest {
     pub bot: Option<CsmlBot>,
     pub bot_id: Option<String>,
     pub version_id: Option<String>,
-    pub fn_endpoint: Option<String>,
+    #[serde(alias = "fn_endpoint")]
+    pub apps_endpoint: Option<String>,
     pub event: CsmlRequest,
 }
 
 impl RunRequest {
     pub fn get_bot_opt(&self) -> Result<BotOpt, EngineError> {
         match self.clone() {
+            // Bot
             RunRequest {
                 bot: Some(csml_bot),
                 ..
             } => Ok(BotOpt::CsmlBot(csml_bot)),
+
+            // version id
             RunRequest {
                 version_id: Some(version_id),
                 bot_id: Some(bot_id),
-                fn_endpoint,
+                apps_endpoint,
                 ..
             } => Ok(BotOpt::Id {
                 version_id,
                 bot_id,
-                fn_endpoint,
+                apps_endpoint,
             }),
+
+            // bot id
             RunRequest {
                 bot_id: Some(bot_id),
-                fn_endpoint,
+                apps_endpoint,
                 ..
             } => Ok(BotOpt::BotId {
                 bot_id,
-                fn_endpoint,
+                apps_endpoint,
             }),
+
             _ => Err(EngineError::Format("Invalid bot_opt format".to_owned())),
         }
     }
@@ -63,12 +70,14 @@ pub enum BotOpt {
     Id {
         version_id: String,
         bot_id: String,
-        fn_endpoint: Option<String>,
+        #[serde(alias = "fn_endpoint")]
+        apps_endpoint: Option<String>,
     },
     #[serde(rename = "bot_id")]
     BotId {
         bot_id: String,
-        fn_endpoint: Option<String>,
+        #[serde(alias = "fn_endpoint")]
+        apps_endpoint: Option<String>,
     },
 }
 
@@ -78,24 +87,24 @@ impl BotOpt {
             BotOpt::CsmlBot(csml_bot) => csml_bot.to_owned(),
             BotOpt::BotId {
                 bot_id,
-                fn_endpoint,
+                apps_endpoint,
             } => {
                 let mut bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)
                     .unwrap()
                     .unwrap();
-                bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
+                bot_version.bot.fn_endpoint = apps_endpoint.to_owned();
                 bot_version.bot
             }
             BotOpt::Id {
                 version_id,
                 bot_id,
-                fn_endpoint,
+                apps_endpoint,
             } => {
                 let mut bot_version =
                     db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
                         .unwrap()
                         .unwrap();
-                bot_version.bot.fn_endpoint = fn_endpoint.to_owned();
+                bot_version.bot.fn_endpoint = apps_endpoint.to_owned();
                 bot_version.bot
             }
         }

@@ -319,7 +319,7 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
 * {
 *   id: String,
 *   name: String,
-*   fn_endpoint: Option<String>,
+*   apps_endpoint: Option<String>,
 *   flows: Vec<CsmlFlow>,
 *   custom_components: Option<>,
 *   default_flow: String,
