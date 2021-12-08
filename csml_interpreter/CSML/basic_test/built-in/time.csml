@@ -21,3 +21,15 @@ parse_2_arg:
 
     say time.format()
     goto end
+
+parse_timezone:
+    do time = Time().parse("2014-11-28T21:00:09+09:00")
+
+    say time.format()
+    goto end
+
+with_timezone:
+    do time = Time().parse("2014-11-28T21:00:09Z").with_timezone(9 * 3600)
+
+    say time.format()
+    goto end
