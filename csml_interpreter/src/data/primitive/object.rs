@@ -18,7 +18,7 @@ use crate::interpreter::{
     builtins::http::{http_request}, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
-use chrono::{DateTime, SecondsFormat, TimeZone, Utc};
+use chrono::{DateTime, TimeZone, Utc, FixedOffset};
 use lettre::Transport;
 use phf::phf_map;
 use regex::Regex;
@@ -51,6 +51,7 @@ const FUNCTIONS_SMTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map
 
 const FUNCTIONS_TIME: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "at" => (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Write),
+    "with_timezone" => (PrimitiveObject::with_timezone as PrimitiveMethod, Right::Write),
     "unix" => (PrimitiveObject::unix as PrimitiveMethod, Right::Write),
     "add" => (PrimitiveObject::add_time as PrimitiveMethod, Right::Write),
     "sub" => (PrimitiveObject::sub_time as PrimitiveMethod, Right::Write),
@@ -724,6 +725,42 @@ impl PrimitiveObject {
         }
     }
 
+    fn with_timezone(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "with_timezone(timezone: int) => Time Object";
+
+        let timezone = match args.get("arg0") {
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?
+            }
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ))
+        };
+
+        object.value.insert(
+            "timezone".to_owned(),
+            PrimitiveInt::get_literal(*timezone, interval),
+        );
+
+        let mut lit = PrimitiveObject::get_literal(&object.value, interval);
+        lit.set_content_type("time");
+
+        Ok(lit)
+    }
+
     fn unix(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
@@ -911,9 +948,20 @@ impl PrimitiveObject {
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "Time().format(format: String)";
+ 
+        let timezone = if let Some(timezone) = object.value.get("timezone") {
+            Literal::get_value::<i64>(
+                &timezone.primitive,
+                &data.context.flow,
+                interval,
+                "".to_string(),
+            ).ok()
+        } else {
+            None
+        };
 
-        let date: DateTime<Utc> = match object.value.get("milliseconds") {
-            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+        match (object.value.get("milliseconds"), timezone) {
+            (Some(lit), None) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -921,35 +969,34 @@ impl PrimitiveObject {
                     "".to_string(),
                 )?;
 
-                Utc.timestamp_millis(*millis)
+                let date: DateTime<Utc> = Utc.timestamp_millis(*millis);
+
+                let formatted_date = tools_time::format_date(args, date, data, interval, true)?;
+
+                Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
+            (Some(lit), Some(timezone)) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let millis = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                let date: DateTime<FixedOffset> = FixedOffset::east(*timezone as i32).timestamp_millis(*millis);
+
+                let formatted_date = tools_time::format_date(args, date, data, interval, false)?;
+
+                Ok(PrimitiveString::get_literal(&formatted_date, interval))
+            }
+
             _ => {
-                return Err(gen_error_info(
+                Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ))
             }
-        };
-
-        let formatted_date = match args.len() {
-            0 => date.to_rfc3339_opts(SecondsFormat::Millis, true),
-            _ => {
-                let format_lit = match args.get("arg0") {
-                    Some(res) => res.to_owned(),
-                    _ => PrimitiveNull::get_literal(Interval::default()),
-                };
-
-                let format = Literal::get_value::<String>(
-                    &format_lit.primitive,
-                    &data.context.flow,
-                    interval,
-                    "format parameter must be of type string".to_string(),
-                )?;
-                date.format(format).to_string()
-            }
-        };
-
-        Ok(PrimitiveString::get_literal(&formatted_date, interval))
+        }
     }
 }
 
