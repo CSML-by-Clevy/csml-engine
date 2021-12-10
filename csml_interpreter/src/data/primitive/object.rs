@@ -814,10 +814,10 @@ impl PrimitiveObject {
         };
 
         let email = tools_smtp::format_email(csml_email, data, interval)?;
+        info!("send email: {:?}", email);
+        debug!("send email: {:?}, mailer: {:?}", email, object.value);
         let mailer = tools_smtp::get_mailer(&mut object.value, data, interval)?;
 
-        info!("send email: {:?}", email);
-        debug!("send email: {:?}, mailer: {:?}", email, mailer);
         match mailer.send(&email) {
             Ok(_) => Ok(PrimitiveBoolean::get_literal(true, interval)),
             Err(e) => {
