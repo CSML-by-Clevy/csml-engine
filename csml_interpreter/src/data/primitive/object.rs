@@ -18,13 +18,16 @@ use crate::interpreter::{
     builtins::http::{http_request}, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
-use chrono::{DateTime, TimeZone, Utc, FixedOffset};
-use lettre::Transport;
-use phf::phf_map;
-use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
+
+use phf::phf_map;
+use regex::Regex;
+use lettre::Transport;
+use log::{debug, info, error};
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, TimeZone, Utc, FixedOffset};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -47,6 +50,8 @@ const FUNCTIONS_SMTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map
     "auth" => (PrimitiveObject::credentials as PrimitiveMethod, Right::Read),
     "port" => (PrimitiveObject::port as PrimitiveMethod, Right::Read),
     "tls" => (PrimitiveObject::smtp_tls as PrimitiveMethod, Right::Read),
+    "starttls" => (PrimitiveObject::starttls as PrimitiveMethod, Right::Read),
+    "set_auth_mechanism" => (PrimitiveObject::set_auth_mechanism as PrimitiveMethod, Right::Read),
     "send" => (PrimitiveObject::smtp_send as PrimitiveMethod, Right::Read),
 };
 
@@ -182,7 +187,7 @@ impl PrimitiveObject {
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
         _additional_info: &Option<HashMap<String, Literal>>,
-        data: &mut Data,
+        _data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
@@ -660,6 +665,123 @@ impl PrimitiveObject {
         Ok(result)
     }
 
+    fn set_auth_mechanism(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+
+        let usage = "Available mechanisms: PLAIN, AUTH LOGIN, XOAUTH2. set_auth_mechanism(String || Array<String>) => smtp object";
+
+        let auth_mechanisms = match args.get("arg0") {
+            Some(lit) if lit.content_type == "string" => {
+                let value = tools_smtp::get_auth_mechanism(lit, data, interval, usage)?;
+
+                let mut map = HashMap::new();
+                map.insert(
+                    value,
+                    PrimitiveNull::get_literal(interval),
+                );
+
+                map
+            },
+            Some(lit) if lit.content_type == "array" => {
+                let vec = Literal::get_value::<Vec<Literal>>(
+                  &lit.primitive,
+                    &data.context.flow,
+                    lit.interval,
+                    format!("usage: {}", usage),
+                )?;
+
+                let map = vec.iter()
+                    .filter_map(|lit| {
+                        tools_smtp::get_auth_mechanism(lit, data, interval, usage).ok()
+                    })
+                    .map(|val| (val, PrimitiveNull::get_literal(interval)))
+                    .collect::<HashMap<String, Literal>>();
+
+                if map.is_empty() {
+                    return Err(gen_error_info(
+                        Position::new(interval, &data.context.flow),
+                        format!("usage: {}", usage),
+                    ));
+                }
+
+                map
+            },
+            _ => {
+                error!("set_auth_mechanism wrong mechanism name {:?}", args);
+
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "auth_mechanisms".to_owned(),
+            PrimitiveObject::get_literal(&auth_mechanisms, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
+    fn starttls(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "starttls(BOOLEAN) => smtp object";
+
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let tls = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<bool>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "starttls".to_owned(),
+            PrimitiveBoolean::get_literal(*tls, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
     fn smtp_send(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
@@ -694,9 +816,12 @@ impl PrimitiveObject {
         let email = tools_smtp::format_email(csml_email, data, interval)?;
         let mailer = tools_smtp::get_mailer(&mut object.value, data, interval)?;
 
+        info!("send email: {:?}", email);
+        debug!("send email: {:?}, mailer: {:?}", email, mailer);
         match mailer.send(&email) {
             Ok(_) => Ok(PrimitiveBoolean::get_literal(true, interval)),
             Err(e) => {
+                error!("send email failed {:?}", e);
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Could not send email: {:?}", e),

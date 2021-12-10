@@ -5,7 +5,7 @@ use crate::data::{
 use crate::error_format::*;
 use lettre::{
     message::{header, Mailbox, MultiPart, SinglePart},
-    transport::smtp::authentication::Credentials,
+    transport::smtp::authentication::{Mechanism, Credentials},
 };
 use std::collections::HashMap;
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,6 +76,54 @@ where
             Position::new(interval, &data.context.flow),
             error_message,
         )),
+    }
+}
+
+// by default letter will use Mechanism::Plain and Mechanism::Login
+
+// PLAIN authentication mechanism, defined in
+// [RFC 4616](https://tools.ietf.org/html/rfc4616)
+//   Plain,
+
+// LOGIN authentication mechanism
+// Obsolete but needed for some providers (like office365)
+// Defined in [draft-murchison-sasl-login-00](https://www.ietf.org/archive/id/draft-murchison-sasl-login-00.txt).
+//  Login, // AUTH LOGIN => LOGIN
+
+// Non-standard XOAUTH2 mechanism, defined in
+// [xoauth2-protocol](https://developers.google.com/gmail/imap/xoauth2-protocol)
+// Xoauth2,
+fn get_auth_mechanisms(
+    object: &HashMap<String, Literal>,
+    data: &Data,
+    interval: Interval,
+) -> Option<Vec<Mechanism>> {
+
+    let auth_values = get_value::<HashMap<String, Literal>>(
+        object.get("auth_mechanisms"),
+        data,
+        "".to_owned(),
+        interval,
+    ).ok()?;
+
+    let mut vec = vec![];
+
+    if auth_values.contains_key("PLAIN") {
+        vec.push(Mechanism::Plain);
+    }
+
+    if auth_values.contains_key("AUTH LOGIN"){
+        vec.push(Mechanism::Login);
+    }
+
+    if auth_values.contains_key("XOAUTH2") {
+        vec.push(Mechanism::Xoauth2);
+    }
+
+    if vec.is_empty() {
+        None
+    } else {
+        Some(vec)
     }
 }
 
@@ -178,9 +226,17 @@ pub fn get_mailer(
         "password is missing or invalid type".to_owned(),
         interval,
     )?;
+
+    let auth_mechanisms = get_auth_mechanisms(object, data, interval);
+
+    let starttls: bool = match get_value::<bool>(object.get("starttls"), data, "".to_owned(), interval) {
+        Ok(starttls) => starttls.to_owned() ,
+        Err(_) => false,
+    };
+
     // set default port to [465] for TLS connections. RFC8314](https://tools.ietf.org/html/rfc8314)
-    let port = match get_value::<u16>(object.get("port"), data, "".to_owned(), interval) {
-        Ok(port_value) => port_value.to_owned(),
+    let port = match get_value::<i64>(object.get("port"), data, "".to_owned(), interval) {
+        Ok(port_value) => port_value.to_owned() as u16,
         Err(_) => 465,
     };
     let smtp_server = get_value::<String>(
@@ -198,16 +254,30 @@ pub fn get_mailer(
     };
 
     match is_tls {
-        true => match lettre::SmtpTransport::relay(smtp_server) {
-            Ok(smtp_server) => {
-                let mailer = smtp_server.credentials(credentials).port(port).build();
+        true => {
+            let smtp_builder = match starttls {
+                true => lettre::SmtpTransport::starttls_relay(smtp_server),
+                _ => lettre::SmtpTransport::relay(smtp_server)
+            };
 
-                Ok(mailer)
+            match smtp_builder {
+                Ok(smtp_server) => {
+
+                    let mut smtp_builder  = smtp_server
+                        .credentials(credentials)
+                        .port(port);
+
+                    if let Some(auth_mechanisms) = auth_mechanisms {
+                        smtp_builder = smtp_builder.authentication(auth_mechanisms);
+                    }
+
+                    Ok(smtp_builder.build())
+                }
+                Err(_) => Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    "invalid SMTP address".to_owned(),
+                )),
             }
-            Err(_) => Err(gen_error_info(
-                Position::new(interval, &data.context.flow),
-                "invalid SMTP address".to_owned(),
-            )),
         },
         false => {
             let mailer = lettre::SmtpTransport::builder_dangerous(smtp_server)
@@ -217,5 +287,31 @@ pub fn get_mailer(
 
             Ok(mailer)
         }
+    }
+}
+
+pub fn get_auth_mechanism(
+    lit: &Literal,
+    data: &Data,
+    interval: Interval,
+    usage: &str,
+) -> Result<String, ErrorInfo> {
+
+    let value = Literal::get_value::<String>(
+        &lit.primitive,
+        &data.context.flow,
+        lit.interval,
+        format!("usage: {}", usage),
+    )?;
+
+    // "XOAUTH2", "AUTH LOGIN", "PLAIN"
+    match value.to_lowercase() {
+        value if value == "PLAIN".to_lowercase() => Ok("PLAIN".to_owned()),
+        value if value == "AUTH LOGIN".to_lowercase() => Ok("AUTH LOGIN".to_owned()),
+        value if value == "XOAUTH2".to_lowercase() => Ok("XOAUTH2".to_owned()),
+        _ => Err(gen_error_info(
+            Position::new(interval, &data.context.flow),
+            usage.to_owned(),
+        ))
     }
 }
