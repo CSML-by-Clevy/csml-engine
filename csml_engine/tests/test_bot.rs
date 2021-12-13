@@ -333,11 +333,14 @@ fn ok_test_memory() {
     let events = &["/flow6"];
     let messages = &[
         "flow6 start",
+        "< random > is used before it was saved in memory at line 8, column 30 at flow [flow6]",
         "{\"val\":1}",
         "message",
         "4",
         "4.2",
         "[21,42,84]",
+        "< random > is used before it was saved in memory at line 17, column 9 at flow [flow6]",
+        "Null",
     ];
 
     let channel_id = Uuid::new_v4().to_string();
@@ -360,10 +363,12 @@ fn ok_test_memory() {
             Ok(obj) => {
                 let messages = obj["messages"].as_array().unwrap();
                 for message in messages.iter() {
+                    let content_type = message["payload"]["content_type"].as_str().unwrap();
+
                     output_message.push(
-                        message["payload"]["content"]["text"]
+                        message["payload"]["content"][content_type]
                             .as_str()
-                            .unwrap()
+                            .unwrap_or("Null")
                             .to_owned(),
                     );
                 }

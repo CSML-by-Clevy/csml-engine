@@ -736,7 +736,7 @@ components:
         default_flow:
           type: string
           example: Default
-        fn_endpoint:
+        apps_endpoint:
           $ref: "#/components/schemas/FnEndpoint"
         flows:
           type: array
@@ -954,7 +954,7 @@ components:
         bot_id:
           type: string
           example: MyBotID
-        fn_endpoint:
+        apps_endpoint:
           $ref: "#/components/schemas/FnEndpoint"
         event:
           $ref: "#/components/schemas/EventModel"
@@ -972,7 +972,7 @@ components:
         version_id:
           type: string
           example: "86ba492a-b6fe-4c22-95ec-55be4e1c83f0"
-        fn_endpoint:
+        apps_endpoint:
           $ref: "#/components/schemas/FnEndpoint"
         event:
           $ref: "#/components/schemas/EventModel"

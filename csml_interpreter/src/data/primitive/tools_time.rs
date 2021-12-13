@@ -3,11 +3,11 @@ use crate::data::{
     error_info::ErrorInfo,
     position::Position,
     primitive::PrimitiveType,
-    primitive::{Data, PrimitiveInt, PrimitiveObject},
+    primitive::{Data, PrimitiveInt, PrimitiveObject, PrimitiveNull},
     Literal,
 };
 use crate::error_format::*;
-use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use chrono::{DateTime, SecondsFormat, NaiveDate, NaiveDateTime, Utc, TimeZone};
 use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,6 +107,14 @@ pub fn parse_rfc3339(
 
     let mut object = HashMap::new();
 
+    let timezone: i32 = date.timezone().local_minus_utc();
+    if timezone != 0 {
+        object.insert(
+            "timezone".to_owned(),
+            PrimitiveInt::get_literal(timezone as i64, interval),
+        );
+    }
+
     object.insert(
         "milliseconds".to_owned(),
         PrimitiveInt::get_literal(date.timestamp_millis(), interval),
@@ -155,4 +163,35 @@ pub fn pasre_from_str(
     lit.set_content_type("time");
 
     Ok(lit)
+}
+
+pub fn format_date<Tz>(
+    args: &HashMap<String, Literal>,
+    date:DateTime<Tz>,
+    data: &mut Data,
+    interval: Interval,
+    use_z: bool,
+) -> Result<String, ErrorInfo>
+where
+ Tz: TimeZone,
+ Tz::Offset: core::fmt::Display,
+{
+    match args.len() {
+        0 => Ok(date.to_rfc3339_opts(SecondsFormat::Millis, use_z)),
+        _ => {
+            let format_lit = match args.get("arg0") {
+                Some(res) => res.to_owned(),
+                _ => PrimitiveNull::get_literal(Interval::default()),
+            };
+
+            let format = Literal::get_value::<String>(
+                &format_lit.primitive,
+                &data.context.flow,
+                interval,
+                "format parameter must be of type string".to_string(),
+            )?;
+
+            Ok(date.format(format).to_string())
+        }
+    }
 }

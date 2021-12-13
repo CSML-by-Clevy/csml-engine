@@ -78,6 +78,7 @@ pub trait Primitive: Send {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         content_type: &ContentType,
         data: &mut Data,
@@ -110,6 +111,7 @@ impl dyn Primitive {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         content_type: &ContentType,
         mem_update: &mut bool,
@@ -120,7 +122,7 @@ impl dyn Primitive {
         *mem_update = false;
 
         let (res, right) =
-            self.do_exec(name, args, interval, content_type, data, msg_data, sender)?;
+            self.do_exec(name, args, additional_info, interval, content_type, data, msg_data, sender)?;
         if right == Right::Write {
             *mem_update = true;
         }

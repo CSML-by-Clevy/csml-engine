@@ -14,6 +14,7 @@ use parser::parse_flow;
 use data::ast::{Expr, Flow, InstructionScope, Interval};
 use data::context::get_hashmap_from_mem;
 use data::error_info::ErrorInfo;
+use data::literal::create_error_info;
 use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
@@ -266,13 +267,17 @@ pub fn interpret(
         let ast = match flows.get(&flow) {
             Some(result) => result.to_owned(),
             None => {
+                let error_message = format!("flow '{}' does not exist in this bot", flow);
+                let error_info = create_error_info(&error_message, Interval::default());
+
                 return MessageData::error_to_message(
                     Err(ErrorInfo {
                         position: Position {
                             flow: flow.clone(),
                             interval: Interval::default(),
                         },
-                        message: format!("flow '{}' does not exist in this bot", flow),
+                        message: error_message,
+                        additional_info: Some(error_info)
                     }),
                     &sender,
                 );

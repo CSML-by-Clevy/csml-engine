@@ -100,6 +100,7 @@ where
         literal: Literal {
             content_type: "boolean".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         },
         in_in_substring: false,

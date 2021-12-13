@@ -5,6 +5,7 @@ start:
     remember int = 4
     remember float = 4.2
     remember vec = [21, 42, 84]
+    remember no_initialize = random
     goto step step1
 
 step1:
@@ -13,3 +14,4 @@ step1:
     say int.to_string()
     say float.to_string()
     say vec.to_string()
+    say random

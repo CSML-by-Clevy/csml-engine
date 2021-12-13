@@ -1,13 +1,16 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::primitive::{object::PrimitiveObject, string::PrimitiveString, PrimitiveType};
+use crate::data::primitive::{
+    PrimitiveObject, PrimitiveString,
+    PrimitiveInt, PrimitiveType
+};
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
 use std::collections::HashMap;
 use std::env;
 
 use std::sync::Arc;
-use ureq::{Request};
+use ureq::{Request, Response};
 use log::{debug, error, info,};
 
 use rustls::{
@@ -54,6 +57,43 @@ fn get_value<'lifetime, T: 'static>(
             Position::new(interval, flow_name),
             format!("'{}' {}", key, error),
         ))
+    }
+}
+
+fn set_http_error_info(
+    response: &Response,
+    error_message: String,
+    flow_name: &str,
+    interval: Interval,
+) ->  ErrorInfo {
+    let mut error = gen_error_info(
+        Position::new(interval, flow_name),
+        error_message,
+    );
+
+    let status = PrimitiveInt::get_literal(response.status() as i64, interval);
+    error.add_info("status", status);
+
+    let headers = response.headers_names()
+    .iter()
+        .fold(HashMap::new(), |mut acc, name| {
+        if let Some(header) = response.header(name) {
+            let value = PrimitiveString::get_literal(header, interval);
+            acc.insert(name.to_owned(), value);
+        }
+        acc
+    });
+
+    error.add_info("headers", PrimitiveObject::get_literal(&headers , interval));
+
+    error
+}
+
+pub fn get_ssl_state(object: &HashMap<String, Literal>) -> bool {
+    match object.get("disable_ssl_verify") {
+        Some(val) 
+        if val.primitive.get_type() == PrimitiveType::PrimitiveBoolean => val.primitive.as_bool(),
+        _ => false
     }
 }
 
@@ -109,11 +149,12 @@ fn get_http_request(
     url: &str,
     flow_name: &str,
     interval: Interval,
+    is_ssl_disable: bool
 ) -> Result<Request, ErrorInfo> {
 
     if let Ok(disable_ssl_verify) = env::var("DISABLE_SSL_VERIFY") {
         match disable_ssl_verify.parse::<bool>() {
-            Ok(low_data) if low_data => {
+            Ok(low_data) if low_data || is_ssl_disable => {
                 let agent = get_no_certificate_verifier_agent();
 
                 let request = match method {
@@ -160,11 +201,12 @@ pub fn http_request(
     interval: Interval,
 ) -> Result<serde_json::Value, ErrorInfo> {
     let url = get_url(object, flow_name, interval)?;
+    let is_ssl_disable = get_ssl_state(object);
 
     let header =
         get_value::<HashMap<String, Literal>>("header", object, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
 
-    let mut request = get_http_request(method, &url, flow_name, interval)?;
+    let mut request = get_http_request(method, &url, flow_name, interval, is_ssl_disable)?;
 
     for key in header.keys() {
         let value = get_value::<String>(key, header, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
@@ -182,17 +224,51 @@ pub fn http_request(
 
     match response {
         Ok(response) => {
-            match response.into_json() {
-                Ok(value) => Ok(value),
-                Err(_) => Err(gen_error_info(
-                    Position::new(interval, flow_name),
-                    ERROR_FAIL_RESPONSE_JSON.to_owned(),
-                )),
+            let mut error = set_http_error_info(
+                &response,
+                ERROR_FAIL_RESPONSE_JSON.to_owned(),
+                flow_name,
+                interval
+            );
+            let error_body = "Invalid Response format, please send a json or a valid UTF-8 sequence";
+            error.add_info("body", PrimitiveString::get_literal(error_body, interval));
+
+            match response.into_string() {
+                Ok(value) => {
+                    match serde_json::from_str::<serde_json::Value>(&value) {
+                        Ok(value) => Ok(value),
+                        Err(err) => {
+                            error!("Http response Json parsing failed: {:?}", err);
+                            Err(error)
+                        }
+                    }
+                },
+                Err(err) => {
+                    error!("Http response Json parsing failed: {:?}", err);
+                    Err(error)
+                },
             }
         }
         Err(err) => {
-            error!("Http call failed: {:?}", err);
-            return Err(gen_error_info(Position::new(interval, flow_name), err.to_string()));
+            let error_message = err.to_string();
+            error!("Http call failed: {:?}", error_message);
+
+            if let ureq::Error::Status(_, response) = err {
+                let mut error = set_http_error_info(&response, error_message, flow_name, interval);
+
+                let body = match response.into_string() {
+                    Ok(body) => body,
+                    Err(_) => {
+                        "Invalid Response format, please send a json or a valid UTF-8 sequence".to_owned()
+                    }
+                };
+
+                error.add_info("body", PrimitiveString::get_literal(&body, interval));
+
+                Err(error)
+            } else {
+                Err(gen_error_info(Position::new(interval, flow_name), error_message))
+            }
         }
     }
 }

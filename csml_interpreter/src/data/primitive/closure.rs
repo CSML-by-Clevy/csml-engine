@@ -1,5 +1,5 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::literal::ContentType;
+use crate::data::{literal, literal::ContentType};
 use crate::data::position::Position;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::string::PrimitiveString;
@@ -43,12 +43,15 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_int" => (PrimitiveClosure::is_int as PrimitiveMethod, Right::Read),
     "is_float" => (PrimitiveClosure::is_float as PrimitiveMethod, Right::Read),
     "type_of" => (PrimitiveClosure::type_of as PrimitiveMethod, Right::Read),
+    "is_error" => (PrimitiveClosure::is_error as PrimitiveMethod, Right::Read),
+    "get_info" => (PrimitiveClosure::get_info as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveClosure::to_string as PrimitiveMethod, Right::Read),
 };
 
 type PrimitiveMethod = fn(
     int: &mut PrimitiveClosure,
     args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
     data: &mut Data,
     interval: Interval,
 ) -> Result<Literal, ErrorInfo>;
@@ -68,6 +71,7 @@ impl PrimitiveClosure {
     fn is_number(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -86,6 +90,7 @@ impl PrimitiveClosure {
     fn is_int(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -104,6 +109,7 @@ impl PrimitiveClosure {
     fn is_float(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -122,6 +128,7 @@ impl PrimitiveClosure {
     fn type_of(
         _int: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -137,9 +144,35 @@ impl PrimitiveClosure {
         Ok(PrimitiveString::get_literal("closure", interval))
     }
 
+    fn get_info(
+        _closure: &mut PrimitiveClosure,
+        args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        literal::get_info(args, additional_info, interval, data)
+    }
+
+    fn is_error(
+        _closure: &mut PrimitiveClosure,
+        _args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        _data: &mut Data,
+        interval: Interval,
+    ) -> Result<Literal, ErrorInfo> {
+        match additional_info {
+            Some(map) if map.contains_key("error") => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
     fn to_string(
         closure: &mut PrimitiveClosure,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
     ) -> Result<Literal, ErrorInfo> {
@@ -184,6 +217,7 @@ impl PrimitiveClosure {
         Literal {
             content_type: "closure".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         }
     }
@@ -305,6 +339,7 @@ impl Primitive for PrimitiveClosure {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
         data: &mut Data,
@@ -312,7 +347,7 @@ impl Primitive for PrimitiveClosure {
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, data, interval)?;
+            let res = f(self, args, additional_info, data, interval)?;
 
             return Ok((res, *right));
         }

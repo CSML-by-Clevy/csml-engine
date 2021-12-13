@@ -93,6 +93,7 @@ pub fn load_info(directory_name: &str) -> Result<CsmlBot, Box<dyn Error>> {
         custom_components: None,
         default_flow: manifest.default_flow.clone(),
         bot_ast: None,
+        no_interruption_delay: None,
         env: None,
     })
 }

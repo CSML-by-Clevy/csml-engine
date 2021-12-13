@@ -1,6 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::{
+    literal,
     ast::Interval,
     literal::ContentType,
     message::Message,
@@ -17,13 +18,16 @@ use crate::interpreter::{
     builtins::http::{http_request}, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
-use chrono::{DateTime, SecondsFormat, TimeZone, Utc};
-use lettre::Transport;
-use phf::phf_map;
-use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
+
+use phf::phf_map;
+use regex::Regex;
+use lettre::Transport;
+use log::{debug, info, error};
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, TimeZone, Utc, FixedOffset};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -31,6 +35,7 @@ use std::{collections::HashMap, sync::mpsc};
 
 const FUNCTIONS_HTTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "set" => (PrimitiveObject::set as PrimitiveMethod, Right::Read),
+    "disable_ssl_verify" => (PrimitiveObject::disable_ssl_verify as PrimitiveMethod, Right::Read),
     "auth" => (PrimitiveObject::auth as PrimitiveMethod, Right::Read),
     "query" => (PrimitiveObject::query as PrimitiveMethod, Right::Read),
     "get" => (PrimitiveObject::get_http as PrimitiveMethod, Right::Read),
@@ -45,11 +50,14 @@ const FUNCTIONS_SMTP: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map
     "auth" => (PrimitiveObject::credentials as PrimitiveMethod, Right::Read),
     "port" => (PrimitiveObject::port as PrimitiveMethod, Right::Read),
     "tls" => (PrimitiveObject::smtp_tls as PrimitiveMethod, Right::Read),
+    "starttls" => (PrimitiveObject::starttls as PrimitiveMethod, Right::Read),
+    "set_auth_mechanism" => (PrimitiveObject::set_auth_mechanism as PrimitiveMethod, Right::Read),
     "send" => (PrimitiveObject::smtp_send as PrimitiveMethod, Right::Read),
 };
 
 const FUNCTIONS_TIME: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "at" => (PrimitiveObject::set_date_at as PrimitiveMethod, Right::Write),
+    "with_timezone" => (PrimitiveObject::with_timezone as PrimitiveMethod, Right::Write),
     "unix" => (PrimitiveObject::unix as PrimitiveMethod, Right::Write),
     "add" => (PrimitiveObject::add_time as PrimitiveMethod, Right::Write),
     "sub" => (PrimitiveObject::sub_time as PrimitiveMethod, Right::Write),
@@ -64,19 +72,19 @@ const FUNCTIONS_JWT: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map!
 };
 
 const FUNCTIONS_CRYPTO: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
-        "create_hmac" => (PrimitiveObject::create_hmac as PrimitiveMethod, Right::Read),
-        "create_hash" => (PrimitiveObject::create_hash as PrimitiveMethod, Right::Read),
-        "digest" => (PrimitiveObject::digest as PrimitiveMethod, Right::Read),
+    "create_hmac" => (PrimitiveObject::create_hmac as PrimitiveMethod, Right::Read),
+    "create_hash" => (PrimitiveObject::create_hash as PrimitiveMethod, Right::Read),
+    "digest" => (PrimitiveObject::digest as PrimitiveMethod, Right::Read),
 };
 
 const FUNCTIONS_BASE64: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
-        "encode" => (PrimitiveObject::base64_encode as PrimitiveMethod, Right::Read),
-        "decode" => (PrimitiveObject::base64_decode as PrimitiveMethod, Right::Read),
+    "encode" => (PrimitiveObject::base64_encode as PrimitiveMethod, Right::Read),
+    "decode" => (PrimitiveObject::base64_decode as PrimitiveMethod, Right::Read),
 };
 
 const FUNCTIONS_HEX: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
-        "encode" => (PrimitiveObject::hex_encode as PrimitiveMethod, Right::Read),
-        "decode" => (PrimitiveObject::hex_decode as PrimitiveMethod, Right::Read),
+    "encode" => (PrimitiveObject::hex_encode as PrimitiveMethod, Right::Read),
+    "decode" => (PrimitiveObject::hex_decode as PrimitiveMethod, Right::Read),
 };
 
 const FUNCTIONS_EVENT: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
@@ -92,6 +100,8 @@ const FUNCTIONS_READ: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map
     "is_int" => (PrimitiveObject::is_int as PrimitiveMethod, Right::Read),
     "is_float" => (PrimitiveObject::is_float as PrimitiveMethod, Right::Read),
     "type_of" => (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
+    "get_info" => (PrimitiveObject::get_info as PrimitiveMethod, Right::Read),
+    "is_error" => (PrimitiveObject::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
 
     "contains" => (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
@@ -112,6 +122,7 @@ const FUNCTIONS_WRITE: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_ma
 type PrimitiveMethod = fn(
     object: &mut PrimitiveObject,
     args: &HashMap<String, Literal>,
+    additional_info: &Option<HashMap<String, Literal>>,
     data: &mut Data,
     interval: Interval,
     content_type: &str,
@@ -130,6 +141,7 @@ impl PrimitiveObject {
     fn set(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -171,9 +183,29 @@ impl PrimitiveObject {
         Ok(result)
     }
 
+    fn disable_ssl_verify(
+        object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        _data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let mut object = object.to_owned();
+
+        let value = PrimitiveBoolean::get_literal(true, interval);
+        object.value.insert("disable_ssl_verify".to_owned(), value);
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+        result.set_content_type("http");
+
+        Ok(result)
+    }
+
     fn auth(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -241,6 +273,7 @@ impl PrimitiveObject {
     fn query(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -284,6 +317,7 @@ impl PrimitiveObject {
     fn get_http(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -316,6 +350,7 @@ impl PrimitiveObject {
     fn post(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         _data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -342,6 +377,7 @@ impl PrimitiveObject {
     fn put(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         _data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -368,6 +404,7 @@ impl PrimitiveObject {
     fn delete(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         _data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -394,6 +431,7 @@ impl PrimitiveObject {
     fn patch(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         _data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -422,6 +460,7 @@ impl PrimitiveObject {
     fn send(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -471,6 +510,7 @@ impl PrimitiveObject {
     fn credentials(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -536,6 +576,7 @@ impl PrimitiveObject {
     fn port(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -581,6 +622,7 @@ impl PrimitiveObject {
     fn smtp_tls(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -623,9 +665,127 @@ impl PrimitiveObject {
         Ok(result)
     }
 
+    fn set_auth_mechanism(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+
+        let usage = "Available mechanisms: PLAIN, AUTH LOGIN, XOAUTH2. set_auth_mechanism(String || Array<String>) => smtp object";
+
+        let auth_mechanisms = match args.get("arg0") {
+            Some(lit) if lit.content_type == "string" => {
+                let value = tools_smtp::get_auth_mechanism(lit, data, interval, usage)?;
+
+                let mut map = HashMap::new();
+                map.insert(
+                    value,
+                    PrimitiveNull::get_literal(interval),
+                );
+
+                map
+            },
+            Some(lit) if lit.content_type == "array" => {
+                let vec = Literal::get_value::<Vec<Literal>>(
+                  &lit.primitive,
+                    &data.context.flow,
+                    lit.interval,
+                    format!("usage: {}", usage),
+                )?;
+
+                let map = vec.iter()
+                    .filter_map(|lit| {
+                        tools_smtp::get_auth_mechanism(lit, data, interval, usage).ok()
+                    })
+                    .map(|val| (val, PrimitiveNull::get_literal(interval)))
+                    .collect::<HashMap<String, Literal>>();
+
+                if map.is_empty() {
+                    return Err(gen_error_info(
+                        Position::new(interval, &data.context.flow),
+                        format!("usage: {}", usage),
+                    ));
+                }
+
+                map
+            },
+            _ => {
+                error!("set_auth_mechanism wrong mechanism name {:?}", args);
+
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "auth_mechanisms".to_owned(),
+            PrimitiveObject::get_literal(&auth_mechanisms, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
+    fn starttls(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "starttls(BOOLEAN) => smtp object";
+
+        if args.len() < 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let tls = match args.get("arg0") {
+            Some(lit) => Literal::get_value::<bool>(
+                &lit.primitive,
+                &data.context.flow,
+                lit.interval,
+                format!("usage: {}", usage),
+            )?,
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ));
+            }
+        };
+
+        let mut object = object.to_owned();
+
+        object.value.insert(
+            "starttls".to_owned(),
+            PrimitiveBoolean::get_literal(*tls, interval),
+        );
+
+        let mut result = PrimitiveObject::get_literal(&object.value, interval);
+
+        result.set_content_type("smtp");
+
+        Ok(result)
+    }
+
     fn smtp_send(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -654,11 +814,14 @@ impl PrimitiveObject {
         };
 
         let email = tools_smtp::format_email(csml_email, data, interval)?;
+        info!("send email: {:?}", email);
+        debug!("send email: {:?}, mailer: {:?}", email, object.value);
         let mailer = tools_smtp::get_mailer(&mut object.value, data, interval)?;
 
         match mailer.send(&email) {
             Ok(_) => Ok(PrimitiveBoolean::get_literal(true, interval)),
             Err(e) => {
+                error!("send email failed {:?}", e);
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Could not send email: {:?}", e),
@@ -672,6 +835,7 @@ impl PrimitiveObject {
     fn set_date_at(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         _data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -706,9 +870,46 @@ impl PrimitiveObject {
         }
     }
 
+    fn with_timezone(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "with_timezone(timezone: int) => Time Object";
+
+        let timezone = match args.get("arg0") {
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?
+            }
+            _ => return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ))
+        };
+
+        object.value.insert(
+            "timezone".to_owned(),
+            PrimitiveInt::get_literal(*timezone, interval),
+        );
+
+        let mut lit = PrimitiveObject::get_literal(&object.value, interval);
+        lit.set_content_type("time");
+
+        Ok(lit)
+    }
+
     fn unix(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -762,6 +963,7 @@ impl PrimitiveObject {
     fn add_time(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -811,6 +1013,7 @@ impl PrimitiveObject {
     fn sub_time(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -860,6 +1063,7 @@ impl PrimitiveObject {
     fn parse_date(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -883,14 +1087,26 @@ impl PrimitiveObject {
     fn date_format(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "Time().format(format: String)";
+ 
+        let timezone = if let Some(timezone) = object.value.get("timezone") {
+            Literal::get_value::<i64>(
+                &timezone.primitive,
+                &data.context.flow,
+                interval,
+                "".to_string(),
+            ).ok()
+        } else {
+            None
+        };
 
-        let date: DateTime<Utc> = match object.value.get("milliseconds") {
-            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+        match (object.value.get("milliseconds"), timezone) {
+            (Some(lit), None) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -898,35 +1114,34 @@ impl PrimitiveObject {
                     "".to_string(),
                 )?;
 
-                Utc.timestamp_millis(*millis)
+                let date: DateTime<Utc> = Utc.timestamp_millis(*millis);
+
+                let formatted_date = tools_time::format_date(args, date, data, interval, true)?;
+
+                Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
+            (Some(lit), Some(timezone)) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let millis = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                let date: DateTime<FixedOffset> = FixedOffset::east(*timezone as i32).timestamp_millis(*millis);
+
+                let formatted_date = tools_time::format_date(args, date, data, interval, false)?;
+
+                Ok(PrimitiveString::get_literal(&formatted_date, interval))
+            }
+
             _ => {
-                return Err(gen_error_info(
+                Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
                 ))
             }
-        };
-
-        let formatted_date = match args.len() {
-            0 => date.to_rfc3339_opts(SecondsFormat::Millis, true),
-            _ => {
-                let format_lit = match args.get("arg0") {
-                    Some(res) => res.to_owned(),
-                    _ => PrimitiveNull::get_literal(Interval::default()),
-                };
-
-                let format = Literal::get_value::<String>(
-                    &format_lit.primitive,
-                    &data.context.flow,
-                    interval,
-                    "format parameter must be of type string".to_string(),
-                )?;
-                date.format(format).to_string()
-            }
-        };
-
-        Ok(PrimitiveString::get_literal(&formatted_date, interval))
+        }
     }
 }
 
@@ -934,6 +1149,7 @@ impl PrimitiveObject {
     fn jwt_sign(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -999,6 +1215,7 @@ impl PrimitiveObject {
     fn jwt_decode(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1069,6 +1286,7 @@ impl PrimitiveObject {
     fn jwt_verity(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1155,6 +1373,7 @@ impl PrimitiveObject {
     fn create_hmac(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1246,6 +1465,7 @@ impl PrimitiveObject {
     fn create_hash(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1315,6 +1535,7 @@ impl PrimitiveObject {
     fn digest(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1371,6 +1592,7 @@ impl PrimitiveObject {
     fn base64_encode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1395,6 +1617,7 @@ impl PrimitiveObject {
     fn base64_decode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1429,6 +1652,7 @@ impl PrimitiveObject {
     fn hex_encode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1453,6 +1677,7 @@ impl PrimitiveObject {
     fn hex_decode(
         object: &mut PrimitiveObject,
         _args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1487,6 +1712,7 @@ impl PrimitiveObject {
     fn get_type(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         content_type: &str,
@@ -1506,6 +1732,7 @@ impl PrimitiveObject {
     fn get_content(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         content_type: &str,
@@ -1522,6 +1749,7 @@ impl PrimitiveObject {
         Ok(Literal {
             content_type: content_type.to_owned(),
             primitive: Box::new(object.clone()),
+            additional_info: None,
             interval,
         })
     }
@@ -1529,6 +1757,7 @@ impl PrimitiveObject {
     fn is_email(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1560,6 +1789,7 @@ impl PrimitiveObject {
     fn match_args(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1589,6 +1819,7 @@ impl PrimitiveObject {
     fn match_array(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1628,6 +1859,7 @@ impl PrimitiveObject {
     fn is_number(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1647,6 +1879,7 @@ impl PrimitiveObject {
     fn is_int(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1666,6 +1899,7 @@ impl PrimitiveObject {
     fn is_float(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1685,6 +1919,7 @@ impl PrimitiveObject {
     fn type_of(
         _object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1701,9 +1936,37 @@ impl PrimitiveObject {
         Ok(PrimitiveString::get_literal("object", interval))
     }
 
+    fn get_info(
+        _object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        literal::get_info(args, additional_info, interval, data)
+    }
+
+    fn is_error(
+        _object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
+        _data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        match additional_info {
+            Some(map) if map.contains_key("error") => {
+                Ok(PrimitiveBoolean::get_literal(true, interval))
+            }
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+        }
+    }
+
     fn to_string(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1723,6 +1986,7 @@ impl PrimitiveObject {
     fn contains(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1761,6 +2025,7 @@ impl PrimitiveObject {
     fn is_empty(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1782,6 +2047,7 @@ impl PrimitiveObject {
     fn length(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1803,6 +2069,7 @@ impl PrimitiveObject {
     fn keys(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1828,6 +2095,7 @@ impl PrimitiveObject {
     fn values(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1853,6 +2121,7 @@ impl PrimitiveObject {
     fn get_generics(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1894,6 +2163,7 @@ impl PrimitiveObject {
     fn clear_values(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1925,6 +2195,7 @@ impl PrimitiveObject {
     fn insert(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -1973,6 +2244,7 @@ impl PrimitiveObject {
     fn remove(
         object: &mut PrimitiveObject,
         args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
         data: &mut Data,
         interval: Interval,
         _content_type: &str,
@@ -2055,8 +2327,24 @@ impl PrimitiveObject {
         Literal {
             content_type: "object".to_owned(),
             primitive,
+            additional_info: None,
             interval,
         }
+    }
+
+    pub fn obj_literal_to_json(map: &HashMap<String, Literal>) -> serde_json::Value {
+        let mut object: serde_json::map::Map<String, serde_json::Value> =
+            serde_json::map::Map::new();
+
+        for (key, literal) in map.iter() {
+            let content_type = &literal.content_type;
+            object.insert(
+                key.to_owned(),
+                literal.primitive.format_mem(content_type, false),
+            );
+        }
+
+        serde_json::Value::Object(object)
     }
 }
 
@@ -2167,15 +2455,7 @@ impl Primitive for PrimitiveObject {
 
         match (content_type, first) {
             (content_type, false) if content_type == "object" => {
-                for (key, literal) in self.value.iter() {
-                    let content_type = &literal.content_type;
-                    object.insert(
-                        key.to_owned(),
-                        literal.primitive.format_mem(content_type, false),
-                    );
-                }
-
-                serde_json::Value::Object(object)
+                PrimitiveObject::obj_literal_to_json(&self.value)
             }
             (content_type, _) => {
                 let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
@@ -2222,6 +2502,7 @@ impl Primitive for PrimitiveObject {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         content_type: &ContentType,
         data: &mut Data,
@@ -2258,7 +2539,7 @@ impl Primitive for PrimitiveObject {
 
         for function in vector.iter() {
             if let Some((f, right)) = function.get(name) {
-                let result = f(self, args, data, interval, &content_type)?;
+                let result = f(self, args, additional_info, data, interval, &content_type)?;
 
                 return Ok((result, *right));
             }
@@ -2271,6 +2552,7 @@ impl Primitive for PrimitiveObject {
                     return res.primitive.do_exec(
                         name,
                         args,
+                        additional_info,
                         interval,
                         &ContentType::Primitive,
                         data,
