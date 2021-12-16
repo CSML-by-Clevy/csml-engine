@@ -28,6 +28,7 @@ jobs:
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
+        target: aarch64-apple-darwin
         override: true
 
     - name: Set environment variables for the build
