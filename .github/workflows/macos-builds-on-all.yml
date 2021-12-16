@@ -1,6 +1,9 @@
 name: macos-build
 
-on: [push]
+# on: [push]
+on:
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -10,7 +13,8 @@ jobs:
         os: [macos-10.15]
         include:
           - os: macos-10.15
-            asset_name: csml-server-macos-amd64
+            amd_asset_name: csml-server-macos-amd64
+            arm_asset_name: csml-server-macos-arm64
 
     steps:
     - uses: actions/checkout@v2
@@ -24,6 +28,12 @@ jobs:
           target
         key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Install postgres
+      run: |
+        /usr/local/opt/postgres/bin/pg_ctl -D /usr/local/var/postgres start
+        sleep 3
+        /usr/local/opt/postgres/bin/createuser -s postgres
+
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
       with:
@@ -31,14 +41,76 @@ jobs:
         target: aarch64-apple-darwin
         override: true
 
-    - name: Set environment variables for the build
-      run: |
-        echo "SDKROOT=$(xcrun -sdk macosx11.1 --show-sdk-path)" >> $GITHUB_PATH
-        echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.1 --show-sdk-platform-version)" >> $GITHUB_PATH
 
-    - name: Build Server
+    - name: (AMD) Build Server
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql --target=aarch64-apple-darwin
+        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql
 
+
+    # - uses: actions/upload-artifact@v2
+    #   with:
+    #     name: ${{ matrix.amd_asset_name }}
+    #     path: target/release/csml_server
+
+    - name: Set environment variables for the build
+      run: |
+        echo "SDKROOT=$(xcrun -sdk macosx11.1 --show-sdk-path)" >> $GITHUB_ENV
+        echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.1 --show-sdk-platform-version)" >> $GITHUB_ENV
+
+    - name: (ARM) Build Server
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target=aarch64-apple-darwin
+
+    # - uses: actions/upload-artifact@v2
+    #   with:
+    #     name: ${{ matrix.arm_asset_name }}
+    #     path: target/release/csml_server
+
+
+
+
+  # publish-binaries:
+  #   runs-on: ${{ matrix.os }}
+  #   needs: build
+  #   strategy:
+  #     matrix:
+  #       os: [macos-10.15]
+  #       include:
+  #         - os: macos-10.15
+  #           amd_asset_name: csml-server-macos-amd64
+  #           arm_asset_name: csml-server-macos-arm64
+
+  #   steps:
+  #     - run: mkdir -p target/release
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: ${{ matrix.amd_asset_name }}
+  #         path: target/release
+
+  #     - name: Upload linux AMD binary to release
+  #       uses: svenstaro/upload-release-action@2.2.0
+  #       with:
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #         file: target/release/csml_server
+  #         asset_name: ${{ matrix.asset_name }}
+  #         tag: ${{ github.ref }}
+  #         overwrite: true
+
+  #     - run: mkdir -p target/aarch64-apple-darwin/release
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: ${{ matrix.amd_asset_name }}
+  #         path: target/aarch64-apple-darwin/release
+
+  #     - name: Upload linux ARM binary to release
+  #       uses: svenstaro/upload-release-action@2.2.0
+  #       with:
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #         file: target/aarch64-apple-darwin/release/csml_server
+  #         asset_name: ${{ matrix.asset_name }}
+  #         tag: ${{ github.ref }}
+  #         overwrite: true

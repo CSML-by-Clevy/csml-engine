@@ -5,4 +5,6 @@ Dockerfile
 .dockerignore
 
 !target/release/csml_server
+!target/armv7-unknown-linux-gnueabihf/release/csml_server
+!target/armv7-unknown-linux-gnueabihf/debug/csml_server
 
