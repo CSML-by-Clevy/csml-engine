@@ -1,0 +1,43 @@
+name: macos-build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-10.15]
+        include:
+          - os: macos-10.15
+            asset_name: csml-server-macos-amd64
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Cache Cargo
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Rust Stable
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Set environment variables for the build
+      run: |
+        echo "SDKROOT=$(xcrun -sdk macosx11.0 --show-sdk-path)" >> $GITHUB_PATH
+        echo "MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.0 --show-sdk-platform-version)" >> $GITHUB_PATH
+
+    - name: Build Server
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql --target=aarch64-apple-darwin
+
