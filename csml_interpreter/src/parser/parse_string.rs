@@ -85,14 +85,14 @@ where
     E: ParseError<Span<'a>>,
 {
     let mut escape = false;
-    let mut index = 0;
+    let mut len  = 0;
 
-    for (i_bytes, c) in s.as_bytes().iter().enumerate() {
-        if *c as char == '\"' && !escape {
-            return Ok((s, Some(i_bytes)));
+    for c in s.chars() {
+        if c == '\"' && !escape {
+            return Ok((s, Some(len)));
         }
 
-        if *c as char == '\\' {
+        if c == '\\' {
             escape = match escape {
                 true => false,
                 false => true,
@@ -100,10 +100,10 @@ where
         } else {
             escape = false;
         }
-        index = i_bytes;
-    }
 
-    let (s, _) = nom::bytes::complete::take(index)(s)?;
+        len += c.len_utf8();
+    }
+    let (s, _) = nom::bytes::complete::take(len)(s)?;
     Ok((s, None))
 }
 
