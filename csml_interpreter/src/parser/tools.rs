@@ -143,15 +143,18 @@ pub fn get_distance_brace(s: &Span, key: char) -> Option<usize> {
     let mut escape: bool = false;
     let mut expand: bool = false;
     let mut substring: bool = false;
+    let mut distance = 0;
 
-    for (i, c) in s.as_bytes().iter().enumerate() {
-        if *c as char == key && !escape && !substring {
-            if let Some(c) = s.as_bytes().iter().nth(i + 1) {
-                if *c as char == key {
-                    return Some(i);
+    for (i, c) in s.chars().enumerate() {
+        if c == key && !escape && !substring {
+            if let Some(c) = s.chars().nth(i + 1) {
+                if c == key {
+                    return Some(distance);
                 }
             }
         }
+
+        distance += c.len_utf8();
 
         set_open_expand(s.fragment(), i, escape, substring, &mut expand);
         set_close_expand(s.fragment(), i, escape, substring, &mut expand);
