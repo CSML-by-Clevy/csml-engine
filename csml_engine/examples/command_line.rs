@@ -41,7 +41,7 @@ fn init_bot() -> CsmlBot {
     CsmlBot {
         id: "botid".to_owned(),
         name: "plop".to_owned(),
-        fn_endpoint: Some("endpoint".to_owned()),
+        apps_endpoint: Some("endpoint".to_owned()),
         flows: vec![
             CsmlFlow {
                 id: "flowid".to_owned(),
