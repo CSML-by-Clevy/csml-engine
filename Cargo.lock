@@ -557,8 +557,8 @@ dependencies = [
 name = "aws_lambda"
 version = "0.1.0"
 dependencies = [
- "csml_engine",
- "csml_interpreter",
+ "csml_engine 1.8.1",
+ "csml_interpreter 1.8.1",
  "lambda_runtime",
  "ring",
  "serde",
@@ -748,6 +748,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e70cc2f62c6ce1868963827bd677764c62d07c3d9a3e1fb1177ee1a9ab199eb2"
 
 [[package]]
+name = "cesu8"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d43a04d8753f35258c91f8ec639f792891f748a1edbd759cf1dcea3382ad83c"
+
+[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -786,6 +792,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 dependencies = [
  "bitflags",
+]
+
+[[package]]
+name = "combine"
+version = "4.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2b2f5d0ee456f3928812dfc8c6d9a1d592b98678f6d56db9b0cd2b7bc6c8db5"
+dependencies = [
+ "bytes 1.0.1",
+ "memchr",
 ]
 
 [[package]]
@@ -961,6 +977,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "697c714f50560202b1f4e2e09cd50a421881c83e9025db75d15f276616f04f40"
 
 [[package]]
+name = "csml_android"
+version = "0.1.0"
+dependencies = [
+ "csml_engine 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csml_interpreter 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "jni",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "csml_engine"
 version = "1.8.1"
 dependencies = [
@@ -968,7 +995,7 @@ dependencies = [
  "bincode",
  "bson",
  "chrono",
- "csml_interpreter",
+ "csml_interpreter 1.8.1",
  "diesel",
  "diesel_migrations",
  "env_logger",
@@ -994,11 +1021,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "csml_engine"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfbe8f1fc77dd7eb45abe49aaac63791d003f9b4c9d41e88e87805568be8dcb6"
+dependencies = [
+ "base64 0.13.0",
+ "bincode",
+ "bson",
+ "chrono",
+ "csml_interpreter 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "env_logger",
+ "futures 0.3.16",
+ "hex",
+ "log",
+ "md-5",
+ "mongodb",
+ "multimap",
+ "openssl",
+ "rand 0.7.3",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio 1.9.0",
+ "ureq 2.3.0",
+ "uuid",
+]
+
+[[package]]
 name = "csml_engine_node"
 version = "1.8.1"
 dependencies = [
- "csml_engine",
- "csml_interpreter",
+ "csml_engine 1.8.1",
+ "csml_interpreter 1.8.1",
  "neon",
  "neon-build",
  "neon-serde",
@@ -1034,6 +1090,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "csml_interpreter"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54ec7c63287fba0dac2e184d876312fbd7c653c2b8c2d4dc02b193a5233f2a8b"
+dependencies = [
+ "base64 0.13.0",
+ "bincode",
+ "chrono",
+ "env_logger",
+ "hex",
+ "jsonwebtoken",
+ "lettre",
+ "libc",
+ "log",
+ "nom 5.1.2",
+ "nom_locate",
+ "openssl",
+ "phf",
+ "rand 0.7.3",
+ "regex",
+ "rustls 0.20.0",
+ "serde",
+ "serde_json",
+ "typetag",
+ "ureq 2.3.0",
+ "uuid",
+]
+
+[[package]]
 name = "csml_server"
 version = "1.8.1"
 dependencies = [
@@ -1043,12 +1128,22 @@ dependencies = [
  "actix-service 2.0.0",
  "actix-web",
  "bytes 0.5.6",
- "csml_engine",
- "csml_interpreter",
+ "csml_engine 1.8.1",
+ "csml_interpreter 1.8.1",
  "env_logger",
  "futures 0.3.16",
  "json",
  "log",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "csmllib"
+version = "0.1.0"
+dependencies = [
+ "csml_engine 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csml_interpreter 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
 ]
@@ -1881,6 +1976,26 @@ name = "itoa"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
+
+[[package]]
+name = "jni"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6df18c2e3db7e453d3c6ac5b3e9d5182664d28788126d39b91f2d1e22b017ec"
+dependencies = [
+ "cesu8",
+ "combine",
+ "jni-sys",
+ "log",
+ "thiserror",
+ "walkdir",
+]
+
+[[package]]
+name = "jni-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
 
 [[package]]
 name = "js-sys"
@@ -3275,6 +3390,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
+name = "same-file"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
+dependencies = [
+ "winapi-util",
+]
+
+[[package]]
 name = "schannel"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4472,6 +4596,17 @@ name = "waker-fn"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d5b2c62b4012a3e1eca5a7e077d13b3bf498c4073e33ccd58626607748ceeca"
+
+[[package]]
+name = "walkdir"
+version = "2.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "808cf2735cd4b6866113f648b791c6adc5714537bc222d9347bb203386ffda56"
+dependencies = [
+ "same-file",
+ "winapi 0.3.9",
+ "winapi-util",
+]
 
 [[package]]
 name = "want"

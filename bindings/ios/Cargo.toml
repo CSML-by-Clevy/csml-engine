@@ -1,17 +1,14 @@
 [package]
-name = "csml_android"
+name = "csmllib"
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+name = "csmllib"
+crate-type = ["staticlib"]
 
 [dependencies]
 csml_engine = {version = "1.8.1", features = ["mongo"]}
 csml_interpreter = "1.8.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-[target.'cfg(target_os="android")'.dependencies]
-jni = "0.19.0"
-
-
-[lib]
-name = "csml_android"
-crate-type = ["dylib"]

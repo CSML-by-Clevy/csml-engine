@@ -13,7 +13,6 @@ pub struct LimitPaginationQueryParams {
   pagination_key: Option<String>,
 }
 
-
 unsafe fn get_string(s: *mut c_char) -> String {
     if s.is_null() {
         return "".to_owned()
@@ -22,6 +21,28 @@ unsafe fn get_string(s: *mut c_char) -> String {
     CString::from_raw(s)
         .into_string()
         .expect("into_string() call failed")
+}
+
+
+#[no_mangle]
+pub unsafe extern "C" fn hello_csml(to: *const c_char) -> *mut c_char {
+    let c_str = CStr::from_ptr(to);
+    let recipient = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => "you",
+    };
+
+    CString::new(format!("Hello from CSML: {}", recipient))
+        .unwrap()
+        .into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn release_string(s: *mut c_char) {
+    if s.is_null() {
+        return;
+    }
+    CString::from_raw(s);
 }
 
 // #############################################################################
