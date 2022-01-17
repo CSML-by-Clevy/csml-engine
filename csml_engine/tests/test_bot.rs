@@ -76,7 +76,7 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
     let bot = CsmlBot {
         id: bot_info.name.clone(),
         name: bot_info.name.clone(),
-        fn_endpoint: None,
+        apps_endpoint: None,
         flows: bot_flows,
         native_components: None,
         custom_components: None,

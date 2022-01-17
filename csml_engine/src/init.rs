@@ -38,7 +38,7 @@ pub fn init_conversation_info<'a>(
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
 
-    let mut context = init_context(default_flow, request.client.clone(), &bot.fn_endpoint);
+    let mut context = init_context(default_flow, request.client.clone(), &bot.apps_endpoint);
     let ttl = get_ttl_duration_value(Some(event));
     let low_data = get_low_data_mode_value(event);
 
