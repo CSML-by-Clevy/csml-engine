@@ -60,12 +60,12 @@ jobs:
       with:
         use-cross: true
         command: build
-        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target armv7-unknown-linux-gnueabihf --release
+        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target aarch64-unknown-linux-gnu --release
 
     - uses: actions/upload-artifact@v2
       with:
         name:  ${{ matrix.arm_asset_name }}
-        path: target/armv7-unknown-linux-gnueabihf/release/csml_server
+        path: target/aarch64-unknown-linux-gnu/release/csml_server
 
 
 
@@ -98,17 +98,17 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
 
-      - run: mkdir -p target/armv7-unknown-linux-gnueabihf/release
+      - run: mkdir -p target/aarch64-unknown-linux-gnu/release
       - uses: actions/download-artifact@v2
         with:
           name: ${{ matrix.arm_asset_name }}
-          path: target/armv7-unknown-linux-gnueabihf/release
+          path: target/aarch64-unknown-linux-gnu/release
 
       - name: Upload linux ARM binary to release
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/armv7-unknown-linux-gnueabihf/release/csml_server
+          file: target/aarch64-unknown-linux-gnu/release/csml_server
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
@@ -125,11 +125,11 @@ jobs:
           name: csml-server-linux-amd64
           path: target/release
 
-      - run: mkdir -p target/armv7-unknown-linux-gnueabihf/release
+      - run: mkdir -p target/aarch64-unknown-linux-gnu/release
       - uses: actions/download-artifact@v2
         with:
           name: csml-server-linux-armv7
-          path: target/armv7-unknown-linux-gnueabihf/release
+          path: target/aarch64-unknown-linux-gnu/release
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1

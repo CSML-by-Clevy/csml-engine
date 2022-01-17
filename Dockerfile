@@ -24,7 +24,7 @@ RUN update-ca-certificates
 
 WORKDIR /usr/src/csml
 
-COPY target/armv7-unknown-linux-gnueabihf/release/csml_server server
+COPY target/aarch64-unknown-linux-gnu/release/csml_server server
 
 RUN chmod 755 server
 
