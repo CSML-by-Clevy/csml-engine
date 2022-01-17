@@ -1,6 +1,8 @@
 name: linux-build
 
-on: [push]
+on:
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -66,48 +68,51 @@ jobs:
         path: target/armv7-unknown-linux-gnueabihf/release/csml_server
 
 
-  # publish-binaries:
-  #   runs-on: ${{ matrix.os }}
-  #   needs: build
-  #   strategy:
-  #     matrix:
-  #       os: [ubuntu-18.04]
-  #       include:
-  #         - os: ubuntu-18.04
-  #           amd_asset_name: csml-server-linux-amd64
-  #           arm_asset_name: csml-server-linux-armv7
 
 
-  #   steps:
-  #     - run: mkdir -p target/release
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: ${{ matrix.amd_asset_name }}
-  #         path: target/release
 
-  #     - name: Upload linux AMD binary to release
-  #       uses: svenstaro/upload-release-action@2.2.0
-  #       with:
-  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
-  #         file: target/release/csml_server
-  #         asset_name: ${{ matrix.asset_name }}
-  #         tag: ${{ github.ref }}
-  #         overwrite: true
+  publish-binaries:
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-18.04]
+        include:
+          - os: ubuntu-18.04
+            amd_asset_name: csml-server-linux-amd64
+            arm_asset_name: csml-server-linux-armv7
 
-  #     - run: mkdir -p target/armv7-unknown-linux-gnueabihf/release
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: ${{ matrix.arm_asset_name }}
-  #         path: target/armv7-unknown-linux-gnueabihf/release
+    steps:
+      - run: mkdir -p target/release
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.amd_asset_name }}
+          path: target/release
 
-  #     - name: Upload linux ARM binary to release
-  #       uses: svenstaro/upload-release-action@2.2.0
-  #       with:
-  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
-  #         file: target/armv7-unknown-linux-gnueabihf/release/csml_server
-  #         asset_name: ${{ matrix.asset_name }}
-  #         tag: ${{ github.ref }}
-  #         overwrite: true
+      - name: Upload linux AMD binary to release
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/csml_server
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - run: mkdir -p target/armv7-unknown-linux-gnueabihf/release
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.arm_asset_name }}
+          path: target/armv7-unknown-linux-gnueabihf/release
+
+      - name: Upload linux ARM binary to release
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/armv7-unknown-linux-gnueabihf/release/csml_server
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
 
   publish-docker:
     runs-on: ubuntu-18.04
@@ -143,8 +148,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.TMP_DOCKERHUB_USERNAME }}
-          password: ${{ secrets.TMP_DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # using ${{ github.ref }} returns /refs/tags/TAGNAME instead of just TAGNAME
       - name: Get release version
@@ -157,6 +162,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: amerelo/tmp_csml:latest
+          tags: |
+            clevy/csml-engine:latest
+            clevy/csml-engine:${{ steps.release_version.outputs.tag }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
