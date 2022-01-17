@@ -92,7 +92,7 @@ impl BotOpt {
                 let mut bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)
                     .unwrap()
                     .unwrap();
-                bot_version.bot.fn_endpoint = apps_endpoint.to_owned();
+                bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
                 bot_version.bot
             }
             BotOpt::Id {
@@ -104,7 +104,7 @@ impl BotOpt {
                     db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
                         .unwrap()
                         .unwrap();
-                bot_version.bot.fn_endpoint = apps_endpoint.to_owned();
+                bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
                 bot_version.bot
             }
         }
@@ -186,7 +186,7 @@ impl SerializeCsmlBot {
         CsmlBot {
             id: self.id.to_owned(),
             name: self.name.to_owned(),
-            fn_endpoint: None,
+            apps_endpoint: None,
             flows: self.flows.to_owned(),
             native_components: {
                 match self.native_components.to_owned() {
@@ -277,7 +277,7 @@ impl DynamoBot {
         CsmlBot {
             id: self.id.to_owned(),
             name: self.name.to_owned(),
-            fn_endpoint: None,
+            apps_endpoint: None,
             flows,
             native_components: None,
             custom_components: {
