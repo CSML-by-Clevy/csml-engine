@@ -164,8 +164,11 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            clevy/csml-engine:latest
-            clevy/csml-engine:${{ steps.release_version.outputs.tag }}
+          tags: amerelo/tmp_csml:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+
+          # tags: |
+          #   clevy/csml-engine:latest
+          #   clevy/csml-engine:${{ steps.release_version.outputs.tag }}
+
