@@ -29,15 +29,15 @@ jobs:
           target
         key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    # - name: Install postgres (Linux)
-    #   if: runner.os == 'Linux'
-    #   run: |
-    #     sudo apt-get update
-    #     sudo apt-get install -y libpq-dev postgresql
-    #     echo "host    all             all             127.0.0.1/32            md5" > sudo tee -a /etc/postgresql/10/main/pg_hba.conf
-    #     sudo service postgresql restart && sleep 3
-    #     sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-    #     sudo service postgresql restart && sleep 3
+    - name: Install postgres (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev postgresql
+        echo "host    all             all             127.0.0.1/32            md5" > sudo tee -a /etc/postgresql/10/main/pg_hba.conf
+        sudo service postgresql restart && sleep 3
+        sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+        sudo service postgresql restart && sleep 3
 
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
@@ -45,16 +45,16 @@ jobs:
         toolchain: stable
         override: true
 
-    # - name: (AMD) Build Server
-    #   uses: actions-rs/cargo@v1
-    #   with:
-    #     command: build
-    #     args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql  --release
+    - name: (AMD) Build Server
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql  --release
 
-    # - uses: actions/upload-artifact@v2
-    #   with:
-    #     name: ${{ matrix.amd_asset_name }}
-    #     path: target/release/csml_server
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.amd_asset_name }}
+        path: target/release/csml_server
 
 
     - name: (ARM) Build Server
@@ -121,10 +121,10 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2
-      # - uses: actions/download-artifact@v2
-      #   with:
-      #     name: csml-server-linux-amd64
-      #     path: target/release
+      - uses: actions/download-artifact@v2
+        with:
+          name: csml-server-linux-amd64
+          path: target/release
 
       - uses: actions/download-artifact@v2
         with:
@@ -160,8 +160,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          # linux/amd64,
-          platforms: linux/arm64
+          platforms:  linux/amd64,linux/arm64
           push: true
           tags: amerelo/tmp_csml:latest
           cache-from: type=local,src=/tmp/.buildx-cache
