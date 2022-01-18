@@ -1,8 +1,8 @@
 name: linux-build
 
 on:
-  push:
-    branches: [dev]
+  pull_request:
+    branches: [ master, dev ]
   # release:
   #   types: [published]
 
