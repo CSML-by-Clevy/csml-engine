@@ -25,7 +25,7 @@ pub fn one_of(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Lit
                 literal.interval,
                 ERROR_ONE_OF.to_owned(),
             )?;
-            match res.get(rand::thread_rng().gen_range(0, res.len())) {
+            match res.get(rand::thread_rng().gen_range(0..res.len())) {
                 Some(lit) => Ok(lit.to_owned()),
                 None => Err(gen_error_info(
                     Position::new(literal.interval, flow_name),
