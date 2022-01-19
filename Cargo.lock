@@ -954,16 +954,6 @@ dependencies = [
 
 [[package]]
 name = "crypto-mac"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bff07008ec701e8028e2ceb8f83f0e4274ee62bd2dbdc4fefff2e9a91824081a"
-dependencies = [
- "generic-array",
- "subtle",
-]
-
-[[package]]
-name = "crypto-mac"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1d1a86f49236c215f271d40892d5fc950490551400b02ef360692c29815c714"
@@ -1627,6 +1617,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "h2"
+version = "0.3.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c9de88456263e249e241fcd211d3954e2c9b0ef7ccfc235a444eb367cae3689"
+dependencies = [
+ "bytes 1.0.1",
+ "fnv",
+ "futures-core",
+ "futures-sink",
+ "futures-util",
+ "http 0.2.4",
+ "indexmap",
+ "slab",
+ "tokio 1.15.0",
+ "tokio-util 0.6.8",
+ "tracing",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1658,21 +1667,11 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hmac"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1441c6b1e930e2817404b5046f1f989899143a12bf92de603b69f4e0aee1e15"
-dependencies = [
- "crypto-mac 0.10.1",
- "digest 0.9.0",
-]
-
-[[package]]
-name = "hmac"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
 dependencies = [
- "crypto-mac 0.11.1",
+ "crypto-mac",
  "digest 0.9.0",
 ]
 
@@ -1790,6 +1789,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
+ "h2 0.3.10",
  "http 0.2.4",
  "http-body 0.4.3",
  "httparse",
@@ -2171,12 +2171,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "md5"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
-
-[[package]]
 name = "memchr"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2327,7 +2321,7 @@ dependencies = [
  "futures-io",
  "futures-util",
  "hex",
- "hmac 0.11.0",
+ "hmac",
  "lazy_static",
  "md-5 0.9.1",
  "os_info",
@@ -2726,7 +2720,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d95f5254224e617595d2cc3cc73ff0a5eaf2637519e25f03388154e9378b6ffa"
 dependencies = [
- "crypto-mac 0.11.1",
+ "crypto-mac",
 ]
 
 [[package]]
@@ -3129,9 +3123,9 @@ dependencies = [
 
 [[package]]
 name = "rusoto_core"
-version = "0.46.0"
+version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02aff20978970d47630f08de5f0d04799497818d16cafee5aec90c4b4d0806cf"
+checksum = "5b4f000e8934c1b4f70adde180056812e7ea6b1a247952db8ee98c94cd3116cc"
 dependencies = [
  "async-trait",
  "base64 0.13.0",
@@ -3145,7 +3139,7 @@ dependencies = [
  "log",
  "rusoto_credential",
  "rusoto_signature",
- "rustc_version 0.2.3",
+ "rustc_version 0.4.0",
  "serde",
  "serde_json",
  "tokio 1.15.0",
@@ -3154,9 +3148,9 @@ dependencies = [
 
 [[package]]
 name = "rusoto_credential"
-version = "0.46.0"
+version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e91e4c25ea8bfa6247684ff635299015845113baaa93ba8169b9e565701b58e"
+checksum = "6a46b67db7bb66f5541e44db22b0a02fed59c9603e146db3a9e633272d3bac2f"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3172,9 +3166,9 @@ dependencies = [
 
 [[package]]
 name = "rusoto_dynamodb"
-version = "0.46.0"
+version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f26af40f36409cb8fae3069690f78f638f747b55c7b90f338d5ed36016b0cda"
+checksum = "7935e1f9ca57c4ee92a4d823dcd698eb8c992f7e84ca21976ae72cd2b03016e7"
 dependencies = [
  "async-trait",
  "bytes 1.0.1",
@@ -3186,9 +3180,9 @@ dependencies = [
 
 [[package]]
 name = "rusoto_s3"
-version = "0.46.0"
+version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abc3f56f14ccf91f880b9a9c2d0556d8523e8c155041c54db155b384a1dd1119"
+checksum = "048c2fe811a823ad5a9acc976e8bf4f1d910df719dcf44b15c3e96c5b7a51027"
 dependencies = [
  "async-trait",
  "bytes 1.0.1",
@@ -3199,26 +3193,27 @@ dependencies = [
 
 [[package]]
 name = "rusoto_signature"
-version = "0.46.0"
+version = "0.47.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5486e6b1673ab3e0ba1ded284fb444845fe1b7f41d13989a54dd60f62a7b2baa"
+checksum = "6264e93384b90a747758bcc82079711eacf2e755c3a8b5091687b5349d870bcc"
 dependencies = [
  "base64 0.13.0",
  "bytes 1.0.1",
+ "chrono",
+ "digest 0.9.0",
  "futures 0.3.16",
  "hex",
- "hmac 0.10.1",
+ "hmac",
  "http 0.2.4",
  "hyper 0.14.11",
  "log",
- "md5",
+ "md-5 0.9.1",
  "percent-encoding",
  "pin-project-lite 0.2.7",
  "rusoto_credential",
- "rustc_version 0.2.3",
+ "rustc_version 0.4.0",
  "serde",
  "sha2",
- "time 0.2.27",
  "tokio 1.15.0",
 ]
 
@@ -3244,6 +3239,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0dfe2087c51c460008730de8b57e6a320782fbfb312e1f4d520e6c6fae155ee"
 dependencies = [
  "semver 0.11.0",
+]
+
+[[package]]
+name = "rustc_version"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
+dependencies = [
+ "semver 1.0.4",
 ]
 
 [[package]]
@@ -3386,6 +3390,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "semver"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "568a8e6258aa33c13358f81fd834adb854c6f7c9468520910a9b1e8fac068012"
+
+[[package]]
 name = "semver-parser"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3431,9 +3441,9 @@ dependencies = [
 
 [[package]]
 name = "serde_dynamodb"
-version = "0.7.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e9faf5eb2ed31361096d8273a89862d506fe6c6178d86cfb181a3b86e533405"
+checksum = "b0a485bf5e371e28d4978444686ffa91830d4719b92fb31960fbd8f494816239"
 dependencies = [
  "bytes 1.0.1",
  "rusoto_dynamodb",
@@ -3521,9 +3531,9 @@ dependencies = [
 
 [[package]]
 name = "shlex"
-version = "0.1.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
+checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
 name = "signal-hook-registry"
