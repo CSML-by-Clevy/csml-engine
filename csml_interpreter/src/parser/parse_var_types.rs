@@ -18,8 +18,8 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{cut, opt},
-    error::ParseError,
-    multi::separated_list,
+    error::{ParseError, ContextError},
+    multi::separated_list0,
     sequence::{delimited, preceded, terminated, tuple},
     Err, IResult,
 };
@@ -30,7 +30,7 @@ use nom::{
 
 fn parse_condition_group<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, interval) = get_interval(s)?;
 
@@ -52,7 +52,7 @@ where
 
 fn parse_assignation_without_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = parse_arg_idents_assignation(s)?;
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
@@ -74,7 +74,7 @@ where
 
 pub fn parse_r_bracket<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     match tag(R_BRACKET)(s) {
         Ok((rest, val)) => Ok((rest, val)),
@@ -87,7 +87,7 @@ where
 
 pub fn parse_idents_expr_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, idents) = parse_idents_usage(s)?;
 
@@ -96,7 +96,7 @@ where
 
 pub fn parse_fn_args<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<String>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (start, _) = preceded(comment, get_interval)(s)?;
     let (s, (vec, _)) = parse_error(
@@ -106,7 +106,7 @@ where
             tag(L_PAREN),
             terminated(
                 tuple((
-                    separated_list(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
+                    separated_list0(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
                     opt(preceded(comment, tag(COMMA))),
                 )),
                 cut(parse_r_parentheses),
@@ -119,7 +119,7 @@ where
 
 pub fn parse_expr_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (start, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, (vec, _)) = parse_error(
@@ -129,7 +129,7 @@ where
             tag(L_PAREN),
             terminated(
                 tuple((
-                    separated_list(
+                    separated_list0(
                         preceded(comment, tag(COMMA)),
                         alt((parse_assignation_without_path, parse_operator)),
                     ),
@@ -147,7 +147,7 @@ where
 
 pub fn parse_expr_array<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (start, mut interval) = preceded(comment, get_interval)(s)?;
 
@@ -158,7 +158,7 @@ where
             tag(L_BRACKET),
             terminated(
                 tuple((
-                    separated_list(preceded(comment, tag(COMMA)), parse_operator), //parse_basic_expr
+                    separated_list0(preceded(comment, tag(COMMA)), parse_operator), //parse_basic_expr
                     opt(preceded(comment, tag(COMMA))),
                 )),
                 preceded(comment, parse_r_bracket),
@@ -173,23 +173,26 @@ where
 
 pub fn parse_basic_expr<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    let (s, expr) = preceded(
-        comment,
-        alt((
-            parse_closure,
-            parse_condition_group,
-            parse_object,
-            parse_expr_array,
-            parse_literal_expr,
-            parse_built_in,
-            parse_string,
-            parse_idents_expr_usage,
-        )),
-    )(s)?;
+
+    let (s, _) = comment(s)?;
+
+    let (s, expr) = alt((
+        parse_closure,
+        parse_condition_group,
+        parse_object,
+        parse_expr_array,
+        parse_literal_expr,
+        parse_built_in,
+        parse_string,
+        parse_idents_expr_usage,
+    ))(s)?;
 
     let (s, expr) = parse_path(s, expr)?;
 
-    parse_idents_as(s, expr)
+    let (s, expr) = parse_idents_as(s, expr)?;
+
+    let (s, _) = comment(s)?;
+    Ok((s, expr))
 }
