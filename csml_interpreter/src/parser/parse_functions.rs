@@ -6,7 +6,7 @@ use crate::parser::{
     parse_comments::comment, parse_scope::parse_root, parse_var_types::parse_fn_args, tools::*,
 };
 
-use nom::error::ParseError;
+use nom::error::{ParseError, ContextError};
 use nom::{bytes::complete::tag, sequence::preceded, Err, *};
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@ pub fn parse_function_prototype<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Identifier, Vec<String>), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag("fn"))(s)?;
     let (s, ident) = preceded(comment, parse_idents_assignation)(s)?;
@@ -39,7 +39,7 @@ pub fn parse_function<'a, E: ParseError<Span<'a>>>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, (ident, args)) = parse_function_prototype(s)?;

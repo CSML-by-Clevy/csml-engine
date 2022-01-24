@@ -2,55 +2,66 @@ use crate::data::tokens::*;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_until, take_while},
-    combinator::opt,
-    error::ParseError,
+    combinator::value,
+    sequence::pair,
+    sequence::delimited,
+    sequence::tuple,
+    character::complete::multispace0,
+    bytes::complete::is_not,
+    error::{ParseError},
     multi::many0,
     IResult, *,
 };
 
-fn comment_single_line<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    let (s, _) = tag(INLINE_COMMENT)(s)?;
 
-    let val: IResult<Span<'a>, Span<'a>, E> = take_until("\n")(s);
-    let val2: IResult<Span<'a>, Span<'a>, E> = take_until("\r\n")(s);
-    if let Ok((s, v)) = val {
-        Ok((s, v))
-    } else if let Ok((s, v)) = val2 {
-        Ok((s, v))
-    } else {
-        // if new line is not found the rest of the file is commented
-        Ok((Span::new(""), Span::new("")))
-    }
+fn comment_single_line<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
+  value(
+    s, // Output is thrown away.
+    pair(tag("//"), is_not("\n\r"))
+  )(s)
 }
 
 fn comment_delimited<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    let (s, _) = tag(START_COMMENT)(s)?;
-    let val: IResult<Span<'a>, Span<'a>, E> = take_until(END_COMMENT)(s);
-    match val {
-        Ok((s, _)) => tag(END_COMMENT)(s),
-        // Error in comment_delimited is if '*/' is not found so the rest of the file is commented
-        Err(Err::Error(_e)) | Err(Err::Failure(_e)) => Ok((Span::new(""), Span::new(""))),
-        Err(Err::Incomplete(_)) => unimplemented!(),
-    }
+    value(
+      s, // Output is thrown away.
+      tuple((
+        tag(START_COMMENT),
+        take_until(END_COMMENT),
+        tag(END_COMMENT)
+      ))
+    )(s)
 }
 
 fn all_comments<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    let (s, _) = opt(sp)(s)?;
-    alt((comment_delimited, comment_single_line))(s)
+    alt((comment_single_line, comment_delimited))(s)
 }
 
 pub fn comment<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    let val = many0(all_comments)(s);
-    let (s, _) = match val {
+    let (s, _) = sp(s)?;
+
+    let (s, _) = match many0(ws(all_comments))(s) {
         Ok(val) => val,
         Err(Err::Error((s, _val))) | Err(Err::Failure((s, _val))) => return Ok((s, s)),
         Err(Err::Incomplete(i)) => return Err(Err::Incomplete(i)),
     };
-    sp(s)
+
+    Ok((s, s))
 }
 
 fn sp<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
     // nom combinators like `take_while` return a function. That function is the
     // parser,to which we can pass the input
     take_while(move |c| WHITE_SPACE.contains(c))(s)
+}
+
+
+fn ws<'a, F: 'a, O, E: ParseError<Span<'a>>>(inner: F) -> impl FnMut(Span<'a>) -> IResult<Span<'a>, O, E>
+  where
+  F: Fn(Span<'a>) -> IResult<Span<'a>, O, E>,
+{
+  delimited(
+    multispace0,
+    inner,
+    multispace0
+  )
 }

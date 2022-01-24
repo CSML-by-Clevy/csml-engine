@@ -36,7 +36,7 @@ use parse_import::parse_import;
 use parse_scope::parse_root;
 use tools::*;
 
-use nom::error::ParseError;
+use nom::error::{ParseError, ContextError};
 use nom::{branch::alt, bytes::complete::tag, multi::fold_many0, sequence::preceded, Err, *};
 use std::collections::HashMap;
 
@@ -46,7 +46,7 @@ use std::collections::HashMap;
 
 pub fn parse_step_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     // this will save the location of the keyword in order to display the error correctly
     let (command_span, _) = comment(s)?;
@@ -136,12 +136,12 @@ pub fn parse_flow<'a>(slice: &'a str, flow_name: &'a str) -> Result<Flow, ErrorI
 // PRIVATE FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-fn parse_step<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
+fn parse_step<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
-    let (s, ident) = preceded(comment, parse_step_name)(s)?;
+    let (s, ident) = parse_step_name(s)?;
 
     let (s, actions) = preceded(comment, parse_root)(s)?;
     let (s, end) = get_interval(s)?;
@@ -160,14 +160,15 @@ where
     ))
 }
 
-fn start_parsing<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E> {
+fn start_parsing<'a, E>(s: Span<'a>,) -> IResult<Span<'a>, (Vec<Instruction>, FlowType), E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
     let flow_type = FlowType::Normal;
 
     let (s, flow) = fold_many0(
         alt((parse_import, parse_function, parse_step)),
-        Vec::new(),
+        Vec::new,
         |mut acc, mut item| {
             acc.append(&mut item);
             acc

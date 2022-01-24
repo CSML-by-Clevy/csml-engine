@@ -20,8 +20,8 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{opt},
-    error::ParseError,
-    multi::separated_list,
+    error::{ParseError, ContextError},
+    multi::separated_list0,
     sequence::{preceded, terminated, tuple},
     Err, IResult,
 };
@@ -32,7 +32,7 @@ use nom::{
 
 fn addition_assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(ADDITION_ASSIGNMENT)(s)?;
     Ok((rest, AssignType::AdditionAssignment))
@@ -40,7 +40,7 @@ where
 
 fn subtraction_assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(SUBTRACTION_ASSIGNMENT)(s)?;
     Ok((rest, AssignType::SubtractionAssignment))
@@ -48,7 +48,7 @@ where
 
 fn assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(ASSIGN)(s)?;
     Ok((rest, AssignType::Assignment))
@@ -56,7 +56,7 @@ where
 
 fn parse_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<Expr>), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = parse_idents_assignation(s)?;
     let (s, _) = preceded(comment, tag(ASSIGN))(s)?;
@@ -67,7 +67,7 @@ where
 
 fn parse_assignation_with_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = parse_idents_assignation(s)?;
     let (s, ident) = parse_path(s, Expr::IdentExpr(name))?;
@@ -83,7 +83,7 @@ where
 
 fn parse_remember_as<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Identifier, Box<Expr>), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, operator) = parse_operator(s)?;
 
@@ -95,7 +95,7 @@ where
 
 fn parse_forget_all<'a, E>(s: Span<'a>) -> IResult<Span<'a>, ForgetMemory, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = tag("*")(s)?;
 
@@ -104,7 +104,7 @@ where
 
 fn parse_forget_single<'a, E>(s: Span<'a>) -> IResult<Span<'a>, ForgetMemory, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, ident) = parse_idents_usage(s)?;
 
@@ -113,13 +113,13 @@ where
 
 fn parse_forget_list<'a, E>(s: Span<'a>) -> IResult<Span<'a>, ForgetMemory, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, (vec, _)) = preceded(
         tag(L_BRACKET),
         terminated(
             tuple((
-                separated_list(preceded(comment, tag(COMMA)), parse_idents_usage), 
+                separated_list0(preceded(comment, tag(COMMA)), parse_idents_usage), 
                 opt(preceded(comment, tag(COMMA))),
             )),
             preceded(comment, parse_r_bracket),
@@ -131,8 +131,8 @@ where
 
 fn parse_action_argument<'a, E, F, G>(s: Span<'a>, func: F) -> IResult<Span<'a>, G, E>
 where
-    E: ParseError<Span<'a>>,
-    F: Fn(Span<'a>) -> IResult<Span<'a>, G, E>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+    F: FnMut(Span<'a>) -> IResult<Span<'a>, G, E>,
 {
     match preceded(comment, func)(s) {
         Ok(value) => Ok(value),
@@ -150,7 +150,7 @@ where
 
 fn parse_do<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, DO)(s)?;
@@ -173,7 +173,7 @@ where
 
 fn parse_remember<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, REMEMBER)(s)?;
@@ -189,7 +189,7 @@ where
 
 fn parse_forget<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, interval) = get_interval(s)?;
@@ -214,7 +214,7 @@ where
 
 fn parse_say<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, SAY)(s)?;
@@ -229,7 +229,7 @@ where
 
 fn parse_debug<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, mut interval) = get_interval(s)?;
@@ -251,7 +251,7 @@ where
 //TODO: deprecate use
 fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, USE)(s)?;
@@ -271,7 +271,7 @@ where
 
 fn parse_hold<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, inter) = preceded(comment, get_interval)(s)?;
     let (s, name) = get_string(s)?;
@@ -286,7 +286,7 @@ where
 
 fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, inter) = preceded(comment, get_interval)(s)?;
     let (s, name) = get_string(s)?;
@@ -301,7 +301,7 @@ where
 
 fn parse_continue<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, inter) = preceded(comment, get_interval)(s)?;
     let (s, name) = get_string(s)?;
@@ -316,7 +316,7 @@ where
 
 fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, RETURN)(s)?;
@@ -340,7 +340,7 @@ where
 
 pub fn parse_root_functions<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     alt((
         // common actions

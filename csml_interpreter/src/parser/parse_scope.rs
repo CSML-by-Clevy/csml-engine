@@ -7,7 +7,7 @@ use crate::parser::{
     state_context::count_commands,
 };
 use nom::{
-    bytes::complete::tag, error::ParseError, multi::fold_many0, sequence::delimited,
+    bytes::complete::tag, error::{ParseError, ContextError}, multi::fold_many0, sequence::delimited,
     sequence::preceded, *,
 };
 
@@ -17,11 +17,11 @@ use nom::{
 
 pub fn parse_root<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let result = fold_many0(
         parse_root_functions,
-        Block::default(),
+        Block::default,
         |mut acc: Block, mut command| {
             let mut index = acc.commands_count;
 
@@ -43,7 +43,7 @@ where
 
 pub fn parse_implicit_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let mut acc = Block::default();
     let (s, item) = parse_root_functions(s)?;
@@ -59,7 +59,7 @@ where
 
 pub fn parse_scope<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (start, _) = get_interval(s)?;
 

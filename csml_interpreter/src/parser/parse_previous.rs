@@ -9,7 +9,7 @@ use nom::{error::*, sequence::preceded, *};
 fn get_previous<I, E: ParseError<I>>(
     var: String,
     interval: Interval
-) -> impl Fn(I) -> IResult<I, PreviousType, E> {
+) -> impl FnMut(I) -> IResult<I, PreviousType, E> {
     move |input: I| {
         if var == FLOW {
             Ok((input, PreviousType::Flow(interval)))
@@ -23,7 +23,7 @@ fn get_previous<I, E: ParseError<I>>(
 
 pub fn parse_previous<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, interval) = preceded(comment, get_interval)(s)?;
     let (s, name) = get_string(s)?;
