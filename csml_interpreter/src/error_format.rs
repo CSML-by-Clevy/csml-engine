@@ -90,7 +90,7 @@ pub const ERROR_IMPORT_STEP_FLOW: &str = "step not found in flow";
 
 // ### Variables
 pub const ERROR_GET_VAR_INFO: &str = "Expression must be a variable";
-pub const ERROR_JSON_TO_LITERAL: &str = "Number is larget than a 64-bit integer";
+pub const ERROR_JSON_TO_LITERAL: &str = "Number is larger than a 64-bit integer";
 
 // ### Memory
 pub const ERROR_STEP_MEMORY: &str = "Variable does not exist in step's memory";
