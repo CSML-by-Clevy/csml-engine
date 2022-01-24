@@ -420,6 +420,11 @@ fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Lite
         PrimitiveString::get_literal(&data.context.flow, interval)
     );
 
+    flow_context.insert(
+        "default_flow".to_owned(),
+        PrimitiveString::get_literal(&data.context.flow, interval)
+    );
+
     if let Some(previous_info) = &data.previous_info {
         flow_context.insert(
             "previous_step".to_owned(),
@@ -446,7 +451,7 @@ pub fn get_metadata_context_literal(
     let flow_context = get_flow_context(data, interval);
     let mut path_skip = 1;
 
-    // get flow context current_flow / previous_flow / current_step / previous_step
+    // get flow context default_flow / current_flow / previous_flow / current_step / previous_step
     let mut lit = match path.get(1) {
         Some((interval, PathLiteral::MapIndex(context_name))) => {
             match flow_context.get(context_name) {
@@ -590,6 +595,7 @@ pub fn get_var(
             let (
                 tmp_flows,
                 tmp_flow,
+                tmp_default_flow,
                 mut tmp_context,
                 tmp_event,
                 tmp_env,
@@ -604,6 +610,7 @@ pub fn get_var(
             let mut new_scope_data = Data::new(
                 &tmp_flows,
                 &tmp_flow,
+                tmp_default_flow,
                 &mut tmp_context,
                 &tmp_event,
                 &tmp_env,
