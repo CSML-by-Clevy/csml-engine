@@ -181,6 +181,7 @@ pub enum ObjectType {
     Hold(Interval),
     Say(Box<Expr>),
     Debug(Box<Expr>, Interval),
+    Log(Box<Expr>, Interval),
     Return(Box<Expr>),
     Do(DoType),
     Use(Box<Expr>),

@@ -12,7 +12,7 @@ use nom::{error::*, sequence::preceded, IResult};
 
 pub fn parse_built_in<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, interval) = get_interval(s)?;
     let (s, name) = get_string(s)?;

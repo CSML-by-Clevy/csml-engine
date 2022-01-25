@@ -7,7 +7,7 @@ use crate::parser::{
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    error::ParseError,
+    error::{ParseError, ContextError},
     multi::many1,
     sequence::{preceded, terminated},
     *,
@@ -22,7 +22,7 @@ use nom::{
 // [ number + number ]
 fn parse_index<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathState), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, interval) = get_interval(s)?;
 
@@ -36,7 +36,7 @@ where
 
 fn parse_dot_path<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Interval, PathState), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     // let (s, found) = take_while(|c| "\n".contains(c))(s)?;
     // let (s, _) = match found.fragment().is_empty() {
@@ -69,7 +69,7 @@ where
 
 pub fn parse_path<'a, E>(s: Span<'a>, expr: Expr) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let path: IResult<Span<'a>, Vec<(Interval, PathState)>, E> = many1(
         alt((

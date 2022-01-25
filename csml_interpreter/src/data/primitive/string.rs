@@ -65,6 +65,10 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "slice" => (PrimitiveString::slice as PrimitiveMethod, Right::Read),
     "split" => (PrimitiveString::split as PrimitiveMethod, Right::Read),
 
+    "trim" => (PrimitiveString::trim as PrimitiveMethod, Right::Read),
+    "trim_left" => (PrimitiveString::trim_left as PrimitiveMethod, Right::Read),
+    "trim_right" => (PrimitiveString::trim_right as PrimitiveMethod, Right::Read),
+
     "abs" => (PrimitiveString::abs as PrimitiveMethod, Right::Read),
     "cos" => (PrimitiveString::cos as PrimitiveMethod, Right::Read),
     "ceil" =>(PrimitiveString::ceil as PrimitiveMethod, Right::Read),
@@ -1156,6 +1160,77 @@ impl PrimitiveString {
         }
 
         Ok(PrimitiveArray::get_literal(&vector, interval))
+    }
+
+
+    fn trim(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "trim() => string";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        // match args.length() {
+
+        // }
+
+        let s = &string.value;
+        Ok(PrimitiveString::get_literal(s.trim(), interval))
+    }
+
+    fn trim_left(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "trim() => string";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let s = &string.value;
+        Ok(PrimitiveString::get_literal(s.trim_start(), interval))
+    }
+
+    fn trim_right(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "trim_right() => string";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let s = &string.value;
+        Ok(PrimitiveString::get_literal(s.trim_end(), interval))
     }
 }
 

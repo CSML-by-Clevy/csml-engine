@@ -6,8 +6,8 @@ use nom::{
     bytes::complete::tag,
     bytes::complete::take_till1,
     combinator::{cut, map, opt},
-    error::{context, ParseError},
-    multi::separated_list,
+    error::{context, ParseError, ContextError},
+    multi::separated_list0,
     sequence::{preceded, separated_pair, terminated, tuple},
     IResult,
 };
@@ -19,7 +19,7 @@ use std::collections::HashMap;
 
 fn string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (Span<'a>, bool), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let token = match (
         tag(DOUBLE_QUOTE)(s) as IResult<Span<'a>, Span<'a>, E>,
@@ -54,9 +54,9 @@ fn parse_arguments<'a, E>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Vec<((Span<'a>, bool), Expr)>, bool), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    let (s, result) = separated_list(
+    let (s, result) = separated_list0(
         preceded(comment, tag(COMMA)),
         separated_pair(
             preceded(comment, string),
@@ -70,7 +70,7 @@ where
 
 fn key_value<'a, E>(s: Span<'a>) -> IResult<Span<'a>, (HashMap<String, Expr>, bool), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     map(parse_arguments, |(tuple_vec, mut is_in_sub_string)| {
         let args_map = tuple_vec
@@ -95,7 +95,7 @@ where
 
 pub fn parse_object<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
     // the 'is_in_sub_string' param is use to determine if this object was declare inside a string or not

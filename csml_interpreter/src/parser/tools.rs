@@ -1,7 +1,7 @@
 use crate::data::{ast::*, tokens::*};
 use nom::{
     bytes::complete::take_while1,
-    error::{ErrorKind, ParseError},
+    error::{ErrorKind, ParseError, ContextError},
     *,
 };
 
@@ -9,7 +9,7 @@ use nom::{
 // PRIVATE FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-fn position<'a, E: ParseError<Span<'a>>, T>(s: T) -> IResult<T, T, E>
+fn position<'a, E: ParseError<Span<'a>> + ContextError<Span<'a>>, T>(s: T) -> IResult<T, T, E>
 where
     T: InputIter + InputTake,
     E: nom::error::ParseError<T>,
@@ -79,7 +79,7 @@ fn set_close_expand(s: &str, index: usize, escape: bool, substring: bool, expand
 
 pub fn get_interval<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Interval, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, pos) = position(s)?;
     Ok((s, Interval::new_as_span(pos)))
@@ -102,10 +102,10 @@ pub fn get_range_interval(vector_interval: &[Interval]) -> Interval {
 }
 
 // generate range error
-pub fn parse_error<'a, O, E, F>(start: Span<'a>, span: Span<'a>, func: F) -> IResult<Span<'a>, O, E>
+pub fn parse_error<'a, O, E, F>(start: Span<'a>, span: Span<'a>, mut func: F) -> IResult<Span<'a>, O, E>
 where
-    E: ParseError<Span<'a>>,
-    F: Fn(Span<'a>) -> IResult<Span<'a>, O, E>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+    F: FnMut(Span<'a>) -> IResult<Span<'a>, O, E>,
 {
     match func(span) {
         Ok(value) => Ok(value),
@@ -117,7 +117,7 @@ where
 
 pub fn get_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, string) = take_while1(|c: char| c == '_' || c == '\\' || c.is_alphanumeric())(s)?;
     // let (rest, string) = take_till1(|c: char| c != UNDERSCORE && !c.is_alphanumeric())(s)?;
@@ -129,7 +129,7 @@ where
 pub fn get_tag<I, E: ParseError<I>>(
     var: String,
     tag: &str,
-) -> impl Fn(I) -> IResult<I, (), E> + '_ {
+) -> impl FnMut(I) -> IResult<I, (), E> + '_ {
     move |input: I| {
         if var == tag {
             Ok((input, ()))
