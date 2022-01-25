@@ -1,4 +1,4 @@
-name: Publish CSML Server Packages
+name: linux-build
 
 on:
   release:
@@ -7,26 +7,18 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    env:
-      MACOSX_DEPLOYMENT_TARGET: 10.11
-      VCPKGRS_DYNAMIC: 1
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15]
+        os: [ubuntu-18.04]
         include:
           - os: ubuntu-18.04
-            asset_name: csml-server-linux-amd64
-          - os: macos-10.15
-            asset_name: csml-server-macos-amd64
-          # - os: windows-latest
-          #   asset_name: csml-server-windows-amd64
+            amd_asset_name: csml-server-linux-amd64
+            arm_asset_name: csml-server-linux-armv64
 
     steps:
     - uses: actions/checkout@v2
 
-    # for some reason cache does not work properly with macos builds
     - name: Cache Cargo
-      if: matrix.os != 'macos-10.15'
       uses: actions/cache@v2
       with:
         path: |
@@ -45,38 +37,36 @@ jobs:
         sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
         sudo service postgresql restart && sleep 3
 
-    - name: Install postgres (MacOS)
-      if: runner.os == 'macos-10.15'
-      run: |
-        /usr/local/opt/postgres/bin/pg_ctl -D /usr/local/var/postgres start
-        sleep 3
-        /usr/local/opt/postgres/bin/createuser -s postgres
-
-
-    # - name: Install postgres (Windows)
-    #   if: runner.os == 'windows-latest'
-    #   shell: bash
-    #   run: |
-    #     choco install postgresql12 --force --params '/Password:root'
-    #     echo "C:\Program Files\PostgreSQL\12\bin" >> $GITHUB_PATH
-    #     echo "C:\Program Files\PostgreSQL\12\lib" >> $GITHUB_PATH
-
     - name: Install Rust Stable
       uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
         override: true
 
-    - name: Build Server
+    - name: (AMD) Build Server
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --verbose --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql  --release
+        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql  --release
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.asset_name }}
+        name: ${{ matrix.amd_asset_name }}
         path: target/release/csml_server
+
+
+    - name: (ARM) Build Server
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: true
+        command: build
+        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target aarch64-unknown-linux-gnu --release
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name:  ${{ matrix.arm_asset_name }}
+        path: target/aarch64-unknown-linux-gnu/release/csml_server
+
 
 
 
@@ -84,33 +74,44 @@ jobs:
   publish-binaries:
     runs-on: ${{ matrix.os }}
     needs: build
-    env:
-      MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15]
+        os: [ubuntu-18.04]
         include:
           - os: ubuntu-18.04
-            asset_name: csml-server-linux-amd64
-          - os: macos-10.15
-            asset_name: csml-server-macos-amd64
+            amd_asset_name: csml-server-linux-amd64
+            arm_asset_name: csml-server-linux-armv64
 
     steps:
       - run: mkdir -p target/release
       - uses: actions/download-artifact@v2
         with:
-          name: ${{ matrix.asset_name }}
+          name: ${{ matrix.amd_asset_name }}
           path: target/release
 
-      - name: Upload binary to release
+      - name: Upload linux AMD binary to release
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/release/csml_server
-          asset_name: ${{ matrix.asset_name }}
+          asset_name: ${{ matrix.amd_asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
 
+      - run: mkdir -p target/aarch64-unknown-linux-gnu/release
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.arm_asset_name }}
+          path: target/aarch64-unknown-linux-gnu/release
+
+      - name: Upload linux ARM binary to release
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/aarch64-unknown-linux-gnu/release/csml_server
+          asset_name: ${{ matrix.arm_asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
 
 
   publish-docker:
@@ -118,11 +119,18 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v2
-      - run: mkdir -p target/release
       - uses: actions/download-artifact@v2
         with:
           name: csml-server-linux-amd64
           path: target/release
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: csml-server-linux-armv64
+          path: target/aarch64-unknown-linux-gnu/release
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -150,9 +158,12 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
+          platforms:  linux/amd64,linux/arm64
           push: true
           tags: |
             clevy/csml-engine:latest
             clevy/csml-engine:${{ steps.release_version.outputs.tag }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+
+
