@@ -98,7 +98,7 @@ pub fn api(
     http.insert("header".to_owned(), lit_header);
     http.insert("body".to_owned(), body);
 
-    match http_request(&http, "post", &data.context.flow, interval) {
+    match http_request(&http, "post", &data.context.flow, interval, true) {
         Ok(value) => match value.get("data") {
             Some(value) => interpolate(value, interval, data, msg_data, sender),
             None => {
