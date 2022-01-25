@@ -248,6 +248,28 @@ where
     ))
 }
 
+
+fn parse_log<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, mut interval) = get_interval(s)?;
+    let (s, ..) = get_tag(name, LOG_ACTION)(s)?;
+
+    let (s, expr) = parse_action_argument(s, parse_operator)?;
+    let (s, end) = get_interval(s)?;
+    interval.add_end(end);
+
+    // this vec is temporary until a solution for multiple arguments in debug is found
+    let vec = Expr::VecExpr(vec![expr], interval);
+
+    Ok((
+        s,
+        Expr::ObjectExpr(ObjectType::Log(Box::new(vec), interval)),
+    ))
+}
+
 //TODO: deprecate use
 fn parse_use<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
@@ -346,6 +368,7 @@ where
         // common actions
         parse_do,
         parse_debug,
+        parse_log,
         parse_if,
         parse_foreach,
         parse_while,
