@@ -481,7 +481,7 @@ impl PrimitiveArray {
 
         if let Some(res) = array
             .value
-            .get(rand::thread_rng().gen_range(0, array.value.len()))
+            .get(rand::thread_rng().gen_range(0..array.value.len()))
         {
             return Ok(res.to_owned());
         }

@@ -11,7 +11,7 @@ use crate::parser::{
 use nom::{
     bytes::complete::tag,
     combinator::{cut},
-    error::ParseError,
+    error::{ParseError, ContextError},
     sequence::preceded,
     *,
 };
@@ -22,7 +22,7 @@ use nom::{
 
 pub fn parse_while<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(WHILE))(s)?;
     let (s, mut interval) = get_interval(s)?;

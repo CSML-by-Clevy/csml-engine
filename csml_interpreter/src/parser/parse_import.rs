@@ -9,8 +9,8 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{map, opt},
-    error::{ErrorKind, ParseError},
-    multi::separated_list,
+    error::{ErrorKind, ParseError, ContextError},
+    multi::separated_list0,
     sequence::{preceded, terminated, tuple},
     Err, IResult,
 };
@@ -21,7 +21,7 @@ use nom::{
 
 fn parse_fn_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, identifier) = parse_idents_assignation(s)?;
 
@@ -30,7 +30,7 @@ where
 
 fn parse_fn_name_as_vec<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, expr) = parse_fn_name(s)?;
 
@@ -39,14 +39,14 @@ where
 
 fn parse_group<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, (vec, ..)) = preceded(
         tag(L_BRACE),
         terminated(
             tuple((
                 map(
-                    separated_list(preceded(comment, tag(COMMA)), parse_fn_name),
+                    separated_list0(preceded(comment, tag(COMMA)), parse_fn_name),
                     |vec| vec.into_iter().map(|expr| expr).collect(),
                 ),
                 opt(preceded(comment, tag(COMMA))),
@@ -60,7 +60,7 @@ where
 
 fn parse_import_params<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Expr>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     match alt((parse_group, parse_fn_name_as_vec))(s) {
         Ok(value) => Ok(value),
@@ -74,7 +74,7 @@ where
 
 fn parse_from<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, FROM)(s)?;
@@ -91,7 +91,7 @@ pub fn parse_import_prototype<'a, E>(
     s: Span<'a>,
 ) -> IResult<Span<'a>, (Interval, Vec<Expr>, Option<String>), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, start) =  preceded(comment,get_interval)(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
@@ -107,7 +107,7 @@ where
 
 pub fn parse_import<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<Instruction>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, (interval, fn_names, from_flow)) = parse_import_prototype(s)?;
 

@@ -12,7 +12,7 @@ use crate::parser::{
 use nom::{
     bytes::complete::tag,
     combinator::{cut, opt},
-    error::ParseError,
+    error::{ParseError, ContextError},
     sequence::preceded,
     *,
 };
@@ -23,7 +23,7 @@ use nom::{
 
 fn pars_args<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(COMMA))(s)?;
     let (s, idents) = parse_idents_assignation(s)?;
@@ -37,7 +37,7 @@ where
 
 pub fn parse_foreach<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(FOREACH))(s)?;
     let (s, mut interval) = get_interval(s)?;

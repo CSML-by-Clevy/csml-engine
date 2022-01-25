@@ -5,21 +5,21 @@ use crate::parser::{
 use nom::{
     bytes::complete::tag,
     combinator::opt,
-    error::ParseError,
-    multi::separated_list,
+    error::{ParseError, ContextError},
+    multi::separated_list0,
     sequence::{preceded, terminated, tuple},
     IResult,
 };
 
 fn parse_closure_args<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Vec<String>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, (vec, _)) = preceded(
         tag(L_PAREN),
         terminated(
             tuple((
-                separated_list(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
+                separated_list0(preceded(comment, tag(COMMA)), preceded(comment, get_string)),
                 opt(preceded(comment, tag(COMMA))),
             )),
             preceded(comment, tag(R_PAREN)),
@@ -31,7 +31,7 @@ where
 
 pub fn parse_closure<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, mut interval) = preceded(comment, get_interval)(s)?;
     let (s, args) = parse_closure_args(s)?;

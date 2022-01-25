@@ -45,6 +45,25 @@ impl ArgsType {
         }
     }
 
+    pub fn args_to_log(&self, interval: Interval, at_flow: &str) -> String {
+        match self {
+            Self::Named(map) | Self::Normal(map) => {
+
+                let mut args = vec![];
+                let size = map.len();
+                let mut index = 0;
+                while index < size {
+                    let lit = map[&format!("arg{}", index)].clone();
+                    let value = lit.primitive.to_string();
+                    args.push(value);
+                    index = index + 1;
+                }
+
+                format!("<Log at flow: {}, line: {}> : {:?}", at_flow, interval.start_line, args.join(", "))
+            }
+        }
+    }
+
     pub fn get<'a>(&'a self, key: &str, index: usize) -> Option<&'a Literal> {
         match self {
             Self::Named(var) => {
