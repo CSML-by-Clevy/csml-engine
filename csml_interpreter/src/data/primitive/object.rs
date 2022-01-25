@@ -495,7 +495,7 @@ impl PrimitiveObject {
                 }
             };
 
-            let value = http_request(&object.value, method, &data.context.flow, interval)?;
+            let value = http_request(&object.value, method, &data.context.flow, interval, false)?;
             return json_to_literal(&value, interval, &data.context.flow);
         }
 
