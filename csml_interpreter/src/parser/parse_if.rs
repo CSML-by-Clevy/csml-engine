@@ -8,7 +8,7 @@ use crate::parser::{
     tools::*,
 };
 use nom::{
-    branch::alt, bytes::complete::tag, combinator::opt, error::ParseError, sequence::delimited,
+    branch::alt, bytes::complete::tag, combinator::opt, error::{ParseError, ContextError}, sequence::delimited,
     sequence::preceded, *,
 };
 
@@ -18,14 +18,14 @@ use nom::{
 
 fn parse_strict_condition_group<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     delimited(parse_l_parentheses, parse_operator, parse_r_parentheses)(s)
 }
 
 fn parse_else_if<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Box<IfStatement>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(ELSE))(s)?;
     let (s, _) = preceded(comment, tag(IF))(s)?;
@@ -49,7 +49,7 @@ where
 
 fn parse_else<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Box<IfStatement>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(ELSE))(s)?;
     let (s, mut interval) = get_interval(s)?;
@@ -71,7 +71,7 @@ where
 
 pub fn parse_if<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = preceded(comment, tag(IF))(s)?;
     let (s, condition) = parse_strict_condition_group(s)?;

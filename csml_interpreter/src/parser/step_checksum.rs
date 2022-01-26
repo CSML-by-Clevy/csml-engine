@@ -4,7 +4,7 @@ use crate::interpreter::variable_handler::interval::interval_from_expr;
 use crate::parser::parse_comments::comment;
 
 use nom::{
-    bytes::complete::take_while1, error::ParseError, multi::fold_many0, sequence::preceded, Err,
+    bytes::complete::take_while1, error::{ParseError, ContextError}, multi::fold_many0, sequence::preceded, Err,
     IResult, InputTake,
 };
 
@@ -14,7 +14,7 @@ use nom::{
 
 fn get_text<'a, E>(s: Span<'a>) -> IResult<Span<'a>, &'a str, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, string) = take_while1(|c: char| !WHITE_SPACE.contains(c))(s)?;
 
@@ -23,9 +23,9 @@ where
 
 fn clean_text<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    let (span, vec) = fold_many0(preceded(comment, get_text), Vec::new(), |mut acc, item| {
+    let (span, vec) = fold_many0(preceded(comment, get_text), Vec::new, |mut acc, item| {
         acc.push(item);
         acc
     })(s)?;

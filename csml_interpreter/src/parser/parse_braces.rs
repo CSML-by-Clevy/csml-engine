@@ -1,6 +1,6 @@
 use crate::data::tokens::*;
 use crate::error_format::{gen_nom_failure, ERROR_LEFT_BRACE, ERROR_RIGHT_BRACE};
-use nom::{bytes::complete::tag, error::ParseError, *};
+use nom::{bytes::complete::tag, error::{ParseError, ContextError}, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
@@ -8,7 +8,7 @@ use nom::{bytes::complete::tag, error::ParseError, *};
 
 pub fn parse_l_brace<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     match tag(L_BRACE)(s) {
         Ok((rest, val)) => Ok((rest, val)),
@@ -21,7 +21,7 @@ where
 
 pub fn parse_r_brace<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     match tag(R_BRACE)(s) {
         Ok((rest, val)) => Ok((rest, val)),

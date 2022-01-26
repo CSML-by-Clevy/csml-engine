@@ -3,7 +3,7 @@ pub mod data;
 use crate::data::tokens::Span;
 use crate::data::{position::Position, warnings::Warnings, Interval};
 use nom::{
-    error::{ErrorKind, ParseError},
+    error::{ErrorKind, ParseError, ContextError},
     *,
 };
 
@@ -381,7 +381,7 @@ pub fn gen_warning_info(position: Position, message: String) -> Warnings {
 
 pub fn gen_nom_error<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     Err::Error(E::add_context(
         span,
@@ -392,7 +392,7 @@ where
 
 pub fn gen_nom_failure<'a, E>(span: Span<'a>, error: &'static str) -> Err<E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     Err::Failure(E::add_context(
         span,

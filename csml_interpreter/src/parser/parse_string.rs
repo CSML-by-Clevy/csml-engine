@@ -4,19 +4,42 @@ use crate::error_format::{gen_nom_failure, CustomError, *};
 use crate::interpreter::variable_handler::expr_to_literal;
 use crate::parser::operator::parse_operator;
 use crate::parser::parse_comments::comment;
-use crate::parser::tools::{get_distance_brace, get_interval, get_range_interval, parse_error};
+use crate::parser::tools::{get_interval, get_range_interval, parse_error};
 use nom::{
     bytes::complete::tag,
-    combinator::cut,
-    error::ParseError,
+    combinator::{cut},
+    error::{ParseError, ContextError},
     sequence::{delimited, preceded},
     *,
 };
 use std::sync::mpsc;
 
+use nom::bytes::complete::{escaped_transform};
+use nom::character::complete::{satisfy, anychar};
+use nom::branch::alt;
+use nom::combinator::{value};
+
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////};
+
+fn parser(input: &str) -> IResult<&str, String> 
+{
+    escaped_transform(
+    satisfy(|c| c != '\\'),
+      '\\',
+      alt((
+        value('\n', tag("n")),
+        value('\t', tag("t")),
+        value('\r', tag("r")),
+        value('\'', tag("\'")),
+        value('\"', tag("\"")),
+        value('\\', tag("\\")),
+        anychar,
+      ))
+    )(input)
+}
+
 
 fn add_to_vector<'a, E>(
     s: Span<'a>,
@@ -25,51 +48,26 @@ fn add_to_vector<'a, E>(
     interval_vector: &mut Vec<Interval>,
 ) -> IResult<Span<'a>, Span<'a>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, value) = s.take_split(length);
     let (value, interval) = get_interval(value)?;
 
-    let mut string = String::new();
-    let mut escape = false;
+    let (_, string) = parser(&value.fragment())
+        .unwrap_or(("", value.fragment().to_string()));
 
-    for c in value.fragment().chars() {
-        if c != '\\' || escape {
-            if escape {
-                match c {
-                    'n' => string.push('\n'),
-                    't' => string.push('\t'),
-                    'r' => string.push('\r'),
-                    '\'' => string.push('\''),
-                    '\"' => string.push('\"'),
-                    '\\' => string.push('\\'),
-                    c => string.push(c),
-                }
-
-                escape = false;
-            } else {
-                string.push(c);
-            }
-        } else {
-            escape = true;
-        }
-    }
-
-    if !value.fragment().is_empty() {
-        expr_vector.push(Expr::LitExpr {
-            literal: PrimitiveString::get_literal(&string, interval),
-            in_in_substring: false,
-        });
-
-        interval_vector.push(interval);
-    }
+    expr_vector.push(Expr::LitExpr {
+        literal: PrimitiveString::get_literal(&string, interval),
+        in_in_substring: false,
+    });
+    interval_vector.push(interval);
 
     Ok((rest, value))
 }
 
 fn parse_close_bracket<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     match preceded(comment, tag("}}"))(s) {
         Ok((rest, val)) => Ok((rest, val)),
@@ -82,7 +80,7 @@ where
 
 fn get_distance_quote<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Option<usize>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let mut escape = false;
     let mut len  = 0;
@@ -107,13 +105,43 @@ where
     Ok((s, None))
 }
 
+
+fn get_distance_braces<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Option<usize>, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let mut escape = false;
+    let mut len  = 0;
+
+    for (i, c) in s.chars().enumerate() {
+        if c == '{' && !escape {
+            if Some('{') == s.chars().nth(i + 1) {
+                return Ok((s, Some(len)));
+            }
+        }
+
+        if c == '\\' {
+            escape = match escape {
+                true => false,
+                false => true,
+            }
+        } else {
+            escape = false;
+        }
+
+        len += c.len_utf8();
+    }
+    let (s, _) = nom::bytes::complete::take(len)(s)?;
+    Ok((s, None))
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
 fn parse_complex_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, expr) = match parse_operator(s) {
         Ok((rest, val)) => (rest, val),
@@ -135,9 +163,63 @@ where
     Ok((rest, expr))
 }
 
+fn check_escaped_right_brace<'a, E>(
+    s: Span<'a>,
+    len: usize,
+    string: &mut Span<'a>,
+    vector: &mut Vec<Expr>,
+    interval: &mut Vec<Interval>,
+) -> IResult<Span<'a>, (), E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let mut ref_srt = string.fragment().chars();
+    if len > 1 && ref_srt.nth(len - 1) == Some('\\') {
+        let (split_rest, split_string) = string.take_split(len + 2);
+
+        add_to_vector(
+            split_string,
+            split_string.fragment().len(),
+             vector,
+             interval,
+        )?;
+        *string = split_rest;
+
+        Ok((s, ()))
+    } else {
+        Err(gen_nom_failure(s, ERROR_DOUBLE_CLOSE_BRACE))
+    }
+}
+
+fn check_escaped_left_brace<'a, E>(
+    s: Span<'a>,
+    len: usize,
+    string: &mut Span<'a>,
+    vector: &mut Vec<Expr>,
+    interval: &mut Vec<Interval>,
+) -> IResult<Span<'a>, (), E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let mut ref_srt = string.fragment().chars();
+    if len > 1 && ref_srt.nth(len - 1) == Some('\\') {
+        let (res, _) = add_to_vector(
+            *string,
+            string.fragment().len(),
+            vector,
+            interval,
+        )?;
+        *string = res;
+
+        Ok((s, ()))
+    } else {
+        return Err(gen_nom_failure(s, ERROR_DOUBLE_CLOSE_BRACE))
+    }
+}
+
 fn do_parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     match get_distance_quote(s)? {
         (_, Some(distance)) => {
@@ -148,34 +230,50 @@ where
             let mut string = string.to_owned();
 
             while !string.fragment().is_empty() {
+
                 match (
-                    get_distance_brace(&string, '{'),
-                    get_distance_brace(&string, '}'),
+                    string.find_substring("{{"),
+                    string.find_substring("}}")
                 ) {
                     (Some(lhs_distance), Some(rhs_distance)) if lhs_distance < rhs_distance => {
-                        let (rest, _) =
-                            add_to_vector(string, lhs_distance, &mut vector, &mut interval)?;
-                        let (rest, expression) =
-                            delimited(tag("{{"), parse_complex_string, parse_close_bracket)(rest)?;
-                        vector.push(expression);
+                        if let (_, Some(index)) = get_distance_braces(string)? {
+                            let (split_rest, split_string) = string.take_split(index);
+                            add_to_vector(
+                                split_string,
+                                split_string.fragment().len(),
+                                &mut vector,
+                                &mut interval,
+                            )?;
+                            let (split_rest, expression) =
+                                    delimited(tag("{{"), parse_complex_string, parse_close_bracket)(split_rest)?;
+                            vector.push(expression);
+                            string = split_rest;
+                        } else {
+                            let (res, _) = add_to_vector(
+                                string,
+                                string.fragment().len(),
+                                &mut vector,
+                                &mut interval,
+                            )?;
 
-                        string = rest;
+                            string = res;
+                        }
                     }
-                    (Some(_), None) => {
-                        return Err(gen_nom_failure(s, ERROR_DOUBLE_CLOSE_BRACE));
+                    (_, Some(len)) => {
+                        check_escaped_right_brace(s, len, &mut string, &mut vector, &mut interval)?;
                     }
-                    (None, Some(_)) => {
-                        return Err(gen_nom_failure(s, ERROR_DOUBLE_OPEN_BRACE));
+                    (Some(len), _) => {
+                        check_escaped_left_brace(s, len, &mut string, &mut vector, &mut interval)?;
                     }
                     (_, _) => {
-                        let (rest, _) = add_to_vector(
+                        let (res, _) = add_to_vector(
                             string,
                             string.fragment().len(),
                             &mut vector,
                             &mut interval,
                         )?;
 
-                        string = rest;
+                        string = res;
                     }
                 }
             }
@@ -190,7 +288,7 @@ where
 
 fn do_parse_expand_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     match s.find_substring("\\\"") {
         Some(distance) => {
@@ -216,19 +314,22 @@ where
 
 pub fn parse_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (start, _) = get_interval(s)?;
 
-    match (
+    let toto = match (
         tag(DOUBLE_QUOTE)(s) as IResult<Span<'a>, Span<'a>, E>,
         tag(BACKSLASH_DOUBLE_QUOTE)(s) as IResult<Span<'a>, Span<'a>, E>,
     ) {
-        (Ok(_), ..) => parse_error(
+        (Ok(_), ..) => {
+
+            parse_error(
             start,
             s,
             delimited(tag(DOUBLE_QUOTE), do_parse_string, cut(tag(DOUBLE_QUOTE))),
-        ),
+            )
+        },
         (.., Ok(_)) => parse_error(
             start,
             s,
@@ -238,8 +339,12 @@ where
                 tag(BACKSLASH_DOUBLE_QUOTE),
             ),
         ),
-        (Err(err), ..) => Err(err),
-    }
+        (Err(err), ..) => {
+            Err(err)
+        },
+    };
+
+    toto
 }
 
 pub fn interpolate_string(
@@ -319,17 +424,6 @@ mod tests {
     }
 
     #[test]
-    fn ok_simple_reverse() {
-        let string = "\"}} {{\"";
-        let span = Span::new(string);
-
-        match test_string(span) {
-            Ok(..) => {}
-            Err(e) => panic!("{:?}", e),
-        }
-    }
-
-    #[test]
     fn ok_simple_escape() {
         let string = "\"\\\"Hello\\\"\"";
         let span = Span::new(string);
@@ -375,7 +469,7 @@ mod tests {
 
     #[test]
     fn ok_simple_escape_open_brace() {
-        let string = "\"\\{{\"";
+        let string = r#"\"\{{\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -386,7 +480,7 @@ mod tests {
 
     #[test]
     fn ok_simple_escape_close_brace() {
-        let string = "\"\\}}\"";
+        let string = r#"\"\}}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -434,7 +528,7 @@ mod tests {
 
     #[test]
     fn ok_expand_integer() {
-        let string = "\"{{ 42 }}\"";
+        let string = r#"\"{{ 42 + 8 }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -456,7 +550,7 @@ mod tests {
 
     #[test]
     fn ok_expand_escape_empty_string() {
-        let string = "\"{{ \\\"\\\" }}\"";
+        let string = r#"\"{{ \"\" }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -467,7 +561,7 @@ mod tests {
 
     #[test]
     fn ok_expand_ident() {
-        let string = "\"{{ Hello }}\"";
+        let string = r#"\"{{ Hello }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -478,7 +572,7 @@ mod tests {
 
     #[test]
     fn ok_expand_array() {
-        let string = "\"{{ [\\\"Hello\\\"] }}\"";
+        let string = r#"\"{{ [\"Hello\"] }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -489,7 +583,7 @@ mod tests {
 
     #[test]
     fn ok_expand_empty_array() {
-        let string = "\"{{ [] }}\"";
+        let string = r#"\"{{ [] }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -500,7 +594,7 @@ mod tests {
 
     #[test]
     fn ok_expand_object() {
-        let string = "\"{{ {\\\"Foo\\\":\\\"Bar\\\"} }}\"";
+        let string = r#"\"{{ {\"Foo\":\"Bar\"} }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -511,7 +605,7 @@ mod tests {
 
     #[test]
     fn ok_expand_empty_object() {
-        let string = "\"{{ {} }}\"";
+        let string = r#"\"{{ {} }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -522,7 +616,7 @@ mod tests {
 
     #[test]
     fn ok_expand_function_0() {
-        let string = "\"{{ f() }}\"";
+        let string = r#"\"{{ f() }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -533,7 +627,7 @@ mod tests {
 
     #[test]
     fn ok_expand_function_1() {
-        let string = "\"{{ f(\\\"hello\\\") }}\"";
+        let string = r#"\"{{ f(\"hello\") }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -544,7 +638,7 @@ mod tests {
 
     #[test]
     fn ok_expand_function_2() {
-        let string = "\"{{ f(\\\"hello\\\", f(hello)) }}\"";
+        let string = r#"\"{{ f(\"hello\", f(hello)) }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -555,7 +649,7 @@ mod tests {
 
     #[test]
     fn ok_expand_as() {
-        let string = "\"{{ [\\\"{{ Hello }}\\\"] as array }}\"";
+        let string = r#"\"{{ [\"{{ Hello }}\"] as array }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -566,7 +660,7 @@ mod tests {
 
     #[test]
     fn ok_expand_expand_0() {
-        let string = "\"{{ \\\"{{ Hello }}\\\" }}\"";
+        let string = r#"\"{{ \"{{ Hello }}\" }}\""#;
         let span = Span::new(string);
 
         match test_string(span) {
@@ -589,6 +683,17 @@ mod tests {
     #[test]
     fn err_expand_close() {
         let string = "\"Hello }}\"";
+        let span = Span::new(string);
+
+        match test_string(span) {
+            Ok(..) => panic!("need to fail"),
+            Err(_) => {}
+        }
+    }
+
+    #[test]
+    fn err_simple_reverse() {
+        let string = "\"}} {{\"";
         let span = Span::new(string);
 
         match test_string(span) {
