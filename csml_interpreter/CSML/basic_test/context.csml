@@ -1,0 +1,10 @@
+start:
+
+current_step:
+    say _metadata._context.current_step
+
+current_flow:
+    say _metadata._context.current_flow
+
+default_flow:
+    say _metadata._context.default_flow
