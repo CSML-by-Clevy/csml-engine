@@ -1,7 +1,5 @@
 start:
 
     say "Hello World 😆"
-    
-    say _metadata._context.default_flow
 
     goto end
