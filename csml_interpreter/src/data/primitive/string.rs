@@ -1181,12 +1181,8 @@ impl PrimitiveString {
             ));
         }
 
-        // match args.length() {
-
-        // }
-
         let s = &string.value;
-        Ok(PrimitiveString::get_literal(s.trim(), interval))
+        Ok(PrimitiveString::get_literal(&s.trim(), interval))
     }
 
     fn trim_left(
@@ -1198,7 +1194,7 @@ impl PrimitiveString {
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "trim() => string";
+        let usage = "trim_left() => string";
 
         if !args.is_empty() {
             return Err(gen_error_info(
@@ -1208,7 +1204,7 @@ impl PrimitiveString {
         }
 
         let s = &string.value;
-        Ok(PrimitiveString::get_literal(s.trim_start(), interval))
+        Ok(PrimitiveString::get_literal(&s.trim_start(), interval))
     }
 
     fn trim_right(
@@ -1230,7 +1226,7 @@ impl PrimitiveString {
         }
 
         let s = &string.value;
-        Ok(PrimitiveString::get_literal(s.trim_end(), interval))
+        Ok(PrimitiveString::get_literal(&s.trim_end(), interval))
     }
 }
 
