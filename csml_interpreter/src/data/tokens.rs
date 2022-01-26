@@ -69,6 +69,7 @@ pub const FLOW: &str = "flow";
 pub const STEP: &str = "step";
 pub const SAY: &str = "say";
 pub const DEBUG_ACTION: &str = "debug";
+pub const LOG_ACTION: &str = "log";
 pub const USE: &str = "use";
 pub const HOLD: &str = "hold";
 pub const GOTO: &str = "goto";
