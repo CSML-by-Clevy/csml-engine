@@ -104,6 +104,7 @@ pub fn match_actions(
             let (
                 tmp_flows,
                 tmp_flow,
+                tmp_default_flow,
                 mut tmp_context,
                 tmp_event,
                 tmp_env,
@@ -118,6 +119,7 @@ pub fn match_actions(
             let mut new_scope_data = Data::new(
                 &tmp_flows,
                 &tmp_flow,
+                tmp_default_flow,
                 &mut tmp_context,
                 &tmp_event,
                 &tmp_env,

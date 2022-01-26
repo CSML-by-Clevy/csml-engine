@@ -287,6 +287,7 @@ pub fn interpret(
         let mut data = Data::new(
             &flows,
             &ast,
+            bot.default_flow.clone(),
             &mut context,
             &event,
             &env,
