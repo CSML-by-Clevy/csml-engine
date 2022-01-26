@@ -1,0 +1,6 @@
+---
+name: bot
+bot_version: 0.1.0
+engine_version: 1.6.3
+default_flow: default
+commands: []
