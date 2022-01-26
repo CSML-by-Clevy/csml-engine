@@ -83,6 +83,15 @@ pub fn match_actions(
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
+        ObjectType::Log(args, interval) => {
+            let args = resolve_fn_args(args, data, &mut msg_data, sender)?;
+
+            let log_msg = args.args_to_log(interval.to_owned(), &data.context.flow);
+
+            eprintln!("{}", log_msg);
+
+            Ok(msg_data)
+        }
         ObjectType::Use(arg) => {
             expr_to_literal(arg, false, None, data, &mut msg_data, sender)?;
             Ok(msg_data)
@@ -95,6 +104,7 @@ pub fn match_actions(
             let (
                 tmp_flows,
                 tmp_flow,
+                tmp_default_flow,
                 mut tmp_context,
                 tmp_event,
                 tmp_env,
@@ -109,6 +119,7 @@ pub fn match_actions(
             let mut new_scope_data = Data::new(
                 &tmp_flows,
                 &tmp_flow,
+                tmp_default_flow,
                 &mut tmp_context,
                 &tmp_event,
                 &tmp_env,

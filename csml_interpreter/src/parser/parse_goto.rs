@@ -14,7 +14,7 @@ use nom::{branch::alt, bytes::complete::tag, combinator::opt, error::*, sequence
 
 fn get_variable<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, ..) = tag(DOLLAR)(s)?;
 
@@ -26,7 +26,7 @@ where
 
 fn get_name<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, position) = get_interval(s)?;
     let (s, name) = parse_string_assignation(s)?;
@@ -36,14 +36,14 @@ where
 
 fn get_goto_value_type<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     alt((get_variable, get_name))(s)
 }
 
 fn get_step<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, STEP)(s)?;
@@ -55,7 +55,7 @@ where
 
 fn get_flow<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, FLOW)(s)?;
@@ -67,7 +67,7 @@ where
 
 fn get_step_at_flow<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, ..) = comment(s)?;
 
@@ -88,7 +88,7 @@ where
 
 pub fn parse_goto<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, name) = preceded(comment, get_string)(s)?;
     let (s, ..) = get_tag(name, GOTO)(s)?;

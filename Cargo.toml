@@ -6,6 +6,9 @@ members = [
     "csml_cli",
     "bindings/node/native",
     "bindings/aws_lambda",
+
+    "bindings/ios",
+    "bindings/android"
 ]
 
 [profile.test]

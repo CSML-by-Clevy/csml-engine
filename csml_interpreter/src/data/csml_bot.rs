@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 pub struct CsmlBot {
     pub id: String,
     pub name: String,
-    #[serde(alias = "apps_endpoint")]
-    pub fn_endpoint: Option<String>,
+    #[serde(alias = "fn_endpoint")]
+    pub apps_endpoint: Option<String>,
     pub flows: Vec<CsmlFlow>,
     pub native_components: Option<serde_json::Map<String, serde_json::Value>>, //
     pub custom_components: Option<serde_json::Value>,                          // serde_json::Value
@@ -42,7 +42,7 @@ impl CsmlBot {
         Self {
             id: id.to_owned(),
             name: name.to_owned(),
-            fn_endpoint: apps_endpoint,
+            apps_endpoint,
             flows,
             native_components,
             custom_components,
@@ -77,7 +77,7 @@ impl CsmlBot {
 
         map.insert("id".to_owned(), serde_json::json!(self.id));
         map.insert("name".to_owned(), serde_json::json!(self.name));
-        map.insert("apps_endpoint".to_owned(), serde_json::json!(self.fn_endpoint));
+        map.insert("apps_endpoint".to_owned(), serde_json::json!(self.apps_endpoint));
         map.insert("flows".to_owned(), serde_json::json!(self.flows));
         map.insert("default_flow".to_owned(), serde_json::json!(self.default_flow));
         map.insert("no_interruption_delay".to_owned(), serde_json::json!(self.no_interruption_delay));

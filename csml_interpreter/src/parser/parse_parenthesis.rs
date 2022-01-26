@@ -2,7 +2,7 @@ use crate::data::tokens::*;
 use crate::error_format::{gen_nom_failure, ERROR_PARENTHESES, ERROR_PARENTHESES_END};
 use crate::parser::parse_comments::comment;
 
-use nom::{bytes::complete::tag, error::ParseError, *};
+use nom::{bytes::complete::tag, error::{ParseError, ContextError}, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
@@ -10,7 +10,7 @@ use nom::{bytes::complete::tag, error::ParseError, *};
 
 pub fn parse_l_parentheses<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s2, _) = comment(s)?;
 
@@ -25,7 +25,7 @@ where
 
 pub fn parse_r_parentheses<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s2, _) = comment(s)?;
     match tag(R_PAREN)(s2) {

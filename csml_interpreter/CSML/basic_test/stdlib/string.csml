@@ -92,3 +92,6 @@ step_12_slice:
 
 step_13_to_string:
     say "\"4\"".to_string()
+
+step_14_to_string:
+    say "😆\"{{2}}\""

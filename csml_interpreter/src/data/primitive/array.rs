@@ -43,6 +43,7 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_error" => (PrimitiveArray::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveArray::to_string as PrimitiveMethod, Right::Read),
     
+    "init" => (PrimitiveArray::init as PrimitiveMethod, Right::Read),
     "find" => (PrimitiveArray::find as PrimitiveMethod, Right::Read),
     "is_empty" => (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read),
     "insert_at" => (PrimitiveArray::insert_at as PrimitiveMethod, Right::Write),
@@ -58,6 +59,8 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "map" => (PrimitiveArray::map as PrimitiveMethod, Right::Read),
     "filter" => (PrimitiveArray::filter as PrimitiveMethod, Right::Read),
     "reduce" => (PrimitiveArray::reduce as PrimitiveMethod, Right::Read),
+    "reverse" => (PrimitiveArray::reverse as PrimitiveMethod, Right::Read),
+    "append" => (PrimitiveArray::append as PrimitiveMethod, Right::Read),
 };
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -229,6 +232,50 @@ impl PrimitiveArray {
 }
 
 impl PrimitiveArray {
+    fn init(
+        _array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "init(capacity: Int) => [Literal]";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let capacity = match args.get("arg0") {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                *Literal::get_value::<i64>(
+                    &res.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_ARRAY_INSERT_AT.to_owned(),
+                )? as usize
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_ARRAY_INSERT_AT.to_owned(),
+                ));
+            }
+        };
+
+        let mut vec = Vec::with_capacity(capacity);
+        for _ in 0..capacity {
+            vec.push(PrimitiveNull::get_literal(interval));
+        }
+
+        Ok(PrimitiveArray::get_literal(&vec, interval))
+    }
+
+
     fn find(
         array: &mut PrimitiveArray,
         args: &HashMap<String, Literal>,
@@ -481,7 +528,7 @@ impl PrimitiveArray {
 
         if let Some(res) = array
             .value
-            .get(rand::thread_rng().gen_range(0, array.value.len()))
+            .get(rand::thread_rng().gen_range(0..array.value.len()))
         {
             return Ok(res.to_owned());
         }
@@ -739,6 +786,74 @@ impl PrimitiveArray {
                 format!("usage: {}", usage),
             )),
         }
+    }
+
+    fn reverse(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "reverse() => [Literal]";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let mut reversed_list = array.value.clone();
+        reversed_list.reverse();
+
+        Ok(PrimitiveArray::get_literal(&reversed_list, interval))
+    }
+
+    fn append(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "append(other_array: [Literal]) => [Literal]";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let mut other_array: Vec<Literal> = match args.get("arg0") {
+            Some(res) if res.content_type == "array" => {
+                let value = Literal::get_value::<Vec<Literal>>(
+                    &res.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_ARRAY_INSERT_AT.to_owned(),
+                )?;
+
+                (*value).clone().to_vec()
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_ARRAY_INSERT_AT.to_owned(),
+                ));
+            }
+        };
+
+        let mut new_array = array.value.clone();
+
+        new_array.append(&mut other_array);
+
+        Ok(PrimitiveArray::get_literal(&new_array, interval))
     }
 }
 

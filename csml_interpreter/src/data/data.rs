@@ -18,6 +18,7 @@ pub struct PreviousInfo {
 pub struct Data<'a> {
     pub flows: &'a HashMap<String, Flow>,
     pub flow: &'a Flow,
+    pub default_flow: String,
     pub context: &'a mut Context,
     pub event: &'a Event,
     pub env: &'a Literal,
@@ -58,6 +59,7 @@ impl<'a> Data<'a> {
     pub fn new(
         flows: &'a HashMap<String, Flow>,
         flow: &'a Flow,
+        default_flow: String,
         context: &'a mut Context,
         event: &'a Event,
         env: &'a Literal,
@@ -72,6 +74,7 @@ impl<'a> Data<'a> {
         Self {
             flows,
             flow,
+            default_flow,
             context,
             event,
             env,
@@ -90,6 +93,7 @@ impl<'a> Data<'a> {
     ) -> (
         HashMap<String, Flow>,
         Flow,
+        String,
         Context,
         Event,
         Literal,
@@ -103,6 +107,7 @@ impl<'a> Data<'a> {
         (
             self.flows.clone(),
             self.flow.clone(),
+            self.default_flow.to_string(),
             init_child_context(&self),
             self.event.clone(),
             self.env.clone(),
@@ -143,6 +148,7 @@ pub fn init_child_scope<'a>(
     Data::new(
         &data.flows,
         &data.flow,
+        data.default_flow.clone(),
         context,
         &data.event,
         &data.env,

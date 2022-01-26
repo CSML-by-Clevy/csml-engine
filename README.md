@@ -39,7 +39,7 @@ With a very expressive and text-only syntax, CSML flows are easy to understand, 
 * Rich and extensible conversational components such as Carousel, Image, Video, Button, Card, Input, Calendar...
 * Built-in short-term and long-term memory slots: no more complex state machine boilerplate
 * Portable, fast, and easy to deploy: it only requires a MongoDB database (or AWS account for serverless version)
-* Vibrant community of over 5000 active CSML developers
+* Vibrant community of over 10,000 active CSML developers
 
 ## Example
 

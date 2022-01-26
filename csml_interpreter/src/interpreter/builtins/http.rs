@@ -199,6 +199,7 @@ pub fn http_request(
     method: &str,
     flow_name: &str,
     interval: Interval,
+    is_app_call: bool,
 ) -> Result<serde_json::Value, ErrorInfo> {
     let url = get_url(object, flow_name, interval)?;
     let is_ssl_disable = get_ssl_state(object);
@@ -250,7 +251,18 @@ pub fn http_request(
             }
         }
         Err(err) => {
-            let error_message = err.to_string();
+            // if this function is call by the APP system hide the apps_endpoint for de error message
+            let error_message = match is_app_call {
+                true => {
+                    if let ureq::Error::Status(code, _) = err {
+                        format!("Apps service: status code {}", code)
+                    } else {
+                        format!("Apps service: error")
+                    }
+                },
+                false => err.to_string()
+            };
+
             error!("Http call failed: {:?}", error_message);
 
             if let ureq::Error::Status(_, response) = err {

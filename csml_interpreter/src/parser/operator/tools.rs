@@ -1,7 +1,7 @@
 use crate::{
     data::{ast::*, tokens::*},
 };
-use nom::{branch::alt, bytes::complete::tag, error::ParseError, *};
+use nom::{branch::alt, bytes::complete::tag, error::{ParseError, ContextError}, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -9,7 +9,7 @@ use nom::{branch::alt, bytes::complete::tag, error::ParseError, *};
 
 pub fn parse_not_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Postfix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(NOT)(s)?;
     Ok((rest, Postfix::Not))
@@ -17,7 +17,7 @@ where
 
 pub fn addition_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = tag(ADDITION)(s)?;
     Ok((s, Infix::Addition))
@@ -25,7 +25,7 @@ where
 
 pub fn subtraction_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = tag(SUBTRACTION)(s)?;
     Ok((s, Infix::Subtraction))
@@ -33,7 +33,7 @@ where
 
 pub fn and_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(AND)(s)?;
     Ok((rest, Infix::And))
@@ -41,7 +41,7 @@ where
 
 pub fn or_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(OR)(s)?;
     Ok((rest, Infix::Or))
@@ -49,7 +49,7 @@ where
 
 pub fn divide_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = tag(DIVIDE)(s)?;
     Ok((s, Infix::Divide))
@@ -57,7 +57,7 @@ where
 
 pub fn multiply_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = tag(MULTIPLY)(s)?;
     Ok((s, Infix::Multiply))
@@ -65,7 +65,7 @@ where
 
 pub fn remainder_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, _) = tag(REMAINDER)(s)?;
     Ok((s, Infix::Remainder))
@@ -73,7 +73,7 @@ where
 
 pub fn not_equal_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(NOT_EQUAL)(s)?;
     Ok((rest, Infix::NotEqual))
@@ -81,7 +81,7 @@ where
 
 pub fn equal_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(EQUAL)(s)?;
     Ok((rest, Infix::Equal))
@@ -89,7 +89,7 @@ where
 
 pub fn not_match<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(NOT_MATCH)(s)?;
     Ok((rest, Infix::NotMatch))
@@ -97,7 +97,7 @@ where
 
 pub fn parse_match<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(MATCH)(s)?;
     Ok((rest, Infix::Match))
@@ -105,7 +105,7 @@ where
 
 pub fn greater_than_equal_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(GREATER_THAN_EQUAL)(s)?;
     Ok((rest, Infix::GreaterThanEqual))
@@ -113,7 +113,7 @@ where
 
 pub fn less_than_equal_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(LESS_THAN_EQUAL)(s)?;
     Ok((rest, Infix::LessThanEqual))
@@ -121,7 +121,7 @@ where
 
 pub fn greater_than_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(GREATER_THAN)(s)?;
     Ok((rest, Infix::GreaterThan))
@@ -129,7 +129,7 @@ where
 
 pub fn less_than_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(LESS_THAN)(s)?;
     Ok((rest, Infix::LessThan))
@@ -141,21 +141,21 @@ where
 
 pub fn parse_item_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     alt((subtraction_operator, addition_operator))(s)
 }
 
 pub fn parse_term_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     alt((divide_operator, multiply_operator, remainder_operator))(s)
 }
 
 pub fn parse_infix_operators<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     alt((
         not_equal_operator,

@@ -7,7 +7,7 @@ use crate::parser::{
     tools::get_interval,
     tools::{get_string, get_tag},
 };
-use nom::{combinator::cut, error::ParseError, sequence::preceded, Err::*, IResult};
+use nom::{combinator::cut, error::{ParseError, ContextError}, sequence::preceded, Err::*, IResult};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -19,7 +19,7 @@ fn form_idents(ident: String, position: Interval) -> Identifier {
 
 fn validate_string<'a, E>(s: Span<'a>, reserved: &[&str], var: &str) -> IResult<Span<'a>, (), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     if reserved.contains(&&(*var.to_ascii_lowercase())) {
         return Err(gen_nom_error(s, ERROR_RESERVED));
@@ -38,7 +38,7 @@ where
 
 fn validate_arg_string<'a, E>(s: Span<'a>, var: &str) -> IResult<Span<'a>, (), E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     if var.len() > std::u8::MAX as usize {
         return Err(gen_nom_failure(s, ERROR_SIZE_IDENT));
@@ -57,7 +57,7 @@ where
 
 pub fn parse_string_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (span, var) = get_string(s)?;
     let (_, ..) = validate_string(s, UTILISATION_RESERVED, &var)?;
@@ -67,7 +67,7 @@ where
 
 pub fn parse_string_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (span, var) = get_string(s)?;
     let (_, ..) = validate_string(s, ASSIGNATION_RESERVED, &var)?;
@@ -77,7 +77,7 @@ where
 
 pub fn parse_arg_string_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (span, var) = get_string(s)?;
     let (_, ..) = validate_arg_string(s, &var)?;
@@ -87,7 +87,7 @@ where
 
 pub fn parse_idents_usage<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, position) = preceded(comment, get_interval)(s)?;
     let (s, var) = parse_string_usage(s)?;
@@ -97,7 +97,7 @@ where
 
 pub fn parse_idents_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, position) = preceded(comment, get_interval)(s)?;
     let (s, var) = parse_string_assignation(s)?;
@@ -107,7 +107,7 @@ where
 
 pub fn parse_arg_idents_assignation<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Identifier, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (s, position) = preceded(comment, get_interval)(s)?;
     let (s, var) = parse_arg_string_assignation(s)?;
@@ -117,7 +117,7 @@ where
 
 pub fn parse_idents_as<'a, E>(s: Span<'a>, expr: Expr) -> IResult<Span<'a>, Expr, E>
 where
-    E: ParseError<Span<'a>>,
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let arg: IResult<Span<'a>, String, E> = preceded(comment, get_string)(s);
 

@@ -7,7 +7,6 @@
 **/*.node
 **/node_modules
 **/.DS_Store
-**/*.sh
 **/*~
 **/.webpack
 .vscode

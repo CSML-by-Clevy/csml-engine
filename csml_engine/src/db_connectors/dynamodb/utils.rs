@@ -77,7 +77,7 @@ pub fn execute_batch_write_query(db: &mut DynamoDbClient, input: BatchWriteItemI
             Err(RusotoError::Service(BatchWriteItemError::ProvisionedThroughputExceeded(err))) => {
 
                 let interval = std::cmp::min(MAX_INTERVAL_LIMIT,RETRY_BASE * 2 * retry_times);
-                let interval_jitter = rng.gen_range(0,interval);
+                let interval_jitter = rng.gen_range(0..interval);
                 let duration = time::Duration::from_millis(interval_jitter);
 
                 thread::sleep(duration);
