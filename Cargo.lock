@@ -596,8 +596,8 @@ dependencies = [
 name = "aws_lambda"
 version = "0.1.0"
 dependencies = [
- "csml_engine 1.8.1",
- "csml_interpreter 1.8.1",
+ "csml_engine",
+ "csml_interpreter 1.9.0-rc0",
  "lambda_runtime",
  "ring",
  "serde",
@@ -1179,8 +1179,8 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "crossterm 0.21.0",
- "csml_engine 1.8.1",
- "csml_interpreter 1.8.1",
+ "csml_engine",
+ "csml_interpreter 1.9.0-rc0",
  "dotenv",
  "git2",
  "image",
@@ -1197,8 +1197,8 @@ dependencies = [
 name = "csml_android"
 version = "0.1.0"
 dependencies = [
- "csml_engine 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "csml_interpreter 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csml_engine",
+ "csml_interpreter 1.8.1",
  "jni",
  "serde",
  "serde_json",
@@ -1206,13 +1206,13 @@ dependencies = [
 
 [[package]]
 name = "csml_engine"
-version = "1.8.1"
+version = "1.9.0-rc0"
 dependencies = [
  "base64 0.13.0",
  "bincode",
  "bson",
  "chrono",
- "csml_interpreter 1.8.1",
+ "csml_interpreter 1.9.0-rc0",
  "diesel",
  "diesel_migrations",
  "env_logger",
@@ -1238,72 +1238,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "csml_engine"
-version = "1.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfbe8f1fc77dd7eb45abe49aaac63791d003f9b4c9d41e88e87805568be8dcb6"
-dependencies = [
- "base64 0.13.0",
- "bincode",
- "bson",
- "chrono",
- "csml_interpreter 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "env_logger",
- "futures 0.3.19",
- "hex",
- "log",
- "md-5 0.9.1",
- "mongodb",
- "multimap",
- "openssl",
- "rand 0.7.3",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "tokio 1.15.0",
- "ureq 2.4.0",
- "uuid",
-]
-
-[[package]]
 name = "csml_engine_node"
-version = "1.8.1"
+version = "1.9.0-rc0"
 dependencies = [
- "csml_engine 1.8.1",
- "csml_interpreter 1.8.1",
+ "csml_engine",
+ "csml_interpreter 1.9.0-rc0",
  "neon",
  "neon-build",
  "neon-serde",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "csml_interpreter"
-version = "1.8.1"
-dependencies = [
- "base64 0.13.0",
- "bincode",
- "chrono",
- "env_logger",
- "hex",
- "jsonwebtoken",
- "lettre",
- "libc",
- "log",
- "nom 7.1.0",
- "nom_locate 4.0.0",
- "openssl",
- "phf 0.10.1",
- "rand 0.8.4",
- "regex",
- "rustls 0.20.2",
- "serde",
- "serde_json",
- "typetag",
- "ureq 2.4.0",
- "uuid",
 ]
 
 [[package]]
@@ -1336,8 +1280,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "csml_interpreter"
+version = "1.9.0-rc0"
+dependencies = [
+ "base64 0.13.0",
+ "bincode",
+ "chrono",
+ "env_logger",
+ "hex",
+ "jsonwebtoken",
+ "lettre",
+ "libc",
+ "log",
+ "nom 7.1.0",
+ "nom_locate 4.0.0",
+ "openssl",
+ "phf 0.10.1",
+ "rand 0.8.4",
+ "regex",
+ "rustls 0.20.2",
+ "serde",
+ "serde_json",
+ "typetag",
+ "ureq 2.4.0",
+ "uuid",
+]
+
+[[package]]
 name = "csml_server"
-version = "1.8.1"
+version = "1.9.0-rc0"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1345,8 +1316,8 @@ dependencies = [
  "actix-service 2.0.2",
  "actix-web",
  "bytes 0.5.6",
- "csml_engine 1.8.1",
- "csml_interpreter 1.8.1",
+ "csml_engine",
+ "csml_interpreter 1.9.0-rc0",
  "env_logger",
  "futures 0.3.19",
  "json",
@@ -1359,8 +1330,8 @@ dependencies = [
 name = "csmllib"
 version = "0.1.0"
 dependencies = [
- "csml_engine 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "csml_interpreter 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csml_engine",
+ "csml_interpreter 1.8.1",
  "serde",
  "serde_json",
 ]
