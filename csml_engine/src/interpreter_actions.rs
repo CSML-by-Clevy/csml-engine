@@ -30,7 +30,7 @@ pub fn interpret_step(
 
     csml_logger(
         CsmlLog::new(
-            Some(&data.client),
+            None,
             Some(data.context.flow.to_string()),
             None,
             format!("interpreter: start interpretations of bot {:?}", bot.id)
@@ -77,7 +77,7 @@ pub fn interpret_step(
             MSG::Message(msg) => {
                 csml_logger(
                     CsmlLog::new(
-                        Some(&data.client),
+                        None,
                         Some(data.context.flow.to_string()),
                         None,
                         format!("sending message")
@@ -97,6 +97,17 @@ pub fn interpret_step(
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
+            MSG::Log{flow, line, message} => {
+                csml_logger(
+                    CsmlLog::new(
+                        Some(&data.client),
+                        Some(flow),
+                        Some(line),
+                        message
+                    ),
+                    LogLvl::Error
+                );
+            }
             MSG::Hold(Hold {
                 index,
                 step_vars,
@@ -114,7 +125,7 @@ pub fn interpret_step(
 
                 csml_logger(
                     CsmlLog::new(
-                        Some(&data.client),
+                        None,
                         Some(data.context.flow.to_string()),
                         None,
                         format!("hold bot")
@@ -126,7 +137,7 @@ pub fn interpret_step(
                         Some(&data.client),
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("hold bot, state_hold {:?}, client {:?}", state_hold)
+                        format!("hold bot, state_hold {:?}", state_hold)
                     ),
                     LogLvl::Debug
                 );

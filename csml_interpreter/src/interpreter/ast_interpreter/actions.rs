@@ -85,10 +85,13 @@ pub fn match_actions(
         }
         ObjectType::Log(args, interval) => {
             let args = resolve_fn_args(args, data, &mut msg_data, sender)?;
-
             let log_msg = args.args_to_log(interval.to_owned(), &data.context.flow);
 
-            eprintln!("{}", log_msg);
+            MSG::send(&sender, MSG::Log{
+                flow: data.context.flow.to_owned(),
+                line: interval.start_line,
+                message: log_msg,
+            });
 
             Ok(msg_data)
         }

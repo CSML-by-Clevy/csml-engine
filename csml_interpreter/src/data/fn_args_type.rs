@@ -59,7 +59,7 @@ impl ArgsType {
                     index = index + 1;
                 }
 
-                format!("<Log at flow: {}, line: {}> : {:?}", at_flow, interval.start_line, args.join(", "))
+                format!("{}}", args.join(", "))
             }
         }
     }

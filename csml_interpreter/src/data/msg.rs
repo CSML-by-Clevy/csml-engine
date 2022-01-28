@@ -14,6 +14,11 @@ pub enum MSG {
     Remember(Memory),
     Forget(ForgetMemory),
     Message(Message),
+    Log{
+        flow: String,
+        line: u32,
+        message: String,
+    },
     Hold(Hold),
     Next {
         flow: Option<String>,
