@@ -7,7 +7,7 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    data::{ast::Flow, Client, Context, Event, Interval, Memory, Message},
+    data::{csml_logs::*, ast::Flow, Client, Context, Event, Interval, Memory, Message},
     error_format::{ERROR_KEY_ALPHANUMERIC, ERROR_NUMBER_AS_KEY, ERROR_SIZE_IDENT},
     get_step,
     interpreter::json_to_literal,
@@ -17,7 +17,6 @@ use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::env;
 
-use log::{debug};
 use regex::Regex;
 use md5::{Digest, Md5};
 
@@ -152,7 +151,15 @@ pub fn send_msg_to_callback_url(
 ) {
     let messages = messages_formater(data, msg, interaction_order, end);
 
-    debug!("conversation_end: {:?}", messages["conversation_end"]);
+    csml_logger(
+        CsmlLog::new(
+            Some(&data.client),
+            Some(data.context.flow.to_string()),
+            None,
+            format!("conversation_end: {:?}", messages["conversation_end"])
+        ),
+        LogLvl::Debug
+    );
 
     send_to_callback_url(data, serde_json::json!(messages))
 }
@@ -364,14 +371,26 @@ pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineE
 }
 
 pub fn init_logger() {
-    if let Ok(debug) = env::var("DEBUG") {
-        // RUST_LOG=rusoto
-        // hyper=debug
-        if &debug == "true" {
-            env::set_var("hyper", "debug");
-            let _ = env_logger::try_init();
-        }
-    };
+    let env = env_logger::Env::default()
+    .filter_or("CSML_LOG_LEVEL", "error");
+
+    let _ = env_logger::Builder::from_env(env)
+    .format(|buf, record| {
+        let style = buf.default_level_style(record.level());
+
+        let timestamp = buf.timestamp_millis();
+        let path = record.target();
+
+        writeln!(
+            buf,
+            "{} {} {} {}",
+            style.value(record.level()),
+            timestamp,
+            path,
+            record.args()
+        )
+    })
+    .try_init();
 }
 
 pub fn get_ttl_duration_value(event: Option<&Event>) -> Option<chrono::Duration> {

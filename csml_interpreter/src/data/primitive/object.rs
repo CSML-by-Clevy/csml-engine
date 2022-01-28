@@ -5,6 +5,7 @@ use crate::data::{
     ast::Interval,
     literal::ContentType,
     message::Message,
+    csml_logs::*,
     primitive::{
         tools_crypto, tools_jwt, tools_smtp, tools_time, Data, MessageData, Primitive,
         PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
@@ -24,7 +25,6 @@ use std::{collections::HashMap, sync::mpsc};
 use phf::phf_map;
 use regex::Regex;
 use lettre::Transport;
-use log::{debug, info, error};
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, TimeZone, Utc, FixedOffset};
 
@@ -713,7 +713,15 @@ impl PrimitiveObject {
                 map
             },
             _ => {
-                error!("set_auth_mechanism wrong mechanism name {:?}", args);
+                csml_logger(
+                    CsmlLog::new(
+                        None,
+                        Some(data.context.flow.to_string()),
+                        Some(interval.start_line),
+                        format!("set_auth_mechanism wrong mechanism name {:?}", args)
+                    ),
+                    LogLvl::Error
+                );
 
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
@@ -814,14 +822,38 @@ impl PrimitiveObject {
         };
 
         let email = tools_smtp::format_email(csml_email, data, interval)?;
-        info!("send email: {:?}", email);
-        debug!("send email: {:?}, mailer: {:?}", email, object.value);
+        csml_logger(
+            CsmlLog::new(
+                None,
+                Some(data.context.flow.to_string()),
+                Some(interval.start_line),
+                format!("send email: {:?}", email)
+            ),
+            LogLvl::Info
+        );
+        csml_logger(
+            CsmlLog::new(
+                None,
+                Some(data.context.flow.to_string()),
+                Some(interval.start_line),
+                format!("send email: {:?}, mailer: {:?}", email, object.value)
+            ),
+            LogLvl::Debug
+        );
         let mailer = tools_smtp::get_mailer(&mut object.value, data, interval)?;
 
         match mailer.send(&email) {
             Ok(_) => Ok(PrimitiveBoolean::get_literal(true, interval)),
             Err(e) => {
-                error!("send email failed {:?}", e);
+                csml_logger(
+                    CsmlLog::new(
+                        None,
+                        Some(data.context.flow.to_string()),
+                        Some(interval.start_line),
+                        format!("send email failed {:?}", e)
+                    ),
+                    LogLvl::Error
+                );
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Could not send email: {:?}", e),
