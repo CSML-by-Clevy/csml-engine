@@ -5,6 +5,8 @@ use crate::db_connectors::{is_mongodb, mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
 
+use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
+
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, DbConversation, EngineError};
 use crate::db_connectors::utils::*;

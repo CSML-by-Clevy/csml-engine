@@ -42,7 +42,7 @@ pub fn interpret_step(
             Some(&data.client),
             Some(data.context.flow.to_string()),
             None,
-            format!("interpreter: client {:?} start interpretations of bot {:?}, with ", bot)
+            format!("interpreter: start interpretations of bot {:?}, with ", bot.id)
         ),
         LogLvl::Debug
     );
@@ -97,7 +97,7 @@ pub fn interpret_step(
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
-            MSG::Log{flow, line, message} => {
+            MSG::Log{flow, line, message, log_lvl} => {
                 csml_logger(
                     CsmlLog::new(
                         Some(&data.client),
@@ -105,7 +105,7 @@ pub fn interpret_step(
                         Some(line),
                         message
                     ),
-                    LogLvl::Error
+                    log_lvl
                 );
             }
             MSG::Hold(Hold {

@@ -1,11 +1,5 @@
 start:
 
-    // say "Hello World 😆"
+    say "Hello World 😆"
 
-    do pet = HTTP("https://exle.com/pets/1").get().send()
-
-    say pet.is_error()
-
-    say pet.get_info()
-
-
+    goto end

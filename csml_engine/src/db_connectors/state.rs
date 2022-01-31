@@ -4,6 +4,8 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+
+use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, EngineError};
 use crate::db_connectors::utils::*;
@@ -163,7 +165,7 @@ pub fn set_state_items(
     );
     csml_logger(
         CsmlLog::new(
-            Some(client),
+            Some(_client),
             None,
             None,
             format!("db call set state type: {:?}, keys and values {:?}", _type, _keys_values)

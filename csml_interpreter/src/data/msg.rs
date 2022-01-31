@@ -1,6 +1,7 @@
 use crate::data::{
     ast::ForgetMemory, error_info::ErrorInfo, hold::Hold, message::Message,
     primitive::PrimitiveNull, Literal, Memory, MessageData,
+    csml_logs::LogLvl,
 };
 
 use std::sync::mpsc;
@@ -18,6 +19,7 @@ pub enum MSG {
         flow: String,
         line: u32,
         message: String,
+        log_lvl: LogLvl,
     },
     Hold(Hold),
     Next {

@@ -45,7 +45,7 @@ impl ArgsType {
         }
     }
 
-    pub fn args_to_log(&self, interval: Interval, at_flow: &str) -> String {
+    pub fn args_to_log(&self) -> String {
         match self {
             Self::Named(map) | Self::Normal(map) => {
 
@@ -59,7 +59,7 @@ impl ArgsType {
                     index = index + 1;
                 }
 
-                format!("{}}", args.join(", "))
+                format!("{}", args.join(", "))
             }
         }
     }

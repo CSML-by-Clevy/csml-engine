@@ -83,14 +83,15 @@ pub fn match_actions(
             MSG::send(&sender, MSG::Message(msg.clone()));
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
-        ObjectType::Log(args, interval) => {
-            let args = resolve_fn_args(args, data, &mut msg_data, sender)?;
-            let log_msg = args.args_to_log(interval.to_owned(), &data.context.flow);
+        ObjectType::Log{expr, interval, log_lvl} => {
+            let args = resolve_fn_args(expr, data, &mut msg_data, sender)?;
+            let log_msg = args.args_to_log();
 
             MSG::send(&sender, MSG::Log{
                 flow: data.context.flow.to_owned(),
                 line: interval.start_line,
                 message: log_msg,
+                log_lvl: log_lvl.to_owned(),
             });
 
             Ok(msg_data)

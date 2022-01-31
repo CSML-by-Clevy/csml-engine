@@ -3,7 +3,9 @@ use crate::data::Client;
 use log::{error, warn, info, debug, trace};
 use std::io::Write;
 
-#[derive(PartialEq, Copy, Clone, Debug)]
+use serde::{Serialize, Deserialize};
+
+#[derive(PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum LogLvl {
     Error,
     Warn,
@@ -87,9 +89,14 @@ impl CsmlLog {
 
 pub fn init_logger() {
     let env = env_logger::Env::default()
-    .filter_or("CSML_LOG_LEVEL", "error");
+    .filter_or("CSML_LOG_LEVEL", "csml_interpreter=trace");
 
     let _ = env_logger::Builder::from_env(env)
+    .filter_module("async_std", log::LevelFilter::Error)
+    .filter_module("async_io", log::LevelFilter::Error)
+    .filter_module("polling", log::LevelFilter::Error)
+    .filter_module("os_info", log::LevelFilter::Error)
+    .filter_module("ureq", log::LevelFilter::Error)
     .format(|buf, record| {
         let style = buf.default_level_style(record.level());
 
