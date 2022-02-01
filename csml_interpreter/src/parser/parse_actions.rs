@@ -278,7 +278,7 @@ where
 
     let (s, log_lvl) =  match opt(parse_log_lvl)(s)? {
         (s, Some(log_lvl)) => (s, log_lvl),
-        (s, None) => (s, LogLvl::Error)
+        (s, None) => (s, LogLvl::Info)
     };
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;

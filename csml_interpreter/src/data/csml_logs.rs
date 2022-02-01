@@ -89,7 +89,7 @@ impl CsmlLog {
 
 pub fn init_logger() {
     let env = env_logger::Env::default()
-    .filter_or("CSML_LOG_LEVEL", "csml_interpreter=trace");
+    .filter_or("CSML_LOG_LEVEL", "csml_interpreter=info");
 
     let _ = env_logger::Builder::from_env(env)
     .filter_module("async_std", log::LevelFilter::Error)
