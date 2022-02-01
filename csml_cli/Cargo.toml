@@ -5,7 +5,7 @@ authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
 edition = "2018"
 
 [dependencies]
-csml_engine = { path = "../csml_engine", features = ["postgresql", "mongo", "dynamo"]}
+csml_engine = { path = "../csml_engine", features = ["mongo"]}
 csml_interpreter = { path = "../csml_interpreter" }
 
 
