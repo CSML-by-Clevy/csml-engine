@@ -5,7 +5,6 @@ mod run;
 use clap::{App, AppSettings, Arg, SubCommand};
 use csml_engine::data::BotOpt;
 
-// ui_image::image
 use interface::{chat_menu::format_initial_payload, StartUI};
 use run::load_info;
 
