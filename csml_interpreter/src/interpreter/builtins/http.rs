@@ -4,14 +4,13 @@ use crate::data::primitive::{
     PrimitiveObject, PrimitiveString,
     PrimitiveInt, PrimitiveType
 };
-use crate::data::{ast::Interval, ArgsType, Literal};
+use crate::data::{csml_logs::*, ast::Interval, ArgsType, Literal };
 use crate::error_format::*;
 use std::collections::HashMap;
 use std::env;
 
 use std::sync::Arc;
 use ureq::{Request, Response};
-use log::{debug, error, info,};
 
 use rustls::{
     Certificate,
@@ -113,12 +112,20 @@ pub fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Int
             url.push_str("?");
 
             for (index, key) in query.keys().enumerate() {
-                let value = get_value::<String>(key, query, flow_name, interval, ERROR_HTTP_QUERY_VALUES)?;
-    
+                let value = match query.get(key) {
+                    Some(val) => {val.primitive.to_string()},
+                    None => {
+                        return Err(gen_error_info(
+                            Position::new(interval, flow_name),
+                            format!("'{}' {}", key, ERROR_HTTP_GET_VALUE),
+                        ))
+                    }
+                };
+
                 url.push_str(key);
                 url.push_str("=");
-                url.push_str(value);
-    
+                url.push_str(&value);
+
                 if index + 1 < length {
                     url.push_str("&");
                 }
@@ -210,13 +217,37 @@ pub fn http_request(
     let mut request = get_http_request(method, &url, flow_name, interval, is_ssl_disable)?;
 
     for key in header.keys() {
-        let value = get_value::<String>(key, header, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
+        let value = match header.get(key) {
+            Some(val) => {val.primitive.to_string()},
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval, flow_name),
+                    format!("'{}' {}", key, ERROR_HTTP_GET_VALUE),
+                ))
+            }
+        };
 
-        request = request.set(key, value);
+        request = request.set(key, &value);
     }
 
-    info!("Make Http call");
-    debug!("Make Http call request info: {:?}", request);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            Some(flow_name.to_string()),
+            Some(interval.start_line),
+            "Make Http call".to_string()
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            Some(flow_name.to_string()),
+            Some(interval.start_line),
+            format!("Make Http call request info: {:?}", request)
+        ),
+        LogLvl::Debug
+    );
 
     let response = match object.get("body") {
         Some(body) => request.send_json(body.primitive.to_json()),
@@ -239,13 +270,29 @@ pub fn http_request(
                     match serde_json::from_str::<serde_json::Value>(&value) {
                         Ok(value) => Ok(value),
                         Err(err) => {
-                            error!("Http response Json parsing failed: {:?}", err);
+                            csml_logger(
+                                CsmlLog::new(
+                                    None,
+                                    Some(flow_name.to_string()),
+                                    Some(interval.start_line),
+                                    format!("Http response Json parsing failed: {:?}", err)
+                                ),
+                                LogLvl::Error
+                            );
                             Err(error)
                         }
                     }
                 },
                 Err(err) => {
-                    error!("Http response Json parsing failed: {:?}", err);
+                    csml_logger(
+                        CsmlLog::new(
+                            None,
+                            Some(flow_name.to_string()),
+                            Some(interval.start_line),
+                            format!("Http response Json parsing failed: {:?}", err)
+                        ),
+                        LogLvl::Error
+                    );
                     Err(error)
                 },
             }
@@ -263,7 +310,15 @@ pub fn http_request(
                 false => err.to_string()
             };
 
-            error!("Http call failed: {:?}", error_message);
+            csml_logger(
+                CsmlLog::new(
+                    None,
+                    Some(flow_name.to_string()),
+                    Some(interval.start_line),
+                    format!("Http call failed: {:?}", error_message)
+                ),
+                LogLvl::Error
+            );
 
             if let ureq::Error::Status(_, response) = err {
                 let mut error = set_http_error_info(&response, error_message, flow_name, interval);

@@ -1,4 +1,4 @@
-use crate::data::{ast::*, tokens::*};
+use crate::data::{ast::*, tokens::*, csml_logs::LogLvl};
 use crate::error_format::{
     gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_REMEMBER, ERROR_RETURN, ERROR_USE,
 };
@@ -18,11 +18,12 @@ use crate::parser::{
 
 use nom::{
     branch::alt,
-    bytes::complete::tag,
+    bytes::complete::{tag, take_while1},
     combinator::{opt},
-    error::{ParseError, ContextError},
-    multi::separated_list0,
-    sequence::{preceded, terminated, tuple},
+    error::{ParseError, ContextError, ErrorKind},
+    multi::{separated_list0},
+    sequence::{preceded, terminated, tuple, },
+
     Err, IResult,
 };
 
@@ -249,6 +250,24 @@ where
 }
 
 
+pub fn parse_log_lvl<'a, E>(s: Span<'a>) -> IResult<Span<'a>, LogLvl, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (s, _) = comment(s)?;
+
+    let (rest, string) = take_while1(|c: char| c == '_' || c == '\\' || c.is_alphanumeric())(s)?;
+
+    match string.fragment().to_lowercase().as_str() {
+        "error" => Ok((rest, LogLvl::Error)),
+        "warn" => Ok((rest, LogLvl::Warn)),
+        "info" => Ok((rest, LogLvl::Info)),
+        "debug" => Ok((rest, LogLvl::Debug)),
+        "trace" => Ok((rest, LogLvl::Trace)),
+        _      => Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+    }
+}
+
 fn parse_log<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
@@ -257,8 +276,14 @@ where
     let (s, mut interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, LOG_ACTION)(s)?;
 
+    let (s, log_lvl) =  match opt(parse_log_lvl)(s)? {
+        (s, Some(log_lvl)) => (s, log_lvl),
+        (s, None) => (s, LogLvl::Info)
+    };
+
     let (s, expr) = parse_action_argument(s, parse_operator)?;
     let (s, end) = get_interval(s)?;
+
     interval.add_end(end);
 
     // this vec is temporary until a solution for multiple arguments in debug is found
@@ -266,7 +291,7 @@ where
 
     Ok((
         s,
-        Expr::ObjectExpr(ObjectType::Log(Box::new(vec), interval)),
+        Expr::ObjectExpr(ObjectType::Log{expr: Box::new(vec), interval, log_lvl}),
     ))
 }
 

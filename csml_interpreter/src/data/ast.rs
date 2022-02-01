@@ -1,4 +1,5 @@
 use crate::data::tokens::*;
+use crate::data::csml_logs::LogLvl;
 use crate::data::{ArgsType, Literal};
 
 use std::cmp::Ordering;
@@ -181,7 +182,11 @@ pub enum ObjectType {
     Hold(Interval),
     Say(Box<Expr>),
     Debug(Box<Expr>, Interval),
-    Log(Box<Expr>, Interval),
+    Log{
+        expr: Box<Expr>,
+        interval: Interval,
+        log_lvl: LogLvl
+    },
     Return(Box<Expr>),
     Do(DoType),
     Use(Box<Expr>),
