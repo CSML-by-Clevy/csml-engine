@@ -112,12 +112,20 @@ pub fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Int
             url.push_str("?");
 
             for (index, key) in query.keys().enumerate() {
-                let value = get_value::<String>(key, query, flow_name, interval, ERROR_HTTP_QUERY_VALUES)?;
-    
+                let value = match query.get(key) {
+                    Some(val) => {val.primitive.to_string()},
+                    None => {
+                        return Err(gen_error_info(
+                            Position::new(interval, flow_name),
+                            format!("'{}' {}", key, ERROR_HTTP_GET_VALUE),
+                        ))
+                    }
+                };
+
                 url.push_str(key);
                 url.push_str("=");
-                url.push_str(value);
-    
+                url.push_str(&value);
+
                 if index + 1 < length {
                     url.push_str("&");
                 }
@@ -209,9 +217,17 @@ pub fn http_request(
     let mut request = get_http_request(method, &url, flow_name, interval, is_ssl_disable)?;
 
     for key in header.keys() {
-        let value = get_value::<String>(key, header, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
+        let value = match header.get(key) {
+            Some(val) => {val.primitive.to_string()},
+            None => {
+                return Err(gen_error_info(
+                    Position::new(interval, flow_name),
+                    format!("'{}' {}", key, ERROR_HTTP_GET_VALUE),
+                ))
+            }
+        };
 
-        request = request.set(key, value);
+        request = request.set(key, &value);
     }
 
     csml_logger(
