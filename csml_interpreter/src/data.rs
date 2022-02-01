@@ -4,6 +4,7 @@ pub mod context;
 pub mod csml_bot;
 pub mod csml_flow;
 pub mod csml_result;
+pub mod csml_logs;
 pub mod data;
 pub mod error_info;
 pub mod event;

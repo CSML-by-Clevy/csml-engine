@@ -4,14 +4,30 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+
+use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, Database, EngineError};
-use log::{debug, info,};
-
 
 pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineError> {
-    info!("db call delete client");
-    debug!("db call delete client: {:?}", client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete client")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call delete client")
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {

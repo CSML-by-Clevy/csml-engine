@@ -4,11 +4,11 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+
+use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, ConversationInfo, EngineError, Client};
 use crate::db_connectors::utils::*;
-
-use log::{debug, info,};
 
 pub fn add_messages_bulk(
     data: &mut ConversationInfo,
@@ -16,8 +16,24 @@ pub fn add_messages_bulk(
     interaction_order: i32,
     direction: &str,
 ) -> Result<(), EngineError> {
-    info!("db call save messages {:?}", msgs);
-    debug!("db call save messages {:?} client {:?}", msgs, data.client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call save messages {:?}", msgs)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(&data.client),
+            None,
+            None,
+            format!("db call save messages {:?}", msgs)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -67,8 +83,24 @@ pub fn get_client_messages(
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
-    info!("db call get messages");
-    debug!("db call get messages client {:?}", client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get messages")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call get messages")
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {

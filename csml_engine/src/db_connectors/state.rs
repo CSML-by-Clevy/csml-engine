@@ -4,12 +4,12 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+
+use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, EngineError};
 use crate::db_connectors::utils::*;
 use csml_interpreter::data::Client;
-
-use log::{debug, info,};
 
 pub fn delete_state_key(
     client: &Client,
@@ -17,8 +17,24 @@ pub fn delete_state_key(
     key: &str,
     db: &mut Database,
 ) -> Result<(), EngineError> {
-    info!("db call delete state key: {:?}, type: {:?}", key, _type);
-    debug!("db call delete state key: {:?}, type: {:?}, client {:?}", key, _type, client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete state key: {:?}, type: {:?}", key, _type)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call delete state key: {:?}, type: {:?}", key, _type)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -47,8 +63,24 @@ pub fn get_state_key(
     _key: &str,
     db: &mut Database,
 ) -> Result<Option<serde_json::Value>, EngineError> {
-    info!("db call get state key: {:?}, type: {:?}", _key, _type);
-    debug!("db call get state key: {:?}, type: {:?}, client {:?}", _key, _type, client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get state key: {:?}, type: {:?}", _key, _type)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call get state key: {:?}, type: {:?}", _key, _type)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -75,8 +107,24 @@ pub fn get_current_state(
     client: &Client,
     db: &mut Database,
 ) -> Result<Option<serde_json::Value>, EngineError> {
-    info!("db call get current state");
-    debug!("db call get current state client {:?}", client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get current state")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call get current state")
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -106,8 +154,24 @@ pub fn set_state_items(
     ttl: Option<chrono::Duration>,
     _db: &mut Database,
 ) -> Result<(), EngineError> {
-    info!("db call set state type: {:?}, keys and values {:?}", _type, _keys_values);
-    debug!("db call set state type: {:?}, keys and values {:?}, client: {:?}", _type, _keys_values, _client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call set state type: {:?}, keys and values {:?}", _type, _keys_values)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(_client),
+            None,
+            None,
+            format!("db call set state type: {:?}, keys and values {:?}", _type, _keys_values)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {

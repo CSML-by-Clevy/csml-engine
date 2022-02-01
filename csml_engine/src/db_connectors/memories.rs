@@ -4,20 +4,36 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+
+use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
+
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, EngineError, Memory};
 use crate::db_connectors::utils::*;
 use std::collections::HashMap;
 
-use log::{debug, info,};
-
 pub fn add_memories(
     data: &mut ConversationInfo,
     memories: &HashMap<String, Memory>,
 ) -> Result<(), EngineError> {
-
-    info!("db call save memories {:?}", memories.keys());
-    debug!("db call save memories {:?}", memories);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call save memories {:?}", memories.keys())
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call save memories {:?}", memories.keys())
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -48,8 +64,24 @@ pub fn create_client_memory(
     db: &mut Database
 ) -> Result<(), EngineError> {
 
-    info!("db call save memory {:?}", key);
-    debug!("db call save memory {:?} with value {:?}", key, value);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call save memory {:?}", key)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call save memory {:?} with value {:?}", key, value)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -77,8 +109,24 @@ pub fn create_client_memory(
 }
 
 pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
-    info!("db call get memories");
-    debug!("db call get memories client {:?}", client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get memories")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call get memories")
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -105,8 +153,24 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
  * Get client Memories
  */
  pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
-    info!("db call get memories client");
-    debug!("db call get memories client {:?}", client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get memories client")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call get memories client")
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -133,8 +197,24 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
  * Get client Memory
  */
  pub fn get_memory(client: &Client, key: &str, db: &mut Database) -> Result<serde_json::Value, EngineError> {
-    info!("db call get memory {:?}", key);
-    debug!("db call get memory {:?}, client: {:?}", key, client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get memory {:?}", key)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call get memory {:?}", key)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -159,8 +239,24 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
 
 
 pub fn delete_client_memory(client: &Client, key: &str, db: &mut Database) -> Result<(), EngineError> {
-    info!("db call delete memory {:?}", key);
-    debug!("db call delete memory {:?}, client: {:?}", key, client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete memory {:?}", key)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call delete memory {:?}", key)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -184,8 +280,24 @@ pub fn delete_client_memory(client: &Client, key: &str, db: &mut Database) -> Re
 }
 
 pub fn delete_client_memories(client: &Client, db: &mut Database) -> Result<(), EngineError> {
-    info!("db call delete memories");
-    debug!("db call delete memories, client: {:?}", client);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete memories")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            Some(client),
+            None,
+            None,
+            format!("db call delete memories")
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {

@@ -6,16 +6,31 @@ use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 use crate::db_connectors::{is_postgresql, postgresql_connector};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{BotVersion, CsmlBot, Database, EngineError};
-
-use log::{debug, info,};
+use csml_interpreter::data::csml_logs::*;
 
 pub fn create_bot_version(
     bot_id: String,
     csml_bot: CsmlBot,
     db: &mut Database,
 ) -> Result<String, EngineError> {
-    info!("db call create bot version, bot_id: {:?}", bot_id);
-    debug!("db call create bot version, bot_id: {:?}, csml_bot: {:?}", bot_id, csml_bot);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call create bot version, bot_id: {:?}", bot_id)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call create bot version, bot_id: {:?}, csml_bot: {:?}", bot_id, csml_bot)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -67,8 +82,15 @@ pub fn get_last_bot_version(
     bot_id: &str,
     db: &mut Database,
 ) -> Result<Option<BotVersion>, EngineError> {
-    info!("db call get last bot version, bot_id: {:?}", bot_id);
-    debug!("db call get last bot version, bot_id: {:?}", bot_id);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get last bot version, bot_id: {:?}", bot_id)
+        ),
+        LogLvl::Info
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -96,8 +118,24 @@ pub fn get_by_version_id(
     _bot_id: &str,
     db: &mut Database,
 ) -> Result<Option<BotVersion>, EngineError> {
-    info!("db call get by version id, version_id: {:?}", version_id);
-    debug!("db call get by version id, version_id: {:?}, bot_id: {:?}", version_id, _bot_id);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get by version id, version_id: {:?}", version_id)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get by version id, version_id: {:?}, bot_id: {:?}", version_id, _bot_id)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -126,8 +164,24 @@ pub fn get_bot_versions(
     pagination_key: Option<String>,
     db: &mut Database,
 ) -> Result<serde_json::Value, EngineError> {
-    info!("db call get bot versions, bot_id: {:?}", bot_id);
-    debug!("db call get bot versions, bot_id: {:?}, limit {:?}, pagination_key {:?}", bot_id, limit, pagination_key);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get bot versions, bot_id: {:?}", bot_id)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call get bot versions, bot_id: {:?}, limit {:?}, pagination_key {:?}", bot_id, limit, pagination_key)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -159,8 +213,24 @@ pub fn delete_bot_version(
     version_id: &str,
     db: &mut Database,
 ) -> Result<(), EngineError> {
-    info!("db call delete bot version, version_id: {:?}", version_id);
-    debug!("db call delete bot version, version_id: {:?}", version_id);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete bot version, version_id: {:?}", version_id)
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete bot version, version_id: {:?}", version_id)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -184,8 +254,24 @@ pub fn delete_bot_version(
 }
 
 pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), EngineError> {
-    info!("db call delete bot versions");
-    debug!("db call delete bot versions, bot_id: {:?}", bot_id);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete bot versions")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete bot versions, bot_id: {:?}", bot_id)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -210,8 +296,24 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), Engine
 
 
 pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), EngineError> {
-    info!("db call delete all bot data");
-    debug!("db call delete all bot data, bot_id: {:?}", bot_id);
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete all bot data")
+        ),
+        LogLvl::Info
+    );
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!("db call delete all bot data, bot_id: {:?}", bot_id)
+        ),
+        LogLvl::Debug
+    );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {

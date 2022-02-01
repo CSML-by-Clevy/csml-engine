@@ -7,6 +7,7 @@ pub mod parser;
 
 pub use interpreter::components::load_components;
 pub use parser::step_checksum::get_step;
+pub use data::csml_logs;
 
 use interpreter::{interpret_scope, json_to_literal};
 use parser::parse_flow;
@@ -98,7 +99,7 @@ fn execute_step(
 ////////////////////////////////////////////////////////////////////////////////
 
 pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
-    let _ = env_logger::try_init();
+    csml_logs::init_logger();
 
     let mut result = HashMap::new();
 
@@ -118,7 +119,7 @@ pub fn get_steps_from_flow(bot: CsmlBot) -> HashMap<String, Vec<String>> {
 }
 
 pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
-    let _ = env_logger::try_init();
+    csml_logs::init_logger();
 
     let mut flows = vec![];
     let mut errors = Vec::new();
@@ -162,7 +163,7 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
 }
 
 pub fn fold_bot(bot: &CsmlBot) -> String {
-    let _ = env_logger::try_init();
+    csml_logs::init_logger();
 
     let mut flows = vec![];
     let mut errors = Vec::new();
@@ -224,7 +225,7 @@ pub fn interpret(
     event: Event,
     sender: Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
-    let _ = env_logger::try_init();
+    csml_logs::init_logger();
 
     let mut msg_data = MessageData::default();
 

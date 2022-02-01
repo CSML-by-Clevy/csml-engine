@@ -5,6 +5,7 @@ pub use csml_interpreter::{
         error_info::ErrorInfo,
         warnings::Warnings,
         Client, CsmlResult,
+        csml_logs::*,
     },
     load_components,
 };
