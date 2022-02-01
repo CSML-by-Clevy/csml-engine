@@ -1,19 +1,5 @@
-// start:
-
-//     say "Hello World 😆"
-
-//     goto end
-
-
 start:
-  do params = { "test": 123 }
-  
-  // Request is not performed! Endpoint is not called.
-  // Query params that are not strings should be cast as string
-  do x = HTTP("https://somewhere.com").query(params).send()
 
-  // Request is not performed! Endpoint is not called.
-  // Not sure what the error means here? => 'test' not found in HTTP object
-  do x = HTTP("https://somewhere.com").set(params).send()
+    say "Hello World 😆"
 
-  say "x = {{x}}"
+    goto end
