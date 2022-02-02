@@ -87,7 +87,7 @@ pub fn load_info(directory_name: &str) -> Result<CsmlBot, Box<dyn Error>> {
     Ok(CsmlBot {
         id: manifest.name.clone(),
         name: manifest.name.clone(),
-        fn_endpoint: None,
+        apps_endpoint: None,
         flows,
         native_components: Some(load_components().unwrap()),
         custom_components: None,
