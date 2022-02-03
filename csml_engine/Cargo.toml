@@ -30,7 +30,7 @@ optional = true
 [dependencies.diesel]
 version = "1.4.8"
 optional = true
-features = ["postgres", "chrono", "uuidv07"]
+features = ["postgres", "sqlite", "chrono", "uuidv07"]
 
 [dependencies.mongodb]
 version = "2.0.0"
