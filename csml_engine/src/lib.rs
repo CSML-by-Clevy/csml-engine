@@ -20,11 +20,11 @@ mod interpreter_actions;
 mod send;
 mod utils;
 
-#[cfg(feature = "postgresql")]
+#[cfg(any(feature = "postgresql", feature = "sqlite"))]
 #[macro_use]
 extern crate diesel;
 
-#[cfg(feature = "postgresql")]
+#[cfg(any(feature = "postgresql", feature = "sqlite"))]
 #[macro_use]
 extern crate diesel_migrations;
 
