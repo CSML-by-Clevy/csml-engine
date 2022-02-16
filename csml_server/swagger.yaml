@@ -143,7 +143,7 @@ paths:
           required: false
           schema:
             type: integer
-            default: 20
+            default: 25
         - name: pagination_key
           in: query
           description: pagination key (if the previous request had susequent results)
@@ -344,6 +344,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: limit
+          in: query
+          description: max number of messages to retrieve
+          required: false
+          schema:
+            type: integer
+            default: 25
         - name: pagination_key
           in: query
           required: false
@@ -737,7 +744,7 @@ components:
           type: string
           example: Default
         apps_endpoint:
-          $ref: "#/components/schemas/FnEndpoint"
+          $ref: "#/components/schemas/AppsEndpoint"
         flows:
           type: array
           items:
@@ -955,7 +962,7 @@ components:
           type: string
           example: MyBotID
         apps_endpoint:
-          $ref: "#/components/schemas/FnEndpoint"
+          $ref: "#/components/schemas/AppsEndpoint"
         event:
           $ref: "#/components/schemas/EventModel"
     RunRequestSpecificVersion:
@@ -973,7 +980,7 @@ components:
           type: string
           example: "86ba492a-b6fe-4c22-95ec-55be4e1c83f0"
         apps_endpoint:
-          $ref: "#/components/schemas/FnEndpoint"
+          $ref: "#/components/schemas/AppsEndpoint"
         event:
           $ref: "#/components/schemas/EventModel"
 
@@ -1073,7 +1080,7 @@ components:
           type: boolean
           description: Whether the server is in debug mode
 
-    FnEndpoint:
+    AppsEndpoint:
       type: string
       description: optional endpoint to call for external App() calls
       format: url
