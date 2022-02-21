@@ -40,6 +40,25 @@ pub fn one_of(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Lit
     }
 }
 
+pub fn or(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
+    match (args.get("arg0", 0), args.get("arg1", 1)) {
+        (Some(first_val), Some(optional_value)) => {
+            match &first_val.additional_info {
+                Some(map) if map.contains_key("error") => {
+                    Ok(optional_value.to_owned())
+                }
+                _ => Ok(first_val.to_owned())
+            }
+        }
+        _ => {
+            Err(gen_error_info(
+                Position::new(interval, flow_name),
+                "ERROR_SHUFFLE".to_owned(),
+            ))
+        }
+    }
+}
+
 pub fn shuffle(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("array", 0) {
         Some(literal) => {

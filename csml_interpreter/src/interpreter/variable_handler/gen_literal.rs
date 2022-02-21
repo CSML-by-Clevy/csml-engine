@@ -3,6 +3,7 @@ use crate::data::position::Position;
 use crate::data::{
     ast::PathLiteral,
     primitive::{PrimitiveNull, PrimitiveString},
+    warnings::DisplayWarnings,
 };
 use crate::data::{
     ast::{Interval, PathState},
@@ -22,7 +23,7 @@ use std::sync::mpsc;
 
 pub fn gen_literal_from_event(
     interval: Interval,
-    condition: bool,
+    dis_warnings: &DisplayWarnings,
     path: Option<&[(Interval, PathState)]>,
     data: &mut Data,
     msg_data: &mut MessageData,
@@ -30,7 +31,7 @@ pub fn gen_literal_from_event(
 ) -> Result<Literal, ErrorInfo> {
     match path {
         Some(path) => {
-            let path = resolve_path(path, condition, data, msg_data, sender)?;
+            let path = resolve_path(path, dis_warnings, data, msg_data, sender)?;
             let mut lit = json_to_literal(&data.event.content, interval.to_owned(), &data.context.flow)?;
 
             lit.set_content_type("event");
@@ -47,7 +48,7 @@ pub fn gen_literal_from_event(
 
             let (lit, _tmp_mem_update) = exec_path_actions(
                 &mut lit,
-                condition,
+                dis_warnings,
                 None,
                 &Some(path),
                 &content_type,
@@ -74,7 +75,7 @@ pub fn gen_literal_from_component(
 ) -> Result<Literal, ErrorInfo> {
     match path {
         Some(path) => {
-            let mut path = resolve_path(path, false, data, msg_data, sender)?;
+            let mut path = resolve_path(path, &DisplayWarnings::On, data, msg_data, sender)?;
 
             if let Some((_interval, function_name)) = path.first() {
                 if let PathLiteral::Func {
@@ -90,7 +91,7 @@ pub fn gen_literal_from_component(
 
                         let (lit, _tmp_mem_update) = exec_path_actions(
                             &mut lit,
-                            false,
+                            &DisplayWarnings::On,
                             None,
                             &Some(path),
                             &ContentType::Primitive,
@@ -118,7 +119,7 @@ pub fn gen_literal_from_component(
 
 pub fn get_literal_from_metadata(
     path: &[(Interval, PathLiteral)],
-    condition: bool,
+    dis_warnings: &DisplayWarnings,
     data: &mut Data,
     msg_data: &mut MessageData,
     interval: Interval,
@@ -140,7 +141,7 @@ pub fn get_literal_from_metadata(
     let content_type = ContentType::get(&lit);
     let (lit, _tmp_mem_update) = exec_path_actions(
         &mut lit,
-        condition,
+        dis_warnings,
         None,
         &Some(path[1..].to_owned()),
         &content_type,

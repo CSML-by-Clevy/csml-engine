@@ -13,6 +13,7 @@ use crate::interpreter::variable_handler::{
     exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*, resolve_fn_args,
     search_goto_var_memory, forget_memories::{forget_scope_memories, remove_message_data_memories}
 };
+use crate::data::warnings::DisplayWarnings;
 use crate::parser::ExitCondition;
 use std::collections::HashMap;
 use std::sync::mpsc;
@@ -37,11 +38,11 @@ fn get_var_info<'a>(
             get_var_info(literal, Some(path), data, msg_data, sender)
         }
         Expr::IdentExpr(var) => match search_in_memory_type(var, data) {
-            Ok(_) => get_var_from_mem(var.to_owned(), false, path, data, msg_data, sender),
+            Ok(_) => get_var_from_mem(var.to_owned(), &DisplayWarnings::On, path, data, msg_data, sender),
             Err(_) => {
                 let lit = PrimitiveNull::get_literal(var.interval.to_owned());
                 data.step_vars.insert(var.ident.to_owned(), lit);
-                get_var_from_mem(var.to_owned(), false, path, data, msg_data, sender)
+                get_var_from_mem(var.to_owned(), &DisplayWarnings::On, path, data, msg_data, sender)
             }
         },
         e => Err(gen_error_info(
@@ -62,7 +63,7 @@ pub fn match_actions(
         ObjectType::Say(arg) => {
             let msg = Message::new(expr_to_literal(
                     arg,
-                    false,
+                    &DisplayWarnings::On,
                     None,
                     data,
                     &mut msg_data,
@@ -74,7 +75,7 @@ pub fn match_actions(
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
         ObjectType::Debug(args, interval) => {
-            let args = resolve_fn_args(args, data, &mut msg_data, sender)?;
+            let args = resolve_fn_args(args, data, &mut msg_data, &DisplayWarnings::On, sender)?;
 
             let msg = Message::new(
                 args.args_to_debug(interval.to_owned()),
@@ -84,7 +85,7 @@ pub fn match_actions(
             Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
         }
         ObjectType::Log{expr, interval, log_lvl} => {
-            let args = resolve_fn_args(expr, data, &mut msg_data, sender)?;
+            let args = resolve_fn_args(expr, data, &mut msg_data, &DisplayWarnings::On, sender)?;
             let log_msg = args.args_to_log();
 
             MSG::send(&sender, MSG::Log{
@@ -97,7 +98,7 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Use(arg) => {
-            expr_to_literal(arg, false, None, data, &mut msg_data, sender)?;
+            expr_to_literal(arg, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
             Ok(msg_data)
         }
         ObjectType::Do(DoType::Update(assign_type, old, new)) => {
@@ -137,7 +138,7 @@ pub fn match_actions(
             );
             // #####################
 
-            let mut new_value = expr_to_literal(new, false, None, data, &mut msg_data, sender)?;
+            let mut new_value = expr_to_literal(new, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
             let memory: HashMap<String, Literal> = data.get_all_memories();
@@ -185,7 +186,7 @@ pub fn match_actions(
 
             exec_path_actions(
                 lit,
-                false,
+                &DisplayWarnings::On,
                 Some(new_value),
                 &path,
                 &ContentType::get(&lit),
@@ -207,7 +208,7 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Do(DoType::Exec(expr)) => {
-            expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
+            expr_to_literal(expr, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::Step(step), ..) => {
@@ -362,7 +363,7 @@ pub fn match_actions(
         }
         ObjectType::Remember(name, variable) => {
             let mut new_value =
-                expr_to_literal(variable, false, None, data, &mut msg_data, sender)?;
+                expr_to_literal(variable, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
 
             // only for closure capture the step variables
             let memory: HashMap<String, Literal> = data.get_all_memories();

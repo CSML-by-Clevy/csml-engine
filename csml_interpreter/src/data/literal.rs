@@ -127,8 +127,18 @@ impl Literal {
         self.content_type = content_type.to_owned();
     }
 
-    pub fn add_info(&mut self, additional_info: HashMap<String, Literal>) {
-        self.additional_info = Some(additional_info);
+    pub fn add_info(&mut self, key: &str, value: Literal) {
+        match self.additional_info {
+            Some(ref mut map) => {
+                map.insert(key.to_owned(), value);
+            }
+            None => {
+                let mut info = HashMap::new();
+                info.insert(key.to_owned(),value);
+
+                self.additional_info = Some(info);
+            }
+        }
     }
 
     pub fn add_error_to_info(&mut self, error_msg: &str) {
