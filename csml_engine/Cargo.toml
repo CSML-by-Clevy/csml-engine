@@ -99,3 +99,5 @@ env_logger= "0.9.0"
 name = "command_line"
 [[example]]
 name = "fold_bot"
+[[example]]
+name = "get_messages"

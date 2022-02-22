@@ -157,6 +157,19 @@ pub fn get_client_messages(
     messages::get_client_messages(client, &mut db, limit, pagination_key)
 }
 
+pub fn get_client_messages_between_dates(
+    client: &Client,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+    from_date: i64,
+    to_date: Option<i64>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut db = init_db()?;
+    init_logger();
+
+    messages::get_client_messages_between_dates(client, &mut db, limit,pagination_key,  from_date, to_date)
+}
+
 pub fn get_client_conversations(
     client: &Client,
     limit: Option<i64>,
