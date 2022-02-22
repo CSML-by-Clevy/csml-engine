@@ -4,6 +4,9 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+#[cfg(feature = "sqlite")]
+use crate::db_connectors::{is_sqlite, sqlite_connector};
+
 
 use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
@@ -54,6 +57,12 @@ pub fn delete_state_key(
         return postgresql_connector::state::delete_state_key(client, _type, key, db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::state::delete_state_key(client, _type, key, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -100,6 +109,12 @@ pub fn get_state_key(
         return postgresql_connector::state::get_state_key(client, _type, _key, db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::state::get_state_key(client, _type, _key, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -142,6 +157,12 @@ pub fn get_current_state(
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::state::get_current_state(client, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::state::get_current_state(client, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -195,6 +216,14 @@ pub fn set_state_items(
         let expires_at = get_expires_at_for_postgresql(ttl);
 
         return postgresql_connector::state::set_state_items(_client, _type, _keys_values, expires_at, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(_db)?;
+        let expires_at = get_expires_at_for_sqlite(ttl);
+
+        return sqlite_connector::state::set_state_items(_client, _type, _keys_values, expires_at, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
