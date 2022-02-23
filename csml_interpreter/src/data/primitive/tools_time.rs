@@ -8,7 +8,7 @@ use crate::data::{
 };
 use crate::error_format::*;
 use chrono::{DateTime, SecondsFormat, NaiveDate, NaiveDateTime, Utc, TimeZone};
-use std::collections::HashMap;
+use std::{collections::HashMap};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -107,18 +107,12 @@ pub fn parse_rfc3339(
 
     let mut object = HashMap::new();
 
-    let timezone: i32 = date.timezone().local_minus_utc();
-    if timezone != 0 {
-        object.insert(
-            "timezone".to_owned(),
-            PrimitiveInt::get_literal(timezone as i64, interval),
-        );
-    }
-
     object.insert(
         "milliseconds".to_owned(),
-        PrimitiveInt::get_literal(date.timestamp_millis(), interval),
+        PrimitiveInt::get_literal(date.naive_utc().timestamp_millis(), interval),
     );
+
+
     let mut lit = PrimitiveObject::get_literal(&object, interval);
     lit.set_content_type("time");
 
@@ -139,14 +133,14 @@ pub fn pasre_from_str(
     let format_str = get_date_string(args, 1, data, interval, usage)?;
 
     let date_millis = if let Ok(date) = DateTime::parse_from_str(&date_str, &format_str) {
-        date.timestamp_millis()
+        date.naive_utc().timestamp_millis()
     } else if let Ok(naive_datetime) = NaiveDateTime::parse_from_str(&date_str, &format_str) {
         let date = DateTime::<Utc>::from_utc(naive_datetime, Utc);
-        date.timestamp_millis()
+        date.naive_utc().timestamp_millis()
     } else if let Ok(naive_date) = NaiveDate::parse_from_str(&date_str, &format_str) {
         let naive_datetime: NaiveDateTime = naive_date.and_hms(0, 0, 0);
         let date = DateTime::<Utc>::from_utc(naive_datetime, Utc);
-        date.timestamp_millis()
+        date.naive_utc().timestamp_millis()
     } else {
         return Err(gen_error_info(
             Position::new(interval, &data.context.flow),
@@ -159,6 +153,7 @@ pub fn pasre_from_str(
         "milliseconds".to_owned(),
         PrimitiveInt::get_literal(date_millis, interval),
     );
+
     let mut lit = PrimitiveObject::get_literal(&object, interval);
     lit.set_content_type("time");
 
