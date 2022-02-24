@@ -21,7 +21,11 @@ edition = "2018"
 [features]
 mongo = ["mongodb", "bson", "futures"]
 dynamo = ["rusoto_core", "rusoto_dynamodb", "rusoto_s3", "serde_dynamodb"]
-postgresql = ["diesel", "diesel_migrations"]
+postgresql = ["diesel_postgresql"]
+sqlite = ["diesel_sqlite"]
+
+diesel_postgresql = ["diesel/postgres", "diesel/uuidv07", "diesel/chrono", "diesel_migrations"]
+diesel_sqlite = ["diesel/sqlite", "diesel/chrono", "diesel_migrations"]
 
 [dependencies.diesel_migrations]
 version = "1.4.0"
@@ -30,7 +34,6 @@ optional = true
 [dependencies.diesel]
 version = "1.4.8"
 optional = true
-features = ["postgres", "chrono", "uuidv07"]
 
 [dependencies.mongodb]
 version = "2.0.0"
