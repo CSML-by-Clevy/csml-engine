@@ -4,6 +4,9 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+#[cfg(feature = "sqlite")]
+use crate::db_connectors::{is_sqlite, sqlite_connector};
+
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{BotVersion, CsmlBot, Database, EngineError};
 use csml_interpreter::data::csml_logs::*;
@@ -75,6 +78,22 @@ pub fn create_bot_version(
         return Ok(version_id);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+
+        let serializable_bot = crate::data::to_serializable_bot(&csml_bot);
+        let bot = serde_json::json!(serializable_bot).to_string();
+
+        let version_id = sqlite_connector::bot::create_bot_version(
+            bot_id.clone(),
+            bot,
+            db,
+        )?;
+
+        return Ok(version_id);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -108,6 +127,12 @@ pub fn get_last_bot_version(
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::bot::get_last_bot_version(&bot_id, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::bot::get_last_bot_version(&bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -153,6 +178,12 @@ pub fn get_by_version_id(
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::bot::get_bot_by_version_id(&version_id, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::bot::get_bot_by_version_id(&version_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -205,6 +236,12 @@ pub fn get_bot_versions(
         return postgresql_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -250,6 +287,12 @@ pub fn delete_bot_version(
         return postgresql_connector::bot::delete_bot_version(version_id, db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::bot::delete_bot_version(version_id, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -289,6 +332,12 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), Engine
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::bot::delete_bot_versions(bot_id, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::bot::delete_bot_versions(bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -355,6 +404,18 @@ pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), Engine
         postgresql_connector::conversations::delete_all_bot_data(bot_id, db)?;
         postgresql_connector::memories::delete_all_bot_data(bot_id, db)?;
         postgresql_connector::state::delete_all_bot_data(bot_id, db)?;
+        return Ok(());
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        delete_bot_versions(bot_id, db)?;
+
+        let db = sqlite_connector::get_db(db)?;
+
+        sqlite_connector::conversations::delete_all_bot_data(bot_id, db)?;
+        sqlite_connector::memories::delete_all_bot_data(bot_id, db)?;
+        sqlite_connector::state::delete_all_bot_data(bot_id, db)?;
         return Ok(());
     }
 

@@ -42,6 +42,8 @@ use self::dynamodb as dynamodb_connector;
 use self::mongodb as mongodb_connector;
 #[cfg(feature = "postgresql")]
 use self::postgresql as postgresql_connector;
+#[cfg(feature = "sqlite")]
+use self::sqlite as sqlite_connector;
 
 pub mod bot;
 pub mod conversations;
@@ -63,6 +65,9 @@ mod dynamodb;
 mod mongodb;
 #[cfg(feature = "postgresql")]
 mod postgresql;
+
+#[cfg(feature = "sqlite")]
+mod sqlite;
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -178,6 +183,14 @@ pub fn is_postgresql() -> bool {
     }
 }
 
+#[cfg(feature = "sqlite")]
+pub fn is_sqlite() -> bool {
+    match std::env::var("ENGINE_DB_TYPE") {
+        Ok(val) => val == "sqlite".to_owned(),
+        Err(_) => false,
+    }
+}
+
 pub fn init_db() -> Result<Database, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -194,6 +207,11 @@ pub fn init_db() -> Result<Database, EngineError> {
         return postgresql_connector::init();
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        return sqlite_connector::init();
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -202,6 +220,11 @@ pub fn make_migrations() -> Result<(), EngineError> {
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         return self::postgresql::make_migrations();
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        return self::sqlite::make_migrations();
     }
 
     Ok(())

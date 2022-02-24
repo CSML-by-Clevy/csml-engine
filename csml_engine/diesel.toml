@@ -2,4 +2,4 @@
 # see diesel.rs/guides/configuring-diesel-cli
 
 [print_schema]
-file = "src/db_connectors/postgresql/schema.rs"
+file = "src/db_connectors/sqlite/schema.rs"

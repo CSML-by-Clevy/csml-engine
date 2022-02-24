@@ -45,7 +45,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql
+        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql,csml_engine/sqlite
 
     - uses: actions/upload-artifact@v2
       with:
@@ -61,7 +61,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target=aarch64-apple-darwin
+        args: --release --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/sqlite --target=aarch64-apple-darwin
 
     - uses: actions/upload-artifact@v2
       with:
