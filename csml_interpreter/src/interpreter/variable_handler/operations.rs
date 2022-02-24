@@ -3,7 +3,7 @@ use crate::data::{
     ast::{Expr, Postfix, Infix},
     Literal, Data, MessageData, MSG,
     primitive::boolean::PrimitiveBoolean,
-    position::Position,
+    position::Position, warnings::DisplayWarnings,
 };
 use crate::interpreter::{
     variable_handler::{
@@ -142,7 +142,7 @@ pub fn evaluate_postfix(
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 )  -> Result<Literal, ErrorInfo> {
-    let value = valid_literal(expr_to_literal(expr, true, None, data, msg_data, sender));
+    let value = valid_literal(expr_to_literal(expr, &DisplayWarnings::Off, None, data, msg_data, sender));
     let interval = interval_from_expr(expr);
 
     if postfixes.len() % 2  == 0 {

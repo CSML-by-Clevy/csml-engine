@@ -1,5 +1,5 @@
 use crate::data::{
-    ast::*, tokens::{Span, BUILT_IN, COMPONENT},
+    ast::*, tokens::{Span, BUILT_IN, BUILT_IN_WITHOUT_WARNINGS, COMPONENT},
     position::Position,
     primitive::{PrimitiveClosure, PrimitiveType},
     warnings::*,
@@ -196,6 +196,7 @@ pub fn validate_functions(linter_info: &mut LinterInfo) {
 
         if !is_native_component && 
             !BUILT_IN.contains(&info.name.as_str()) && 
+            !BUILT_IN_WITHOUT_WARNINGS.contains(&info.name.as_str()) && 
             COMPONENT != info.name &&
             !validate_closure(&info, linter_info) &&
             !function_exist(&info, linter_info)
