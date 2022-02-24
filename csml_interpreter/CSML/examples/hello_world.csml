@@ -2,4 +2,6 @@ start:
 
     say "Hello World 😆"
 
+    say event.secure
+
     goto end

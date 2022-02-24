@@ -33,6 +33,8 @@ pub fn gen_literal_from_event(
             let path = resolve_path(path, condition, data, msg_data, sender)?;
             let mut lit = json_to_literal(&data.event.content, interval.to_owned(), &data.context.flow)?;
 
+            println!("===> {:?}", data.event);
+
             lit.set_content_type("event");
 
             let content_type = match ContentType::get(&lit) {
