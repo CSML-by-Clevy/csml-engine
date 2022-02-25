@@ -26,7 +26,7 @@ use phf::phf_map;
 use regex::Regex;
 use lettre::Transport;
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, LocalResult, TimeZone, Utc, FixedOffset};
+use chrono::{DateTime, LocalResult, TimeZone, Utc};
 use chrono_tz::Tz;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -920,7 +920,16 @@ impl PrimitiveObject {
                     interval,
                     "".to_string(),
                 )?;
-                let tz: Tz = tz_name.parse().unwrap();
+                let tz: Tz = match tz_name.parse() {
+                    Ok(tz) => tz,
+                    Err(_) => {
+                        return Err(gen_error_info(
+                            Position::new(interval, &data.context.flow),
+                            format!("invalid timezone {}", tz_name),
+                        ));
+                    }
+                };
+            
 
                 tz.to_string()
             }
@@ -1159,15 +1168,8 @@ impl PrimitiveObject {
                     "".to_string(),
                 ).ok();
 
-                let tz_seconds = Literal::get_value::<i64>(
-                    &timezone.primitive,
-                    &data.context.flow,
-                    interval,
-                    "".to_string(),
-                ).ok();
-
-                let formatted_date = match (tz_string, tz_seconds) {
-                    (Some(tz_string), _) => {
+                let formatted_date = match tz_string {
+                    Some(tz_string) => {
                         let local_date = Utc.timestamp_millis(*millis);
 
                         match tz_string.parse::<Tz>() {
@@ -1183,22 +1185,19 @@ impl PrimitiveObject {
                                 }
                             },
                             Err(_) => {
-                                tools_time::format_date(args, local_date, data, interval, false)?
+                                return Err(gen_error_info(
+                                    Position::new(interval, &data.context.flow),
+                                    format!("invalid timezone {}", tz_string),
+                                ))
                             },
                         }
-                    }, 
-                    (_, Some(tz_seconds)) =>  {
-                        let date: DateTime<FixedOffset> = FixedOffset::east(*tz_seconds as i32).timestamp_millis(*millis);
-
-                        tools_time::format_date(args, date, data, interval, false)?
-                    }
+                    },
                     _ => {
                         let date =  Utc.timestamp_millis(*millis);
 
                         tools_time::format_date(args, date, data, interval, false)?
                     }
                 };
-
 
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
