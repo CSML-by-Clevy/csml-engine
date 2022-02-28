@@ -4,6 +4,9 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+#[cfg(feature = "sqlite")]
+use crate::db_connectors::{is_sqlite, sqlite_connector};
+
 
 use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 
@@ -51,6 +54,12 @@ pub fn add_memories(
     if is_postgresql() {
         let expires_at = get_expires_at_for_postgresql(data.ttl);
         return postgresql_connector::memories::add_memories(data, &memories, expires_at);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let expires_at = get_expires_at_for_sqlite(data.ttl);
+        return sqlite_connector::memories::add_memories(data, &memories, expires_at);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -105,6 +114,13 @@ pub fn create_client_memory(
         return postgresql_connector::memories::create_client_memory(client, &key, &value, expires_at,db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        let expires_at = get_expires_at_for_sqlite(ttl);
+        return sqlite_connector::memories::create_client_memory(client, &key, &value, expires_at,db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -144,6 +160,12 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::memories::internal_use_get_memories(client, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::memories::internal_use_get_memories(client, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -190,6 +212,12 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
         return postgresql_connector::memories::get_memories(client, db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::memories::get_memories(client, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -234,6 +262,12 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
         return postgresql_connector::memories::get_memory(client, key, db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::memories::get_memory(client, key, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -276,6 +310,12 @@ pub fn delete_client_memory(client: &Client, key: &str, db: &mut Database) -> Re
         return postgresql_connector::memories::delete_client_memory(client, key, db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::memories::delete_client_memory(client, key, db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -315,6 +355,12 @@ pub fn delete_client_memories(client: &Client, db: &mut Database) -> Result<(), 
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::memories::delete_client_memories(client, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::memories::delete_client_memories(client, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

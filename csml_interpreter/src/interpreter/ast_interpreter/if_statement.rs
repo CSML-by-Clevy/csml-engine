@@ -1,6 +1,6 @@
 use crate::data::{
     ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
-    Data, Literal, MessageData, MSG,
+    Data, Literal, MessageData, MSG, warnings::DisplayWarnings,
 };
 use crate::error_format::*;
 use crate::interpreter::{
@@ -27,7 +27,7 @@ pub fn valid_condition(
         Expr::LitExpr { literal, .. } => valid_literal(Ok(literal.to_owned())),
         Expr::IdentExpr(ident) => valid_literal(get_var(
             ident.to_owned(),
-            true,
+            &DisplayWarnings::Off,
             None,
             data,
             msg_data,
@@ -40,7 +40,7 @@ pub fn valid_condition(
         Expr::InfixExpr(inf, exp_1, exp_2) => valid_literal(evaluate_condition(
             inf, exp_1, exp_2, data, msg_data, sender,
         )),
-        value => valid_literal(expr_to_literal(value, true, None, data, msg_data, sender)),
+        value => valid_literal(expr_to_literal(value, &DisplayWarnings::Off, None, data, msg_data, sender)),
     }
 }
 
@@ -89,19 +89,19 @@ pub fn evaluate_condition(
             &flow_name,
             infix,
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
-            expr_to_literal(exp, true, None, data, msg_data, sender),
+            expr_to_literal(exp, &DisplayWarnings::Off, None, data, msg_data, sender),
         ),
         (exp, Expr::InfixExpr(i1, ex1, ex2)) => evaluate_infix(
             &flow_name,
             infix,
-            expr_to_literal(exp, true, None, data, msg_data, sender),
+            expr_to_literal(exp, &DisplayWarnings::Off, None, data, msg_data, sender),
             evaluate_condition(i1, ex1, ex2, data, msg_data, sender),
         ),
         (exp_1, exp_2) => evaluate_infix(
             &flow_name,
             infix,
-            expr_to_literal(exp_1, true, None, data, msg_data, sender),
-            expr_to_literal(exp_2, true, None, data, msg_data, sender),
+            expr_to_literal(exp_1, &DisplayWarnings::Off, None, data, msg_data, sender),
+            expr_to_literal(exp_2, &DisplayWarnings::Off, None, data, msg_data, sender),
         ),
     }
 }

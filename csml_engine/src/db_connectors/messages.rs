@@ -4,6 +4,9 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+#[cfg(feature = "sqlite")]
+use crate::db_connectors::{is_sqlite, sqlite_connector};
+
 
 use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
@@ -74,6 +77,19 @@ pub fn add_messages_bulk(
         );
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let expires_at = get_expires_at_for_sqlite(data.ttl);
+
+        return sqlite_connector::messages::add_messages_bulk(
+            data,
+            &msgs,
+            interaction_order,
+            direction,
+            expires_at,
+        );
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -133,6 +149,18 @@ pub fn get_client_messages(
         let db = postgresql_connector::get_db(db)?;
 
         return postgresql_connector::messages::get_client_messages(
+            client,
+            db,
+            limit,
+            pagination_key,
+        );
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+
+        return sqlite_connector::messages::get_client_messages(
             client,
             db,
             limit,
