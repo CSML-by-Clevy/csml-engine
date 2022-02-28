@@ -38,7 +38,6 @@ fn format_message(
         "interaction_order": interaction_order,
         "direction": direction,
         "payload": encrypt_data(&message)?, // encrypted
-        "content_type": &message["content_type"].as_str().unwrap_or("text"),
         "expires_at": expires_at,
         "created_at": time
     };

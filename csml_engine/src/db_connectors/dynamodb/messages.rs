@@ -194,7 +194,6 @@ pub fn get_client_messages(
             "interaction_order": message.interaction_order,
             "direction": message.direction,
             "payload": decrypt_data(message.payload)?,
-            "content_type": message.content_type,
             "created_at": message.created_at
         });
 
