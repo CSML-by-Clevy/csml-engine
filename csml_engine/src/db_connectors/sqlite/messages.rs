@@ -124,7 +124,6 @@ pub fn get_client_messages(
             "step_id": message.step_id,
             "direction": message.direction,
             "payload": decrypt_data(message.payload)?,
-            "content_type": message.content_type,
 
             "updated_at": message.updated_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string(),
             "created_at": message.created_at.format("%Y-%m-%dT%H:%M:%S%.fZ").to_string()

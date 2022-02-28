@@ -110,7 +110,6 @@ pub struct DbMessage {
     pub interaction_order: i32,
     pub direction: String,
     pub payload: serde_json::Value,
-    pub content_type: String,
     pub created_at: String,
 }
 
