@@ -1,5 +1,8 @@
 use crate::data::primitive::string::PrimitiveString;
-use crate::data::{ast::*, position::Position, tokens::*, Data, Literal, MessageData, MSG};
+use crate::data::{
+    ast::*, position::Position, tokens::*, Data, Literal,
+    MessageData, MSG, warnings::DisplayWarnings,
+};
 use crate::error_format::{gen_nom_failure, CustomError, *};
 use crate::interpreter::variable_handler::expr_to_literal;
 use crate::parser::operator::parse_operator;
@@ -373,7 +376,7 @@ pub fn interpolate_string(
                     ERROR_PARSING.to_owned(),
                 ))
             } else {
-                expr_to_literal(&expr, false, None, data, msg_data, sender)
+                expr_to_literal(&expr, &DisplayWarnings::On, None, data, msg_data, sender)
             }
         }
         Err(e) => match e {
