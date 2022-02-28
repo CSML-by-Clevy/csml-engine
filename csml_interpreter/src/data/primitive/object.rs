@@ -26,8 +26,8 @@ use phf::phf_map;
 use regex::Regex;
 use lettre::Transport;
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, TimeZone, Utc, FixedOffset};
-
+use chrono::{DateTime, LocalResult, TimeZone, Utc, FixedOffset};
+use chrono_tz::Tz;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -910,16 +910,28 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "with_timezone(timezone: int) => Time Object";
+        let usage = "with_timezone(timezone_name: string) => Time Object. Example: with_timezone(\"Europe/Paris\") ";
 
         let timezone = match args.get("arg0") {
-            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
-                Literal::get_value::<i64>(
+            Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveString => {
+                let tz_name =  Literal::get_value::<String>(
                     &lit.primitive,
                     &data.context.flow,
                     interval,
                     "".to_string(),
-                )?
+                )?;
+                let tz: Tz = match tz_name.parse() {
+                    Ok(tz) => tz,
+                    Err(_) => {
+                        return Err(gen_error_info(
+                            Position::new(interval, &data.context.flow),
+                            format!("invalid timezone {}", tz_name),
+                        ));
+                    }
+                };
+            
+
+                tz.to_string()
             }
             _ => return Err(gen_error_info(
                 Position::new(interval, &data.context.flow),
@@ -929,7 +941,7 @@ impl PrimitiveObject {
 
         object.value.insert(
             "timezone".to_owned(),
-            PrimitiveInt::get_literal(*timezone, interval),
+            PrimitiveString::get_literal(&timezone, interval),
         );
 
         let mut lit = PrimitiveObject::get_literal(&object.value, interval);
@@ -1125,10 +1137,10 @@ impl PrimitiveObject {
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
         let usage = "Time().format(format: String)";
- 
-        let timezone = if let Some(timezone) = object.value.get("timezone") {
+
+        let offset = if let Some(offset) = object.value.get("offset") {
             Literal::get_value::<i64>(
-                &timezone.primitive,
+                &offset.primitive,
                 &data.context.flow,
                 interval,
                 "".to_string(),
@@ -1137,8 +1149,9 @@ impl PrimitiveObject {
             None
         };
 
-        match (object.value.get("milliseconds"), timezone) {
-            (Some(lit), None) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+
+        match (object.value.get("milliseconds"), object.value.get("timezone"), offset) {
+            (Some(lit), None, None) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -1152,7 +1165,7 @@ impl PrimitiveObject {
 
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
-            (Some(lit), Some(timezone)) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+            (Some(lit), Some(timezone), _) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -1160,7 +1173,56 @@ impl PrimitiveObject {
                     "".to_string(),
                 )?;
 
-                let date: DateTime<FixedOffset> = FixedOffset::east(*timezone as i32).timestamp_millis(*millis);
+                let tz_string = Literal::get_value::<String>(
+                    &timezone.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                ).ok();
+
+                let formatted_date = match tz_string {
+                    Some(tz_string) => {
+                        let local_date = Utc.timestamp_millis(*millis);
+
+                        match tz_string.parse::<Tz>() {
+                            Ok(tz) => {
+                                match tz.from_local_datetime(&local_date.naive_local()) {
+                                    LocalResult::Single(date) 
+                                    | LocalResult::Ambiguous(date, _) => {
+                                        tools_time::format_date(args, date, data, interval, false)?
+                                    },
+                                    LocalResult::None => {
+                                        tools_time::format_date(args, local_date, data, interval, false)?
+                                    },
+                                }
+                            },
+                            Err(_) => {
+                                return Err(gen_error_info(
+                                    Position::new(interval, &data.context.flow),
+                                    format!("invalid timezone {}", tz_string),
+                                ))
+                            },
+                        }
+                    },
+                    _ => {
+                        let date =  Utc.timestamp_millis(*millis);
+
+                        tools_time::format_date(args, date, data, interval, false)?
+                    }
+                };
+
+                Ok(PrimitiveString::get_literal(&formatted_date, interval))
+            }
+
+            (Some(lit), None, Some(offset)) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let millis = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                let date: DateTime<FixedOffset> = FixedOffset::east(*offset as i32).timestamp_millis(*millis);
 
                 let formatted_date = tools_time::format_date(args, date, data, interval, false)?;
 
