@@ -98,12 +98,13 @@ fn ok_parse_timezone() {
     assert_eq!(v1, v2)
 }
 
+
 #[test]
 fn ok_with_timezone() {
     let data =
         r#"
         {"messages":[ 
-            {"content":{"text": "2014-11-29T06:00:09.000+09:00"},"content_type":"text"}
+            {"content":{"text": "2014-11-28T21:00:09.000+01:00"},"content_type":"text"}
         ],
         "memories":[]
         }"#;

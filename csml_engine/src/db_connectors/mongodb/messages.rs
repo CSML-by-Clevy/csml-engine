@@ -38,7 +38,6 @@ fn format_message(
         "interaction_order": interaction_order,
         "direction": direction,
         "payload": encrypt_data(&message)?, // encrypted
-        "content_type": &message["content_type"].as_str().unwrap_or("text"),
         "expires_at": expires_at,
         "created_at": time
     };
@@ -60,7 +59,6 @@ fn format_message_struct(message: bson::document::Document) -> Result<DbMessage,
         interaction_order: message.get_i32("interaction_order").unwrap(),
         direction: message.get_str("direction").unwrap().to_owned(),
         payload,
-        content_type: message.get_str("content_type").unwrap().to_owned(),
         created_at: message.get_datetime("created_at").unwrap().to_chrono().to_rfc3339_opts(SecondsFormat::Millis, true),
     })
 }
@@ -143,7 +141,6 @@ pub fn get_client_messages(
                     "step_id": message.step_id,
                     "direction": message.direction,
                     "payload": message.payload,
-                    "content_type": message.content_type,
                     "created_at": message.created_at,
                 });
 

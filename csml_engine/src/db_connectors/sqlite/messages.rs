@@ -1,9 +1,9 @@
 use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
 
 use crate::{
-    db_connectors::postgresql::get_db,
+    db_connectors::sqlite::get_db,
     encrypt::{encrypt_data, decrypt_data},
-    EngineError, PostgresqlClient,
+    EngineError, SqliteClient,
     ConversationInfo, Client
 };
 
@@ -32,10 +32,10 @@ pub fn add_messages_bulk(
     let mut new_messages = vec!();
     for (message_order, message) in msgs.iter().enumerate() {
 
-        let conversation_id = uuid::Uuid::parse_str(&data.conversation_id).unwrap();
+        let conversation_id = models::UUID::parse_str(&data.conversation_id).unwrap();
 
         let msg = models::NewMessages {
-            id: uuid::Uuid::new_v4(),
+            id: models::UUID::new_v4(),
             conversation_id,
 
             flow_id: &data.context.flow,
@@ -54,14 +54,14 @@ pub fn add_messages_bulk(
 
     diesel::insert_into(csml_messages::table)
     .values(&new_messages)
-    .get_result::<models::Message>(&db.client)?;
+    .execute(&db.client)?;
 
     Ok(())
 }
 
 pub fn delete_user_messages(
     client: &Client,
-    db: &PostgresqlClient
+    db: &SqliteClient
 ) -> Result<(), EngineError> {
 
     let conversations: Vec<models::Conversation> = csml_conversations::table
@@ -82,7 +82,7 @@ pub fn delete_user_messages(
 
 pub fn get_client_messages(
     client: &Client,
-    db: &PostgresqlClient,
+    db: &SqliteClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
@@ -119,7 +119,7 @@ pub fn get_client_messages(
                 "channel_id": &client.channel_id,
                 "user_id": &client.user_id
             },
-            "conversation_id": message.conversation_id,
+            "conversation_id": message.conversation_id.get_uuid(),
             "flow_id": message.flow_id,
             "step_id": message.step_id,
             "direction": message.direction,

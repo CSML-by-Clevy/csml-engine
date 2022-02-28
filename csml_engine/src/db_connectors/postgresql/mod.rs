@@ -13,7 +13,7 @@ pub mod expired_data;
 
 use crate::{Database, EngineError, PostgresqlClient};
 
-use diesel::prelude::*;
+use diesel::prelude::{Connection, PgConnection};
 
 embed_migrations!("migrations/postgresql");
 
