@@ -1,13 +1,9 @@
 use crate::data::tokens::*;
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_until, take_while},
-    combinator::value,
-    sequence::pair,
+    bytes::complete::{tag, take_until, take_while, take_till},
     sequence::delimited,
-    sequence::tuple,
     character::complete::multispace0,
-    bytes::complete::is_not,
     error::{ParseError},
     multi::many0,
     IResult, *,
@@ -15,21 +11,20 @@ use nom::{
 
 
 fn comment_single_line<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-  value(
-    s, // Output is thrown away.
-    pair(tag("//"), is_not("\n\r"))
-  )(s)
+    let (s, _) = tag("//")(s)?;
+
+    take_till(|ch| ch == '\n')(s)
 }
 
 fn comment_delimited<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
-    value(
-      s, // Output is thrown away.
-      tuple((
-        tag(START_COMMENT),
-        take_until(END_COMMENT),
-        tag(END_COMMENT)
-      ))
-    )(s)
+    let (s, _) = tag(START_COMMENT)(s)?;
+    let val: IResult<Span<'a>, Span<'a>, E> = take_until(END_COMMENT)(s);
+    match val {
+        Ok((s, _)) => tag(END_COMMENT)(s),
+        // Error in comment_delimited is if '*/' is not found so the rest of the file is commented
+        Err(Err::Error(_e)) | Err(Err::Failure(_e)) => Ok((Span::new(""), Span::new(""))),
+        Err(Err::Incomplete(_)) => Ok((Span::new(""), Span::new(""))),
+    }
 }
 
 fn all_comments<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {

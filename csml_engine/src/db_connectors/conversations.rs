@@ -4,6 +4,9 @@ use crate::db_connectors::{is_dynamodb, dynamodb_connector};
 use crate::db_connectors::{is_mongodb, mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+#[cfg(feature = "sqlite")]
+use crate::db_connectors::{is_sqlite, sqlite_connector};
+
 
 use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 
@@ -65,6 +68,15 @@ pub fn create_conversation(
         );
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        let expires_at = get_expires_at_for_sqlite(ttl);
+        return sqlite_connector::conversations::create_conversation(
+            flow_id, step_id, client, expires_at, db,
+        );
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -106,6 +118,12 @@ pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Resul
         return postgresql_connector::conversations::close_conversation(id, client, "CLOSED", db);
     }
 
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::conversations::close_conversation(id, client, "CLOSED", db);
+    }
+
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
@@ -145,6 +163,12 @@ pub fn close_all_conversations(client: &Client, db: &mut Database) -> Result<(),
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::conversations::close_all_conversations(client, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::conversations::close_all_conversations(client, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -189,6 +213,12 @@ pub fn get_latest_open(
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::conversations::get_latest_open(client, db);
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::conversations::get_latest_open(client, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -246,6 +276,17 @@ pub fn update_conversation(
     if is_postgresql() {
         let db = postgresql_connector::get_db(&mut data.db)?;
         return postgresql_connector::conversations::update_conversation(
+            &data.conversation_id,
+            flow_id,
+            step_id,
+            db,
+        );
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(&mut data.db)?;
+        return sqlite_connector::conversations::update_conversation(
             &data.conversation_id,
             flow_id,
             step_id,
@@ -311,6 +352,17 @@ pub fn get_client_conversations(
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         return postgresql_connector::conversations::get_client_conversations(
+            client,
+            db,
+            limit,
+            pagination_key
+        );
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+        return sqlite_connector::conversations::get_client_conversations(
             client,
             db,
             limit,

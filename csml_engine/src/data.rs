@@ -316,9 +316,23 @@ pub enum Database {
     Dynamodb(DynamoDbClient),
     #[cfg(feature = "postgresql")]
     Postgresql(PostgresqlClient),
+    #[cfg(feature = "sqlite")]
+    SqLite(SqliteClient),
     None,
 }
 
+
+#[cfg(feature = "sqlite")]
+pub struct SqliteClient {
+    pub client: diesel::prelude::SqliteConnection
+}
+
+#[cfg(feature = "sqlite")]
+impl SqliteClient {
+    pub fn new(client: diesel::prelude::SqliteConnection) -> Self {
+        Self { client }
+    }
+}
 
 #[cfg(feature = "postgresql")]
 pub struct PostgresqlClient {
@@ -415,10 +429,10 @@ pub enum EngineError {
     #[cfg(any(feature = "dynamo"))]
     S3ErrorCode(u16),
 
-    #[cfg(any(feature = "postgresql"))]
-    PsqlErrorCode(String),
-    #[cfg(any(feature = "postgresql"))]
-    PsqlMigrationsError(String),
+    #[cfg(any(feature = "postgresql", feature = "sqlite"))]
+    SqlErrorCode(String),
+    #[cfg(any(feature = "postgresql", feature = "sqlite"))]
+    SqlMigrationsError(String),
 }
 
 impl From<serde_json::Error> for EngineError {
@@ -492,16 +506,16 @@ impl From<serde_dynamodb::Error> for EngineError {
     }
 }
 
-#[cfg(any(feature = "postgresql"))]
+#[cfg(any(feature = "postgresql", feature = "sqlite"))]
 impl From<diesel::result::Error> for EngineError {
     fn from(e: diesel::result::Error) -> Self {
-        EngineError::PsqlErrorCode(e.to_string())
+        EngineError::SqlErrorCode(e.to_string())
     }
 }
 
-#[cfg(any(feature = "postgresql"))]
+#[cfg(any(feature = "postgresql", feature = "sqlite"))]
 impl From<diesel_migrations::RunMigrationsError> for EngineError {
     fn from(e: diesel_migrations::RunMigrationsError) -> Self {
-        EngineError::PsqlMigrationsError(e.to_string())
+        EngineError::SqlMigrationsError(e.to_string())
     }
 }

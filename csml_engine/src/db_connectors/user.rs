@@ -4,6 +4,9 @@ use crate::db_connectors::{dynamodb as dynamodb_connector, is_dynamodb};
 use crate::db_connectors::{is_mongodb, mongodb as mongodb_connector};
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
+#[cfg(feature = "sqlite")]
+use crate::db_connectors::{is_sqlite, sqlite_connector};
+
 
 use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
@@ -61,6 +64,18 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
         postgresql_connector::memories::delete_client_memories(client, db)?;
         postgresql_connector::messages::delete_user_messages(client, db)?;
         postgresql_connector::state::delete_user_state(client, db)?;
+
+        return Ok(())
+    }
+
+    #[cfg(feature = "sqlite")]
+    if is_sqlite() {
+        let db = sqlite_connector::get_db(db)?;
+
+        sqlite_connector::conversations::delete_user_conversations(client, db)?;
+        sqlite_connector::memories::delete_client_memories(client, db)?;
+        sqlite_connector::messages::delete_user_messages(client, db)?;
+        sqlite_connector::state::delete_user_state(client, db)?;
 
         return Ok(())
     }
