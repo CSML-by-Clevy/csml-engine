@@ -6,6 +6,7 @@ use crate::data::{
     primitive::PrimitiveClosure,
     data::{init_child_context, init_child_scope, Data},
     ArgsType, Literal, MemoryType, MessageData, Position, MSG,
+    warnings::DisplayWarnings,
 };
 use crate::error_format::*;
 use crate::interpreter::{
@@ -17,6 +18,25 @@ use crate::interpreter::{
 
 use std::{collections::HashMap, sync::mpsc};
 
+////////////////////////////////////////////////////////////////////////////////
+// Local Struct
+////////////////////////////////////////////////////////////////////////////////
+
+enum ObjType {
+    NativeComponent,
+    BuiltIn,
+    BuiltInWithoutWarnings,
+    Function{
+        fn_args: Vec<String>,
+        scope: Expr,
+    },
+    Import,
+    Closure{
+        fn_args: Vec<String>,
+        scope: Expr,
+    },
+    Error,
+}
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +219,51 @@ fn check_for_closure<'a>(
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
+fn get_type<'a>(
+    name: &'a str,
+    interval: Interval,
+    data: &'a Data,
+) -> ObjType {
+
+    if data.native_component.contains_key(name) {
+        return ObjType::NativeComponent
+    }
+
+    if BUILT_IN.contains(&name) {
+        return ObjType::BuiltIn
+    }
+
+    if BUILT_IN_WITHOUT_WARNINGS.contains(&name) {
+        return ObjType::BuiltInWithoutWarnings
+    }
+
+    if let Some((
+        InstructionScope::FunctionScope {
+            name: _,
+            args: fn_args,
+        },
+        scope,
+    )) = check_for_function(name, data) {
+        return ObjType::Function{
+            fn_args,
+            scope
+        }
+    }
+
+    if let Some((_fn_args, _expr, _new_flow)) = check_for_import(name, interval, data) {
+        return ObjType::Import
+    }
+
+    if let Some((fn_args, scope)) = check_for_closure(name, interval, data) {
+        return ObjType::Closure {
+            fn_args,
+            scope
+        }
+    }
+
+    ObjType::Error
+}
+
 pub fn resolve_object(
     name: &str,
     args: &Expr,
@@ -207,51 +272,49 @@ pub fn resolve_object(
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
-    let args = resolve_fn_args(args, data, msg_data, sender)?;
+    match get_type(name, interval, data) {
+        ObjType::NativeComponent => {
+            let resolved_args = resolve_fn_args(args, data, msg_data, &DisplayWarnings::On, sender)?;
 
-    let function = check_for_function(name, data);
-    let import = check_for_import(name, interval, data);
-    let closure = check_for_closure(name, interval, data);
-
-    match (
-        data.native_component.contains_key(name),
-        BUILT_IN.contains(&name),
-        function,
-        import,
-        closure,
-    ) {
-        (true, ..) => {
-            let value = match_native_builtin(&name, args, interval.to_owned(), data);
+            let value = match_native_builtin(&name, resolved_args, interval.to_owned(), data);
             Ok(MSG::send_error_msg(&sender, msg_data, value))
         }
 
-        (_, true, ..) => {
-            let value = match_builtin(&name, args, interval.to_owned(), data, msg_data, sender);
+        ObjType::BuiltIn => {
+            let resolved_args = resolve_fn_args(args, data, msg_data, &DisplayWarnings::On, sender)?;
+
+            let value = match_builtin(&name, resolved_args, interval.to_owned(), data, msg_data, sender);
 
             Ok(MSG::send_error_msg(&sender, msg_data, value))
         }
 
-        (
-            ..,
-            Some((
-                InstructionScope::FunctionScope {
-                    name: _,
-                    args: fn_args,
-                },
-                scope,
-            )),
-            _,
-            _,
-        ) => exec_fn(
-            &scope, &fn_args, args, None, interval, data, msg_data, sender,
-        ),
+        ObjType::BuiltInWithoutWarnings => {
+            let resolved_args = resolve_fn_args(args, data, msg_data, &DisplayWarnings::Off, sender)?;
 
-        (.., Some((fn_args, expr, new_flow)), _) => {
-            if fn_args.len() > args.len() {
-                return Err(gen_error_info(
-                    Position::new(interval, &data.context.flow),
-                    ERROR_FN_ARGS.to_owned(),
-                ));
+            let value = match_builtin(&name, resolved_args, interval.to_owned(), data, msg_data, sender);
+
+            Ok(MSG::send_error_msg(&sender, msg_data, value))
+        }
+
+        ObjType::Function{fn_args, scope} => {
+            let resolved_args = resolve_fn_args(args, data, msg_data, &DisplayWarnings::On, sender)?;
+            exec_fn(
+                &scope, &fn_args, resolved_args, None, interval, data, msg_data, sender,
+            )
+        },
+
+        ObjType::Import => {
+            let resolved_args = resolve_fn_args(args, data, msg_data, &DisplayWarnings::On, sender)?;
+
+            let error = gen_error_info(
+                Position::new(interval, &data.context.flow),
+                ERROR_FN_ARGS.to_owned(),
+            );
+
+            let (fn_args, expr, new_flow) = check_for_import(name, interval, data).ok_or(error.clone())?;
+
+            if fn_args.len() > resolved_args.len() {
+                return Err(error);
             }
 
             let mut context = init_child_context(&data);
@@ -259,20 +322,24 @@ pub fn resolve_object(
             let mut new_scope_data = init_child_scope(data, &mut context, &mut step_count);
             new_scope_data.flow = new_flow;
 
-            insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &args, msg_data, sender);
+            insert_args_in_scope_memory(&mut new_scope_data, &fn_args, &resolved_args, msg_data, sender);
 
             exec_fn_in_new_scope(&expr, &mut new_scope_data, msg_data, sender)
         }
 
-        (.., Some((fn_args, scope))) => exec_fn(
-            &scope, &fn_args, args, None, interval, data, msg_data, sender,
-        ),
+        ObjType::Closure{fn_args, scope} => {
+            let resolved_args = resolve_fn_args(args, data, msg_data, &DisplayWarnings::On, sender)?;
+            exec_fn(
+                &scope, &fn_args, resolved_args, None, interval, data, msg_data, sender,
+            )
+        },
 
-        _ => {
+        ObjType::Error => {
             let err = gen_error_info(
                 Position::new(interval, &data.context.flow),
                 format!("{} [{}]", ERROR_BUILTIN_UNKNOWN, name),
             );
+
             Ok(MSG::send_error_msg(
                 &sender,
                 msg_data,
