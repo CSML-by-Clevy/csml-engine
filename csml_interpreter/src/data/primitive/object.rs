@@ -26,7 +26,7 @@ use phf::phf_map;
 use regex::Regex;
 use lettre::Transport;
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, LocalResult, TimeZone, Utc};
+use chrono::{DateTime, LocalResult, TimeZone, Utc, FixedOffset};
 use chrono_tz::Tz;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1138,8 +1138,20 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let usage = "Time().format(format: String)";
 
-        match (object.value.get("milliseconds"), object.value.get("timezone")) {
-            (Some(lit), None) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+        let offset = if let Some(offset) = object.value.get("offset") {
+            Literal::get_value::<i64>(
+                &offset.primitive,
+                &data.context.flow,
+                interval,
+                "".to_string(),
+            ).ok()
+        } else {
+            None
+        };
+
+
+        match (object.value.get("milliseconds"), object.value.get("timezone"), offset) {
+            (Some(lit), None, None) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -1153,7 +1165,7 @@ impl PrimitiveObject {
 
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
-            (Some(lit), Some(timezone)) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+            (Some(lit), Some(timezone), _) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -1198,6 +1210,21 @@ impl PrimitiveObject {
                         tools_time::format_date(args, date, data, interval, false)?
                     }
                 };
+
+                Ok(PrimitiveString::get_literal(&formatted_date, interval))
+            }
+
+            (Some(lit), None, Some(offset)) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+                let millis = Literal::get_value::<i64>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    "".to_string(),
+                )?;
+
+                let date: DateTime<FixedOffset> = FixedOffset::east(*offset as i32).timestamp_millis(*millis);
+
+                let formatted_date = tools_time::format_date(args, date, data, interval, false)?;
 
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }

@@ -112,6 +112,13 @@ pub fn parse_rfc3339(
         PrimitiveInt::get_literal(date.naive_utc().timestamp_millis(), interval),
     );
 
+    let offset: i32 = date.timezone().local_minus_utc();
+    if offset != 0 {
+        object.insert(
+            "offset".to_owned(),
+            PrimitiveInt::get_literal(offset as i64, interval),
+        );
+    }
 
     let mut lit = PrimitiveObject::get_literal(&object, interval);
     lit.set_content_type("time");

@@ -77,6 +77,27 @@ fn ok_time_parse_2_args() {
     assert_eq!(v1, v2)
 }
 
+#[test]
+fn ok_parse_timezone() {
+    let data =
+        r#"
+        {"messages":[ 
+            {"content":{"text": "2014-11-28T21:00:09.000+09:00"},"content_type":"text"}
+        ],
+        "memories":[]
+        }"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(HashMap::new(), HashMap::new(), None, None, "parse_timezone", "flow"),
+        "CSML/basic_test/built-in/time.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
 
 #[test]
 fn ok_with_timezone() {
