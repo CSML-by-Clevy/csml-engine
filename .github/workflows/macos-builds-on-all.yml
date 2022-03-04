@@ -13,7 +13,9 @@ jobs:
         include:
           - os: macos-10.15
             amd_asset_name: csml-server-macos-amd64
+            amd_cli_asset_name: csml-cli-macos-amd64
             arm_asset_name: csml-server-macos-arm64
+            arm_cli_asset_name: csml-cli-macos-arm64
 
     steps:
     - uses: actions/checkout@v2
@@ -52,6 +54,17 @@ jobs:
         name: ${{ matrix.amd_asset_name }}
         path: target/release/csml_server
 
+    - name: (AMD) Build Cli
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --manifest-path=csml_cli/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql,csml_engine/sqlite
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.amd_cli_asset_name }}
+        path: target/release/csml_cli
+
     - name: Set environment variables for the build
       run: |
         echo "SDKROOT=$(xcrun -sdk macosx11.1 --show-sdk-path)" >> $GITHUB_ENV
@@ -68,7 +81,16 @@ jobs:
         name: ${{ matrix.arm_asset_name }}
         path: target/aarch64-apple-darwin/release/csml_server
 
+    - name: (ARM) Build CLI
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --manifest-path=csml_cli/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/sqlite --target=aarch64-apple-darwin
 
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.arm_cli_asset_name }}
+        path: target/aarch64-apple-darwin/release/csml_cli
 
 
   publish-binaries:
@@ -80,7 +102,9 @@ jobs:
         include:
           - os: macos-10.15
             amd_asset_name: csml-server-macos-amd64
+            amd_cli_asset_name: csml-cli-macos-amd64
             arm_asset_name: csml-server-macos-arm64
+            arm_cli_asset_name: csml-cli-macos-arm64
 
     steps:
       - run: mkdir -p target/release
@@ -89,7 +113,7 @@ jobs:
           name: ${{ matrix.amd_asset_name }}
           path: target/release
 
-      - name: Upload linux AMD binary to release
+      - name: Upload MacOS AMD binary to release
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -98,17 +122,46 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
 
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.amd_cli_asset_name }}
+          path: target/release
+
+      - name: Upload MacOS AMD CLI binary to release
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/csml_cli
+          asset_name: ${{ matrix.amd_cli_asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+
       - run: mkdir -p target/aarch64-apple-darwin/release
       - uses: actions/download-artifact@v2
         with:
-          name: ${{ matrix.amd_asset_name }}
+          name: ${{ matrix.arm_asset_name }}
           path: target/aarch64-apple-darwin/release
 
-      - name: Upload linux ARM binary to release
+      - name: Upload MacOS ARM binary to release
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/aarch64-apple-darwin/release/csml_server
           asset_name: ${{ matrix.arm_asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.arm_cli_asset_name }}
+          path: target/aarch64-apple-darwin/release
+
+      - name: Upload MacOS ARM CLI binary to release
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/aarch64-apple-darwin/release/csml_cli
+          asset_name: ${{ matrix.arm_cli_asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
