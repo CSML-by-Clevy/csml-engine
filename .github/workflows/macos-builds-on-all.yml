@@ -90,7 +90,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.arm_cli_asset_name }}
-        path: target/aarch64-apple-darwin/release/csml_cli
+        path: target/aarch64-apple-darwin/release/csml
 
 
   publish-binaries:
@@ -161,7 +161,7 @@ jobs:
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/aarch64-apple-darwin/release/csml_cli
+          file: target/aarch64-apple-darwin/release/csml
           asset_name: ${{ matrix.arm_cli_asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
