@@ -1,6 +1,6 @@
 [package]
 name = "csml_engine"
-version = "1.9.2-rc3"
+version = "1.9.2"
 authors = [
     "Alexis Merelo <alexis.merelo@clevy.io>",
     "François Falala-Sechet <francois@clevy.io>",
@@ -75,7 +75,7 @@ features = ["rustls"]
 optional = true
 
 [dependencies]
-csml_interpreter = { version = "1.9.2-rc3", path = "../csml_interpreter" }
+csml_interpreter = { version = "1.9.2", path = "../csml_interpreter" }
 multimap = "0.8.3"
 md-5 = "0.10.0"
 chrono = { version = "0.4.19", features = ["serde"]}
