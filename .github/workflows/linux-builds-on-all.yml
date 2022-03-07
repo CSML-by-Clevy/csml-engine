@@ -67,13 +67,12 @@ jobs:
         name: ${{ matrix.amd_cli_asset_name }}
         path: target/release/csml_cli
 
-
     - name: (ARM) Build Server
       uses: actions-rs/cargo@v1
       with:
         use-cross: true
         command: build
-        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/sqlite --target aarch64-unknown-linux-gnu --release
+        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target aarch64-unknown-linux-gnu --release
 
     - uses: actions/upload-artifact@v2
       with:
@@ -85,7 +84,7 @@ jobs:
       with:
         use-cross: true
         command: build
-        args: --manifest-path=csml_cli/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/sqlite --target aarch64-unknown-linux-gnu --release
+        args: --manifest-path=csml_cli/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target aarch64-unknown-linux-gnu --release
 
     - uses: actions/upload-artifact@v2
       with:
