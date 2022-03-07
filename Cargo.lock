@@ -597,7 +597,7 @@ name = "aws_lambda"
 version = "0.1.0"
 dependencies = [
  "csml_engine",
- "csml_interpreter 1.9.2-rc0",
+ "csml_interpreter 1.9.2-rc1",
  "lambda_runtime",
  "ring",
  "serde",
@@ -1202,7 +1202,7 @@ dependencies = [
  "clap",
  "crossterm 0.21.0",
  "csml_engine",
- "csml_interpreter 1.9.2-rc0",
+ "csml_interpreter 1.9.2-rc1",
  "dotenv",
  "git2",
  "image",
@@ -1228,13 +1228,13 @@ dependencies = [
 
 [[package]]
 name = "csml_engine"
-version = "1.9.2-rc0"
+version = "1.9.2-rc1"
 dependencies = [
  "base64 0.13.0",
  "bincode",
  "bson",
  "chrono",
- "csml_interpreter 1.9.2-rc0",
+ "csml_interpreter 1.9.2-rc1",
  "diesel",
  "diesel_migrations",
  "env_logger",
@@ -1261,10 +1261,10 @@ dependencies = [
 
 [[package]]
 name = "csml_engine_node"
-version = "1.9.2-rc0"
+version = "1.9.2-rc1"
 dependencies = [
  "csml_engine",
- "csml_interpreter 1.9.2-rc0",
+ "csml_interpreter 1.9.2-rc1",
  "neon",
  "neon-build",
  "neon-serde",
@@ -1303,7 +1303,7 @@ dependencies = [
 
 [[package]]
 name = "csml_interpreter"
-version = "1.9.2-rc0"
+version = "1.9.2-rc1"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -1331,7 +1331,7 @@ dependencies = [
 
 [[package]]
 name = "csml_server"
-version = "1.9.2-rc0"
+version = "1.9.2-rc1"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1340,7 +1340,7 @@ dependencies = [
  "actix-web",
  "bytes 0.5.6",
  "csml_engine",
- "csml_interpreter 1.9.2-rc0",
+ "csml_interpreter 1.9.2-rc1",
  "env_logger",
  "futures 0.3.19",
  "json",
