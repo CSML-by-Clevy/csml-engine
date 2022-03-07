@@ -13,7 +13,9 @@ jobs:
         include:
           - os: ubuntu-18.04
             amd_asset_name: csml-server-linux-amd64
+            amd_cli_asset_name: csml-cli-linux-amd64
             arm_asset_name: csml-server-linux-armv64
+            arm_cli_asset_name: csml-cli-linux-armv64
 
     steps:
     - uses: actions/checkout@v2
@@ -54,19 +56,40 @@ jobs:
         name: ${{ matrix.amd_asset_name }}
         path: target/release/csml_server
 
+    - name: (AMD) Build CLI
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --manifest-path=csml_cli/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/postgresql,csml_engine/sqlite  --release
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.amd_cli_asset_name }}
+        path: target/release/csml
 
     - name: (ARM) Build Server
       uses: actions-rs/cargo@v1
       with:
         use-cross: true
         command: build
-        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo,csml_engine/sqlite --target aarch64-unknown-linux-gnu --release
+        args: --manifest-path=csml_server/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target aarch64-unknown-linux-gnu --release
 
     - uses: actions/upload-artifact@v2
       with:
         name:  ${{ matrix.arm_asset_name }}
         path: target/aarch64-unknown-linux-gnu/release/csml_server
 
+    - name: (ARM) Build CLI
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: true
+        command: build
+        args: --manifest-path=csml_cli/Cargo.toml --features csml_engine/mongo,csml_engine/dynamo --target aarch64-unknown-linux-gnu --release
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name:  ${{ matrix.arm_cli_asset_name }}
+        path: target/aarch64-unknown-linux-gnu/release/csml
 
 
 
@@ -80,7 +103,9 @@ jobs:
         include:
           - os: ubuntu-18.04
             amd_asset_name: csml-server-linux-amd64
+            amd_cli_asset_name: csml-cli-linux-amd64
             arm_asset_name: csml-server-linux-armv64
+            arm_cli_asset_name: csml-cli-linux-armv64
 
     steps:
       - run: mkdir -p target/release
@@ -98,6 +123,21 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
 
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.amd_cli_asset_name }}
+          path: target/release
+
+      - name: Upload linux AMD CLI binary to release
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/csml
+          asset_name: ${{ matrix.amd_cli_asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+
       - run: mkdir -p target/aarch64-unknown-linux-gnu/release
       - uses: actions/download-artifact@v2
         with:
@@ -110,6 +150,20 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: target/aarch64-unknown-linux-gnu/release/csml_server
           asset_name: ${{ matrix.arm_asset_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.arm_cli_asset_name }}
+          path: target/aarch64-unknown-linux-gnu/release
+
+      - name: Upload linux ARM CLI binary to release
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/aarch64-unknown-linux-gnu/release/csml
+          asset_name: ${{ matrix.arm_cli_asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
 

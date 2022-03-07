@@ -6,6 +6,7 @@ use crate::data::{
     },
     primitive::tools::get_array,
     Data, MessageData, MSG,
+    warnings::DisplayWarnings,
 };
 use crate::error_format::*;
 use crate::interpreter::interpret_scope;
@@ -27,7 +28,7 @@ pub fn for_loop(
     data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-    let literal = expr_to_literal(expr, false, None, data, &mut msg_data, sender)?;
+    let literal = expr_to_literal(expr, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
     let mut array = get_array(literal, &data.context.flow, ERROR_FOREACH.to_owned())?;
 
     let mut value_skipped = 0;

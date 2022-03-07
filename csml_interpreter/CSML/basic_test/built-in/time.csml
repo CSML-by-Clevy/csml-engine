@@ -29,7 +29,7 @@ parse_timezone:
     goto end
 
 with_timezone:
-    do time = Time().parse("2014-11-28T21:00:09Z").with_timezone(9 * 3600)
+    do time = Time().parse("2014-11-28T21:00:09Z").with_timezone("Europe/Paris")
 
     say time.format()
     goto end

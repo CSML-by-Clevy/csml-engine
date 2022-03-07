@@ -371,29 +371,6 @@ pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineE
     return Ok(());
 }
 
-// pub fn init_logger() {
-//     let env = env_logger::Env::default()
-//     .filter_or("CSML_LOG_LEVEL", "error");
-
-//     let _ = env_logger::Builder::from_env(env)
-//     .format(|buf, record| {
-//         let style = buf.default_level_style(record.level());
-
-//         let timestamp = buf.timestamp_millis();
-//         let path = record.target();
-
-//         writeln!(
-//             buf,
-//             "{} {} {} {}",
-//             style.value(record.level()),
-//             timestamp,
-//             path,
-//             record.args()
-//         )
-//     })
-//     .try_init();
-// }
-
 pub fn get_ttl_duration_value(event: Option<&Event>) -> Option<chrono::Duration> {
 
     if let Some(event) = event {
