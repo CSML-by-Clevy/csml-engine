@@ -63,7 +63,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.amd_cli_asset_name }}
-        path: target/release/csml_cli
+        path: target/release/csml
 
     - name: Set environment variables for the build
       run: |
@@ -131,7 +131,7 @@ jobs:
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/csml_cli
+          file: target/release/csml
           asset_name: ${{ matrix.amd_cli_asset_name }}
           tag: ${{ github.ref }}
           overwrite: true
