@@ -46,7 +46,7 @@ pub fn gen_literal_from_event(
                 }
             };
 
-            let (mut lit, _tmp_mem_update) = exec_path_actions(
+            let (lit, _tmp_mem_update) = exec_path_actions(
                 &mut lit,
                 dis_warnings,
                 None,
@@ -56,8 +56,6 @@ pub fn gen_literal_from_event(
                 msg_data,
                 sender,
             )?;
-
-            // lit.secure_variable = data.event.secure;
 
             Ok(lit)
         }

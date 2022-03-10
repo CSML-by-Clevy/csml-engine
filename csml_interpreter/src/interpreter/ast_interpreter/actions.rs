@@ -89,12 +89,22 @@ pub fn match_actions(
         ObjectType::Debug(args, interval) => {
             let args = resolve_fn_args(args, data, &mut msg_data, &DisplayWarnings::On, sender)?;
 
-            let msg = Message::new(
-                args.args_to_debug(interval.to_owned()),
-                &data.context.flow
-            )?;
-            MSG::send(&sender, MSG::Message(msg.clone()));
-            Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+            let lit = args.args_to_debug(interval.to_owned());
+
+            // check if it is secure variable 
+            if lit.secure_variable {
+                let err = gen_error_info(
+                    Position::new(lit.interval, &data.context.flow),
+                    "Secure variable can not be display".to_owned(),
+                );
+
+                MSG::send_error_msg(&sender, &mut msg_data, Err(err));
+                Ok(msg_data)
+            } else {
+                let msg = Message::new( lit, &data.context.flow)?;
+                MSG::send(&sender, MSG::Message(msg.clone()));
+                Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+            }
         }
         ObjectType::Log{expr, interval, log_lvl} => {
             let args = resolve_fn_args(expr, data, &mut msg_data, &DisplayWarnings::On, sender)?;
