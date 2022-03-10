@@ -91,6 +91,7 @@ const FUNCTIONS_EVENT: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_ma
     "get_type" => (PrimitiveObject::get_type as PrimitiveMethod, Right::Read),
     "get_content" => (PrimitiveObject::get_content as PrimitiveMethod, Right::Read),
     "is_email" => (PrimitiveObject::is_email as PrimitiveMethod, Right::Read),
+    "is_secure" => (PrimitiveObject::is_secure as PrimitiveMethod, Right::Read),
     "match" => (PrimitiveObject::match_args as PrimitiveMethod, Right::Read),
     "match_array" => (PrimitiveObject::match_array as PrimitiveMethod, Right::Read),
 };
@@ -1844,6 +1845,7 @@ impl PrimitiveObject {
             content_type: content_type.to_owned(),
             primitive: Box::new(object.clone()),
             additional_info: None,
+            secure_variable: false,
             interval,
         })
     }
@@ -1871,11 +1873,24 @@ impl PrimitiveObject {
         }
 
         let email_regex = Regex::new(
-            r"^([a-zA-Z0-9_+]([a-zA-Z0-9_+.]*[a-zA-Z0-9_+])?)@([a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,6})",
+            r"^[^@]+@[^@]+\.[^@]+$",
         )
         .unwrap();
 
         let lit = PrimitiveBoolean::get_literal(email_regex.is_match(&text), interval);
+
+        Ok(lit)
+    }
+
+    fn is_secure(
+        _object: &mut PrimitiveObject,
+        _args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let lit = PrimitiveBoolean::get_literal(data.event.secure, interval);
 
         Ok(lit)
     }
@@ -2422,6 +2437,7 @@ impl PrimitiveObject {
             content_type: "object".to_owned(),
             primitive,
             additional_info: None,
+            secure_variable: false,
             interval,
         }
     }

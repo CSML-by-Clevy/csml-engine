@@ -34,8 +34,6 @@ pub fn gen_literal_from_event(
             let path = resolve_path(path, dis_warnings, data, msg_data, sender)?;
             let mut lit = json_to_literal(&data.event.content, interval.to_owned(), &data.context.flow)?;
 
-            println!("===> {:?}", data.event);
-
             lit.set_content_type("event");
 
             let content_type = match ContentType::get(&lit) {
@@ -48,7 +46,7 @@ pub fn gen_literal_from_event(
                 }
             };
 
-            let (lit, _tmp_mem_update) = exec_path_actions(
+            let (mut lit, _tmp_mem_update) = exec_path_actions(
                 &mut lit,
                 dis_warnings,
                 None,
@@ -59,12 +57,20 @@ pub fn gen_literal_from_event(
                 sender,
             )?;
 
+            // lit.secure_variable = data.event.secure;
+
             Ok(lit)
         }
-        None => Ok(PrimitiveString::get_literal(
-            &data.event.content_value,
-            interval.to_owned(),
-        )),
+        None => {
+            let mut lit = PrimitiveString::get_literal(
+                &data.event.content_value,
+                interval.to_owned(),
+            );
+
+            lit.secure_variable = data.event.secure;
+
+            Ok(lit)
+        },
     }
 }
 

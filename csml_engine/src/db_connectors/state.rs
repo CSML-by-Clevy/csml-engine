@@ -255,6 +255,7 @@ mod tests {
             step_name: "step_name".to_owned(),
             flow_name: "flow_name".to_owned(),
             previous: None,
+            secure: false
         };
 
         let state_hold: serde_json::Value = serde_json::json!({

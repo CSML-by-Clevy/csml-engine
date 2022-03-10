@@ -218,6 +218,7 @@ impl PrimitiveClosure {
             content_type: "closure".to_owned(),
             primitive,
             additional_info: None,
+            secure_variable: false,
             interval,
         }
     }

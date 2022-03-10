@@ -144,6 +144,7 @@ pub fn memory_to_literal(
                     content_type: "closure".to_owned(),
                     primitive: Box::new(closure),
                     additional_info: None,
+                    secure_variable: false,
                     interval,
                 })
             }

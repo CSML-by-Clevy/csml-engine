@@ -138,6 +138,7 @@ where
             content_type: "boolean".to_owned(),
             primitive,
             additional_info: None,
+            secure_variable: false,
             interval,
         },
         in_in_substring: false,

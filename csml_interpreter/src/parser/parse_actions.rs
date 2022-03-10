@@ -331,6 +331,21 @@ where
     ))
 }
 
+fn parse_hold_secure<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (s, inter) = preceded(comment, get_interval)(s)?;
+    let (s, name) = get_string(s)?;
+
+    let (s, ..) = get_tag(name, HOLD_SECURE)(s)?;
+
+    Ok((
+        s,
+        Expr::ObjectExpr(ObjectType::HoldSecure(inter)),
+    ))
+}
+
 fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
@@ -407,6 +422,7 @@ where
         parse_remember,
         parse_forget,
         parse_hold,
+        parse_hold_secure,
         // only accessible in functions scopes
         parse_return,
         // soon to be deprecated

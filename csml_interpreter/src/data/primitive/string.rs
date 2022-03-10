@@ -1779,6 +1779,7 @@ impl PrimitiveString {
             content_type: "string".to_owned(),
             primitive,
             additional_info: None,
+            secure_variable: false,
             interval,
         }
     }
@@ -2038,6 +2039,7 @@ impl Primitive for PrimitiveString {
                 content_type: "string".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.value)),
                 additional_info: None,
+                secure_variable: false,
                 interval: Interval {
                     start_column: 0,
                     start_line: 0,

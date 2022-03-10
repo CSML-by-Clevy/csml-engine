@@ -61,7 +61,8 @@ fn hold_test_some_0() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "start",
             "flow",
@@ -92,7 +93,8 @@ fn hold_test_some_3() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "start",
             "flow",
@@ -123,7 +125,8 @@ fn hold_test_some_7() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "start",
             "flow",
@@ -154,7 +157,8 @@ fn hold_test_some_8() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "start",
             "flow",
@@ -185,7 +189,8 @@ fn hold_test_some_17() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "start",
             "flow",
@@ -217,7 +222,8 @@ fn hold_test_step_1_ok() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "hold_1_ok",
             "flow",
@@ -248,7 +254,8 @@ fn hold_test_step_2_ok() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "hold_2_ok",
             "flow",
@@ -279,7 +286,8 @@ fn hold_test_step_3_ok() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "hold_3_ok",
             "flow",
@@ -310,7 +318,8 @@ fn hold_test_step_4_ok() {
                 serde_json::json!({}),
                 "".to_owned(),
                 "".to_owned(),
-                None
+                None,
+                false
             )),
             "hold_4_ok",
             "flow",

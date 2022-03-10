@@ -180,6 +180,7 @@ pub enum ObjectType {
     Goto(GotoType, Interval),
     Previous(PreviousType, Interval),
     Hold(Interval),
+    HoldSecure(Interval),
     Say(Box<Expr>),
     Debug(Box<Expr>, Interval),
     Log{

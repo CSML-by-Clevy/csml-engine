@@ -48,6 +48,7 @@ pub fn interval_from_reserved_fn(reserved_fn: &ObjectType) -> Interval {
         ObjectType::As(ident, ..) => ident.interval.to_owned(),
         ObjectType::BuiltIn(Function { interval, .. }) => interval.to_owned(),
         ObjectType::Hold(interval) => interval.to_owned(),
+        ObjectType::HoldSecure(interval) => interval.to_owned(),
         ObjectType::Break(interval) => interval.to_owned(),
         ObjectType::Continue(interval) => interval.to_owned(),
     }

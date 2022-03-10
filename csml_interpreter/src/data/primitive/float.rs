@@ -504,6 +504,7 @@ impl PrimitiveFloat {
             content_type: "float".to_owned(),
             primitive,
             additional_info: None,
+            secure_variable: false,
             interval,
         }
     }
@@ -692,6 +693,7 @@ impl Primitive for PrimitiveFloat {
                 content_type: "float".to_owned(),
                 primitive: Box::new(PrimitiveString::new(&self.to_string())),
                 additional_info: None,
+                secure_variable: false,
                 interval: Interval {
                     start_column: 0,
                     start_line: 0,

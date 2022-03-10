@@ -118,6 +118,8 @@ impl<'a> Data<'a> {
             self.custom_component.clone(),
             self.native_component.clone(),
         )
+
+
     }
 
     // get permanent and temporary memories in a single hashmap
