@@ -75,7 +75,7 @@ pub fn match_actions(
             if lit.secure_variable {
                 let err = gen_error_info(
                     Position::new(lit.interval, &data.context.flow),
-                    "Secure variable can not be display".to_owned(),
+                    "Secure variable can not be displayed".to_owned(),
                 );
 
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
@@ -95,7 +95,7 @@ pub fn match_actions(
             if lit.secure_variable {
                 let err = gen_error_info(
                     Position::new(lit.interval, &data.context.flow),
-                    "Secure variable can not be display".to_owned(),
+                    "Secure variable can not be displayed".to_owned(),
                 );
 
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
@@ -166,7 +166,7 @@ pub fn match_actions(
             if new_value.secure_variable {
                 let err = gen_error_info(
                     Position::new(new_value.interval, &data.context.flow),
-                    "assignation of secure variable is not allowed".to_owned(),
+                    "Assignation of secure variable is not allowed".to_owned(),
                 );
 
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
@@ -404,7 +404,7 @@ pub fn match_actions(
             if new_value.secure_variable {
                 let err = gen_error_info(
                     Position::new(new_value.interval, &data.context.flow),
-                    "assignation of secure variable is not allowed".to_owned(),
+                    "Assignation of secure variable is not allowed".to_owned(),
                 );
 
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
