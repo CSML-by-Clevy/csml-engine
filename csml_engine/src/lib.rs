@@ -106,9 +106,18 @@ pub fn start_conversation(
     check_for_hold(&mut data, &bot, &mut formatted_event)?;
 
     // save event in db as message RECEIVE
-    let msgs = vec![request.payload.to_owned()];
-    if !data.low_data && !formatted_event.secure {
-        messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+    match (data.low_data, formatted_event.secure) {
+        (false, true) => {
+            let msgs = vec![serde_json::json!({"content_type": "secure"})];
+
+            messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+        }
+        (false, false) => {
+            let msgs = vec![request.payload.to_owned()];
+
+            messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+        }
+        (true, _) => {}
     }
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
