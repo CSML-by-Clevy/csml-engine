@@ -215,10 +215,12 @@ pub fn validate_functions(linter_info: &mut LinterInfo) {
 
 pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
     let mut is_step_start_present = false;
+    let mut steps_nbr = 0;
 
     for (instruction_scope, scope) in flow.ast.flow_instructions.iter() {
         match instruction_scope {
             InstructionScope::StepScope(step_name) => {
+                steps_nbr += 1;
                 if step_name == "start" {
                     is_step_start_present = true;
                 }
@@ -281,7 +283,7 @@ pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
         }
     }
 
-    if !is_step_start_present {
+    if !is_step_start_present && steps_nbr > 0 {
         linter_info.errors.push(gen_error_info(
             Position::new(Interval::default(), linter_info.flow_name),
             format!("missing step 'start' in flow [{}]", flow.flow_name),
