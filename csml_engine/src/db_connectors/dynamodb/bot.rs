@@ -3,7 +3,7 @@ use crate::db_connectors::{
     dynamodb::{aws_s3, Bot, DynamoDbKey, Class},
     BotVersion,
 };
-use csml_interpreter::data::{csml_flow::CsmlFlow};
+use csml_interpreter::data::{csml_flow::CsmlFlow, csml_bot::Modules};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
 use crate::EngineError;
@@ -13,6 +13,7 @@ pub fn create_bot_version(
     bot_id: String,
     bot: String,
     flows: String,
+    flow_modules: String,
     db: &mut DynamoDbClient,
 ) -> Result<String, EngineError> {
     let data: Bot = Bot::new(bot_id, bot);
@@ -30,6 +31,9 @@ pub fn create_bot_version(
     let key = format!("bots/{}/versions/{}/flows.json", &data.id, &data.version_id);
     aws_s3::put_object(db, &key, flows)?;
 
+    let key = format!("bots/{}/versions/{}/modules.json", &data.id, &data.version_id);
+    aws_s3::put_object(db, &key, flow_modules)?;
+
     Ok(data.version_id.to_owned())
 }
 
@@ -38,6 +42,13 @@ pub fn get_flows(key: &str, db: &mut DynamoDbClient) -> Result<Vec<CsmlFlow>, En
     let flows: Vec<CsmlFlow> = serde_json::from_str(&object).unwrap();
 
     Ok(flows)
+}
+
+pub fn get_modules(key: &str, db: &mut DynamoDbClient) -> Result<Modules, EngineError> {
+    let object = aws_s3::get_object(db, key)?;
+    let modules: Modules = serde_json::from_str(&object).unwrap();
+
+    Ok(modules)
 }
 
 fn query_bot_version(
@@ -199,8 +210,11 @@ pub fn get_bot_by_version_id(
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
             let flows = get_flows(&key, db)?;
 
+            let key = format!("bots/{}/versions/{}/modules.json", bot_id, version_id);
+            let modules = get_modules(&key, db)?;
+
             Ok(Some(BotVersion {
-                bot: csml_bot.to_bot(flows),
+                bot: csml_bot.to_bot(flows, modules),
                 version_id: bot.version_id,
                 engine_version: env!("CARGO_PKG_VERSION").to_owned(),
             }))
@@ -286,8 +300,11 @@ pub fn get_last_bot_version(
     let key = format!("bots/{}/versions/{}/flows.json", bot_id, bot.version_id);
     let flows = get_flows(&key, db)?;
 
+    let key = format!("bots/{}/versions/{}/modules.json", bot_id, bot.version_id);
+    let modules = get_modules(&key, db)?;
+
     Ok(Some(BotVersion {
-        bot: csml_bot.to_bot(flows),
+        bot: csml_bot.to_bot(flows, modules),
         version_id: bot.version_id,
         engine_version: env!("CARGO_PKG_VERSION").to_owned(),
     }))
@@ -299,6 +316,9 @@ pub fn delete_bot_version(
     db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
     let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
+    aws_s3::delete_object(db, &key)?;
+
+    let key = format!("bots/{}/versions/{}/modules.json", bot_id, version_id);
     aws_s3::delete_object(db, &key)?;
 
     let item_key = DynamoDbKey {
@@ -342,6 +362,9 @@ pub fn delete_bot_versions(
             let data: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
 
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, data.version_id);
+            aws_s3::delete_object(db, &key)?;
+
+            let key = format!("bots/{}/versions/{}/modules.json", bot_id, data.version_id);
             aws_s3::delete_object(db, &key)?;
 
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {

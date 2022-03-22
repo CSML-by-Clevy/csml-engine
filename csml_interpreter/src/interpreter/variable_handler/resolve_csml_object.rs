@@ -65,11 +65,12 @@ fn get_function<'a>(
 
 fn search_function<'a>(
     origin_flow_name: &str,
-    bot: &'a HashMap<String, Flow>,
+    bot_flows: &'a HashMap<String, Flow>,
+    extern_flows: &'a HashMap<String, Flow>,
     import: &ImportScope,
 ) -> Result<(Vec<String>, Expr, &'a Flow), ErrorInfo> {
     match &import.from_flow {
-        Some(flow_name) => match bot.get(flow_name) {
+        FromFlow::Normal(flow_name) => match bot_flows.get(flow_name) {
             Some(flow) => {
                 let error_message = format!(
                     "function '{}' not found in '{}' flow",
@@ -98,8 +99,37 @@ fn search_function<'a>(
                 })
             },
         },
-        None => {
-            for (_name, flow) in bot.iter() {
+        FromFlow::Extern(flow_name) => match extern_flows.get(flow_name) {
+            Some(flow) => {
+                let error_message = format!(
+                    "function '{}' not found in '{}' flow",
+                    import.name, flow_name
+                );
+                let error_info = create_error_info(&error_message, Interval::default());
+
+                get_function(flow, &import.name, &import.original_name).ok_or(ErrorInfo {
+                    position: Position::new(import.interval, origin_flow_name),
+                    message: error_message,
+                    additional_info: Some(error_info)
+                })
+            }
+            None => {
+                let error_message = format!(
+                    "function '{}' not found in '{}' flow",
+                    import.name, flow_name
+                );
+                let error_info = create_error_info(&error_message, Interval::default());
+
+
+                Err(ErrorInfo {
+                    position: Position::new(import.interval, origin_flow_name),
+                    message: error_message,
+                    additional_info: Some(error_info)
+                })
+            },
+        }
+        FromFlow::None => {
+            for (_name, flow) in bot_flows.iter() {
                 if let Some(values) = get_function(flow, &import.name, &import.original_name) {
                     return Ok(values);
                 }
@@ -175,17 +205,18 @@ fn check_for_import<'a>(
     interval: Interval,
     data: &'a Data,
 ) -> Option<(Vec<String>, Expr, &'a Flow)> {
+
     match data
         .flow
         .flow_instructions
         .get_key_value(&InstructionScope::ImportScope(ImportScope {
             name: name.to_owned(),
             original_name: None,
-            from_flow: None,
+            from_flow: FromFlow::None,
             interval: interval.clone(),
         })) {
         Some((InstructionScope::ImportScope(import), _expr)) => {
-            match search_function(&data.context.flow,data.flows, import) {
+            match search_function(&data.context.flow,data.flows, data.extern_flows, import) {
                 Ok((fn_args, expr, new_flow)) => Some((fn_args, expr, new_flow)), // if new_flow == data.flow {
                 _err => None,
             }
@@ -260,6 +291,8 @@ fn get_type<'a>(
             scope
         }
     }
+
+    println!("=========> not found");
 
     ObjType::Error
 }

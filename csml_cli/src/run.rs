@@ -1,6 +1,6 @@
 use csml_engine::data::CsmlRequest;
 use csml_interpreter::{
-    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
+    data::{csml_bot::{CsmlBot, Modules}, csml_flow::CsmlFlow, Client},
     load_components,
 };
 
@@ -95,6 +95,7 @@ pub fn load_info(directory_name: &str) -> Result<CsmlBot, Box<dyn Error>> {
         bot_ast: None,
         no_interruption_delay: None,
         env: None,
+        modules: Modules::default(),
     })
 }
 

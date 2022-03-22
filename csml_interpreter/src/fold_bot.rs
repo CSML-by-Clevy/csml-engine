@@ -1,5 +1,5 @@
 
-use crate::data::{warnings::*,};
+use crate::data::{warnings::*, ast::FromFlow};
 use crate::error_format::{ErrorInfo};
 
 use crate::linter::{
@@ -17,6 +17,7 @@ use std::collections::{HashSet, HashMap};
 
 pub fn fold_bot(
     flows: &[FlowToValidate],
+    modules: &[FlowToValidate],
     errors: &mut Vec<ErrorInfo>,
     warnings: &mut Vec<Warnings>,
     native_components: &Option<serde_json::Map<String, serde_json::Value>>,
@@ -49,7 +50,14 @@ pub fn fold_bot(
         linter_info.flow_name = &flow.flow_name;
         linter_info.raw_flow = flow.raw_flow;
 
-        validate_flow_ast(flow, &mut linter_info);
+        validate_flow_ast(flow, &mut linter_info, false);
+    }
+
+    for flow in modules.iter() {
+        linter_info.flow_name = &flow.flow_name;
+        linter_info.raw_flow = flow.raw_flow;
+
+        validate_flow_ast(flow, &mut linter_info, true);
     }
 
     validate_gotos(&mut linter_info);
@@ -134,10 +142,14 @@ fn make_update_fn_name_list<'a>(
 
                 for function in function_list.iter() {
                     match &import.from_flow {
-                        Some(from) if function.in_flow == from => {
+                        FromFlow::Normal(from) if function.in_flow == from => {
                             update_fn_call_name(flow, function, function_call);
                         }
-                        None if &function.name == fn_name => {
+                        // ??? 
+                        FromFlow::Extern(from) if function.in_flow == from => {
+                            update_fn_call_name(flow, function, function_call);
+                        }
+                        FromFlow::None if &function.name == fn_name => {
                             update_fn_call_name(flow, function, function_call);
                         }
                         _ => {}

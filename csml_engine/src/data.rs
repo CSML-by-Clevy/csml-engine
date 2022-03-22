@@ -3,7 +3,7 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, Context,
 };
-use csml_interpreter::data::{CsmlBot, CsmlFlow, Message};
+use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Modules};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -121,6 +121,7 @@ pub struct SerializeCsmlBot {
     pub default_flow: String,
     pub no_interruption_delay: Option<i32>,
     pub env: Option<String>,
+    pub modules: Modules
 }
 
 /**
@@ -151,6 +152,7 @@ impl CsmlBotBincode {
             default_flow: self.default_flow,
             no_interruption_delay: None,
             env: None,
+            modules: Modules::default(),
         }
     }
 }
@@ -178,6 +180,7 @@ pub fn to_serializable_bot(bot: &CsmlBot) -> SerializeCsmlBot {
             Some(value) => encrypt_data(value).ok(),
             None => None,
         },
+        modules: bot.modules.to_owned(),
     }
 }
 
@@ -213,6 +216,7 @@ impl SerializeCsmlBot {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,
             },
+            modules: self.modules.to_owned(),
         }
     }
 }
@@ -273,7 +277,7 @@ pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
 }
 
 impl DynamoBot {
-    pub fn to_bot(&self, flows: Vec<CsmlFlow>) -> CsmlBot {
+    pub fn to_bot(&self, flows: Vec<CsmlFlow>, modules: Modules) -> CsmlBot {
         CsmlBot {
             id: self.id.to_owned(),
             name: self.name.to_owned(),
@@ -296,6 +300,7 @@ impl DynamoBot {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,
             },
+            modules
         }
     }
 }

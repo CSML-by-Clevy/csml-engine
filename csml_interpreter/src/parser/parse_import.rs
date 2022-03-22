@@ -72,7 +72,7 @@ where
     }
 }
 
-fn parse_from<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
+fn parse_from<'a, E>(s: Span<'a>) -> IResult<Span<'a>, FromFlow, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
@@ -80,7 +80,20 @@ where
     let (s, ..) = get_tag(name, FROM)(s)?;
     let (s, name) = preceded(comment, get_string)(s)?;
 
-    Ok((s, name))
+    Ok((s, FromFlow::Normal(name)))
+}
+
+fn parse_from_extern_module<'a, E>(s: Span<'a>) -> IResult<Span<'a>, FromFlow, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+    let (s, ..) = get_tag(name, FROM)(s)?;
+
+    let (s, name) = preceded(comment,
+        preceded(tag("modules/"),get_string ))(s)?;
+
+    Ok((s, FromFlow::Extern(name)))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +102,7 @@ where
 
 pub fn parse_import_prototype<'a, E>(
     s: Span<'a>,
-) -> IResult<Span<'a>, (Interval, Vec<Expr>, Option<String>), E>
+) -> IResult<Span<'a>, (Interval, Vec<Expr>, FromFlow), E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
@@ -100,7 +113,10 @@ where
 
     let (s, fn_names) = preceded(comment, parse_import_params)(s)?;
 
-    let (s, from_flow) = opt(parse_from)(s)?;
+    let (s, from_flow) = match opt(alt((parse_from_extern_module, parse_from, )))(s)? {
+        (s, Some(from_flow)) => (s, from_flow),
+        (s, None) => (s, FromFlow::None)
+    };
 
     Ok((s, (start, fn_names, from_flow)))
 }

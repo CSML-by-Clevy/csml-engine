@@ -50,12 +50,15 @@ pub fn create_bot_version(
         let dynamo_bot = crate::data::to_dynamo_bot(&csml_bot);
 
         let flows = serde_json::json!(&csml_bot.flows);
+        let flow_modules = serde_json::json!(&csml_bot.modules);
+    
         let bot = serde_json::json!(dynamo_bot).to_string();
 
         let version_id = dynamodb_connector::bot::create_bot_version(
             bot_id.clone(),
             bot,
             flows.to_string(),
+            flow_modules.to_string(),
             db,
         )?;
 

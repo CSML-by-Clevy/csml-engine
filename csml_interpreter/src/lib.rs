@@ -19,7 +19,7 @@ use data::literal::create_error_info;
 use data::event::Event;
 use data::message_data::MessageData;
 use data::msg::MSG;
-use data::CsmlBot;
+use data::{CsmlBot, CsmlFlow};
 use data::CsmlResult;
 use data::{Context, Data, Position, STEP_LIMIT};
 use error_format::*;
@@ -122,6 +122,7 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     csml_logs::init_logger();
 
     let mut flows = vec![];
+    let mut modules = vec![];
     let mut errors = Vec::new();
     let mut imports = Vec::new();
 
@@ -136,6 +137,21 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
 
                 // flows.insert(flow.name.to_owned(), ast_flow);
                 flows.push(FlowToValidate {
+                    flow_name: flow.name.to_owned(),
+                    ast: ast_flow,
+                    raw_flow: &flow.content,
+                });
+            }
+            Err(error) => {
+                errors.push(error);
+            }
+        }
+    }
+
+    for flow in bot.modules.flows.iter() {
+        match parse_flow(&flow.content, &flow.name) {
+            Ok(ast_flow) => {
+                modules.push(FlowToValidate {
                     flow_name: flow.name.to_owned(),
                     ast: ast_flow,
                     raw_flow: &flow.content,
@@ -152,6 +168,7 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     if errors.is_empty() {
         lint_bot(
             &flows,
+            &modules,
             &mut errors,
             &mut warnings,
             &bot.native_components,
@@ -159,13 +176,14 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
         );
     }
 
-    CsmlResult::new(FlowToValidate::get_bot(flows), warnings, errors)
+    CsmlResult::new(FlowToValidate::get_flows(flows), FlowToValidate::get_flows(modules), warnings, errors)
 }
 
 pub fn fold_bot(bot: &CsmlBot) -> String {
     csml_logs::init_logger();
 
     let mut flows = vec![];
+    let mut modules = vec![];
     let mut errors = Vec::new();
     let mut imports = Vec::new();
 
@@ -191,11 +209,27 @@ pub fn fold_bot(bot: &CsmlBot) -> String {
         }
     }
 
+    for flow in bot.modules.flows.iter() {
+        match parse_flow(&flow.content, &flow.name) {
+            Ok(ast_flow) => {
+                modules.push(FlowToValidate {
+                    flow_name: flow.name.to_owned(),
+                    ast: ast_flow,
+                    raw_flow: &flow.content,
+                });
+            }
+            Err(error) => {
+                errors.push(error);
+            }
+        }
+    }
+
     let mut warnings = vec![];
     // only use the fold if there is no error in the paring otherwise the linter will catch false errors
 
     fold(
         &flows,
+        &modules,
         &mut errors,
         &mut warnings,
         &bot.native_components,
@@ -203,7 +237,7 @@ pub fn fold_bot(bot: &CsmlBot) -> String {
     )
 }
 
-fn get_flows(bot: &CsmlBot) -> HashMap<String, Flow> {
+fn get_flows(bot: &CsmlBot) -> (HashMap<String, Flow>, HashMap<String, Flow>) {
     match &bot.bot_ast {
         Some(bot) => {
             let base64decoded = base64::decode(&bot).unwrap();
@@ -211,12 +245,52 @@ fn get_flows(bot: &CsmlBot) -> HashMap<String, Flow> {
         }
         None => {
             let bot = validate_bot(&bot);
-            match bot.flows {
+
+            let flows = match bot.flows {
                 Some(flows) => flows,
                 None => HashMap::new(),
+            };
+
+            let extern_flows = match bot.extern_flows {
+                Some(flows) => flows,
+                None => HashMap::new(),
+            };
+
+            (flows, extern_flows)
+        }
+    }
+}
+
+pub fn search_for_modules(bot: &mut CsmlBot) {
+    let mut downloaded_modules = vec!();
+
+    for module in bot.modules.modules.iter() {
+        if let None = bot.modules.flows.iter().find(|&flow| flow.name == module.name) {
+            let url = match &module.url{
+                Some(url) => url,
+                None => panic!("no url"),
+            };
+
+            let request = ureq::get(url);
+
+            match request.call() {
+                Ok(response) => {
+                    let flow_content = response.into_string().unwrap();
+                    downloaded_modules.push(CsmlFlow {
+                        id: module.name.clone(),
+                        name: module.name.clone(),
+                        content: flow_content,
+                        commands: vec![],
+                    });
+                }
+                Err(error) => {
+                    panic!("{:?}", error)
+                }
             }
         }
     }
+
+    bot.modules.flows.append(&mut downloaded_modules);
 }
 
 pub fn interpret(
@@ -249,7 +323,7 @@ pub fn interpret(
         _ => serde_json::Map::new(),
     };
 
-    let flows = get_flows(&bot);
+    let (flows, extern_flows) = get_flows(&bot);
 
     let env = match bot.env {
         Some(env) => json_to_literal(&env, Interval::default(), &flow).unwrap(),
@@ -287,6 +361,7 @@ pub fn interpret(
 
         let mut data = Data::new(
             &flows,
+            &extern_flows,
             &ast,
             bot.default_flow.clone(),
             &mut context,
