@@ -185,7 +185,7 @@ impl PrimitiveString {
         }
 
         let email_regex = Regex::new(
-            r"^([a-zA-Z0-9_+]([a-zA-Z0-9_+.]*[a-zA-Z0-9_+])?)@([a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,6})",
+            r"^[^@]+@[^@]+\.[^@]+$",
         )
         .unwrap();
 

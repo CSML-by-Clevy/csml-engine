@@ -168,6 +168,12 @@ pub const BUILT_IN: &[&str] = &[
     JWT, CRYPTO, TIME, SMTP, EXISTS,
 ];
 
+pub const OR_BUILT_IN: &str = "Or";
+
+pub const BUILT_IN_WITHOUT_WARNINGS: &[&str] = &[
+    OR_BUILT_IN
+];
+
 pub const FROM_FILE: &str = "FromFile";
 pub const GET_VALUE: &str = "GetValue";
 pub const FIRST: &str = "first";

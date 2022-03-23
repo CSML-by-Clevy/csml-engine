@@ -108,12 +108,9 @@ pub fn memory_to_literal(
             ) {
                 let mut literal = memory_to_literal(value, interval, flow_name)?;
 
-                let mut obj = HashMap::new();
                 for (k, v) in additional_info.iter() {
-                    obj.insert(k.to_owned(), memory_to_literal(v, interval, flow_name)?);
+                    literal.add_info(k, memory_to_literal(v, interval, flow_name)?);
                 }
-
-                literal.add_info(obj);
 
                 Ok(literal)
             } else {

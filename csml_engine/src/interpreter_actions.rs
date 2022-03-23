@@ -94,8 +94,6 @@ pub fn interpret_step(
                     LogLvl::Debug
                 );
 
-                dbg!(&msg);
-
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }

@@ -58,6 +58,7 @@ pub fn match_builtin(
         HEX => hex(args, &data.context.flow, interval),
         FN | APP => api(args, interval, data, msg_data, sender),
         ONE_OF => one_of(args, &data.context.flow, interval),
+        OR_BUILT_IN => or(args, &data.context.flow, interval),
         SHUFFLE => shuffle(args, &data.context.flow, interval),
         LENGTH => length(args, &data.context.flow, interval),
         FIND => find(args, &data.context.flow, interval),
