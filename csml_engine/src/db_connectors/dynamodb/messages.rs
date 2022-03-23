@@ -120,7 +120,7 @@ fn query_messages(
     .collect();
 
     let key_condition_expression = if from_date.is_some() {
-        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix) and #createdDateTime BETWEEN :fromDateTime AND :toDateTime".to_owned()
+        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix) and #created_at BETWEEN :fromDateTime AND :toDateTime".to_owned()
     } else {
         "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned()
     };
@@ -205,7 +205,7 @@ pub fn get_client_messages(
     .collect();
 
     if from_date.is_some() {
-        expr_attr_names.insert("#createdDateTime".to_string(), "createdDateTime".to_string());
+        expr_attr_names.insert("#created_at".to_string(), "created_at".to_string());
     }
 
     let data = query_messages(
