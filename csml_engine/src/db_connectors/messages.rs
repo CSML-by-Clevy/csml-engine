@@ -98,6 +98,8 @@ pub fn get_client_messages(
     db: &mut Database,
     limit: Option<i64>,
     pagination_key: Option<String>,
+    from_date: Option<i64>,
+    to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     csml_logger(
         CsmlLog::new(
@@ -128,6 +130,8 @@ pub fn get_client_messages(
             db,
             limit,
             pagination_key,
+            from_date,
+            to_date,
         );
     }
 
@@ -141,6 +145,8 @@ pub fn get_client_messages(
             db,
             limit,
             pagination_key,
+            from_date,
+            to_date,
         );
     }
 
@@ -153,6 +159,8 @@ pub fn get_client_messages(
             db,
             limit,
             pagination_key,
+            from_date,
+            to_date,
         );
     }
 
@@ -161,69 +169,6 @@ pub fn get_client_messages(
         let db = sqlite_connector::get_db(db)?;
 
         return sqlite_connector::messages::get_client_messages(
-            client,
-            db,
-            limit,
-            pagination_key,
-        );
-    }
-
-    Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
-}
-
-
-pub fn get_client_messages_between_dates(
-    client: &Client,
-    db: &mut Database,
-    limit: Option<i64>,
-    pagination_key: Option<String>,
-    from_date: i64,
-    to_date: Option<i64>,
-) -> Result<serde_json::Value, EngineError> {
-    csml_logger(
-        CsmlLog::new(
-            Some(client),
-            None,
-            None,
-            format!("db call get between dates {}, {:?}", from_date, to_date)
-        ),
-        LogLvl::Info
-    );
-
-    #[cfg(feature = "mongo")]
-    if is_mongodb() {
-        let db = mongodb_connector::get_db(db)?;
-        let pagination_key = mongodb_connector::get_pagination_key(pagination_key)?;
-
-        return mongodb_connector::messages::get_messages_between_dates(
-            client,
-            db,
-            limit,
-            pagination_key,
-            from_date,
-            to_date,
-        );
-    }
-
-    #[cfg(feature = "postgresql")]
-    if is_postgresql() {
-        let db = postgresql_connector::get_db(db)?;
-
-        return postgresql_connector::messages::get_messages_between_dates(
-            client,
-            db,
-            limit,
-            pagination_key,
-            from_date,
-            to_date,
-        );
-    }
-
-    #[cfg(feature = "sqlite")]
-    if is_sqlite() {
-        let db = sqlite_connector::get_db(db)?;
-
-        return sqlite_connector::messages::get_messages_between_dates(
             client,
             db,
             limit,

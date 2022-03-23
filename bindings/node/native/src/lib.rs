@@ -606,6 +606,12 @@ pub struct LimitPaginationQueryParams {
   pagination_key: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct BetweenDatesQueryParams {
+    from_date: Option<i64>,
+    to_date: Option<i64>,
+}
+
 fn get_client_messages(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
@@ -613,7 +619,17 @@ fn get_client_messages(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsparams = cx.argument::<JsValue>(1)?;
     let params: LimitPaginationQueryParams = neon_serde::from_value(&mut cx, jsparams)?;
 
-    match csml_engine::get_client_messages(&client, params.limit, params.pagination_key) {
+    let jsparams = cx.argument::<JsValue>(2)?;
+    let between_dates: BetweenDatesQueryParams = neon_serde::from_value(&mut cx, jsparams)?;
+
+
+    match csml_engine::get_client_messages(
+        &client,
+        params.limit,
+        params.pagination_key,
+        between_dates.from_date,
+        between_dates.to_date
+    ) {
         Ok(value) => {
             Ok(neon_serde::to_value(&mut cx, &value)?)
         },

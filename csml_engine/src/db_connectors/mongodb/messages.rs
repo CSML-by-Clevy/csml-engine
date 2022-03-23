@@ -100,77 +100,7 @@ pub fn get_client_messages(
     db: &MongoDbClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
-) -> Result<serde_json::Value, EngineError> {
-    let collection = db.client.collection::<Document>("message");
-
-    let limit = match limit {
-        Some(limit) => std::cmp::min(limit + 1 , 26),
-        None => 26,
-    };
-
-    let filter = match pagination_key {
-        Some(key) => {
-            doc! {
-                "client": bson::to_bson(&client)?,
-                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() }
-            }
-        }
-        None => doc! {
-            "client": bson::to_bson(&client)?,
-        },
-    };
-
-    let find_options = mongodb::options::FindOptions::builder()
-        .sort(doc! { "$natural": -1 })
-        .batch_size(30)
-        .limit(limit)
-        .build();
-    let cursor = collection.find(filter, find_options)?;
-
-    let mut messages = vec![];
-    for doc in cursor {
-        match doc {
-            Ok(msg) => {
-                let message = format_message_struct(msg)?;
-
-                let json = serde_json::json!({
-                    "client": message.client,
-                    "conversation_id": message.conversation_id,
-                    "flow_id": message.flow_id,
-                    "step_id": message.step_id,
-                    "direction": message.direction,
-                    "payload": message.payload,
-                    "created_at": message.created_at,
-                });
-
-                messages.push(json);
-            }
-            Err(_) => (),
-        };
-    }
-
-    match messages.len() == limit as usize {
-        true => {
-            messages.pop();
-            match messages.last() {
-                Some(last) => {
-                    let pagination_key = base64::encode(last["version_id"].clone().to_string());
-
-                    Ok(serde_json::json!({"messages": messages, "pagination_key": pagination_key}))
-                }
-                None => Ok(serde_json::json!({ "messages": messages })),
-            }
-        }
-        false => Ok(serde_json::json!({ "messages": messages })),
-    }
-}
-
-pub fn get_messages_between_dates(
-    client: &Client,
-    db: &MongoDbClient,
-    limit: Option<i64>,
-    pagination_key: Option<String>,
-    from_date: i64,
+    from_date: Option<i64>,
     to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     let collection = db.client.collection::<Document>("message");
@@ -180,23 +110,40 @@ pub fn get_messages_between_dates(
         None => 26,
     };
 
-    let from_date = bson::DateTime::from_millis(from_date);
-    let to_date = match to_date {
-        Some(to_date) => bson::DateTime::from_millis(to_date),
-        None => bson::DateTime::from_chrono(chrono::Utc::now())
-    };
+    let filter = match (pagination_key, from_date) {
+        (Some(key), Some(from_date)) => {
+            let from_date = bson::DateTime::from_millis(from_date * 1000);
+            let to_date = match to_date {
+                Some(to_date) => bson::DateTime::from_millis(to_date * 1000),
+                None => bson::DateTime::from_chrono(chrono::Utc::now())
+            };
 
-    let filter = match pagination_key {
-        Some(key) => {
             doc! {
                 "client": bson::to_bson(&client)?,
                 "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() },
                 "created_at": {"$gte": from_date, "$lt": to_date}
             }
         }
-        None => doc! {
+        (None, Some(from_date)) => {
+            let from_date = bson::DateTime::from_millis(from_date * 1000);
+            let to_date = match to_date {
+                Some(to_date) => bson::DateTime::from_millis(to_date * 1000),
+                None => bson::DateTime::from_chrono(chrono::Utc::now())
+            };
+
+            doc! {
+                "client": bson::to_bson(&client)?,
+                "created_at": {"$gte": from_date, "$lt": to_date}
+            }
+        }
+        (Some(key), None) => {
+            doc! {
+                "client": bson::to_bson(&client)?,
+                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() },
+            }
+        }
+        (None, None) => doc! {
             "client": bson::to_bson(&client)?,
-            "created_at": {"$gte": from_date, "$lt": to_date}
         },
     };
 
@@ -205,6 +152,7 @@ pub fn get_messages_between_dates(
         .batch_size(30)
         .limit(limit)
         .build();
+
     let cursor = collection.find(filter, find_options)?;
 
     let mut messages = vec![];
@@ -220,7 +168,6 @@ pub fn get_messages_between_dates(
                     "step_id": message.step_id,
                     "direction": message.direction,
                     "payload": message.payload,
-                    "content_type": message.content_type,
                     "created_at": message.created_at,
                 });
 

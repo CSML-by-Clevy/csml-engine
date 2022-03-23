@@ -12,7 +12,7 @@ use routes::{
     conversations::{close_user_conversations, get_open, get_client_conversations},
     memories::{create_client_memory, get_memory, get_memories,
     delete_memories, delete_memory},
-    messages::get_client_messages,
+    messages::{get_client_messages},
     state::get_client_current_state,
     clean_data::delete_expired_data,
     migrations::make_migrations,
@@ -275,7 +275,17 @@ fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Val
                 _ => None
             };
 
-            get_client_messages(client, limit, pagination_key)
+            let from_date = match query_params.get("from_date") {
+                Some(serde_json::Value::Number(from_date)) => from_date.as_i64(),
+                _ => None
+            };
+
+            let to_date = match query_params.get("to_date") {
+                Some(serde_json::Value::Number(to_date)) => to_date.as_i64(),
+                _ => None
+            };
+
+            get_client_messages(client, limit, pagination_key, from_date, to_date)
         }
 
         /*

@@ -337,7 +337,7 @@ impl MenuState {
 
                 DataBase::DynamoDB {
                     dynamodb_region,
-                    dynamodb_table: self.menu[4 + local_host].get_value(),
+                    dynamodb_table: self.menu[3 + local_host].get_value(),
                     s3_region,
                     s3_bucket: self.menu[6 + local_host ].get_value(),
                 }
