@@ -1,0 +1,7 @@
+fn my_fn_() {
+    return 21
+}
+
+fn my_fn_colon():
+    return 42
+
