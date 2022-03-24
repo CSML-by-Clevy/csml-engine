@@ -307,6 +307,8 @@ pub struct CsmlRequest {
     pub callback_url: Option<String>,
     pub payload: serde_json::Value,
     pub metadata: serde_json::Value,
+    pub ttl_duration: Option<serde_json::Value>,
+    pub low_data_mode: Option<serde_json::Value>
 }
 
 pub enum Database {
