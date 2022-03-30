@@ -266,20 +266,13 @@ pub fn http_request(
             error.add_info("body", PrimitiveString::get_literal(error_body, interval));
 
             match response.into_string() {
-                Ok(value) => {
-                    match serde_json::from_str::<serde_json::Value>(&value) {
-                        Ok(value) => Ok(value),
-                        Err(err) => {
-                            csml_logger(
-                                CsmlLog::new(
-                                    None,
-                                    Some(flow_name.to_string()),
-                                    Some(interval.start_line),
-                                    format!("Http response Json parsing failed: {:?}", err)
-                                ),
-                                LogLvl::Error
-                            );
-                            Err(error)
+                Ok(string_value) => {
+                    match serde_json::from_str::<serde_json::Value>(&string_value) {
+                        Ok(json_value) => {
+                            Ok(json_value)
+                        },
+                        Err(_) => {
+                            Ok(serde_json::json!(string_value))
                         }
                     }
                 },

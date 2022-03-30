@@ -6,7 +6,6 @@ use crate::data::{ast::*, ArgsType, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
-    json_to_rust::interpolate,
     variable_handler::{
         exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
         resolve_csml_object::resolve_object, resolve_path,
@@ -29,7 +28,7 @@ fn exec_path_literal(
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
         let path = resolve_path(path, dis_warnings, data, msg_data, sender)?;
-        let (mut new_literal, ..) = exec_path_actions(
+        let (new_literal, ..) = exec_path_actions(
             literal,
             dis_warnings,
             None,
@@ -39,11 +38,6 @@ fn exec_path_literal(
             msg_data,
             sender,
         )?;
-
-        if new_literal.content_type == "string" {
-            let string = serde_json::json!(new_literal.primitive.to_string());
-            new_literal = interpolate(&string, new_literal.interval, data, msg_data, sender)?;
-        }
 
         Ok(new_literal)
     } else {
