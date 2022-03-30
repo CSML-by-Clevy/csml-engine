@@ -7,6 +7,7 @@ pub enum MemoryType {
     Metadata,
     Use,
     Remember,
+    Constant
 }
 
 #[derive(Debug, Clone)]

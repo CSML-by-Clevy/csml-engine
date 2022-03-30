@@ -18,6 +18,7 @@ pub struct PreviousInfo {
 pub struct Data<'a> {
     pub flows: &'a HashMap<String, Flow>,
     pub flow: &'a Flow,
+    pub constants: HashMap<String, Literal>,
     pub default_flow: String,
     pub context: &'a mut Context,
     pub event: &'a Event,
@@ -71,9 +72,12 @@ impl<'a> Data<'a> {
         custom_component: &'a serde_json::Map<String, serde_json::Value>,
         native_component: &'a serde_json::Map<String, serde_json::Value>,
     ) -> Self {
+        let constants = flow.constants.clone();
+
         Self {
             flows,
             flow,
+            constants,
             default_flow,
             context,
             event,

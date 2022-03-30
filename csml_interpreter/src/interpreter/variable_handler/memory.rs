@@ -8,10 +8,12 @@ pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, E
     match (
         data.context.current.get(&name.ident),
         data.step_vars.get(&name.ident),
+        data.flow.constants.contains_key(&name.ident)
     ) {
-        (_, Some(_)) => Ok("use".to_owned()),
-        (Some(_), _) => Ok("remember".to_owned()),
-        (None, None) => Err(gen_error_info(
+        (_, _, true) => Ok("constant".to_owned()),
+        (_, Some(_), _) => Ok("use".to_owned()),
+        (Some(_), _, _) => Ok("remember".to_owned()),
+        (None, None, false) => Err(gen_error_info(
             Position::new(name.interval, &data.context.flow),
             format!("< {} > {}", name.ident, ERROR_FIND_MEMORY),
         )),

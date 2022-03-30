@@ -130,11 +130,6 @@ pub fn parse_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    // let (s, init) = parse_and_condition(s)?;
-    // fold_many0(parse_or, || { init }, |acc, value: Expr| {
-    //     Expr::InfixExpr(Infix::Or, Box::new(acc), Box::new(value))
-    // })(s)
-
     let (s, value) = parse_and_condition(s)?;
 
     let (s, mut v) = many0(

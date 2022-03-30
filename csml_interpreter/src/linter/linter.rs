@@ -270,6 +270,11 @@ pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
                 ));
             }
 
+            InstructionScope::Constant(_) => {
+                // add constant variable in linter info
+                    // check for duplication
+                    //  - ??
+            }
             InstructionScope::DuplicateInstruction(interval, info) => {
                 linter_info.errors.push(gen_error_info(
                     Position::new(interval.to_owned(), linter_info.flow_name,),

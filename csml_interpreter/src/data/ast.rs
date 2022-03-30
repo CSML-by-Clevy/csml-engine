@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 pub struct Flow {
     pub flow_instructions: HashMap<InstructionScope, Expr>,
     pub flow_type: FlowType,
+    pub constants: HashMap<String, Literal>,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -47,6 +48,7 @@ pub enum InstructionScope {
     StepScope(String),
     FunctionScope { name: String, args: Vec<String> },
     ImportScope(ImportScope),
+    Constant(String),
 
     // this Variant is use to store all duplicated instruction during parsing
     // and use by the linter to display them all as errors
@@ -59,6 +61,7 @@ impl Hash for InstructionScope {
             InstructionScope::StepScope(name) => name.hash(state),
             InstructionScope::FunctionScope { name, .. } => name.hash(state),
             InstructionScope::ImportScope(import_scope) => import_scope.hash(state),
+            InstructionScope::Constant(name) => name.hash(state),
             InstructionScope::DuplicateInstruction(interval, ..) => interval.hash(state),
         }
     }
@@ -79,9 +82,14 @@ impl PartialEq for InstructionScope {
                 InstructionScope::ImportScope(import_scope2),
             ) => import_scope1 == import_scope2,
             (
+                InstructionScope::Constant(name1),
+                InstructionScope::Constant(name2),
+            ) => name1 == name2,
+            (
                 InstructionScope::DuplicateInstruction(interval1, ..),
                 InstructionScope::DuplicateInstruction(interval2, ..),
             ) => interval1 == interval2,
+            
             _ => false,
         }
     }
@@ -92,14 +100,15 @@ impl Eq for InstructionScope {}
 impl Display for InstructionScope {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            InstructionScope::StepScope(ref idents, ..) => write!(f, "{}", idents),
-            InstructionScope::FunctionScope { name, .. } => write!(f, "{}", name),
+            InstructionScope::StepScope(ref idents, ..) => write!(f, "step {}", idents),
+            InstructionScope::FunctionScope { name, .. } => write!(f, "function {}", name),
             InstructionScope::ImportScope(ImportScope {
                 name,
                 original_name: _,
                 from_flow,
                 ..
             }) => write!(f, "import {} from {:?} ", name, from_flow),
+            InstructionScope::Constant(name) => write!(f, "constant {}", name),
             InstructionScope::DuplicateInstruction(index, ..) => {
                 write!(f, "duplicate instruction at line {}", index.start_line)
             }
@@ -112,6 +121,7 @@ impl InstructionScope {
         match self {
             InstructionScope::StepScope(name, ..) => format!("step {}", name),
             InstructionScope::FunctionScope { name, .. } => format!("function {}", name),
+            InstructionScope::Constant(name) => format!("constant {}", name),
             InstructionScope::ImportScope(ImportScope { name, .. }) => format!("import {}", name),
             InstructionScope::DuplicateInstruction(_, info) => format!("duplicate {}", info),
         }
