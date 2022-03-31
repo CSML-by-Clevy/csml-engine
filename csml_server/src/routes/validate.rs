@@ -34,6 +34,7 @@ pub async fn handler(body: web::Json<CsmlBot>) -> HttpResponse {
 
     CsmlResult {
       flows: _,
+      extern_flows: _,
       warnings: _,
       errors: None,
     } => {
@@ -42,6 +43,7 @@ pub async fn handler(body: web::Json<CsmlBot>) -> HttpResponse {
 
     CsmlResult {
       flows: _,
+      extern_flows: _,
       warnings: _,
       errors: Some(errors),
     } => {

@@ -11,6 +11,7 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub struct CsmlResult {
     pub flows: Option<HashMap<String, Flow>>,
+    pub extern_flows: Option<HashMap<String, Flow>>,
     pub warnings: Option<Vec<Warnings>>,
     pub errors: Option<Vec<ErrorInfo>>,
 }
@@ -22,11 +23,17 @@ pub struct CsmlResult {
 impl CsmlResult {
     pub fn new(
         flows: HashMap<String, Flow>,
+        extern_flows: HashMap<String, Flow>,
         warnings: Vec<Warnings>,
         errors: Vec<ErrorInfo>,
     ) -> Self {
         let flows = match flows.is_empty() {
             false => Some(flows),
+            true => None,
+        };
+
+        let extern_flows = match extern_flows.is_empty() {
+            false => Some(extern_flows),
             true => None,
         };
 
@@ -42,6 +49,7 @@ impl CsmlResult {
 
         Self {
             flows,
+            extern_flows,
             warnings,
             errors,
         }

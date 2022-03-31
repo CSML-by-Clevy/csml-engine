@@ -193,6 +193,7 @@ pub unsafe extern "C" fn ValidateBot(
     match csml_engine::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
         CsmlResult {
             flows: _,
+            extern_flows: _,
             warnings,
             errors: None,
         } => {
@@ -210,6 +211,7 @@ pub unsafe extern "C" fn ValidateBot(
         }
         CsmlResult {
             flows: _,
+            extern_flows: _,
             warnings,
             errors: Some(errors),
         } => {

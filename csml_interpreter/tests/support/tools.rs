@@ -1,4 +1,4 @@
-use csml_interpreter::data::csml_bot::CsmlBot;
+use csml_interpreter::data::csml_bot::{CsmlBot};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::message_data::MessageData;
@@ -37,6 +37,7 @@ pub fn format_message(event: Event, context: Context, filepath: &str) -> Message
         Some(native_component),
         None,
         "flow",
+        None,
         None,
         None,
         None,

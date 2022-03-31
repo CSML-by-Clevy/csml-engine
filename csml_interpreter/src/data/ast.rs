@@ -20,17 +20,25 @@ pub enum FlowType {
     Normal,
 }
 
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
+pub enum FromFlow {
+    Normal(String),
+    Extern(String),
+    None,
+}
+
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportScope {
     pub name: String,
     pub original_name: Option<String>,
-    pub from_flow: Option<String>,
+    pub from_flow: FromFlow,
     pub interval: Interval,
 }
 
 impl Hash for ImportScope {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.name.hash(state);
+        self.name.hash(state)
     }
 }
 
@@ -75,8 +83,8 @@ impl PartialEq for InstructionScope {
                 InstructionScope::FunctionScope { name: name2, .. },
             ) => name1 == name2,
             (
-                InstructionScope::ImportScope(import_scope1),
-                InstructionScope::ImportScope(import_scope2),
+                InstructionScope::ImportScope(ImportScope{name: import_scope1, ..}),
+                InstructionScope::ImportScope(ImportScope{name: import_scope2, ..}),
             ) => import_scope1 == import_scope2,
             (
                 InstructionScope::DuplicateInstruction(interval1, ..),

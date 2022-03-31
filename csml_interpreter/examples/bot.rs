@@ -1,4 +1,4 @@
-use csml_interpreter::data::csml_bot::CsmlBot;
+use csml_interpreter::data::csml_bot::{CsmlBot};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::Context;
@@ -92,6 +92,7 @@ fn main() {
         Some(native_components),
         Some(serde_json::json!(custom_components)),
         DEFAULT_FLOW_NAME,
+        None,
         None,
         None,
         None,
