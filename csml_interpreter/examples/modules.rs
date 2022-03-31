@@ -34,14 +34,14 @@ fn main() {
         None,
         None,
         None,
-        Modules {
+        Some(Modules {
             modules: vec![ModuleData{
                 name: "module".to_string(),
                 url: Some("https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml".to_string()),
                 version: "latest".to_string()
             }],
             flows: vec![]
-        }
+        })
     );
 
     // Create an Event

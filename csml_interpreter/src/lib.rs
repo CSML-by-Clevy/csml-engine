@@ -148,17 +148,19 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
         }
     }
 
-    for flow in bot.modules.flows.iter() {
-        match parse_flow(&flow.content, &flow.name) {
-            Ok(ast_flow) => {
-                modules.push(FlowToValidate {
-                    flow_name: flow.name.to_owned(),
-                    ast: ast_flow,
-                    raw_flow: &flow.content,
-                });
-            }
-            Err(error) => {
-                errors.push(error);
+    if let Some(ref mods) = bot.modules {
+        for flow in mods.flows.iter() {
+            match parse_flow(&flow.content, &flow.name) {
+                Ok(ast_flow) => {
+                    modules.push(FlowToValidate {
+                        flow_name: flow.name.to_owned(),
+                        ast: ast_flow,
+                        raw_flow: &flow.content,
+                    });
+                }
+                Err(error) => {
+                    errors.push(error);
+                }
             }
         }
     }
@@ -209,17 +211,19 @@ pub fn fold_bot(bot: &CsmlBot) -> String {
         }
     }
 
-    for flow in bot.modules.flows.iter() {
-        match parse_flow(&flow.content, &flow.name) {
-            Ok(ast_flow) => {
-                modules.push(FlowToValidate {
-                    flow_name: flow.name.to_owned(),
-                    ast: ast_flow,
-                    raw_flow: &flow.content,
-                });
-            }
-            Err(error) => {
-                errors.push(error);
+    if let Some(ref mods) = bot.modules {
+        for flow in mods.flows.iter() {
+            match parse_flow(&flow.content, &flow.name) {
+                Ok(ast_flow) => {
+                    modules.push(FlowToValidate {
+                        flow_name: flow.name.to_owned(),
+                        ast: ast_flow,
+                        raw_flow: &flow.content,
+                    });
+                }
+                Err(error) => {
+                    errors.push(error);
+                }
             }
         }
     }
@@ -264,33 +268,36 @@ fn get_flows(bot: &CsmlBot) -> (HashMap<String, Flow>, HashMap<String, Flow>) {
 pub fn search_for_modules(bot: &mut CsmlBot) {
     let mut downloaded_modules = vec!();
 
-    for module in bot.modules.modules.iter() {
-        if let None = bot.modules.flows.iter().find(|&flow| flow.name == module.name) {
-            let url = match &module.url{
-                Some(url) => url,
-                None => panic!("no url"),
-            };
+    if let Some(ref mut mods) = bot.modules {
 
-            let request = ureq::get(url);
+        for module in mods.modules.iter() {
+            if let None = mods.flows.iter().find(|&flow| flow.name == module.name) {
+                let url = match &module.url{
+                    Some(url) => url,
+                    None => panic!("no url"),
+                };
 
-            match request.call() {
-                Ok(response) => {
-                    let flow_content = response.into_string().unwrap();
-                    downloaded_modules.push(CsmlFlow {
-                        id: module.name.clone(),
-                        name: module.name.clone(),
-                        content: flow_content,
-                        commands: vec![],
-                    });
-                }
-                Err(error) => {
-                    panic!("{:?}", error)
+                let request = ureq::get(url);
+
+                match request.call() {
+                    Ok(response) => {
+                        let flow_content = response.into_string().unwrap();
+                        downloaded_modules.push(CsmlFlow {
+                            id: module.name.clone(),
+                            name: module.name.clone(),
+                            content: flow_content,
+                            commands: vec![],
+                        });
+                    }
+                    Err(error) => {
+                        panic!("{:?}", error)
+                    }
                 }
             }
         }
-    }
 
-    bot.modules.flows.append(&mut downloaded_modules);
+        mods.flows.append(&mut downloaded_modules);
+    }
 }
 
 pub fn interpret(

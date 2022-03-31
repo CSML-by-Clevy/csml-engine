@@ -1,6 +1,6 @@
 use csml_engine::{fold_bot};
 use csml_interpreter::{
-    data::{csml_bot::{CsmlBot, Modules}, csml_flow::CsmlFlow},
+    data::{csml_bot::{CsmlBot}, csml_flow::CsmlFlow},
     load_components,
 };
 use std::fs::File;
@@ -40,7 +40,7 @@ fn init_bot() -> CsmlBot {
         bot_ast: None,
         no_interruption_delay: None,
         env: None,
-        modules: Modules::default()
+        modules: None,
     }
 }
 

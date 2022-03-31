@@ -1,7 +1,7 @@
 mod support;
 
 use csml_interpreter::data::context::Context;
-use csml_interpreter::data::csml_bot::{CsmlBot, Modules};
+use csml_interpreter::data::csml_bot::{CsmlBot};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::MessageData;
@@ -44,7 +44,7 @@ fn format_message(
         None,
         None,
         None,
-        Modules::default()
+        None,
     );
 
     interpret(bot, context, event, None)

@@ -121,7 +121,7 @@ pub struct SerializeCsmlBot {
     pub default_flow: String,
     pub no_interruption_delay: Option<i32>,
     pub env: Option<String>,
-    pub modules: Modules
+    pub modules: Option<Modules>
 }
 
 /**
@@ -152,7 +152,7 @@ impl CsmlBotBincode {
             default_flow: self.default_flow,
             no_interruption_delay: None,
             env: None,
-            modules: Modules::default(),
+            modules: None,
         }
     }
 }
@@ -300,7 +300,7 @@ impl DynamoBot {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,
             },
-            modules
+            modules: Some(modules)
         }
     }
 }
