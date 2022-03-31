@@ -9,11 +9,11 @@ use crate::data::primitive::{
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    multi::{many0, many1},
     character::complete::{char, one_of},
-    combinator::{ opt, recognize},
-    error::{ParseError, ContextError},
-    sequence::{preceded, tuple, terminated},
+    combinator::{opt, recognize},
+    error::{ContextError, ParseError},
+    multi::{many0, many1},
+    sequence::{preceded, terminated, tuple},
     IResult,
 };
 
@@ -25,23 +25,14 @@ fn signed_digits<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    recognize(
-    tuple((
-        opt(one_of("+-")),
-        decimal
-    ))
-    )(s)
+    recognize(tuple((opt(one_of("+-")), decimal)))(s)
 }
 
 fn decimal<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    recognize(
-      many1(
-        terminated(one_of("0123456789"), many0(char('_')))
-      )
-    )(s)
+    recognize(many1(terminated(one_of("0123456789"), many0(char('_')))))(s)
 }
 
 fn parse_integer<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -58,33 +49,22 @@ where
     Ok((s, expression))
 }
 
-fn floating_point<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> 
+fn floating_point<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     alt((
         // Case one: .42
-        recognize(
-          tuple((
-            char('.'),
-            decimal,
-          ))
-        )
-        , // Case two: 42.42
-        recognize(
-          tuple((
+        recognize(tuple((char('.'), decimal))), // Case two: 42.42
+        recognize(tuple((
             opt(one_of("+-")),
             decimal,
-            preceded(
-              char('.'),
-              decimal,
-            )
-          ))
-        )
+            preceded(char('.'), decimal),
+        ))),
     ))(s)
 }
 
-fn parse_float<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E> 
+fn parse_float<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
@@ -172,7 +152,7 @@ where
 {
     // map_res(signed_digits, |s: Span| s.fragment().parse::<i64>())(s)
     let (s, raw_digits) = signed_digits(s)?;
-    let int =  raw_digits.fragment().parse::<i64>().unwrap_or(0);
+    let int = raw_digits.fragment().parse::<i64>().unwrap_or(0);
 
     Ok((s, int))
 }

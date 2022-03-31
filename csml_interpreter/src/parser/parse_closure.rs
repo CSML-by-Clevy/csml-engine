@@ -5,7 +5,7 @@ use crate::parser::{
 use nom::{
     bytes::complete::tag,
     combinator::opt,
-    error::{ParseError, ContextError},
+    error::{ContextError, ParseError},
     multi::separated_list0,
     sequence::{preceded, terminated, tuple},
     IResult,

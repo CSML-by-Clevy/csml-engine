@@ -1,5 +1,4 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::{literal, literal::ContentType};
 use crate::data::position::Position;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::float::PrimitiveFloat;
@@ -9,6 +8,7 @@ use crate::data::primitive::tools::check_division_by_zero_i64;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
+use crate::data::{literal, literal::ContentType};
 use crate::error_format::*;
 use phf::phf_map;
 use serde::{Deserialize, Serialize};
@@ -156,7 +156,7 @@ impl PrimitiveInt {
             Some(map) if map.contains_key("error") => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
-            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 

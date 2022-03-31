@@ -4,8 +4,11 @@ use crate::interpreter::variable_handler::interval::interval_from_expr;
 use crate::parser::parse_comments::comment;
 
 use nom::{
-    bytes::complete::take_while1, error::{ParseError, ContextError}, multi::fold_many0, sequence::preceded, Err,
-    IResult, InputTake,
+    bytes::complete::take_while1,
+    error::{ContextError, ParseError},
+    multi::fold_many0,
+    sequence::preceded,
+    Err, IResult, InputTake,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

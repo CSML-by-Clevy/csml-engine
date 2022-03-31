@@ -1,9 +1,9 @@
 use crate::data::Client;
 
-use log::{error, warn, info, debug, trace};
+use log::{debug, error, info, trace, warn};
 use std::io::Write;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum LogLvl {
@@ -11,7 +11,7 @@ pub enum LogLvl {
     Warn,
     Info,
     Debug,
-    Trace
+    Trace,
 }
 
 pub struct CsmlLog {
@@ -55,25 +55,25 @@ impl CsmlLog {
         client: Option<&Client>,
         flow: Option<String>,
         line: Option<u32>,
-        message: String
+        message: String,
     ) -> Self {
         let (bot_id, user_id, channel_id) = match client {
             Some(client) => (
                 Some(client.bot_id.to_string()),
                 Some(client.user_id.to_string()),
-                Some(client.channel_id.to_string())
+                Some(client.channel_id.to_string()),
             ),
-            None => (None, None, None)
+            None => (None, None, None),
         };
 
         let flow = match flow {
             Some(flow) => Some(flow),
-            None => None
+            None => None,
         };
 
         let line = match line {
             Some(line) => Some(line),
-            None => None
+            None => None,
         };
 
         Self {
@@ -88,37 +88,33 @@ impl CsmlLog {
 }
 
 pub fn init_logger() {
-    let env = env_logger::Env::default()
-    .filter_or("CSML_LOG_LEVEL", "error");
+    let env = env_logger::Env::default().filter_or("CSML_LOG_LEVEL", "error");
 
     let _ = env_logger::Builder::from_env(env)
-    .filter_module("async_std", log::LevelFilter::Error)
-    .filter_module("async_io", log::LevelFilter::Error)
-    .filter_module("polling", log::LevelFilter::Error)
-    .filter_module("os_info", log::LevelFilter::Error)
-    .filter_module("ureq", log::LevelFilter::Error)
-    .format(|buf, record| {
-        let style = buf.default_level_style(record.level());
+        .filter_module("async_std", log::LevelFilter::Error)
+        .filter_module("async_io", log::LevelFilter::Error)
+        .filter_module("polling", log::LevelFilter::Error)
+        .filter_module("os_info", log::LevelFilter::Error)
+        .filter_module("ureq", log::LevelFilter::Error)
+        .format(|buf, record| {
+            let style = buf.default_level_style(record.level());
 
-        let timestamp = buf.timestamp_millis();
-        let path = record.target();
+            let timestamp = buf.timestamp_millis();
+            let path = record.target();
 
-        writeln!(
-            buf,
-            "{} {} {} {}",
-            style.value(record.level()),
-            timestamp,
-            path,
-            record.args()
-        )
-    })
-    .try_init();
+            writeln!(
+                buf,
+                "{} {} {} {}",
+                style.value(record.level()),
+                timestamp,
+                path,
+                record.args()
+            )
+        })
+        .try_init();
 }
 
-pub fn csml_logger(
-    log_message: CsmlLog,
-    log_lvl: LogLvl
-) {
+pub fn csml_logger(log_message: CsmlLog, log_lvl: LogLvl) {
     match log_lvl {
         LogLvl::Error => error!("{:?}", log_message),
         LogLvl::Warn => warn!("{:?}", log_message),

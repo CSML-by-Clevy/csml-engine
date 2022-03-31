@@ -1,4 +1,4 @@
-use nom::error::{ErrorKind, ParseError, ContextError, FromExternalError};
+use nom::error::{ContextError, ErrorKind, FromExternalError, ParseError};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CustomError<I> {
@@ -27,7 +27,6 @@ impl<I: std::fmt::Display> ParseError<I> for CustomError<I> {
 }
 
 impl<I: std::fmt::Display> ContextError<I> for CustomError<I> {
-
     fn add_context(input: I, ctx: &'static str, mut other: Self) -> Self {
         match other.error {
             error if "" == error => {
@@ -49,4 +48,4 @@ impl<I, E> FromExternalError<I, E> for CustomError<I> {
             error: "".to_owned(),
         }
     }
-  }
+}

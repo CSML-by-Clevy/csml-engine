@@ -93,7 +93,6 @@ fn ok_object_step5() {
     }
 }
 
-
 #[test]
 fn ok_object_step6() {
     let data = r#"{"messages":[ {"content":{"text":"3"},"content_type":"text"} ],"memories":[]}"#;

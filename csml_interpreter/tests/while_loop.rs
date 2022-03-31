@@ -11,8 +11,7 @@ use serde_json::Value;
 
 #[test]
 fn ok_while_loop() {
-    let data =
-        r#"
+    let data = r#"
             {
                 "messages":[ 
                     {"content":{ "text": "0"  },"content_type":"text"},

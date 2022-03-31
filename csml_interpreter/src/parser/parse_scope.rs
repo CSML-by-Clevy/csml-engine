@@ -3,12 +3,16 @@ use crate::parser::parse_braces::parse_r_brace;
 use crate::parser::{
     parse_actions::parse_root_functions,
     parse_comments::comment,
-    tools::{get_interval, parse_error},
     state_context::count_commands,
+    tools::{get_interval, parse_error},
 };
 use nom::{
-    bytes::complete::tag, error::{ParseError, ContextError}, multi::fold_many0, sequence::delimited,
-    sequence::preceded, *,
+    bytes::complete::tag,
+    error::{ContextError, ParseError},
+    multi::fold_many0,
+    sequence::delimited,
+    sequence::preceded,
+    *,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,10 +29,7 @@ where
         |mut acc: Block, mut command| {
             let mut index = acc.commands_count;
 
-            let mut instruction_info = InstructionInfo {
-                index,
-                total: 0,
-            };
+            let mut instruction_info = InstructionInfo { index, total: 0 };
 
             count_commands(&mut command, &mut index, &mut instruction_info);
 
@@ -48,10 +49,7 @@ where
     let mut acc = Block::default();
     let (s, item) = parse_root_functions(s)?;
 
-    let instruction_info = InstructionInfo {
-        index: 0,
-        total: 0,
-    };
+    let instruction_info = InstructionInfo { index: 0, total: 0 };
 
     acc.commands.push((item, instruction_info));
     Ok((s, acc))

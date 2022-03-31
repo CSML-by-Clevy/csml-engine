@@ -1,6 +1,10 @@
 use crate::data::tokens::*;
 use crate::error_format::{gen_nom_failure, ERROR_LEFT_BRACE, ERROR_RIGHT_BRACE};
-use nom::{bytes::complete::tag, error::{ParseError, ContextError}, *};
+use nom::{
+    bytes::complete::tag,
+    error::{ContextError, ParseError},
+    *,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS

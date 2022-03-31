@@ -7,7 +7,13 @@ use crate::parser::{
     tools::get_interval,
     tools::{get_string, get_tag},
 };
-use nom::{combinator::cut, error::{ParseError, ContextError}, sequence::preceded, Err::*, IResult};
+use nom::{
+    combinator::cut,
+    error::{ContextError, ParseError},
+    sequence::preceded,
+    Err::*,
+    IResult,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS

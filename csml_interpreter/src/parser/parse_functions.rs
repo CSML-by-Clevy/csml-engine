@@ -3,15 +3,16 @@ use crate::parser::parse_idents::parse_idents_assignation;
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::*;
 use crate::parser::{
-    parse_braces::parse_r_brace,
-    parse_comments::comment, parse_scope::parse_root,
+    parse_braces::parse_r_brace, parse_comments::comment, parse_scope::parse_root,
     parse_var_types::parse_fn_args, tools::*,
 };
 
-use nom::error::{ParseError, ContextError};
+use nom::error::{ContextError, ParseError};
 use nom::{
-    bytes::complete::tag, sequence::{preceded, delimited},
-    branch::alt, Err, IResult
+    branch::alt,
+    bytes::complete::tag,
+    sequence::{delimited, preceded},
+    Err, IResult,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,9 +38,7 @@ where
     preceded(comment, parse_root)(s)
 }
 
-fn parse_function_scope<'a, E: ParseError<Span<'a>>>(
-    s: Span<'a>,
-) -> IResult<Span<'a>, Block, E>
+fn parse_function_scope<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Block, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {

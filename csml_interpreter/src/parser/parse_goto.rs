@@ -1,9 +1,9 @@
 use crate::data::{ast::*, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_GOTO_STEP};
 use crate::parser::{
-    parse_path::parse_path, parse_var_types::parse_idents_expr_usage,
     get_interval, parse_comments::comment, parse_idents::parse_string_assignation,
-    tools::get_string, tools::get_tag, GotoType, GotoValueType,
+    parse_path::parse_path, parse_var_types::parse_idents_expr_usage, tools::get_string,
+    tools::get_tag, GotoType, GotoValueType,
 };
 
 use nom::{branch::alt, bytes::complete::tag, combinator::opt, error::*, sequence::preceded, *};
@@ -97,8 +97,5 @@ where
 
     let (s, goto_type) = alt((get_step, get_flow, get_step_at_flow))(s)?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Goto(goto_type, interval)),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Goto(goto_type, interval))))
 }

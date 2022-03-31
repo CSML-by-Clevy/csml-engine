@@ -10,12 +10,11 @@ pub use json_to_rust::{json_to_literal, memory_to_literal};
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::{
-    ast::*, Data, Hold, IndexInfo, Literal,
-    MessageData, MSG, warnings::DisplayWarnings,
+    ast::*, warnings::DisplayWarnings, Data, Hold, IndexInfo, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::{
-    ast_interpreter::{for_loop, while_loop, match_actions, solve_if_statement},
+    ast_interpreter::{for_loop, match_actions, solve_if_statement, while_loop},
     variable_handler::{expr_to_literal, interval::interval_from_expr},
 };
 use crate::parser::ExitCondition;
@@ -67,7 +66,14 @@ pub fn interpret_scope(
 
         match action {
             Expr::ObjectExpr(ObjectType::Return(var)) => {
-                let lit = expr_to_literal(var, &DisplayWarnings::On, None, data, &mut message_data, &None)?;
+                let lit = expr_to_literal(
+                    var,
+                    &DisplayWarnings::On,
+                    None,
+                    data,
+                    &mut message_data,
+                    &None,
+                )?;
                 message_data.exit_condition = Some(ExitCondition::Return(lit));
 
                 return Ok(message_data);
@@ -128,14 +134,7 @@ pub fn interpret_scope(
                 )?
             }
             Expr::WhileExpr(expr, block, range) => {
-                message_data = while_loop(
-                    expr,
-                    block,
-                    range,
-                    message_data,
-                    data,
-                    &sender,
-                )?
+                message_data = while_loop(expr, block, range, message_data, data, &sender)?
             }
             e => {
                 return Err(gen_error_info(

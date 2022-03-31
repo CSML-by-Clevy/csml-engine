@@ -1,10 +1,7 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
-use crate::data::primitive::{
-    PrimitiveObject, PrimitiveString,
-    PrimitiveInt, PrimitiveType
-};
-use crate::data::{csml_logs::*, ast::Interval, ArgsType, Literal };
+use crate::data::primitive::{PrimitiveInt, PrimitiveObject, PrimitiveString, PrimitiveType};
+use crate::data::{ast::Interval, csml_logs::*, ArgsType, Literal};
 use crate::error_format::*;
 use std::collections::HashMap;
 use std::env;
@@ -13,8 +10,8 @@ use std::sync::Arc;
 use ureq::{Request, Response};
 
 use rustls::{
+    client::{ServerCertVerified, ServerCertVerifier, ServerName},
     Certificate,
-    client::{ServerCertVerified, ServerName, ServerCertVerifier}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,12 +28,11 @@ impl ServerCertVerifier for NoVerifier {
         _server_name: &ServerName,
         _scts: &mut dyn Iterator<Item = &[u8]>,
         _ocsp_response: &[u8],
-        _now: std::time::SystemTime
+        _now: std::time::SystemTime,
     ) -> Result<ServerCertVerified, rustls::Error> {
         Ok(ServerCertVerified::assertion())
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PRIVATE FUNCTIONS
@@ -50,7 +46,12 @@ fn get_value<'lifetime, T: 'static>(
     error: &'static str,
 ) -> Result<&'lifetime T, ErrorInfo> {
     if let Some(literal) = object.get(key) {
-        Literal::get_value::<T>(&literal.primitive, flow_name, interval, format!("'{}' {}", key, error))
+        Literal::get_value::<T>(
+            &literal.primitive,
+            flow_name,
+            interval,
+            format!("'{}' {}", key, error),
+        )
     } else {
         Err(gen_error_info(
             Position::new(interval, flow_name),
@@ -64,35 +65,34 @@ fn set_http_error_info(
     error_message: String,
     flow_name: &str,
     interval: Interval,
-) ->  ErrorInfo {
-    let mut error = gen_error_info(
-        Position::new(interval, flow_name),
-        error_message,
-    );
+) -> ErrorInfo {
+    let mut error = gen_error_info(Position::new(interval, flow_name), error_message);
 
     let status = PrimitiveInt::get_literal(response.status() as i64, interval);
     error.add_info("status", status);
 
-    let headers = response.headers_names()
-    .iter()
+    let headers = response
+        .headers_names()
+        .iter()
         .fold(HashMap::new(), |mut acc, name| {
-        if let Some(header) = response.header(name) {
-            let value = PrimitiveString::get_literal(header, interval);
-            acc.insert(name.to_owned(), value);
-        }
-        acc
-    });
+            if let Some(header) = response.header(name) {
+                let value = PrimitiveString::get_literal(header, interval);
+                acc.insert(name.to_owned(), value);
+            }
+            acc
+        });
 
-    error.add_info("headers", PrimitiveObject::get_literal(&headers , interval));
+    error.add_info("headers", PrimitiveObject::get_literal(&headers, interval));
 
     error
 }
 
 pub fn get_ssl_state(object: &HashMap<String, Literal>) -> bool {
     match object.get("disable_ssl_verify") {
-        Some(val) 
-        if val.primitive.get_type() == PrimitiveType::PrimitiveBoolean => val.primitive.as_bool(),
-        _ => false
+        Some(val) if val.primitive.get_type() == PrimitiveType::PrimitiveBoolean => {
+            val.primitive.as_bool()
+        }
+        _ => false,
     }
 }
 
@@ -100,12 +100,22 @@ pub fn get_ssl_state(object: &HashMap<String, Literal>) -> bool {
 /// PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Interval) -> Result<String, ErrorInfo> {
-    let url = &mut get_value::<String>("url", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?.to_owned();
+pub fn get_url(
+    object: &HashMap<String, Literal>,
+    flow_name: &str,
+    interval: Interval,
+) -> Result<String, ErrorInfo> {
+    let url = &mut get_value::<String>("url", object, flow_name, interval, ERROR_HTTP_GET_VALUE)?
+        .to_owned();
 
     if object.get("query").is_some() {
-        let query =
-            get_value::<HashMap<String, Literal>>("query", object, flow_name,interval, ERROR_HTTP_GET_VALUE)?;
+        let query = get_value::<HashMap<String, Literal>>(
+            "query",
+            object,
+            flow_name,
+            interval,
+            ERROR_HTTP_GET_VALUE,
+        )?;
 
         let length = query.len();
         if length > 0 {
@@ -113,7 +123,7 @@ pub fn get_url(object: &HashMap<String, Literal>, flow_name: &str, interval: Int
 
             for (index, key) in query.keys().enumerate() {
                 let value = match query.get(key) {
-                    Some(val) => {val.primitive.to_string()},
+                    Some(val) => val.primitive.to_string(),
                     None => {
                         return Err(gen_error_info(
                             Position::new(interval, flow_name),
@@ -140,15 +150,17 @@ fn get_no_certificate_verifier_agent() -> ureq::Agent {
     let root_store = rustls::RootCertStore::empty();
 
     let mut tls_config = rustls::ClientConfig::builder()
-    .with_safe_defaults()
-    .with_root_certificates(root_store)
-    .with_no_client_auth();
+        .with_safe_defaults()
+        .with_root_certificates(root_store)
+        .with_no_client_auth();
 
-    tls_config.dangerous().set_certificate_verifier(Arc::new(NoVerifier));
+    tls_config
+        .dangerous()
+        .set_certificate_verifier(Arc::new(NoVerifier));
 
     ureq::AgentBuilder::new()
-    .tls_config(Arc::new(tls_config))
-    .build()
+        .tls_config(Arc::new(tls_config))
+        .build()
 }
 
 fn get_http_request(
@@ -156,9 +168,8 @@ fn get_http_request(
     url: &str,
     flow_name: &str,
     interval: Interval,
-    is_ssl_disable: bool
+    is_ssl_disable: bool,
 ) -> Result<Request, ErrorInfo> {
-
     if let Ok(disable_ssl_verify) = env::var("DISABLE_SSL_VERIFY") {
         match disable_ssl_verify.parse::<bool>() {
             Ok(low_data) if low_data || is_ssl_disable => {
@@ -167,7 +178,7 @@ fn get_http_request(
                 let request = match method {
                     delete if delete == "delete" => agent.delete(url),
                     put if put == "put" => agent.put(url),
-                    patch if patch == "patch" => agent.request("PATCH",url),
+                    patch if patch == "patch" => agent.request("PATCH", url),
                     post if post == "post" => agent.post(url),
                     get if get == "get" => agent.get(url),
                     _ => {
@@ -178,7 +189,7 @@ fn get_http_request(
                     }
                 };
 
-                return Ok(request)
+                return Ok(request);
             }
             _ => {}
         }
@@ -187,7 +198,7 @@ fn get_http_request(
     let request = match method {
         delete if delete == "delete" => ureq::delete(url),
         put if put == "put" => ureq::put(url),
-        patch if patch == "patch" => ureq::request("PATCH",url),
+        patch if patch == "patch" => ureq::request("PATCH", url),
         post if post == "post" => ureq::post(url),
         get if get == "get" => ureq::get(url),
         _ => {
@@ -211,14 +222,19 @@ pub fn http_request(
     let url = get_url(object, flow_name, interval)?;
     let is_ssl_disable = get_ssl_state(object);
 
-    let header =
-        get_value::<HashMap<String, Literal>>("header", object, flow_name, interval, ERROR_HTTP_GET_VALUE)?;
+    let header = get_value::<HashMap<String, Literal>>(
+        "header",
+        object,
+        flow_name,
+        interval,
+        ERROR_HTTP_GET_VALUE,
+    )?;
 
     let mut request = get_http_request(method, &url, flow_name, interval, is_ssl_disable)?;
 
     for key in header.keys() {
         let value = match header.get(key) {
-            Some(val) => {val.primitive.to_string()},
+            Some(val) => val.primitive.to_string(),
             None => {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
@@ -235,18 +251,18 @@ pub fn http_request(
             None,
             Some(flow_name.to_string()),
             Some(interval.start_line),
-            "Make Http call".to_string()
+            "Make Http call".to_string(),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             None,
             Some(flow_name.to_string()),
             Some(interval.start_line),
-            format!("Make Http call request info: {:?}", request)
+            format!("Make Http call request info: {:?}", request),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     let response = match object.get("body") {
@@ -260,34 +276,31 @@ pub fn http_request(
                 &response,
                 ERROR_FAIL_RESPONSE_JSON.to_owned(),
                 flow_name,
-                interval
+                interval,
             );
-            let error_body = "Invalid Response format, please send a json or a valid UTF-8 sequence";
+            let error_body =
+                "Invalid Response format, please send a json or a valid UTF-8 sequence";
             error.add_info("body", PrimitiveString::get_literal(error_body, interval));
 
             match response.into_string() {
                 Ok(string_value) => {
                     match serde_json::from_str::<serde_json::Value>(&string_value) {
-                        Ok(json_value) => {
-                            Ok(json_value)
-                        },
-                        Err(_) => {
-                            Ok(serde_json::json!(string_value))
-                        }
+                        Ok(json_value) => Ok(json_value),
+                        Err(_) => Ok(serde_json::json!(string_value)),
                     }
-                },
+                }
                 Err(err) => {
                     csml_logger(
                         CsmlLog::new(
                             None,
                             Some(flow_name.to_string()),
                             Some(interval.start_line),
-                            format!("Http response Json parsing failed: {:?}", err)
+                            format!("Http response Json parsing failed: {:?}", err),
                         ),
-                        LogLvl::Error
+                        LogLvl::Error,
                     );
                     Err(error)
-                },
+                }
             }
         }
         Err(err) => {
@@ -299,8 +312,8 @@ pub fn http_request(
                     } else {
                         format!("Apps service: error")
                     }
-                },
-                false => err.to_string()
+                }
+                false => err.to_string(),
             };
 
             csml_logger(
@@ -308,9 +321,9 @@ pub fn http_request(
                     None,
                     Some(flow_name.to_string()),
                     Some(interval.start_line),
-                    format!("Http call failed: {:?}", error_message)
+                    format!("Http call failed: {:?}", error_message),
                 ),
-                LogLvl::Error
+                LogLvl::Error,
             );
 
             if let ureq::Error::Status(_, response) = err {
@@ -319,7 +332,8 @@ pub fn http_request(
                 let body = match response.into_string() {
                     Ok(body) => body,
                     Err(_) => {
-                        "Invalid Response format, please send a json or a valid UTF-8 sequence".to_owned()
+                        "Invalid Response format, please send a json or a valid UTF-8 sequence"
+                            .to_owned()
                     }
                 };
 
@@ -327,7 +341,10 @@ pub fn http_request(
 
                 Err(error)
             } else {
-                Err(gen_error_info(Position::new(interval, flow_name), error_message))
+                Err(gen_error_info(
+                    Position::new(interval, flow_name),
+                    error_message,
+                ))
             }
         }
     }
@@ -361,7 +378,12 @@ pub fn http(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Liter
             let lit_header = PrimitiveObject::get_literal(&header, interval);
             http.insert("header".to_owned(), lit_header);
 
-            args.populate(&mut http, &["url", "header", "query", "body"], flow_name, interval)?;
+            args.populate(
+                &mut http,
+                &["url", "header", "query", "body"],
+                flow_name,
+                interval,
+            )?;
 
             let mut result = PrimitiveObject::get_literal(&http, interval);
 

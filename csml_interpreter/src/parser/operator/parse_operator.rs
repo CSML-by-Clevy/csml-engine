@@ -9,8 +9,8 @@ use crate::parser::parse_comments::comment;
 use crate::parser::parse_var_types::parse_basic_expr;
 use nom::{
     branch::alt,
-    error::{ParseError, ContextError},
-    multi::{many1, many0},
+    error::{ContextError, ParseError},
+    multi::{many0, many1},
     sequence::{preceded, tuple},
     *,
 };
@@ -52,10 +52,7 @@ where
     let (s, vec) = preceded(comment, many1(parse_not_operator))(s)?;
     let (s, expr) = parse_item(s)?;
 
-    Ok((
-        s,
-        Expr::PostfixExpr(vec, Box::new(expr)),
-    ))
+    Ok((s, Expr::PostfixExpr(vec, Box::new(expr))))
 }
 
 fn parse_and_condition<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -68,9 +65,7 @@ where
     // })(s)
     let (s, value) = parse_infix_expr(s)?;
 
-    let (s, mut v) = many0(
-        parse_and
-    )(s)?;
+    let (s, mut v) = many0(parse_and)(s)?;
 
     let value = v.drain(0..).fold(value, |acc, expr| {
         Expr::InfixExpr(Infix::And, Box::new(acc), Box::new(expr))
@@ -85,9 +80,7 @@ where
 {
     let (s, value) = parse_term(s)?;
 
-    let (s, mut v) = many0(
-        tuple((preceded(comment, parse_item_operator), parse_term))
-    )(s)?;
+    let (s, mut v) = many0(tuple((preceded(comment, parse_item_operator), parse_term)))(s)?;
 
     let value = v.drain(0..).fold(value, |acc, (infix, expr)| {
         Expr::InfixExpr(infix, Box::new(acc), Box::new(expr))
@@ -100,12 +93,12 @@ fn parse_term<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-
     let (s, value) = parse_basic_expr(s)?;
 
-    let (s, mut v) = many0(
-        tuple((preceded(comment, parse_term_operator), parse_basic_expr))
-    )(s)?;
+    let (s, mut v) = many0(tuple((
+        preceded(comment, parse_term_operator),
+        parse_basic_expr,
+    )))(s)?;
 
     let value = v.drain(0..).fold(value, |acc, (infix, expr)| {
         Expr::InfixExpr(infix, Box::new(acc), Box::new(expr))
@@ -132,9 +125,7 @@ where
 {
     let (s, value) = parse_and_condition(s)?;
 
-    let (s, mut v) = many0(
-        parse_or
-    )(s)?;
+    let (s, mut v) = many0(parse_or)(s)?;
 
     let value = v.drain(0..).fold(value, |acc, expr| {
         Expr::InfixExpr(Infix::Or, Box::new(acc), Box::new(expr))

@@ -1,13 +1,13 @@
 pub mod data;
 pub mod error_format;
+pub mod fold_bot;
 pub mod interpreter;
 pub mod linter;
-pub mod fold_bot;
 pub mod parser;
 
+pub use data::csml_logs;
 pub use interpreter::components::load_components;
 pub use parser::step_checksum::get_step;
-pub use data::csml_logs;
 
 use interpreter::{interpret_scope, json_to_literal};
 use parser::parse_flow;
@@ -15,16 +15,16 @@ use parser::parse_flow;
 use data::ast::{Expr, Flow, InstructionScope, Interval};
 use data::context::get_hashmap_from_mem;
 use data::error_info::ErrorInfo;
-use data::literal::create_error_info;
 use data::event::Event;
+use data::literal::create_error_info;
 use data::message_data::MessageData;
 use data::msg::MSG;
-use data::{CsmlBot, CsmlFlow};
 use data::CsmlResult;
 use data::{Context, Data, Position, STEP_LIMIT};
+use data::{CsmlBot, CsmlFlow};
 use error_format::*;
-use linter::{linter::lint_bot, FlowToValidate};
 use fold_bot::fold_bot as fold;
+use linter::{linter::lint_bot, FlowToValidate};
 use parser::ExitCondition;
 
 use std::collections::HashMap;
@@ -178,7 +178,12 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
         );
     }
 
-    CsmlResult::new(FlowToValidate::get_flows(flows), FlowToValidate::get_flows(modules), warnings, errors)
+    CsmlResult::new(
+        FlowToValidate::get_flows(flows),
+        FlowToValidate::get_flows(modules),
+        warnings,
+        errors,
+    )
 }
 
 pub fn fold_bot(bot: &CsmlBot) -> String {
@@ -266,13 +271,12 @@ fn get_flows(bot: &CsmlBot) -> (HashMap<String, Flow>, HashMap<String, Flow>) {
 }
 
 pub fn search_for_modules(bot: &mut CsmlBot) {
-    let mut downloaded_modules = vec!();
+    let mut downloaded_modules = vec![];
 
     if let Some(ref mut mods) = bot.modules {
-
         for module in mods.modules.iter() {
             if let None = mods.flows.iter().find(|&flow| flow.name == module.name) {
-                let url = match &module.url{
+                let url = match &module.url {
                     Some(url) => url,
                     None => panic!("no url"),
                 };
@@ -359,7 +363,7 @@ pub fn interpret(
                             interval: Interval::default(),
                         },
                         message: error_message,
-                        additional_info: Some(error_info)
+                        additional_info: Some(error_info),
                     }),
                     &sender,
                 );
