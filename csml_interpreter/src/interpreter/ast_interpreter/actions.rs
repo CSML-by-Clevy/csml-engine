@@ -38,9 +38,14 @@ fn get_var_info<'a>(
             get_var_info(literal, Some(path), data, msg_data, sender)
         }
         Expr::IdentExpr(var) => match search_in_memory_type(var, data) {
-            Ok(_) => get_var_from_mem(var.to_owned(), &DisplayWarnings::On, path, data, msg_data, sender),
+            Ok(_) => {
+                get_var_from_mem(var.to_owned(), &DisplayWarnings::On, path, data, msg_data, sender)
+            },
+            // If variable doesn't exist, create the variable in the flow scope 'use' with NULL as value
+            // this is done in order to prevent stopping errors
             Err(_) => {
                 let lit = PrimitiveNull::get_literal(var.interval.to_owned());
+
                 data.step_vars.insert(var.ident.to_owned(), lit);
                 get_var_from_mem(var.to_owned(), &DisplayWarnings::On, path, data, msg_data, sender)
             }
@@ -147,6 +152,7 @@ pub fn match_actions(
             capture_variables(&mut &mut new_value, memory, &data.context.flow);
 
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
+
             match assign_type {
                 AssignType::AdditionAssignment => {
                     let primitive = lit.primitive.clone() + new_value.primitive;
@@ -184,12 +190,19 @@ pub fn match_actions(
                 }
                 _ => {}
             };
-            
+            //TODO: refacto memory update system
+
+            let (new_value, update) = if let MemoryType::Constant = mem_type {
+                //TODO: send warning constant variables are not updatable
+                (None, false)
+            } else {
+                (Some(new_value), true)
+            };
 
             exec_path_actions(
                 lit,
                 &DisplayWarnings::On,
-                Some(new_value),
+                new_value,
                 &path,
                 &ContentType::get(&lit),
                 &mut new_scope_data,
@@ -201,7 +214,7 @@ pub fn match_actions(
                 lit.to_owned(),
                 name,
                 &mem_type,
-                true,
+                update,
                 data,
                 &mut msg_data,
                 sender,

@@ -97,7 +97,7 @@ fn get_offsets(ast: &Flow) -> (Vec<(String, usize)>, Vec<usize>) {
 
     for (instruction_type, block) in ast.flow_instructions.iter() {
         match instruction_type {
-            InstructionScope::StepScope(name) => {
+            InstructionScope::StepScope(name) | InstructionScope::Constant(name) => {
                 let interval = interval_from_expr(block);
                 offsets.push((name.to_owned(), interval.offset))
             }

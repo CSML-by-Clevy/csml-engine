@@ -48,6 +48,19 @@ fn get_var_from_step_var<'a>(
     }
 }
 
+fn get_var_from_constant<'a>(
+    name: &Identifier,
+    data: &'a mut Data,
+) -> Result<&'a mut Literal, ErrorInfo> {
+    match data.constants.get_mut(&name.ident) {
+        Some(lit) => Ok(lit),
+        None => Err(gen_error_info(
+            Position::new(name.interval, &data.context.flow),
+            format!("< {} > {}", name.ident, ERROR_STEP_MEMORY),
+        )),
+    }
+}
+
 fn loop_path(
     mut lit: &mut Literal,
     dis_warnings: &DisplayWarnings,
@@ -252,7 +265,6 @@ fn loop_path(
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-//TODO: return Warning or Error Component
 pub fn get_literal<'a, 'b>(
     literal: &'a mut Literal,
     index: Option<Literal>,
@@ -379,7 +391,6 @@ pub fn resolve_path(
     Ok(new_path)
 }
 
-//TODO: Add Warning for nonexisting key
 pub fn exec_path_actions(
     lit: &mut Literal,
     dis_warnings: &DisplayWarnings,
@@ -413,7 +424,6 @@ pub fn exec_path_actions(
         Ok((lit.to_owned(), tmp_update_var))
     }
 }
-
 
 fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Literal> {
 
@@ -645,6 +655,7 @@ pub fn get_var(
                         msg_data,
                         sender,
                     );
+
                     let (new_literal, update_mem) = match result {
                         Ok((lit, update)) => (lit, update),
                         Err(err) => (MSG::send_error_msg(&sender, msg_data, Err(err)), false),
@@ -722,6 +733,10 @@ pub fn get_var_from_mem<'a>(
         var if var == "use" => {
             let lit = get_var_from_step_var(&name, data)?;
             Ok((lit, name.ident, MemoryType::Use, path))
+        }
+        var if var == "constant" => {
+            let lit = get_var_from_constant(&name, data)?;
+            Ok((lit, name.ident, MemoryType::Constant, path))
         }
         _ => {
             let lit = search_var_memory(name.clone(), data)?;

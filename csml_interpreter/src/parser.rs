@@ -10,6 +10,7 @@ pub mod parse_functions;
 pub mod parse_goto;
 pub mod parse_idents;
 pub mod parse_if;
+pub mod parse_constant;
 pub mod parse_import;
 pub mod parse_literal;
 pub mod parse_object;
@@ -32,6 +33,7 @@ use crate::error_format::*;
 use crate::interpreter::variable_handler::interval::interval_from_expr;
 use parse_comments::comment;
 use parse_functions::parse_function;
+use parse_constant::{parse_constant, constant_expr_to_lit};
 use parse_import::parse_import;
 use parse_scope::parse_root;
 use tools::*;
@@ -78,32 +80,44 @@ where
 pub fn parse_flow<'a>(slice: &'a str, flow_name: &'a str) -> Result<Flow, ErrorInfo> {
     match start_parsing::<CustomError<Span<'a>>>(Span::new(slice)) {
         Ok((_, (instructions, flow_type))) => {
-            let flow_instructions =
-                instructions
-                    .into_iter()
-                    .fold(HashMap::new(), |mut flow, elem| {
-                        let instruction_interval = interval_from_expr(&elem.actions);
-                        let instruction_info = elem.instruction_type.get_info();
 
-                        if let Some(old_instruction) =
-                            flow.insert(elem.instruction_type, elem.actions)
-                        {
-                            // this is done in order to store all duplicated instruction during parsing
-                            // and use by the linter to display them all as errors
-                            flow.insert(
-                                InstructionScope::DuplicateInstruction(
-                                    instruction_interval,
-                                    instruction_info,
-                                ),
-                                old_instruction,
-                            );
-                        };
-                        flow
-                    });
+            let (mut flow_instructions, mut constants) = (HashMap::new(), HashMap::new());
+
+            for instruction in instructions.into_iter() {
+                if let Instruction {
+                    instruction_type: InstructionScope::Constant(name),
+                    actions: expr,
+                } = instruction {
+                    let lit = constant_expr_to_lit(&expr, flow_name)?;
+
+                    constants.insert(
+                        name,
+                        lit,
+                    );
+                } else {
+                    let instruction_interval = interval_from_expr(&instruction.actions);
+                    let instruction_info = instruction.instruction_type.get_info();
+
+                    if let Some(old_instruction) =
+                        flow_instructions.insert(instruction.instruction_type, instruction.actions)
+                    {
+                        // This is done in order to store all duplicated instruction during parsing
+                        // and use by the linter to display them all as errors
+                        flow_instructions.insert(
+                            InstructionScope::DuplicateInstruction(
+                                instruction_interval,
+                                instruction_info,
+                            ),
+                            old_instruction,
+                        );
+                    };
+                }
+            }
 
             Ok(Flow {
                 flow_instructions,
                 flow_type,
+                constants,
             })
         }
         Err(e) => match e {
@@ -167,7 +181,7 @@ where
     let flow_type = FlowType::Normal;
 
     let (s, flow) = fold_many0(
-        alt((parse_import, parse_function, parse_step)),
+        alt((parse_constant, parse_import, parse_function, parse_step)),
         Vec::new,
         |mut acc, mut item| {
             acc.append(&mut item);
