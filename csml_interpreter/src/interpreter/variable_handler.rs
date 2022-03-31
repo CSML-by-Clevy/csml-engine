@@ -611,6 +611,7 @@ pub fn get_var(
             // in the future we need to refacto this code to avoid any scope copy like this
             let (
                 tmp_flows,
+                tmp_extern_flows,
                 tmp_flow,
                 tmp_default_flow,
                 mut tmp_context,
@@ -626,6 +627,7 @@ pub fn get_var(
 
             let mut new_scope_data = Data::new(
                 &tmp_flows,
+                &tmp_extern_flows,
                 &tmp_flow,
                 tmp_default_flow,
                 &mut tmp_context,

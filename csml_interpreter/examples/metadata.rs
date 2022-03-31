@@ -1,4 +1,4 @@
-use csml_interpreter::data::csml_bot::CsmlBot;
+use csml_interpreter::data::csml_bot::{CsmlBot};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::{primitive::PrimitiveString, Context, Interval};
@@ -29,6 +29,7 @@ fn main() {
         Some(native_component),
         None,
         DEFAULT_FLOW_NAME,
+        None,
         None,
         None,
         None,

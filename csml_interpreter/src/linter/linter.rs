@@ -29,6 +29,7 @@ pub const ERROR_HOLD_IN_LOOP: &str = "'hold' action is not allowed in function s
 
 pub fn lint_bot(
     flows: &[FlowToValidate],
+    modules: &[FlowToValidate],
     errors: &mut Vec<ErrorInfo>,
     warnings: &mut Vec<Warnings>,
     native_components: &Option<serde_json::Map<String, serde_json::Value>>,
@@ -61,7 +62,14 @@ pub fn lint_bot(
         linter_info.flow_name = &flow.flow_name;
         linter_info.raw_flow = flow.raw_flow;
 
-        validate_flow_ast(flow, &mut linter_info);
+        validate_flow_ast(flow, &mut linter_info, false);
+    }
+
+    for flow in modules.iter() {
+        linter_info.flow_name = &flow.flow_name;
+        linter_info.raw_flow = flow.raw_flow;
+
+        validate_flow_ast(flow, &mut linter_info, true);
     }
 
     validate_gotos(&mut linter_info);
@@ -104,12 +112,18 @@ pub fn validate_gotos(linter_info: &mut LinterInfo) {
 
 pub fn validate_imports(linter_info: &mut LinterInfo) {
     'outer: for import_info in linter_info.import_list.iter() {
+        let extern_module = if let FromFlow::Extern(_) = import_info.from_flow {
+            true
+        } else {
+            false
+        };
+
         if let Some(_) = linter_info.function_list.get(&FunctionInfo::new(
             import_info.as_name.to_owned(),
             import_info.in_flow,
-
             import_info.raw_flow,
             import_info.interval.to_owned(),
+            extern_module
         )) {
             gen_function_error(
                 linter_info.errors,
@@ -127,7 +141,7 @@ pub fn validate_imports(linter_info: &mut LinterInfo) {
             ImportInfo {
                 as_name,
                 original_name,
-                from_flow: Some(flow),
+                from_flow: FromFlow::Normal(flow),
                 raw_flow,
                 interval,
                 in_flow,
@@ -142,6 +156,39 @@ pub fn validate_imports(linter_info: &mut LinterInfo) {
                     flow,
                     raw_flow,
                     interval.to_owned(),
+                    false
+                )) {
+                    gen_function_error(
+                        linter_info.errors,
+                        raw_flow,
+                        in_flow,
+                        interval.to_owned(),
+                        format!(
+                            "import failed function '{}' not found in flow '{}'",
+                            as_name, flow
+                        ),
+                    );
+                };
+            }
+            ImportInfo {
+                as_name,
+                original_name,
+                from_flow: FromFlow::Extern(flow),
+                raw_flow,
+                interval,
+                in_flow,
+            } => {
+                let as_name = match original_name {
+                    Some(name) => name,
+                    None => as_name,
+                };
+
+                if let None = linter_info.function_list.get(&FunctionInfo::new(
+                    as_name.to_owned(),
+                    flow,
+                    raw_flow,
+                    interval.to_owned(),
+                    true
                 )) {
                     gen_function_error(
                         linter_info.errors,
@@ -213,7 +260,7 @@ pub fn validate_functions(linter_info: &mut LinterInfo) {
     }
 }
 
-pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
+pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo, extern_module: bool) {
     let mut is_step_start_present = false;
     let mut steps_nbr = 0;
 
@@ -251,13 +298,14 @@ pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo) {
 
                 linter_info.scope_type = save_step_name;
 
-
                 linter_info.function_list.insert(FunctionInfo::new(
                     name.to_owned(),
                     linter_info.flow_name,
                     linter_info.raw_flow,
                     interval_from_expr(scope),
+                    extern_module,
                 ));
+
             }
             InstructionScope::ImportScope(import_scope) => {
                 linter_info.import_list.insert(ImportInfo::new(

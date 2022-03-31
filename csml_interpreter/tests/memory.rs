@@ -1,7 +1,7 @@
 mod support;
 
 use csml_interpreter::data::context::Context;
-use csml_interpreter::data::csml_bot::CsmlBot;
+use csml_interpreter::data::csml_bot::{CsmlBot};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::MessageData;
@@ -33,6 +33,7 @@ fn format_message(event: Event, context: Context, vector: &[&str]) -> MessageDat
         None,
         None,
         DEFAULT_FLOW_NAME,
+        None,
         None,
         None,
         None,

@@ -170,6 +170,7 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     match csml_engine::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
         CsmlResult {
             flows: _,
+            extern_flows: _,
             warnings,
             errors: None,
         } => {
@@ -187,6 +188,7 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
         }
         CsmlResult {
             flows: _,
+            extern_flows: _,
             warnings,
             errors: Some(errors),
         } => {

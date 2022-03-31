@@ -15,7 +15,7 @@ pub struct FlowToValidate<'a> {
 }
 
 impl<'a> FlowToValidate<'a> {
-    pub fn get_bot(flows: Vec<Self>) -> HashMap<String, Flow> {
+    pub fn get_flows(flows: Vec<Self>) -> HashMap<String, Flow> {
         flows
             .into_iter()
             .map(|flow| (flow.flow_name, flow.ast))

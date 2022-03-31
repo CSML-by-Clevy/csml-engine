@@ -222,7 +222,7 @@ pub fn draw_run(
             .split(Rect {
                 x: (s.width as f32 / 2.05) as u16,
                 y: 1,
-                width: (s.width as f32 / 1.9) as u16,
+                width: (s.width as f32 / 2.0) as u16,
                 height: s.height,
             });
 

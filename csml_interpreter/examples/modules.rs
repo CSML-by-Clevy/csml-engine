@@ -1,10 +1,10 @@
-use csml_interpreter::data::csml_bot::{CsmlBot};
+use csml_interpreter::data::csml_bot::{CsmlBot, Modules, ModuleData};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::Context;
 use csml_interpreter::interpret;
 use csml_interpreter::load_components;
-use csml_interpreter::validate_bot;
+use csml_interpreter::{validate_bot, search_for_modules};
 use std::collections::HashMap;
 
 const DEFAULT_ID_NAME: &str = "id";
@@ -17,13 +17,13 @@ const DEFAULT_BOT_NAME: &str = "my_bot";
 ////////////////////////////////////////////////////////////////////////////////
 
 fn main() {
-    let default_content = std::fs::read_to_string("CSML/examples/hello_world.csml").unwrap();
+    let default_content = std::fs::read_to_string("CSML/examples/module.csml").unwrap();
     let default_flow = CsmlFlow::new(DEFAULT_ID_NAME, "default", &default_content, Vec::default());
 
     let native_component = load_components().unwrap();
 
     // Create a CsmlBot
-    let bot = CsmlBot::new(
+    let mut bot = CsmlBot::new(
         DEFAULT_ID_NAME,
         DEFAULT_BOT_NAME,
         None,
@@ -34,7 +34,14 @@ fn main() {
         None,
         None,
         None,
-        None,
+        Some(Modules {
+            modules: vec![ModuleData{
+                name: "module".to_string(),
+                url: Some("https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml".to_string()),
+                version: "latest".to_string()
+            }],
+            flows: vec![]
+        })
     );
 
     // Create an Event
@@ -55,6 +62,8 @@ fn main() {
         DEFAULT_STEP_NAME,
         DEFAULT_FLOW_NAME,
     );
+
+    search_for_modules(&mut bot);
 
     // Run interpreter
     let result = validate_bot(&bot);
