@@ -1,7 +1,10 @@
-use crate::{
-    data::{ast::*, tokens::*},
+use crate::data::{ast::*, tokens::*};
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    error::{ContextError, ParseError},
+    *,
 };
-use nom::{branch::alt, bytes::complete::tag, error::{ParseError, ContextError}, *};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS

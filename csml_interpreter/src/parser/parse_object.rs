@@ -6,7 +6,7 @@ use nom::{
     bytes::complete::tag,
     bytes::complete::take_till1,
     combinator::{cut, map, opt},
-    error::{context, ParseError, ContextError},
+    error::{context, ContextError, ParseError},
     multi::separated_list0,
     sequence::{preceded, separated_pair, terminated, tuple},
     IResult,

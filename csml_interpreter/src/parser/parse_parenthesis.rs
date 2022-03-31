@@ -2,7 +2,11 @@ use crate::data::tokens::*;
 use crate::error_format::{gen_nom_failure, ERROR_PARENTHESES, ERROR_PARENTHESES_END};
 use crate::parser::parse_comments::comment;
 
-use nom::{bytes::complete::tag, error::{ParseError, ContextError}, *};
+use nom::{
+    bytes::complete::tag,
+    error::{ContextError, ParseError},
+    *,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS

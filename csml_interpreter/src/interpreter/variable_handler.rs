@@ -1,4 +1,5 @@
 pub mod expr_to_literal;
+pub mod forget_memories;
 pub mod gen_generic_component;
 pub mod gen_literal;
 pub mod interval;
@@ -6,7 +7,6 @@ pub mod match_literals;
 pub mod memory;
 pub mod operations;
 pub mod resolve_csml_object;
-pub mod forget_memories;
 
 use crate::data::literal::ContentType;
 pub use expr_to_literal::{expr_to_literal, resolve_fn_args};
@@ -18,8 +18,9 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
-    data::Data, warnings::DisplayWarnings,
-    tokens::{COMPONENT, EVENT, _ENV, _METADATA, _MEMORY},
+    data::Data,
+    tokens::{COMPONENT, EVENT, _ENV, _MEMORY, _METADATA},
+    warnings::DisplayWarnings,
     ArgsType, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
@@ -92,14 +93,18 @@ fn loop_path(
                             format!("[{}] {}", index, ERROR_ARRAY_INDEX),
                         );
                         let null = match dis_warnings {
-                            &DisplayWarnings::Off => PrimitiveNull::get_literal(err.position.interval),
-                            &DisplayWarnings::On => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                            &DisplayWarnings::Off => {
+                                PrimitiveNull::get_literal(err.position.interval)
+                            }
+                            &DisplayWarnings::On => {
+                                MSG::send_error_msg(&sender, msg_data, Err(err))
+                            }
                         };
                         return Ok((null, tmp_update_var));
                     }
                 }
             }
-            PathLiteral::VecIndex(index) => match get_at_index(lit, &data.context.flow,*index) {
+            PathLiteral::VecIndex(index) => match get_at_index(lit, &data.context.flow, *index) {
                 Some(new_lit) => lit = new_lit,
                 None => {
                     let err = gen_error_info(
@@ -144,13 +149,18 @@ fn loop_path(
                                 format!("[{}] {}", key, ERROR_OBJECT_GET),
                             );
 
-                            let error = PrimitiveString::get_literal(&err.message, err.position.interval);
+                            let error =
+                                PrimitiveString::get_literal(&err.message, err.position.interval);
 
                             // if value does not exist in memory we create a null value and we apply all the path actions
                             // if we are not in a condition an error message is created and send
                             let mut null = match dis_warnings {
-                                &DisplayWarnings::Off => PrimitiveNull::get_literal(err.position.interval),
-                                &DisplayWarnings::On => MSG::send_error_msg(&sender, msg_data, Err(err)),
+                                &DisplayWarnings::Off => {
+                                    PrimitiveNull::get_literal(err.position.interval)
+                                }
+                                &DisplayWarnings::On => {
+                                    MSG::send_error_msg(&sender, msg_data, Err(err))
+                                }
                             };
 
                             null.add_info("error", error);
@@ -306,7 +316,11 @@ pub fn get_literal<'a, 'b>(
     }
 }
 
-pub fn get_string_index(lit: Literal, flow_name: &str, index: usize) -> Result<Option<Literal>, ErrorInfo> {
+pub fn get_string_index(
+    lit: Literal,
+    flow_name: &str,
+    index: usize,
+) -> Result<Option<Literal>, ErrorInfo> {
     let array = get_array(lit, flow_name, ERROR_INDEXING.to_owned())?;
 
     match array.get(index) {
@@ -315,7 +329,11 @@ pub fn get_string_index(lit: Literal, flow_name: &str, index: usize) -> Result<O
     }
 }
 
-pub fn get_at_index<'a>(lit: &'a mut Literal, flow_name: &str, index: usize) -> Option<&'a mut Literal> {
+pub fn get_at_index<'a>(
+    lit: &'a mut Literal,
+    flow_name: &str,
+    index: usize,
+) -> Option<&'a mut Literal> {
     let vec = Literal::get_mut_value::<Vec<Literal>>(
         &mut lit.primitive,
         flow_name,
@@ -326,7 +344,11 @@ pub fn get_at_index<'a>(lit: &'a mut Literal, flow_name: &str, index: usize) -> 
     vec.get_mut(index)
 }
 
-pub fn get_value_from_key<'a>(lit: &'a mut Literal, flow_name: &str, key: &str) -> Option<&'a mut Literal> {
+pub fn get_value_from_key<'a>(
+    lit: &'a mut Literal,
+    flow_name: &str,
+    key: &str,
+) -> Option<&'a mut Literal> {
     let map = Literal::get_mut_value::<HashMap<String, Literal>>(
         &mut lit.primitive,
         flow_name,
@@ -426,31 +448,30 @@ pub fn exec_path_actions(
 }
 
 fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Literal> {
-
     let mut flow_context = HashMap::new();
 
     flow_context.insert(
         "current_step".to_owned(),
-        PrimitiveString::get_literal(&data.context.step, interval)
+        PrimitiveString::get_literal(&data.context.step, interval),
     );
     flow_context.insert(
         "current_flow".to_owned(),
-        PrimitiveString::get_literal(&data.context.flow, interval)
+        PrimitiveString::get_literal(&data.context.flow, interval),
     );
 
     flow_context.insert(
         "default_flow".to_owned(),
-        PrimitiveString::get_literal(&data.context.flow, interval)
+        PrimitiveString::get_literal(&data.context.flow, interval),
     );
 
     if let Some(previous_info) = &data.previous_info {
         flow_context.insert(
             "previous_step".to_owned(),
-            PrimitiveString::get_literal(&previous_info.step_at_flow.0, interval)
+            PrimitiveString::get_literal(&previous_info.step_at_flow.0, interval),
         );
         flow_context.insert(
             "previous_flow".to_owned(),
-            PrimitiveString::get_literal(&previous_info.step_at_flow.1, interval)
+            PrimitiveString::get_literal(&previous_info.step_at_flow.1, interval),
         );
     }
 
@@ -476,11 +497,11 @@ pub fn get_metadata_context_literal(
                     path_skip += 1;
 
                     lit.to_owned()
-                },
+                }
                 None => PrimitiveObject::get_literal(&flow_context, *interval),
             }
-        },
-        _ => PrimitiveObject::get_literal(&flow_context, interval)
+        }
+        _ => PrimitiveObject::get_literal(&flow_context, interval),
     };
 
     let content_type = ContentType::get(&lit);
@@ -506,8 +527,15 @@ pub fn get_literal_from_metadata(
 ) -> Result<Literal, ErrorInfo> {
     let mut lit = match path.get(0) {
         Some((interval, PathLiteral::MapIndex(name))) if name == "_context" => {
-            return get_metadata_context_literal(path, *interval, dis_warnings, data, msg_data, sender);
-        },
+            return get_metadata_context_literal(
+                path,
+                *interval,
+                dis_warnings,
+                data,
+                msg_data,
+                sender,
+            );
+        }
         Some((interval, PathLiteral::MapIndex(name))) => match data.context.metadata.get(name) {
             Some(lit) => lit.to_owned(),
             None => PrimitiveNull::get_literal(interval.to_owned()),
@@ -601,9 +629,9 @@ pub fn get_var(
 
                     Ok(lit)
                 }
-                None => Ok(lit)
+                None => Ok(lit),
             }
-        },
+        }
         _ => {
             // ######################
             //// TODO:
@@ -635,7 +663,7 @@ pub fn get_var(
                 &tmp_env,
                 tmp_loop_indexs,
                 tmp_loop_index,
-                &mut tmp_step_count, 
+                &mut tmp_step_count,
                 tmp_step_vars,
                 data.previous_info.clone(),
                 &tmp_custom_component,
@@ -756,14 +784,8 @@ pub fn search_goto_var_memory<'a>(
     match var {
         GotoValueType::Name(ident) => Ok(ident.ident.clone()),
         GotoValueType::Variable(expr) => {
-            let literal = expr_to_literal(
-                expr,
-                &DisplayWarnings::On,
-                None,
-                data,
-                msg_data,
-                sender,
-            )?;
+            let literal =
+                expr_to_literal(expr, &DisplayWarnings::On, None, data, msg_data, sender)?;
 
             Ok(Literal::get_value::<String>(
                 &literal.primitive,

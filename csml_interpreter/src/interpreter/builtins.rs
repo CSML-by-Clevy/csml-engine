@@ -1,12 +1,12 @@
 pub mod api;
 pub mod crypto;
+pub mod exists;
 pub mod format;
 pub mod functions;
 pub mod http;
-pub mod smtp;
 pub mod jwt;
+pub mod smtp;
 pub mod time;
-pub mod exists;
 
 pub mod tools;
 
@@ -19,13 +19,13 @@ use std::sync::mpsc;
 
 use api::api;
 use crypto::crypto;
+use exists::exists;
 use format::*;
 use functions::*;
 use http::http;
-use smtp::smtp;
 use jwt::jwt;
+use smtp::smtp;
 use time::time;
-use exists::exists;
 
 pub fn match_native_builtin(
     name: &str,

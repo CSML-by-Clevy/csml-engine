@@ -27,7 +27,7 @@ pub struct CsmlBot {
 pub struct ModuleData {
     pub name: String,
     pub url: Option<String>,
-    pub version: String
+    pub version: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -102,10 +102,19 @@ impl CsmlBot {
 
         map.insert("id".to_owned(), serde_json::json!(self.id));
         map.insert("name".to_owned(), serde_json::json!(self.name));
-        map.insert("apps_endpoint".to_owned(), serde_json::json!(self.apps_endpoint));
+        map.insert(
+            "apps_endpoint".to_owned(),
+            serde_json::json!(self.apps_endpoint),
+        );
         map.insert("flows".to_owned(), serde_json::json!(self.flows));
-        map.insert("default_flow".to_owned(), serde_json::json!(self.default_flow));
-        map.insert("no_interruption_delay".to_owned(), serde_json::json!(self.no_interruption_delay));
+        map.insert(
+            "default_flow".to_owned(),
+            serde_json::json!(self.default_flow),
+        );
+        map.insert(
+            "no_interruption_delay".to_owned(),
+            serde_json::json!(self.no_interruption_delay),
+        );
         map.insert("env".to_owned(), serde_json::json!(self.env));
 
         serde_json::json!(map)

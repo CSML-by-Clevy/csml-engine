@@ -36,7 +36,7 @@ pub fn base64(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Lit
     }
 }
 
-pub fn hex(args: ArgsType, flow_name: &str ,interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn hex(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("string", 0) {
         Some(literal) if literal.primitive.get_type() == PrimitiveType::PrimitiveString => {
             let mut object: HashMap<String, Literal> = HashMap::new();

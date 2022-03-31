@@ -1,14 +1,13 @@
 use crate::data::tokens::*;
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_until, take_while, take_till},
-    sequence::delimited,
+    bytes::complete::{tag, take_till, take_until, take_while},
     character::complete::multispace0,
-    error::{ParseError},
+    error::ParseError,
     multi::many0,
+    sequence::delimited,
     IResult, *,
 };
-
 
 fn comment_single_line<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E> {
     let (s, _) = tag("//")(s)?;
@@ -49,14 +48,11 @@ fn sp<'a, E: ParseError<Span<'a>>>(s: Span<'a>) -> IResult<Span<'a>, Span<'a>, E
     take_while(move |c| WHITE_SPACE.contains(c))(s)
 }
 
-
-fn ws<'a, F: 'a, O, E: ParseError<Span<'a>>>(inner: F) -> impl FnMut(Span<'a>) -> IResult<Span<'a>, O, E>
-  where
-  F: Fn(Span<'a>) -> IResult<Span<'a>, O, E>,
+fn ws<'a, F: 'a, O, E: ParseError<Span<'a>>>(
+    inner: F,
+) -> impl FnMut(Span<'a>) -> IResult<Span<'a>, O, E>
+where
+    F: Fn(Span<'a>) -> IResult<Span<'a>, O, E>,
 {
-  delimited(
-    multispace0,
-    inner,
-    multispace0
-  )
+    delimited(multispace0, inner, multispace0)
 }

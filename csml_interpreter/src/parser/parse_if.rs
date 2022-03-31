@@ -8,8 +8,13 @@ use crate::parser::{
     tools::*,
 };
 use nom::{
-    branch::alt, bytes::complete::tag, combinator::opt, error::{ParseError, ContextError}, sequence::delimited,
-    sequence::preceded, *,
+    branch::alt,
+    bytes::complete::tag,
+    combinator::opt,
+    error::{ContextError, ParseError},
+    sequence::delimited,
+    sequence::preceded,
+    *,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,10 +64,7 @@ where
     let (s, end) = get_interval(s)?;
     interval.add_end(end);
 
-    Ok((
-        s,
-        Box::new(IfStatement::ElseStmt(block, interval)),
-    ))
+    Ok((s, Box::new(IfStatement::ElseStmt(block, interval))))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

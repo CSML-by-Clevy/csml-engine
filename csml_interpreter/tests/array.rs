@@ -402,7 +402,8 @@ fn array_filter() {
 
 #[test]
 fn array_map_index() {
-    let data = r#"{"memories":[], "messages":[{"content":[0, 1, 2, 3, 4], "content_type":"array"}]}"#;
+    let data =
+        r#"{"memories":[], "messages":[{"content":[0, 1, 2, 3, 4], "content_type":"array"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         Context::new(
@@ -421,7 +422,6 @@ fn array_map_index() {
 
     assert_eq!(v1, v2)
 }
-
 
 #[test]
 fn array_filter_index() {

@@ -121,8 +121,16 @@ impl dyn Primitive {
     ) -> Result<Literal, ErrorInfo> {
         *mem_update = false;
 
-        let (res, right) =
-            self.do_exec(name, args, additional_info, interval, content_type, data, msg_data, sender)?;
+        let (res, right) = self.do_exec(
+            name,
+            args,
+            additional_info,
+            interval,
+            content_type,
+            data,
+            msg_data,
+            sender,
+        )?;
         if right == Right::Write {
             *mem_update = true;
         }

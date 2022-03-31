@@ -1,15 +1,14 @@
-use crate::data::{ast::*, tokens::*, position::Position, Literal};
-use crate::data::primitive::{PrimitiveArray, PrimitiveObject, PrimitiveBoolean};
+use crate::data::primitive::{PrimitiveArray, PrimitiveBoolean, PrimitiveObject};
+use crate::data::{ast::*, position::Position, tokens::*, Literal};
 use crate::error_format::*;
 use crate::parser::{
-    parse_comments::comment, operator::parse_operator,
-    parse_idents::parse_idents_assignation, tools::*,
+    operator::parse_operator, parse_comments::comment, parse_idents::parse_idents_assignation,
+    tools::*,
 };
 
-use nom::error::{ParseError, ContextError};
+use nom::error::{ContextError, ParseError};
 use nom::{bytes::complete::tag, sequence::preceded, IResult};
 use std::collections::HashMap;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -29,7 +28,7 @@ fn interval_from_expr(expr: &Expr) -> Interval {
         Expr::VecExpr(_e, range_interval) => *range_interval,
         Expr::ObjectExpr(fnexpr) => interval_from_reserved_fn(fnexpr),
         Expr::InfixExpr(_i, expr, _e) => interval_from_expr(expr), // RangeInterval ?
-        Expr::PostfixExpr(_p, expr) => interval_from_expr(expr), // RangeInterval ?
+        Expr::PostfixExpr(_p, expr) => interval_from_expr(expr),   // RangeInterval ?
         Expr::PathExpr { literal, .. } => interval_from_expr(literal),
         Expr::ForEachExpr(_, _, _, _, range_interval) => *range_interval,
         Expr::WhileExpr(_, _, range_interval) => *range_interval,
@@ -55,7 +54,7 @@ pub fn interval_from_reserved_fn(reserved_fn: &ObjectType) -> Interval {
         ObjectType::Do(DoType::Exec(expr)) => interval_from_expr(expr),
         ObjectType::Say(expr) => interval_from_expr(expr),
         ObjectType::Debug(_expr, interval) => interval.to_owned(),
-        ObjectType::Log{interval, ..} => interval.to_owned(),
+        ObjectType::Log { interval, .. } => interval.to_owned(),
         ObjectType::Return(expr) => interval_from_expr(expr),
         ObjectType::Remember(ident, ..) => ident.interval.to_owned(),
         ObjectType::Forget(_, interval) => interval.to_owned(),
@@ -175,13 +174,10 @@ fn evaluate_infix(
             lhs.interval,
         )),
 
-        (Infix::Match, Ok(lhs), Ok(_)) |
-        (Infix::NotMatch, Ok(lhs), Ok(_)) => {
-            Err(gen_error_info(
-                Position::new(lhs.interval, "flow"),
-                "invalid operation in constant declaration".to_owned(),
-            ))
-        },
+        (Infix::Match, Ok(lhs), Ok(_)) | (Infix::NotMatch, Ok(lhs), Ok(_)) => Err(gen_error_info(
+            Position::new(lhs.interval, "flow"),
+            "invalid operation in constant declaration".to_owned(),
+        )),
 
         (_, Err(e), ..) | (.., Err(e)) => Err(e),
     }
@@ -193,7 +189,6 @@ fn evaluate_condition(
     expr2: &Expr,
     flow_name: &str,
 ) -> Result<Literal, ErrorInfo> {
-
     match (expr1, expr2) {
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate_infix(
             &flow_name,
@@ -222,7 +217,6 @@ fn evaluate_condition(
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,14 +239,12 @@ where
         s,
         vec![Instruction {
             instruction_type: InstructionScope::Constant(name.ident),
-            actions: expr
+            actions: expr,
         }],
     ))
 }
 
-
 pub fn constant_expr_to_lit(expr: &Expr, flow_name: &str) -> Result<Literal, ErrorInfo> {
-
     match expr {
         Expr::MapExpr {
             object,
@@ -262,23 +254,24 @@ pub fn constant_expr_to_lit(expr: &Expr, flow_name: &str) -> Result<Literal, Err
             let mut map = HashMap::new();
 
             for (key, value) in object.iter() {
-                map.insert(
-                    key.to_owned(),
-                    constant_expr_to_lit(&value, flow_name)?,
-                );
+                map.insert(key.to_owned(), constant_expr_to_lit(&value, flow_name)?);
             }
 
-            Ok(PrimitiveObject::get_literal(&map, range_interval.to_owned()))
+            Ok(PrimitiveObject::get_literal(
+                &map,
+                range_interval.to_owned(),
+            ))
         }
         Expr::VecExpr(vec, range_interval) => {
             let mut array = vec![];
             for value in vec.iter() {
-                array.push(constant_expr_to_lit(
-                    value, flow_name
-                )?)
+                array.push(constant_expr_to_lit(value, flow_name)?)
             }
 
-            Ok(PrimitiveArray::get_literal(&array, range_interval.to_owned()))
+            Ok(PrimitiveArray::get_literal(
+                &array,
+                range_interval.to_owned(),
+            ))
         }
         Expr::PostfixExpr(postfix, expr) => {
             let value = match constant_expr_to_lit(expr, flow_name) {
@@ -287,7 +280,7 @@ pub fn constant_expr_to_lit(expr: &Expr, flow_name: &str) -> Result<Literal, Err
             };
             let interval = interval_from_expr(expr);
 
-            if postfix.len() % 2  == 0 {
+            if postfix.len() % 2 == 0 {
                 Ok(PrimitiveBoolean::get_literal(value, interval))
             } else {
                 Ok(PrimitiveBoolean::get_literal(!value, interval))

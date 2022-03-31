@@ -4,13 +4,12 @@ use crate::data::{
     //     hold_index_end_loop, hold_index_start_loop, hold_loop_decrs_index, hold_loop_incrs_index,
     // },
     // primitive::tools::get_array,
-    Data, MessageData, MSG,
+    Data,
+    MessageData,
+    MSG,
 };
 use crate::error_format::*;
-use crate::interpreter::{
-    ast_interpreter::if_statement::valid_condition,
-    interpret_scope
-};
+use crate::interpreter::{ast_interpreter::if_statement::valid_condition, interpret_scope};
 use crate::parser::ExitCondition;
 use std::sync::mpsc;
 
@@ -44,9 +43,8 @@ pub fn while_loop(
         //     };
 
         //     hold_loop_incrs_index(data, for_loop_index + skip_value);
-            msg_data = msg_data + interpret_scope(block, data, sender)?;
+        msg_data = msg_data + interpret_scope(block, data, sender)?;
         //     hold_loop_decrs_index(data);
-
 
         match msg_data.exit_condition {
             Some(ExitCondition::Break) => {

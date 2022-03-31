@@ -7,7 +7,7 @@ use crate::parser::{
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    error::{ParseError, ContextError},
+    error::{ContextError, ParseError},
     multi::many1,
     sequence::{preceded, terminated},
     *,
@@ -71,12 +71,8 @@ pub fn parse_path<'a, E>(s: Span<'a>, expr: Expr) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    let path: IResult<Span<'a>, Vec<(Interval, PathState)>, E> = many1(
-        alt((
-            parse_index,
-            preceded(comment, parse_dot_path)
-        ))
-    )(s);
+    let path: IResult<Span<'a>, Vec<(Interval, PathState)>, E> =
+        many1(alt((parse_index, preceded(comment, parse_dot_path))))(s);
 
     match path {
         Ok((s, path)) => Ok((

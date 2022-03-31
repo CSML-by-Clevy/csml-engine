@@ -1,8 +1,8 @@
 use crate::data::{
-    ast::{Interval, FromFlow},
+    ast::{FromFlow, Interval},
     warnings::*,
 };
-use crate::error_format::{ErrorInfo};
+use crate::error_format::ErrorInfo;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
@@ -12,8 +12,8 @@ pub enum StepBreakers {
     GOTO {
         step: String,
         flow: String,
-        interval: Interval
-    }
+        interval: Interval,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +64,7 @@ pub struct State {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ScopeType {
     Function(String),
-    Step(String)
+    Step(String),
 }
 
 #[derive(Debug)]
@@ -113,7 +113,9 @@ impl<'a> Hash for FunctionInfo<'a> {
 
 impl<'a> PartialEq for FunctionInfo<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name && self.in_flow == other.in_flow && self.extern_module == other.extern_module
+        self.name == other.name
+            && self.in_flow == other.in_flow
+            && self.extern_module == other.extern_module
     }
 }
 
@@ -145,7 +147,7 @@ impl<'a> StepInfo<'a> {
         raw_flow: &'a str,
         in_flow: String,
         step_breakers: Vec<StepBreakers>,
-        interval: Interval
+        interval: Interval,
     ) -> Self {
         Self {
             flow: flow.to_owned(),
@@ -204,13 +206,19 @@ impl<'a> LinterInfo<'a> {
             functions_call_list,
             errors,
             warnings,
-            native_components
+            native_components,
         }
     }
 }
 
 impl<'a> FunctionInfo<'a> {
-    pub fn new(name: String, in_flow: &'a str, raw_flow: &'a str, interval: Interval, extern_module: bool) -> Self {
+    pub fn new(
+        name: String,
+        in_flow: &'a str,
+        raw_flow: &'a str,
+        interval: Interval,
+        extern_module: bool,
+    ) -> Self {
         Self {
             name,
             in_flow,
@@ -222,7 +230,14 @@ impl<'a> FunctionInfo<'a> {
 }
 
 impl<'a> FunctionCallInfo<'a> {
-    pub fn new(name: String, in_flow: &'a str, scope_type: ScopeType, is_permanent: bool, raw_flow: &'a str, interval: Interval) -> Self {
+    pub fn new(
+        name: String,
+        in_flow: &'a str,
+        scope_type: ScopeType,
+        is_permanent: bool,
+        raw_flow: &'a str,
+        interval: Interval,
+    ) -> Self {
         Self {
             name,
             in_flow,

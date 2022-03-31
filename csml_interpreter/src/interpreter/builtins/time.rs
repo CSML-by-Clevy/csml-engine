@@ -1,8 +1,8 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::primitive::{PrimitiveObject, PrimitiveInt};
+use crate::data::primitive::{PrimitiveInt, PrimitiveObject};
 use crate::data::{ast::Interval, ArgsType, Literal};
-use std::{collections::HashMap};
-use chrono::{Utc};
+use chrono::Utc;
+use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PUBLIC FUNCTIONS
@@ -14,10 +14,7 @@ pub fn time(_args: ArgsType, _flow_name: &str, interval: Interval) -> Result<Lit
 
     time.insert(
         "milliseconds".to_owned(),
-        PrimitiveInt::get_literal(
-            date.timestamp_millis(),
-            interval
-        )
+        PrimitiveInt::get_literal(date.timestamp_millis(), interval),
     );
 
     let mut result = PrimitiveObject::get_literal(&time, interval);

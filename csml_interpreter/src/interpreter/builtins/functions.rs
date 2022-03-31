@@ -42,20 +42,14 @@ pub fn one_of(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Lit
 
 pub fn or(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match (args.get("arg0", 0), args.get("arg1", 1)) {
-        (Some(first_val), Some(optional_value)) => {
-            match &first_val.additional_info {
-                Some(map) if map.contains_key("error") => {
-                    Ok(optional_value.to_owned())
-                }
-                _ => Ok(first_val.to_owned())
-            }
-        }
-        _ => {
-            Err(gen_error_info(
-                Position::new(interval, flow_name),
-                "ERROR_SHUFFLE".to_owned(),
-            ))
-        }
+        (Some(first_val), Some(optional_value)) => match &first_val.additional_info {
+            Some(map) if map.contains_key("error") => Ok(optional_value.to_owned()),
+            _ => Ok(first_val.to_owned()),
+        },
+        _ => Err(gen_error_info(
+            Position::new(interval, flow_name),
+            "ERROR_SHUFFLE".to_owned(),
+        )),
     }
 }
 
@@ -93,9 +87,12 @@ pub fn length(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Lit
                     literal.interval,
                 ));
             }
-            if let Ok(res) =
-                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_LENGTH.to_owned())
-            {
+            if let Ok(res) = Literal::get_value::<String>(
+                &literal.primitive,
+                flow_name,
+                interval,
+                ERROR_LENGTH.to_owned(),
+            ) {
                 return Ok(PrimitiveInt::get_literal(
                     res.len() as i64,
                     literal.interval,
@@ -119,9 +116,12 @@ pub fn find(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Liter
     let mut case = false;
 
     if let Some(literal) = args.get("in", 1) {
-        if let Ok(res) =
-            Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_FIND.to_owned())
-        {
+        if let Ok(res) = Literal::get_value::<String>(
+            &literal.primitive,
+            flow_name,
+            interval,
+            ERROR_FIND.to_owned(),
+        ) {
             string = Some(res);
         }
     } else if string.is_none() {
@@ -132,17 +132,24 @@ pub fn find(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Liter
     }
 
     if let Some(literal) = args.get("in", 1) {
-        if let Ok(res) =
-            Literal::get_value::<bool>(&literal.primitive, flow_name, interval, ERROR_FIND.to_owned())
-        {
+        if let Ok(res) = Literal::get_value::<bool>(
+            &literal.primitive,
+            flow_name,
+            interval,
+            ERROR_FIND.to_owned(),
+        ) {
             case = *res;
         }
     }
 
     match (args.get("value", 0), string) {
         (Some(literal), Some(string)) => {
-            let res =
-                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_FIND.to_owned())?;
+            let res = Literal::get_value::<String>(
+                &literal.primitive,
+                flow_name,
+                interval,
+                ERROR_FIND.to_owned(),
+            )?;
             if case {
                 Ok(PrimitiveBoolean::get_literal(
                     string.contains(res),
@@ -173,8 +180,12 @@ pub fn random(interval: Interval) -> Result<Literal, ErrorInfo> {
 pub fn floor(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("float", 0) {
         Some(literal) => {
-            let res =
-                Literal::get_value::<f64>(&literal.primitive, flow_name, interval, ERROR_FLOOR.to_owned())?;
+            let res = Literal::get_value::<f64>(
+                &literal.primitive,
+                flow_name,
+                interval,
+                ERROR_FLOOR.to_owned(),
+            )?;
             Ok(PrimitiveFloat::get_literal(res.floor(), literal.interval))
         }
         _ => Err(gen_error_info(
@@ -184,7 +195,11 @@ pub fn floor(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Lite
     }
 }
 
-pub fn uuid_command(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn uuid_command(
+    args: ArgsType,
+    flow_name: &str,
+    interval: Interval,
+) -> Result<Literal, ErrorInfo> {
     if args.len() == 0 {
         return Ok(PrimitiveString::get_literal(
             &Uuid::new_v4().to_string(),
@@ -194,8 +209,12 @@ pub fn uuid_command(args: ArgsType, flow_name: &str, interval: Interval) -> Resu
 
     match args.get("value", 0) {
         Some(literal) => {
-            let arg =
-                Literal::get_value::<String>(&literal.primitive, flow_name, interval, ERROR_FLOOR.to_owned())?;
+            let arg = Literal::get_value::<String>(
+                &literal.primitive,
+                flow_name,
+                interval,
+                ERROR_FLOOR.to_owned(),
+            )?;
 
             match arg {
                 arg if arg == "v1" => {

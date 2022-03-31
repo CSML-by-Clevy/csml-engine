@@ -1,7 +1,7 @@
 use crate::data::primitive::string::PrimitiveString;
 use crate::data::{
-    ast::*, position::Position, tokens::*, Data, Literal,
-    MessageData, MSG, warnings::DisplayWarnings,
+    ast::*, position::Position, tokens::*, warnings::DisplayWarnings, Data, Literal, MessageData,
+    MSG,
 };
 use crate::error_format::{gen_nom_failure, CustomError, *};
 use crate::interpreter::variable_handler::expr_to_literal;
@@ -10,39 +10,37 @@ use crate::parser::parse_comments::comment;
 use crate::parser::tools::{get_interval, get_range_interval, parse_error};
 use nom::{
     bytes::complete::tag,
-    combinator::{cut},
-    error::{ParseError, ContextError},
+    combinator::cut,
+    error::{ContextError, ParseError},
     sequence::{delimited, preceded},
     *,
 };
 use std::sync::mpsc;
 
-use nom::bytes::complete::{escaped_transform};
-use nom::character::complete::{satisfy, anychar};
 use nom::branch::alt;
-use nom::combinator::{value};
+use nom::bytes::complete::escaped_transform;
+use nom::character::complete::{anychar, satisfy};
+use nom::combinator::value;
 
 ////////////////////////////////////////////////////////////////////////////////
 // TOOL FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////};
 
-fn parser(input: &str) -> IResult<&str, String> 
-{
+fn parser(input: &str) -> IResult<&str, String> {
     escaped_transform(
-    satisfy(|c| c != '\\'),
-      '\\',
-      alt((
-        value('\n', tag("n")),
-        value('\t', tag("t")),
-        value('\r', tag("r")),
-        value('\'', tag("\'")),
-        value('\"', tag("\"")),
-        value('\\', tag("\\")),
-        anychar,
-      ))
+        satisfy(|c| c != '\\'),
+        '\\',
+        alt((
+            value('\n', tag("n")),
+            value('\t', tag("t")),
+            value('\r', tag("r")),
+            value('\'', tag("\'")),
+            value('\"', tag("\"")),
+            value('\\', tag("\\")),
+            anychar,
+        )),
     )(input)
 }
-
 
 fn add_to_vector<'a, E>(
     s: Span<'a>,
@@ -56,8 +54,7 @@ where
     let (rest, value) = s.take_split(length);
     let (value, interval) = get_interval(value)?;
 
-    let (_, string) = parser(&value.fragment())
-        .unwrap_or(("", value.fragment().to_string()));
+    let (_, string) = parser(&value.fragment()).unwrap_or(("", value.fragment().to_string()));
 
     expr_vector.push(Expr::LitExpr {
         literal: PrimitiveString::get_literal(&string, interval),
@@ -86,7 +83,7 @@ where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let mut escape = false;
-    let mut len  = 0;
+    let mut len = 0;
 
     for c in s.chars() {
         if c == '\"' && !escape {
@@ -108,13 +105,12 @@ where
     Ok((s, None))
 }
 
-
 fn get_distance_braces<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Option<usize>, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let mut escape = false;
-    let mut len  = 0;
+    let mut len = 0;
 
     for (i, c) in s.chars().enumerate() {
         if c == '{' && !escape {
@@ -183,8 +179,8 @@ where
         add_to_vector(
             split_string,
             split_string.fragment().len(),
-             vector,
-             interval,
+            vector,
+            interval,
         )?;
         *string = split_rest;
 
@@ -206,17 +202,12 @@ where
 {
     let mut ref_srt = string.fragment().chars();
     if len > 1 && ref_srt.nth(len - 1) == Some('\\') {
-        let (res, _) = add_to_vector(
-            *string,
-            string.fragment().len(),
-            vector,
-            interval,
-        )?;
+        let (res, _) = add_to_vector(*string, string.fragment().len(), vector, interval)?;
         *string = res;
 
         Ok((s, ()))
     } else {
-        return Err(gen_nom_failure(s, ERROR_DOUBLE_CLOSE_BRACE))
+        return Err(gen_nom_failure(s, ERROR_DOUBLE_CLOSE_BRACE));
     }
 }
 
@@ -233,11 +224,7 @@ where
             let mut string = string.to_owned();
 
             while !string.fragment().is_empty() {
-
-                match (
-                    string.find_substring("{{"),
-                    string.find_substring("}}")
-                ) {
+                match (string.find_substring("{{"), string.find_substring("}}")) {
                     (Some(lhs_distance), Some(rhs_distance)) if lhs_distance < rhs_distance => {
                         if let (_, Some(index)) = get_distance_braces(string)? {
                             let (split_rest, split_string) = string.take_split(index);
@@ -248,7 +235,9 @@ where
                                 &mut interval,
                             )?;
                             let (split_rest, expression) =
-                                    delimited(tag("{{"), parse_complex_string, parse_close_bracket)(split_rest)?;
+                                delimited(tag("{{"), parse_complex_string, parse_close_bracket)(
+                                    split_rest,
+                                )?;
                             vector.push(expression);
                             string = split_rest;
                         } else {
@@ -325,14 +314,11 @@ where
         tag(DOUBLE_QUOTE)(s) as IResult<Span<'a>, Span<'a>, E>,
         tag(BACKSLASH_DOUBLE_QUOTE)(s) as IResult<Span<'a>, Span<'a>, E>,
     ) {
-        (Ok(_), ..) => {
-
-            parse_error(
+        (Ok(_), ..) => parse_error(
             start,
             s,
             delimited(tag(DOUBLE_QUOTE), do_parse_string, cut(tag(DOUBLE_QUOTE))),
-            )
-        },
+        ),
         (.., Ok(_)) => parse_error(
             start,
             s,
@@ -342,9 +328,7 @@ where
                 tag(BACKSLASH_DOUBLE_QUOTE),
             ),
         ),
-        (Err(err), ..) => {
-            Err(err)
-        },
+        (Err(err), ..) => Err(err),
     };
 
     toto
@@ -381,15 +365,16 @@ pub fn interpolate_string(
         }
         Err(e) => match e {
             Err::Error(err) | Err::Failure(err) => Err(gen_error_info(
-                Position::new(Interval::new_as_u32(
-                    err.input.location_line(),
-                    err.input.get_column() as u32,
-                    span.location_offset(),
-                    None,
-                    None,
+                Position::new(
+                    Interval::new_as_u32(
+                        err.input.location_line(),
+                        err.input.get_column() as u32,
+                        span.location_offset(),
+                        None,
+                        None,
+                    ),
+                    &data.context.flow,
                 ),
-                &data.context.flow,
-            ),
                 err.error,
             )),
             Err::Incomplete(_err) => unimplemented!(),

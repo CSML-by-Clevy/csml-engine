@@ -482,8 +482,6 @@ fn http_post_0() {
     assert_eq!(v1, v2)
 }
 
-
-
 #[test]
 fn http_auth_0() {
     let data = r#"{

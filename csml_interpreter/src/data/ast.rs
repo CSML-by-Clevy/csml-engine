@@ -1,5 +1,5 @@
-use crate::data::tokens::*;
 use crate::data::csml_logs::LogLvl;
+use crate::data::tokens::*;
 use crate::data::{ArgsType, Literal};
 
 use std::cmp::Ordering;
@@ -27,7 +27,6 @@ pub enum FromFlow {
     Extern(String),
     None,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportScope {
@@ -86,18 +85,23 @@ impl PartialEq for InstructionScope {
                 InstructionScope::FunctionScope { name: name2, .. },
             ) => name1 == name2,
             (
-                InstructionScope::ImportScope(ImportScope{name: import_scope1, ..}),
-                InstructionScope::ImportScope(ImportScope{name: import_scope2, ..}),
+                InstructionScope::ImportScope(ImportScope {
+                    name: import_scope1,
+                    ..
+                }),
+                InstructionScope::ImportScope(ImportScope {
+                    name: import_scope2,
+                    ..
+                }),
             ) => import_scope1 == import_scope2,
-            (
-                InstructionScope::Constant(name1),
-                InstructionScope::Constant(name2),
-            ) => name1 == name2,
+            (InstructionScope::Constant(name1), InstructionScope::Constant(name2)) => {
+                name1 == name2
+            }
             (
                 InstructionScope::DuplicateInstruction(interval1, ..),
                 InstructionScope::DuplicateInstruction(interval2, ..),
             ) => interval1 == interval2,
-            
+
             _ => false,
         }
     }
@@ -192,7 +196,6 @@ pub enum AssignType {
     SubtractionAssignment,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObjectType {
     Goto(GotoType, Interval),
@@ -200,10 +203,10 @@ pub enum ObjectType {
     Hold(Interval),
     Say(Box<Expr>),
     Debug(Box<Expr>, Interval),
-    Log{
+    Log {
         expr: Box<Expr>,
         interval: Interval,
-        log_lvl: LogLvl
+        log_lvl: LogLvl,
     },
     Return(Box<Expr>),
     Do(DoType),

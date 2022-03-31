@@ -1,4 +1,4 @@
-use csml_interpreter::data::csml_bot::{CsmlBot};
+use csml_interpreter::data::csml_bot::CsmlBot;
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::Context;
@@ -58,7 +58,7 @@ fn main() {
 
     // Run interpreter
     let result = validate_bot(&bot);
-    
+
     if result.errors.is_some() {
         dbg!(result.errors);
         return;

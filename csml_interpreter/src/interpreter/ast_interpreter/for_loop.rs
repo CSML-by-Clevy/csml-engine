@@ -5,8 +5,8 @@ use crate::data::{
         hold_index_end_loop, hold_index_start_loop, hold_loop_decrs_index, hold_loop_incrs_index,
     },
     primitive::tools::get_array,
-    Data, MessageData, MSG,
     warnings::DisplayWarnings,
+    Data, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::interpret_scope;
@@ -28,7 +28,14 @@ pub fn for_loop(
     data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-    let literal = expr_to_literal(expr, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
+    let literal = expr_to_literal(
+        expr,
+        &DisplayWarnings::On,
+        None,
+        data,
+        &mut msg_data,
+        sender,
+    )?;
     let mut array = get_array(literal, &data.context.flow, ERROR_FOREACH.to_owned())?;
 
     let mut value_skipped = 0;
@@ -40,7 +47,10 @@ pub fn for_loop(
         if let Some(index) = index {
             data.step_vars.insert(
                 index.ident.to_owned(),
-                PrimitiveInt::get_literal((for_loop_index + value_skipped) as i64, elem.interval.to_owned()),
+                PrimitiveInt::get_literal(
+                    (for_loop_index + value_skipped) as i64,
+                    elem.interval.to_owned(),
+                ),
             );
         };
 

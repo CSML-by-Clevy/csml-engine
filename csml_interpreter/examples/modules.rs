@@ -1,10 +1,10 @@
-use csml_interpreter::data::csml_bot::{CsmlBot, Modules, ModuleData};
+use csml_interpreter::data::csml_bot::{CsmlBot, ModuleData, Modules};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::Context;
 use csml_interpreter::interpret;
 use csml_interpreter::load_components;
-use csml_interpreter::{validate_bot, search_for_modules};
+use csml_interpreter::{search_for_modules, validate_bot};
 use std::collections::HashMap;
 
 const DEFAULT_ID_NAME: &str = "id";
@@ -67,7 +67,7 @@ fn main() {
 
     // Run interpreter
     let result = validate_bot(&bot);
-    
+
     if result.errors.is_some() {
         dbg!(result.errors);
         return;

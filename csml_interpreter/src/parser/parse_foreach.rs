@@ -12,7 +12,7 @@ use crate::parser::{
 use nom::{
     bytes::complete::tag,
     combinator::{cut, opt},
-    error::{ParseError, ContextError},
+    error::{ContextError, ParseError},
     sequence::preceded,
     *,
 };

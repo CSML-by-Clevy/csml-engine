@@ -1,4 +1,4 @@
-use crate::data::{ast::*, tokens::*, csml_logs::LogLvl};
+use crate::data::{ast::*, csml_logs::LogLvl, tokens::*};
 use crate::error_format::{
     gen_nom_failure, ERROR_ACTION_ARGUMENT, ERROR_REMEMBER, ERROR_RETURN, ERROR_USE,
 };
@@ -6,24 +6,23 @@ use crate::parser::{
     operator::parse_operator,
     parse_comments::comment,
     parse_foreach::parse_foreach,
-    parse_while_loop::parse_while,
     parse_goto::parse_goto,
-    parse_previous::parse_previous,
     parse_idents::{parse_idents_assignation, parse_idents_usage},
     parse_if::parse_if,
     parse_path::parse_path,
+    parse_previous::parse_previous,
     parse_var_types::parse_r_bracket,
+    parse_while_loop::parse_while,
     tools::{get_interval, get_string, get_tag},
 };
 
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
-    combinator::{opt},
-    error::{ParseError, ContextError, ErrorKind},
-    multi::{separated_list0},
-    sequence::{preceded, terminated, tuple, },
-
+    combinator::opt,
+    error::{ContextError, ErrorKind, ParseError},
+    multi::separated_list0,
+    sequence::{preceded, terminated, tuple},
     Err, IResult,
 };
 
@@ -73,12 +72,19 @@ where
     let (s, name) = parse_idents_assignation(s)?;
     let (s, ident) = parse_path(s, Expr::IdentExpr(name))?;
 
-    let (s, assign_type) = preceded(comment, alt((addition_assignment, subtraction_assignment, assignment)))(s)?;
+    let (s, assign_type) = preceded(
+        comment,
+        alt((addition_assignment, subtraction_assignment, assignment)),
+    )(s)?;
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 
     Ok((
         s,
-        Expr::ObjectExpr(ObjectType::Assign(assign_type, Box::new(ident), Box::new(expr))),
+        Expr::ObjectExpr(ObjectType::Assign(
+            assign_type,
+            Box::new(ident),
+            Box::new(expr),
+        )),
     ))
 }
 
@@ -120,7 +126,7 @@ where
         tag(L_BRACKET),
         terminated(
             tuple((
-                separated_list0(preceded(comment, tag(COMMA)), parse_idents_usage), 
+                separated_list0(preceded(comment, tag(COMMA)), parse_idents_usage),
                 opt(preceded(comment, tag(COMMA))),
             )),
             preceded(comment, parse_r_bracket),
@@ -159,17 +165,21 @@ where
     let (s, expr) = parse_action_argument(s, alt((parse_assignation_with_path, parse_operator)))?;
 
     let (s, do_type) = match expr {
-        Expr::ObjectExpr(ObjectType::As(ident, expr)) => {
-            (s, DoType::Update(AssignType::Assignment, Box::new(Expr::IdentExpr(ident)), expr))
+        Expr::ObjectExpr(ObjectType::As(ident, expr)) => (
+            s,
+            DoType::Update(
+                AssignType::Assignment,
+                Box::new(Expr::IdentExpr(ident)),
+                expr,
+            ),
+        ),
+        Expr::ObjectExpr(ObjectType::Assign(assign_type, ident, expr)) => {
+            (s, DoType::Update(assign_type, ident, expr))
         }
-        Expr::ObjectExpr(ObjectType::Assign(assign_type, ident, expr)) => (s, DoType::Update(assign_type, ident, expr)),
         _ => (s, DoType::Exec(Box::new(expr))),
     };
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Do(do_type)),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Do(do_type))))
 }
 
 fn parse_remember<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -182,10 +192,7 @@ where
     let (s, (idents, expr)) =
         parse_action_argument(s, alt((parse_assignation, parse_remember_as)))?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Remember(idents, expr)),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Remember(idents, expr))))
 }
 
 fn parse_forget<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -196,15 +203,12 @@ where
     let (s, interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, FORGET)(s)?;
 
-    let (s, forget_mem) = parse_action_argument(s,
+    let (s, forget_mem) = parse_action_argument(
+        s,
         preceded(
             comment,
-            alt((
-                parse_forget_all,
-                parse_forget_single,
-                parse_forget_list
-            ))
-        )
+            alt((parse_forget_all, parse_forget_single, parse_forget_list)),
+        ),
     )?;
 
     Ok((
@@ -222,10 +226,7 @@ where
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Say(Box::new(expr))),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Say(Box::new(expr)))))
 }
 
 fn parse_debug<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -249,7 +250,6 @@ where
     ))
 }
 
-
 pub fn parse_log_lvl<'a, E>(s: Span<'a>) -> IResult<Span<'a>, LogLvl, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
@@ -264,7 +264,7 @@ where
         "info" => Ok((rest, LogLvl::Info)),
         "debug" => Ok((rest, LogLvl::Debug)),
         "trace" => Ok((rest, LogLvl::Trace)),
-        _      => Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag)))
+        _ => Err(Err::Error(E::from_error_kind(s, ErrorKind::Tag))),
     }
 }
 
@@ -276,9 +276,9 @@ where
     let (s, mut interval) = get_interval(s)?;
     let (s, ..) = get_tag(name, LOG_ACTION)(s)?;
 
-    let (s, log_lvl) =  match opt(parse_log_lvl)(s)? {
+    let (s, log_lvl) = match opt(parse_log_lvl)(s)? {
         (s, Some(log_lvl)) => (s, log_lvl),
-        (s, None) => (s, LogLvl::Info)
+        (s, None) => (s, LogLvl::Info),
     };
 
     let (s, expr) = parse_action_argument(s, parse_operator)?;
@@ -291,7 +291,11 @@ where
 
     Ok((
         s,
-        Expr::ObjectExpr(ObjectType::Log{expr: Box::new(vec), interval, log_lvl}),
+        Expr::ObjectExpr(ObjectType::Log {
+            expr: Box::new(vec),
+            interval,
+            log_lvl,
+        }),
     ))
 }
 
@@ -310,10 +314,7 @@ where
         _ => return Err(gen_nom_failure(s, ERROR_USE)),
     }
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Use(Box::new(expr))),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Use(Box::new(expr)))))
 }
 
 fn parse_hold<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -325,10 +326,7 @@ where
 
     let (s, ..) = get_tag(name, HOLD)(s)?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Hold(inter)),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Hold(inter))))
 }
 
 fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -340,10 +338,7 @@ where
 
     let (s, ..) = get_tag(name, BREAK)(s)?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Break(inter)),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Break(inter))))
 }
 
 fn parse_continue<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -355,10 +350,7 @@ where
 
     let (s, ..) = get_tag(name, CONTINUE)(s)?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Continue(inter)),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Continue(inter))))
 }
 
 fn parse_return<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
@@ -375,10 +367,7 @@ where
         Err(Err::Incomplete(needed)) => return Err(Err::Incomplete(needed)),
     };
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::Return(Box::new(expr))),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::Return(Box::new(expr)))))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

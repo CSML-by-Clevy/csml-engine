@@ -1,6 +1,6 @@
-use csml_engine::{fold_bot};
+use csml_engine::fold_bot;
 use csml_interpreter::{
-    data::{csml_bot::{CsmlBot}, csml_flow::CsmlFlow},
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow},
     load_components,
 };
 use std::fs::File;

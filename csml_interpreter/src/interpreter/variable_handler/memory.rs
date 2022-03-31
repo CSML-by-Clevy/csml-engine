@@ -8,7 +8,7 @@ pub fn search_in_memory_type(name: &Identifier, data: &Data) -> Result<String, E
     match (
         data.context.current.get(&name.ident),
         data.step_vars.get(&name.ident),
-        data.flow.constants.contains_key(&name.ident)
+        data.flow.constants.contains_key(&name.ident),
     ) {
         (_, _, true) => Ok("constant".to_owned()),
         (_, Some(_), _) => Ok("use".to_owned()),
@@ -50,7 +50,10 @@ pub fn save_literal_in_mem(
             // save new value in current memory
             msg_data.add_to_memory(&name, lit.clone());
             // send new value to manager in order to be save in db
-            MSG::send(sender, MSG::Remember(Memory::new(name.clone(), lit.clone())));
+            MSG::send(
+                sender,
+                MSG::Remember(Memory::new(name.clone(), lit.clone())),
+            );
             data.context.current.insert(name, lit);
         }
         MemoryType::Use if update => {
