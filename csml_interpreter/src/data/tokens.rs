@@ -73,6 +73,7 @@ pub const DEBUG_ACTION: &str = "debug";
 pub const LOG_ACTION: &str = "log";
 pub const USE: &str = "use";
 pub const HOLD: &str = "hold";
+pub const HOLD_SECURE: &str = "hold_secure";
 pub const GOTO: &str = "goto";
 pub const PREVIOUS: &str = "previous";
 pub const MATCH: &str = "match";
@@ -87,7 +88,8 @@ pub const BREAK: &str = "break";
 pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
-pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, FORGET, USE, HOLD, BREAK];
+pub const FN_SCOPE_REJECTED: &[&str] =
+    &[SAY, GOTO, REMEMBER, FORGET, USE, HOLD, HOLD_SECURE, BREAK];
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";

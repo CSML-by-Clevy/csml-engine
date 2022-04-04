@@ -20,6 +20,7 @@ pub struct Hold {
     pub step_name: String,
     pub flow_name: String,
     pub previous: Option<PreviousInfo>,
+    pub secure: bool,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +34,7 @@ impl Hold {
         step_name: String,
         flow_name: String,
         previous: Option<PreviousInfo>,
+        secure: bool,
     ) -> Self {
         Self {
             index,
@@ -40,6 +42,7 @@ impl Hold {
             step_name,
             flow_name,
             previous,
+            secure
         }
     }
 
@@ -53,6 +56,7 @@ impl Hold {
             step_name: "".to_owned(),
             flow_name: "".to_owned(),
             previous: None,
+            secure: false
         }
     }
 }

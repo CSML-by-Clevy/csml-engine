@@ -80,14 +80,20 @@ pub fn expr_to_literal(
             ..
         } => {
             let mut map = HashMap::new();
+            let mut is_secure = false;
 
             for (key, value) in object.iter() {
-                map.insert(
-                    key.to_owned(),
-                    expr_to_literal(&value, dis_warnings, None, data, msg_data, sender)?,
-                );
+                let lit = expr_to_literal(&value, dis_warnings, None, data, msg_data, sender)?;
+                if lit.secure_variable {
+                    is_secure = true;
+                }
+
+                map.insert(key.to_owned(), lit);
             }
+
             let mut literal = PrimitiveObject::get_literal(&map, range_interval.to_owned());
+            literal.secure_variable = is_secure;
+
             exec_path_literal(&mut literal, dis_warnings, path, data, msg_data, sender)
         }
         Expr::ComplexLiteral(vec, range_interval) => {
@@ -102,17 +108,19 @@ pub fn expr_to_literal(
         }
         Expr::VecExpr(vec, range_interval) => {
             let mut array = vec![];
+            let mut is_secure = false;
+
             for value in vec.iter() {
-                array.push(expr_to_literal(
-                    value,
-                    dis_warnings,
-                    None,
-                    data,
-                    msg_data,
-                    sender,
-                )?)
+                let lit = expr_to_literal(value, dis_warnings, None, data, msg_data, sender)?;
+                if lit.secure_variable {
+                    is_secure = true;
+                }
+
+                array.push(lit)
             }
             let mut literal = PrimitiveArray::get_literal(&array, range_interval.to_owned());
+            literal.secure_variable = is_secure;
+
             exec_path_literal(&mut literal, dis_warnings, path, data, msg_data, sender)
         }
         Expr::PostfixExpr(postfix, expr) => {
@@ -188,7 +196,7 @@ pub fn resolve_fn_args(
                         if named_args && first > 1 {
                             return Err(gen_error_info(
                                 Position::new(interval_from_expr(expr), &data.context.flow),
-                                ERROR_EXPR_TO_LITERAL.to_owned(), // TODO: error mix of named args and anonymous args
+                                ERROR_EXPR_TO_LITERAL.to_owned(),
                             ));
                         }
                         let literal =
@@ -205,7 +213,7 @@ pub fn resolve_fn_args(
         }
         e => Err(gen_error_info(
             Position::new(interval_from_expr(e), &data.context.flow),
-            ERROR_EXPR_TO_LITERAL.to_owned(), //TODO: internal error fn args bad format
+            ERROR_EXPR_TO_LITERAL.to_owned(),
         )),
     }
 }

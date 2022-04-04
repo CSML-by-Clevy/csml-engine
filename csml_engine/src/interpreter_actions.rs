@@ -117,13 +117,15 @@ pub fn interpret_step(
                 step_name,
                 flow_name,
                 previous,
+                secure,
             }) => {
                 let hash = get_current_step_hash(&data.context, bot)?;
                 let state_hold: Value = serde_json::json!({
                     "index": index,
                     "step_vars": step_vars,
                     "hash": hash,
-                    "previous": previous
+                    "previous": previous,
+                    "secure": secure
                 });
 
                 csml_logger(
@@ -158,6 +160,7 @@ pub fn interpret_step(
                     step_name,
                     flow_name,
                     previous,
+                    secure
                 });
             }
             MSG::Next { flow, step } => match (flow, step) {

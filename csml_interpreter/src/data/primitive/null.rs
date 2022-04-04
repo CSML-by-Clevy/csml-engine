@@ -185,6 +185,7 @@ impl PrimitiveNull {
             content_type: "null".to_owned(),
             primitive,
             additional_info: None,
+            secure_variable: false,
             interval,
         }
     }
@@ -298,6 +299,7 @@ impl Primitive for PrimitiveNull {
                 content_type: "text".to_owned(),
                 primitive: Box::new(PrimitiveNull::default()),
                 additional_info: None,
+                secure_variable: false,
                 interval: Interval {
                     start_column: 0,
                     start_line: 0,

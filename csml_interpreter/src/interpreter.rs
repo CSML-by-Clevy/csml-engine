@@ -101,6 +101,29 @@ pub fn interpret_scope(
                     data.context.step.clone(),
                     data.context.flow.clone(),
                     data.previous_info.clone(),
+                    false
+                );
+
+                message_data.hold = Some(hold.to_owned());
+
+                MSG::send(&sender, MSG::Hold(hold));
+                message_data.exit_condition = Some(ExitCondition::Hold);
+                return Ok(message_data);
+            }
+            Expr::ObjectExpr(ObjectType::HoldSecure(..)) => {
+                let index = instruction_info.index;
+                let map = data.step_vars.to_owned();
+
+                let hold = Hold::new(
+                    IndexInfo {
+                        command_index: index,
+                        loop_index: data.loop_indexs.clone(),
+                    },
+                    step_vars_to_json(map),
+                    data.context.step.clone(),
+                    data.context.flow.clone(),
+                    data.previous_info.clone(),
+                    true
                 );
 
                 message_data.hold = Some(hold.to_owned());

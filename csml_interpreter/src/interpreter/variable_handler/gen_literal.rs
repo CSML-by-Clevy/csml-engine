@@ -60,10 +60,16 @@ pub fn gen_literal_from_event(
 
             Ok(lit)
         }
-        None => Ok(PrimitiveString::get_literal(
-            &data.event.content_value,
-            interval.to_owned(),
-        )),
+        None => {
+            let mut lit = PrimitiveString::get_literal(
+                &data.event.content_value,
+                interval.to_owned(),
+            );
+
+            lit.secure_variable = data.event.secure;
+
+            Ok(lit)
+        },
     }
 }
 
