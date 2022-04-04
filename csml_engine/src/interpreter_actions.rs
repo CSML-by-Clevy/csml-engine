@@ -1,11 +1,11 @@
-use crate::db_connectors::{
-    conversations::*,  memories::*, messages::*, state::*,
-};
+use crate::db_connectors::{conversations::*, memories::*, messages::*, state::*};
 use crate::utils::*;
 use crate::{data::*, delete_client_memories};
 
 use csml_interpreter::{
-    data::{csml_logs::*, ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, Event, Hold, MSG},
+    data::{
+        ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_logs::*, Event, Hold, MSG,
+    },
     interpret,
 };
 use serde_json::{map::Map, Value};
@@ -33,18 +33,21 @@ pub fn interpret_step(
             None,
             Some(data.context.flow.to_string()),
             None,
-            format!("interpreter: start interpretations of bot {:?}", bot.id)
+            format!("interpreter: start interpretations of bot {:?}", bot.id),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&data.client),
             Some(data.context.flow.to_string()),
             None,
-            format!("interpreter: start interpretations of bot {:?}, with ", bot.id)
+            format!(
+                "interpreter: start interpretations of bot {:?}, with ",
+                bot.id
+            ),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
     let new_bot = bot.clone();
     thread::spawn(move || {
@@ -80,32 +83,32 @@ pub fn interpret_step(
                         None,
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("sending message")
+                        format!("sending message"),
                     ),
-                    LogLvl::Info
+                    LogLvl::Info,
                 );
                 csml_logger(
                     CsmlLog::new(
                         Some(&data.client),
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("sending message {:?}", msg)
+                        format!("sending message {:?}", msg),
                     ),
-                    LogLvl::Debug
+                    LogLvl::Debug,
                 );
 
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
-            MSG::Log{flow, line, message, log_lvl} => {
+            MSG::Log {
+                flow,
+                line,
+                message,
+                log_lvl,
+            } => {
                 csml_logger(
-                    CsmlLog::new(
-                        Some(&data.client),
-                        Some(flow),
-                        Some(line),
-                        message
-                    ),
-                    log_lvl
+                    CsmlLog::new(Some(&data.client), Some(flow), Some(line), message),
+                    log_lvl,
                 );
             }
             MSG::Hold(Hold {
@@ -130,18 +133,18 @@ pub fn interpret_step(
                         None,
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("hold bot")
+                        format!("hold bot"),
                     ),
-                    LogLvl::Info
+                    LogLvl::Info,
                 );
                 csml_logger(
                     CsmlLog::new(
                         Some(&data.client),
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("hold bot, state_hold {:?}", state_hold)
+                        format!("hold bot, state_hold {:?}", state_hold),
                     ),
-                    LogLvl::Debug
+                    LogLvl::Debug,
                 );
 
                 set_state_items(
@@ -167,9 +170,12 @@ pub fn interpret_step(
                             Some(&data.client),
                             None,
                             None,
-                            format!("goto flow: {}, step: {} from: flow: {} step: {}", flow, step, data.context.flow, data.context.step)
+                            format!(
+                                "goto flow: {}, step: {} from: flow: {} step: {}",
+                                flow, step, data.context.flow, data.context.step
+                            ),
                         ),
-                        LogLvl::Debug
+                        LogLvl::Debug,
                     );
                     update_current_context(data, &memories);
                     goto_flow(
@@ -187,9 +193,12 @@ pub fn interpret_step(
                             Some(&data.client),
                             None,
                             None,
-                            format!("goto flow: {}, step: start from: flow: {} step: {}", flow, data.context.flow, data.context.step)
+                            format!(
+                                "goto flow: {}, step: start from: flow: {} step: {}",
+                                flow, data.context.flow, data.context.step
+                            ),
                         ),
-                        LogLvl::Debug
+                        LogLvl::Debug,
                     );
                     update_current_context(data, &memories);
                     let step = "start".to_owned();
@@ -208,9 +217,12 @@ pub fn interpret_step(
                             Some(&data.client),
                             None,
                             None,
-                            format!("goto flow: {}, step: {} from: flow: {} step: {}", data.context.flow, step, data.context.flow, data.context.step)
+                            format!(
+                                "goto flow: {}, step: {} from: flow: {} step: {}",
+                                data.context.flow, step, data.context.flow, data.context.step
+                            ),
                         ),
-                        LogLvl::Debug
+                        LogLvl::Debug,
                     );
                     if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
                         break;
@@ -222,9 +234,12 @@ pub fn interpret_step(
                             Some(&data.client),
                             Some(data.context.flow.to_string()),
                             None,
-                            format!("goto end from: flow: {} step: {}", data.context.flow, data.context.step)
+                            format!(
+                                "goto end from: flow: {} step: {}",
+                                data.context.flow, data.context.step
+                            ),
                         ),
-                        LogLvl::Debug
+                        LogLvl::Debug,
                     );
 
                     let step = "end".to_owned();
@@ -240,9 +255,9 @@ pub fn interpret_step(
                         Some(&data.client),
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("interpreter error: {:?}", err_msg)
+                        format!("interpreter error: {:?}", err_msg),
                     ),
-                    LogLvl::Error
+                    LogLvl::Error,
                 );
 
                 send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);

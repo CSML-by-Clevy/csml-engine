@@ -17,6 +17,8 @@ pub struct GetClientInfoQuery {
     channel_id: String,
     limit: Option<i64>,
     pagination_key: Option<String>,
+    from_date: Option<i64>,
+    to_date: Option<i64>,
 }
 
 /**
@@ -38,12 +40,15 @@ pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>, req: act
         None => None,
     };
 
+    let from_date = query.limit.to_owned();
+    let to_date = query.limit.to_owned();
+
     if let Some(_value) = validate_api_key(&req) {
         return HttpResponse::Forbidden().finish()
     }
 
     let res = thread::spawn(move || {
-        csml_engine::get_client_messages(&client, limit, pagination_key)
+        csml_engine::get_client_messages(&client, limit, pagination_key, from_date, to_date)
     }).join().unwrap();
 
     match res {
@@ -52,7 +57,7 @@ pub async fn get_client_messages(query: web::Query<GetClientInfoQuery>, req: act
         eprintln!("EngineError: {:?}", err);
         HttpResponse::InternalServerError().finish()
         }
-   }
+    }
 }
 
 #[cfg(test)]

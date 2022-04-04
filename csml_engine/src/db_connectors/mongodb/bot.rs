@@ -51,9 +51,8 @@ pub fn get_bot_versions(
     let collection = db.client.collection::<Document>("bot");
 
     let limit = match limit {
-        Some(limit) if limit >= 1 => limit + 1,
-        Some(_limit) => 21,
-        None => 21,
+        Some(limit) => std::cmp::min(limit + 1 , 26),
+        None => 26,
     };
 
     let filter = match pagination_key {

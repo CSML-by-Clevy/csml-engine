@@ -2,19 +2,20 @@ pub mod data;
 pub use csml_interpreter::{
     data::{
         ast::{Expr, Flow, InstructionScope},
+        csml_logs::*,
+        csml_logs::*,
         error_info::ErrorInfo,
         warnings::Warnings,
         Client, CsmlResult, Event,
-        csml_logs::*,
     },
-    load_components, search_for_modules
+    load_components, search_for_modules,
 };
 
 use serde_json::json;
 
-mod error_messages;
 mod db_connectors;
 mod encrypt;
+mod error_messages;
 mod init;
 mod interpreter_actions;
 mod send;
@@ -30,9 +31,9 @@ extern crate diesel_migrations;
 
 use data::*;
 use db_connectors::{
-    bot, conversations, init_db, memories, messages, state, user,
-    state::{set_state_items, delete_state_key}, clean_db, BotVersion, BotVersionCreated,
-    DbConversation,
+    bot, clean_db, conversations, init_db, memories, messages, state,
+    state::{delete_state_key, set_state_items},
+    user, BotVersion, BotVersionCreated, DbConversation,
 };
 use init::*;
 use interpreter_actions::interpret_step;
@@ -159,11 +160,13 @@ pub fn get_client_messages(
     client: &Client,
     limit: Option<i64>,
     pagination_key: Option<String>,
+    from_date: Option<i64>,
+    to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     let mut db = init_db()?;
     init_logger();
 
-    messages::get_client_messages(client, &mut db, limit, pagination_key)
+    messages::get_client_messages(client, &mut db, limit, pagination_key, from_date, to_date)
 }
 
 pub fn get_client_conversations(
@@ -213,7 +216,7 @@ pub fn create_bot_version(mut csml_bot: CsmlBot) -> Result<BotVersionCreated, En
 
     let bot_id = csml_bot.id.clone();
 
-    // search for modules to download 
+    // search for modules to download
     search_for_modules(&mut csml_bot);
 
     match validate_bot(csml_bot.clone()) {
@@ -363,7 +366,7 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
         }
     };
 
-    // search for modules to download 
+    // search for modules to download
     search_for_modules(&mut bot);
 
     csml_interpreter::validate_bot(&bot)
@@ -380,9 +383,7 @@ pub fn fold_bot(mut bot: CsmlBot) -> Result<String, EngineError> {
     // load native components into the bot
     bot.native_components = match load_components() {
         Ok(components) => Some(components),
-        Err(err) => {
-            return Err(EngineError::Parring(err.format_error()))
-        }
+        Err(err) => return Err(EngineError::Parring(err.format_error())),
     };
 
     Ok(csml_interpreter::fold_bot(&bot))
@@ -411,7 +412,11 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
  * If the hold is valid, we also need to load the local step memory
  * (context.hold.step_vars) into the conversation context.
  */
-fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot, event: &mut Event) -> Result<(), EngineError> {
+fn check_for_hold(
+    data: &mut ConversationInfo,
+    bot: &CsmlBot,
+    event: &mut Event,
+) -> Result<(), EngineError> {
     match state::get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(hold)) => {
@@ -481,7 +486,10 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
         },
         Err(_) => {
             ready = false;
-            status.insert("database_type".to_owned(), serde_json::json!("error: no database type selected"))
+            status.insert(
+                "database_type".to_owned(),
+                serde_json::json!("error: no database type selected"),
+            )
         }
     };
 

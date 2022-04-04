@@ -87,7 +87,9 @@ mod tests {
             &client,
             &mut data.db,
             Some(2),
-            None
+            None,
+            None,
+            None,
         ).unwrap();
 
         let received_msgs: Vec<serde_json::Value> = serde_json::from_value(response["messages"].clone()).unwrap();
@@ -103,7 +105,9 @@ mod tests {
             &client,
             &mut data.db,
             Some(2),
-            None
+            None,
+            None,
+            None,
         ).unwrap();
 
         let received_msgs: Vec<serde_json::Value> = serde_json::from_value(response["messages"].clone()).unwrap();

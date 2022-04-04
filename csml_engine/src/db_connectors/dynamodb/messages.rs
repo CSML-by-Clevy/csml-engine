@@ -2,6 +2,7 @@ use crate::db_connectors::dynamodb::{get_db, Message, MessageDeleteInfo, DynamoD
 use crate::{encrypt::{encrypt_data, decrypt_data}, ConversationInfo, EngineError, Client};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
+use chrono::{DateTime, Utc, NaiveDateTime, SecondsFormat};
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -93,10 +94,12 @@ fn query_messages(
     pagination_key: Option<HashMap<String, AttributeValue>>,
     projection_expression: Option<String>,
     expression_attribute_names: Option<HashMap<String, String>>,
+    from_date: Option<i64>,
+    to_date: Option<i64>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Message::get_hash(client);
 
-    let expr_attr_values = [
+    let mut expr_attr_values: HashMap<String, AttributeValue> = [
         (
             String::from(":hashVal"),
             AttributeValue {
@@ -116,11 +119,47 @@ fn query_messages(
     .cloned()
     .collect();
 
+    let key_condition_expression = if from_date.is_some() {
+        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix) and #created_at BETWEEN :fromDateTime AND :toDateTime".to_owned()
+    } else {
+        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned()
+    };
+
+    if let Some(from_date) = from_date {
+        let from_date = DateTime::<Utc>::from_utc(
+            NaiveDateTime::from_timestamp(from_date, 0),
+            Utc
+        );
+        let to_date = match to_date {
+            Some(to_date) => DateTime::<Utc>::from_utc(
+                NaiveDateTime::from_timestamp(to_date, 0),
+                Utc
+            ),
+            None => chrono::Utc::now()
+        };
+
+        expr_attr_values.insert(
+            String::from(":fromDateTime"),
+            AttributeValue {
+                s: Some(from_date.to_rfc3339_opts(SecondsFormat::Millis, true)),
+                ..Default::default()
+            },
+        );
+
+        expr_attr_values.insert(
+            String::from(":toDateTime"),
+            AttributeValue {
+                s: Some(to_date.to_rfc3339_opts(SecondsFormat::Millis, true)),
+                ..Default::default()
+            },
+        );
+    };
+
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name,
         key_condition_expression: Some(
-            "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned(),
+            key_condition_expression
         ),
         expression_attribute_names,
         expression_attribute_values: Some(expr_attr_values),
@@ -147,6 +186,8 @@ pub fn get_client_messages(
     db: &mut DynamoDbClient,
     limit: Option<i64>,
     pagination_key: Option<HashMap<String, AttributeValue>>,
+    from_date: Option<i64>,
+    to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     let mut messages = vec![];
     let limit = match limit {
@@ -155,13 +196,17 @@ pub fn get_client_messages(
         None => 20,
     };
 
-    let expr_attr_names = [
+    let mut expr_attr_names: HashMap<String, String> = [
         (String::from("#hashKey"), String::from("hash")),
         (String::from("#rangeKey"), String::from("range_time")), // time index
     ]
     .iter()
     .cloned()
     .collect();
+
+    if from_date.is_some() {
+        expr_attr_names.insert("#created_at".to_string(), "created_at".to_string());
+    }
 
     let data = query_messages(
         client,
@@ -170,7 +215,9 @@ pub fn get_client_messages(
         Some(String::from("TimeIndex")),
         limit, pagination_key,
         None,
-        Some(expr_attr_names)
+        Some(expr_attr_names),
+        from_date,
+        to_date,
     )?;
 
     // The query returns an array of items (max 10, based on the limit param above).
@@ -234,6 +281,8 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
             pagination_key,
             Some("#conversation_id, #id".to_owned()),
             Some(expr_attr_names.clone()),
+            None,
+            None,
         )?;
 
         // The query returns an array of items (max 10, based on the limit param above).

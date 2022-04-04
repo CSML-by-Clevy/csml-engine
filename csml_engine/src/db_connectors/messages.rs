@@ -98,6 +98,8 @@ pub fn get_client_messages(
     db: &mut Database,
     limit: Option<i64>,
     pagination_key: Option<String>,
+    from_date: Option<i64>,
+    to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     csml_logger(
         CsmlLog::new(
@@ -128,6 +130,8 @@ pub fn get_client_messages(
             db,
             limit,
             pagination_key,
+            from_date,
+            to_date,
         );
     }
 
@@ -141,6 +145,8 @@ pub fn get_client_messages(
             db,
             limit,
             pagination_key,
+            from_date,
+            to_date,
         );
     }
 
@@ -153,6 +159,8 @@ pub fn get_client_messages(
             db,
             limit,
             pagination_key,
+            from_date,
+            to_date,
         );
     }
 
@@ -165,6 +173,8 @@ pub fn get_client_messages(
             db,
             limit,
             pagination_key,
+            from_date,
+            to_date,
         );
     }
 

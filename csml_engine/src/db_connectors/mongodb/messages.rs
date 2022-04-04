@@ -100,23 +100,49 @@ pub fn get_client_messages(
     db: &MongoDbClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
+    from_date: Option<i64>,
+    to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     let collection = db.client.collection::<Document>("message");
 
     let limit = match limit {
-        Some(limit) if limit >= 1 => limit + 1,
-        Some(_limit) => 21,
-        None => 21,
+        Some(limit) => std::cmp::min(limit + 1 , 26),
+        None => 26,
     };
 
-    let filter = match pagination_key {
-        Some(key) => {
+    let filter = match (pagination_key, from_date) {
+        (Some(key), Some(from_date)) => {
+            let from_date = bson::DateTime::from_millis(from_date * 1000);
+            let to_date = match to_date {
+                Some(to_date) => bson::DateTime::from_millis(to_date * 1000),
+                None => bson::DateTime::from_chrono(chrono::Utc::now())
+            };
+
             doc! {
                 "client": bson::to_bson(&client)?,
-                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() }
+                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() },
+                "created_at": {"$gte": from_date, "$lt": to_date}
             }
         }
-        None => doc! {
+        (None, Some(from_date)) => {
+            let from_date = bson::DateTime::from_millis(from_date * 1000);
+            let to_date = match to_date {
+                Some(to_date) => bson::DateTime::from_millis(to_date * 1000),
+                None => bson::DateTime::from_chrono(chrono::Utc::now())
+            };
+
+            doc! {
+                "client": bson::to_bson(&client)?,
+                "created_at": {"$gte": from_date, "$lt": to_date}
+            }
+        }
+        (Some(key), None) => {
+            doc! {
+                "client": bson::to_bson(&client)?,
+                "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() },
+            }
+        }
+        (None, None) => doc! {
             "client": bson::to_bson(&client)?,
         },
     };
@@ -126,6 +152,7 @@ pub fn get_client_messages(
         .batch_size(30)
         .limit(limit)
         .build();
+
     let cursor = collection.find(filter, find_options)?;
 
     let mut messages = vec![];
