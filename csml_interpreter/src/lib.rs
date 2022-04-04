@@ -20,8 +20,11 @@ use data::literal::create_error_info;
 use data::message_data::MessageData;
 use data::msg::MSG;
 use data::CsmlResult;
+use data::{
+    csml_bot::{CsmlBot, ModuleData},
+    CsmlFlow,
+};
 use data::{Context, Data, Position, STEP_LIMIT};
-use data::{CsmlBot, CsmlFlow};
 use error_format::*;
 use fold_bot::fold_bot as fold;
 use linter::{linter::lint_bot, FlowToValidate};
@@ -274,7 +277,12 @@ pub fn search_for_modules(bot: &mut CsmlBot) {
     let mut downloaded_modules = vec![];
 
     if let Some(ref mut mods) = bot.modules {
-        for module in mods.modules.iter() {
+        let modules: Vec<ModuleData> = match serde_yaml::from_str(&mods.config) {
+            Ok(modules) => modules,
+            Err(_) => return,
+        };
+
+        for module in modules.iter() {
             if let None = mods.flows.iter().find(|&flow| flow.name == module.name) {
                 let url = match &module.url {
                     Some(url) => url,

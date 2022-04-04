@@ -1,9 +1,13 @@
 use csml_engine::{
     data::{BotOpt, CsmlRequest},
-    start_conversation, delete_expired_data,
+    delete_expired_data, start_conversation,
 };
 use csml_interpreter::{
-    data::{csml_bot::{CsmlBot, Modules, ModuleData}, csml_flow::CsmlFlow, Client},
+    data::{
+        csml_bot::{CsmlBot, Modules},
+        csml_flow::CsmlFlow,
+        Client,
+    },
     load_components,
 };
 use serde_json::json;
@@ -65,11 +69,7 @@ fn init_bot() -> CsmlBot {
         no_interruption_delay: None,
         env: None,
         modules: Some(Modules {
-            modules: vec![ModuleData{
-                name: "module".to_string(),
-                url: Some("https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml".to_string()),
-                version: "latest".to_string()
-            }],
+            config: "- {name: module,url: https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml, version: latest }".to_string(),
             flows: vec![]
         })
     }

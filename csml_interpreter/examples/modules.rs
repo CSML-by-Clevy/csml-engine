@@ -1,4 +1,4 @@
-use csml_interpreter::data::csml_bot::{CsmlBot, ModuleData, Modules};
+use csml_interpreter::data::csml_bot::{CsmlBot, Modules};
 use csml_interpreter::data::csml_flow::CsmlFlow;
 use csml_interpreter::data::event::Event;
 use csml_interpreter::data::Context;
@@ -35,13 +35,9 @@ fn main() {
         None,
         None,
         Some(Modules {
-            modules: vec![ModuleData{
-                name: "module".to_string(),
-                url: Some("https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml".to_string()),
-                version: "latest".to_string()
-            }],
-            flows: vec![]
-        })
+            config: r"- {name: module, url: https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml, version: latest }".to_string(),
+            flows: vec![],
+        }),
     );
 
     // Create an Event

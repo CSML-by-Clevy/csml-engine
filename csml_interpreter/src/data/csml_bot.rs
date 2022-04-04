@@ -27,27 +27,24 @@ pub struct CsmlBot {
 pub struct ModuleData {
     pub name: String,
     pub url: Option<String>,
+    #[serde(default = "default_version")]
     pub version: String,
+}
+
+fn default_version() -> String {
+    "latest".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Modules {
-    pub modules: Vec<ModuleData>,
+    pub config: String,
+    #[serde(default)]
     pub flows: Vec<CsmlFlow>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
-
-impl Modules {
-    pub fn default() -> Self {
-        Self {
-            modules: vec![],
-            flows: vec![],
-        }
-    }
-}
 
 impl CsmlBot {
     pub fn new(
