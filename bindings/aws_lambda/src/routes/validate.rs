@@ -33,6 +33,7 @@ pub fn handler(body: CsmlBot) -> Result<serde_json::Value, HandlerError> {
     let response = match validate_bot(body.clone()) {
         CsmlResult {
             flows: _,
+            extern_flows: _,
             warnings: _,
             errors: None,
         } => {
@@ -41,6 +42,7 @@ pub fn handler(body: CsmlBot) -> Result<serde_json::Value, HandlerError> {
 
         CsmlResult {
         flows: _,
+        extern_flows: _,
         warnings: _,
         errors: Some(errors),
         } => {

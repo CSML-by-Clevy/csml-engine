@@ -5,7 +5,7 @@ use crate::data::{
 use crate::error_format::*;
 use lettre::{
     message::{header, Mailbox, MultiPart, SinglePart},
-    transport::smtp::authentication::{Mechanism, Credentials},
+    transport::smtp::authentication::{Credentials, Mechanism},
 };
 use std::collections::HashMap;
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,13 +98,13 @@ fn get_auth_mechanisms(
     data: &Data,
     interval: Interval,
 ) -> Option<Vec<Mechanism>> {
-
     let auth_values = get_value::<HashMap<String, Literal>>(
         object.get("auth_mechanisms"),
         data,
         "".to_owned(),
         interval,
-    ).ok()?;
+    )
+    .ok()?;
 
     let mut vec = vec![];
 
@@ -112,7 +112,7 @@ fn get_auth_mechanisms(
         vec.push(Mechanism::Plain);
     }
 
-    if auth_values.contains_key("AUTH LOGIN"){
+    if auth_values.contains_key("AUTH LOGIN") {
         vec.push(Mechanism::Login);
     }
 
@@ -229,10 +229,11 @@ pub fn get_mailer(
 
     let auth_mechanisms = get_auth_mechanisms(object, data, interval);
 
-    let starttls: bool = match get_value::<bool>(object.get("starttls"), data, "".to_owned(), interval) {
-        Ok(starttls) => starttls.to_owned() ,
-        Err(_) => false,
-    };
+    let starttls: bool =
+        match get_value::<bool>(object.get("starttls"), data, "".to_owned(), interval) {
+            Ok(starttls) => starttls.to_owned(),
+            Err(_) => false,
+        };
 
     // set default port to [465] for TLS connections. RFC8314](https://tools.ietf.org/html/rfc8314)
     let port = match get_value::<i64>(object.get("port"), data, "".to_owned(), interval) {
@@ -257,15 +258,12 @@ pub fn get_mailer(
         true => {
             let smtp_builder = match starttls {
                 true => lettre::SmtpTransport::starttls_relay(smtp_server),
-                _ => lettre::SmtpTransport::relay(smtp_server)
+                _ => lettre::SmtpTransport::relay(smtp_server),
             };
 
             match smtp_builder {
                 Ok(smtp_server) => {
-
-                    let mut smtp_builder  = smtp_server
-                        .credentials(credentials)
-                        .port(port);
+                    let mut smtp_builder = smtp_server.credentials(credentials).port(port);
 
                     if let Some(auth_mechanisms) = auth_mechanisms {
                         smtp_builder = smtp_builder.authentication(auth_mechanisms);
@@ -278,7 +276,7 @@ pub fn get_mailer(
                     "invalid SMTP address".to_owned(),
                 )),
             }
-        },
+        }
         false => {
             let mailer = lettre::SmtpTransport::builder_dangerous(smtp_server)
                 .credentials(credentials)
@@ -296,7 +294,6 @@ pub fn get_auth_mechanism(
     interval: Interval,
     usage: &str,
 ) -> Result<String, ErrorInfo> {
-
     let value = Literal::get_value::<String>(
         &lit.primitive,
         &data.context.flow,
@@ -312,6 +309,6 @@ pub fn get_auth_mechanism(
         _ => Err(gen_error_info(
             Position::new(interval, &data.context.flow),
             usage.to_owned(),
-        ))
+        )),
     }
 }

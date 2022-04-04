@@ -1,10 +1,10 @@
 use crate::data::error_info::ErrorInfo;
+use crate::data::literal;
 use crate::data::position::Position;
 use crate::data::primitive::{
     boolean::PrimitiveBoolean, object::PrimitiveObject, string::PrimitiveString, Primitive,
     PrimitiveType, Right,
 };
-use crate::data::{literal};
 use crate::data::{
     ast::Interval, literal::ContentType, message::Message, tokens::NULL, Data, Literal,
     MessageData, MSG,
@@ -143,7 +143,7 @@ impl PrimitiveNull {
             Some(map) if map.contains_key("error") => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
-            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 

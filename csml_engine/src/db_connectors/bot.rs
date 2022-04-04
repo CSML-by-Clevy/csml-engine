@@ -9,7 +9,7 @@ use crate::db_connectors::{is_sqlite, sqlite_connector};
 
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{BotVersion, CsmlBot, Database, EngineError};
-use csml_interpreter::data::csml_logs::*;
+use csml_interpreter::data::{csml_logs::*, Modules};
 
 pub fn create_bot_version(
     bot_id: String,
@@ -50,12 +50,18 @@ pub fn create_bot_version(
         let dynamo_bot = crate::data::to_dynamo_bot(&csml_bot);
 
         let flows = serde_json::json!(&csml_bot.flows);
+        let flow_modules = match csml_bot.modules {
+            Some(ref modules) => serde_json::json!(&modules),
+            None => serde_json::json!(&Modules::default()),
+        };
+
         let bot = serde_json::json!(dynamo_bot).to_string();
 
         let version_id = dynamodb_connector::bot::create_bot_version(
             bot_id.clone(),
             bot,
             flows.to_string(),
+            flow_modules.to_string(),
             db,
         )?;
 

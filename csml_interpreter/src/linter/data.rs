@@ -1,8 +1,8 @@
 use crate::data::{
-    ast::Interval,
+    ast::{FromFlow, Interval},
     warnings::*,
 };
-use crate::error_format::{ErrorInfo};
+use crate::error_format::ErrorInfo;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
@@ -12,8 +12,8 @@ pub enum StepBreakers {
     GOTO {
         step: String,
         flow: String,
-        interval: Interval
-    }
+        interval: Interval,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -41,6 +41,7 @@ pub struct FunctionInfo<'a> {
     pub name: String,
     pub in_flow: &'a str,
     pub raw_flow: &'a str,
+    pub extern_module: bool,
     pub interval: Interval,
 }
 
@@ -48,7 +49,7 @@ pub struct FunctionInfo<'a> {
 pub struct ImportInfo<'a> {
     pub as_name: String,
     pub original_name: Option<String>,
-    pub from_flow: Option<String>,
+    pub from_flow: FromFlow,
     pub in_flow: &'a str,
     pub raw_flow: &'a str,
     pub interval: Interval,
@@ -63,7 +64,7 @@ pub struct State {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ScopeType {
     Function(String),
-    Step(String)
+    Step(String),
 }
 
 #[derive(Debug)]
@@ -74,6 +75,7 @@ pub struct LinterInfo<'a> {
     pub goto_list: &'a mut Vec<StepInfo<'a>>,
     pub step_list: &'a mut HashSet<StepInfo<'a>>,
     pub function_list: &'a mut HashSet<FunctionInfo<'a>>,
+    // pub modules_function_list: &'a mut HashSet<FunctionInfo<'a>>,
     pub import_list: &'a mut HashSet<ImportInfo<'a>>,
     pub valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
     pub functions_call_list: &'a mut Vec<FunctionCallInfo<'a>>,
@@ -104,13 +106,16 @@ impl<'a> Eq for StepInfo<'a> {}
 impl<'a> Hash for FunctionInfo<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.name.hash(state);
-        self.in_flow.hash(state)
+        self.in_flow.hash(state);
+        self.extern_module.hash(state)
     }
 }
 
 impl<'a> PartialEq for FunctionInfo<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name && self.in_flow == other.in_flow
+        self.name == other.name
+            && self.in_flow == other.in_flow
+            && self.extern_module == other.extern_module
     }
 }
 
@@ -142,7 +147,7 @@ impl<'a> StepInfo<'a> {
         raw_flow: &'a str,
         in_flow: String,
         step_breakers: Vec<StepBreakers>,
-        interval: Interval
+        interval: Interval,
     ) -> Self {
         Self {
             flow: flow.to_owned(),
@@ -180,6 +185,7 @@ impl<'a> LinterInfo<'a> {
         goto_list: &'a mut Vec<StepInfo<'a>>,
         step_list: &'a mut HashSet<StepInfo<'a>>,
         function_list: &'a mut HashSet<FunctionInfo<'a>>,
+        // modules_function_list: &'a mut HashSet<FunctionInfo<'a>>,
         import_list: &'a mut HashSet<ImportInfo<'a>>,
         valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
         functions_call_list: &'a mut Vec<FunctionCallInfo<'a>>,
@@ -194,29 +200,44 @@ impl<'a> LinterInfo<'a> {
             goto_list,
             step_list,
             function_list,
+            // modules_function_list,
             import_list,
             valid_closure_list,
             functions_call_list,
             errors,
             warnings,
-            native_components
+            native_components,
         }
     }
 }
 
 impl<'a> FunctionInfo<'a> {
-    pub fn new(name: String, in_flow: &'a str, raw_flow: &'a str, interval: Interval) -> Self {
+    pub fn new(
+        name: String,
+        in_flow: &'a str,
+        raw_flow: &'a str,
+        interval: Interval,
+        extern_module: bool,
+    ) -> Self {
         Self {
             name,
             in_flow,
             raw_flow,
+            extern_module,
             interval,
         }
     }
 }
 
 impl<'a> FunctionCallInfo<'a> {
-    pub fn new(name: String, in_flow: &'a str, scope_type: ScopeType, is_permanent: bool, raw_flow: &'a str, interval: Interval) -> Self {
+    pub fn new(
+        name: String,
+        in_flow: &'a str,
+        scope_type: ScopeType,
+        is_permanent: bool,
+        raw_flow: &'a str,
+        interval: Interval,
+    ) -> Self {
         Self {
             name,
             in_flow,
@@ -232,7 +253,7 @@ impl<'a> ImportInfo<'a> {
     pub fn new(
         as_name: String,
         original_name: Option<String>,
-        from_flow: Option<String>,
+        from_flow: FromFlow,
         in_flow: &'a str,
         raw_flow: &'a str,
         interval: Interval,

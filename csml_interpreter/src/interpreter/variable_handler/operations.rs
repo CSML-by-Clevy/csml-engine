@@ -1,15 +1,13 @@
-use crate::error_format::{gen_error_info, ErrorInfo};
 use crate::data::{
-    ast::{Expr, Postfix, Infix},
-    Literal, Data, MessageData, MSG,
+    ast::{Expr, Infix, Postfix},
+    position::Position,
     primitive::boolean::PrimitiveBoolean,
-    position::Position, warnings::DisplayWarnings,
+    warnings::DisplayWarnings,
+    Data, Literal, MessageData, MSG,
 };
-use crate::interpreter::{
-    variable_handler::{
-        expr_to_literal, interval::interval_from_expr,
-        match_literals::match_obj
-    },
+use crate::error_format::{gen_error_info, ErrorInfo};
+use crate::interpreter::variable_handler::{
+    expr_to_literal, interval::interval_from_expr, match_literals::match_obj,
 };
 use std::sync::mpsc;
 
@@ -141,11 +139,18 @@ pub fn evaluate_postfix(
     data: &mut Data,
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
-)  -> Result<Literal, ErrorInfo> {
-    let value = valid_literal(expr_to_literal(expr, &DisplayWarnings::Off, None, data, msg_data, sender));
+) -> Result<Literal, ErrorInfo> {
+    let value = valid_literal(expr_to_literal(
+        expr,
+        &DisplayWarnings::Off,
+        None,
+        data,
+        msg_data,
+        sender,
+    ));
     let interval = interval_from_expr(expr);
 
-    if postfixes.len() % 2  == 0 {
+    if postfixes.len() % 2 == 0 {
         Ok(PrimitiveBoolean::get_literal(value, interval))
     } else {
         Ok(PrimitiveBoolean::get_literal(!value, interval))

@@ -1,6 +1,7 @@
 use crate::data::{
     ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
-    Data, Literal, MessageData, MSG, warnings::DisplayWarnings,
+    warnings::DisplayWarnings,
+    Data, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::{
@@ -33,14 +34,20 @@ pub fn valid_condition(
             msg_data,
             sender,
         )),
-        Expr::PostfixExpr(post, exp) => valid_literal(evaluate_postfix(
-            post, exp, data, msg_data, sender,
-            ))
-        ,
+        Expr::PostfixExpr(post, exp) => {
+            valid_literal(evaluate_postfix(post, exp, data, msg_data, sender))
+        }
         Expr::InfixExpr(inf, exp_1, exp_2) => valid_literal(evaluate_condition(
             inf, exp_1, exp_2, data, msg_data, sender,
         )),
-        value => valid_literal(expr_to_literal(value, &DisplayWarnings::Off, None, data, msg_data, sender)),
+        value => valid_literal(expr_to_literal(
+            value,
+            &DisplayWarnings::Off,
+            None,
+            data,
+            msg_data,
+            sender,
+        )),
     }
 }
 

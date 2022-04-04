@@ -1,11 +1,11 @@
-use crate::data::{ast::*, tokens::*, primitive::PrimitiveInt};
+use crate::data::{ast::*, primitive::PrimitiveInt, tokens::*};
 use crate::error_format::{gen_nom_failure, ERROR_RIGHT_BRACKET};
 use crate::parser::{
     operator::{parse_operator, tools::parse_item_operator},
     parse_built_in::parse_built_in,
     parse_closure::parse_closure,
     parse_comments::comment,
-    parse_idents::{parse_idents_as, parse_arg_idents_assignation, parse_idents_usage},
+    parse_idents::{parse_arg_idents_assignation, parse_idents_as, parse_idents_usage},
     parse_literal::parse_literal_expr,
     parse_object::parse_object,
     parse_parenthesis::parse_r_parentheses,
@@ -18,7 +18,7 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     combinator::{cut, opt},
-    error::{ParseError, ContextError},
+    error::{ContextError, ParseError},
     multi::separated_list0,
     sequence::{delimited, preceded, terminated, tuple},
     Err, IResult,
@@ -35,18 +35,21 @@ where
     let (s, interval) = get_interval(s)?;
 
     let (s, opt) = opt(preceded(comment, parse_item_operator))(s)?;
-    let (s, expr) =  delimited(
-            preceded(comment, tag(L_PAREN)),
-            parse_operator,
-            parse_r_parentheses,
+    let (s, expr) = delimited(
+        preceded(comment, tag(L_PAREN)),
+        parse_operator,
+        parse_r_parentheses,
     )(s)?;
 
     match opt {
         Some(infix) => {
-            let zero = Expr::LitExpr{literal: PrimitiveInt::get_literal(0,interval), in_in_substring: false};
+            let zero = Expr::LitExpr {
+                literal: PrimitiveInt::get_literal(0, interval),
+                in_in_substring: false,
+            };
             Ok((s, Expr::InfixExpr(infix, Box::new(zero), Box::new(expr))))
-        },
-        None => Ok((s, expr))
+        }
+        None => Ok((s, expr)),
     }
 }
 
@@ -175,7 +178,6 @@ pub fn parse_basic_expr<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-
     let (s, _) = comment(s)?;
 
     let (s, expr) = alt((

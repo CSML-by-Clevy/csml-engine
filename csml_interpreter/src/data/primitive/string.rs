@@ -1,5 +1,4 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::{literal, literal::ContentType};
 use crate::data::position::Position;
 use crate::data::primitive::array::PrimitiveArray;
 use crate::data::primitive::boolean::PrimitiveBoolean;
@@ -11,6 +10,7 @@ use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
 use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
+use crate::data::{literal, literal::ContentType};
 use crate::error_format::*;
 use crate::interpreter::json_to_literal;
 use phf::phf_map;
@@ -184,10 +184,7 @@ impl PrimitiveString {
             ));
         }
 
-        let email_regex = Regex::new(
-            r"^[^@]+@[^@]+\.[^@]+$",
-        )
-        .unwrap();
+        let email_regex = Regex::new(r"^[^@]+@[^@]+\.[^@]+$").unwrap();
 
         let result = email_regex.is_match(&string.value);
 
@@ -240,7 +237,7 @@ impl PrimitiveString {
             Some(map) if map.contains_key("error") => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
-            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 
@@ -418,23 +415,24 @@ impl PrimitiveString {
         }
 
         let (to_replace, replace_by) = match (args.get("arg0"), args.get("arg1")) {
-            (Some(old), Some(new)) 
-                if old.primitive.get_type() == PrimitiveType::PrimitiveString &&
-                new.primitive.get_type() == PrimitiveType::PrimitiveString 
-            => {
-
-                (Literal::get_value::<String>(
-                    &old.primitive,
-                    &data.context.flow,
-                    interval,
-                    ERROR_STRING_REPLACE.to_owned(),
-                )?,
-                Literal::get_value::<String>(
-                    &new.primitive,
-                    &data.context.flow,
-                    interval,
-                    ERROR_STRING_REPLACE.to_owned(),
-                )?)
+            (Some(old), Some(new))
+                if old.primitive.get_type() == PrimitiveType::PrimitiveString
+                    && new.primitive.get_type() == PrimitiveType::PrimitiveString =>
+            {
+                (
+                    Literal::get_value::<String>(
+                        &old.primitive,
+                        &data.context.flow,
+                        interval,
+                        ERROR_STRING_REPLACE.to_owned(),
+                    )?,
+                    Literal::get_value::<String>(
+                        &new.primitive,
+                        &data.context.flow,
+                        interval,
+                        ERROR_STRING_REPLACE.to_owned(),
+                    )?,
+                )
             }
             _ => {
                 return Err(gen_error_info(
@@ -468,23 +466,24 @@ impl PrimitiveString {
         }
 
         let (to_replace, replace_by) = match (args.get("arg0"), args.get("arg1")) {
-            (Some(old), Some(new)) 
-                if old.primitive.get_type() == PrimitiveType::PrimitiveString &&
-                new.primitive.get_type() == PrimitiveType::PrimitiveString 
-            => {
-
-                (Literal::get_value::<String>(
-                    &old.primitive,
-                    &data.context.flow,
-                    interval,
-                    ERROR_STRING_REPLACE_ALL.to_owned(),
-                )?,
-                Literal::get_value::<String>(
-                    &new.primitive,
-                    &data.context.flow,
-                    interval,
-                    ERROR_STRING_REPLACE_ALL.to_owned(),
-                )?)
+            (Some(old), Some(new))
+                if old.primitive.get_type() == PrimitiveType::PrimitiveString
+                    && new.primitive.get_type() == PrimitiveType::PrimitiveString =>
+            {
+                (
+                    Literal::get_value::<String>(
+                        &old.primitive,
+                        &data.context.flow,
+                        interval,
+                        ERROR_STRING_REPLACE_ALL.to_owned(),
+                    )?,
+                    Literal::get_value::<String>(
+                        &new.primitive,
+                        &data.context.flow,
+                        interval,
+                        ERROR_STRING_REPLACE_ALL.to_owned(),
+                    )?,
+                )
             }
             _ => {
                 return Err(gen_error_info(
@@ -518,23 +517,24 @@ impl PrimitiveString {
         }
 
         let (regex, replace_by) = match (args.get("arg0"), args.get("arg1")) {
-            (Some(old), Some(new)) 
-                if old.primitive.get_type() == PrimitiveType::PrimitiveString &&
-                new.primitive.get_type() == PrimitiveType::PrimitiveString 
-            => {
-
-                (Literal::get_value::<String>(
-                    &old.primitive,
-                    &data.context.flow,
-                    interval,
-                    ERROR_STRING_REPLACE_REGEX.to_owned(),
-                )?,
-                Literal::get_value::<String>(
-                    &new.primitive,
-                    &data.context.flow,
-                    interval,
-                    ERROR_STRING_REPLACE_REGEX.to_owned(),
-                )?)
+            (Some(old), Some(new))
+                if old.primitive.get_type() == PrimitiveType::PrimitiveString
+                    && new.primitive.get_type() == PrimitiveType::PrimitiveString =>
+            {
+                (
+                    Literal::get_value::<String>(
+                        &old.primitive,
+                        &data.context.flow,
+                        interval,
+                        ERROR_STRING_REPLACE_REGEX.to_owned(),
+                    )?,
+                    Literal::get_value::<String>(
+                        &new.primitive,
+                        &data.context.flow,
+                        interval,
+                        ERROR_STRING_REPLACE_REGEX.to_owned(),
+                    )?,
+                )
             }
             _ => {
                 return Err(gen_error_info(
@@ -1161,7 +1161,6 @@ impl PrimitiveString {
 
         Ok(PrimitiveArray::get_literal(&vector, interval))
     }
-
 
     fn trim(
         string: &mut PrimitiveString,
@@ -1851,8 +1850,7 @@ impl Primitive for PrimitiveString {
                     other.get_type()
                 )),
             }
-        }
-        else {
+        } else {
             let mut new_string = self.value.clone();
 
             new_string.push_str(&rhs.value);
@@ -2078,7 +2076,15 @@ impl Primitive for PrimitiveString {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, additional_info, interval, data, msg_data, sender)?;
+            let res = f(
+                self,
+                args,
+                additional_info,
+                interval,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok((res, *right));
         }

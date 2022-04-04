@@ -3,12 +3,12 @@ use crate::data::{
     error_info::ErrorInfo,
     position::Position,
     primitive::PrimitiveType,
-    primitive::{Data, PrimitiveInt, PrimitiveObject, PrimitiveNull},
+    primitive::{Data, PrimitiveInt, PrimitiveNull, PrimitiveObject},
     Literal,
 };
 use crate::error_format::*;
-use chrono::{DateTime, SecondsFormat, NaiveDate, NaiveDateTime, Utc, TimeZone};
-use std::{collections::HashMap};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, SecondsFormat, TimeZone, Utc};
+use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 // PRIVATE FUNCTIONS
@@ -169,14 +169,14 @@ pub fn pasre_from_str(
 
 pub fn format_date<Tz>(
     args: &HashMap<String, Literal>,
-    date:DateTime<Tz>,
+    date: DateTime<Tz>,
     data: &mut Data,
     interval: Interval,
     use_z: bool,
 ) -> Result<String, ErrorInfo>
 where
- Tz: TimeZone,
- Tz::Offset: core::fmt::Display,
+    Tz: TimeZone,
+    Tz::Offset: core::fmt::Display,
 {
     match args.len() {
         0 => Ok(date.to_rfc3339_opts(SecondsFormat::Millis, use_z)),

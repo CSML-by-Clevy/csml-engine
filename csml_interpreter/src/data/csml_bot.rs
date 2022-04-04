@@ -14,6 +14,7 @@ pub struct CsmlBot {
     #[serde(alias = "fn_endpoint")]
     pub apps_endpoint: Option<String>,
     pub flows: Vec<CsmlFlow>,
+    pub modules: Option<Modules>,
     pub native_components: Option<serde_json::Map<String, serde_json::Value>>, //
     pub custom_components: Option<serde_json::Value>,                          // serde_json::Value
     pub default_flow: String,
@@ -22,9 +23,31 @@ pub struct CsmlBot {
     pub env: Option<serde_json::Value>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModuleData {
+    pub name: String,
+    pub url: Option<String>,
+    pub version: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Modules {
+    pub modules: Vec<ModuleData>,
+    pub flows: Vec<CsmlFlow>,
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // STATIC FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+
+impl Modules {
+    pub fn default() -> Self {
+        Self {
+            modules: vec![],
+            flows: vec![],
+        }
+    }
+}
 
 impl CsmlBot {
     pub fn new(
@@ -38,12 +61,14 @@ impl CsmlBot {
         bot_ast: Option<String>,
         no_interruption_delay: Option<i32>,
         env: Option<serde_json::Value>,
+        modules: Option<Modules>,
     ) -> Self {
         Self {
             id: id.to_owned(),
             name: name.to_owned(),
             apps_endpoint,
             flows,
+            modules,
             native_components,
             custom_components,
             default_flow: default_flow.to_owned(),
@@ -77,10 +102,19 @@ impl CsmlBot {
 
         map.insert("id".to_owned(), serde_json::json!(self.id));
         map.insert("name".to_owned(), serde_json::json!(self.name));
-        map.insert("apps_endpoint".to_owned(), serde_json::json!(self.apps_endpoint));
+        map.insert(
+            "apps_endpoint".to_owned(),
+            serde_json::json!(self.apps_endpoint),
+        );
         map.insert("flows".to_owned(), serde_json::json!(self.flows));
-        map.insert("default_flow".to_owned(), serde_json::json!(self.default_flow));
-        map.insert("no_interruption_delay".to_owned(), serde_json::json!(self.no_interruption_delay));
+        map.insert(
+            "default_flow".to_owned(),
+            serde_json::json!(self.default_flow),
+        );
+        map.insert(
+            "no_interruption_delay".to_owned(),
+            serde_json::json!(self.no_interruption_delay),
+        );
         map.insert("env".to_owned(), serde_json::json!(self.env));
 
         serde_json::json!(map)

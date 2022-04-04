@@ -32,7 +32,8 @@ pub fn gen_literal_from_event(
     match path {
         Some(path) => {
             let path = resolve_path(path, dis_warnings, data, msg_data, sender)?;
-            let mut lit = json_to_literal(&data.event.content, interval.to_owned(), &data.context.flow)?;
+            let mut lit =
+                json_to_literal(&data.event.content, interval.to_owned(), &data.context.flow)?;
 
             lit.set_content_type("event");
 
@@ -85,7 +86,14 @@ pub fn gen_literal_from_component(
                 } = function_name
                 {
                     if let Some(component) = data.custom_component.get(name) {
-                        let mut lit = gen_generic_component(name, true, &data.context.flow, interval, args, component)?;
+                        let mut lit = gen_generic_component(
+                            name,
+                            true,
+                            &data.context.flow,
+                            interval,
+                            args,
+                            component,
+                        )?;
 
                         path.drain(..1);
 

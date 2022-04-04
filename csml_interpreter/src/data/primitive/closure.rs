@@ -1,8 +1,8 @@
 use crate::data::error_info::ErrorInfo;
-use crate::data::{literal, literal::ContentType};
 use crate::data::position::Position;
 use crate::data::primitive::boolean::PrimitiveBoolean;
 use crate::data::primitive::string::PrimitiveString;
+use crate::data::{literal, literal::ContentType};
 
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
@@ -165,7 +165,7 @@ impl PrimitiveClosure {
             Some(map) if map.contains_key("error") => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
-            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 

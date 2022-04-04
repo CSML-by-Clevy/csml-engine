@@ -16,7 +16,14 @@ fn ok_tmp_memory() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "exists_true_tmp_memory", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "exists_true_tmp_memory",
+            "flow",
+        ),
         "CSML/basic_test/built-in/exists.csml",
     );
 
@@ -28,8 +35,7 @@ fn ok_tmp_memory() {
 
 #[test]
 fn ok_permanent_memory() {
-    let data =
-        r#"{
+    let data = r#"{
             "memories":[{"key":"toto", "value":42}],
             "messages":[ 
                 {"content":{ "text": "true"  },"content_type":"text"} 
@@ -38,7 +44,14 @@ fn ok_permanent_memory() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "exists_true_permanent_memory", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "exists_true_permanent_memory",
+            "flow",
+        ),
         "CSML/basic_test/built-in/exists.csml",
     );
 
@@ -47,7 +60,6 @@ fn ok_permanent_memory() {
 
     assert_eq!(v1, v2)
 }
-
 
 #[test]
 fn fail_exists_memory() {
@@ -56,7 +68,14 @@ fn fail_exists_memory() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "exists_false", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "exists_false",
+            "flow",
+        ),
         "CSML/basic_test/built-in/exists.csml",
     );
 
@@ -65,4 +84,3 @@ fn fail_exists_memory() {
 
     assert_eq!(v1, v2)
 }
-

@@ -2,19 +2,19 @@ pub mod data;
 pub use csml_interpreter::{
     data::{
         ast::{Expr, Flow, InstructionScope},
+        csml_logs::*,
         error_info::ErrorInfo,
         warnings::Warnings,
         Client, CsmlResult,
-        csml_logs::*,
     },
-    load_components,
+    load_components, search_for_modules,
 };
 
 use serde_json::json;
 
-mod error_messages;
 mod db_connectors;
 mod encrypt;
+mod error_messages;
 mod init;
 mod interpreter_actions;
 mod send;
@@ -30,9 +30,9 @@ extern crate diesel_migrations;
 
 use data::*;
 use db_connectors::{
-    bot, conversations, init_db, memories, messages, state, user,
-    state::{set_state_items, delete_state_key}, clean_db, BotVersion, BotVersionCreated,
-    DbConversation,
+    bot, clean_db, conversations, init_db, memories, messages, state,
+    state::{delete_state_key, set_state_items},
+    user, BotVersion, BotVersionCreated, DbConversation,
 };
 use init::*;
 use interpreter_actions::interpret_step;
@@ -200,11 +200,14 @@ pub fn create_client_memory(
 /**
  * Create bot version
  */
-pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
+pub fn create_bot_version(mut csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
     let mut db = init_db()?;
     init_logger();
 
     let bot_id = csml_bot.id.clone();
+
+    // search for modules to download
+    search_for_modules(&mut csml_bot);
 
     match validate_bot(csml_bot.clone()) {
         CsmlResult {
@@ -348,9 +351,13 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
                 errors: Some(vec![err]),
                 warnings: None,
                 flows: None,
+                extern_flows: None,
             }
         }
     };
+
+    // search for modules to download
+    search_for_modules(&mut bot);
 
     csml_interpreter::validate_bot(&bot)
 }
@@ -366,9 +373,7 @@ pub fn fold_bot(mut bot: CsmlBot) -> Result<String, EngineError> {
     // load native components into the bot
     bot.native_components = match load_components() {
         Ok(components) => Some(components),
-        Err(err) => {
-            return Err(EngineError::Parring(err.format_error()))
-        }
+        Err(err) => return Err(EngineError::Parring(err.format_error())),
     };
 
     Ok(csml_interpreter::fold_bot(&bot))
@@ -459,7 +464,10 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
         },
         Err(_) => {
             ready = false;
-            status.insert("database_type".to_owned(), serde_json::json!("error: no database type selected"))
+            status.insert(
+                "database_type".to_owned(),
+                serde_json::json!("error: no database type selected"),
+            )
         }
     };
 

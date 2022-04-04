@@ -1,11 +1,11 @@
 use crate::data::position::Position;
-use crate::data::primitive::{Primitive, PrimitiveString, PrimitiveObject};
-use crate::data::{Interval, Data};
+use crate::data::primitive::{Primitive, PrimitiveObject, PrimitiveString};
+use crate::data::{Data, Interval};
 use crate::error_format::*;
 
 use std::cmp::Ordering;
-use std::ops::Add;
 use std::collections::HashMap;
+use std::ops::Add;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -48,7 +48,6 @@ pub fn get_info(
     let usage = "get_info(Optional<String: search_key>) => Literal";
 
     match (additional_info, args.get("arg0")) {
-
         (Some(map), None) => Ok(PrimitiveObject::get_literal(map, interval)),
 
         (Some(map), Some(key)) => {
@@ -71,9 +70,9 @@ pub fn get_info(
                     Ok(lit)
                 }
             }
-        },
+        }
 
-        _ => Ok(PrimitiveString::get_literal("Null", interval))
+        _ => Ok(PrimitiveString::get_literal("Null", interval)),
     }
 }
 
@@ -82,7 +81,7 @@ pub fn create_error_info(error_msg: &str, interval: Interval) -> HashMap<String,
 
     map.insert(
         "error".to_owned(),
-        PrimitiveString::get_literal(error_msg, interval)
+        PrimitiveString::get_literal(error_msg, interval),
     );
 
     map
@@ -134,7 +133,7 @@ impl Literal {
             }
             None => {
                 let mut info = HashMap::new();
-                info.insert(key.to_owned(),value);
+                info.insert(key.to_owned(), value);
 
                 self.additional_info = Some(info);
             }
@@ -146,7 +145,7 @@ impl Literal {
             Some(ref mut map) => {
                 map.insert(
                     "error".to_owned(),
-                    PrimitiveString::get_literal(error_msg, self.interval)
+                    PrimitiveString::get_literal(error_msg, self.interval),
                 );
             }
             None => {
@@ -158,10 +157,12 @@ impl Literal {
 
     pub fn add_literal_to_info(&mut self, key: String, lit: Literal) {
         match self.additional_info {
-            Some(ref mut map) => {map.insert(key,lit);},
+            Some(ref mut map) => {
+                map.insert(key, lit);
+            }
             None => {
                 let mut map = HashMap::new();
-                map.insert(key,lit);
+                map.insert(key, lit);
 
                 self.additional_info = Some(map);
             }

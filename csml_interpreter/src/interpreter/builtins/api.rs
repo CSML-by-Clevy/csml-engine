@@ -10,7 +10,12 @@ use crate::interpreter::{
 
 use std::{collections::HashMap, sync::mpsc};
 
-fn format_body(args: &ArgsType, flow_name: &str, interval: Interval, client: Client) -> Result<Literal, ErrorInfo> {
+fn format_body(
+    args: &ArgsType,
+    flow_name: &str,
+    interval: Interval,
+    client: Client,
+) -> Result<Literal, ErrorInfo> {
     let mut map: HashMap<String, Literal> = HashMap::new();
 
     match args.get("fn_id", 0) {
@@ -102,7 +107,10 @@ pub fn api(
         Ok(value) => match value.get("data") {
             Some(value) => interpolate(value, interval, data, msg_data, sender),
             None => {
-                let err = gen_error_info(Position::new(interval, &data.context.flow), ERROR_HTTP_NOT_DATA.to_owned());
+                let err = gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_HTTP_NOT_DATA.to_owned(),
+                );
                 Ok(MSG::send_error_msg(sender, msg_data, Err(err)))
             }
         },

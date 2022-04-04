@@ -9,18 +9,23 @@ use crate::support::tools::message_to_json_value;
 
 use serde_json::Value;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// VALID SYNTAX
 ////////////////////////////////////////////////////////////////////////////////
 
 #[test]
 fn ok_current_step() {
-    let data =
-        r#"{"messages":[ {"content":{"text": "current_step"},"content_type":"text"} ],"memories":[]}"#;
+    let data = r#"{"messages":[ {"content":{"text": "current_step"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "current_step", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "current_step",
+            "flow",
+        ),
         "CSML/basic_test/context.csml",
     );
 
@@ -36,7 +41,14 @@ fn ok_current_flow() {
         r#"{"messages":[ {"content":{"text": "flow"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "current_flow", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "current_flow",
+            "flow",
+        ),
         "CSML/basic_test/context.csml",
     );
 
@@ -52,7 +64,14 @@ fn ok_default_flow() {
         r#"{"messages":[ {"content":{"text": "flow"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "default_flow", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "default_flow",
+            "flow",
+        ),
         "CSML/basic_test/context.csml",
     );
 

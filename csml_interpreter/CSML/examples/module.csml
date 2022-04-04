@@ -1,0 +1,4 @@
+import add from modules/module
+
+start:
+    say add(1, 2)

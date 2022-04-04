@@ -1,6 +1,6 @@
 use csml_engine::data::CsmlRequest;
 use csml_interpreter::{
-    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
+    data::{csml_bot::{CsmlBot, Modules}, csml_flow::CsmlFlow, Client},
     load_components,
 };
 
@@ -28,6 +28,8 @@ pub fn init_request(string: &str, metadata: Option<serde_json::Value>) -> CsmlRe
             Some(metadata) => metadata,
             None => json!({}),
         },
+        ttl_duration: None,
+        low_data_mode: None
     }
 }
 
@@ -48,6 +50,8 @@ pub fn init_request_flow_trigger(flow_id: &str, step_id: Option<&str>) -> CsmlRe
             }
         }),
         metadata: json!({}),
+        ttl_duration: None,
+        low_data_mode: None
     }
 }
 
@@ -95,6 +99,7 @@ pub fn load_info(directory_name: &str) -> Result<CsmlBot, Box<dyn Error>> {
         bot_ast: None,
         no_interruption_delay: None,
         env: None,
+        modules: Some(Modules::default()),
     })
 }
 

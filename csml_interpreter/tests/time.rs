@@ -11,8 +11,7 @@ use serde_json::Value;
 
 #[test]
 fn ok_time() {
-    let data =
-        r#"
+    let data = r#"
         {"messages":[ 
             {"content":{"text": "true"},"content_type":"text"},
             {"content":{"text": "true"},"content_type":"text"},
@@ -33,11 +32,9 @@ fn ok_time() {
     assert_eq!(v1, v2)
 }
 
-
 #[test]
 fn ok_time_parse_1_args() {
-    let data =
-        r#"
+    let data = r#"
         {"messages":[ 
             {"content":{"text": "1983-08-13T00:00:00.000Z"},"content_type":"text"}
         ],
@@ -45,7 +42,14 @@ fn ok_time_parse_1_args() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "parse_1_arg", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "parse_1_arg",
+            "flow",
+        ),
         "CSML/basic_test/built-in/time.csml",
     );
 
@@ -55,11 +59,9 @@ fn ok_time_parse_1_args() {
     assert_eq!(v1, v2)
 }
 
-
 #[test]
 fn ok_time_parse_2_args() {
-    let data =
-        r#"
+    let data = r#"
         {"messages":[ 
             {"content":{"text": "1983-08-13T12:09:14.274Z"},"content_type":"text"}
         ],
@@ -67,7 +69,14 @@ fn ok_time_parse_2_args() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "parse_2_arg", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "parse_2_arg",
+            "flow",
+        ),
         "CSML/basic_test/built-in/time.csml",
     );
 
@@ -79,8 +88,7 @@ fn ok_time_parse_2_args() {
 
 #[test]
 fn ok_parse_timezone() {
-    let data =
-        r#"
+    let data = r#"
         {"messages":[ 
             {"content":{"text": "2014-11-28T21:00:09.000+09:00"},"content_type":"text"}
         ],
@@ -88,7 +96,14 @@ fn ok_parse_timezone() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "parse_timezone", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "parse_timezone",
+            "flow",
+        ),
         "CSML/basic_test/built-in/time.csml",
     );
 
@@ -98,11 +113,9 @@ fn ok_parse_timezone() {
     assert_eq!(v1, v2)
 }
 
-
 #[test]
 fn ok_with_timezone() {
-    let data =
-        r#"
+    let data = r#"
         {"messages":[ 
             {"content":{"text": "2014-11-28T21:00:09.000+01:00"},"content_type":"text"}
         ],
@@ -110,7 +123,14 @@ fn ok_with_timezone() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "with_timezone", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "with_timezone",
+            "flow",
+        ),
         "CSML/basic_test/built-in/time.csml",
     );
 
@@ -119,4 +139,3 @@ fn ok_with_timezone() {
 
     assert_eq!(v1, v2)
 }
-

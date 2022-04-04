@@ -278,7 +278,6 @@ fn string_step_11() {
     assert_eq!(v1, v2)
 }
 
-
 #[test]
 fn string_step_12_slice() {
     let data = r#"{
