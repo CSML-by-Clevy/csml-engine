@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::data::{ast::Interval, ArgsType, Literal};
 use crate::error_format::*;
 
-pub fn crypto(args: ArgsType, flow_name: &str,interval: Interval) -> Result<Literal, ErrorInfo> {
+pub fn crypto(args: ArgsType, flow_name: &str, interval: Interval) -> Result<Literal, ErrorInfo> {
     match args.get("value", 0) {
         Some(value) => {
             let mut map: HashMap<String, Literal> = HashMap::new();

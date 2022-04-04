@@ -1,5 +1,5 @@
+use crate::data::primitive::PrimitiveObject;
 use crate::data::Literal;
-use crate::data::primitive::{PrimitiveObject};
 
 #[derive(Debug, Clone)]
 pub enum MemoryType {
@@ -7,6 +7,7 @@ pub enum MemoryType {
     Metadata,
     Use,
     Remember,
+    Constant,
 }
 
 #[derive(Debug, Clone)]

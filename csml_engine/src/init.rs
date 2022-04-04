@@ -8,9 +8,9 @@ use crate::{
 use csml_interpreter::{
     data::{
         context::{get_hashmap_from_json, get_hashmap_from_mem},
-        ApiInfo, Client, Event,
+        ast::Flow, ApiInfo, Client, Event, 
     },
-    load_components, validate_bot,
+    load_components, validate_bot, search_for_modules
 };
 use std::collections::HashMap;
 
@@ -88,13 +88,26 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
         Err(err) => return Err(EngineError::Interpreter(err.format_error())),
     };
 
+    search_for_modules(bot);
+
     match validate_bot(&bot) {
         CsmlResult {
             flows: Some(flows),
+            extern_flows: Some(extern_flows),
             errors: None,
             ..
         } => {
-            bot.bot_ast = Some(base64::encode(bincode::serialize(&flows).unwrap()));
+            bot.bot_ast = Some(base64::encode(bincode::serialize(&(&flows, &extern_flows)).unwrap()));
+        }
+        CsmlResult {
+            flows: Some(flows),
+            extern_flows: None,
+            errors: None,
+            ..
+        } => {
+            let extern_flows: HashMap<String, Flow> = HashMap::new();
+
+            bot.bot_ast = Some(base64::encode(bincode::serialize(&(&flows, &extern_flows)).unwrap()));
         }
         CsmlResult {
             errors: Some(errors),

@@ -17,7 +17,9 @@ pub struct PreviousInfo {
 #[derive(Debug)]
 pub struct Data<'a> {
     pub flows: &'a HashMap<String, Flow>,
+    pub extern_flows: &'a HashMap<String, Flow>,
     pub flow: &'a Flow,
+    pub constants: HashMap<String, Literal>,
     pub default_flow: String,
     pub context: &'a mut Context,
     pub event: &'a Event,
@@ -58,6 +60,7 @@ impl PreviousInfo {
 impl<'a> Data<'a> {
     pub fn new(
         flows: &'a HashMap<String, Flow>,
+        extern_flows: &'a HashMap<String, Flow>,
         flow: &'a Flow,
         default_flow: String,
         context: &'a mut Context,
@@ -71,9 +74,13 @@ impl<'a> Data<'a> {
         custom_component: &'a serde_json::Map<String, serde_json::Value>,
         native_component: &'a serde_json::Map<String, serde_json::Value>,
     ) -> Self {
+        let constants = flow.constants.clone();
+
         Self {
             flows,
+            extern_flows,
             flow,
+            constants,
             default_flow,
             context,
             event,
@@ -92,6 +99,7 @@ impl<'a> Data<'a> {
         &self,
     ) -> (
         HashMap<String, Flow>,
+        HashMap<String, Flow>,
         Flow,
         String,
         Context,
@@ -106,6 +114,7 @@ impl<'a> Data<'a> {
     ) {
         (
             self.flows.clone(),
+            self.extern_flows.clone(),
             self.flow.clone(),
             self.default_flow.to_string(),
             init_child_context(&self),
@@ -149,6 +158,7 @@ pub fn init_child_scope<'a>(
 ) -> Data<'a> {
     Data::new(
         &data.flows,
+        &data.extern_flows,
         &data.flow,
         data.default_flow.clone(),
         context,

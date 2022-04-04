@@ -62,7 +62,7 @@ fn hold_test_some_0() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "start",
             "flow",
@@ -94,7 +94,7 @@ fn hold_test_some_3() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "start",
             "flow",
@@ -126,7 +126,7 @@ fn hold_test_some_7() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "start",
             "flow",
@@ -158,7 +158,7 @@ fn hold_test_some_8() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "start",
             "flow",
@@ -190,7 +190,7 @@ fn hold_test_some_17() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "start",
             "flow",
@@ -203,7 +203,6 @@ fn hold_test_some_17() {
 
     assert_eq!(v1, v2)
 }
-
 
 #[test]
 fn hold_test_step_1_ok() {
@@ -223,7 +222,7 @@ fn hold_test_step_1_ok() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "hold_1_ok",
             "flow",
@@ -255,7 +254,7 @@ fn hold_test_step_2_ok() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "hold_2_ok",
             "flow",
@@ -287,7 +286,7 @@ fn hold_test_step_3_ok() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "hold_3_ok",
             "flow",
@@ -319,7 +318,7 @@ fn hold_test_step_4_ok() {
                 "".to_owned(),
                 "".to_owned(),
                 None,
-                false
+                false,
             )),
             "hold_4_ok",
             "flow",

@@ -1,12 +1,11 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::{
-    ast::*, primitive::PrimitiveNull, Data, Literal,
-    MessageData, MSG, warnings::DisplayWarnings,
+    ast::*, primitive::PrimitiveNull, warnings::DisplayWarnings, Data, Literal, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::{
-    ast_interpreter::{for_loop, while_loop, match_actions, solve_if_statement},
+    ast_interpreter::{for_loop, match_actions, solve_if_statement, while_loop},
     variable_handler::{expr_to_literal, interval::interval_from_expr},
 };
 use crate::parser::ExitCondition;
@@ -26,7 +25,14 @@ fn interpret_function_scope(
     for (action, instruction_info) in actions.commands.iter() {
         match action {
             Expr::ObjectExpr(ObjectType::Return(var)) => {
-                let lit = expr_to_literal(var, &DisplayWarnings::On, None, data, &mut message_data, sender)?;
+                let lit = expr_to_literal(
+                    var,
+                    &DisplayWarnings::On,
+                    None,
+                    data,
+                    &mut message_data,
+                    sender,
+                )?;
 
                 message_data.exit_condition = Some(ExitCondition::Return(lit));
                 return Ok(message_data);

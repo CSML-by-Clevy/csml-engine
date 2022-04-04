@@ -1,10 +1,10 @@
 use crate::data::{
-    literal::{Literal, create_error_info},
+    literal::{create_error_info, Literal},
     position::Position,
 };
 
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 pub struct ErrorInfo {
     pub position: Position,
     pub message: String,
-    pub additional_info: Option<HashMap<String, Literal>>
+    pub additional_info: Option<HashMap<String, Literal>>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,13 +22,14 @@ pub struct ErrorInfo {
 ////////////////////////////////////////////////////////////////////////////////
 
 impl ErrorInfo {
-    pub fn new(
-        position: Position,
-        message: String,
-    ) -> Self {
+    pub fn new(position: Position, message: String) -> Self {
         let error_info = create_error_info(&message, position.interval);
 
-        Self { position, message, additional_info: Some(error_info)}
+        Self {
+            position,
+            message,
+            additional_info: Some(error_info),
+        }
     }
 
     pub fn add_info(&mut self, key: &str, value: Literal) {
@@ -38,7 +39,7 @@ impl ErrorInfo {
             }
             None => {
                 let mut info = HashMap::new();
-                info.insert(key.to_owned(),value);
+                info.insert(key.to_owned(), value);
 
                 self.additional_info = Some(info);
             }

@@ -1,11 +1,11 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::position::Position;
 use crate::data::{
-    literal,
     ast::Interval,
+    csml_logs::*,
+    literal,
     literal::ContentType,
     message::Message,
-    csml_logs::*,
     primitive::{
         tools_crypto, tools_jwt, tools_smtp, tools_time, Data, MessageData, Primitive,
         PrimitiveArray, PrimitiveBoolean, PrimitiveInt, PrimitiveNull, PrimitiveString,
@@ -16,18 +16,18 @@ use crate::data::{
 };
 use crate::error_format::*;
 use crate::interpreter::{
-    builtins::http::{http_request}, json_to_rust::json_to_literal,
+    builtins::http::http_request, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
 
+use chrono::{DateTime, FixedOffset, LocalResult, TimeZone, Utc};
+use chrono_tz::Tz;
+use lettre::Transport;
 use phf::phf_map;
 use regex::Regex;
-use lettre::Transport;
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, LocalResult, TimeZone, Utc, FixedOffset};
-use chrono_tz::Tz;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -476,8 +476,7 @@ impl PrimitiveObject {
         }
 
         if let Some(literal) = object.value.get("method") {
-
-            let method =  match Literal::get_value::<String>(
+            let method = match Literal::get_value::<String>(
                 &literal.primitive,
                 &data.context.flow,
                 interval,
@@ -490,7 +489,7 @@ impl PrimitiveObject {
                 Ok(get) if get == "get" => "get",
                 _ => {
                     return Err(gen_error_info(
-                        Position::new(interval, &data.context.flow,),
+                        Position::new(interval, &data.context.flow),
                         ERROR_HTTP_UNKNOWN_METHOD.to_string(),
                     ))
                 }
@@ -674,7 +673,6 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-
         let usage = "Available mechanisms: PLAIN, AUTH LOGIN, XOAUTH2. set_auth_mechanism(String || Array<String>) => smtp object";
 
         let auth_mechanisms = match args.get("arg0") {
@@ -682,22 +680,20 @@ impl PrimitiveObject {
                 let value = tools_smtp::get_auth_mechanism(lit, data, interval, usage)?;
 
                 let mut map = HashMap::new();
-                map.insert(
-                    value,
-                    PrimitiveNull::get_literal(interval),
-                );
+                map.insert(value, PrimitiveNull::get_literal(interval));
 
                 map
-            },
+            }
             Some(lit) if lit.content_type == "array" => {
                 let vec = Literal::get_value::<Vec<Literal>>(
-                  &lit.primitive,
+                    &lit.primitive,
                     &data.context.flow,
                     lit.interval,
                     format!("usage: {}", usage),
                 )?;
 
-                let map = vec.iter()
+                let map = vec
+                    .iter()
                     .filter_map(|lit| {
                         tools_smtp::get_auth_mechanism(lit, data, interval, usage).ok()
                     })
@@ -712,16 +708,16 @@ impl PrimitiveObject {
                 }
 
                 map
-            },
+            }
             _ => {
                 csml_logger(
                     CsmlLog::new(
                         None,
                         Some(data.context.flow.to_string()),
                         Some(interval.start_line),
-                        format!("set_auth_mechanism wrong mechanism name {:?}", args)
+                        format!("set_auth_mechanism wrong mechanism name {:?}", args),
                     ),
-                    LogLvl::Error
+                    LogLvl::Error,
                 );
 
                 return Err(gen_error_info(
@@ -828,18 +824,18 @@ impl PrimitiveObject {
                 None,
                 Some(data.context.flow.to_string()),
                 Some(interval.start_line),
-                format!("send email: {:?}", email)
+                format!("send email: {:?}", email),
             ),
-            LogLvl::Info
+            LogLvl::Info,
         );
         csml_logger(
             CsmlLog::new(
                 None,
                 Some(data.context.flow.to_string()),
                 Some(interval.start_line),
-                format!("send email: {:?}, mailer: {:?}", email, object.value)
+                format!("send email: {:?}, mailer: {:?}", email, object.value),
             ),
-            LogLvl::Debug
+            LogLvl::Debug,
         );
         let mailer = tools_smtp::get_mailer(&mut object.value, data, interval)?;
 
@@ -851,14 +847,14 @@ impl PrimitiveObject {
                         None,
                         Some(data.context.flow.to_string()),
                         Some(interval.start_line),
-                        format!("send email failed {:?}", e)
+                        format!("send email failed {:?}", e),
                     ),
-                    LogLvl::Error
+                    LogLvl::Error,
                 );
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Could not send email: {:?}", e),
-                ))
+                ));
             }
         }
     }
@@ -915,7 +911,7 @@ impl PrimitiveObject {
 
         let timezone = match args.get("arg0") {
             Some(lit) if lit.primitive.get_type() == PrimitiveType::PrimitiveString => {
-                let tz_name =  Literal::get_value::<String>(
+                let tz_name = Literal::get_value::<String>(
                     &lit.primitive,
                     &data.context.flow,
                     interval,
@@ -930,14 +926,15 @@ impl PrimitiveObject {
                         ));
                     }
                 };
-            
 
                 tz.to_string()
             }
-            _ => return Err(gen_error_info(
-                Position::new(interval, &data.context.flow),
-                format!("usage: {}", usage),
-            ))
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ))
+            }
         };
 
         object.value.insert(
@@ -972,10 +969,10 @@ impl PrimitiveObject {
 
                 match time_value {
                     t_val if t_val == "s" => t_val.to_owned(),
-                    _  => "m".to_owned()
+                    _ => "m".to_owned(),
                 }
             }
-            _ => "m".to_owned()
+            _ => "m".to_owned(),
         };
 
         match object.value.get("milliseconds") {
@@ -991,7 +988,7 @@ impl PrimitiveObject {
 
                 let duration = match time_type {
                     t_val if t_val == "s" => date.timestamp(),
-                    _  => date.timestamp_millis()
+                    _ => date.timestamp_millis(),
                 };
 
                 Ok(PrimitiveInt::get_literal(duration, interval))
@@ -1048,10 +1045,12 @@ impl PrimitiveObject {
 
                 Ok(lit)
             }
-            _ => return Err(gen_error_info(
-                Position::new(interval, &data.context.flow),
-                format!("usage: {}", usage),
-            ))
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ))
+            }
         }
     }
 
@@ -1098,10 +1097,12 @@ impl PrimitiveObject {
 
                 Ok(lit)
             }
-            _ => return Err(gen_error_info(
-                Position::new(interval, &data.context.flow),
-                format!("usage: {}", usage),
-            ))
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("usage: {}", usage),
+                ))
+            }
         }
     }
 
@@ -1145,13 +1146,17 @@ impl PrimitiveObject {
                 &data.context.flow,
                 interval,
                 "".to_string(),
-            ).ok()
+            )
+            .ok()
         } else {
             None
         };
 
-
-        match (object.value.get("milliseconds"), object.value.get("timezone"), offset) {
+        match (
+            object.value.get("milliseconds"),
+            object.value.get("timezone"),
+            offset,
+        ) {
             (Some(lit), None, None) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
@@ -1166,7 +1171,9 @@ impl PrimitiveObject {
 
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
-            (Some(lit), Some(timezone), _) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+            (Some(lit), Some(timezone), _)
+                if lit.primitive.get_type() == PrimitiveType::PrimitiveInt =>
+            {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -1179,34 +1186,32 @@ impl PrimitiveObject {
                     &data.context.flow,
                     interval,
                     "".to_string(),
-                ).ok();
+                )
+                .ok();
 
                 let formatted_date = match tz_string {
                     Some(tz_string) => {
                         let local_date = Utc.timestamp_millis(*millis);
 
                         match tz_string.parse::<Tz>() {
-                            Ok(tz) => {
-                                match tz.from_local_datetime(&local_date.naive_local()) {
-                                    LocalResult::Single(date) 
-                                    | LocalResult::Ambiguous(date, _) => {
-                                        tools_time::format_date(args, date, data, interval, false)?
-                                    },
-                                    LocalResult::None => {
-                                        tools_time::format_date(args, local_date, data, interval, false)?
-                                    },
+                            Ok(tz) => match tz.from_local_datetime(&local_date.naive_local()) {
+                                LocalResult::Single(date) | LocalResult::Ambiguous(date, _) => {
+                                    tools_time::format_date(args, date, data, interval, false)?
                                 }
+                                LocalResult::None => tools_time::format_date(
+                                    args, local_date, data, interval, false,
+                                )?,
                             },
                             Err(_) => {
                                 return Err(gen_error_info(
                                     Position::new(interval, &data.context.flow),
                                     format!("invalid timezone {}", tz_string),
                                 ))
-                            },
+                            }
                         }
-                    },
+                    }
                     _ => {
-                        let date =  Utc.timestamp_millis(*millis);
+                        let date = Utc.timestamp_millis(*millis);
 
                         tools_time::format_date(args, date, data, interval, false)?
                     }
@@ -1215,7 +1220,9 @@ impl PrimitiveObject {
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
 
-            (Some(lit), None, Some(offset)) if lit.primitive.get_type() == PrimitiveType::PrimitiveInt => {
+            (Some(lit), None, Some(offset))
+                if lit.primitive.get_type() == PrimitiveType::PrimitiveInt =>
+            {
                 let millis = Literal::get_value::<i64>(
                     &lit.primitive,
                     &data.context.flow,
@@ -1223,19 +1230,18 @@ impl PrimitiveObject {
                     "".to_string(),
                 )?;
 
-                let date: DateTime<FixedOffset> = FixedOffset::east(*offset as i32).timestamp_millis(*millis);
+                let date: DateTime<FixedOffset> =
+                    FixedOffset::east(*offset as i32).timestamp_millis(*millis);
 
                 let formatted_date = tools_time::format_date(args, date, data, interval, false)?;
 
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
 
-            _ => {
-                Err(gen_error_info(
-                    Position::new(interval, &data.context.flow),
-                    format!("usage: {}", usage),
-                ))
-            }
+            _ => Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            )),
         }
     }
 }
@@ -2068,7 +2074,7 @@ impl PrimitiveObject {
             Some(map) if map.contains_key("error") => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
-            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 

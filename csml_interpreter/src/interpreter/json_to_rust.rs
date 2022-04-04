@@ -99,13 +99,9 @@ pub fn memory_to_literal(
         }
 
         serde_json::Value::Object(map) if map.contains_key("_additional_info") => {
-            if let (
-                Some(value),
-                Some(serde_json::Value::Object(additional_info))
-            ) = (
-                map.get("value"),
-                map.get("_additional_info")
-            ) {
+            if let (Some(value), Some(serde_json::Value::Object(additional_info))) =
+                (map.get("value"), map.get("_additional_info"))
+            {
                 let mut literal = memory_to_literal(value, interval, flow_name)?;
 
                 for (k, v) in additional_info.iter() {
@@ -118,14 +114,12 @@ pub fn memory_to_literal(
             }
         }
 
-        serde_json::Value::Object(map) if map.contains_key("_content") && map.contains_key("_content_type") => {
-            if let (
-                Some(content), 
-                Some(serde_json::Value::String(conent_type))
-            ) = (
-                map.get("_content"),
-                map.get("_content_type")
-            ) {
+        serde_json::Value::Object(map)
+            if map.contains_key("_content") && map.contains_key("_content_type") =>
+        {
+            if let (Some(content), Some(serde_json::Value::String(conent_type))) =
+                (map.get("_content"), map.get("_content_type"))
+            {
                 let mut literal = memory_to_literal(content, interval, flow_name)?;
                 literal.set_content_type(&conent_type);
                 Ok(literal)
@@ -135,10 +129,8 @@ pub fn memory_to_literal(
         }
 
         serde_json::Value::Object(map) if map.contains_key("_closure") => {
-
-            if let Some(closure_json) = map.get("_closure"){
-                let closure: PrimitiveClosure =
-                serde_json::from_value(closure_json.to_owned())?;
+            if let Some(closure_json) = map.get("_closure") {
+                let closure: PrimitiveClosure = serde_json::from_value(closure_json.to_owned())?;
 
                 Ok(Literal {
                     content_type: "closure".to_owned(),
@@ -147,8 +139,7 @@ pub fn memory_to_literal(
                     secure_variable: false,
                     interval,
                 })
-            }
-            else {
+            } else {
                 Ok(PrimitiveNull::get_literal(interval))
             }
         }

@@ -1,16 +1,14 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::primitive::{closure::capture_variables, PrimitiveArray, PrimitiveObject};
-use crate::data::{Position, warnings::DisplayWarnings};
 use crate::data::{ast::*, ArgsType, Data, Literal, MessageData, MSG};
+use crate::data::{warnings::DisplayWarnings, Position};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
-    json_to_rust::interpolate,
     variable_handler::{
         exec_path_actions, get_string_from_complex_string, get_var, interval::interval_from_expr,
-        resolve_csml_object::resolve_object, resolve_path,
-        operations::{evaluate_postfix},
+        operations::evaluate_postfix, resolve_csml_object::resolve_object, resolve_path,
     },
 };
 use std::{collections::HashMap, sync::mpsc};
@@ -29,7 +27,7 @@ fn exec_path_literal(
 ) -> Result<Literal, ErrorInfo> {
     if let Some(path) = path {
         let path = resolve_path(path, dis_warnings, data, msg_data, sender)?;
-        let (mut new_literal, ..) = exec_path_actions(
+        let (new_literal, ..) = exec_path_actions(
             literal,
             dis_warnings,
             None,
@@ -39,11 +37,6 @@ fn exec_path_literal(
             msg_data,
             sender,
         )?;
-
-        if new_literal.content_type == "string" {
-            let string = serde_json::json!(new_literal.primitive.to_string());
-            new_literal = interpolate(&string, new_literal.interval, data, msg_data, sender)?;
-        }
 
         Ok(new_literal)
     } else {
@@ -95,10 +88,7 @@ pub fn expr_to_literal(
                     is_secure = true;
                 }
 
-                map.insert(
-                    key.to_owned(),
-                    lit,
-                );
+                map.insert(key.to_owned(), lit);
             }
 
             let mut literal = PrimitiveObject::get_literal(&map, range_interval.to_owned());
@@ -121,9 +111,7 @@ pub fn expr_to_literal(
             let mut is_secure = false;
 
             for value in vec.iter() {
-                let lit = expr_to_literal(
-                    value, dis_warnings, None, data, msg_data, sender,
-                )?;
+                let lit = expr_to_literal(value, dis_warnings, None, data, msg_data, sender)?;
                 if lit.secure_variable {
                     is_secure = true;
                 }
@@ -199,7 +187,8 @@ pub fn resolve_fn_args(
                         };
                         named_args = true;
 
-                        let literal = expr_to_literal(var, dis_warnings, None, data, msg_data, sender)?;
+                        let literal =
+                            expr_to_literal(var, dis_warnings, None, data, msg_data, sender)?;
                         map.insert(name.ident.to_owned(), literal);
                     }
                     expr => {
@@ -210,7 +199,8 @@ pub fn resolve_fn_args(
                                 ERROR_EXPR_TO_LITERAL.to_owned(),
                             ));
                         }
-                        let literal = expr_to_literal(expr, dis_warnings, None, data, msg_data, sender)?;
+                        let literal =
+                            expr_to_literal(expr, dis_warnings, None, data, msg_data, sender)?;
                         map.insert(format!("arg{}", index), literal);
                     }
                 }

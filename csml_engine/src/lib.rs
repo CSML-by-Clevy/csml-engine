@@ -7,7 +7,7 @@ pub use csml_interpreter::{
         Client, CsmlResult, Event,
         csml_logs::*,
     },
-    load_components,
+    load_components, search_for_modules
 };
 
 use serde_json::json;
@@ -207,11 +207,14 @@ pub fn create_client_memory(
 /**
  * Create bot version
  */
-pub fn create_bot_version(csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
+pub fn create_bot_version(mut csml_bot: CsmlBot) -> Result<BotVersionCreated, EngineError> {
     let mut db = init_db()?;
     init_logger();
 
     let bot_id = csml_bot.id.clone();
+
+    // search for modules to download 
+    search_for_modules(&mut csml_bot);
 
     match validate_bot(csml_bot.clone()) {
         CsmlResult {
@@ -355,9 +358,13 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
                 errors: Some(vec![err]),
                 warnings: None,
                 flows: None,
+                extern_flows: None,
             }
         }
     };
+
+    // search for modules to download 
+    search_for_modules(&mut bot);
 
     csml_interpreter::validate_bot(&bot)
 }

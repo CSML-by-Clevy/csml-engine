@@ -1,7 +1,7 @@
 use crate::data::{ast::*, tokens::*};
 use nom::{
     bytes::complete::take_while1,
-    error::{ErrorKind, ParseError, ContextError},
+    error::{ContextError, ErrorKind, ParseError},
     *,
 };
 
@@ -102,7 +102,11 @@ pub fn get_range_interval(vector_interval: &[Interval]) -> Interval {
 }
 
 // generate range error
-pub fn parse_error<'a, O, E, F>(start: Span<'a>, span: Span<'a>, mut func: F) -> IResult<Span<'a>, O, E>
+pub fn parse_error<'a, O, E, F>(
+    start: Span<'a>,
+    span: Span<'a>,
+    mut func: F,
+) -> IResult<Span<'a>, O, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
     F: FnMut(Span<'a>) -> IResult<Span<'a>, O, E>,

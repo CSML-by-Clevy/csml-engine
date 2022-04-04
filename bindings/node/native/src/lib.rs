@@ -1,11 +1,11 @@
 use csml_engine::{
-    data::{RunRequest}, start_conversation, user_close_all_conversations,
-    Client, CsmlResult, ErrorInfo, Warnings
+    data::RunRequest, start_conversation, user_close_all_conversations, Client, CsmlResult,
+    ErrorInfo, Warnings,
 };
 use csml_interpreter::data::csml_bot::CsmlBot;
 use neon::{context::Context, prelude::*, register_module};
-use serde_json::{Value};
 use serde::Deserialize;
+use serde_json::Value;
 
 fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
     let jsclient = cx.argument::<JsValue>(0)?;
@@ -13,7 +13,10 @@ fn get_open_conversation(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::get_open_conversation(&client) {
         Ok(Some(conversation)) => {
-            let mut map = serde_json::json!(conversation).as_object().unwrap().to_owned();
+            let mut map = serde_json::json!(conversation)
+                .as_object()
+                .unwrap()
+                .to_owned();
 
             // DbConversation uses _id instead of id for the default mongodb mapping
             if let Some(id) = map.remove("_id") {
@@ -37,19 +40,15 @@ fn get_client_current_state(mut cx: FunctionContext) -> JsResult<JsValue> {
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
 
     match csml_engine::get_current_state(&client) {
-        Ok(Some(value)) => {
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
-        Ok(None) => {
-            Ok(neon_serde::to_value(&mut cx, &serde_json::Value::Null)?)
-        },
+        Ok(Some(value)) => Ok(neon_serde::to_value(&mut cx, &value)?),
+        Ok(None) => Ok(neon_serde::to_value(&mut cx, &serde_json::Value::Null)?),
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -64,19 +63,17 @@ fn create_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::create_client_memory(&client, key, value) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -119,7 +116,10 @@ fn format_warnings<'a, C: Context<'a>>(
         object.set(cx, "flow", flow).unwrap();
         object.set(cx, "start_line", line).unwrap();
         object.set(cx, "start_column", column).unwrap();
-        if let (Some(end_line),Some(end_column)) = (warning.position.interval.end_line, warning.position.interval.end_column) {
+        if let (Some(end_line), Some(end_column)) = (
+            warning.position.interval.end_line,
+            warning.position.interval.end_column,
+        ) {
             let end_line = cx.number(end_line as f64);
             let end_column = cx.number(end_column as f64);
 
@@ -148,7 +148,10 @@ fn format_errors<'a, C: Context<'a>>(
         object.set(cx, "flow", flow).unwrap();
         object.set(cx, "start_line", line).unwrap();
         object.set(cx, "start_column", column).unwrap();
-        if let (Some(end_line),Some(end_column)) = (err.position.interval.end_line, err.position.interval.end_column) {
+        if let (Some(end_line), Some(end_column)) = (
+            err.position.interval.end_line,
+            err.position.interval.end_column,
+        ) {
             let end_line = cx.number(end_line as f64);
             let end_column = cx.number(end_column as f64);
 
@@ -170,6 +173,7 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
     match csml_engine::validate_bot(serde_json::from_value(jsonbot).unwrap()) {
         CsmlResult {
             flows: _,
+            extern_flows: _,
             warnings,
             errors: None,
         } => {
@@ -187,6 +191,7 @@ fn validate_bot(mut cx: FunctionContext) -> JsResult<JsObject> {
         }
         CsmlResult {
             flows: _,
+            extern_flows: _,
             warnings,
             errors: Some(errors),
         } => {
@@ -258,14 +263,14 @@ fn create_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
             let value = serde_json::json!(version_data);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -290,9 +295,7 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
         Ok(bot) => {
             let value = match bot {
                 Some(bot) => {
-                    serde_json::json!(
-                        bot.flatten()
-                    )
+                    serde_json::json!(bot.flatten())
                 }
                 None => {
                     serde_json::json!({
@@ -309,7 +312,7 @@ fn get_bot_by_version_id(mut cx: FunctionContext) -> JsResult<JsValue> {
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -332,9 +335,7 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
         Ok(bot) => {
             let value = match bot {
                 Some(bot) => {
-                    serde_json::json!(
-                        bot.flatten()
-                    )
+                    serde_json::json!(bot.flatten())
                 }
                 None => {
                     serde_json::json!({
@@ -344,14 +345,14 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
             };
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -360,23 +361,21 @@ fn get_last_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
 */
 fn delete_bot_version(mut cx: FunctionContext) -> JsResult<JsValue> {
     let bot_id = cx.argument::<JsString>(0)?.value();
-    let version_id =  cx.argument::<JsString>(1)?.value();
+    let version_id = cx.argument::<JsString>(1)?.value();
 
     match csml_engine::delete_bot_version_id(&version_id, &bot_id) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -388,19 +387,17 @@ fn delete_bot_versions(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::delete_all_bot_versions(&bot_id) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -422,17 +419,17 @@ fn fold_bot(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::fold_bot(bot) {
         Ok(flow) => {
-            let value = serde_json::json!({"flow": flow});
+            let value = serde_json::json!({ "flow": flow });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -446,19 +443,17 @@ fn delete_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
     match csml_engine::delete_client_memory(&client, &memory_name) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -471,19 +466,17 @@ fn delete_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::delete_client_memories(&client) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -496,19 +489,17 @@ fn delete_client_data(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::delete_client(&client) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -521,19 +512,17 @@ fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
 
     match csml_engine::delete_all_bot_data(&bot_id) {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -542,22 +531,19 @@ fn delete_bot_data(mut cx: FunctionContext) -> JsResult<JsValue> {
 * conversations, messages, memories, interactions, states, path, versions
 */
 fn delete_expired_data(mut cx: FunctionContext) -> JsResult<JsValue> {
-
     match csml_engine::delete_expired_data() {
         Ok(value) => {
-            let value= serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -566,17 +552,14 @@ fn get_client_memories(mut cx: FunctionContext) -> JsResult<JsValue> {
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
 
     match csml_engine::get_client_memories(&client) {
-        Ok(value) => {
-
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -586,24 +569,21 @@ fn get_client_memory(mut cx: FunctionContext) -> JsResult<JsValue> {
     let client: Client = neon_serde::from_value(&mut cx, jsclient)?;
 
     match csml_engine::get_client_memory(&client, &key) {
-        Ok(value) => {
-
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
 #[derive(Debug, Deserialize)]
 pub struct LimitPaginationQueryParams {
-  limit: Option<i64>,
-  pagination_key: Option<String>,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
 }
 
 fn get_client_messages(mut cx: FunctionContext) -> JsResult<JsValue> {
@@ -614,16 +594,14 @@ fn get_client_messages(mut cx: FunctionContext) -> JsResult<JsValue> {
     let params: LimitPaginationQueryParams = neon_serde::from_value(&mut cx, jsparams)?;
 
     match csml_engine::get_client_messages(&client, params.limit, params.pagination_key) {
-        Ok(value) => {
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -635,36 +613,31 @@ fn get_client_conversations(mut cx: FunctionContext) -> JsResult<JsValue> {
     let params: LimitPaginationQueryParams = neon_serde::from_value(&mut cx, jsparams)?;
 
     match csml_engine::get_client_conversations(&client, params.limit, params.pagination_key) {
-        Ok(value) => {
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
 fn make_migrations(mut cx: FunctionContext) -> JsResult<JsValue> {
-
     match csml_engine::make_migrations() {
         Ok(value) => {
-            let value = serde_json::json!(
-                value
-            );
+            let value = serde_json::json!(value);
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 
@@ -689,16 +662,14 @@ fn get_bot_versions_limit(mut cx: FunctionContext) -> JsResult<JsValue> {
     let params: LimitPaginationQueryParams = serde_json::from_value(jsonparams).unwrap();
 
     match csml_engine::get_bot_versions(&bot_id, params.limit, params.pagination_key) {
-        Ok(value) => {
-            Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        Ok(value) => Ok(neon_serde::to_value(&mut cx, &value)?),
         Err(err) => {
             let value = serde_json::json!({
                 "error": format!("{:?}", err),
             });
 
             Ok(neon_serde::to_value(&mut cx, &value)?)
-        },
+        }
     }
 }
 

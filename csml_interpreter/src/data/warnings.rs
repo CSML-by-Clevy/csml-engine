@@ -20,7 +20,7 @@ pub struct Warnings {
 #[derive(Debug, Clone)]
 pub enum DisplayWarnings {
     On,
-    Off
+    Off,
 }
 
 ////////////////////////////////////////////////////////////////////////////////

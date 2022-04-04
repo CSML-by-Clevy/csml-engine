@@ -22,7 +22,11 @@ pub fn client_to_json(client: &Client, interval: Interval) -> HashMap<String, Li
     map
 }
 
-pub fn accept_to_array(literal: &HashMap<String, Literal>, mut vec: Vec<Literal>, flow_name: &str,) -> Vec<Literal> {
+pub fn accept_to_array(
+    literal: &HashMap<String, Literal>,
+    mut vec: Vec<Literal>,
+    flow_name: &str,
+) -> Vec<Literal> {
     match literal.get("accepts") {
         Some(literal) => {
             match Literal::get_value::<Vec<Literal>>(
@@ -40,7 +44,7 @@ pub fn accept_to_array(literal: &HashMap<String, Literal>, mut vec: Vec<Literal>
     }
 }
 
-pub fn accepts_from_buttons(buttons: &Literal, flow_name: &str,) -> Literal {
+pub fn accepts_from_buttons(buttons: &Literal, flow_name: &str) -> Literal {
     match Literal::get_value::<Vec<Literal>>(
         &buttons.primitive,
         flow_name,
@@ -55,7 +59,7 @@ pub fn accepts_from_buttons(buttons: &Literal, flow_name: &str,) -> Literal {
                     buttons.interval,
                     ERROR_UNREACHABLE.to_owned(),
                 ) {
-                    Ok(value) => accept_to_array(value, vec, flow_name,),
+                    Ok(value) => accept_to_array(value, vec, flow_name),
                     Err(..) => vec,
                 }
             });

@@ -42,7 +42,7 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "get_info" => (PrimitiveArray::get_info as PrimitiveMethod, Right::Read),
     "is_error" => (PrimitiveArray::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveArray::to_string as PrimitiveMethod, Right::Read),
-    
+
     "init" => (PrimitiveArray::init as PrimitiveMethod, Right::Read),
     "find" => (PrimitiveArray::find as PrimitiveMethod, Right::Read),
     "is_empty" => (PrimitiveArray::is_empty as PrimitiveMethod, Right::Read),
@@ -205,7 +205,7 @@ impl PrimitiveArray {
             Some(map) if map.contains_key("error") => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
-            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 
@@ -274,7 +274,6 @@ impl PrimitiveArray {
 
         Ok(PrimitiveArray::get_literal(&vec, interval))
     }
-
 
     fn find(
         array: &mut PrimitiveArray,
@@ -1210,7 +1209,15 @@ impl Primitive for PrimitiveArray {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, additional_info, interval, data, msg_data, sender)?;
+            let res = f(
+                self,
+                args,
+                additional_info,
+                interval,
+                data,
+                msg_data,
+                sender,
+            )?;
 
             return Ok((res, *right));
         }

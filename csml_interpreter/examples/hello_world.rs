@@ -34,6 +34,7 @@ fn main() {
         None,
         None,
         None,
+        None,
     );
 
     // Create an Event
@@ -58,7 +59,7 @@ fn main() {
 
     // Run interpreter
     let result = validate_bot(&bot);
-    
+
     if result.errors.is_some() {
         dbg!(result.errors);
         return;

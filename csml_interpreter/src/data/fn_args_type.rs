@@ -53,7 +53,6 @@ impl ArgsType {
     pub fn args_to_log(&self) -> String {
         match self {
             Self::Named(map) | Self::Normal(map) => {
-
                 let mut args = vec![];
                 let size = map.len();
                 let mut index = 0;

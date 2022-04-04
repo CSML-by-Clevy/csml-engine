@@ -271,7 +271,7 @@ fn get_default_object(
                 if let Some(serde_json::Value::String(dependency)) = function.get("$_get") {
                     match memoization.get(dependency) {
                         Some(value) => {
-                            result = serde_json::Value::add(flow_name,&result, &value, interval)?;
+                            result = serde_json::Value::add(flow_name, &result, &value, interval)?;
                         }
                         None => {
                             if recursion.contains(dependency) {
@@ -293,13 +293,14 @@ fn get_default_object(
                             if let Some(value) = value {
                                 memoization.insert(dependency.to_string(), value.to_owned());
 
-                                result = serde_json::Value::add(flow_name,&result, value, interval)?;
+                                result =
+                                    serde_json::Value::add(flow_name, &result, value, interval)?;
                             }
                         }
                     }
                 }
                 if let Some(dependency) = function.get("$_set") {
-                    result = serde_json::Value::add(flow_name,&result, dependency, interval)?;
+                    result = serde_json::Value::add(flow_name, &result, dependency, interval)?;
                 }
             }
         }
@@ -422,7 +423,7 @@ pub fn gen_generic_component(
                         return Err(ErrorInfo::new(
                             Position::new(*interval, flow_name),
                             format!("invalid generic component {}, multiple keys are no allowed for single argument {:?}", name, keys),
-                        ))
+                        ));
                     }
 
                     for key in keys {

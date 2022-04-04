@@ -49,7 +49,14 @@ fn forget_single() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), metadata, None, None, "forget_single", "flow"),
+        Context::new(
+            HashMap::new(),
+            metadata,
+            None,
+            None,
+            "forget_single",
+            "flow",
+        ),
         "CSML/basic_test/syntax/forget.csml",
     );
 

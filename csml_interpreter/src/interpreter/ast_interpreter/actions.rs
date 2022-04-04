@@ -1,19 +1,23 @@
 use crate::data::data::PreviousInfo;
 use crate::data::position::Position;
+use crate::data::warnings::DisplayWarnings;
 use crate::data::{
     ast::*,
     data::Data,
     literal::ContentType,
     message::*,
     primitive::{closure::capture_variables, PrimitiveNull, PrimitiveString},
-    Literal, Memory, MemoryType, MessageData, MSG
+    Literal, Memory, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::{
-    exec_path_actions, expr_to_literal, get_var_from_mem, interval::*, memory::*, resolve_fn_args,
-    search_goto_var_memory, forget_memories::{forget_scope_memories, remove_message_data_memories}
+    exec_path_actions, expr_to_literal,
+    forget_memories::{forget_scope_memories, remove_message_data_memories},
+    get_var_from_mem,
+    interval::*,
+    memory::*,
+    resolve_fn_args, search_goto_var_memory,
 };
-use crate::data::warnings::DisplayWarnings;
 use crate::parser::ExitCondition;
 use std::collections::HashMap;
 use std::sync::mpsc;
@@ -38,11 +42,28 @@ fn get_var_info<'a>(
             get_var_info(literal, Some(path), data, msg_data, sender)
         }
         Expr::IdentExpr(var) => match search_in_memory_type(var, data) {
-            Ok(_) => get_var_from_mem(var.to_owned(), &DisplayWarnings::On, path, data, msg_data, sender),
+            Ok(_) => get_var_from_mem(
+                var.to_owned(),
+                &DisplayWarnings::On,
+                path,
+                data,
+                msg_data,
+                sender,
+            ),
+            // If variable doesn't exist, create the variable in the flow scope 'use' with NULL as value
+            // this is done in order to prevent stopping errors
             Err(_) => {
                 let lit = PrimitiveNull::get_literal(var.interval.to_owned());
+
                 data.step_vars.insert(var.ident.to_owned(), lit);
-                get_var_from_mem(var.to_owned(), &DisplayWarnings::On, path, data, msg_data, sender)
+                get_var_from_mem(
+                    var.to_owned(),
+                    &DisplayWarnings::On,
+                    path,
+                    data,
+                    msg_data,
+                    sender,
+                )
             }
         },
         e => Err(gen_error_info(
@@ -58,20 +79,12 @@ pub fn match_actions(
     data: &mut Data,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<MessageData, ErrorInfo> {
-
     match function {
         ObjectType::Say(arg) => {
+            let lit =
+                expr_to_literal(arg, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
 
-            let lit = expr_to_literal(
-                arg,
-                &DisplayWarnings::On,
-                None,
-                data,
-                &mut msg_data,
-                sender,
-            )?;
-
-            // check if it is secure variable 
+            // check if it is secure variable
             if lit.secure_variable {
                 let err = gen_error_info(
                     Position::new(lit.interval, &data.context.flow),
@@ -81,7 +94,7 @@ pub fn match_actions(
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
                 Ok(msg_data)
             } else {
-                let msg = Message::new( lit, &data.context.flow)?;
+                let msg = Message::new(lit, &data.context.flow)?;
                 MSG::send(&sender, MSG::Message(msg.clone()));
                 Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
             }
@@ -91,7 +104,7 @@ pub fn match_actions(
 
             let lit = args.args_to_debug(interval.to_owned());
 
-            // check if it is secure variable 
+            // check if it is secure variable
             if lit.secure_variable {
                 let err = gen_error_info(
                     Position::new(lit.interval, &data.context.flow),
@@ -101,21 +114,28 @@ pub fn match_actions(
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
                 Ok(msg_data)
             } else {
-                let msg = Message::new( lit, &data.context.flow)?;
+                let msg = Message::new(lit, &data.context.flow)?;
                 MSG::send(&sender, MSG::Message(msg.clone()));
                 Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
             }
         }
-        ObjectType::Log{expr, interval, log_lvl} => {
+        ObjectType::Log {
+            expr,
+            interval,
+            log_lvl,
+        } => {
             let args = resolve_fn_args(expr, data, &mut msg_data, &DisplayWarnings::On, sender)?;
             let log_msg = args.args_to_log();
 
-            MSG::send(&sender, MSG::Log{
-                flow: data.context.flow.to_owned(),
-                line: interval.start_line,
-                message: log_msg,
-                log_lvl: log_lvl.to_owned(),
-            });
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: interval.start_line,
+                    message: log_msg,
+                    log_lvl: log_lvl.to_owned(),
+                },
+            );
 
             Ok(msg_data)
         }
@@ -130,6 +150,7 @@ pub fn match_actions(
             // in the future we need to refacto this code to avoid any scope copy like this
             let (
                 tmp_flows,
+                tmp_extern_flows,
                 tmp_flow,
                 tmp_default_flow,
                 mut tmp_context,
@@ -145,6 +166,7 @@ pub fn match_actions(
 
             let mut new_scope_data = Data::new(
                 &tmp_flows,
+                &tmp_extern_flows,
                 &tmp_flow,
                 tmp_default_flow,
                 &mut tmp_context,
@@ -160,9 +182,10 @@ pub fn match_actions(
             );
             // #####################
 
-            let mut new_value = expr_to_literal(new, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
+            let mut new_value =
+                expr_to_literal(new, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
 
-            // check if it is secure variable 
+            // check if it is secure variable
             if new_value.secure_variable {
                 let err = gen_error_info(
                     Position::new(new_value.interval, &data.context.flow),
@@ -170,7 +193,7 @@ pub fn match_actions(
                 );
 
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
-                return Ok(msg_data)
+                return Ok(msg_data);
             }
 
             // only for closure capture the step variables
@@ -178,6 +201,7 @@ pub fn match_actions(
             capture_variables(&mut &mut new_value, memory, &data.context.flow);
 
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
+
             match assign_type {
                 AssignType::AdditionAssignment => {
                     let primitive = lit.primitive.clone() + new_value.primitive;
@@ -189,12 +213,10 @@ pub fn match_actions(
                                 interval: new_value.interval,
                                 additional_info: None,
                                 secure_variable: false,
-                                primitive
+                                primitive,
                             };
                         }
-                        Err(err) => {
-                            new_value = PrimitiveString::get_literal(&err, lit.interval)
-                        }
+                        Err(err) => new_value = PrimitiveString::get_literal(&err, lit.interval),
                     }
                 }
                 AssignType::SubtractionAssignment => {
@@ -207,21 +229,27 @@ pub fn match_actions(
                                 interval: new_value.interval,
                                 additional_info: None,
                                 secure_variable: false,
-                                primitive
+                                primitive,
                             };
                         }
-                        Err(err) => {
-                            new_value = PrimitiveString::get_literal(&err, lit.interval)
-                        }
+                        Err(err) => new_value = PrimitiveString::get_literal(&err, lit.interval),
                     }
                 }
                 _ => {}
+            };
+            //TODO: refacto memory update system
+
+            let (new_value, update) = if let MemoryType::Constant = mem_type {
+                //TODO: send warning constant variables are not updatable
+                (None, false)
+            } else {
+                (Some(new_value), true)
             };
 
             exec_path_actions(
                 lit,
                 &DisplayWarnings::On,
-                Some(new_value),
+                new_value,
                 &path,
                 &ContentType::get(&lit),
                 &mut new_scope_data,
@@ -233,7 +261,7 @@ pub fn match_actions(
                 lit.to_owned(),
                 name,
                 &mem_type,
-                true,
+                update,
                 data,
                 &mut msg_data,
                 sender,
@@ -242,7 +270,14 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Do(DoType::Exec(expr)) => {
-            expr_to_literal(expr, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
+            expr_to_literal(
+                expr,
+                &DisplayWarnings::On,
+                None,
+                data,
+                &mut msg_data,
+                sender,
+            )?;
             Ok(msg_data)
         }
         ObjectType::Goto(GotoType::Step(step), ..) => {
@@ -262,7 +297,10 @@ pub fn match_actions(
                     previous_info.goto(data.context.flow.clone(), data.context.step.clone());
                 }
                 None => {
-                    data.previous_info = Some(PreviousInfo::new(data.context.flow.clone(), data.context.step.clone()))
+                    data.previous_info = Some(PreviousInfo::new(
+                        data.context.flow.clone(),
+                        data.context.step.clone(),
+                    ))
                 }
             }
 
@@ -293,7 +331,10 @@ pub fn match_actions(
                     previous_info.goto(data.context.flow.clone(), data.context.step.clone());
                 }
                 None => {
-                    data.previous_info = Some(PreviousInfo::new(data.context.flow.clone(), data.context.step.clone()))
+                    data.previous_info = Some(PreviousInfo::new(
+                        data.context.flow.clone(),
+                        data.context.step.clone(),
+                    ))
                 }
             }
             // current flow/step
@@ -307,11 +348,11 @@ pub fn match_actions(
         ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
             let step = match step {
                 Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
-                None => "start".to_owned() // default value start step
+                None => "start".to_owned(), // default value start step
             };
             let flow = match flow {
                 Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender)?,
-                None => data.context.flow.to_owned() // default value current flow
+                None => data.context.flow.to_owned(), // default value current flow
             };
 
             let mut flow_opt = Some(flow.clone());
@@ -337,7 +378,10 @@ pub fn match_actions(
                     previous_info.goto(data.context.flow.clone(), data.context.step.clone());
                 }
                 None => {
-                    data.previous_info = Some(PreviousInfo::new(data.context.flow.clone(), data.context.step.clone()))
+                    data.previous_info = Some(PreviousInfo::new(
+                        data.context.flow.clone(),
+                        data.context.step.clone(),
+                    ))
                 }
             }
 
@@ -357,11 +401,12 @@ pub fn match_actions(
                     flow_opt = Some(tmp_f.clone());
 
                     previous_info.flow = data.context.flow.clone();
-                    previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
+                    previous_info.step_at_flow =
+                        (data.context.step.clone(), data.context.flow.clone());
 
                     data.context.flow = tmp_f;
                     data.context.step = "start".to_string();
-                },
+                }
                 (PreviousType::Step(_interval), Some(ref mut previous_info)) => {
                     let (tmp_s, tmp_f) = previous_info.step_at_flow.clone();
                     flow_opt = Some(tmp_f.clone());
@@ -370,7 +415,8 @@ pub fn match_actions(
                     if data.context.flow != tmp_f {
                         previous_info.flow = tmp_f.clone();
                     }
-                    previous_info.step_at_flow = (data.context.step.clone(), data.context.flow.clone());
+                    previous_info.step_at_flow =
+                        (data.context.step.clone(), data.context.flow.clone());
 
                     data.context.flow = tmp_f;
                     data.context.step = tmp_s;
@@ -396,11 +442,16 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Remember(name, variable) => {
+            let mut new_value = expr_to_literal(
+                variable,
+                &DisplayWarnings::On,
+                None,
+                data,
+                &mut msg_data,
+                sender,
+            )?;
 
-            let mut new_value =
-                expr_to_literal(variable, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
-
-            // check if it is secure variable 
+            // check if it is secure variable
             if new_value.secure_variable {
                 let err = gen_error_info(
                     Position::new(new_value.interval, &data.context.flow),
@@ -408,7 +459,7 @@ pub fn match_actions(
                 );
 
                 MSG::send_error_msg(&sender, &mut msg_data, Err(err));
-                return Ok(msg_data)
+                return Ok(msg_data);
             }
 
             // only for closure capture the step variables
@@ -433,10 +484,7 @@ pub fn match_actions(
             // delete memory from current scope
             forget_scope_memories(&memory, data);
 
-            MSG::send(
-                &sender,
-                MSG::Forget(memory.to_owned()),
-            );
+            MSG::send(&sender, MSG::Forget(memory.to_owned()));
 
             Ok(msg_data)
         }

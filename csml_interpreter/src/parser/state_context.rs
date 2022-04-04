@@ -29,7 +29,7 @@ fn count_if_commands(if_statement: &mut IfStatement, index: &mut usize) {
         } => {
             count_scope_commands(scope, index);
             if *index >= 1 {
-                *last_action_index = *index -1;
+                *last_action_index = *index - 1;
             }
 
             if let Some(else_scope) = then_branch {
@@ -53,7 +53,7 @@ pub fn count_commands(command: &mut Expr, index: &mut usize, info: &mut Instruct
         Expr::ObjectExpr(..) => {
             info.index = *index;
             *index = *index + 1
-        },
+        }
 
         Expr::IfExpr(if_statement) => {
             info.index = *index;

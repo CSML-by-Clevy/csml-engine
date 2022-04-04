@@ -2,7 +2,7 @@ use csml_engine::{
     data::{BotOpt, CsmlRequest},
     start_conversation,
 };
-use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client};
+use csml_interpreter::data::{csml_bot::{CsmlBot}, csml_flow::CsmlFlow, Client};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs;
@@ -87,6 +87,7 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
             "random": "value",
             "toto": "key",
         })),
+        modules: None,
     };
 
     Ok(bot)
@@ -106,6 +107,8 @@ fn init_request(string: &str, bot_id: String, channel_id: String) -> CsmlRequest
             "content": { "text": string},
         }),
         metadata: json!({"some": "custom-value"}),
+        ttl_duration: None,
+        low_data_mode: None
     }
 }
 

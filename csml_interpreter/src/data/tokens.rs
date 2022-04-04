@@ -58,6 +58,7 @@ pub const IF: &str = "if";
 pub const ELSE: &str = "else";
 
 pub const IMPORT: &str = "import";
+pub const CONST: &str = "const";
 pub const FROM: &str = "from";
 pub const AS: &str = "as";
 pub const IN: &str = "in";
@@ -87,7 +88,8 @@ pub const BREAK: &str = "break";
 pub const CONTINUE: &str = "continue";
 pub const RETURN: &str = "return";
 
-pub const FN_SCOPE_REJECTED: &[&str] = &[SAY, GOTO, REMEMBER, FORGET, USE, HOLD, HOLD_SECURE, BREAK];
+pub const FN_SCOPE_REJECTED: &[&str] =
+    &[SAY, GOTO, REMEMBER, FORGET, USE, HOLD, HOLD_SECURE, BREAK];
 
 pub const TRUE: &str = "true";
 pub const FALSE: &str = "false";
@@ -115,19 +117,19 @@ pub const TYPES: &[&str] = &[
 ];
 
 pub const RESERVED: &[&str] = &[
-    FOREACH, WHILE, IF, ELSE, IMPORT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE, HOLD, HOLD_SECURE, GOTO,
-    MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE, NULL, BREAK,
-    COMPONENT,
-];
-
-pub const UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, WHILE, IF, ELSE, IMPORT, AS, DO, FLOW, STEP, SAY, USE, HOLD, HOLD_SECURE, GOTO, MATCH, REMEMBER, FORGET,
+    FOREACH, WHILE, IF, ELSE, IMPORT, CONST, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE,
+    HOLD, GOTO, MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE, NULL,
     BREAK, COMPONENT,
 ];
 
+pub const UTILISATION_RESERVED: &[&str] = &[
+    FOREACH, WHILE, IF, ELSE, IMPORT, CONST, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH,
+    REMEMBER, FORGET, BREAK, COMPONENT,
+];
+
 pub const ASSIGNATION_RESERVED: &[&str] = &[
-    FOREACH, WHILE , IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, HOLD_SECURE, GOTO, MATCH, REMEMBER,
-    FORGET, _METADATA, _MEMORY, _ENV, TRUE, FALSE, NULL, BREAK, COMPONENT,
+    FOREACH, WHILE, IF, ELSE, IMPORT, AS, DO, EVENT, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH,
+    REMEMBER, FORGET, _METADATA, _MEMORY, _ENV, TRUE, FALSE, NULL, BREAK, COMPONENT,
 ];
 
 pub const TYPING: &str = "Typing";
@@ -171,9 +173,7 @@ pub const BUILT_IN: &[&str] = &[
 
 pub const OR_BUILT_IN: &str = "Or";
 
-pub const BUILT_IN_WITHOUT_WARNINGS: &[&str] = &[
-    OR_BUILT_IN
-];
+pub const BUILT_IN_WITHOUT_WARNINGS: &[&str] = &[OR_BUILT_IN];
 
 pub const FROM_FILE: &str = "FromFile";
 pub const GET_VALUE: &str = "GetValue";

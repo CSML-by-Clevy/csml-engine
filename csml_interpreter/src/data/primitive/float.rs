@@ -1,8 +1,8 @@
 use crate::data::primitive::tools::check_division_by_zero_f64;
 use crate::data::{
-    literal,
     ast::Interval,
     error_info::ErrorInfo,
+    literal,
     literal::ContentType,
     message::Message,
     position::Position,
@@ -159,7 +159,7 @@ impl PrimitiveFloat {
             Some(map) if map.contains_key("error") => {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
-            _ => Ok(PrimitiveBoolean::get_literal(false, interval))
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 

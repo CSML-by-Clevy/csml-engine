@@ -44,6 +44,7 @@ fn format_message(
         None,
         None,
         None,
+        None,
     );
 
     interpret(bot, context, event, None)
