@@ -9,6 +9,7 @@ pub struct Event {
     pub content: serde_json::Value,
     pub ttl_duration: Option<i64>,
     pub low_data_mode: Option<bool>,
+    pub secure: bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,6 +24,7 @@ impl Default for Event {
             content: serde_json::json!({}),
             ttl_duration: None,
             low_data_mode: None,
+            secure: false
         }
     }
 }
@@ -39,6 +41,7 @@ impl Event {
             content,
             ttl_duration: None,
             low_data_mode: None,
+            secure: false
         }
     }
 }

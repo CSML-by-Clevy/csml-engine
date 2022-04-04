@@ -1046,6 +1046,7 @@ impl PrimitiveArray {
             content_type: "array".to_owned(),
             primitive,
             additional_info: None,
+            secure_variable: false,
             interval,
         }
     }

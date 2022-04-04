@@ -806,11 +806,16 @@ pub fn get_string_from_complex_string(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
     let mut new_string = String::new();
+    let mut is_secure = false;
 
-    //TODO: log error with span
     for elem in exprs.iter() {
         match expr_to_literal(elem, &DisplayWarnings::On, None, data, msg_data, sender) {
-            Ok(var) => new_string.push_str(&var.primitive.to_string()),
+            Ok(var) => {
+                if var.secure_variable {
+                    is_secure = true;
+                }
+                new_string.push_str(&var.primitive.to_string())
+            },
             Err(err) => {
                 return Err(err);
             }
@@ -818,6 +823,7 @@ pub fn get_string_from_complex_string(
     }
 
     let mut result = PrimitiveString::get_literal(&new_string, interval);
+    result.secure_variable = is_secure;
     result.set_content_type("text");
 
     Ok(result)

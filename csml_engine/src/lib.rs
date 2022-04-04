@@ -4,7 +4,7 @@ pub use csml_interpreter::{
         ast::{Expr, Flow, InstructionScope},
         error_info::ErrorInfo,
         warnings::Warnings,
-        Client, CsmlResult,
+        Client, CsmlResult, Event,
         csml_logs::*,
     },
     load_components, search_for_modules
@@ -63,7 +63,7 @@ pub fn start_conversation(
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     init_logger();
 
-    let formatted_event = format_event(json!(request))?;
+    let mut formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
 
     let mut bot = bot_opt.search_bot(&mut db);
@@ -76,12 +76,6 @@ pub fn start_conversation(
         &bot,
         db,
     )?;
-
-    // save event in db as message RECEIVE
-    let msgs = vec![request.payload.to_owned()];
-    if !data.low_data {
-        messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
-    }
 
     // block user event if delay variable si on and delay_time is bigger than current time
     if let Some(delay) = bot.no_interruption_delay {
@@ -109,7 +103,22 @@ pub fn start_conversation(
     }
     //////////////////////////////////////
 
-    check_for_hold(&mut data, &bot)?;
+    check_for_hold(&mut data, &bot, &mut formatted_event)?;
+
+    // save event in db as message RECEIVE
+    match (data.low_data, formatted_event.secure) {
+        (false, true) => {
+            let msgs = vec![serde_json::json!({"content_type": "secure"})];
+
+            messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+        }
+        (false, false) => {
+            let msgs = vec![request.payload.to_owned()];
+
+            messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
+        }
+        (true, _) => {}
+    }
 
     let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
@@ -402,7 +411,7 @@ pub fn user_close_all_conversations(client: Client) -> Result<(), EngineError> {
  * If the hold is valid, we also need to load the local step memory
  * (context.hold.step_vars) into the conversation context.
  */
-fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), EngineError> {
+fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot, event: &mut Event) -> Result<(), EngineError> {
     match state::get_state_key(&data.client, "hold", "position", &mut data.db) {
         // user is currently on hold
         Ok(Some(hold)) => {
@@ -426,6 +435,12 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 }
             };
 
+            let secure_hold = hold["secure"].as_bool().unwrap_or(false);
+
+            if secure_hold {
+                event.secure = true;
+            }
+
             // all good, let's load the position and local variables
             data.context.hold = Some(Hold {
                 index,
@@ -433,7 +448,9 @@ fn check_for_hold(data: &mut ConversationInfo, bot: &CsmlBot) -> Result<(), Engi
                 step_name: data.context.step.to_owned(),
                 flow_name: data.context.flow.to_owned(),
                 previous: serde_json::from_value(hold["previous"].clone()).unwrap_or(None),
+                secure: secure_hold,
             });
+
             state::delete_state_key(&data.client, "hold", "position", &mut data.db)?;
         }
         // user is not on hold

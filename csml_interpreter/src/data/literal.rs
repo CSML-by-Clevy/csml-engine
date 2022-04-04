@@ -19,6 +19,7 @@ pub struct Literal {
     pub primitive: Box<dyn Primitive>,
     // this adds complementary information about the origin of the variable
     pub additional_info: Option<HashMap<String, Literal>>,
+    pub secure_variable: bool,
     pub interval: Interval,
 }
 

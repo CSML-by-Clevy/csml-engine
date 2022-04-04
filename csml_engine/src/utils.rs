@@ -7,7 +7,7 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    data::{csml_logs::*, ast::Flow, Client, Context, Event, Interval, Memory, Message},
+    data::{ast::Flow, csml_logs::*, Client, Context, Event, Interval, Memory, Message},
     error_format::{ERROR_KEY_ALPHANUMERIC, ERROR_NUMBER_AS_KEY, ERROR_SIZE_IDENT},
     get_step,
     interpreter::json_to_literal,
@@ -17,8 +17,8 @@ use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::env;
 
-use regex::Regex;
 use md5::{Digest, Md5};
+use regex::Regex;
 
 /**
  * Update current context memories in place.
@@ -136,6 +136,7 @@ pub fn format_event(json_event: serde_json::Value) -> Result<Event, EngineError>
         content,
         ttl_duration: json_event["ttl_duration"].as_i64(),
         low_data_mode: json_event["low_data_mode"].as_bool(),
+        secure: json_event["payload"]["secure"].as_bool().unwrap_or(false),
     })
 }
 
@@ -156,9 +157,9 @@ pub fn send_msg_to_callback_url(
             Some(&data.client),
             Some(data.context.flow.to_string()),
             None,
-            format!("conversation_end: {:?}", messages["conversation_end"])
+            format!("conversation_end: {:?}", messages["conversation_end"]),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     send_to_callback_url(data, serde_json::json!(messages))
@@ -270,29 +271,27 @@ pub fn search_flow<'a>(
             let flow_trigger: FlowTrigger = serde_json::from_str(&event.content_value)?;
 
             match get_flow_by_id(&flow_trigger.flow_id, &bot.flows) {
-                Ok(flow) => {
-                    match flow_trigger.step_id {
-                        Some(step_id) => Ok((flow, step_id)),
-                        None => Ok((flow, "start".to_owned())),
-                    }
+                Ok(flow) => match flow_trigger.step_id {
+                    Some(step_id) => Ok((flow, step_id)),
+                    None => Ok((flow, "start".to_owned())),
                 },
-                Err(_) => Ok((get_flow_by_id(&bot.default_flow, &bot.flows)? , "start".to_owned())),
+                Err(_) => Ok((
+                    get_flow_by_id(&bot.default_flow, &bot.flows)?,
+                    "start".to_owned(),
+                )),
             }
         }
         event if event.content_type == "regex" => {
             let mut random_flows = vec![];
 
             for flow in bot.flows.iter() {
-                let contains_command = flow
-                    .commands
-                    .iter()
-                    .any(|cmd| {
-                        if let Ok(action) = Regex::new(&event.content_value) {
-                            action.is_match(&cmd)
-                        } else {
-                            false
-                        }
-                    });
+                let contains_command = flow.commands.iter().any(|cmd| {
+                    if let Ok(action) = Regex::new(&event.content_value) {
+                        action.is_match(&cmd)
+                    } else {
+                        false
+                    }
+                });
 
                 if contains_command {
                     random_flows.push(flow)
@@ -371,20 +370,19 @@ pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineE
 }
 
 pub fn get_ttl_duration_value(event: Option<&Event>) -> Option<chrono::Duration> {
-
     if let Some(event) = event {
         if let Some(ttl) = event.ttl_duration {
-            return Some(chrono::Duration::days(ttl))
+            return Some(chrono::Duration::days(ttl));
         }
     }
 
     if let Ok(ttl) = env::var("TTL_DURATION") {
         if let Some(ttl) = ttl.parse::<i64>().ok() {
-            return Some(chrono::Duration::days(ttl))
+            return Some(chrono::Duration::days(ttl));
         }
     }
 
-    return None
+    return None;
 }
 
 pub fn get_low_data_mode_value(event: &Event) -> bool {
@@ -398,5 +396,5 @@ pub fn get_low_data_mode_value(event: &Event) -> bool {
         }
     }
 
-    return false
+    return false;
 }

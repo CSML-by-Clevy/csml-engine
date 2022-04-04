@@ -24,8 +24,12 @@ impl ArgsType {
                 let mut args = vec![];
                 let size = map.len();
                 let mut index = 0;
+                let mut is_secure = false;
                 while index < size {
                     let lit = map[&format!("arg{}", index)].clone();
+                    if lit.secure_variable {
+                        is_secure = true;
+                    }
                     let value =
                         PrimitiveString::get_literal(&lit.primitive.to_string(), lit.interval);
                     args.push(value);
@@ -38,6 +42,7 @@ impl ArgsType {
                 );
 
                 let mut lit = PrimitiveObject::get_literal(&obj, interval);
+                lit.secure_variable = is_secure;
                 lit.set_content_type("debug");
 
                 lit
@@ -53,6 +58,10 @@ impl ArgsType {
                 let mut index = 0;
                 while index < size {
                     let lit = map[&format!("arg{}", index)].clone();
+                    if lit.secure_variable {
+                        return "secure variables can not be logged".to_string()
+                    }
+
                     let value = lit.primitive.to_string();
                     args.push(value);
                     index = index + 1;

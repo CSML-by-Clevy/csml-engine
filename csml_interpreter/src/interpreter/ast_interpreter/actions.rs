@@ -81,19 +81,43 @@ pub fn match_actions(
 ) -> Result<MessageData, ErrorInfo> {
     match function {
         ObjectType::Say(arg) => {
-            let msg = Message::new(
-                expr_to_literal(arg, &DisplayWarnings::On, None, data, &mut msg_data, sender)?,
-                &data.context.flow,
-            )?;
-            MSG::send(&sender, MSG::Message(msg.clone()));
-            Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+            let lit =
+                expr_to_literal(arg, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
+
+            // check if it is secure variable
+            if lit.secure_variable {
+                let err = gen_error_info(
+                    Position::new(lit.interval, &data.context.flow),
+                    "Secure variable can not be displayed".to_owned(),
+                );
+
+                MSG::send_error_msg(&sender, &mut msg_data, Err(err));
+                Ok(msg_data)
+            } else {
+                let msg = Message::new(lit, &data.context.flow)?;
+                MSG::send(&sender, MSG::Message(msg.clone()));
+                Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+            }
         }
         ObjectType::Debug(args, interval) => {
             let args = resolve_fn_args(args, data, &mut msg_data, &DisplayWarnings::On, sender)?;
 
-            let msg = Message::new(args.args_to_debug(interval.to_owned()), &data.context.flow)?;
-            MSG::send(&sender, MSG::Message(msg.clone()));
-            Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+            let lit = args.args_to_debug(interval.to_owned());
+
+            // check if it is secure variable
+            if lit.secure_variable {
+                let err = gen_error_info(
+                    Position::new(lit.interval, &data.context.flow),
+                    "Secure variable can not be displayed".to_owned(),
+                );
+
+                MSG::send_error_msg(&sender, &mut msg_data, Err(err));
+                Ok(msg_data)
+            } else {
+                let msg = Message::new(lit, &data.context.flow)?;
+                MSG::send(&sender, MSG::Message(msg.clone()));
+                Ok(Message::add_to_message(msg_data, MessageType::Msg(msg)))
+            }
         }
         ObjectType::Log {
             expr,
@@ -161,6 +185,17 @@ pub fn match_actions(
             let mut new_value =
                 expr_to_literal(new, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
 
+            // check if it is secure variable
+            if new_value.secure_variable {
+                let err = gen_error_info(
+                    Position::new(new_value.interval, &data.context.flow),
+                    "Assignation of secure variable is not allowed".to_owned(),
+                );
+
+                MSG::send_error_msg(&sender, &mut msg_data, Err(err));
+                return Ok(msg_data);
+            }
+
             // only for closure capture the step variables
             let memory: HashMap<String, Literal> = data.get_all_memories();
             capture_variables(&mut &mut new_value, memory, &data.context.flow);
@@ -177,6 +212,7 @@ pub fn match_actions(
                                 content_type: new_value.content_type,
                                 interval: new_value.interval,
                                 additional_info: None,
+                                secure_variable: false,
                                 primitive,
                             };
                         }
@@ -192,6 +228,7 @@ pub fn match_actions(
                                 content_type: new_value.content_type,
                                 interval: new_value.interval,
                                 additional_info: None,
+                                secure_variable: false,
                                 primitive,
                             };
                         }
@@ -413,6 +450,17 @@ pub fn match_actions(
                 &mut msg_data,
                 sender,
             )?;
+
+            // check if it is secure variable
+            if new_value.secure_variable {
+                let err = gen_error_info(
+                    Position::new(new_value.interval, &data.context.flow),
+                    "Assignation of secure variable is not allowed".to_owned(),
+                );
+
+                MSG::send_error_msg(&sender, &mut msg_data, Err(err));
+                return Ok(msg_data);
+            }
 
             // only for closure capture the step variables
             let memory: HashMap<String, Literal> = data.get_all_memories();
