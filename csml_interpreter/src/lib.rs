@@ -20,10 +20,7 @@ use data::literal::create_error_info;
 use data::message_data::MessageData;
 use data::msg::MSG;
 use data::CsmlResult;
-use data::{
-    csml_bot::{CsmlBot, ModuleData},
-    CsmlFlow,
-};
+use data::{csml_bot::CsmlBot, CsmlFlow};
 use data::{Context, Data, Position, STEP_LIMIT};
 use error_format::*;
 use fold_bot::fold_bot as fold;
@@ -152,17 +149,19 @@ pub fn validate_bot(bot: &CsmlBot) -> CsmlResult {
     }
 
     if let Some(ref mods) = bot.modules {
-        for flow in mods.flows.iter() {
-            match parse_flow(&flow.content, &flow.name) {
-                Ok(ast_flow) => {
-                    modules.push(FlowToValidate {
-                        flow_name: flow.name.to_owned(),
-                        ast: ast_flow,
-                        raw_flow: &flow.content,
-                    });
-                }
-                Err(error) => {
-                    errors.push(error);
+        for module in mods.iter() {
+            if let Some(flow) = &module.flow {
+                match parse_flow(&flow.content, &flow.name) {
+                    Ok(ast_flow) => {
+                        modules.push(FlowToValidate {
+                            flow_name: flow.name.to_owned(),
+                            ast: ast_flow,
+                            raw_flow: &flow.content,
+                        });
+                    }
+                    Err(error) => {
+                        errors.push(error);
+                    }
                 }
             }
         }
@@ -220,17 +219,19 @@ pub fn fold_bot(bot: &CsmlBot) -> String {
     }
 
     if let Some(ref mods) = bot.modules {
-        for flow in mods.flows.iter() {
-            match parse_flow(&flow.content, &flow.name) {
-                Ok(ast_flow) => {
-                    modules.push(FlowToValidate {
-                        flow_name: flow.name.to_owned(),
-                        ast: ast_flow,
-                        raw_flow: &flow.content,
-                    });
-                }
-                Err(error) => {
-                    errors.push(error);
+        for module in mods.iter() {
+            if let Some(flow) = &module.flow {
+                match parse_flow(&flow.content, &flow.name) {
+                    Ok(ast_flow) => {
+                        modules.push(FlowToValidate {
+                            flow_name: flow.name.to_owned(),
+                            ast: ast_flow,
+                            raw_flow: &flow.content,
+                        });
+                    }
+                    Err(error) => {
+                        errors.push(error);
+                    }
                 }
             }
         }
@@ -273,43 +274,43 @@ fn get_flows(bot: &CsmlBot) -> (HashMap<String, Flow>, HashMap<String, Flow>) {
     }
 }
 
-pub fn search_for_modules(bot: &mut CsmlBot) {
-    let mut downloaded_modules = vec![];
+pub fn search_for_modules(bot: &mut CsmlBot) -> Result<(), String> {
+    if let Some(ref mut modules) = bot.modules {
+        for module in modules.iter_mut() {
+            if let None = module.flow {
+                // module already downloaded
+                continue;
+            }
 
-    if let Some(ref mut mods) = bot.modules {
-        let modules: Vec<ModuleData> = match serde_yaml::from_str(&mods.config) {
-            Ok(modules) => modules,
-            Err(_) => return,
-        };
-
-        for module in modules.iter() {
-            if let None = mods.flows.iter().find(|&flow| flow.name == module.name) {
-                let url = match &module.url {
-                    Some(url) => url,
-                    None => panic!("no url"),
-                };
-
-                let request = ureq::get(url);
-
-                match request.call() {
-                    Ok(response) => {
-                        let flow_content = response.into_string().unwrap();
-                        downloaded_modules.push(CsmlFlow {
-                            id: module.name.clone(),
-                            name: module.name.clone(),
-                            content: flow_content,
-                            commands: vec![],
-                        });
-                    }
-                    Err(error) => {
-                        panic!("{:?}", error)
-                    }
+            let url = match &module.url {
+                Some(url) => url,
+                None => {
+                    // use env
+                    // or error
+                    // todo: get url from env with auth info
+                    return Err("url not set for module".to_string());
                 }
+            };
+
+            let request = ureq::get(url);
+
+            match request.call() {
+                Ok(response) => {
+                    let flow_content = response.into_string().unwrap();
+
+                    module.flow = Some(CsmlFlow {
+                        id: module.name.clone(),
+                        name: module.name.clone(),
+                        content: flow_content,
+                        commands: vec![],
+                    });
+                }
+                Err(error) => return Err(error.to_string()),
             }
         }
-
-        mods.flows.append(&mut downloaded_modules);
     }
+
+    Ok(())
 }
 
 pub fn interpret(

@@ -3,7 +3,7 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, Context,
 };
-use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Modules};
+use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Module};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -121,7 +121,7 @@ pub struct SerializeCsmlBot {
     pub default_flow: String,
     pub no_interruption_delay: Option<i32>,
     pub env: Option<String>,
-    pub modules: Option<Modules>
+    pub modules: Option<Vec<Module>>,
 }
 
 /**
@@ -277,7 +277,7 @@ pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
 }
 
 impl DynamoBot {
-    pub fn to_bot(&self, flows: Vec<CsmlFlow>, modules: Modules) -> CsmlBot {
+    pub fn to_bot(&self, flows: Vec<CsmlFlow>, modules: Vec<Module>) -> CsmlBot {
         CsmlBot {
             id: self.id.to_owned(),
             name: self.name.to_owned(),
@@ -300,7 +300,7 @@ impl DynamoBot {
                 Some(value) => decrypt_data(value).ok(),
                 None => None,
             },
-            modules: Some(modules)
+            modules: Some(modules),
         }
     }
 }
@@ -313,7 +313,7 @@ pub struct CsmlRequest {
     pub payload: serde_json::Value,
     pub metadata: serde_json::Value,
     pub ttl_duration: Option<serde_json::Value>,
-    pub low_data_mode: Option<serde_json::Value>
+    pub low_data_mode: Option<serde_json::Value>,
 }
 
 pub enum Database {
@@ -328,10 +328,9 @@ pub enum Database {
     None,
 }
 
-
 #[cfg(feature = "sqlite")]
 pub struct SqliteClient {
-    pub client: diesel::prelude::SqliteConnection
+    pub client: diesel::prelude::SqliteConnection,
 }
 
 #[cfg(feature = "sqlite")]

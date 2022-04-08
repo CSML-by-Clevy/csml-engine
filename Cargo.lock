@@ -1324,7 +1324,6 @@ dependencies = [
  "rustls 0.20.2",
  "serde",
  "serde_json",
- "serde_yaml",
  "typetag",
  "ureq 2.4.0",
  "uuid",
