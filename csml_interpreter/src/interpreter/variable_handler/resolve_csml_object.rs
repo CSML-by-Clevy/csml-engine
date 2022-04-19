@@ -273,8 +273,6 @@ fn get_type<'a>(name: &'a str, interval: Interval, data: &'a Data) -> ObjType {
         return ObjType::Closure { fn_args, scope };
     }
 
-    println!("=========> not found");
-
     ObjType::Error
 }
 
