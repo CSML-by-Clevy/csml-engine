@@ -23,7 +23,7 @@ use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
 
 use chrono::{DateTime, FixedOffset, LocalResult, TimeZone, Utc};
-use chrono_tz::Tz;
+use chrono_tz::{Tz, UTC};
 use lettre::Transport;
 use phf::phf_map;
 use regex::Regex;
@@ -1194,8 +1194,10 @@ impl PrimitiveObject {
                         let local_date = Utc.timestamp_millis(*millis);
 
                         match tz_string.parse::<Tz>() {
-                            Ok(tz) => match tz.from_local_datetime(&local_date.naive_local()) {
+                            Ok(tz) => match UTC.from_local_datetime(&local_date.naive_local()) {
                                 LocalResult::Single(date) | LocalResult::Ambiguous(date, _) => {
+                                    let date = date.with_timezone(&tz);
+
                                     tools_time::format_date(args, date, data, interval, false)?
                                 }
                                 LocalResult::None => tools_time::format_date(
@@ -1878,10 +1880,7 @@ impl PrimitiveObject {
             ));
         }
 
-        let email_regex = Regex::new(
-            r"^[^@]+@[^@]+\.[^@]+$",
-        )
-        .unwrap();
+        let email_regex = Regex::new(r"^[^@]+@[^@]+\.[^@]+$").unwrap();
 
         let lit = PrimitiveBoolean::get_literal(email_regex.is_match(&text), interval);
 

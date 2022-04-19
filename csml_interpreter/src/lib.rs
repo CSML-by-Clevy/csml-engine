@@ -379,6 +379,17 @@ pub fn interpret(
             }
         };
 
+        // if the target flow dose not contains a 'start' flow change the target to the default_flow
+        if step == "start"
+            && ast
+                .flow_instructions
+                .get(&InstructionScope::StepScope(step.to_owned()))
+                .is_none()
+        {
+            flow = bot.default_flow.clone();
+            continue;
+        }
+
         let mut data = Data::new(
             &flows,
             &extern_flows,

@@ -160,7 +160,7 @@ pub fn interpret_step(
                     step_name,
                     flow_name,
                     previous,
-                    secure
+                    secure,
                 });
             }
             MSG::Next { flow, step } => match (flow, step) {

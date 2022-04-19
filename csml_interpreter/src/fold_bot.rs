@@ -36,6 +36,7 @@ pub fn fold_bot(
         &mut goto_list,
         &mut step_list,
         &mut function_list,
+        default_flow,
         &mut import_list,
         &mut valid_closure_list,
         &mut functions_call_list,

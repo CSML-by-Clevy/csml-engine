@@ -53,6 +53,7 @@ pub fn lint_bot(
         &mut goto_list,
         &mut step_list,
         &mut function_list,
+        default_flow,
         &mut import_list,
         &mut valid_closure_list,
         &mut functions_call_list,
@@ -349,7 +350,7 @@ pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo, ex
         }
     }
 
-    if !is_step_start_present && steps_nbr > 0 {
+    if !is_step_start_present && (steps_nbr > 0 && linter_info.default_flow != flow.flow_name) {
         linter_info.errors.push(gen_error_info(
             Position::new(Interval::default(), linter_info.flow_name),
             format!("missing step 'start' in flow [{}]", flow.flow_name),
@@ -857,7 +858,11 @@ fn infinite_loop_check(
                         let is_infinite_loop = is_in_list(&step_list, flow, step);
                         if is_infinite_loop {
                             step_list.push((flow.to_owned(), step.to_owned()));
-                            return Some((step_list.to_owned(), interval.to_owned(), previews_flow));
+                            return Some((
+                                step_list.to_owned(),
+                                interval.to_owned(),
+                                previews_flow,
+                            ));
                         }
 
                         if is_in_list(&close_list, flow, step) {
