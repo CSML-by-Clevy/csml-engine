@@ -62,7 +62,7 @@ fn main() {
         DEFAULT_FLOW_NAME,
     );
 
-    search_for_modules(&mut bot);
+    search_for_modules(&mut bot).unwrap();
 
     // Run interpreter
     let result = validate_bot(&bot);
