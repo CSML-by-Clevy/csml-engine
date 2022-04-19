@@ -1,8 +1,13 @@
-use crate::db_connectors::dynamodb::{get_db, Message, MessageDeleteInfo, DynamoDbClient, DynamoDbKey,};
-use crate::{encrypt::{encrypt_data, decrypt_data}, ConversationInfo, EngineError, Client};
+use crate::db_connectors::dynamodb::{
+    get_db, DynamoDbClient, DynamoDbKey, Message, MessageDeleteInfo, MessageFromDateInfo,
+};
+use crate::{
+    encrypt::{decrypt_data, encrypt_data},
+    Client, ConversationInfo, EngineError,
+};
+use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
-use chrono::{DateTime, Utc, NaiveDateTime, SecondsFormat};
 
 use crate::db_connectors::dynamodb::utils::*;
 
@@ -26,7 +31,7 @@ fn format_messages(
             i as i32,
             &encrypt_data(&message)?,
             &message["content_type"].to_string(),
-            expires_at
+            expires_at,
         ));
     }
 
@@ -35,7 +40,7 @@ fn format_messages(
 
 pub fn write_messages_batch(
     messages: &[Message],
-    db: &mut DynamoDbClient
+    db: &mut DynamoDbClient,
 ) -> Result<(), EngineError> {
     // We can only use BatchWriteItem on up to 25 items at once,
     // so we need to split the messages to write into chunks of max
@@ -94,12 +99,10 @@ fn query_messages(
     pagination_key: Option<HashMap<String, AttributeValue>>,
     projection_expression: Option<String>,
     expression_attribute_names: Option<HashMap<String, String>>,
-    from_date: Option<i64>,
-    to_date: Option<i64>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Message::get_hash(client);
 
-    let mut expr_attr_values: HashMap<String, AttributeValue> = [
+    let expr_attr_values: HashMap<String, AttributeValue> = [
         (
             String::from(":hashVal"),
             AttributeValue {
@@ -119,48 +122,13 @@ fn query_messages(
     .cloned()
     .collect();
 
-    let key_condition_expression = if from_date.is_some() {
-        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix) and #created_at BETWEEN :fromDateTime AND :toDateTime".to_owned()
-    } else {
-        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned()
-    };
-
-    if let Some(from_date) = from_date {
-        let from_date = DateTime::<Utc>::from_utc(
-            NaiveDateTime::from_timestamp(from_date, 0),
-            Utc
-        );
-        let to_date = match to_date {
-            Some(to_date) => DateTime::<Utc>::from_utc(
-                NaiveDateTime::from_timestamp(to_date, 0),
-                Utc
-            ),
-            None => chrono::Utc::now()
-        };
-
-        expr_attr_values.insert(
-            String::from(":fromDateTime"),
-            AttributeValue {
-                s: Some(from_date.to_rfc3339_opts(SecondsFormat::Millis, true)),
-                ..Default::default()
-            },
-        );
-
-        expr_attr_values.insert(
-            String::from(":toDateTime"),
-            AttributeValue {
-                s: Some(to_date.to_rfc3339_opts(SecondsFormat::Millis, true)),
-                ..Default::default()
-            },
-        );
-    };
+    let key_condition_expression =
+        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned();
 
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name,
-        key_condition_expression: Some(
-            key_condition_expression
-        ),
+        key_condition_expression: Some(key_condition_expression),
         expression_attribute_names,
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(limit),
@@ -173,9 +141,70 @@ fn query_messages(
     let future = db.client.query(input);
     let data = match db.runtime.block_on(future) {
         Ok(data) => data,
-        Err(e) => {
-            return Err(EngineError::Manager(format!("query_messages {:?}", e)))
-        }
+        Err(e) => return Err(EngineError::Manager(format!("query_messages {:?}", e))),
+    };
+
+    Ok(data)
+}
+
+fn query_messages_from_date(
+    db: &mut DynamoDbClient,
+    range: String,
+    index_name: Option<String>,
+    limit: i64,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+    projection_expression: Option<String>,
+    expression_attribute_names: Option<HashMap<String, String>>,
+    from_date: i64,
+    _to_date: Option<i64>,
+) -> Result<QueryOutput, EngineError> {
+    let from_date = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(from_date, 0), Utc);
+    // let to_date = match to_date {
+    //     Some(to_date) => {
+    //         DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(to_date, 0), Utc)
+    //     }
+    //     None => chrono::Utc::now(),
+    // };
+
+    let expr_attr_values: HashMap<String, AttributeValue> = [
+        (
+            String::from(":hashVal"),
+            AttributeValue {
+                s: Some(range),
+                ..Default::default()
+            },
+        ),
+        (
+            String::from(":fromDateTime"),
+            AttributeValue {
+                s: Some(from_date.to_rfc3339_opts(SecondsFormat::Millis, true)),
+                ..Default::default()
+            },
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let key_condition_expression = "#hashKey = :hashVal and #rangeKey >= :fromDateTime".to_owned();
+
+    let input = QueryInput {
+        table_name: get_table_name()?,
+        index_name,
+        key_condition_expression: Some(key_condition_expression),
+        expression_attribute_names,
+        expression_attribute_values: Some(expr_attr_values),
+        limit: Some(limit),
+        exclusive_start_key: pagination_key,
+        scan_index_forward: Some(false),
+        projection_expression,
+        ..Default::default()
+    };
+
+    let future = db.client.query(input);
+    let data = match db.runtime.block_on(future) {
+        Ok(data) => data,
+        Err(e) => return Err(EngineError::Manager(format!("query_messages {:?}", e))),
     };
 
     Ok(data)
@@ -186,8 +215,6 @@ pub fn get_client_messages(
     db: &mut DynamoDbClient,
     limit: Option<i64>,
     pagination_key: Option<HashMap<String, AttributeValue>>,
-    from_date: Option<i64>,
-    to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     let mut messages = vec![];
     let limit = match limit {
@@ -196,7 +223,7 @@ pub fn get_client_messages(
         None => 20,
     };
 
-    let mut expr_attr_names: HashMap<String, String> = [
+    let expr_attr_names: HashMap<String, String> = [
         (String::from("#hashKey"), String::from("hash")),
         (String::from("#rangeKey"), String::from("range_time")), // time index
     ]
@@ -204,20 +231,15 @@ pub fn get_client_messages(
     .cloned()
     .collect();
 
-    if from_date.is_some() {
-        expr_attr_names.insert("#created_at".to_string(), "created_at".to_string());
-    }
-
     let data = query_messages(
         client,
         db,
         String::from("message#"),
         Some(String::from("TimeIndex")),
-        limit, pagination_key,
+        limit,
+        pagination_key,
         None,
         Some(expr_attr_names),
-        from_date,
-        to_date,
     )?;
 
     // The query returns an array of items (max 10, based on the limit param above).
@@ -257,13 +279,102 @@ pub fn get_client_messages(
     }
 }
 
+pub fn get_client_messages_from_date(
+    db: &mut DynamoDbClient,
+    limit: Option<i64>,
+    pagination_key: Option<HashMap<String, AttributeValue>>,
+    from_date: i64,
+    to_date: Option<i64>,
+) -> Result<serde_json::Value, EngineError> {
+    let mut messages = vec![];
+    let limit = match limit {
+        Some(limit) if limit >= 1 => limit,
+        Some(_limit) => 20,
+        None => 20,
+    };
+
+    let expr_attr_names: HashMap<String, String> = [
+        (String::from("#hashKey"), String::from("class")),
+        (String::from("#rangeKey"), String::from("created_at")), // time index
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let data = query_messages_from_date(
+        db,
+        String::from("message"),
+        Some(String::from("CreatedIndex")),
+        limit,
+        pagination_key,
+        None,
+        Some(expr_attr_names.clone()),
+        from_date,
+        to_date,
+    )?;
+
+    // The query returns an array of items (max 10, based on the limit param above).
+    // If 0 item is returned it means that there is no open conversation, so simply return None
+    // , "last_key": :
+    let items = match data.items {
+        None => return Ok(serde_json::json!({"messages": []})),
+        Some(items) if items.len() == 0 => return Ok(serde_json::json!({"messages": []})),
+        Some(items) => items.clone(),
+    };
+
+    let mut get_requests = vec![];
+
+    for item in items {
+        let message: MessageFromDateInfo = serde_dynamodb::from_hashmap(item)?;
+
+        let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+            hash: message.hash,
+            range: message.range,
+        })?;
+
+        get_requests.push(key);
+    }
+
+    let request_items = [(get_table_name()?, get_requests)]
+        .iter()
+        .cloned()
+        .map(|(name, keys)| {
+            let mut attval = KeysAndAttributes::default();
+
+            attval.keys = keys;
+
+            (name, attval)
+        })
+        .collect();
+
+    let input = BatchGetItemInput {
+        request_items,
+        ..Default::default()
+    };
+
+    let mut get_messages = execute_batch_get_query(db, input)?;
+    messages.append(&mut get_messages);
+
+    match data.last_evaluated_key {
+        Some(pagination_key) => {
+            let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
+
+            return Ok(serde_json::json!({"messages": messages, "pagination_key": pagination_key}));
+        }
+        None => return Ok(serde_json::json!({ "messages": messages })),
+    }
+}
+
 pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
     let expr_attr_names: HashMap<String, String> = [
         (String::from("#hashKey"), String::from("hash")),
         (String::from("#rangeKey"), String::from("range_time")), // time index
-        (String::from("#conversation_id"), String::from("conversation_id")),
+        (
+            String::from("#conversation_id"),
+            String::from("conversation_id"),
+        ),
         (String::from("#id"), String::from("id")),
     ]
     .iter()
@@ -281,8 +392,6 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
             pagination_key,
             Some("#conversation_id, #id".to_owned()),
             Some(expr_attr_names.clone()),
-            None,
-            None,
         )?;
 
         // The query returns an array of items (max 10, based on the limit param above).
@@ -305,15 +414,15 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
             })?;
 
             write_requests.push(WriteRequest {
-                delete_request: Some(DeleteRequest {key}),
+                delete_request: Some(DeleteRequest { key }),
                 put_request: None,
             });
         }
 
         let request_items = [(get_table_name()?, write_requests)]
-        .iter()
-        .cloned()
-        .collect();
+            .iter()
+            .cloned()
+            .collect();
 
         let input = BatchWriteItemInput {
             request_items,
@@ -324,7 +433,7 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
 
         pagination_key = data.last_evaluated_key;
         if let None = &pagination_key {
-            return Ok(())
+            return Ok(());
         }
     }
 }

@@ -1,9 +1,9 @@
 use crate::data::DynamoDbClient;
 use crate::{Client, Database, EngineError};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-use std::collections::HashMap;
 use rusoto_dynamodb::AttributeValue;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
 
 pub mod aws_s3;
 pub mod bot;
@@ -55,7 +55,9 @@ pub fn get_db<'a>(db: &'a mut Database) -> Result<&'a mut DynamoDbClient, Engine
     }
 }
 
-pub fn get_pagination_key(pagination_key: Option<String>) ->  Result<Option<HashMap<String, AttributeValue>>, EngineError> {
+pub fn get_pagination_key(
+    pagination_key: Option<String>,
+) -> Result<Option<HashMap<String, AttributeValue>>, EngineError> {
     match pagination_key {
         Some(key) => {
             let base64decoded = match base64::decode(&key) {
@@ -256,11 +258,7 @@ impl Memory {
         Self {
             hash: hash.to_owned(),
             range: range.to_owned(),
-            range_time: make_range(&[
-                class_name,
-                &now,
-                &range
-            ]),
+            range_time: make_range(&[class_name, &now, &range]),
             class: class_name.to_owned(),
             client: Some(client.to_owned()),
             bot_id: Some(client.bot_id.to_owned()),
@@ -274,11 +272,18 @@ impl Memory {
     }
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 struct MessageDeleteInfo {
     conversation_id: String,
     id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct MessageFromDateInfo {
+    class: String,
+    range: String,
+    created_at: String,
+    hash: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -303,6 +308,53 @@ pub struct Message {
     pub expires_at: Option<i64>,
     pub created_at: String,
 }
+
+// {
+//     "class": AttributeValue {
+//         b: None,
+//         bool: None,
+//         bs: None,
+//         l: None,
+//         m: None,
+//         n: None,
+//         ns: None,
+//         null: None,
+//         s: Some("message"), ss: None
+//     },
+//     "range": AttributeValue {
+//             b: None,
+//             bool: None,
+//             bs: None,
+//             l: None,
+//             m: None,
+//             n: None,
+//             ns: None,
+//             null: None,
+//             s: Some("message#8ced58a8-ae25-47bd-a949-4d702f7650b9#a649e6d1.-c4fa-44db-950e-3dbfafb8ce7b"), ss: None
+//     },
+//     "created_at": AttributeValue {
+//         b: None,
+//         bool: None,
+//         bs: None,
+//         l: None,
+//         m: None,
+//         n: None,
+//         ns: None,
+//         null: None,
+//         s: Some("2022-04-08T13:52:29.841Z"), ss: None
+//     },
+//     "hash": AttributeValue {
+//         b: None,
+//         bool: None,
+//         bs: None,
+//         l: None,
+//         m: None,
+//         n: None,
+//         ns: None,
+//         null: None,
+//         s: Some("bot_id:botid#channel_id:some-channel-id#user_id:alexis"), ss: None
+//     }
+// }
 
 impl Message {
     pub fn get_hash(client: &Client) -> String {
@@ -401,7 +453,13 @@ impl State {
      * hash = bot_id:xxxx#channel_id:xxxx#user_id:xxxx
      * range = mem_state#id
      */
-    pub fn new(client: &Client, _type: &str, key: &str, encrypted_value: &str, expires_at: Option<i64>,) -> Self {
+    pub fn new(
+        client: &Client,
+        _type: &str,
+        key: &str,
+        encrypted_value: &str,
+        expires_at: Option<i64>,
+    ) -> Self {
         let class_name = "state";
         let id = uuid::Uuid::new_v4().to_string();
         let now = get_date_time();

@@ -216,7 +216,17 @@ pub fn match_actions(
                                 primitive,
                             };
                         }
-                        Err(err) => new_value = PrimitiveString::get_literal(&err, lit.interval),
+                        Err(err) => {
+                            new_value = PrimitiveString::get_literal(&err, lit.interval);
+                            MSG::send_error_msg(
+                                &sender,
+                                &mut msg_data,
+                                Err(gen_error_info(
+                                    Position::new(new_value.interval, &new_scope_data.context.flow),
+                                    err,
+                                )),
+                            );
+                        }
                     }
                 }
                 AssignType::SubtractionAssignment => {
@@ -232,7 +242,18 @@ pub fn match_actions(
                                 primitive,
                             };
                         }
-                        Err(err) => new_value = PrimitiveString::get_literal(&err, lit.interval),
+                        Err(err) => {
+                            new_value = PrimitiveString::get_literal(&err, lit.interval);
+
+                            MSG::send_error_msg(
+                                &sender,
+                                &mut msg_data,
+                                Err(gen_error_info(
+                                    Position::new(new_value.interval, &new_scope_data.context.flow),
+                                    err,
+                                )),
+                            );
+                        }
                     }
                 }
                 _ => {}
