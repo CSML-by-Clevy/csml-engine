@@ -348,7 +348,12 @@ impl Add for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(float).do_add(&PrimitiveFloat::new(rhs.value as f64))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} + {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -361,7 +366,12 @@ impl Add for Box<dyn Primitive> {
                 match get_integer(&lhs.value) {
                     Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_add(rhs),
                     Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_add(rhs),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} + {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -375,7 +385,12 @@ impl Add for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(lhs.value as f64).do_add(&PrimitiveFloat::new(float))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} + {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -388,7 +403,12 @@ impl Add for Box<dyn Primitive> {
                 match get_integer(&rhs.value) {
                     Ok(Integer::Int(int)) => lhs.do_add(&PrimitiveFloat::new(int as f64)),
                     Ok(Integer::Float(float)) => lhs.do_add(&PrimitiveFloat::new(float)),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} + {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
 
@@ -439,7 +459,12 @@ impl Sub for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(float).do_sub(&PrimitiveFloat::new(rhs.value as f64))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} - {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -452,7 +477,12 @@ impl Sub for Box<dyn Primitive> {
                 match get_integer(&lhs.value) {
                     Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_sub(rhs),
                     Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_sub(rhs),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} - {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -466,7 +496,12 @@ impl Sub for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(lhs.value as f64).do_sub(&PrimitiveFloat::new(float))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} - {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -479,7 +514,12 @@ impl Sub for Box<dyn Primitive> {
                 match get_integer(&rhs.value) {
                     Ok(Integer::Int(int)) => lhs.do_sub(&PrimitiveFloat::new(int as f64)),
                     Ok(Integer::Float(float)) => lhs.do_sub(&PrimitiveFloat::new(float)),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} - {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             _ => Err(format!(
@@ -529,7 +569,12 @@ impl Div for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(float).do_div(&PrimitiveFloat::new(rhs.value as f64))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} / {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -542,7 +587,12 @@ impl Div for Box<dyn Primitive> {
                 match get_integer(&lhs.value) {
                     Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_div(rhs),
                     Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_div(rhs),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} / {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -556,7 +606,12 @@ impl Div for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(lhs.value as f64).do_div(&PrimitiveFloat::new(float))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} / {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -569,7 +624,12 @@ impl Div for Box<dyn Primitive> {
                 match get_integer(&rhs.value) {
                     Ok(Integer::Int(int)) => lhs.do_div(&PrimitiveFloat::new(int as f64)),
                     Ok(Integer::Float(float)) => lhs.do_div(&PrimitiveFloat::new(float)),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} / {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             _ => Err(format!(
@@ -619,7 +679,12 @@ impl Mul for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(float).do_mul(&PrimitiveFloat::new(rhs.value as f64))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} * {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -632,7 +697,12 @@ impl Mul for Box<dyn Primitive> {
                 match get_integer(&lhs.value) {
                     Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_mul(rhs),
                     Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_mul(rhs),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} * {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -646,7 +716,12 @@ impl Mul for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(lhs.value as f64).do_mul(&PrimitiveFloat::new(float))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} * {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -659,7 +734,12 @@ impl Mul for Box<dyn Primitive> {
                 match get_integer(&rhs.value) {
                     Ok(Integer::Int(int)) => lhs.do_mul(&PrimitiveFloat::new(int as f64)),
                     Ok(Integer::Float(float)) => lhs.do_mul(&PrimitiveFloat::new(float)),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} * {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             _ => Err(format!(
@@ -709,7 +789,12 @@ impl Rem for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(float).do_rem(&PrimitiveFloat::new(rhs.value as f64))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} % {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -722,7 +807,12 @@ impl Rem for Box<dyn Primitive> {
                 match get_integer(&lhs.value) {
                     Ok(Integer::Int(int)) => PrimitiveFloat::new(int as f64).do_rem(rhs),
                     Ok(Integer::Float(float)) => PrimitiveFloat::new(float).do_rem(rhs),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} % {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -736,7 +826,12 @@ impl Rem for Box<dyn Primitive> {
                     Ok(Integer::Float(float)) => {
                         PrimitiveFloat::new(lhs.value as f64).do_rem(&PrimitiveFloat::new(float))
                     }
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} % {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             (lhs, rhs)
@@ -749,11 +844,16 @@ impl Rem for Box<dyn Primitive> {
                 match get_integer(&rhs.value) {
                     Ok(Integer::Int(int)) => lhs.do_rem(&PrimitiveFloat::new(int as f64)),
                     Ok(Integer::Float(float)) => lhs.do_rem(&PrimitiveFloat::new(float)),
-                    Err(err) => Err(err),
+                    Err(_) => Err(format!(
+                        "{} {:?} % {:?}",
+                        ERROR_ILLEGAL_OPERATION,
+                        self.get_type(),
+                        other.get_type()
+                    )),
                 }
             }
             _ => Err(format!(
-                "{} {:?} * {:?}",
+                "{} {:?} % {:?}",
                 ERROR_ILLEGAL_OPERATION,
                 self.get_type(),
                 other.get_type()
