@@ -117,7 +117,7 @@ fn ok_parse_timezone() {
 fn ok_with_timezone() {
     let data = r#"
         {"messages":[ 
-            {"content":{"text": "2014-11-28T21:00:09.000+01:00"},"content_type":"text"}
+            {"content":{"text": "2014-11-28T22:00:09.000+01:00"},"content_type":"text"}
         ],
         "memories":[]
         }"#;
