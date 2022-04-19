@@ -7,11 +7,10 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 #[cfg(feature = "sqlite")]
 use crate::db_connectors::{is_sqlite, sqlite_connector};
 
-
-use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
-use crate::error_messages::ERROR_DB_SETUP;
-use crate::{Database, ConversationInfo, EngineError, Client};
 use crate::db_connectors::utils::*;
+use crate::error_messages::ERROR_DB_SETUP;
+use crate::{Client, ConversationInfo, Database, EngineError};
+use csml_interpreter::data::csml_logs::{csml_logger, CsmlLog, LogLvl};
 
 pub fn add_messages_bulk(
     data: &mut ConversationInfo,
@@ -24,18 +23,18 @@ pub fn add_messages_bulk(
             None,
             None,
             None,
-            format!("db call save messages {:?}", msgs)
+            format!("db call save messages {:?}", msgs),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&data.client),
             None,
             None,
-            format!("db call save messages {:?}", msgs)
+            format!("db call save messages {:?}", msgs),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -47,7 +46,7 @@ pub fn add_messages_bulk(
             &msgs,
             interaction_order,
             direction,
-            expires_at
+            expires_at,
         );
     }
 
@@ -102,22 +101,12 @@ pub fn get_client_messages(
     to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call get messages")
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, format!("db call get messages")),
+        LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(
-            Some(client),
-            None,
-            None,
-            format!("db call get messages")
-        ),
-        LogLvl::Debug
+        CsmlLog::new(Some(client), None, None, format!("db call get messages")),
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -140,14 +129,25 @@ pub fn get_client_messages(
         let db = dynamodb_connector::get_db(db)?;
         let pagination_key = dynamodb_connector::get_pagination_key(pagination_key)?;
 
-        return dynamodb_connector::messages::get_client_messages(
-            client,
-            db,
-            limit,
-            pagination_key,
-            from_date,
-            to_date,
-        );
+        match from_date {
+            Some(from_date) => {
+                return dynamodb_connector::messages::get_client_messages_from_date(
+                    db,
+                    limit,
+                    pagination_key,
+                    from_date,
+                    to_date,
+                );
+            }
+            None => {
+                return dynamodb_connector::messages::get_client_messages(
+                    client,
+                    db,
+                    limit,
+                    pagination_key,
+                )
+            }
+        }
     }
 
     #[cfg(feature = "postgresql")]
