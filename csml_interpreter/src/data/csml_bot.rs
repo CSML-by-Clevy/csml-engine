@@ -14,9 +14,9 @@ pub struct CsmlBot {
     #[serde(alias = "fn_endpoint")]
     pub apps_endpoint: Option<String>,
     pub flows: Vec<CsmlFlow>,
-    pub modules: Option<Modules>,
-    pub native_components: Option<serde_json::Map<String, serde_json::Value>>, //
-    pub custom_components: Option<serde_json::Value>,                          // serde_json::Value
+    pub modules: Option<Vec<Module>>,
+    pub native_components: Option<serde_json::Map<String, serde_json::Value>>,
+    pub custom_components: Option<serde_json::Value>,
     pub default_flow: String,
     pub bot_ast: Option<String>,
     pub no_interruption_delay: Option<i32>,
@@ -24,22 +24,16 @@ pub struct CsmlBot {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModuleData {
+pub struct Module {
     pub name: String,
     pub url: Option<String>,
     #[serde(default = "default_version")]
     pub version: String,
+    pub flow: Option<CsmlFlow>,
 }
 
 fn default_version() -> String {
     "latest".to_string()
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Modules {
-    pub config: String,
-    #[serde(default)]
-    pub flows: Vec<CsmlFlow>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +52,7 @@ impl CsmlBot {
         bot_ast: Option<String>,
         no_interruption_delay: Option<i32>,
         env: Option<serde_json::Value>,
-        modules: Option<Modules>,
+        modules: Option<Vec<Module>>,
     ) -> Self {
         Self {
             id: id.to_owned(),

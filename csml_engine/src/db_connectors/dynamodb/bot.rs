@@ -1,13 +1,13 @@
-use crate::data::{DynamoDbClient, DynamoBot, DynamoBotBincode, };
+use crate::data::{DynamoBot, DynamoBotBincode, DynamoDbClient};
+use crate::db_connectors::dynamodb::utils::*;
 use crate::db_connectors::{
-    dynamodb::{aws_s3, Bot, DynamoDbKey, Class},
+    dynamodb::{aws_s3, Bot, Class, DynamoDbKey},
     BotVersion,
 };
-use csml_interpreter::data::{csml_flow::CsmlFlow, csml_bot::Modules};
+use crate::EngineError;
+use csml_interpreter::data::{csml_bot::Module, csml_flow::CsmlFlow};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
-use crate::EngineError;
-use crate::db_connectors::dynamodb::utils::*;
 
 pub fn create_bot_version(
     bot_id: String,
@@ -31,7 +31,10 @@ pub fn create_bot_version(
     let key = format!("bots/{}/versions/{}/flows.json", &data.id, &data.version_id);
     aws_s3::put_object(db, &key, flows)?;
 
-    let key = format!("bots/{}/versions/{}/modules.json", &data.id, &data.version_id);
+    let key = format!(
+        "bots/{}/versions/{}/modules.json",
+        &data.id, &data.version_id
+    );
     aws_s3::put_object(db, &key, flow_modules)?;
 
     Ok(data.version_id.to_owned())
@@ -44,9 +47,9 @@ pub fn get_flows(key: &str, db: &mut DynamoDbClient) -> Result<Vec<CsmlFlow>, En
     Ok(flows)
 }
 
-pub fn get_modules(key: &str, db: &mut DynamoDbClient) -> Result<Modules, EngineError> {
+pub fn get_modules(key: &str, db: &mut DynamoDbClient) -> Result<Vec<Module>, EngineError> {
     let object = aws_s3::get_object(db, key)?;
-    let modules: Modules = serde_json::from_str(&object).unwrap();
+    let modules: Vec<Module> = serde_json::from_str(&object).unwrap();
 
     Ok(modules)
 }
@@ -103,9 +106,7 @@ fn query_bot_version(
     let query = db.client.query(input);
     let data = match db.runtime.block_on(query) {
         Ok(data) => data,
-        Err(e) => {
-            return Err(EngineError::Manager(format!("query_bot_version {:?}", e)))
-        }
+        Err(e) => return Err(EngineError::Manager(format!("query_bot_version {:?}", e))),
     };
 
     Ok(data)
@@ -139,13 +140,13 @@ pub fn get_bot_versions(
         let data: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
 
         let csml_bot: DynamoBot = match base64::decode(&data.bot) {
-            Ok(base64decoded) =>  {
+            Ok(base64decoded) => {
                 match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
                     Ok(bot) => bot.to_bot(),
-                    Err(_) => serde_json::from_str(&data.bot).unwrap()
+                    Err(_) => serde_json::from_str(&data.bot).unwrap(),
                 }
-            },
-            Err(_) => serde_json::from_str(&data.bot).unwrap()
+            }
+            Err(_) => serde_json::from_str(&data.bot).unwrap(),
         };
 
         let mut json = serde_json::json!({
@@ -201,10 +202,10 @@ pub fn get_bot_by_version_id(
                 Ok(base64decoded) => {
                     match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
-                        Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                        Err(_) => serde_json::from_str(&bot.bot).unwrap(),
                     }
-                },
-                Err(_) => serde_json::from_str(&bot.bot).unwrap()
+                }
+                Err(_) => serde_json::from_str(&bot.bot).unwrap(),
             };
 
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
@@ -274,7 +275,10 @@ pub fn get_last_bot_version(
     let data = match db.runtime.block_on(query) {
         Ok(data) => data,
         Err(e) => {
-            return Err(EngineError::Manager(format!("get_last_bot_version {:?}", e)))
+            return Err(EngineError::Manager(format!(
+                "get_last_bot_version {:?}",
+                e
+            )))
         }
     };
 
@@ -288,13 +292,11 @@ pub fn get_last_bot_version(
 
     let bot: Bot = serde_dynamodb::from_hashmap(item)?;
     let csml_bot: DynamoBot = match base64::decode(&bot.bot) {
-        Ok(base64decoded) =>  {
-            match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
-                Ok(bot) => bot.to_bot(),
-                Err(_) => serde_json::from_str(&bot.bot).unwrap()
-            }
+        Ok(base64decoded) => match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
+            Ok(bot) => bot.to_bot(),
+            Err(_) => serde_json::from_str(&bot.bot).unwrap(),
         },
-        Err(_) => serde_json::from_str(&bot.bot).unwrap()
+        Err(_) => serde_json::from_str(&bot.bot).unwrap(),
     };
 
     let key = format!("bots/{}/versions/{}/flows.json", bot_id, bot.version_id);
@@ -338,10 +340,7 @@ pub fn delete_bot_version(
     Ok(())
 }
 
-pub fn delete_bot_versions(
-    bot_id: &str,
-    db: &mut DynamoDbClient,
-) -> Result<(), EngineError> {
+pub fn delete_bot_versions(bot_id: &str, db: &mut DynamoDbClient) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
     loop {
@@ -379,9 +378,9 @@ pub fn delete_bot_versions(
         }
 
         let request_items = [(get_table_name()?, write_requests)]
-        .iter()
-        .cloned()
-        .collect();
+            .iter()
+            .cloned()
+            .collect();
 
         let input = BatchWriteItemInput {
             request_items,
@@ -392,7 +391,7 @@ pub fn delete_bot_versions(
 
         pagination_key = data.last_evaluated_key;
         if let None = &pagination_key {
-            return Ok(())
+            return Ok(());
         }
     }
 }
@@ -452,9 +451,7 @@ fn query_bot_info(
     let future = db.client.query(input);
     let data = match db.runtime.block_on(future) {
         Ok(data) => data,
-        Err(e) => {
-            return Err(EngineError::Manager(format!("query_bot_info {:?}", e)))
-        }
+        Err(e) => return Err(EngineError::Manager(format!("query_bot_info {:?}", e))),
     };
 
     Ok(data)
@@ -469,7 +466,7 @@ pub fn delete_all_bot_data(
 
     loop {
         // 25 is the Maximum operations in a single request for BatchWriteItemInput
-        let data = query_bot_info(bot_id, class, 25, db, pagination_key, )?;
+        let data = query_bot_info(bot_id, class, 25, db, pagination_key)?;
 
         // The query returns an array of items (max 10, based on the limit param above).
         // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -496,9 +493,9 @@ pub fn delete_all_bot_data(
         }
 
         let request_items = [(get_table_name()?, write_requests)]
-        .iter()
-        .cloned()
-        .collect();
+            .iter()
+            .cloned()
+            .collect();
 
         let input = BatchWriteItemInput {
             request_items,
@@ -509,7 +506,7 @@ pub fn delete_all_bot_data(
 
         pagination_key = data.last_evaluated_key;
         if let None = &pagination_key {
-            return Ok(())
+            return Ok(());
         }
     }
 }
