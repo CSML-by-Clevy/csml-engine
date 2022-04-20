@@ -28,6 +28,7 @@ use linter::{linter::lint_bot, FlowToValidate};
 use parser::ExitCondition;
 
 use std::collections::HashMap;
+use std::env;
 use std::sync::mpsc;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,28 +276,56 @@ fn get_flows(bot: &CsmlBot) -> (HashMap<String, Flow>, HashMap<String, Flow>) {
 }
 
 pub fn search_for_modules(bot: &mut CsmlBot) -> Result<(), String> {
+    let default_auth = env::var("MODULES_AUTH").ok();
+    let default_url = env::var("MODULES_URL").ok();
+
     if let Some(ref mut modules) = bot.modules {
         for module in modules.iter_mut() {
-            if let None = module.flow {
+            if module.flow.is_some() {
                 // module already downloaded
                 continue;
             }
 
-            let url = match &module.url {
-                Some(url) => url,
-                None => {
-                    // use env
-                    // or error
-                    // todo: get url from env with auth info
-                    return Err("url not set for module".to_string());
+            let request = match (&module.url, &default_url) {
+                (Some(url), _) => {
+                    let request = ureq::get(url);
+                    match &module.auth {
+                        Some(auth) => {
+                            let authorization =
+                                format!("Basic {}", base64::encode(auth.as_bytes()));
+
+                            request.set("Authorization", &authorization)
+                        }
+                        _ => request,
+                    }
+                }
+                (None, Some(url)) => {
+                    let request = ureq::get(url);
+
+                    match &default_auth {
+                        Some(auth) => {
+                            let authorization =
+                                format!("Basic {}", base64::encode(auth.as_bytes()));
+
+                            request.set("Authorization", &authorization)
+                        }
+                        _ => request,
+                    }
+                }
+                _ => {
+                    return Err(format!(
+                        "missing url in order to get module [{}]",
+                        module.name
+                    ));
                 }
             };
 
-            let request = ureq::get(url);
-
             match request.call() {
                 Ok(response) => {
-                    let flow_content = response.into_string().unwrap();
+                    let flow_content = match response.into_string() {
+                        Ok(flow) => flow,
+                        Err(_) => return Err(format!("invalid module {}", module.name)),
+                    };
 
                     module.flow = Some(CsmlFlow {
                         id: module.name.clone(),

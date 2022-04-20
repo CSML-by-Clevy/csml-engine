@@ -279,7 +279,7 @@ pub fn interpret_step(
     }
     add_memories(data, &memories)?;
 
-    Ok(messages_formater(
+    Ok(messages_formatter(
         data,
         data.messages.clone(),
         interaction_order,

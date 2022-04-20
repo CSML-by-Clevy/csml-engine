@@ -645,7 +645,7 @@ pub fn get_var(
                 mut tmp_context,
                 tmp_event,
                 tmp_env,
-                tmp_loop_indexs,
+                tmp_loop_indexes,
                 tmp_loop_index,
                 mut tmp_step_count,
                 tmp_step_vars,
@@ -661,7 +661,7 @@ pub fn get_var(
                 &mut tmp_context,
                 &tmp_event,
                 &tmp_env,
-                tmp_loop_indexs,
+                tmp_loop_indexes,
                 tmp_loop_index,
                 &mut tmp_step_count,
                 tmp_step_vars,
@@ -815,7 +815,7 @@ pub fn get_string_from_complex_string(
                     is_secure = true;
                 }
                 new_string.push_str(&var.primitive.to_string())
-            },
+            }
             Err(err) => {
                 return Err(err);
             }

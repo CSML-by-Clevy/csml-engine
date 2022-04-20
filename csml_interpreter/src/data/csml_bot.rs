@@ -27,6 +27,7 @@ pub struct CsmlBot {
 pub struct Module {
     pub name: String,
     pub url: Option<String>,
+    pub auth: Option<String>,
     #[serde(default = "default_version")]
     pub version: String,
     pub flow: Option<CsmlFlow>,

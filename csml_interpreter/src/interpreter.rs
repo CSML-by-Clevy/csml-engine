@@ -95,13 +95,13 @@ pub fn interpret_scope(
                 let hold = Hold::new(
                     IndexInfo {
                         command_index: index,
-                        loop_index: data.loop_indexs.clone(),
+                        loop_index: data.loop_indexes.clone(),
                     },
                     step_vars_to_json(map),
                     data.context.step.clone(),
                     data.context.flow.clone(),
                     data.previous_info.clone(),
-                    false
+                    false,
                 );
 
                 message_data.hold = Some(hold.to_owned());
@@ -117,13 +117,13 @@ pub fn interpret_scope(
                 let hold = Hold::new(
                     IndexInfo {
                         command_index: index,
-                        loop_index: data.loop_indexs.clone(),
+                        loop_index: data.loop_indexes.clone(),
                     },
                     step_vars_to_json(map),
                     data.context.step.clone(),
                     data.context.flow.clone(),
                     data.previous_info.clone(),
-                    true
+                    true,
                 );
 
                 message_data.hold = Some(hold.to_owned());
