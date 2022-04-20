@@ -1053,6 +1053,14 @@ impl PrimitiveArray {
 
                     let args = ArgsType::Normal(map);
 
+                    insert_args_in_scope_memory(
+                        &mut new_scope_data,
+                        &closure.args,
+                        &args,
+                        msg_data,
+                        sender,
+                    );
+
                     accumulator = exec_closure(
                         &closure.func,
                         &closure.args,
