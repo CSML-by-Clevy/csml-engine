@@ -12,7 +12,7 @@ use crate::data::{
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::resolve_csml_object::{
-    exec_closure, exec_fn, insert_args_in_scope_memory, insert_memories_in_scope_memory,
+    exec_closure, insert_args_in_scope_memory, insert_memories_in_scope_memory,
 };
 use phf::phf_map;
 use rand::seq::SliceRandom;
@@ -1035,6 +1035,10 @@ impl PrimitiveArray {
                     format!("usage: {}", usage),
                 )?;
 
+                let mut context = init_child_context(&data);
+                let mut step_count = data.step_count.clone();
+                let mut new_scope_data = init_child_scope(data, &mut context, &mut step_count);
+
                 for (index, value) in array.value.iter().enumerate() {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), accumulator);
@@ -1049,13 +1053,12 @@ impl PrimitiveArray {
 
                     let args = ArgsType::Normal(map);
 
-                    accumulator = exec_fn(
+                    accumulator = exec_closure(
                         &closure.func,
                         &closure.args,
                         args,
-                        closure.enclosed_variables.clone(),
                         interval,
-                        data,
+                        &mut new_scope_data,
                         msg_data,
                         sender,
                     )?;
