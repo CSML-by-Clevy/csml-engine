@@ -150,7 +150,7 @@ pub fn send_msg_to_callback_url(
     interaction_order: i32,
     end: bool,
 ) {
-    let messages = messages_formater(data, msg, interaction_order, end);
+    let messages = messages_formatter(data, msg, interaction_order, end);
 
     csml_logger(
         CsmlLog::new(
@@ -185,7 +185,7 @@ fn add_info_to_message(data: &ConversationInfo, mut msg: Message, interaction_or
  * - send action: when callback_url is set, messages are sent as they come to a defined endpoint
  * - return action: at the end of the interaction, all messages are returned as they were processed
  */
-pub fn messages_formater(
+pub fn messages_formatter(
     data: &mut ConversationInfo,
     vec_msg: Vec<Message>,
     interaction_order: i32,

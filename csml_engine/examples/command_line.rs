@@ -68,12 +68,7 @@ fn init_bot() -> CsmlBot {
         bot_ast: None,
         no_interruption_delay: None,
         env: None,
-        modules: Some(vec![ Module {
-            name: "module".to_string(),
-            url: Some("https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml".to_string()),
-            version: "latest".to_string(),
-            flow: None
-        }])
+        modules: None,
     }
 }
 

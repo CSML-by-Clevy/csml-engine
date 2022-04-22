@@ -10,12 +10,12 @@ use nom::{
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-pub fn parse_not_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Postfix, E>
+pub fn parse_not_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Pretfix, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (rest, ..) = tag(NOT)(s)?;
-    Ok((rest, Postfix::Not))
+    Ok((rest, Pretfix::Not))
 }
 
 pub fn addition_operator<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Infix, E>

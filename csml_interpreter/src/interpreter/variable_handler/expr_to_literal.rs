@@ -123,8 +123,8 @@ pub fn expr_to_literal(
 
             exec_path_literal(&mut literal, dis_warnings, path, data, msg_data, sender)
         }
-        Expr::PostfixExpr(postfix, expr) => {
-            let mut literal = evaluate_postfix(postfix, expr, data, msg_data, sender)?;
+        Expr::PostfixExpr(pretfix, expr) => {
+            let mut literal = evaluate_postfix(pretfix, expr, data, msg_data, sender)?;
             exec_path_literal(&mut literal, dis_warnings, path, data, msg_data, sender)
         }
         Expr::InfixExpr(infix, exp_1, exp_2) => {

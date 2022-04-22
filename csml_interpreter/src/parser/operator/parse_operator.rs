@@ -59,10 +59,6 @@ fn parse_and_condition<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    // let (s, init) = parse_infix_expr(s)?;
-    // fold_many0(parse_and, init.init, |acc, value: Expr| {
-    //     Expr::InfixExpr(Infix::And, Box::new(acc), Box::new(value))
-    // })(s)
     let (s, value) = parse_infix_expr(s)?;
 
     let (s, mut v) = many0(parse_and)(s)?;
