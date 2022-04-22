@@ -1,5 +1,6 @@
 use crate::data::position::Position;
 use crate::data::{
+    data::{init_child_context, init_child_scope, Data},
     literal,
     literal::ContentType,
     primitive::{
@@ -7,10 +8,12 @@ use crate::data::{
         PrimitiveString, PrimitiveType, Right,
     },
     tokens::TYPES,
-    ArgsType, Data, Interval, Literal, Message, MessageData, MSG,
+    ArgsType, Interval, Literal, Message, MessageData, MSG,
 };
 use crate::error_format::*;
-use crate::interpreter::variable_handler::resolve_csml_object::exec_fn;
+use crate::interpreter::variable_handler::resolve_csml_object::{
+    exec_closure, insert_args_in_scope_memory, insert_memories_in_scope_memory,
+};
 use phf::phf_map;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -878,6 +881,18 @@ impl PrimitiveArray {
                 )?;
 
                 let mut vec = vec![];
+                let mut context = init_child_context(&data);
+                let mut step_count = data.step_count.clone();
+                let mut new_scope_data = init_child_scope(data, &mut context, &mut step_count);
+
+                if let Some(memories) = closure.enclosed_variables.clone() {
+                    insert_memories_in_scope_memory(
+                        &mut new_scope_data,
+                        memories,
+                        msg_data,
+                        sender,
+                    );
+                }
 
                 for (index, value) in array.value.iter().enumerate() {
                     let mut map = HashMap::new();
@@ -890,13 +905,20 @@ impl PrimitiveArray {
                     }
 
                     let args = ArgsType::Normal(map);
-                    let result = exec_fn(
+                    insert_args_in_scope_memory(
+                        &mut new_scope_data,
+                        &closure.args,
+                        &args,
+                        msg_data,
+                        sender,
+                    );
+
+                    let result = exec_closure(
                         &closure.func,
                         &closure.args,
                         args,
-                        closure.enclosed_variables.clone(),
                         interval,
-                        data,
+                        &mut new_scope_data,
                         msg_data,
                         sender,
                     )?;
@@ -934,6 +956,19 @@ impl PrimitiveArray {
 
                 let mut vec = vec![];
 
+                let mut context = init_child_context(&data);
+                let mut step_count = data.step_count.clone();
+                let mut new_scope_data = init_child_scope(data, &mut context, &mut step_count);
+
+                if let Some(memories) = closure.enclosed_variables.clone() {
+                    insert_memories_in_scope_memory(
+                        &mut new_scope_data,
+                        memories,
+                        msg_data,
+                        sender,
+                    );
+                }
+
                 for (index, value) in array.value.iter().enumerate() {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), value.to_owned());
@@ -946,16 +981,24 @@ impl PrimitiveArray {
 
                     let args = ArgsType::Normal(map);
 
-                    let result = exec_fn(
+                    insert_args_in_scope_memory(
+                        &mut new_scope_data,
+                        &closure.args,
+                        &args,
+                        msg_data,
+                        sender,
+                    );
+
+                    let result = exec_closure(
                         &closure.func,
                         &closure.args,
                         args,
-                        closure.enclosed_variables.clone(),
                         interval,
-                        data,
+                        &mut new_scope_data,
                         msg_data,
                         sender,
                     )?;
+
                     if result.primitive.as_bool() {
                         vec.push(value.clone());
                     }
@@ -992,6 +1035,10 @@ impl PrimitiveArray {
                     format!("usage: {}", usage),
                 )?;
 
+                let mut context = init_child_context(&data);
+                let mut step_count = data.step_count.clone();
+                let mut new_scope_data = init_child_scope(data, &mut context, &mut step_count);
+
                 for (index, value) in array.value.iter().enumerate() {
                     let mut map = HashMap::new();
                     map.insert("arg0".to_owned(), accumulator);
@@ -1006,13 +1053,20 @@ impl PrimitiveArray {
 
                     let args = ArgsType::Normal(map);
 
-                    accumulator = exec_fn(
+                    insert_args_in_scope_memory(
+                        &mut new_scope_data,
+                        &closure.args,
+                        &args,
+                        msg_data,
+                        sender,
+                    );
+
+                    accumulator = exec_closure(
                         &closure.func,
                         &closure.args,
                         args,
-                        closure.enclosed_variables.clone(),
                         interval,
-                        data,
+                        &mut new_scope_data,
                         msg_data,
                         sender,
                     )?;

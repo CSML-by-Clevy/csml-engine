@@ -91,6 +91,6 @@ pub fn exec_fn_in_new_scope(
 
             Ok(return_value)
         }
-        _ => panic!("error in parsing need to be expr scope"),
+        _ => unreachable!("error in parsing need to be expr scope"),
     }
 }
