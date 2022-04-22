@@ -237,15 +237,24 @@ fn get_result(
     hashmap: &HashMap<String, Literal>,
     interval: Interval,
 ) -> Literal {
-    let mut result = PrimitiveObject::get_literal(&hashmap, interval);
+    if name.to_lowercase() == "text" {
+        // only for text component reformat the literal
 
-    if is_custom_component {
-        result.set_content_type(&format!("Component.{}", name.to_lowercase()));
-    } else {
+        let mut result = hashmap.get("text").unwrap().to_owned();
         result.set_content_type(&name.to_lowercase());
-    }
 
-    result
+        result
+    } else {
+        let mut result = PrimitiveObject::get_literal(&hashmap, interval);
+
+        if is_custom_component {
+            result.set_content_type(&format!("Component.{}", name.to_lowercase()));
+        } else {
+            result.set_content_type(&name.to_lowercase());
+        }
+
+        result
+    }
 }
 
 fn get_default_object(
