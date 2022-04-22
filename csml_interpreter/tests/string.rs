@@ -355,3 +355,55 @@ fn string_step_14_to_string() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn string_step_15_xml() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {"content_type":"text", "content":{"text": "<Item><name>Banana</name><source>Store</source></Item>"}}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_15_xml",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
+
+#[test]
+fn string_step_16_yaml() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {"content_type":"text", "content":{"text": "---\nx: 1.0\ny: 2.0\n"}}
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_16_yaml",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}

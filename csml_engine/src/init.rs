@@ -1,16 +1,20 @@
 use crate::db_connectors::{conversations::*, memories::*};
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
-    utils::{get_default_flow, get_flow_by_id, search_flow, get_ttl_duration_value, get_low_data_mode_value},
+    utils::{
+        get_default_flow, get_flow_by_id, get_low_data_mode_value, get_ttl_duration_value,
+        search_flow,
+    },
     Context, CsmlBot, CsmlFlow, CsmlResult,
 };
 
 use csml_interpreter::{
     data::{
+        ast::Flow,
         context::{get_hashmap_from_json, get_hashmap_from_mem},
-        ast::Flow, ApiInfo, Client, Event, 
+        ApiInfo, Client, Event,
     },
-    load_components, validate_bot, search_for_modules
+    load_components, search_for_modules, validate_bot,
 };
 use std::collections::HashMap;
 
@@ -46,8 +50,14 @@ pub fn init_conversation_info<'a>(
     // or another, this takes precedence over any previously open conversation
     // and a new conversation is created with the new flow as a starting point.
     let flow_found = search_flow(event, &bot, &request.client, &mut db).ok();
-    let conversation_id =
-        get_or_create_conversation(&mut context, &bot, flow_found, &request.client, ttl, &mut db)?;
+    let conversation_id = get_or_create_conversation(
+        &mut context,
+        &bot,
+        flow_found,
+        &request.client,
+        ttl,
+        &mut db,
+    )?;
 
     context.metadata = get_hashmap_from_json(&request.metadata, &context.flow);
     context.current = get_hashmap_from_mem(
@@ -88,7 +98,9 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
         Err(err) => return Err(EngineError::Interpreter(err.format_error())),
     };
 
-    search_for_modules(bot);
+    if let Err(err) = search_for_modules(&mut bot) {
+        return Err(EngineError::Interpreter(format!("{:?}", err)));
+    }
 
     match validate_bot(&bot) {
         CsmlResult {
@@ -97,7 +109,9 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
             errors: None,
             ..
         } => {
-            bot.bot_ast = Some(base64::encode(bincode::serialize(&(&flows, &extern_flows)).unwrap()));
+            bot.bot_ast = Some(base64::encode(
+                bincode::serialize(&(&flows, &extern_flows)).unwrap(),
+            ));
         }
         CsmlResult {
             flows: Some(flows),
@@ -107,7 +121,9 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
         } => {
             let extern_flows: HashMap<String, Flow> = HashMap::new();
 
-            bot.bot_ast = Some(base64::encode(bincode::serialize(&(&flows, &extern_flows)).unwrap()));
+            bot.bot_ast = Some(base64::encode(
+                bincode::serialize(&(&flows, &extern_flows)).unwrap(),
+            ));
         }
         CsmlResult {
             errors: Some(errors),
@@ -171,7 +187,9 @@ fn get_or_create_conversation<'a>(
                             // if flow id exist in db but not in bot close conversation
                             close_conversation(&conversation.id, &client, db)?;
                             // start new conversation at default flow
-                            return create_new_conversation(context, bot, flow_found, client, ttl, db);
+                            return create_new_conversation(
+                                context, bot, flow_found, client, ttl, db,
+                            );
                         }
                     };
 

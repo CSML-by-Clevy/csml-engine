@@ -41,6 +41,7 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "get_info" => (PrimitiveString::get_info as PrimitiveMethod, Right::Read),
     "is_error" => (PrimitiveString::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
+    "to_json" => (PrimitiveString::to_csml_json as PrimitiveMethod, Right::Read),
 
     "is_email" => (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
     "append" => (PrimitiveString::append as PrimitiveMethod, Right::Read),
@@ -260,6 +261,42 @@ impl PrimitiveString {
         }
 
         Ok(PrimitiveString::get_literal(&string.to_string(), interval))
+    }
+
+    fn to_csml_json(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_json() => obj";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let value = string.to_string();
+
+        let xml: Option<serde_json::Value> = serde_xml_rs::from_str(&value).ok();
+        let yaml: Option<serde_json::Value> = serde_yaml::from_str(&value).ok();
+
+        match (&yaml, &xml) {
+            (_, Some(json)) | (Some(json), _) => {
+                json_to_literal(json, interval, &data.context.flow)
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("Invalid format string is not a valid yaml or xml"),
+                ));
+            }
+        }
     }
 }
 

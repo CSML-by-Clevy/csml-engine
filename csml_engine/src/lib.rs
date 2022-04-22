@@ -5,6 +5,7 @@ pub use csml_interpreter::{
         csml_logs::*,
         csml_logs::*,
         error_info::ErrorInfo,
+        position::Position,
         warnings::Warnings,
         Client, CsmlResult, Event,
     },
@@ -217,7 +218,9 @@ pub fn create_bot_version(mut csml_bot: CsmlBot) -> Result<BotVersionCreated, En
     let bot_id = csml_bot.id.clone();
 
     // search for modules to download
-    search_for_modules(&mut csml_bot);
+    if let Err(err) = search_for_modules(&mut csml_bot) {
+        return Err(EngineError::Interpreter(format!("{:?}", err)));
+    }
 
     match validate_bot(csml_bot.clone()) {
         CsmlResult {
@@ -367,7 +370,14 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
     };
 
     // search for modules to download
-    search_for_modules(&mut bot);
+    if let Err(err) = search_for_modules(&mut bot) {
+        return CsmlResult {
+            errors: Some(vec![ErrorInfo::new(Position::default(), err)]),
+            warnings: None,
+            flows: None,
+            extern_flows: None,
+        };
+    }
 
     csml_interpreter::validate_bot(&bot)
 }
