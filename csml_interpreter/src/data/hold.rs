@@ -42,7 +42,7 @@ impl Hold {
             step_name,
             flow_name,
             previous,
-            secure
+            secure,
         }
     }
 
@@ -56,7 +56,7 @@ impl Hold {
             step_name: "".to_owned(),
             flow_name: "".to_owned(),
             previous: None,
-            secure: false
+            secure: false,
         }
     }
 }
@@ -71,7 +71,7 @@ pub fn hold_index_start_loop<'a>(
     value_skipped: &mut usize,
 ) -> &'a [Literal] {
     // add the new loop index in stack
-    data.loop_indexs.push(0);
+    data.loop_indexes.push(0);
 
     if let Some(hold) = &mut data.context.hold {
         let loop_index = &mut hold.index.loop_index;
@@ -86,11 +86,11 @@ pub fn hold_index_start_loop<'a>(
 
 // remove the loop index of the stack
 pub fn hold_index_end_loop(data: &mut Data) {
-    data.loop_indexs.pop();
+    data.loop_indexes.pop();
 }
 
 pub fn hold_loop_incrs_index(data: &mut Data, index: usize) {
-    data.loop_indexs[data.loop_index] = index;
+    data.loop_indexes[data.loop_index] = index;
     data.loop_index = data.loop_index + 1;
 }
 

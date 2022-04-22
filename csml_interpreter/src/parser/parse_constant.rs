@@ -279,14 +279,14 @@ pub fn constant_expr_to_lit(expr: &Expr, flow_name: &str) -> Result<Literal, Err
                 range_interval.to_owned(),
             ))
         }
-        Expr::PostfixExpr(postfix, expr) => {
+        Expr::PostfixExpr(pretfix, expr) => {
             let value = match constant_expr_to_lit(expr, flow_name) {
                 Ok(literal) => literal.primitive.as_bool(),
                 Err(_) => false,
             };
             let interval = interval_from_expr(expr);
 
-            if postfix.len() % 2 == 0 {
+            if pretfix.len() % 2 == 0 {
                 Ok(PrimitiveBoolean::get_literal(value, interval))
             } else {
                 Ok(PrimitiveBoolean::get_literal(!value, interval))

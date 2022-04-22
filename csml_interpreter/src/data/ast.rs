@@ -289,7 +289,7 @@ pub enum Expr {
     },
     VecExpr(Vec<Expr>, Interval),
     InfixExpr(Infix, Box<Expr>, Box<Expr>),
-    PostfixExpr(Vec<Postfix>, Box<Expr>),
+    PostfixExpr(Vec<Pretfix>, Box<Expr>),
     ObjectExpr(ObjectType),
     IfExpr(IfStatement),
 
@@ -334,7 +334,7 @@ pub enum Infix {
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
-pub enum Postfix {
+pub enum Pretfix {
     Not,
 }
 

@@ -1,5 +1,5 @@
 use crate::data::{
-    ast::{Expr, Infix, Postfix},
+    ast::{Expr, Infix, Pretfix},
     position::Position,
     primitive::boolean::PrimitiveBoolean,
     warnings::DisplayWarnings,
@@ -139,7 +139,7 @@ pub fn evaluate_infix(
 }
 
 pub fn evaluate_postfix(
-    postfixes: &[Postfix],
+    postfixes: &[Pretfix],
     expr: &Box<Expr>,
     data: &mut Data,
     msg_data: &mut MessageData,
