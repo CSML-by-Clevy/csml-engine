@@ -1323,7 +1323,9 @@ dependencies = [
  "regex",
  "rustls 0.20.2",
  "serde",
+ "serde-xml-rs",
  "serde_json",
+ "serde_yaml",
  "typetag",
  "ureq 2.4.0",
  "uuid",
@@ -3990,6 +3992,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ce31e24b01e1e524df96f1c2fdd054405f8d7376249a5110886fb4b658484789"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde-xml-rs"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65162e9059be2f6a3421ebbb4fef3e74b7d9e7c60c50a0e292c6239f19f1edfa"
+dependencies = [
+ "log",
+ "serde",
+ "thiserror",
+ "xml-rs",
 ]
 
 [[package]]

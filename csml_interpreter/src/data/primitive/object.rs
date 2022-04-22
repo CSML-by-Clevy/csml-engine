@@ -103,6 +103,8 @@ const FUNCTIONS_READ: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map
     "type_of" => (PrimitiveObject::type_of as PrimitiveMethod, Right::Read),
     "get_info" => (PrimitiveObject::get_info as PrimitiveMethod, Right::Read),
     "is_error" => (PrimitiveObject::is_error as PrimitiveMethod, Right::Read),
+    "to_xml" => (PrimitiveObject::to_xml as PrimitiveMethod, Right::Read),
+    "to_yaml" => (PrimitiveObject::to_yaml as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveObject::to_string as PrimitiveMethod, Right::Read),
 
     "contains" => (PrimitiveObject::contains as PrimitiveMethod, Right::Read),
@@ -2074,6 +2076,58 @@ impl PrimitiveObject {
                 Ok(PrimitiveBoolean::get_literal(true, interval))
             }
             _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
+        }
+    }
+
+    fn to_xml(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_xml() => string";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        match serde_xml_rs::to_string(&object.to_json()) {
+            Ok(string) => Ok(PrimitiveString::get_literal(&string, interval)),
+            Err(_) => Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("Object can not be converted to xml"),
+            )),
+        }
+    }
+
+    fn to_yaml(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "to_yaml() => string";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        match serde_yaml::to_string(&object.to_json()) {
+            Ok(string) => Ok(PrimitiveString::get_literal(&string, interval)),
+            Err(_) => Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("Object can not be converted to yaml"),
+            )),
         }
     }
 

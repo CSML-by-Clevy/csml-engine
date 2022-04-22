@@ -95,3 +95,15 @@ step_13_to_string:
 
 step_14_to_string:
     say "😆\"{{2}}\""
+
+step_15_xml:
+    do var = "<Item><name>Banana</name><source>Store</source></Item>"
+    do obj = var.to_json()
+
+    say obj.to_yaml()
+
+step_16_yaml:
+    do var = "---\nx: 1.0\ny: 2.0"
+    do obj = var.to_json()
+
+    say obj.to_yaml()
