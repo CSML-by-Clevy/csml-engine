@@ -35,6 +35,41 @@ enum ObjType {
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+fn get_type<'a>(name: &'a str, interval: Interval, data: &'a Data) -> ObjType {
+    if data.native_component.contains_key(name) {
+        return ObjType::NativeComponent;
+    }
+
+    if BUILT_IN.contains(&name) {
+        return ObjType::BuiltIn;
+    }
+
+    if BUILT_IN_WITHOUT_WARNINGS.contains(&name) {
+        return ObjType::BuiltInWithoutWarnings;
+    }
+
+    if let Some((
+        InstructionScope::FunctionScope {
+            name: _,
+            args: fn_args,
+        },
+        scope,
+    )) = check_for_function(name, data)
+    {
+        return ObjType::Function { fn_args, scope };
+    }
+
+    if let Some((_fn_args, _expr, _new_flow)) = check_for_import(name, interval, data) {
+        return ObjType::Import;
+    }
+
+    if let Some((fn_args, scope)) = check_for_closure(name, interval, data) {
+        return ObjType::Closure { fn_args, scope };
+    }
+
+    ObjType::Error
+}
+
 fn get_function<'a>(
     flow: &'a Flow,
     fn_name: &str,
@@ -138,47 +173,6 @@ fn search_function<'a>(
     }
 }
 
-fn insert_args_in_scope_memory(
-    new_scope_data: &mut Data,
-    fn_args: &[String],
-    args: &ArgsType,
-    msg_data: &mut MessageData,
-    sender: &Option<mpsc::Sender<MSG>>,
-) {
-    for (index, name) in fn_args.iter().enumerate() {
-        let value = args.get(name, index).unwrap();
-
-        save_literal_in_mem(
-            value.to_owned(),
-            name.to_owned(),
-            &MemoryType::Use,
-            true,
-            new_scope_data,
-            msg_data,
-            sender,
-        );
-    }
-}
-
-fn insert_memories_in_scope_memory(
-    new_scope_data: &mut Data,
-    memories: HashMap<String, Literal>,
-    msg_data: &mut MessageData,
-    sender: &Option<mpsc::Sender<MSG>>,
-) {
-    for (name, value) in memories.iter() {
-        save_literal_in_mem(
-            value.to_owned(),
-            name.to_owned(),
-            &MemoryType::Use,
-            true,
-            new_scope_data,
-            msg_data,
-            sender,
-        );
-    }
-}
-
 fn check_for_function(name: &str, data: &Data) -> Option<(InstructionScope, Expr)> {
     match data
         .flow
@@ -241,39 +235,45 @@ fn check_for_closure<'a>(
 // PUBLIC FUNCTION
 ////////////////////////////////////////////////////////////////////////////////
 
-fn get_type<'a>(name: &'a str, interval: Interval, data: &'a Data) -> ObjType {
-    if data.native_component.contains_key(name) {
-        return ObjType::NativeComponent;
-    }
+pub fn insert_args_in_scope_memory(
+    new_scope_data: &mut Data,
+    fn_args: &[String],
+    args: &ArgsType,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) {
+    for (index, name) in fn_args.iter().enumerate() {
+        let value = args.get(name, index).unwrap();
 
-    if BUILT_IN.contains(&name) {
-        return ObjType::BuiltIn;
+        save_literal_in_mem(
+            value.to_owned(),
+            name.to_owned(),
+            &MemoryType::Use,
+            true,
+            new_scope_data,
+            msg_data,
+            sender,
+        );
     }
+}
 
-    if BUILT_IN_WITHOUT_WARNINGS.contains(&name) {
-        return ObjType::BuiltInWithoutWarnings;
+pub fn insert_memories_in_scope_memory(
+    new_scope_data: &mut Data,
+    memories: HashMap<String, Literal>,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) {
+    for (name, value) in memories.iter() {
+        save_literal_in_mem(
+            value.to_owned(),
+            name.to_owned(),
+            &MemoryType::Use,
+            true,
+            new_scope_data,
+            msg_data,
+            sender,
+        );
     }
-
-    if let Some((
-        InstructionScope::FunctionScope {
-            name: _,
-            args: fn_args,
-        },
-        scope,
-    )) = check_for_function(name, data)
-    {
-        return ObjType::Function { fn_args, scope };
-    }
-
-    if let Some((_fn_args, _expr, _new_flow)) = check_for_import(name, interval, data) {
-        return ObjType::Import;
-    }
-
-    if let Some((fn_args, scope)) = check_for_closure(name, interval, data) {
-        return ObjType::Closure { fn_args, scope };
-    }
-
-    ObjType::Error
 }
 
 pub fn resolve_object(
@@ -375,6 +375,7 @@ pub fn resolve_object(
         ObjType::Closure { fn_args, scope } => {
             let resolved_args =
                 resolve_fn_args(args, data, msg_data, &DisplayWarnings::On, sender)?;
+
             exec_fn(
                 &scope,
                 &fn_args,
@@ -427,5 +428,28 @@ pub fn exec_fn(
         insert_memories_in_scope_memory(&mut new_scope_data, memories, msg_data, sender);
     }
 
-    exec_fn_in_new_scope(scope, &mut new_scope_data, msg_data, sender)
+    println!("=> {:?}\n", new_scope_data.step_vars);
+    let res = exec_fn_in_new_scope(scope, &mut new_scope_data, msg_data, sender);
+    println!("end => {:#?}\n\n", new_scope_data.step_vars);
+
+    res
+}
+
+pub fn exec_closure(
+    scope: &Expr,
+    fn_args: &[String],
+    args: ArgsType,
+    interval: Interval,
+    data: &mut Data,
+    msg_data: &mut MessageData,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<Literal, ErrorInfo> {
+    if fn_args.len() > args.len() {
+        return Err(gen_error_info(
+            Position::new(interval, &data.context.flow),
+            ERROR_FN_ARGS.to_owned(),
+        ));
+    }
+
+    exec_fn_in_new_scope(scope, data, msg_data, sender)
 }
