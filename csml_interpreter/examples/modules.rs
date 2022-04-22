@@ -38,7 +38,8 @@ fn main() {
             name: "module".to_string(),
             url: Some("https://raw.githubusercontent.com/CSML-by-Clevy/csml-engine/dev/csml_engine/CSML/flow2.csml".to_string()),
             version: "latest".to_string(),
-            flow: None
+            flow: None,
+            auth: None,
         }]),
     );
 

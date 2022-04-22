@@ -25,7 +25,7 @@ pub struct Data<'a> {
     pub event: &'a Event,
     pub env: &'a Literal,
 
-    pub loop_indexs: Vec<usize>,
+    pub loop_indexes: Vec<usize>,
     pub loop_index: usize,
 
     pub step_count: &'a mut i32,
@@ -66,7 +66,7 @@ impl<'a> Data<'a> {
         context: &'a mut Context,
         event: &'a Event,
         env: &'a Literal,
-        loop_indexs: Vec<usize>,
+        loop_indexes: Vec<usize>,
         loop_index: usize,
         step_count: &'a mut i32,
         step_vars: HashMap<String, Literal>,
@@ -85,7 +85,7 @@ impl<'a> Data<'a> {
             context,
             event,
             env,
-            loop_indexs,
+            loop_indexes,
             loop_index,
             step_count,
             step_vars,
@@ -120,15 +120,13 @@ impl<'a> Data<'a> {
             init_child_context(&self),
             self.event.clone(),
             self.env.clone(),
-            self.loop_indexs.clone(),
+            self.loop_indexes.clone(),
             self.loop_index.clone(),
             self.step_count.clone(),
             self.step_vars.clone(),
             self.custom_component.clone(),
             self.native_component.clone(),
         )
-
-
     }
 
     // get permanent and temporary memories in a single hashmap
@@ -164,7 +162,7 @@ pub fn init_child_scope<'a>(
         context,
         &data.event,
         &data.env,
-        data.loop_indexs.clone(),
+        data.loop_indexes.clone(),
         data.loop_index,
         step_count,
         HashMap::new(),
