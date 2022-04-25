@@ -100,7 +100,7 @@ step_15_xml:
     do var = "<Item><name>Banana</name><source>Store</source></Item>"
     do obj = var.to_json()
 
-    say obj.to_yaml()
+    say obj.to_xml()
 
 step_16_yaml:
     do var = "---\nx: 1.0\ny: 2.0"
