@@ -9,7 +9,7 @@ use crate::db_connectors::{is_sqlite, sqlite_connector};
 
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{BotVersion, CsmlBot, Database, EngineError};
-use csml_interpreter::data::{csml_bot::Module, csml_logs::*};
+use csml_interpreter::data::csml_logs::*;
 
 pub fn create_bot_version(
     bot_id: String,
@@ -56,7 +56,7 @@ pub fn create_bot_version(
         let flow_modules = match csml_bot.modules {
             Some(ref modules) => serde_json::json!(&modules),
             None => {
-                let modules: Vec<Module> = vec![];
+                let modules: Vec<csml_interpreter::data::csml_bot::Module> = vec![];
 
                 serde_json::json!(modules)
             }

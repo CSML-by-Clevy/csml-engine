@@ -1,20 +1,17 @@
-use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
     db_connectors::sqlite::get_db,
-    encrypt::{encrypt_data, decrypt_data},
-    EngineError, SqliteClient,
-    ConversationInfo, Client
+    encrypt::{decrypt_data, encrypt_data},
+    Client, ConversationInfo, EngineError, SqliteClient,
 };
 
 use super::{
     models,
-    schema::{
-        csml_messages, csml_conversations
-    },
-    pagination::*
+    pagination::*,
+    schema::{csml_conversations, csml_messages},
 };
-use chrono::{NaiveDateTime};
+use chrono::NaiveDateTime;
 
 pub fn add_messages_bulk(
     data: &ConversationInfo,
@@ -29,9 +26,8 @@ pub fn add_messages_bulk(
 
     let db = get_db(&data.db)?;
 
-    let mut new_messages = vec!();
+    let mut new_messages = vec![];
     for (message_order, message) in msgs.iter().enumerate() {
-
         let conversation_id = models::UUID::parse_str(&data.conversation_id).unwrap();
 
         let msg = models::NewMessages {
@@ -53,17 +49,13 @@ pub fn add_messages_bulk(
     }
 
     diesel::insert_into(csml_messages::table)
-    .values(&new_messages)
-    .execute(&db.client)?;
+        .values(&new_messages)
+        .execute(&db.client)?;
 
     Ok(())
 }
 
-pub fn delete_user_messages(
-    client: &Client,
-    db: &SqliteClient
-) -> Result<(), EngineError> {
-
+pub fn delete_user_messages(client: &Client, db: &SqliteClient) -> Result<(), EngineError> {
     let conversations: Vec<models::Conversation> = csml_conversations::table
         .filter(csml_conversations::bot_id.eq(&client.bot_id))
         .filter(csml_conversations::channel_id.eq(&client.channel_id))
@@ -72,9 +64,10 @@ pub fn delete_user_messages(
 
     for conversation in conversations {
         diesel::delete(
-            csml_messages::table
-            .filter(csml_messages::conversation_id.eq(&conversation.id))
-        ).execute(&db.client).ok();
+            csml_messages::table.filter(csml_messages::conversation_id.eq(&conversation.id)),
+        )
+        .execute(&db.client)
+        .ok();
     }
 
     Ok(())
@@ -85,12 +78,12 @@ pub fn get_client_messages(
     db: &SqliteClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
-    from_date: Option<String>,
+    from_date: Option<i64>,
     to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     let pagination_key = match pagination_key {
         Some(paginate) => paginate.parse::<i64>().unwrap_or(1),
-        None => 1
+        None => 1,
     };
 
     let (conversation_with_messages, total_pages) = match from_date {
@@ -98,20 +91,20 @@ pub fn get_client_messages(
             let from_date = NaiveDateTime::from_timestamp(from_date, 0);
             let to_date = match to_date {
                 Some(to_date) => NaiveDateTime::from_timestamp(to_date, 0),
-                None => chrono::Utc::now().naive_utc()
+                None => chrono::Utc::now().naive_utc(),
             };
 
             let mut query = csml_conversations::table
-            .filter(csml_conversations::bot_id.eq(&client.bot_id))
-            .filter(csml_conversations::channel_id.eq(&client.channel_id))
-            .filter(csml_conversations::user_id.eq(&client.user_id))
-            .inner_join(csml_messages::table)
-            .filter(csml_messages::created_at.ge(from_date))
-            .filter(csml_messages::created_at.le(to_date))
-            .select((csml_conversations::all_columns, csml_messages::all_columns))
-            .order_by(csml_messages::created_at.desc())
-            .then_order_by(csml_messages::message_order.desc())
-            .paginate(pagination_key);
+                .filter(csml_conversations::bot_id.eq(&client.bot_id))
+                .filter(csml_conversations::channel_id.eq(&client.channel_id))
+                .filter(csml_conversations::user_id.eq(&client.user_id))
+                .inner_join(csml_messages::table)
+                .filter(csml_messages::created_at.ge(from_date))
+                .filter(csml_messages::created_at.le(to_date))
+                .select((csml_conversations::all_columns, csml_messages::all_columns))
+                .order_by(csml_messages::created_at.desc())
+                .then_order_by(csml_messages::message_order.desc())
+                .paginate(pagination_key);
 
             let limit_per_page = match limit {
                 Some(limit) => std::cmp::min(limit, 25),
@@ -123,14 +116,14 @@ pub fn get_client_messages(
         }
         None => {
             let mut query = csml_conversations::table
-            .filter(csml_conversations::bot_id.eq(&client.bot_id))
-            .filter(csml_conversations::channel_id.eq(&client.channel_id))
-            .filter(csml_conversations::user_id.eq(&client.user_id))
-            .inner_join(csml_messages::table)
-            .select((csml_conversations::all_columns, csml_messages::all_columns))
-            .order_by(csml_messages::created_at.desc())
-            .then_order_by(csml_messages::message_order.desc())
-            .paginate(pagination_key);
+                .filter(csml_conversations::bot_id.eq(&client.bot_id))
+                .filter(csml_conversations::channel_id.eq(&client.channel_id))
+                .filter(csml_conversations::user_id.eq(&client.user_id))
+                .inner_join(csml_messages::table)
+                .select((csml_conversations::all_columns, csml_messages::all_columns))
+                .order_by(csml_messages::created_at.desc())
+                .then_order_by(csml_messages::message_order.desc())
+                .paginate(pagination_key);
 
             let limit_per_page = match limit {
                 Some(limit) => std::cmp::min(limit, 25),
@@ -147,7 +140,7 @@ pub fn get_client_messages(
     let mut msgs = vec![];
     for message in messages {
         let json = serde_json::json!({
-            "client": { 
+            "client": {
                 "bot_id": &client.bot_id,
                 "channel_id": &client.channel_id,
                 "user_id": &client.user_id
@@ -168,9 +161,7 @@ pub fn get_client_messages(
     match pagination_key < total_pages {
         true => {
             let pagination_key = (pagination_key + 1).to_string();
-            Ok(
-                serde_json::json!({"messages": msgs, "pagination_key": pagination_key}),
-            )
+            Ok(serde_json::json!({"messages": msgs, "pagination_key": pagination_key}))
         }
         false => Ok(serde_json::json!({ "messages": msgs })),
     }
