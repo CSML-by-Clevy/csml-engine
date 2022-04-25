@@ -3,11 +3,7 @@ use csml_engine::{
     delete_expired_data, start_conversation,
 };
 use csml_interpreter::{
-    data::{
-        csml_bot::{CsmlBot, Module},
-        csml_flow::CsmlFlow,
-        Client,
-    },
+    data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client},
     load_components,
 };
 use serde_json::json;

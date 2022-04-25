@@ -98,7 +98,7 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
         Err(err) => return Err(EngineError::Interpreter(err.format_error())),
     };
 
-    if let Err(err) = search_for_modules(&mut bot) {
+    if let Err(err) = search_for_modules(bot) {
         return Err(EngineError::Interpreter(format!("{:?}", err)));
     }
 
