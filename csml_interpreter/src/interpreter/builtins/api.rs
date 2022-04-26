@@ -104,8 +104,14 @@ pub fn api(
     http.insert("body".to_owned(), body);
 
     match http_request(&http, "post", &data.context.flow, interval, true) {
-        Ok(value) => match value.get("data") {
-            Some(value) => interpolate(value, interval, data, msg_data, sender),
+        Ok((value, response_info)) => match value.get("data") {
+            Some(value) => {
+                let mut literal = interpolate(value, interval, data, msg_data, sender)?;
+                // add additional information about the http request response: status and headers
+                literal.add_info_block(response_info);
+
+                Ok(literal)
+            }
             None => {
                 let err = gen_error_info(
                     Position::new(interval, &data.context.flow),
