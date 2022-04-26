@@ -497,8 +497,13 @@ impl PrimitiveObject {
                 }
             };
 
-            let value = http_request(&object.value, method, &data.context.flow, interval, false)?;
-            return json_to_literal(&value, interval, &data.context.flow);
+            let (value, response_info) =
+                http_request(&object.value, method, &data.context.flow, interval, false)?;
+            let mut literal = json_to_literal(&value, interval, &data.context.flow)?;
+            // add additional information about the http request response: status and headers
+            literal.add_info_block(response_info);
+
+            return Ok(literal);
         }
 
         Err(gen_error_info(

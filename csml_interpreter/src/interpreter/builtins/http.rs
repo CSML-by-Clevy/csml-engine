@@ -61,15 +61,22 @@ fn get_value<'lifetime, T: 'static>(
 }
 
 fn set_http_error_info(
-    response: &Response,
+    response_info: &HashMap<String, Literal>,
     error_message: String,
     flow_name: &str,
     interval: Interval,
 ) -> ErrorInfo {
     let mut error = gen_error_info(Position::new(interval, flow_name), error_message);
+    error.add_info_block(response_info.clone());
+
+    error
+}
+
+fn get_request_info(response: &Response, interval: Interval) -> HashMap<String, Literal> {
+    let mut response_info = HashMap::new();
 
     let status = PrimitiveInt::get_literal(response.status() as i64, interval);
-    error.add_info("status", status);
+    response_info.insert("status".to_owned(), status);
 
     let headers = response
         .headers_names()
@@ -82,9 +89,12 @@ fn set_http_error_info(
             acc
         });
 
-    error.add_info("headers", PrimitiveObject::get_literal(&headers, interval));
+    response_info.insert(
+        "headers".to_owned(),
+        PrimitiveObject::get_literal(&headers, interval),
+    );
 
-    error
+    response_info
 }
 
 pub fn get_ssl_state(object: &HashMap<String, Literal>) -> bool {
@@ -218,7 +228,7 @@ pub fn http_request(
     flow_name: &str,
     interval: Interval,
     is_app_call: bool,
-) -> Result<serde_json::Value, ErrorInfo> {
+) -> Result<(serde_json::Value, HashMap<String, Literal>), ErrorInfo> {
     let url = get_url(object, flow_name, interval)?;
     let is_ssl_disable = get_ssl_state(object);
 
@@ -272,21 +282,13 @@ pub fn http_request(
 
     match response {
         Ok(response) => {
-            let mut error = set_http_error_info(
-                &response,
-                ERROR_FAIL_RESPONSE_JSON.to_owned(),
-                flow_name,
-                interval,
-            );
-            let error_body =
-                "Invalid Response format, please send a json or a valid UTF-8 sequence";
-            error.add_info("body", PrimitiveString::get_literal(error_body, interval));
+            let response_info = get_request_info(&response, interval);
 
             match response.into_string() {
                 Ok(string_value) => {
                     match serde_json::from_str::<serde_json::Value>(&string_value) {
-                        Ok(json_value) => Ok(json_value),
-                        Err(_) => Ok(serde_json::json!(string_value)),
+                        Ok(json_value) => Ok((json_value, response_info)),
+                        Err(_) => Ok((serde_json::json!(string_value), response_info)),
                     }
                 }
                 Err(err) => {
@@ -299,6 +301,16 @@ pub fn http_request(
                         ),
                         LogLvl::Error,
                     );
+                    let mut error = set_http_error_info(
+                        &response_info,
+                        ERROR_FAIL_RESPONSE_JSON.to_owned(),
+                        flow_name,
+                        interval,
+                    );
+
+                    let error_body =
+                        "Invalid Response format, please send a json or a valid UTF-8 sequence";
+                    error.add_info("body", PrimitiveString::get_literal(error_body, interval));
                     Err(error)
                 }
             }
@@ -327,7 +339,10 @@ pub fn http_request(
             );
 
             if let ureq::Error::Status(_, response) = err {
-                let mut error = set_http_error_info(&response, error_message, flow_name, interval);
+                let response_info = get_request_info(&response, interval);
+
+                let mut error =
+                    set_http_error_info(&response_info, error_message, flow_name, interval);
 
                 let body = match response.into_string() {
                     Ok(body) => body,

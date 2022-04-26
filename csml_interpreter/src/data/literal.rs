@@ -141,6 +141,19 @@ impl Literal {
         }
     }
 
+    pub fn add_info_block(&mut self, info: HashMap<String, Literal>) {
+        match self.additional_info {
+            Some(ref mut map) => {
+                for (key, value) in info {
+                    map.insert(key, value);
+                }
+            }
+            None => {
+                self.additional_info = Some(info);
+            }
+        }
+    }
+
     pub fn add_error_to_info(&mut self, error_msg: &str) {
         match self.additional_info {
             Some(ref mut map) => {
