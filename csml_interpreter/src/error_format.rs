@@ -161,6 +161,12 @@ pub const ERROR_BUILTIN_UNKNOWN: &str = "Unknown builtin";
 pub const ERROR_HTTP_NOT_DATA: &str = "bad format: no 'data' in HTTP response";
 pub const ERROR_NATIVE_COMPONENT: &str = "native component does not exist";
 
+// ### Constants
+pub const ERROR_CONSTANT_MUTABLE_FUNCTION: &str =
+    "Invalid operation constants can not execute self mutable functions";
+pub const ERROR_INVALID_CONSTANT_EXPR: &str =
+    "Constant invalid expression type: constants can not be assign this type of expression";
+
 // ### Primitives
 // #### Indexing
 pub const ERROR_INDEXING: &str =

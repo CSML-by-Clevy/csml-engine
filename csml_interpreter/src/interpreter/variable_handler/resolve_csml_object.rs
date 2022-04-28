@@ -428,9 +428,7 @@ pub fn exec_fn(
         insert_memories_in_scope_memory(&mut new_scope_data, memories, msg_data, sender);
     }
 
-    println!("=> {:?}\n", new_scope_data.step_vars);
     let res = exec_fn_in_new_scope(scope, &mut new_scope_data, msg_data, sender);
-    println!("end => {:#?}\n\n", new_scope_data.step_vars);
 
     res
 }

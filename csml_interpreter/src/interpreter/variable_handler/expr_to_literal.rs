@@ -1,8 +1,10 @@
 use crate::data::error_info::ErrorInfo;
 use crate::data::literal::ContentType;
 use crate::data::primitive::{closure::capture_variables, PrimitiveArray, PrimitiveObject};
-use crate::data::{ast::*, ArgsType, Data, Literal, MessageData, MSG};
-use crate::data::{warnings::DisplayWarnings, Position};
+use crate::data::{
+    ast::*, warnings::DisplayWarnings, ArgsType, Data, Literal, MemoryType, MessageData, Position,
+    MSG,
+};
 use crate::error_format::*;
 use crate::interpreter::{
     ast_interpreter::evaluate_condition,
@@ -30,6 +32,7 @@ fn exec_path_literal(
         let (new_literal, ..) = exec_path_actions(
             literal,
             dis_warnings,
+            &MemoryType::Use,
             None,
             &Some(path),
             &ContentType::get(&literal),

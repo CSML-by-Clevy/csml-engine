@@ -12,11 +12,11 @@ use crate::error_format::{
 };
 use crate::interpreter::variable_handler::interval::interval_from_expr;
 use crate::linter::{
-    FlowToValidate, FunctionCallInfo, FunctionInfo, ImportInfo, LinterInfo, ScopeType, State,
-    StepBreakers, StepInfo,
+    ConstantInfo, FlowConstantUse, FlowToValidate, FunctionCallInfo, FunctionInfo, ImportInfo,
+    LinterInfo, ScopeType, State, StepBreakers, StepInfo,
 };
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub const ERROR_GOTO_IN_FN: &str = "'goto' action is not allowed in function scope";
 pub const ERROR_REMEMBER_IN_FN: &str = "'remember' action is not allowed in function scope";
@@ -39,6 +39,7 @@ pub fn lint_bot(
     default_flow: &str,
 ) {
     let scope_type = ScopeType::Step("start".to_owned());
+    let mut bot_constants = HashMap::new();
     let mut goto_list = vec![];
     let mut step_list = HashSet::new();
     let mut function_list = HashSet::new();
@@ -54,6 +55,7 @@ pub fn lint_bot(
         &mut step_list,
         &mut function_list,
         default_flow,
+        &mut bot_constants,
         &mut import_list,
         &mut valid_closure_list,
         &mut functions_call_list,
@@ -65,6 +67,15 @@ pub fn lint_bot(
     for flow in flows.iter() {
         linter_info.flow_name = &flow.flow_name;
         linter_info.raw_flow = flow.raw_flow;
+
+        // init flow constant save box
+        linter_info.bot_constants.insert(
+            flow.flow_name.clone(),
+            FlowConstantUse {
+                constants: vec![],
+                updated_vars: HashSet::new(),
+            },
+        );
 
         validate_flow_ast(flow, &mut linter_info, false);
     }
@@ -79,6 +90,7 @@ pub fn lint_bot(
     validate_gotos(&mut linter_info);
     validate_imports(&mut linter_info);
     validate_functions(&mut linter_info);
+    validate_constants(&mut linter_info);
 
     match infinite_loop_check(
         &linter_info,
@@ -270,9 +282,40 @@ pub fn validate_functions(linter_info: &mut LinterInfo) {
     }
 }
 
+pub fn validate_constants(linter_info: &mut LinterInfo) {
+    for (flow, constant_info) in linter_info.bot_constants.iter() {
+        for constant in constant_info.constants.iter() {
+            if constant_info.updated_vars.contains(&constant.name) {
+                linter_info.errors.push(gen_error_info(
+                    Position::new(constant.interval, flow),
+                    convert_error_from_interval(
+                        Span::new(constant.raw_flow),
+                        format!(
+                            "constant '{}' is immutable and can not be changed",
+                            constant.name
+                        ),
+                        constant.interval.to_owned(),
+                    ),
+                ));
+            }
+        }
+    }
+}
+
 pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo, extern_module: bool) {
     let mut is_step_start_present = false;
     let mut steps_nbr = 0;
+
+    // save all flow  constant info in linter_info
+    for (constant, lit) in flow.ast.constants.iter() {
+        if let Some(flow_constants) = linter_info.bot_constants.get_mut(linter_info.flow_name) {
+            flow_constants.constants.push(ConstantInfo {
+                name: constant.clone(),
+                raw_flow: linter_info.raw_flow,
+                interval: lit.interval.to_owned(),
+            });
+        };
+    }
 
     for (instruction_scope, scope) in flow.ast.flow_instructions.iter() {
         match instruction_scope {
@@ -332,11 +375,8 @@ pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo, ex
                 ));
             }
 
-            InstructionScope::Constant(_) => {
-                // add constant variable in linter info
-                // check for duplication
-                //  - ??
-            }
+            InstructionScope::Constant(_) => {}
+
             InstructionScope::DuplicateInstruction(interval, info) => {
                 linter_info.errors.push(gen_error_info(
                     Position::new(interval.to_owned(), linter_info.flow_name),
@@ -718,6 +758,12 @@ fn validate_scope(
 
             Expr::ObjectExpr(ObjectType::Do(DoType::Update(_assign, target, new))) => {
                 if let Expr::IdentExpr(name) = &**target {
+                    if let Some(flow_constants) =
+                        linter_info.bot_constants.get_mut(linter_info.flow_name)
+                    {
+                        flow_constants.updated_vars.insert(name.ident.clone());
+                    }
+
                     register_closure(name, false, new, linter_info);
                 }
 

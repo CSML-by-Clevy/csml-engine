@@ -297,9 +297,20 @@ pub fn constant_expr_to_lit(expr: &Expr, flow_name: &str) -> Result<Literal, Err
         }
         Expr::LitExpr { literal, .. } => Ok(literal.clone()),
 
+        Expr::ComplexLiteral(vec, interval) => {
+            if let (1, Some(Expr::LitExpr { literal, .. })) = (vec.len(), vec.get(0)) {
+                Ok(literal.clone())
+            } else {
+                Err(gen_error_info(
+                    Position::new(interval.clone(), flow_name),
+                    ERROR_INVALID_CONSTANT_EXPR.to_owned(),
+                ))
+            }
+        }
+
         e => Err(gen_error_info(
-            Position::new(interval_from_expr(e), "flow"),
-            ERROR_EXPR_TO_LITERAL.to_owned(),
+            Position::new(interval_from_expr(e), flow_name),
+            ERROR_INVALID_CONSTANT_EXPR.to_owned(),
         )),
     }
 }

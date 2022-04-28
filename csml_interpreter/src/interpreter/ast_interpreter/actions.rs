@@ -261,7 +261,15 @@ pub fn match_actions(
             //TODO: refacto memory update system
 
             let (new_value, update) = if let MemoryType::Constant = mem_type {
-                //TODO: send warning constant variables are not updatable
+                MSG::send_error_msg(
+                    &sender,
+                    &mut msg_data,
+                    Err(gen_error_info(
+                        Position::new(new_value.interval, &new_scope_data.context.flow),
+                        format!("const variables are immutable"),
+                    )),
+                );
+
                 (None, false)
             } else {
                 (Some(new_value), true)
@@ -270,6 +278,7 @@ pub fn match_actions(
             exec_path_actions(
                 lit,
                 &DisplayWarnings::On,
+                &mem_type,
                 new_value,
                 &path,
                 &ContentType::get(&lit),

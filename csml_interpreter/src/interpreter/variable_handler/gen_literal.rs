@@ -7,7 +7,7 @@ use crate::data::{
 };
 use crate::data::{
     ast::{Interval, PathState},
-    Data, Literal, MessageData, MSG,
+    Data, Literal, MemoryType, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::gen_generic_component::gen_generic_component;
@@ -50,6 +50,7 @@ pub fn gen_literal_from_event(
             let (lit, _tmp_mem_update) = exec_path_actions(
                 &mut lit,
                 dis_warnings,
+                &MemoryType::Event("event".to_owned()),
                 None,
                 &Some(path),
                 &content_type,
@@ -61,15 +62,13 @@ pub fn gen_literal_from_event(
             Ok(lit)
         }
         None => {
-            let mut lit = PrimitiveString::get_literal(
-                &data.event.content_value,
-                interval.to_owned(),
-            );
+            let mut lit =
+                PrimitiveString::get_literal(&data.event.content_value, interval.to_owned());
 
             lit.secure_variable = data.event.secure;
 
             Ok(lit)
-        },
+        }
     }
 }
 
@@ -106,6 +105,7 @@ pub fn gen_literal_from_component(
                         let (lit, _tmp_mem_update) = exec_path_actions(
                             &mut lit,
                             &DisplayWarnings::On,
+                            &MemoryType::Use,
                             None,
                             &Some(path),
                             &ContentType::Primitive,
@@ -156,6 +156,7 @@ pub fn get_literal_from_metadata(
     let (lit, _tmp_mem_update) = exec_path_actions(
         &mut lit,
         dis_warnings,
+        &MemoryType::Metadata,
         None,
         &Some(path[1..].to_owned()),
         &content_type,

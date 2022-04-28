@@ -7,7 +7,7 @@ use crate::data::primitive::string::PrimitiveString;
 use crate::data::primitive::tools::check_division_by_zero_i64;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
+use crate::data::{ast::Interval, message::Message, Data, Literal, MemoryType, MessageData, MSG};
 use crate::data::{literal, literal::ContentType};
 use crate::error_format::*;
 use phf::phf_map;
@@ -730,6 +730,7 @@ impl Primitive for PrimitiveInt {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        mem_type: &MemoryType,
         additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
@@ -738,9 +739,16 @@ impl Primitive for PrimitiveInt {
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, additional_info, data, interval)?;
+            if *mem_type == MemoryType::Constant && *right == Right::Write {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("{}" , ERROR_CONSTANT_MUTABLE_FUNCTION),
+                ));
+            } else {
+                let res = f(self, args, additional_info, data, interval)?;
 
-            return Ok((res, *right));
+                return Ok((res, *right));
+            }
         }
 
         Err(gen_error_info(

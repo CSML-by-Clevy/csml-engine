@@ -9,7 +9,7 @@ use crate::data::primitive::object::PrimitiveObject;
 use crate::data::primitive::tools::*;
 use crate::data::primitive::Right;
 use crate::data::primitive::{Primitive, PrimitiveType};
-use crate::data::{ast::Interval, message::Message, Data, Literal, MessageData, MSG};
+use crate::data::{ast::Interval, message::Message, Data, Literal, MemoryType, MessageData, MSG};
 use crate::data::{literal, literal::ContentType};
 use crate::error_format::*;
 use crate::interpreter::json_to_literal;
@@ -1266,6 +1266,7 @@ impl PrimitiveString {
     }
 }
 
+// memory type can be set tu 'use' because the result of the operation will create a new literal.
 impl PrimitiveString {
     fn abs(
         string: &mut PrimitiveString,
@@ -1282,6 +1283,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "abs",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1298,6 +1300,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "abs",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1330,6 +1333,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "cos",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1347,6 +1351,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "cos",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1379,6 +1384,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "ceil",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1395,6 +1401,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "ceil",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1427,6 +1434,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "pow",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1443,6 +1451,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "pow",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1475,6 +1484,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "floor",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1491,6 +1501,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "floor",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1523,6 +1534,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "round",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1539,6 +1551,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "round",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1571,6 +1584,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sin",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1587,6 +1601,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sin",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1619,6 +1634,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sqrt",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1635,6 +1651,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "sqrt",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1667,6 +1684,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "tan",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1683,6 +1701,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "tan",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1715,6 +1734,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_int",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1731,6 +1751,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_int",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1763,6 +1784,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_float",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -1779,6 +1801,7 @@ impl PrimitiveString {
             let (literal, _right) = primitive.do_exec(
                 "to_float",
                 args,
+                &MemoryType::Use,
                 additional_info,
                 interval,
                 &ContentType::Primitive,
@@ -2107,6 +2130,7 @@ impl Primitive for PrimitiveString {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        mem_type: &MemoryType,
         additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
@@ -2115,17 +2139,24 @@ impl Primitive for PrimitiveString {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(
-                self,
-                args,
-                additional_info,
-                interval,
-                data,
-                msg_data,
-                sender,
-            )?;
+            if *mem_type == MemoryType::Constant && *right == Right::Write {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("{}" , ERROR_CONSTANT_MUTABLE_FUNCTION),
+                ));
+            } else {
+                let res = f(
+                    self,
+                    args,
+                    additional_info,
+                    interval,
+                    data,
+                    msg_data,
+                    sender,
+                )?;
 
-            return Ok((res, *right));
+                return Ok((res, *right));
+            }
         }
 
         Err(gen_error_info(

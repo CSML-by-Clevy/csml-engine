@@ -1,7 +1,7 @@
 use crate::data::primitive::PrimitiveObject;
 use crate::data::Literal;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MemoryType {
     Event(String),
     Metadata,
