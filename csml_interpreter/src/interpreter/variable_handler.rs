@@ -65,6 +65,7 @@ fn get_var_from_constant<'a>(
 fn loop_path(
     mut lit: &mut Literal,
     dis_warnings: &DisplayWarnings,
+    mem_type: &MemoryType,
     new: Option<Literal>,
     path: &mut Iter<(Interval, PathLiteral)>,
     content_type: &ContentType,
@@ -131,6 +132,7 @@ fn loop_path(
                     lit.primitive.exec(
                         "insert",
                         &args,
+                        mem_type,
                         &lit.additional_info,
                         interval.to_owned(),
                         content_type,
@@ -196,6 +198,7 @@ fn loop_path(
                 let mut return_lit = match lit.primitive.exec(
                     name,
                     args,
+                    mem_type,
                     &lit.additional_info,
                     *interval,
                     content_type,
@@ -212,6 +215,7 @@ fn loop_path(
                 let (lit_new, ..) = loop_path(
                     &mut return_lit,
                     &DisplayWarnings::On,
+                    mem_type,
                     None,
                     path,
                     &content_type,
@@ -416,6 +420,7 @@ pub fn resolve_path(
 pub fn exec_path_actions(
     lit: &mut Literal,
     dis_warnings: &DisplayWarnings,
+    mem_type: &MemoryType,
     new: Option<Literal>,
     path: &Option<Vec<(Interval, PathLiteral)>>,
     content_type: &ContentType,
@@ -428,6 +433,7 @@ pub fn exec_path_actions(
         let (return_lit, update) = loop_path(
             lit,
             dis_warnings,
+            mem_type,
             new,
             &mut path,
             content_type,
@@ -508,6 +514,7 @@ pub fn get_metadata_context_literal(
     let (lit, _tmp_mem_update) = exec_path_actions(
         &mut lit,
         dis_warnings,
+        &MemoryType::Metadata,
         None,
         &Some(path[path_skip..].to_owned()),
         &content_type,
@@ -517,6 +524,14 @@ pub fn get_metadata_context_literal(
     )?;
     Ok(lit)
 }
+
+// pub enum MemoryType {
+//     Event(String),
+//     Metadata,
+//     Use,
+//     Remember,
+//     Constant,
+// }
 
 pub fn get_literal_from_metadata(
     path: &[(Interval, PathLiteral)],
@@ -553,6 +568,7 @@ pub fn get_literal_from_metadata(
     let (lit, _tmp_mem_update) = exec_path_actions(
         &mut lit,
         dis_warnings,
+        &MemoryType::Metadata,
         None,
         &Some(path[1..].to_owned()),
         &content_type,
@@ -588,6 +604,7 @@ pub fn get_var(
                 let (lit, _tmp_mem_update) = exec_path_actions(
                     &mut data.env.clone(),
                     dis_warnings,
+                    &MemoryType::Constant,
                     None,
                     &Some(path.to_owned()),
                     &content_type,
@@ -619,6 +636,7 @@ pub fn get_var(
                     let (lit, _tmp_mem_update) = exec_path_actions(
                         &mut lit,
                         dis_warnings,
+                        &MemoryType::Remember,
                         None,
                         &Some(path),
                         &ContentType::Primitive,
@@ -676,6 +694,7 @@ pub fn get_var(
                     let result = exec_path_actions(
                         lit,
                         dis_warnings,
+                        &mem_type,
                         None,
                         &path,
                         &ContentType::get(&lit),
@@ -721,6 +740,7 @@ pub fn get_var(
                     let (new_literal, ..) = exec_path_actions(
                         &mut null,
                         dis_warnings,
+                        &MemoryType::Use,
                         None,
                         &path,
                         &content_type,

@@ -22,6 +22,7 @@ pub fn fold_bot(
     default_flow: &str,
 ) -> String {
     let scope_type = ScopeType::Step("start".to_owned());
+    let mut bot_constants = HashMap::new();
     let mut goto_list = vec![];
     let mut step_list = HashSet::new();
     let mut function_list = HashSet::new();
@@ -37,6 +38,7 @@ pub fn fold_bot(
         &mut step_list,
         &mut function_list,
         default_flow,
+        &mut bot_constants,
         &mut import_list,
         &mut valid_closure_list,
         &mut functions_call_list,

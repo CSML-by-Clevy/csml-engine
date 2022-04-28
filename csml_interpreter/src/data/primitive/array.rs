@@ -8,7 +8,7 @@ use crate::data::{
         PrimitiveString, PrimitiveType, Right,
     },
     tokens::TYPES,
-    ArgsType, Interval, Literal, Message, MessageData, MSG,
+    ArgsType, Interval, Literal, MemoryType, Message, MessageData, MSG,
 };
 use crate::error_format::*;
 use crate::interpreter::variable_handler::resolve_csml_object::{
@@ -1295,6 +1295,7 @@ impl Primitive for PrimitiveArray {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        mem_type: &MemoryType,
         additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
@@ -1303,17 +1304,24 @@ impl Primitive for PrimitiveArray {
         sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(
-                self,
-                args,
-                additional_info,
-                interval,
-                data,
-                msg_data,
-                sender,
-            )?;
+            if *mem_type == MemoryType::Constant && *right == Right::Write {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("{}", ERROR_CONSTANT_MUTABLE_FUNCTION),
+                ));
+            } else {
+                let res = f(
+                    self,
+                    args,
+                    additional_info,
+                    interval,
+                    data,
+                    msg_data,
+                    sender,
+                )?;
 
-            return Ok((res, *right));
+                return Ok((res, *right));
+            }
         }
 
         Err(gen_error_info(
