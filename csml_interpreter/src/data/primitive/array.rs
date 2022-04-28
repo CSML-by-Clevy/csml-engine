@@ -64,6 +64,7 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "reduce" => (PrimitiveArray::reduce as PrimitiveMethod, Right::Read),
     "reverse" => (PrimitiveArray::reverse as PrimitiveMethod, Right::Read),
     "append" => (PrimitiveArray::append as PrimitiveMethod, Right::Read),
+    "flatten" => (PrimitiveArray::flatten as PrimitiveMethod, Right::Read),
 };
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -854,6 +855,45 @@ impl PrimitiveArray {
         let mut new_array = array.value.clone();
 
         new_array.append(&mut other_array);
+
+        Ok(PrimitiveArray::get_literal(&new_array, interval))
+    }
+
+    fn flatten(
+        array: &mut PrimitiveArray,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "flatten() => [Literal]";
+
+        if args.len() != 0 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let mut new_array = vec![];
+
+        for lit in array.value.iter() {
+            if lit.content_type == "array" {
+                let value = Literal::get_value::<Vec<Literal>>(
+                    &lit.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_ARRAY_INSERT_AT.to_owned(),
+                )?;
+                for elem in value.iter() {
+                    new_array.push(elem.to_owned())
+                }
+            } else {
+                new_array.push(lit.to_owned())
+            }
+        }
 
         Ok(PrimitiveArray::get_literal(&new_array, interval))
     }
