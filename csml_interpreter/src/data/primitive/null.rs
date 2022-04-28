@@ -6,7 +6,7 @@ use crate::data::primitive::{
     PrimitiveType, Right,
 };
 use crate::data::{
-    ast::Interval, literal::ContentType, message::Message, tokens::NULL, Data, Literal,
+    ast::Interval, literal::ContentType, message::Message, tokens::NULL, Data, Literal, MemoryType,
     MessageData, MSG,
 };
 use crate::error_format::*;
@@ -332,6 +332,7 @@ impl Primitive for PrimitiveNull {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        mem_type: &MemoryType,
         additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         _content_type: &ContentType,
@@ -340,9 +341,16 @@ impl Primitive for PrimitiveNull {
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<(Literal, Right), ErrorInfo> {
         if let Some((f, right)) = FUNCTIONS.get(name) {
-            let res = f(self, args, additional_info, data, interval)?;
+            if *mem_type == MemoryType::Constant && *right == Right::Write {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    format!("{}" , ERROR_CONSTANT_MUTABLE_FUNCTION),
+                ));
+            } else {
+                let res = f(self, args, additional_info, data, interval)?;
 
-            return Ok((res, *right));
+                return Ok((res, *right));
+            }
         }
 
         Err(gen_error_info(

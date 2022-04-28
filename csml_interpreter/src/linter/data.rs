@@ -3,7 +3,7 @@ use crate::data::{
     warnings::*,
 };
 use crate::error_format::ErrorInfo;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
@@ -24,6 +24,18 @@ pub struct StepInfo<'a> {
     pub in_flow: String,
     pub step_breakers: Vec<StepBreakers>,
     pub interval: Interval,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConstantInfo<'a> {
+    pub name: String,
+    pub raw_flow: &'a str,
+    pub interval: Interval,
+}
+#[derive(Debug, Clone)]
+pub struct FlowConstantUse<'a> {
+    pub constants: Vec<ConstantInfo<'a>>,
+    pub updated_vars: HashSet<String>,
 }
 
 #[derive(Debug)]
@@ -75,6 +87,7 @@ pub struct LinterInfo<'a> {
     pub goto_list: &'a mut Vec<StepInfo<'a>>,
     pub step_list: &'a mut HashSet<StepInfo<'a>>,
     pub default_flow: &'a str,
+    pub bot_constants: &'a mut HashMap<String, FlowConstantUse<'a>>,
     pub function_list: &'a mut HashSet<FunctionInfo<'a>>,
     pub import_list: &'a mut HashSet<ImportInfo<'a>>,
     pub valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
@@ -186,6 +199,7 @@ impl<'a> LinterInfo<'a> {
         step_list: &'a mut HashSet<StepInfo<'a>>,
         function_list: &'a mut HashSet<FunctionInfo<'a>>,
         default_flow: &'a str,
+        bot_constants: &'a mut HashMap<String, FlowConstantUse<'a>>,
         import_list: &'a mut HashSet<ImportInfo<'a>>,
         valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
         functions_call_list: &'a mut Vec<FunctionCallInfo<'a>>,
@@ -201,6 +215,7 @@ impl<'a> LinterInfo<'a> {
             step_list,
             function_list,
             default_flow,
+            bot_constants,
             import_list,
             valid_closure_list,
             functions_call_list,

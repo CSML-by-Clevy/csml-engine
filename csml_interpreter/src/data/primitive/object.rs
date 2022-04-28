@@ -12,7 +12,7 @@ use crate::data::{
         PrimitiveType, Right, MSG,
     },
     tokens::TYPES,
-    Literal,
+    Literal, MemoryType,
 };
 use crate::error_format::*;
 use crate::interpreter::{
@@ -2676,6 +2676,7 @@ impl Primitive for PrimitiveObject {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        mem_type: &MemoryType,
         additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         content_type: &ContentType,
@@ -2713,9 +2714,16 @@ impl Primitive for PrimitiveObject {
 
         for function in vector.iter() {
             if let Some((f, right)) = function.get(name) {
-                let result = f(self, args, additional_info, data, interval, &content_type)?;
+                if *mem_type == MemoryType::Constant && *right == Right::Write {
+                    return Err(gen_error_info(
+                        Position::new(interval, &data.context.flow),
+                        format!("{}", ERROR_CONSTANT_MUTABLE_FUNCTION),
+                    ));
+                } else {
+                    let result = f(self, args, additional_info, data, interval, &content_type)?;
 
-                return Ok((result, *right));
+                    return Ok((result, *right));
+                }
             }
         }
 
@@ -2726,6 +2734,7 @@ impl Primitive for PrimitiveObject {
                     return res.primitive.do_exec(
                         name,
                         args,
+                        mem_type,
                         additional_info,
                         interval,
                         &ContentType::Primitive,

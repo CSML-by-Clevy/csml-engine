@@ -24,7 +24,7 @@ pub use object::PrimitiveObject;
 pub use string::PrimitiveString;
 
 use crate::data::primitive::tools::*;
-use crate::data::{Data, Interval, Literal, Message, MessageData, MSG};
+use crate::data::{Data, Interval, Literal, MemoryType, Message, MessageData, MSG};
 use crate::error_format::*;
 
 use std::cmp::Ordering;
@@ -78,6 +78,7 @@ pub trait Primitive: Send {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        mem_type: &MemoryType,
         additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         content_type: &ContentType,
@@ -111,6 +112,7 @@ impl dyn Primitive {
         &mut self,
         name: &str,
         args: &HashMap<String, Literal>,
+        mem_type: &MemoryType,
         additional_info: &Option<HashMap<String, Literal>>,
         interval: Interval,
         content_type: &ContentType,
@@ -124,6 +126,7 @@ impl dyn Primitive {
         let (res, right) = self.do_exec(
             name,
             args,
+            mem_type,
             additional_info,
             interval,
             content_type,
