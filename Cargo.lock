@@ -487,9 +487,9 @@ dependencies = [
 
 [[package]]
 name = "async-std"
-version = "1.10.0"
+version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8056f1455169ab86dd47b47391e4ab0cbd25410a70e9fe675544f49bafaf952"
+checksum = "52580991739c5cdb36cde8b2a516371c0a3b70dda36d916cc08b82372916808c"
 dependencies = [
  "async-attributes",
  "async-channel",
@@ -597,7 +597,7 @@ name = "aws_lambda"
 version = "0.1.0"
 dependencies = [
  "csml_engine",
- "csml_interpreter 1.10.0",
+ "csml_interpreter 1.10.1-rc0",
  "lambda_runtime",
  "ring",
  "serde",
@@ -1202,7 +1202,7 @@ dependencies = [
  "clap",
  "crossterm 0.21.0",
  "csml_engine",
- "csml_interpreter 1.10.0",
+ "csml_interpreter 1.10.1-rc0",
  "dotenv",
  "git2",
  "image",
@@ -1228,13 +1228,13 @@ dependencies = [
 
 [[package]]
 name = "csml_engine"
-version = "1.10.0"
+version = "1.10.1-rc0"
 dependencies = [
  "base64 0.13.0",
  "bincode",
  "bson",
  "chrono",
- "csml_interpreter 1.10.0",
+ "csml_interpreter 1.10.1-rc0",
  "diesel",
  "diesel_migrations",
  "env_logger",
@@ -1261,10 +1261,10 @@ dependencies = [
 
 [[package]]
 name = "csml_engine_node"
-version = "1.10.0"
+version = "1.10.1-rc0"
 dependencies = [
  "csml_engine",
- "csml_interpreter 1.10.0",
+ "csml_interpreter 1.10.1-rc0",
  "neon",
  "neon-build",
  "neon-serde",
@@ -1303,7 +1303,7 @@ dependencies = [
 
 [[package]]
 name = "csml_interpreter"
-version = "1.10.0"
+version = "1.10.1-rc0"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -1333,7 +1333,7 @@ dependencies = [
 
 [[package]]
 name = "csml_server"
-version = "1.10.0"
+version = "1.10.1-rc0"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1342,7 +1342,7 @@ dependencies = [
  "actix-web",
  "bytes 0.5.6",
  "csml_engine",
- "csml_interpreter 1.10.0",
+ "csml_interpreter 1.10.1-rc0",
  "env_logger",
  "futures 0.3.19",
  "json",
