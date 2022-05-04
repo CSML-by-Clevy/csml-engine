@@ -1311,7 +1311,6 @@ dependencies = [
  "chrono-tz",
  "env_logger",
  "hex",
- "http 0.2.6",
  "jsonwebtoken",
  "lettre",
  "libc",

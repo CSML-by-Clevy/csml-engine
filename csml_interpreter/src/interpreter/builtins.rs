@@ -7,7 +7,6 @@ pub mod http_builtin;
 pub mod jwt;
 pub mod smtp;
 pub mod time;
-// pub mod uri;
 
 pub mod tools;
 
