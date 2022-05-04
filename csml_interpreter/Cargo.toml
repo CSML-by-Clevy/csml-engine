@@ -37,6 +37,11 @@ libc = "0.2.112"
 phf = { version = "0.10.1", features = ["macros"]}
 regex = "1.5.4"
 ureq = { version = "2.4.0", features = ["json"] }
+
+urlencoding = "2.1.0"
+http = "0.2"
+url = "2.2.2"
+
 rustls = { version = "0.20.2", features = ["dangerous_configuration"] }
 
 lettre = "0.10.0-rc.4"
