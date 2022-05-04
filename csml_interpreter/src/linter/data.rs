@@ -35,7 +35,7 @@ pub struct ConstantInfo<'a> {
 #[derive(Debug, Clone)]
 pub struct FlowConstantUse<'a> {
     pub constants: Vec<ConstantInfo<'a>>,
-    pub updated_vars: HashSet<String>,
+    pub updated_vars: HashMap<String, Interval>,
 }
 
 #[derive(Debug)]
