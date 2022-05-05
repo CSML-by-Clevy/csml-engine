@@ -51,6 +51,8 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "decode_uri" => (PrimitiveString::decode_uri as PrimitiveMethod, Right::Read),
     "encode_uri_component" => (PrimitiveString::encode_uri_component as PrimitiveMethod, Right::Read),
     "decode_uri_component" => (PrimitiveString::decode_uri_component as PrimitiveMethod, Right::Read),
+    "encode_html_escape" => (PrimitiveString::encode_html_escape as PrimitiveMethod, Right::Read),
+    "decode_html_escape" => (PrimitiveString::decode_html_escape as PrimitiveMethod, Right::Read),
 
     "is_email" => (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
     "append" => (PrimitiveString::append as PrimitiveMethod, Right::Read),
@@ -553,6 +555,52 @@ impl PrimitiveString {
                 format!("Invalid UTF8 string"),
             )),
         }
+    }
+
+    fn decode_html_escape(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "decode_html_escape() => String";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let decoded = html_escape::decode_html_entities(&string.value);
+
+        Ok(PrimitiveString::get_literal(&decoded, interval))
+    }
+
+    fn encode_html_escape(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "encode_html_escape() => String";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let decoded = html_escape::encode_text(&string.value);
+
+        Ok(PrimitiveString::get_literal(&decoded, interval))
     }
 }
 
