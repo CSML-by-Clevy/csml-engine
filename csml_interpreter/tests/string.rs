@@ -361,7 +361,7 @@ fn string_step_15_xml() {
     let data = r#"{
         "memories":[],
         "messages":[
-            {"content_type":"text", "content":{"text": "<name><$value>Banana</$value></name><source><$value>Store</$value></source>"}}
+            {"content_type":"text", "content":{"text": "<Item><name>Banana</name><source>Store</source></Item>"}}
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
