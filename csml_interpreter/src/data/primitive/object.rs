@@ -119,6 +119,7 @@ const FUNCTIONS_READ: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map
 const FUNCTIONS_WRITE: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "clear_values" => (PrimitiveObject::clear_values as PrimitiveMethod, Right::Write),
     "insert" => (PrimitiveObject::insert as PrimitiveMethod, Right::Write),
+    "assign" => (PrimitiveObject::assign as PrimitiveMethod, Right::Write),
     "remove" => (PrimitiveObject::remove as PrimitiveMethod, Right::Write),
 };
 
@@ -2410,6 +2411,47 @@ impl PrimitiveObject {
         };
 
         object.value.insert(key.to_owned(), value.to_owned());
+
+        Ok(PrimitiveNull::get_literal(interval))
+    }
+
+    fn assign(
+        object: &mut PrimitiveObject,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        data: &mut Data,
+        interval: Interval,
+        _content_type: &str,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "assign(obj: Object) => null";
+
+        if args.len() != 1 {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let obj = match args.get("arg0") {
+            Some(res) if res.primitive.get_type() == PrimitiveType::PrimitiveObject => {
+                Literal::get_value::<HashMap<String, Literal>>(
+                    &res.primitive,
+                    &data.context.flow,
+                    interval,
+                    ERROR_OBJECT_ASSIGN.to_owned(),
+                )?
+            }
+            _ => {
+                return Err(gen_error_info(
+                    Position::new(interval, &data.context.flow),
+                    ERROR_OBJECT_ASSIGN.to_owned(),
+                ));
+            }
+        };
+
+        object
+            .value
+            .extend(obj.into_iter().map(|(k, v)| (k.clone(), v.clone())));
 
         Ok(PrimitiveNull::get_literal(interval))
     }
