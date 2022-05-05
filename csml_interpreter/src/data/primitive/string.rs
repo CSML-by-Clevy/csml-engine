@@ -283,7 +283,16 @@ impl PrimitiveString {
 
         let value = string.to_string();
 
-        let xml: Option<serde_json::Value> = serde_xml_rs::from_str(&value).ok();
+        let config = quickxml_to_serde::Config::new_with_custom_values(
+            true,
+            "",
+            "text",
+            quickxml_to_serde::NullValue::Ignore,
+        );
+
+        let xml: Option<serde_json::Value> =
+            quickxml_to_serde::xml_string_to_json(value.clone(), &config).ok();
+
         let yaml: Option<serde_json::Value> = serde_yaml::from_str(&value).ok();
 
         match (&yaml, &xml) {
@@ -2142,7 +2151,7 @@ impl Primitive for PrimitiveString {
             if *mem_type == MemoryType::Constant && *right == Right::Write {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
-                    format!("{}" , ERROR_CONSTANT_MUTABLE_FUNCTION),
+                    format!("{}", ERROR_CONSTANT_MUTABLE_FUNCTION),
                 ));
             } else {
                 let res = f(
