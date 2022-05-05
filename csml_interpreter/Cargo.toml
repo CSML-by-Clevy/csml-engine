@@ -34,6 +34,7 @@ serde_json = "1.0"
 serde_yaml = "0.8.23"
 serde-xml-rs = "0.5.1"
 html-escape = "0.2.11"
+quickxml_to_serde = {version = "0.5.0" }
 libc = "0.2.112"
 phf = { version = "0.10.1", features = ["macros"]}
 regex = "1.5.4"

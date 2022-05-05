@@ -373,7 +373,16 @@ impl PrimitiveString {
 
         let value = string.to_string();
 
-        let xml: Option<serde_json::Value> = serde_xml_rs::from_str(&value).ok();
+        let config = quickxml_to_serde::Config::new_with_custom_values(
+            true,
+            "@",
+            "$text",
+            quickxml_to_serde::NullValue::Ignore,
+        );
+
+        let xml: Option<serde_json::Value> =
+            quickxml_to_serde::xml_string_to_json(value.clone(), &config).ok();
+
         let yaml: Option<serde_json::Value> = serde_yaml::from_str(&value).ok();
 
         match (&yaml, &xml) {
