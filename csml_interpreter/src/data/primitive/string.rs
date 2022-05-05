@@ -285,8 +285,8 @@ impl PrimitiveString {
 
         let config = quickxml_to_serde::Config::new_with_custom_values(
             true,
-            "",
-            "text",
+            "@",
+            "$text",
             quickxml_to_serde::NullValue::Ignore,
         );
 
