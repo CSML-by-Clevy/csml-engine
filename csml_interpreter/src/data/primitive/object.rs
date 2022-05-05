@@ -16,7 +16,7 @@ use crate::data::{
 };
 use crate::error_format::*;
 use crate::interpreter::{
-    builtins::http::http_request, json_to_rust::json_to_literal,
+    builtins::http_builtin::http_request, json_to_rust::json_to_literal,
     variable_handler::match_literals::match_obj,
 };
 use std::cmp::Ordering;

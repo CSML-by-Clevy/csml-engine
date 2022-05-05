@@ -4,7 +4,7 @@ use crate::data::primitive::{PrimitiveObject, PrimitiveString, PrimitiveType};
 use crate::data::{ast::Interval, ApiInfo, ArgsType, Client, Data, Literal, MessageData, MSG};
 use crate::error_format::*;
 use crate::interpreter::{
-    builtins::{http::http_request, tools::*},
+    builtins::{http_builtin::http_request, tools::*},
     json_to_rust::interpolate,
 };
 

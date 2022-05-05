@@ -107,3 +107,12 @@ step_16_yaml:
     do obj = var.to_json()
 
     say obj.to_yaml()
+
+step_17_uri:
+    do var = "https://mozilla.org/?key=ы&key2=value2#fragid1=1,4,ы,6"
+
+    say var.encode_uri()
+
+    do var = var.encode_uri()
+
+    say var.decode_uri()
