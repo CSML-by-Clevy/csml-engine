@@ -73,7 +73,7 @@ pub fn lint_bot(
             flow.flow_name.clone(),
             FlowConstantUse {
                 constants: vec![],
-                updated_vars: HashSet::new(),
+                updated_vars: HashMap::new(),
             },
         );
 
@@ -285,16 +285,16 @@ pub fn validate_functions(linter_info: &mut LinterInfo) {
 pub fn validate_constants(linter_info: &mut LinterInfo) {
     for (flow, constant_info) in linter_info.bot_constants.iter() {
         for constant in constant_info.constants.iter() {
-            if constant_info.updated_vars.contains(&constant.name) {
+            if let Some(interval) = constant_info.updated_vars.get(&constant.name) {
                 linter_info.errors.push(gen_error_info(
-                    Position::new(constant.interval, flow),
+                    Position::new(*interval, flow),
                     convert_error_from_interval(
                         Span::new(constant.raw_flow),
                         format!(
                             "constant '{}' is immutable and can not be changed",
                             constant.name
                         ),
-                        constant.interval.to_owned(),
+                        interval.to_owned(),
                     ),
                 ));
             }
@@ -761,7 +761,9 @@ fn validate_scope(
                     if let Some(flow_constants) =
                         linter_info.bot_constants.get_mut(linter_info.flow_name)
                     {
-                        flow_constants.updated_vars.insert(name.ident.clone());
+                        flow_constants
+                            .updated_vars
+                            .insert(name.ident.clone(), name.interval.clone());
                     }
 
                     register_closure(name, false, new, linter_info);
