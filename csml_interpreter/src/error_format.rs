@@ -243,7 +243,7 @@ pub const ERROR_ARRAY_INDEX: &str = "index must be lower than or equal to array.
 pub const ERROR_ARRAY_OVERFLOW: &str = "[push] Cannot push inside array, since array limit is ";
 pub const ERROR_ARRAY_POP: &str = "[pop] Cannot pop if array is empty";
 pub const ERROR_ARRAY_INSERT_AT: &str =
-    "[insert_at] takes two parameters. Usage: array.insert_at(1, elem)";
+    "[insert_at] takes two arguments. Usage: array.insert_at(1, elem)";
 pub const ERROR_ARRAY_INSERT_AT_INT: &str =
     "[insert_at] first parameter must be of type int. Usage: array.insert_at(1, elem)";
 pub const ERROR_ARRAY_REMOVE_AT: &str =
@@ -292,9 +292,9 @@ pub const ERROR_JWT_VALIDATION_SECRETE: &str =
 
 // #### HTTP OBJECT
 pub const ERROR_HTTP_SET: &str =
-    "[set] takes one parameter of type Object. Usage: HTTP(...).set( {\"key\": 42} )";
+    "[set] takes one argument of type Object. Usage: HTTP(...).set( {\"key\": 42} )";
 pub const ERROR_HTTP_QUERY: &str =
-    "[query] takes one parameter of type Object. Usage: HTTP(...).query( {\"key\": 42} )";
+    "[query] takes one argument of type Object. Usage: HTTP(...).query( {\"key\": 42} )";
 
 pub const ERROR_HTTP_SEND: &str = "[send] HTTP Object is bad formatted read doc for correct usage";
 pub const ERROR_HTTP_UNKNOWN_METHOD: &str = "is not a method of HTTP";
@@ -303,13 +303,15 @@ pub const ERROR_HTTP_UNKNOWN_METHOD: &str = "is not a method of HTTP";
 pub const ERROR_OBJECT_TYPE: &str = "value must be of type Object";
 pub const ERROR_OBJECT_GET: &str = "key does not exist";
 pub const ERROR_OBJECT_CONTAINS: &str =
-    "[contains] takes one parameter of type String. Usage: object.contains(\"key\")";
+    "[contains] takes one argument of type String. Usage: object.contains(\"key\")";
 pub const ERROR_OBJECT_GET_GENERICS: &str =
-    "[get_generics] takes one parameter of type String. Usage: object.get_generics(\"key\")";
+    "[get_generics] takes one argument of type String. Usage: object.get_generics(\"key\")";
 pub const ERROR_OBJECT_INSERT: &str =
-    "[insert] take tow parameters. Usage: object.insert(string, any_type)";
+    "[insert] take tow arguments. Usage: object.insert(string, any_type)";
+pub const ERROR_OBJECT_ASSIGN: &str =
+    "[assign] take one argument. Usage: object.assign({\"key\": \"value\"})";
 pub const ERROR_OBJECT_REMOVE: &str =
-    "[remove] takes one parameter of type String. Usage: object.remove(\"key\")";
+    "[remove] takes one argument of type String. Usage: object.remove(\"key\")";
 pub const ERROR_OBJECT_GET_KEY: &str = "key must be of type String";
 pub const ERROR_OBJECT_UNKNOWN_METHOD: &str = "is not a method of Object";
 
