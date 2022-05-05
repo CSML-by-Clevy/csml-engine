@@ -13,13 +13,17 @@ use crate::data::{ast::Interval, message::Message, Data, Literal, MemoryType, Me
 use crate::data::{literal, literal::ContentType};
 use crate::error_format::*;
 use crate::interpreter::json_to_literal;
+// use http::Uri;
 use phf::phf_map;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
+use url::form_urlencoded;
+use url::form_urlencoded::Parse;
+use url::Url;
 
-////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +46,11 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "is_error" => (PrimitiveString::is_error as PrimitiveMethod, Right::Read),
     "to_string" => (PrimitiveString::to_string as PrimitiveMethod, Right::Read),
     "to_json" => (PrimitiveString::to_csml_json as PrimitiveMethod, Right::Read),
+
+    "encode_uri" => (PrimitiveString::encode_uri as PrimitiveMethod, Right::Read),
+    "decode_uri" => (PrimitiveString::decode_uri as PrimitiveMethod, Right::Read),
+    "encode_uri_component" => (PrimitiveString::encode_uri_component as PrimitiveMethod, Right::Read),
+    "decode_uri_component" => (PrimitiveString::decode_uri_component as PrimitiveMethod, Right::Read),
 
     "is_email" => (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
     "append" => (PrimitiveString::append as PrimitiveMethod, Right::Read),
@@ -86,6 +95,85 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct PrimitiveString {
     pub value: String,
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PRIVATE FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+fn encode_value(pairs: &Parse) -> String {
+    let mut vec = vec![];
+
+    for (index, (key, val)) in pairs.enumerate() {
+        let encoded_value: String = if val.contains(",") {
+            let split: Vec<&str> = val.split(',').collect();
+
+            let value =
+                split
+                    .into_iter()
+                    .enumerate()
+                    .fold(String::new(), |mut acc, (index, val)| {
+                        if index > 0 {
+                            acc.push_str(",");
+                        }
+
+                        let encoded = urlencoding::encode(val);
+                        acc.push_str(&encoded);
+
+                        acc
+                    });
+            value
+        } else {
+            urlencoding::encode(&val).into_owned()
+        };
+
+        let and = if index == 0 { "" } else { "&" };
+        let equal = if encoded_value.len() == 0 { "" } else { "=" };
+
+        vec.push(format!("{and}{}{equal}{}", key, encoded_value));
+    }
+
+    vec.concat()
+}
+
+fn decode_value(pairs: &Parse) -> String {
+    let mut vec = vec![];
+
+    for (index, (key, val)) in pairs.enumerate() {
+        let encoded_value: String = if val.contains(",") {
+            let split: Vec<&str> = val.split(',').collect();
+
+            let value =
+                split
+                    .into_iter()
+                    .enumerate()
+                    .fold(String::new(), |mut acc, (index, val)| {
+                        if index > 0 {
+                            acc.push_str(",");
+                        }
+
+                        match urlencoding::decode(val) {
+                            Ok(decoded) => acc.push_str(&decoded),
+                            Err(_) => acc.push_str(&val),
+                        };
+
+                        acc
+                    });
+            value
+        } else {
+            match urlencoding::decode(&val) {
+                Ok(decoded) => decoded.into_owned(),
+                Err(_) => val.into_owned(),
+            }
+        };
+
+        let and = if index == 0 { "" } else { "&" };
+        let equal = if encoded_value.len() == 0 { "" } else { "=" };
+
+        vec.push(format!("{and}{}{equal}{}", key, encoded_value));
+    }
+
+    vec.concat()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,6 +384,165 @@ impl PrimitiveString {
                     format!("Invalid format string is not a valid yaml or xml"),
                 ));
             }
+        }
+    }
+
+    fn encode_uri(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "encode_uri() => String";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let vec: Vec<&str> = string.value.split('?').collect();
+
+        let (q_serparator, query, separator, fragment) = if vec.len() > 1 {
+            let url = Url::parse(&string.value).unwrap();
+
+            let query_pairs = url.query_pairs();
+            let (q_serparator, query) = match query_pairs.count() {
+                0 => ("", "".to_owned()),
+                _ => {
+                    let query = encode_value(&query_pairs);
+                    ("?", query)
+                }
+            };
+
+            let (f_serparatorm, fragment) = match url.fragment() {
+                Some(frag) => {
+                    let pairs = form_urlencoded::parse(frag.as_bytes());
+                    let fragment = encode_value(&pairs);
+
+                    ("#", fragment)
+                }
+                None => ("", "".to_owned()),
+            };
+
+            (q_serparator, query, f_serparatorm, fragment)
+        } else {
+            ("", "".to_owned(), "", "".to_owned())
+        };
+
+        Ok(PrimitiveString::get_literal(
+            &format!("{}{q_serparator}{query}{separator}{fragment}", vec[0]),
+            interval,
+        ))
+    }
+
+    fn decode_uri(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "encode_uri() => String";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let vec: Vec<&str> = string.value.split('?').collect();
+
+        let (q_serparator, query, separator, fragment) = if vec.len() > 1 {
+            let url = Url::parse(&string.value).unwrap();
+
+            let query_pairs = url.query_pairs();
+            let (q_serparator, query) = match query_pairs.count() {
+                0 => ("", "".to_owned()),
+                _ => {
+                    let query = decode_value(&query_pairs);
+                    ("?", query)
+                }
+            };
+
+            let (f_serparatorm, fragment) = match url.fragment() {
+                Some(frag) => {
+                    let pairs = form_urlencoded::parse(frag.as_bytes());
+                    let fragment = decode_value(&pairs);
+
+                    ("#", fragment)
+                }
+                None => ("", "".to_owned()),
+            };
+
+            (q_serparator, query, f_serparatorm, fragment)
+        } else {
+            ("", "".to_owned(), "", "".to_owned())
+        };
+
+        Ok(PrimitiveString::get_literal(
+            &format!("{}{q_serparator}{query}{separator}{fragment}", vec[0]),
+            interval,
+        ))
+    }
+
+    fn encode_uri_component(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "encode_uri_component() => String";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        let encoded: String = urlencoding::encode(&string.value).into_owned();
+
+        Ok(PrimitiveString::get_literal(&encoded, interval))
+    }
+
+    fn decode_uri_component(
+        string: &mut PrimitiveString,
+        args: &HashMap<String, Literal>,
+        _additional_info: &Option<HashMap<String, Literal>>,
+        interval: Interval,
+        data: &mut Data,
+        _msg_data: &mut MessageData,
+        _sender: &Option<mpsc::Sender<MSG>>,
+    ) -> Result<Literal, ErrorInfo> {
+        let usage = "decode_uri_component() => String";
+
+        if !args.is_empty() {
+            return Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("usage: {}", usage),
+            ));
+        }
+
+        match urlencoding::decode(&string.value) {
+            Ok(decoded) => Ok(PrimitiveString::get_literal(
+                &decoded.into_owned(),
+                interval,
+            )),
+            Err(_) => Err(gen_error_info(
+                Position::new(interval, &data.context.flow),
+                format!("Invalid UTF8 string"),
+            )),
         }
     }
 }
@@ -2142,7 +2389,7 @@ impl Primitive for PrimitiveString {
             if *mem_type == MemoryType::Constant && *right == Right::Write {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
-                    format!("{}" , ERROR_CONSTANT_MUTABLE_FUNCTION),
+                    format!("{}", ERROR_CONSTANT_MUTABLE_FUNCTION),
                 ));
             } else {
                 let res = f(

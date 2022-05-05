@@ -3,7 +3,7 @@ pub mod crypto;
 pub mod exists;
 pub mod format;
 pub mod functions;
-pub mod http;
+pub mod http_builtin;
 pub mod jwt;
 pub mod smtp;
 pub mod time;
@@ -22,10 +22,11 @@ use crypto::crypto;
 use exists::exists;
 use format::*;
 use functions::*;
-use http::http;
+use http_builtin::http;
 use jwt::jwt;
 use smtp::smtp;
 use time::time;
+// use uri::*;
 
 pub fn match_native_builtin(
     name: &str,
