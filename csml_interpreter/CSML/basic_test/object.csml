@@ -97,3 +97,10 @@ step6:
     do foo = { "bar": 2 + 1 }
 
     say foo.bar
+
+step_7_assign:
+    do obj = {"toto": 42}
+
+    do obj.assign({"val": 24})
+
+    say obj
