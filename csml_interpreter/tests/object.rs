@@ -108,3 +108,26 @@ fn ok_object_step6() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn ok_step_7_assign() {
+    let data = r#"{"messages":[ {"content":{"toto":42, "val":24},"content_type":"object"} ],"memories":[]}"#;
+
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_7_assign",
+            "flow",
+        ),
+        "CSML/basic_test/object.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
