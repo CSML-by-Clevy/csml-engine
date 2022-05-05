@@ -116,3 +116,12 @@ step_17_uri:
     do var = var.encode_uri()
 
     say var.decode_uri()
+
+step_18_html_escape:
+    do val = "<a><b>42</b></a>"
+
+    say val.encode_html_escape()
+
+    do val.encode_html_escape()
+
+    say val.decode_html_escape()

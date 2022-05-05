@@ -438,3 +438,34 @@ fn string_step_17_uri() {
 
     assert_eq!(v1, v2)
 }
+
+#[test]
+fn string_step_18_html_escape() {
+    let data = r#"{
+        "memories":[],
+        "messages":[
+            {
+                "content_type":"text", "content": {"text": "&lt;a&gt;&lt;b&gt;42&lt;/b&gt;&lt;/a&gt;"}
+            },
+            {
+                "content_type":"text", "content": {"text": "<a><b>42</b></a>"}
+            }
+        ]}"#;
+    let msg = format_message(
+        Event::new("payload", "", serde_json::json!({})),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_18_html_escape",
+            "flow",
+        ),
+        "CSML/basic_test/stdlib/string.csml",
+    );
+
+    let v1: Value = message_to_json_value(msg);
+    let v2: Value = serde_json::from_str(data).unwrap();
+
+    assert_eq!(v1, v2)
+}
