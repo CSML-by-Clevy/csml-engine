@@ -740,6 +740,11 @@ components:
         env:
           type: object
           example: { "SOME_KEY": "SOME_VALUE" }
+        modules:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleModel"
+
         default_flow:
           type: string
           example: Default
@@ -785,6 +790,28 @@ components:
           items:
             type: string
             example: "trigger keyword"
+
+    ModuleModel:
+      type: object
+      required:
+        - name
+      example: {"name": "buttons", "url": "https://raw.githubusercontent.com/CSML-by-Clevy/csml-modules/master/modules/buttons.csml"}
+      properties:
+        name:
+          type: string
+          description: a unique reference name for this module
+        url:
+          type: string
+          description: where this module can be downloaded from. Either url or flow must be present
+        auth:
+          type: string
+          description: "if the module is hosted on a private repository, the token to use for authentication (`Authorization: Bearer TOKEN` header). Optional"
+        version:
+          type: string
+          description: a version reference for persistence. Optional
+        flow:
+          $ref: "#/components/schemas/FlowModel"
+          description: the content of the module. Either url or flow must be present
 
     EventModel:
       type: object
