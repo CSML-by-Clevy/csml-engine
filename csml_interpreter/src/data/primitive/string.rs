@@ -418,11 +418,11 @@ impl PrimitiveString {
 
         let vec: Vec<&str> = string.value.split('?').collect();
 
-        let (q_serparator, query, separator, fragment) = if vec.len() > 1 {
+        let (q_separator, query, separator, fragment) = if vec.len() > 1 {
             let url = Url::parse(&string.value).unwrap();
 
             let query_pairs = url.query_pairs();
-            let (q_serparator, query) = match query_pairs.count() {
+            let (q_separator, query) = match query_pairs.count() {
                 0 => ("", "".to_owned()),
                 _ => {
                     let query = encode_value(&query_pairs);
@@ -440,13 +440,13 @@ impl PrimitiveString {
                 None => ("", "".to_owned()),
             };
 
-            (q_serparator, query, f_serparatorm, fragment)
+            (q_separator, query, f_serparatorm, fragment)
         } else {
             ("", "".to_owned(), "", "".to_owned())
         };
 
         Ok(PrimitiveString::get_literal(
-            &format!("{}{q_serparator}{query}{separator}{fragment}", vec[0]),
+            &format!("{}{q_separator}{query}{separator}{fragment}", vec[0]),
             interval,
         ))
     }
@@ -471,11 +471,11 @@ impl PrimitiveString {
 
         let vec: Vec<&str> = string.value.split('?').collect();
 
-        let (q_serparator, query, separator, fragment) = if vec.len() > 1 {
+        let (q_separator, query, separator, fragment) = if vec.len() > 1 {
             let url = Url::parse(&string.value).unwrap();
 
             let query_pairs = url.query_pairs();
-            let (q_serparator, query) = match query_pairs.count() {
+            let (q_separator, query) = match query_pairs.count() {
                 0 => ("", "".to_owned()),
                 _ => {
                     let query = decode_value(&query_pairs);
@@ -493,13 +493,13 @@ impl PrimitiveString {
                 None => ("", "".to_owned()),
             };
 
-            (q_serparator, query, f_serparatorm, fragment)
+            (q_separator, query, f_serparatorm, fragment)
         } else {
             ("", "".to_owned(), "", "".to_owned())
         };
 
         Ok(PrimitiveString::get_literal(
-            &format!("{}{q_serparator}{query}{separator}{fragment}", vec[0]),
+            &format!("{}{q_separator}{query}{separator}{fragment}", vec[0]),
             interval,
         ))
     }
