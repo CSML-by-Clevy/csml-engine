@@ -51,8 +51,8 @@ const FUNCTIONS: phf::Map<&'static str, (PrimitiveMethod, Right)> = phf_map! {
     "decode_uri" => (PrimitiveString::decode_uri as PrimitiveMethod, Right::Read),
     "encode_uri_component" => (PrimitiveString::encode_uri_component as PrimitiveMethod, Right::Read),
     "decode_uri_component" => (PrimitiveString::decode_uri_component as PrimitiveMethod, Right::Read),
-    "encode_html_escape" => (PrimitiveString::encode_html_escape as PrimitiveMethod, Right::Read),
-    "decode_html_escape" => (PrimitiveString::decode_html_escape as PrimitiveMethod, Right::Read),
+    "encode_html_entities" => (PrimitiveString::encode_html_entities as PrimitiveMethod, Right::Read),
+    "decode_html_entities" => (PrimitiveString::decode_html_entities as PrimitiveMethod, Right::Read),
 
     "is_email" => (PrimitiveString::is_email as PrimitiveMethod, Right::Read),
     "append" => (PrimitiveString::append as PrimitiveMethod, Right::Read),
@@ -557,7 +557,7 @@ impl PrimitiveString {
         }
     }
 
-    fn decode_html_escape(
+    fn decode_html_entities(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         _additional_info: &Option<HashMap<String, Literal>>,
@@ -566,7 +566,7 @@ impl PrimitiveString {
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "decode_html_escape() => String";
+        let usage = "decode_html_entities() => String";
 
         if !args.is_empty() {
             return Err(gen_error_info(
@@ -580,7 +580,7 @@ impl PrimitiveString {
         Ok(PrimitiveString::get_literal(&decoded, interval))
     }
 
-    fn encode_html_escape(
+    fn encode_html_entities(
         string: &mut PrimitiveString,
         args: &HashMap<String, Literal>,
         _additional_info: &Option<HashMap<String, Literal>>,
@@ -589,7 +589,7 @@ impl PrimitiveString {
         _msg_data: &mut MessageData,
         _sender: &Option<mpsc::Sender<MSG>>,
     ) -> Result<Literal, ErrorInfo> {
-        let usage = "encode_html_escape() => String";
+        let usage = "encode_html_entities() => String";
 
         if !args.is_empty() {
             return Err(gen_error_info(

@@ -120,8 +120,8 @@ step_17_uri:
 step_18_html_escape:
     do val = "<a><b>42</b></a>"
 
-    say val.encode_html_escape()
+    say val.encode_html_entities()
 
-    do val.encode_html_escape()
+    do val.encode_html_entities()
 
-    say val.decode_html_escape()
+    say val.decode_html_entities()
