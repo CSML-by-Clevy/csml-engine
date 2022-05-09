@@ -856,6 +856,10 @@ components:
         content:
           type: object
           example: '{"text": "Hi from the user!"}'
+        secure:
+          type: boolean
+          default: false
+          description: Whether to treat the incoming event as a secure input
 
     ConversationModel:
       type: object
