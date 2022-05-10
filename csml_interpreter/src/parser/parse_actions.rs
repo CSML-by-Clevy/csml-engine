@@ -46,6 +46,30 @@ where
     Ok((rest, AssignType::SubtractionAssignment))
 }
 
+fn division_assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (rest, ..) = tag(DIVISION_ASSIGNMENT)(s)?;
+    Ok((rest, AssignType::DivisionAssignment))
+}
+
+fn multiplication_assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (rest, ..) = tag(MULTIPLY_ASSIGNMENT)(s)?;
+    Ok((rest, AssignType::MultiplicationAssignment))
+}
+
+fn remainder_assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (rest, ..) = tag(REMAINDER_ASSIGNMENT)(s)?;
+    Ok((rest, AssignType::RemainderAssignment))
+}
+
 fn assignment<'a, E>(s: Span<'a>) -> IResult<Span<'a>, AssignType, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
@@ -74,7 +98,14 @@ where
 
     let (s, assign_type) = preceded(
         comment,
-        alt((addition_assignment, subtraction_assignment, assignment)),
+        alt((
+            remainder_assignment,
+            division_assignment,
+            multiplication_assignment,
+            addition_assignment,
+            subtraction_assignment,
+            assignment,
+        )),
     )(s)?;
     let (s, expr) = preceded(comment, parse_operator)(s)?;
 
@@ -338,10 +369,7 @@ where
 
     let (s, ..) = get_tag(name, HOLD_SECURE)(s)?;
 
-    Ok((
-        s,
-        Expr::ObjectExpr(ObjectType::HoldSecure(inter)),
-    ))
+    Ok((s, Expr::ObjectExpr(ObjectType::HoldSecure(inter))))
 }
 
 fn parse_break<'a, E>(s: Span<'a>) -> IResult<Span<'a>, Expr, E>

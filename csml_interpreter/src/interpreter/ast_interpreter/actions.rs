@@ -202,62 +202,49 @@ pub fn match_actions(
 
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
 
-            match assign_type {
+            let primitive = match assign_type {
                 AssignType::AdditionAssignment => {
-                    let primitive = lit.primitive.clone() + new_value.primitive;
-
-                    match primitive {
-                        Ok(primitive) => {
-                            new_value = Literal {
-                                content_type: new_value.content_type,
-                                interval: new_value.interval,
-                                additional_info: None,
-                                secure_variable: false,
-                                primitive,
-                            };
-                        }
-                        Err(err) => {
-                            new_value = PrimitiveString::get_literal(&err, lit.interval);
-                            MSG::send_error_msg(
-                                &sender,
-                                &mut msg_data,
-                                Err(gen_error_info(
-                                    Position::new(new_value.interval, &new_scope_data.context.flow),
-                                    err,
-                                )),
-                            );
-                        }
-                    }
+                    Some(lit.primitive.clone() + new_value.primitive.clone())
                 }
                 AssignType::SubtractionAssignment => {
-                    let primitive = lit.primitive.clone() - new_value.primitive;
-
-                    match primitive {
-                        Ok(primitive) => {
-                            new_value = Literal {
-                                content_type: new_value.content_type,
-                                interval: new_value.interval,
-                                additional_info: None,
-                                secure_variable: false,
-                                primitive,
-                            };
-                        }
-                        Err(err) => {
-                            new_value = PrimitiveString::get_literal(&err, lit.interval);
-
-                            MSG::send_error_msg(
-                                &sender,
-                                &mut msg_data,
-                                Err(gen_error_info(
-                                    Position::new(new_value.interval, &new_scope_data.context.flow),
-                                    err,
-                                )),
-                            );
-                        }
-                    }
+                    Some(lit.primitive.clone() - new_value.primitive.clone())
                 }
-                _ => {}
+                AssignType::DivisionAssignment => {
+                    Some(lit.primitive.clone() / new_value.primitive.clone())
+                }
+                AssignType::MultiplicationAssignment => {
+                    Some(lit.primitive.clone() * new_value.primitive.clone())
+                }
+                AssignType::RemainderAssignment => {
+                    Some(lit.primitive.clone() % new_value.primitive.clone())
+                }
+                AssignType::Assignment => None,
             };
+
+            match primitive {
+                Some(Ok(primitive)) => {
+                    new_value = Literal {
+                        content_type: new_value.content_type,
+                        interval: new_value.interval,
+                        additional_info: None,
+                        secure_variable: false,
+                        primitive,
+                    };
+                }
+                Some(Err(err)) => {
+                    new_value = PrimitiveString::get_literal(&err, lit.interval);
+                    MSG::send_error_msg(
+                        &sender,
+                        &mut msg_data,
+                        Err(gen_error_info(
+                            Position::new(new_value.interval, &new_scope_data.context.flow),
+                            err,
+                        )),
+                    );
+                }
+                None => {}
+            }
+
             //TODO: refacto memory update system
 
             let (new_value, update) = if let MemoryType::Constant = mem_type {
