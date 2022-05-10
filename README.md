@@ -38,8 +38,8 @@ With a very expressive and text-only syntax, CSML flows are easy to understand, 
 * Text-only, expressive syntax, easy to learn and develop complex chatbot scenarios with
 * Rich and extensible conversational components such as Carousel, Image, Video, Button, Card, Input, Calendar...
 * Built-in short-term and long-term memory slots: no more complex state machine boilerplate
-* Portable, fast, and easy to deploy: it only requires a MongoDB database (or AWS account for serverless version)
-* Vibrant community of over 10,000 active CSML developers
+* Portable, fast, and easy to deploy: it only requires a standard MongoDB, PostgreSQL or SQLite database
+* Vibrant community of over 20,000 active CSML developers
 
 ## Example
 
@@ -90,32 +90,32 @@ CSML Studio gives you a free playground to experiment with the language as well 
 
 CSML is available as a self-hostable web server that you can easily install with one of the options below.
 
-Note that you will need a database. The default choice is **MongoDB**, but **Amazon DynamoDB** and **PostgreSQL**
-are also available by choosing the `dynamodb` or `postgresql` engine DB type with a slightly different set of environment variables.
+Note that you will need a database. The default choice is **MongoDB**, but **Amazon DynamoDB**, **PostgreSQL** and **SQLite**
+are also available by choosing the `mongodb`, `dynamodb`, `postgresql` or `sqlite` engine DB type with a slightly different set of environment variables.
 
 Before you start, make sure that you have the environment set with following options:
 
 ```
-ENGINE_DB_TYPE=mongodb # must be one of mongodb|dynamodb|postgresql
+ENGINE_DB_TYPE=mongodb # must be one of mongodb|dynamodb|postgresql|sqlite
 
 # for mongodb
-MONGODB_HOST=localhost
-MONGODB_PORT=27017
+MONGODB_URI=mongodb://username:password@localhost:27017
 MONGODB_DATABASE=csml
-MONGODB_USERNAME=root
-MONGODB_PASSWORD=root
 
-# for dynamodb
-AWS_ACCESS_KEY_ID= # or use an IAM role
-AWS_SECRET_ACCESS_KEY= # or use an IAM role
+# for postgresql
+POSTGRESQL_URL=postgres://user:password@hostname:port/database
+
+# for sqlite
+SQLITE_URL=csml.db
+
+# for dynamodb (requires S3 for storage of large items)
+AWS_ACCESS_KEY_ID= # or use a local IAM role
+AWS_SECRET_ACCESS_KEY= # or use a local IAM role
 AWS_REGION=
 AWS_DYNAMODB_ENDPOINT= # optional, defaults to the dynamodb endpoint for the given region.
 AWS_DYNAMODB_TABLE=
 AWS_S3_ENDPOINT= # optional, defaults to the S3 endpoint for the given region
 AWS_S3_BUCKET=
-
-# for postgresql
-POSTGRESQL_URL=postgres://user:password@hostname:port/database
 
 # CSML Server configuration
 ENGINE_SERVER_PORT=5000
@@ -127,6 +127,9 @@ TTL_DURATION=30 # auto-remove chatbot user data after X days
 LOW_DATA_MODE=true # do not store contents of sent/received messages
 DISABLE_SSL_VERIFY=false # reach trusted endpoints with known invalid certificates
 DEBUG=true # print debug output in console
+CSML_LOG_LEVEL=error # print log output in stderr. Possible values are error, warn, info, debug, trace.
+MODULES_URL= # default module repository base url
+MODULES_AUTH= # default module auth token
 ```
 
 ### Deploy to Heroku

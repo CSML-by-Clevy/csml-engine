@@ -1,6 +1,6 @@
 {
-    "name": "CSML application",
-    "description": "",
+    "name": "CSML Engine",
+    "description": "CSML Engine buildpack for heroku deployments",
     "repository": "https://github.com/CSML-by-Clevy/csml-engine/tree/master",
     "success_url": "/",
     "keywords": ["rust", "csml"],
@@ -21,7 +21,7 @@
         },
         "MONGODB_DATABASE": {
             "value": "csml",
-            "required": false
+            "required": true
         },
         "MONGODB_USERNAME": {
             "required": false
