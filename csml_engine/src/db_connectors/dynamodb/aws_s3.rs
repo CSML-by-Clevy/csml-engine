@@ -46,7 +46,11 @@ pub fn get_object(db: &mut DynamoDbClient, key: &str) -> Result<String, EngineEr
 
     let future = db.s3_client.get_object(request);
 
+    println!("start get_object for {}", key);
+
     let value = db.runtime.block_on(future)?;
+
+    println!("OK get_object for {}", key);
 
     match value.body {
         Some(value) => {
