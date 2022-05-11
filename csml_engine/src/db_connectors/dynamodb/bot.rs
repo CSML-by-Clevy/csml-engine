@@ -53,11 +53,9 @@ pub fn get_flows(key: &str, db: &mut DynamoDbClient) -> Result<Vec<CsmlFlow>, En
 pub fn get_modules(key: &str, db: &mut DynamoDbClient) -> Result<Vec<Module>, EngineError> {
     let object = match aws_s3::get_object(db, key) {
         Ok(obj) => obj,
-        Err(err) => {
-            println!("get_object fail : {:?}", err);
-            return Err(err);
-        }
+        Err(_) => return Ok(vec![]), // for Backward compatibility create empty modules
     };
+
     let modules: Vec<Module> = match serde_json::from_str(&object) {
         Ok(modules) => modules,
         Err(_) => vec![],
