@@ -37,6 +37,7 @@ fn format_message(event: Event, context: Context, vector: &[&str]) -> MessageDat
         None,
         None,
         None,
+        None,
     );
 
     interpret(bot, context, event, None)
