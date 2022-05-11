@@ -1,6 +1,6 @@
 [package]
 name = "csml_server"
-version = "1.10.3"
+version = "1.10.4"
 authors = ["François Falala-Sechet <francois@clevy.io>"]
 edition = "2018"
 
