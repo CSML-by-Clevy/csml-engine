@@ -86,6 +86,7 @@ fn execute_step(
                     MSG::Next {
                         flow: None,
                         step: Some("end".to_owned()),
+                        bot: None,
                     },
                 );
             }

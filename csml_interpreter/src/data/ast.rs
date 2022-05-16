@@ -159,6 +159,7 @@ pub enum GotoType {
     StepFlow {
         step: Option<GotoValueType>,
         flow: Option<GotoValueType>,
+        bot: Option<GotoValueType>,
     },
 }
 

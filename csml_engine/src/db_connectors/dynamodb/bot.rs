@@ -276,7 +276,7 @@ pub fn get_last_bot_version(
         Ok(data) => data,
         Err(e) => {
             return Err(EngineError::Manager(format!(
-                "get_last_bot_version {:?}",
+                "Fail to find last bot version in db: {:?}",
                 e
             )))
         }

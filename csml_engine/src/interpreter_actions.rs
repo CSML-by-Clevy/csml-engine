@@ -4,13 +4,29 @@ use crate::{data::*, delete_client_memories};
 
 use csml_interpreter::{
     data::{
-        ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_logs::*, Event, Hold, MSG,
+        ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_logs::*, Event, Hold,
+        Memory, MultiBot, MSG,
     },
     interpret,
 };
 use serde_json::{map::Map, Value};
 use std::collections::HashMap;
 use std::{sync::mpsc, thread};
+
+#[derive(Debug, Clone)]
+enum InterpreterReturn {
+    Continue,
+    End,
+    SwitchBot(SwitchBot),
+}
+
+#[derive(Debug, Clone)]
+pub struct SwitchBot {
+    pub bot_id: String,
+    pub version_id: Option<String>,
+    pub flow: Option<String>,
+    pub step: String,
+}
 
 /**
  * This is the CSML Engine action.
@@ -21,12 +37,13 @@ pub fn interpret_step(
     data: &mut ConversationInfo,
     event: Event,
     bot: &CsmlBot,
-) -> Result<Map<String, Value>, EngineError> {
+) -> Result<(Map<String, Value>, Option<SwitchBot>), EngineError> {
     let mut current_flow: &CsmlFlow = get_flow_by_id(&data.context.flow, &bot.flows)?;
     let mut interaction_order = 0;
     let mut conversation_end = false;
     let (sender, receiver) = mpsc::channel::<MSG>();
     let context = data.context.clone();
+    let mut switch_bot = None;
 
     csml_logger(
         CsmlLog::new(
@@ -163,91 +180,45 @@ pub fn interpret_step(
                     secure,
                 });
             }
-            MSG::Next { flow, step } => match (flow, step) {
-                (Some(flow), Some(step)) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            None,
-                            None,
-                            format!(
-                                "goto flow: {}, step: {} from: flow: {} step: {}",
-                                flow, step, data.context.flow, data.context.step
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
-                    update_current_context(data, &memories);
-                    goto_flow(
-                        data,
-                        &mut interaction_order,
-                        &mut current_flow,
-                        &bot,
-                        flow,
-                        step,
-                    )?
+            MSG::Next {
+                flow,
+                step,
+                bot: None,
+            } => {
+                if let Ok(InterpreterReturn::End) = manage_internal_goto(
+                    data,
+                    &mut conversation_end,
+                    &mut interaction_order,
+                    &mut current_flow,
+                    &bot,
+                    &mut memories,
+                    flow,
+                    step,
+                ) {
+                    break;
                 }
-                (Some(flow), None) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            None,
-                            None,
-                            format!(
-                                "goto flow: {}, step: start from: flow: {} step: {}",
-                                flow, data.context.flow, data.context.step
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
-                    update_current_context(data, &memories);
-                    let step = "start".to_owned();
-                    goto_flow(
-                        data,
-                        &mut interaction_order,
-                        &mut current_flow,
-                        &bot,
-                        flow,
-                        step,
-                    )?
-                }
-                (None, Some(step)) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            None,
-                            None,
-                            format!(
-                                "goto flow: {}, step: {} from: flow: {} step: {}",
-                                data.context.flow, step, data.context.flow, data.context.step
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
-                    if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
-                        break;
-                    }
-                }
-                (None, None) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            Some(data.context.flow.to_string()),
-                            None,
-                            format!(
-                                "goto end from: flow: {} step: {}",
-                                data.context.flow, data.context.step
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
+            }
 
-                    let step = "end".to_owned();
-                    if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
-                        break;
-                    }
+            MSG::Next {
+                flow,
+                step,
+                bot: Some(target_bot),
+            } => {
+                if let Ok(InterpreterReturn::SwitchBot(s_bot)) = manage_switch_bot(
+                    data,
+                    &mut interaction_order,
+                    &mut current_flow,
+                    &bot,
+                    &mut memories,
+                    flow,
+                    step,
+                    target_bot,
+                ) {
+                    switch_bot = Some(s_bot);
+                    break;
                 }
-            },
+            }
+
             MSG::Error(err_msg) => {
                 conversation_end = true;
                 csml_logger(
@@ -277,14 +248,217 @@ pub fn interpret_step(
     if !data.low_data {
         add_messages_bulk(data, msgs, interaction_order, "SEND")?;
     }
+
     add_memories(data, &memories)?;
 
-    Ok(messages_formatter(
-        data,
-        data.messages.clone(),
-        interaction_order,
-        conversation_end,
+    Ok((
+        messages_formatter(
+            data,
+            data.messages.clone(),
+            interaction_order,
+            conversation_end,
+        ),
+        switch_bot,
     ))
+}
+
+fn manage_switch_bot<'a>(
+    data: &mut ConversationInfo,
+    interaction_order: &mut i32,
+    current_flow: &mut &'a CsmlFlow,
+    bot: &'a CsmlBot,
+    memories: &mut HashMap<String, Memory>,
+    flow: Option<String>,
+    step: Option<String>,
+    target_bot: String,
+) -> Result<InterpreterReturn, EngineError> {
+    // check if we are allow to switch to 'target_bot'
+
+    let next_bot = if let Some(multi_bot) = &bot.multi_bot {
+        multi_bot.iter().find(
+            |&MultiBot {
+                 id,
+                 name,
+                 bot_version: _,
+             }| target_bot == *id || target_bot == *name,
+        )
+    } else {
+        None
+    };
+
+    let next_bot = match next_bot {
+        Some(next_bot) => next_bot,
+        None => {
+            // send error switch bot not allowed
+            // send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
+
+            return Ok(InterpreterReturn::End);
+        }
+    };
+
+    let (flow, step) = match (flow, step) {
+        (Some(flow), Some(step)) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    None,
+                    None,
+                    format!(
+                        "goto flow: {flow}, step: {step} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step, bot.id
+                    ),
+                ),
+                LogLvl::Debug,
+            );
+
+            (Some(flow), step)
+        }
+        (Some(flow), None) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    None,
+                    None,
+                    format!(
+                        "goto flow: {flow}, step: start in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step, bot.id
+                    ),
+                ),
+                LogLvl::Debug,
+            );
+
+            (Some(flow), "start".to_owned())
+        }
+        (None, Some(step)) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    None,
+                    None,
+                    format!(
+                        "goto flow: default_flow, step: {step} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step, bot.id
+                    ),
+                ),
+                LogLvl::Debug,
+            );
+
+            (None, step)
+        }
+        (None, None) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    Some(data.context.flow.to_string()),
+                    None,
+                    format!(
+                        "goto flow: default_flow step: start in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step, bot.id
+                     ),
+                ),
+                LogLvl::Debug,
+            );
+
+            (None, "start".to_owned())
+        }
+    };
+
+    // send message switch bot
+    // send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
+
+    close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
+
+    Ok(InterpreterReturn::SwitchBot(SwitchBot {
+        bot_id: next_bot.id.to_owned(),
+        version_id: next_bot.bot_version.to_owned(),
+        flow,
+        step,
+    }))
+}
+
+fn manage_internal_goto<'a>(
+    data: &mut ConversationInfo,
+    conversation_end: &mut bool,
+    interaction_order: &mut i32,
+    current_flow: &mut &'a CsmlFlow,
+    bot: &'a CsmlBot,
+    memories: &mut HashMap<String, Memory>,
+    flow: Option<String>,
+    step: Option<String>,
+) -> Result<InterpreterReturn, EngineError> {
+    match (flow, step) {
+        (Some(flow), Some(step)) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    None,
+                    None,
+                    format!(
+                        "goto flow: {}, step: {} from: flow: {} step: {}",
+                        flow, step, data.context.flow, data.context.step
+                    ),
+                ),
+                LogLvl::Debug,
+            );
+            update_current_context(data, &memories);
+            goto_flow(data, interaction_order, current_flow, &bot, flow, step)?
+        }
+        (Some(flow), None) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    None,
+                    None,
+                    format!(
+                        "goto flow: {}, step: start from: flow: {} step: {}",
+                        flow, data.context.flow, data.context.step
+                    ),
+                ),
+                LogLvl::Debug,
+            );
+            update_current_context(data, &memories);
+            let step = "start".to_owned();
+            goto_flow(data, interaction_order, current_flow, &bot, flow, step)?
+        }
+        (None, Some(step)) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    None,
+                    None,
+                    format!(
+                        "goto flow: {}, step: {} from: flow: {} step: {}",
+                        data.context.flow, step, data.context.flow, data.context.step
+                    ),
+                ),
+                LogLvl::Debug,
+            );
+            if goto_step(data, conversation_end, interaction_order, step)? {
+                return Ok(InterpreterReturn::End);
+            }
+        }
+        (None, None) => {
+            csml_logger(
+                CsmlLog::new(
+                    Some(&data.client),
+                    Some(data.context.flow.to_string()),
+                    None,
+                    format!(
+                        "goto end from: flow: {} step: {}",
+                        data.context.flow, data.context.step
+                    ),
+                ),
+                LogLvl::Debug,
+            );
+
+            let step = "end".to_owned();
+            if goto_step(data, conversation_end, interaction_order, step)? {
+                return Ok(InterpreterReturn::End);
+            }
+        }
+    }
+
+    Ok(InterpreterReturn::Continue)
 }
 
 /**

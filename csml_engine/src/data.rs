@@ -94,21 +94,27 @@ pub enum BotOpt {
 }
 
 impl BotOpt {
-    pub fn search_bot(&self, db: &mut Database) -> CsmlBot {
+    pub fn search_bot(&self, db: &mut Database) -> Result<CsmlBot, EngineError> {
         match self {
-            BotOpt::CsmlBot(csml_bot) => csml_bot.to_owned(),
+            BotOpt::CsmlBot(csml_bot) => Ok(csml_bot.to_owned()),
             BotOpt::BotId {
                 bot_id,
                 apps_endpoint,
                 multi_bot,
             } => {
-                let mut bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)
-                    .unwrap()
-                    .unwrap();
-                bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
-                bot_version.bot.multi_bot = multi_bot.to_owned();
+                let bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)?;
 
-                bot_version.bot
+                match bot_version {
+                    Some(mut bot_version) => {
+                        bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
+                        bot_version.bot.multi_bot = multi_bot.to_owned();
+                        Ok(bot_version.bot)
+                    }
+                    None => Err(EngineError::Manager(format!(
+                        "bot ({}) not found in db",
+                        bot_id
+                    ))),
+                }
             }
             BotOpt::Id {
                 version_id,
@@ -116,14 +122,19 @@ impl BotOpt {
                 apps_endpoint,
                 multi_bot,
             } => {
-                let mut bot_version =
-                    db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
-                        .unwrap()
-                        .unwrap();
-                bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
-                bot_version.bot.multi_bot = multi_bot.to_owned();
+                let bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)?;
 
-                bot_version.bot
+                match bot_version {
+                    Some(mut bot_version) => {
+                        bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
+                        bot_version.bot.multi_bot = multi_bot.to_owned();
+                        Ok(bot_version.bot)
+                    }
+                    None => Err(EngineError::Manager(format!(
+                        "bot version ({}) not found in db",
+                        version_id
+                    ))),
+                }
             }
         }
     }

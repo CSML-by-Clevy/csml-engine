@@ -75,11 +75,15 @@ where
     let (s, at) = opt(tag("@"))(s)?;
     let (s, flow) = opt(get_goto_value_type)(s)?;
 
+    let (s, ..) = comment(s)?;
+
+    let (s, bot) = opt(preceded(tag("in"), preceded(comment, get_goto_value_type)))(s)?;
+
     if let (None, None, None) = (&step, at, &flow) {
         return Err(gen_nom_failure(s, ERROR_GOTO_STEP));
     }
 
-    Ok((s, GotoType::StepFlow { step, flow }))
+    Ok((s, GotoType::StepFlow { step, flow, bot }))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

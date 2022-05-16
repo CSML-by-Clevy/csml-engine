@@ -36,8 +36,9 @@ pub struct Module {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MultiBot {
-    name: String,
-    id: String,
+    pub name: String,
+    pub id: String,
+    pub bot_version: Option<String>,
 }
 
 fn default_version() -> String {
