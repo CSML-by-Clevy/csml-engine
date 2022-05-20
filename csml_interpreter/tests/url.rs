@@ -14,7 +14,15 @@ fn ok_url() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "test", "title": "test"},"content_type":"url"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/url.csml",
     );
 
@@ -29,7 +37,15 @@ fn ok_url_step1() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "test", "title": "test" },"content_type":"url"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "url1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "url1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/url.csml",
     );
 
@@ -44,7 +60,15 @@ fn ok_url_step2() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "plop", "title": "test" },"content_type":"url"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "url2", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "url2",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/url.csml",
     );
 
@@ -59,7 +83,15 @@ fn ok_url_step3() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "text": "plop", "title": "rand" },"content_type":"url"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "url3", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "url3",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/url.csml",
     );
 

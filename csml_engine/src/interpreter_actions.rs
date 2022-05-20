@@ -4,8 +4,8 @@ use crate::{data::*, delete_client_memories};
 
 use csml_interpreter::{
     data::{
-        ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_logs::*, Event, Hold,
-        Memory, MultiBot, MSG,
+        ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_logs::*, Client, Event,
+        Hold, Memory, Message, MultiBot, MSG,
     },
     interpret,
 };
@@ -204,16 +204,9 @@ pub fn interpret_step(
                 step,
                 bot: Some(target_bot),
             } => {
-                if let Ok(InterpreterReturn::SwitchBot(s_bot)) = manage_switch_bot(
-                    data,
-                    &mut interaction_order,
-                    &mut current_flow,
-                    &bot,
-                    &mut memories,
-                    flow,
-                    step,
-                    target_bot,
-                ) {
+                if let Ok(InterpreterReturn::SwitchBot(s_bot)) =
+                    manage_switch_bot(data, &mut interaction_order, &bot, flow, step, target_bot)
+                {
                     switch_bot = Some(s_bot);
                     break;
                 }
@@ -265,9 +258,7 @@ pub fn interpret_step(
 fn manage_switch_bot<'a>(
     data: &mut ConversationInfo,
     interaction_order: &mut i32,
-    current_flow: &mut &'a CsmlFlow,
     bot: &'a CsmlBot,
-    memories: &mut HashMap<String, Memory>,
     flow: Option<String>,
     step: Option<String>,
     target_bot: String,
@@ -289,9 +280,15 @@ fn manage_switch_bot<'a>(
     let next_bot = match next_bot {
         Some(next_bot) => next_bot,
         None => {
-            // send error switch bot not allowed
-            // send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
-
+            csml_logger(
+                CsmlLog::new(
+                    None,
+                    Some(data.context.flow.to_string()),
+                    None,
+                    format!("Switching to Bot: ({}) is not allowed", target_bot),
+                ),
+                LogLvl::Error,
+            );
             return Ok(InterpreterReturn::End);
         }
     };
@@ -364,9 +361,42 @@ fn manage_switch_bot<'a>(
     };
 
     // send message switch bot
-    // send_msg_to_callback_url(data, vec![err_msg.clone()], interaction_order, true);
+    send_msg_to_callback_url(
+        data,
+        vec![Message::switch_bot_message(&next_bot.id, &data.client)],
+        *interaction_order,
+        true,
+    );
+
+    csml_logger(
+        CsmlLog::new(
+            None,
+            Some(data.context.flow.to_string()),
+            None,
+            format!("switch bot"),
+        ),
+        LogLvl::Info,
+    );
 
     close_conversation(&data.conversation_id, &data.client, &mut data.db)?;
+
+    let previous_bot: Value = serde_json::json!({
+        "bot": data.client.bot_id,
+        "flow": data.context.step,
+        "step": data.context.step,
+    });
+
+    set_state_items(
+        &Client::new(
+            next_bot.id.to_owned(),
+            data.client.channel_id.clone(),
+            data.client.user_id.clone(),
+        ),
+        "bot",
+        vec![("previous", &previous_bot)],
+        data.ttl,
+        &mut data.db,
+    )?;
 
     Ok(InterpreterReturn::SwitchBot(SwitchBot {
         bot_id: next_bot.id.to_owned(),

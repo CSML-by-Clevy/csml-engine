@@ -23,6 +23,7 @@ fn ok_tmp_memory() {
             None,
             "exists_true_tmp_memory",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/exists.csml",
     );
@@ -51,6 +52,7 @@ fn ok_permanent_memory() {
             None,
             "exists_true_permanent_memory",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/exists.csml",
     );
@@ -75,6 +77,7 @@ fn fail_exists_memory() {
             None,
             "exists_false",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/exists.csml",
     );

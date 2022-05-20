@@ -14,7 +14,15 @@ fn ok_addition() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"5"},"content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
 
@@ -39,6 +47,7 @@ fn addition_array_step_0() {
             None,
             "addition_array_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -71,6 +80,7 @@ fn addition_array_step_1() {
             None,
             "addition_array_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -103,6 +113,7 @@ fn addition_array_step_2() {
             None,
             "addition_array_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -135,6 +146,7 @@ fn addition_array_step_3() {
             None,
             "addition_array_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -167,6 +179,7 @@ fn addition_array_step_4() {
             None,
             "addition_array_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -199,6 +212,7 @@ fn addition_array_step_5() {
             None,
             "addition_array_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -231,6 +245,7 @@ fn addition_array_step_6() {
             None,
             "addition_array_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -267,6 +282,7 @@ fn addition_boolean_step_0() {
             None,
             "addition_boolean_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -299,6 +315,7 @@ fn addition_boolean_step_1() {
             None,
             "addition_boolean_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -331,6 +348,7 @@ fn addition_boolean_step_2() {
             None,
             "addition_boolean_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -363,6 +381,7 @@ fn addition_boolean_step_3() {
             None,
             "addition_boolean_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -395,6 +414,7 @@ fn addition_boolean_step_4() {
             None,
             "addition_boolean_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -427,6 +447,7 @@ fn addition_boolean_step_5() {
             None,
             "addition_boolean_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -459,6 +480,7 @@ fn addition_boolean_step_6() {
             None,
             "addition_boolean_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -495,6 +517,7 @@ fn addition_float_step_0() {
             None,
             "array_find_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -527,6 +550,7 @@ fn addition_float_step_1() {
             None,
             "addition_float_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -565,6 +589,7 @@ fn addition_float_step_2() {
             None,
             "addition_float_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -592,6 +617,7 @@ fn addition_float_step_3() {
             None,
             "addition_float_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -613,6 +639,7 @@ fn addition_float_step_4() {
             None,
             "addition_float_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -645,6 +672,7 @@ fn addition_float_step_5() {
             None,
             "addition_float_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -683,6 +711,7 @@ fn addition_float_step_6() {
             None,
             "addition_float_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -708,6 +737,7 @@ fn addition_int_step_0() {
             None,
             "array_find_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -740,6 +770,7 @@ fn addition_int_step_1() {
             None,
             "addition_int_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -778,6 +809,7 @@ fn addition_int_step_2() {
             None,
             "addition_int_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -805,6 +837,7 @@ fn addition_int_step_3() {
             None,
             "addition_int_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -826,6 +859,7 @@ fn addition_int_step_4() {
             None,
             "addition_int_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -858,6 +892,7 @@ fn addition_int_step_5() {
             None,
             "addition_int_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -896,6 +931,7 @@ fn addition_int_step_6() {
             None,
             "addition_int_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -921,6 +957,7 @@ fn addition_null_step_0() {
             None,
             "array_find_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -953,6 +990,7 @@ fn addition_null_step_1() {
             None,
             "addition_null_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -985,6 +1023,7 @@ fn addition_null_step_2() {
             None,
             "addition_null_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1017,6 +1056,7 @@ fn addition_null_step_3() {
             None,
             "addition_null_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1049,6 +1089,7 @@ fn addition_null_step_4() {
             None,
             "addition_null_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1081,6 +1122,7 @@ fn addition_null_step_5() {
             None,
             "addition_null_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1113,6 +1155,7 @@ fn addition_null_step_6() {
             None,
             "addition_null_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1149,6 +1192,7 @@ fn addition_object_step_0() {
             None,
             "array_find_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1181,6 +1225,7 @@ fn addition_object_step_1() {
             None,
             "addition_object_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1213,6 +1258,7 @@ fn addition_object_step_2() {
             None,
             "addition_object_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1245,6 +1291,7 @@ fn addition_object_step_3() {
             None,
             "addition_object_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1277,6 +1324,7 @@ fn addition_object_step_4() {
             None,
             "addition_object_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1309,6 +1357,7 @@ fn addition_object_step_5() {
             None,
             "addition_object_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1341,6 +1390,7 @@ fn addition_object_step_6() {
             None,
             "addition_object_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1377,6 +1427,7 @@ fn addition_string_step_0() {
             None,
             "array_find_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1409,6 +1460,7 @@ fn addition_string_step_1() {
             None,
             "addition_string_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1447,6 +1499,7 @@ fn addition_string_step_2() {
             None,
             "addition_string_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1474,6 +1527,7 @@ fn addition_string_step_3() {
             None,
             "addition_string_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1495,6 +1549,7 @@ fn addition_string_step_4() {
             None,
             "addition_string_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1527,6 +1582,7 @@ fn addition_string_step_5() {
             None,
             "addition_string_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1565,6 +1621,7 @@ fn addition_string_step_6() {
             None,
             "addition_string_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );
@@ -1596,6 +1653,7 @@ fn addition_parentheses_step_1() {
             None,
             "addition_parentheses_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/addition.csml",
     );

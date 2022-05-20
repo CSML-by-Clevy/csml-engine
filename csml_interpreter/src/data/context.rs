@@ -6,6 +6,7 @@ use crate::data::{
 use crate::interpreter::{json_to_literal, memory_to_literal};
 
 use nom::lib::std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -17,6 +18,13 @@ pub struct ApiInfo {
     pub apps_endpoint: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PreviousBot {
+    pub bot: String,
+    pub flow: String,
+    pub step: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct Context {
     pub current: HashMap<String, Literal>,
@@ -25,6 +33,7 @@ pub struct Context {
     pub hold: Option<Hold>,
     pub step: String,
     pub flow: String,
+    pub previous_bot: Option<PreviousBot>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +92,7 @@ impl Context {
         hold: Option<Hold>,
         step: &str,
         flow: &str,
+        previous_bot: Option<PreviousBot>,
     ) -> Self {
         Self {
             current,
@@ -91,6 +101,7 @@ impl Context {
             hold,
             step: step.to_owned(),
             flow: flow.to_owned(),
+            previous_bot,
         }
     }
 }

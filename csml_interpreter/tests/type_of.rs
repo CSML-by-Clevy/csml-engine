@@ -14,7 +14,15 @@ fn ok_type_of_array() {
     let data = r#"{"memories":[{"key":"var", "value":[]}], "messages":[{"content":{"text":"array"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "array", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "array",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/type_of.csml",
     );
 
@@ -36,6 +44,7 @@ fn ok_type_of_boolean() {
             None,
             "boolean",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/type_of.csml",
     );
@@ -51,7 +60,15 @@ fn ok_type_of_float() {
     let data = r#"{"memories":[{"key":"var", "value":0.42}], "messages":[{"content":{"text":"float"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "float", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "float",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/type_of.csml",
     );
 
@@ -66,7 +83,15 @@ fn ok_type_of_int() {
     let data = r#"{"memories":[{"key":"var", "value":0}], "messages":[{"content":{"text":"int"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "int", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "int",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/type_of.csml",
     );
 
@@ -81,7 +106,15 @@ fn ok_type_of_null() {
     let data = r#"{"memories":[{"key":"var", "value":null}], "messages":[{"content":{"text":"Null"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "_null", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "_null",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/type_of.csml",
     );
 
@@ -96,7 +129,15 @@ fn ok_type_of_object() {
     let data = r#"{"memories":[{"key":"var", "value":{"_content":{}, "_content_type": "object"} }], "messages":[{"content":{"text":"object"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "object", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "object",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/type_of.csml",
     );
 
@@ -111,7 +152,15 @@ fn ok_type_of_string() {
     let data = r#"{"memories":[{"key":"var", "value":""}], "messages":[{"content":{"text":"string"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "string", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "string",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/type_of.csml",
     );
 

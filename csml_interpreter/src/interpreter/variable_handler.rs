@@ -481,6 +481,27 @@ fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Lite
         );
     }
 
+    if let Some(previous_bot) = &data.context.previous_bot {
+        let mut bot = HashMap::new();
+        bot.insert(
+            "bot".to_owned(),
+            PrimitiveString::get_literal(&previous_bot.bot, interval),
+        );
+        bot.insert(
+            "flow".to_owned(),
+            PrimitiveString::get_literal(&previous_bot.flow, interval),
+        );
+        bot.insert(
+            "step".to_owned(),
+            PrimitiveString::get_literal(&previous_bot.step, interval),
+        );
+
+        flow_context.insert(
+            "previous_bot".to_owned(),
+            PrimitiveObject::get_literal(&bot, interval),
+        );
+    }
+
     flow_context
 }
 

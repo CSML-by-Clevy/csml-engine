@@ -76,6 +76,7 @@ fn empty() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({"Button": {}}),
@@ -104,6 +105,7 @@ fn default() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -162,6 +164,7 @@ fn test_all() {
             None,
             "with_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -229,6 +232,7 @@ fn default_set() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -274,6 +278,7 @@ fn default_get() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -331,6 +336,7 @@ fn default_multiple_get() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -385,6 +391,7 @@ fn default_add_value() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -433,6 +440,7 @@ fn default_add_value_empty() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -484,6 +492,7 @@ fn parameter() {
             None,
             "with_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -548,6 +557,7 @@ fn parameter_multiple() {
             None,
             "with_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -609,6 +619,7 @@ fn unknown_component() {
             None,
             "unknown_component",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -646,6 +657,7 @@ fn missing_type() {
             None,
             "unknown_component",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -682,6 +694,7 @@ fn illegal_operation_default() {
             None,
             "unknown_component",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -720,6 +733,7 @@ fn illegal_operation_add() {
             None,
             "unknown_component",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -758,6 +772,7 @@ fn illegal_operation_parameter() {
             None,
             "unknown_component",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -796,6 +811,7 @@ fn circular_dependencie_on_other_key_default() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -844,6 +860,7 @@ fn circular_dependencie_on_self_default() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -882,6 +899,7 @@ fn circular_dependencie_on_other_key_add() {
             None,
             "with_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -930,6 +948,7 @@ fn circular_dependencie_on_self_add() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({
@@ -968,6 +987,7 @@ fn missing_parameter() {
             None,
             "without_argument",
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec!["CSML/basic_test/generic_component.csml"],
         serde_json::json!({

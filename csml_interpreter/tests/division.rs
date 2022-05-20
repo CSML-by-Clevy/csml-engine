@@ -14,7 +14,15 @@ fn ok_division() {
     let data = r#"{"messages":[ {"content":{"text":"2"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
 
@@ -29,7 +37,15 @@ fn ok_division_2() {
     let data = r#"{"messages":[ {"content":{"text":"21.333333333333332"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "div2", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "div2",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
 
@@ -59,7 +75,7 @@ fn ok_division_2() {
 //             None,
 //             None,
 //             "simple_0",
-//             "flow",
+//             "flow", None,
 //         ),
 //         "CSML/basic_test/numerical_operation/division.csml",
 //         "div3"
@@ -93,6 +109,7 @@ fn division_array_step_0() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -125,6 +142,7 @@ fn division_array_step_1() {
             None,
             "division_array_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -157,6 +175,7 @@ fn division_array_step_2() {
             None,
             "division_array_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -189,6 +208,7 @@ fn division_array_step_3() {
             None,
             "division_array_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -221,6 +241,7 @@ fn division_array_step_4() {
             None,
             "division_array_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -253,6 +274,7 @@ fn division_array_step_5() {
             None,
             "division_array_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -285,6 +307,7 @@ fn division_array_step_6() {
             None,
             "division_array_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -321,6 +344,7 @@ fn division_boolean_step_0() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -353,6 +377,7 @@ fn division_boolean_step_1() {
             None,
             "division_boolean_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -385,6 +410,7 @@ fn division_boolean_step_2() {
             None,
             "division_boolean_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -417,6 +443,7 @@ fn division_boolean_step_3() {
             None,
             "division_boolean_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -449,6 +476,7 @@ fn division_boolean_step_4() {
             None,
             "division_boolean_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -481,6 +509,7 @@ fn division_boolean_step_5() {
             None,
             "division_boolean_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -513,6 +542,7 @@ fn division_boolean_step_6() {
             None,
             "division_boolean_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -549,6 +579,7 @@ fn division_float_step_0() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -581,6 +612,7 @@ fn division_float_step_1() {
             None,
             "division_float_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -619,6 +651,7 @@ fn division_float_step_2() {
             None,
             "division_float_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -646,6 +679,7 @@ fn division_float_step_3() {
             None,
             "division_float_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -667,6 +701,7 @@ fn division_float_step_4() {
             None,
             "division_float_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -699,6 +734,7 @@ fn division_float_step_5() {
             None,
             "division_float_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -737,6 +773,7 @@ fn division_float_step_6() {
             None,
             "division_float_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -762,6 +799,7 @@ fn division_int_step_0() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -794,6 +832,7 @@ fn division_int_step_1() {
             None,
             "division_int_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -832,6 +871,7 @@ fn division_int_step_2() {
             None,
             "division_int_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -859,6 +899,7 @@ fn division_int_step_3() {
             None,
             "division_int_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -880,6 +921,7 @@ fn division_int_step_4() {
             None,
             "division_int_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -912,6 +954,7 @@ fn division_int_step_5() {
             None,
             "division_int_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -950,6 +993,7 @@ fn division_int_step_6() {
             None,
             "division_int_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -975,6 +1019,7 @@ fn division_null_step_0() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1007,6 +1052,7 @@ fn division_null_step_1() {
             None,
             "division_null_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1039,6 +1085,7 @@ fn division_null_step_2() {
             None,
             "division_null_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1071,6 +1118,7 @@ fn division_null_step_3() {
             None,
             "division_null_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1103,6 +1151,7 @@ fn division_null_step_4() {
             None,
             "division_null_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1135,6 +1184,7 @@ fn division_null_step_5() {
             None,
             "division_null_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1167,6 +1217,7 @@ fn division_null_step_6() {
             None,
             "division_null_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1203,6 +1254,7 @@ fn division_object_step_0() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1235,6 +1287,7 @@ fn division_object_step_1() {
             None,
             "division_object_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1267,6 +1320,7 @@ fn division_object_step_2() {
             None,
             "division_object_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1299,6 +1353,7 @@ fn division_object_step_3() {
             None,
             "division_object_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1331,6 +1386,7 @@ fn division_object_step_4() {
             None,
             "division_object_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1363,6 +1419,7 @@ fn division_object_step_5() {
             None,
             "division_object_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1395,6 +1452,7 @@ fn division_object_step_6() {
             None,
             "division_object_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1431,6 +1489,7 @@ fn division_string_step_0() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1463,6 +1522,7 @@ fn division_string_step_1() {
             None,
             "division_string_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1501,6 +1561,7 @@ fn division_string_step_2() {
             None,
             "division_string_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1528,6 +1589,7 @@ fn division_string_step_3() {
             None,
             "division_string_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1549,6 +1611,7 @@ fn division_string_step_4() {
             None,
             "division_string_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1581,6 +1644,7 @@ fn division_string_step_5() {
             None,
             "division_string_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );
@@ -1619,6 +1683,7 @@ fn division_string_step_6() {
             None,
             "division_string_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/division.csml",
     );

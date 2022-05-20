@@ -1,4 +1,4 @@
-use crate::db_connectors::{conversations::*, memories::*};
+use crate::db_connectors::{conversations::*, memories::*, state};
 use crate::interpreter_actions::SwitchBot;
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
@@ -13,10 +13,11 @@ use csml_interpreter::{
     data::{
         ast::Flow,
         context::{get_hashmap_from_json, get_hashmap_from_mem},
-        ApiInfo, Client, Event,
+        ApiInfo, Client, Event, PreviousBot,
     },
     load_components, search_for_modules, validate_bot,
 };
+
 use std::collections::HashMap;
 
 /**
@@ -43,7 +44,12 @@ pub fn init_conversation_info<'a>(
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
 
-    let mut context = init_context(default_flow, request.client.clone(), &bot.apps_endpoint);
+    let mut context = init_context(
+        default_flow,
+        request.client.clone(),
+        &bot.apps_endpoint,
+        &mut db,
+    );
     let ttl = get_ttl_duration_value(Some(event));
     let low_data = get_low_data_mode_value(event);
 
@@ -144,7 +150,14 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
 /**
  * Initialize the context object for incoming requests
  */
-pub fn init_context(flow: String, client: Client, apps_endpoint: &Option<String>) -> Context {
+pub fn init_context(
+    flow: String,
+    client: Client,
+    apps_endpoint: &Option<String>,
+    db: &mut Database,
+) -> Context {
+    let previous_bot = get_previous_bot(&client, db);
+
     let api_info = match apps_endpoint {
         Some(value) => Some(ApiInfo {
             client,
@@ -160,6 +173,14 @@ pub fn init_context(flow: String, client: Client, apps_endpoint: &Option<String>
         hold: None,
         step: "start".to_owned(),
         flow,
+        previous_bot,
+    }
+}
+
+fn get_previous_bot(client: &Client, db: &mut Database) -> Option<PreviousBot> {
+    match state::get_state_key(client, "bot", "previous", db) {
+        Ok(Some(bot)) => serde_json::from_value(bot).ok(),
+        _ => None,
     }
 }
 

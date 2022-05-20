@@ -15,7 +15,15 @@ fn ok_audio() {
         r#"{"messages":[ {"content":{ "url": "test" },"content_type":"audio"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/audio.csml",
     );
 
@@ -30,7 +38,15 @@ fn ok_audio_step2() {
     let data = r#"{"messages":[ {"content":{"url": "test", "service": "youtube" },"content_type":"audio"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "audio1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "audio1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/audio.csml",
     );
 
@@ -45,7 +61,15 @@ fn ok_audio_step3() {
     let data = r#"{"messages":[ {"content":{ "url": "test", "service": "youtube" },"content_type":"audio"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "audio2", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "audio2",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/audio.csml",
     );
 

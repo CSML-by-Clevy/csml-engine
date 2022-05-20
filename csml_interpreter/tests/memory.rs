@@ -70,6 +70,7 @@ fn memory() {
             None,
             DEFAULT_STEP_NAME,
             DEFAULT_FLOW_NAME,
+            None,
         ),
         &vec![
             "CSML/basic_test/bot/default.csml",
