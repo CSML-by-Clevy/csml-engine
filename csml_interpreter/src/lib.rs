@@ -12,8 +12,8 @@ pub use parser::step_checksum::get_step;
 use interpreter::{interpret_scope, json_to_literal};
 use parser::parse_flow;
 
-use data::ast::{Expr, Flow, InstructionScope, Interval};
-use data::context::get_hashmap_from_mem;
+use data::ast::{Expr, Flow, InsertStep, InstructionScope, Interval};
+use data::context::{get_hashmap_from_mem, ContextStepInfo};
 use data::error_info::ErrorInfo;
 use data::event::Event;
 use data::literal::create_error_info;
@@ -80,12 +80,12 @@ fn execute_step(
             // if no goto at the end of the scope end conversation
             None => {
                 msg_data.exit_condition = Some(ExitCondition::End);
-                data.context.step = "end".to_string();
+                data.context.step = ContextStepInfo::Normal("end".to_string());
                 MSG::send(
                     &sender,
                     MSG::Next {
                         flow: None,
-                        step: Some("end".to_owned()),
+                        step: Some(ContextStepInfo::Normal("end".to_owned())),
                     },
                 );
             }
@@ -93,6 +93,92 @@ fn execute_step(
     }
 
     MessageData::error_to_message(msg_data, sender)
+}
+
+fn get_flow_ast<'a, 'b>(
+    flows: &'a HashMap<String, Flow>,
+    flow: &'b str,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> Result<&'a Flow, MessageData> {
+    match flows.get(flow) {
+        Some(result) => Ok(result),
+        None => {
+            let error_message = format!("flow '{}' does not exist in this bot", flow);
+            let error_info = create_error_info(&error_message, Interval::default());
+
+            Err(MessageData::error_to_message(
+                Err(ErrorInfo {
+                    position: Position {
+                        flow: flow.to_owned(),
+                        interval: Interval::default(),
+                    },
+                    message: error_message,
+                    additional_info: Some(error_info),
+                }),
+                &sender,
+            ))
+        }
+    }
+}
+
+fn get_inserted_ast<'a>(
+    flows: &'a HashMap<String, Flow>,
+    ast: &'a Flow,
+    step: &ContextStepInfo,
+    sender: &Option<mpsc::Sender<MSG>>,
+) -> (bool, Option<&'a Flow>) {
+    match &step {
+        ContextStepInfo::Normal(step) => {
+            let missing_step = ast
+                .flow_instructions
+                .get(&InstructionScope::StepScope(step.to_owned()))
+                .is_none();
+
+            (missing_step, None)
+        }
+        ContextStepInfo::UnknownFlow(step_name) => {
+            let missing_step = ast
+                .flow_instructions
+                .get(&InstructionScope::StepScope(step_name.to_owned()))
+                .is_none();
+
+            if missing_step {
+                match ast
+                    .flow_instructions
+                    .get_key_value(&InstructionScope::InsertStep(InsertStep {
+                        name: step_name.to_owned(),
+                        original_name: None,
+                        from_flow: "".to_owned(),
+                        interval: Interval::default(),
+                    })) {
+                    Some((InstructionScope::InsertStep(insert_step), _expr)) => {
+                        let step = ContextStepInfo::InsertedStep {
+                            step: step_name.to_owned(),
+                            flow: insert_step.from_flow.clone(),
+                        };
+
+                        get_inserted_ast(flows, ast, &step, sender)
+                    }
+                    _ => (missing_step, None),
+                }
+            } else {
+                (missing_step, None)
+            }
+        }
+        ContextStepInfo::InsertedStep { step, flow } => {
+            match get_flow_ast(&flows, &flow, &sender) {
+                Ok(inserted_ast) => {
+                    let missing_step = inserted_ast
+                        .flow_instructions
+                        .get(&InstructionScope::StepScope(step.to_owned()))
+                        .is_none();
+
+                    (missing_step, Some(inserted_ast))
+                }
+                Err(_) => (true, None),
+            }
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -388,33 +474,15 @@ pub fn interpret(
     };
 
     while msg_data.exit_condition.is_none() {
-        let ast = match flows.get(&flow) {
-            Some(result) => result.to_owned(),
-            None => {
-                let error_message = format!("flow '{}' does not exist in this bot", flow);
-                let error_info = create_error_info(&error_message, Interval::default());
-
-                return MessageData::error_to_message(
-                    Err(ErrorInfo {
-                        position: Position {
-                            flow: flow.clone(),
-                            interval: Interval::default(),
-                        },
-                        message: error_message,
-                        additional_info: Some(error_info),
-                    }),
-                    &sender,
-                );
-            }
+        let ast = match get_flow_ast(&flows, &flow, &sender) {
+            Ok(ast) => ast,
+            Err(message_data) => return message_data,
         };
 
+        let (missing_step, inserted_ast) = get_inserted_ast(&flows, ast, &step, &sender);
+
         // if the target flow dose not contains a 'start' flow change the target to the default_flow
-        if step == "start"
-            && ast
-                .flow_instructions
-                .get(&InstructionScope::StepScope(step.to_owned()))
-                .is_none()
-        {
+        if step.is_step("start") && missing_step {
             flow = bot.default_flow.clone();
             continue;
         }
@@ -436,10 +504,17 @@ pub fn interpret(
             &native,
         );
 
-        msg_data = msg_data + execute_step(&step, &ast, &mut data, &sender);
+        msg_data = match inserted_ast {
+            Some(inserted_ast) => {
+                msg_data + execute_step(&step.get_step(), &inserted_ast, &mut data, &sender)
+            }
+            None => msg_data + execute_step(&step.get_step(), &ast, &mut data, &sender),
+        };
+
         previous_info = data.previous_info.clone();
         flow = data.context.flow.to_string();
-        step = data.context.step.to_string();
+        step = data.context.step.clone();
+
         // add reset loops index
         step_vars = HashMap::new();
     }

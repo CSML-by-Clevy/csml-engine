@@ -8,6 +8,7 @@ use crate::{
     Context, CsmlBot, CsmlFlow, CsmlResult,
 };
 
+use csml_interpreter::data::context::ContextStepInfo;
 use csml_interpreter::{
     data::{
         ast::Flow,
@@ -83,7 +84,7 @@ pub fn init_conversation_info<'a>(
 
     // Now that everything is correctly setup, update the conversation with wherever
     // we are now and continue with the rest of the request!
-    update_conversation(&mut data, Some(flow), Some(step))?;
+    update_conversation(&mut data, Some(flow), Some(step.get_step()))?;
 
     Ok(data)
 }
@@ -157,7 +158,7 @@ pub fn init_context(flow: String, client: Client, apps_endpoint: &Option<String>
         metadata: HashMap::new(),
         api_info,
         hold: None,
-        step: "start".to_owned(),
+        step: ContextStepInfo::Normal("start".to_owned()),
         flow,
     }
 }
@@ -177,7 +178,7 @@ fn get_or_create_conversation<'a>(
         Some(conversation) => {
             match flow_found {
                 Some((flow, step)) => {
-                    context.step = step;
+                    context.step = ContextStepInfo::UnknownFlow(step);
                     context.flow = flow.name.to_owned();
                 }
                 None => {
@@ -193,7 +194,7 @@ fn get_or_create_conversation<'a>(
                         }
                     };
 
-                    context.step = conversation.step_id.to_owned();
+                    context.step = ContextStepInfo::UnknownFlow(conversation.step_id.to_owned());
                     context.flow = flow.name.to_owned();
                 }
             };
@@ -219,10 +220,11 @@ fn create_new_conversation<'a>(
         Some((flow, step)) => (flow, step),
         None => (get_default_flow(bot)?, "start".to_owned()),
     };
-    context.step = step;
-    context.flow = flow.name.to_owned();
 
-    let conversation_id = create_conversation(&flow.id, &context.step, client, ttl, db)?;
+    let conversation_id = create_conversation(&flow.id, &step, client, ttl, db)?;
+
+    context.step = ContextStepInfo::UnknownFlow(step);
+    context.flow = flow.name.to_owned();
 
     Ok(conversation_id)
 }

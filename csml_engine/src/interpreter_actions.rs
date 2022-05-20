@@ -2,6 +2,7 @@ use crate::db_connectors::{conversations::*, memories::*, messages::*, state::*}
 use crate::utils::*;
 use crate::{data::*, delete_client_memories};
 
+use csml_interpreter::data::context::ContextStepInfo;
 use csml_interpreter::{
     data::{
         ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_logs::*, Event, Hold, MSG,
@@ -97,6 +98,8 @@ pub fn interpret_step(
                     LogLvl::Debug,
                 );
 
+                println!("{:?}", msg);
+
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
             }
@@ -172,7 +175,10 @@ pub fn interpret_step(
                             None,
                             format!(
                                 "goto flow: {}, step: {} from: flow: {} step: {}",
-                                flow, step, data.context.flow, data.context.step
+                                flow,
+                                step.get_step(),
+                                data.context.flow,
+                                data.context.step.get_step()
                             ),
                         ),
                         LogLvl::Debug,
@@ -195,13 +201,15 @@ pub fn interpret_step(
                             None,
                             format!(
                                 "goto flow: {}, step: start from: flow: {} step: {}",
-                                flow, data.context.flow, data.context.step
+                                flow,
+                                data.context.flow,
+                                data.context.step.get_step()
                             ),
                         ),
                         LogLvl::Debug,
                     );
                     update_current_context(data, &memories);
-                    let step = "start".to_owned();
+                    let step = ContextStepInfo::Normal("start".to_owned());
                     goto_flow(
                         data,
                         &mut interaction_order,
@@ -219,7 +227,10 @@ pub fn interpret_step(
                             None,
                             format!(
                                 "goto flow: {}, step: {} from: flow: {} step: {}",
-                                data.context.flow, step, data.context.flow, data.context.step
+                                data.context.flow,
+                                step.get_step(),
+                                data.context.flow,
+                                data.context.step.get_step()
                             ),
                         ),
                         LogLvl::Debug,
@@ -236,13 +247,14 @@ pub fn interpret_step(
                             None,
                             format!(
                                 "goto end from: flow: {} step: {}",
-                                data.context.flow, data.context.step
+                                data.context.flow,
+                                data.context.step.get_step()
                             ),
                         ),
                         LogLvl::Debug,
                     );
 
-                    let step = "end".to_owned();
+                    let step = ContextStepInfo::Normal("end".to_owned());
                     if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
                         break;
                     }
@@ -296,7 +308,7 @@ fn goto_flow<'a>(
     current_flow: &mut &'a CsmlFlow,
     bot: &'a CsmlBot,
     nextflow: String,
-    nextstep: String,
+    nextstep: ContextStepInfo,
 ) -> Result<(), EngineError> {
     *current_flow = get_flow_by_id(&nextflow, &bot.flows)?;
     data.context.flow = nextflow;
@@ -305,7 +317,7 @@ fn goto_flow<'a>(
     update_conversation(
         data,
         Some(current_flow.id.clone()),
-        Some(data.context.step.clone()),
+        Some(data.context.step.get_step()),
     )?;
 
     *interaction_order += 1;
@@ -320,9 +332,9 @@ fn goto_step<'a>(
     data: &mut ConversationInfo,
     conversation_end: &mut bool,
     interaction_order: &mut i32,
-    nextstep: String,
+    nextstep: ContextStepInfo,
 ) -> Result<bool, EngineError> {
-    if nextstep == "end" {
+    if nextstep.is_step("end") {
         *conversation_end = true;
 
         // send end of conversation
@@ -333,7 +345,7 @@ fn goto_step<'a>(
         return Ok(*conversation_end);
     } else {
         data.context.step = nextstep;
-        update_conversation(data, None, Some(data.context.step.to_owned()))?;
+        update_conversation(data, None, Some(data.context.step.get_step()))?;
     }
 
     *interaction_order += 1;

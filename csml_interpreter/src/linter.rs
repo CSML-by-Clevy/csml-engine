@@ -3,8 +3,8 @@ pub mod linter;
 
 use crate::data::ast::Flow;
 pub use data::{
-    ConstantInfo, FlowConstantUse, FunctionCallInfo, FunctionInfo, ImportInfo, LinterInfo,
-    ScopeType, State, StepBreakers, StepInfo,
+    ConstantInfo, FlowConstantUse, FunctionCallInfo, FunctionInfo, ImportInfo, InsertInfo,
+    LinterInfo, ScopeType, State, StepBreakers, StepInfo,
 };
 use std::collections::HashMap;
 
