@@ -42,14 +42,24 @@ pub fn create_bot_version(
 
 pub fn get_flows(key: &str, db: &mut DynamoDbClient) -> Result<Vec<CsmlFlow>, EngineError> {
     let object = aws_s3::get_object(db, key)?;
-    let flows: Vec<CsmlFlow> = serde_json::from_str(&object).unwrap();
+    let flows: Vec<CsmlFlow> = match serde_json::from_str(&object) {
+        Ok(flows) => flows,
+        Err(_) => vec![],
+    };
 
     Ok(flows)
 }
 
 pub fn get_modules(key: &str, db: &mut DynamoDbClient) -> Result<Vec<Module>, EngineError> {
-    let object = aws_s3::get_object(db, key)?;
-    let modules: Vec<Module> = serde_json::from_str(&object).unwrap();
+    let object = match aws_s3::get_object(db, key) {
+        Ok(obj) => obj,
+        Err(_) => return Ok(vec![]), // for Backward compatibility create empty modules
+    };
+
+    let modules: Vec<Module> = match serde_json::from_str(&object) {
+        Ok(modules) => modules,
+        Err(_) => vec![],
+    };
 
     Ok(modules)
 }
