@@ -15,7 +15,15 @@ fn array_step_0() {
         r#"{"memories":[{"key":"vec", "value":[]}, {"key":"vec", "value": [42]}], "messages":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -38,7 +46,15 @@ fn array_step_1() {
     "#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -57,7 +73,15 @@ fn array_step_2() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_2", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_2",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -76,7 +100,15 @@ fn array_step_3() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_3", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_3",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -90,7 +122,15 @@ fn array_step_3() {
 fn array_step_4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_4", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_4",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -101,7 +141,15 @@ fn array_step_4() {
 fn array_step_5() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_5", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_5",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -113,7 +161,15 @@ fn array_step_5() {
 fn array_step_6() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_6", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_6",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -124,7 +180,15 @@ fn array_step_6() {
 fn array_step_7() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_7", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_7",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -135,7 +199,15 @@ fn array_step_7() {
 fn array_step_8() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_8", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_8",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -147,7 +219,15 @@ fn array_step_9() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":""}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_9", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_9",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/array.csml",
     );
 
@@ -169,6 +249,7 @@ fn array_step_10() {
             None,
             "step_10",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -191,6 +272,7 @@ fn array_step_11() {
             None,
             "step_11",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -213,6 +295,7 @@ fn array_index_of_0() {
             None,
             "array_index_of_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -235,6 +318,7 @@ fn array_index_of_1() {
             None,
             "array_index_of_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -257,6 +341,7 @@ fn array_index_of_2() {
             None,
             "array_index_of_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -279,6 +364,7 @@ fn array_find_0() {
             None,
             "array_find_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -301,6 +387,7 @@ fn array_find_1() {
             None,
             "array_find_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -324,6 +411,7 @@ fn array_find_2() {
             None,
             "array_find_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -346,6 +434,7 @@ fn array_map() {
             None,
             "array_map",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -368,6 +457,7 @@ fn array_reduce() {
             None,
             "array_reduce",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -390,6 +480,7 @@ fn array_filter() {
             None,
             "array_filter",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -413,6 +504,7 @@ fn array_map_index() {
             None,
             "array_map_index",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -435,6 +527,7 @@ fn array_filter_index() {
             None,
             "array_filter_index",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );
@@ -457,6 +550,7 @@ fn array_reduce_index() {
             None,
             "array_reduce_index",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/array.csml",
     );

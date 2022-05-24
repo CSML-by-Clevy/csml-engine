@@ -21,6 +21,7 @@ fn ok_regex_0() {
             None,
             "regex_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -43,6 +44,7 @@ fn ok_regex_1() {
             None,
             "regex_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -65,6 +67,7 @@ fn ok_regex_2() {
             None,
             "regex_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -86,6 +89,7 @@ fn ok_regex_3() {
             None,
             "regex_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -104,6 +108,7 @@ fn ok_regex_4() {
             None,
             "regex_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -123,6 +128,7 @@ fn ok_regex_5() {
             None,
             "regex_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -145,6 +151,7 @@ fn ok_regex_6() {
             None,
             "regex_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -167,6 +174,7 @@ fn ok_regex_7() {
             None,
             "regex_7",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );
@@ -189,6 +197,7 @@ fn ok_regex_8() {
             None,
             "regex_8",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/regex.csml",
     );

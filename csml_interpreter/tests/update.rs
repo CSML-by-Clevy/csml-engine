@@ -25,7 +25,15 @@ fn ok_update_step1() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/update.csml",
     );
 
@@ -40,7 +48,15 @@ fn ok_update_step2() {
     let data = r#"{"messages":[ {"content": [{"test": 1}, 2, 3, 4, 5], "content_type":"array"}, {"content": [1, 2, 3, 4, 5], "content_type":"array"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step2", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step2",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/update.csml",
     );
 
@@ -55,7 +71,15 @@ fn ok_update_step3() {
     let data = r#"{"messages":[ {"content": [1], "content_type":"array"}, {"content": [2], "content_type":"array"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step3", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step3",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/update.csml",
     );
 
@@ -70,7 +94,15 @@ fn ok_update_step4() {
     let data = r#"{"messages":[ {"content": [1], "content_type":"array"}, {"content": [1, 2], "content_type":"array"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step4", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step4",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/update.csml",
     );
 
@@ -85,7 +117,15 @@ fn ok_update_step5() {
     let data = r#"{"messages":[ {"content": [1, 2], "content_type":"array"}, {"content": [1], "content_type":"array"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step5", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step5",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/update.csml",
     );
 

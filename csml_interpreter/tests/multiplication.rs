@@ -13,7 +13,15 @@ fn ok_multiplication() {
     let data = r#"{"messages":[ {"content":{"text":"8"},"content_type":"text"}],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
 
@@ -38,6 +46,7 @@ fn multiplication_array_step_0() {
             None,
             "multiplication_array_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -70,6 +79,7 @@ fn multiplication_array_step_1() {
             None,
             "multiplication_array_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -102,6 +112,7 @@ fn multiplication_array_step_2() {
             None,
             "multiplication_array_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -134,6 +145,7 @@ fn multiplication_array_step_3() {
             None,
             "multiplication_array_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -166,6 +178,7 @@ fn multiplication_array_step_4() {
             None,
             "multiplication_array_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -198,6 +211,7 @@ fn multiplication_array_step_5() {
             None,
             "multiplication_array_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -230,6 +244,7 @@ fn multiplication_array_step_6() {
             None,
             "multiplication_array_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -266,6 +281,7 @@ fn multiplication_boolean_step_0() {
             None,
             "multiplication_boolean_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -298,6 +314,7 @@ fn multiplication_boolean_step_1() {
             None,
             "multiplication_boolean_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -330,6 +347,7 @@ fn multiplication_boolean_step_2() {
             None,
             "multiplication_boolean_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -362,6 +380,7 @@ fn multiplication_boolean_step_3() {
             None,
             "multiplication_boolean_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -394,6 +413,7 @@ fn multiplication_boolean_step_4() {
             None,
             "multiplication_boolean_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -426,6 +446,7 @@ fn multiplication_boolean_step_5() {
             None,
             "multiplication_boolean_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -458,6 +479,7 @@ fn multiplication_boolean_step_6() {
             None,
             "multiplication_boolean_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -494,6 +516,7 @@ fn multiplication_float_step_0() {
             None,
             "multiplication_float_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -526,6 +549,7 @@ fn multiplication_float_step_1() {
             None,
             "multiplication_float_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -564,6 +588,7 @@ fn multiplication_float_step_2() {
             None,
             "multiplication_float_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -591,6 +616,7 @@ fn multiplication_float_step_3() {
             None,
             "multiplication_float_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -612,6 +638,7 @@ fn multiplication_float_step_4() {
             None,
             "multiplication_float_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -644,6 +671,7 @@ fn multiplication_float_step_5() {
             None,
             "multiplication_float_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -682,6 +710,7 @@ fn multiplication_float_step_6() {
             None,
             "multiplication_float_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -707,6 +736,7 @@ fn multiplication_int_step_0() {
             None,
             "multiplication_int_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -739,6 +769,7 @@ fn multiplication_int_step_1() {
             None,
             "multiplication_int_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -777,6 +808,7 @@ fn multiplication_int_step_2() {
             None,
             "multiplication_int_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -804,6 +836,7 @@ fn multiplication_int_step_3() {
             None,
             "multiplication_int_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -825,6 +858,7 @@ fn multiplication_int_step_4() {
             None,
             "multiplication_int_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -857,6 +891,7 @@ fn multiplication_int_step_5() {
             None,
             "multiplication_int_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -895,6 +930,7 @@ fn multiplication_int_step_6() {
             None,
             "multiplication_int_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -920,6 +956,7 @@ fn multiplication_null_step_0() {
             None,
             "multiplication_null_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -952,6 +989,7 @@ fn multiplication_null_step_1() {
             None,
             "multiplication_null_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -984,6 +1022,7 @@ fn multiplication_null_step_2() {
             None,
             "multiplication_null_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1016,6 +1055,7 @@ fn multiplication_null_step_3() {
             None,
             "multiplication_null_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1048,6 +1088,7 @@ fn multiplication_null_step_4() {
             None,
             "multiplication_null_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1080,6 +1121,7 @@ fn multiplication_null_step_5() {
             None,
             "multiplication_null_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1112,6 +1154,7 @@ fn multiplication_null_step_6() {
             None,
             "multiplication_null_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1148,6 +1191,7 @@ fn multiplication_object_step_0() {
             None,
             "multiplication_object_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1180,6 +1224,7 @@ fn multiplication_object_step_1() {
             None,
             "multiplication_object_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1212,6 +1257,7 @@ fn multiplication_object_step_2() {
             None,
             "multiplication_object_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1244,6 +1290,7 @@ fn multiplication_object_step_3() {
             None,
             "multiplication_object_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1276,6 +1323,7 @@ fn multiplication_object_step_4() {
             None,
             "multiplication_object_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1308,6 +1356,7 @@ fn multiplication_object_step_5() {
             None,
             "multiplication_object_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1340,6 +1389,7 @@ fn multiplication_object_step_6() {
             None,
             "multiplication_object_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1376,6 +1426,7 @@ fn multiplication_string_step_0() {
             None,
             "multiplication_string_step_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1408,6 +1459,7 @@ fn multiplication_string_step_1() {
             None,
             "multiplication_string_step_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1446,6 +1498,7 @@ fn multiplication_string_step_2() {
             None,
             "multiplication_string_step_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1473,6 +1526,7 @@ fn multiplication_string_step_3() {
             None,
             "multiplication_string_step_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1494,6 +1548,7 @@ fn multiplication_string_step_4() {
             None,
             "multiplication_string_step_4",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1526,6 +1581,7 @@ fn multiplication_string_step_5() {
             None,
             "multiplication_string_step_5",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );
@@ -1564,6 +1620,7 @@ fn multiplication_string_step_6() {
             None,
             "multiplication_string_step_6",
             "flow",
+            None,
         ),
         "CSML/basic_test/numerical_operation/multiplication.csml",
     );

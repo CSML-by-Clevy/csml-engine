@@ -15,7 +15,15 @@ fn ok_debug() {
         r#"{"messages":[ {"content":{ "args": ["42"] },"content_type":"debug"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/syntax/debug.csml",
     );
 
@@ -37,6 +45,7 @@ fn ok_debug_step1() {
             None,
             "debug_formater",
             "flow",
+            None,
         ),
         "CSML/basic_test/syntax/debug.csml",
     );

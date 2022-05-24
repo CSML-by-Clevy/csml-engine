@@ -15,7 +15,15 @@ fn closure_step_0() {
         r#"{"memories":[], "messages":[ {"content":{"text": "2"}, "content_type":"text"} ] }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/closures.csml",
     );
 

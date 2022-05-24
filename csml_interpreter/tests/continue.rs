@@ -14,7 +14,15 @@ fn continue_test_0() {
     let data = r#"{"memories":[], "messages":[{"content":{"text":"3"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/continue.csml",
     );
 
@@ -36,6 +44,7 @@ fn continue_test_1() {
             None,
             "fn_continue",
             "flow",
+            None,
         ),
         "CSML/basic_test/continue.csml",
     );

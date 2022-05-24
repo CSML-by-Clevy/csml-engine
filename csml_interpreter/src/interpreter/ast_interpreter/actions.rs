@@ -318,6 +318,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: None,
                     step: Some(step.to_string()),
+                    bot: None,
                 },
             );
 
@@ -352,6 +353,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: Some(flow.to_string()),
                     step: None,
+                    bot: None,
                 },
             );
 
@@ -375,7 +377,14 @@ pub fn match_actions(
 
             Ok(msg_data)
         }
-        ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
+        ObjectType::Goto(
+            GotoType::StepFlow {
+                step,
+                flow,
+                bot: None,
+            },
+            ..,
+        ) => {
             let step = match step {
                 Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
                 None => "start".to_owned(), // default value start step
@@ -399,6 +408,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: flow_opt,
                     step: Some(step.to_string()),
+                    bot: None,
                 },
             );
 
@@ -421,6 +431,57 @@ pub fn match_actions(
 
             Ok(msg_data)
         }
+
+        ObjectType::Goto(
+            GotoType::StepFlow {
+                step,
+                flow,
+                bot: Some(next_bot),
+            },
+            ..,
+        ) => {
+            let step = match step {
+                Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
+                None => "start".to_owned(), // default value start step
+            };
+            let flow = match flow {
+                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender)?,
+                None => data.context.flow.to_owned(), // default value current flow
+            };
+
+            let bot = search_goto_var_memory(&next_bot, &mut msg_data, data, sender)?;
+
+            msg_data.exit_condition = Some(ExitCondition::End);
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    step: Some(step),
+                    flow: Some(flow),
+                    bot: Some(bot), // need to send previous flow / step / bot info
+                },
+            );
+
+            // // previous flow/step
+            // match data.previous_info {
+            //     Some(ref mut previous_info) => {
+            //         previous_info.goto(data.context.flow.clone(), data.context.step.clone());
+            //     }
+            //     None => {
+            //         data.previous_info = Some(PreviousInfo::new(
+            //             data.context.flow.clone(),
+            //             data.context.step.clone(),
+            //         ))
+            //     }
+            // }
+
+            // current flow/step
+            // data.context.flow = flow.to_string();
+            // data.context.step = step.to_string();
+
+            Ok(msg_data)
+        }
+
         ObjectType::Previous(previous_type, _) => {
             let flow_opt;
             let mut step_opt = None;
@@ -466,6 +527,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: flow_opt,
                     step: step_opt,
+                    bot: None,
                 },
             );
 
