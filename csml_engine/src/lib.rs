@@ -37,7 +37,7 @@ use db_connectors::{
     user, BotVersion, BotVersionCreated, DbConversation,
 };
 use init::*;
-use interpreter_actions::interpret_step;
+use interpreter_actions::{interpret_step, SwitchBot};
 use utils::*;
 
 use chrono::prelude::*;
@@ -61,14 +61,14 @@ use std::{collections::HashMap, env};
  */
 pub fn start_conversation(
     request: CsmlRequest,
-    bot_opt: BotOpt,
+    mut bot_opt: BotOpt,
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     init_logger();
 
     let mut formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
 
-    let mut bot = bot_opt.search_bot(&mut db);
+    let mut bot = bot_opt.search_bot(&mut db)?;
     init_bot(&mut bot)?;
 
     let mut data = init_conversation_info(
@@ -79,7 +79,9 @@ pub fn start_conversation(
         db,
     )?;
 
-    // block user event if delay variable si on and delay_time is bigger than current time
+    check_for_hold(&mut data, &bot, &mut formatted_event)?;
+
+    /////////// block user event if delay variable si on and delay_time is bigger than current time
     if let Some(delay) = bot.no_interruption_delay {
         if let Some(delay) = state::get_state_key(&data.client, "delay", "content", &mut data.db)? {
             match (delay["delay_value"].as_i64(), delay["timestamp"].as_i64()) {
@@ -105,8 +107,6 @@ pub fn start_conversation(
     }
     //////////////////////////////////////
 
-    check_for_hold(&mut data, &bot, &mut formatted_event)?;
-
     // save event in db as message RECEIVE
     match (data.low_data, formatted_event.secure) {
         (false, true) => {
@@ -122,14 +122,65 @@ pub fn start_conversation(
         (true, _) => {}
     }
 
-    let res = interpret_step(&mut data, formatted_event.to_owned(), &bot);
+    let result = interpret_step(&mut data, formatted_event.to_owned(), &bot);
 
-    //end delay
-    if let Some(_) = bot.no_interruption_delay {
-        delete_state_key(&data.client, "delay", "content", &mut data.db)?;
+    check_switch_bot(
+        result,
+        &mut data,
+        &mut bot,
+        &mut bot_opt,
+        &mut formatted_event,
+    )
+}
+
+fn check_switch_bot(
+    result: Result<
+        (
+            serde_json::Map<String, serde_json::Value>,
+            Option<SwitchBot>,
+        ),
+        EngineError,
+    >,
+    data: &mut ConversationInfo,
+    bot: &mut CsmlBot,
+    bot_opt: &mut BotOpt,
+    event: &mut Event,
+) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
+    match result {
+        Ok((mut messages, Some(next_bot))) => {
+            if let Err(err) = switch_bot(data, bot, next_bot, bot_opt, event) {
+                // End no interruption delay
+                if let Some(_) = bot.no_interruption_delay {
+                    delete_state_key(&data.client, "delay", "content", &mut data.db)?;
+                }
+                return Err(err);
+            };
+
+            let result = interpret_step(data, event.clone(), &bot);
+
+            let mut new_messages = check_switch_bot(result, data, bot, bot_opt, event)?;
+
+            messages.append(&mut new_messages);
+
+            Ok(messages)
+        }
+        Ok((messages, None)) => {
+            // End no interruption delay
+            if let Some(_) = bot.no_interruption_delay {
+                delete_state_key(&data.client, "delay", "content", &mut data.db)?;
+            }
+
+            Ok(messages)
+        }
+        Err(err) => {
+            // End no interruption delay
+            if let Some(_) = bot.no_interruption_delay {
+                delete_state_key(&data.client, "delay", "content", &mut data.db)?;
+            }
+
+            Err(err)
+        }
     }
-
-    res
 }
 
 /**

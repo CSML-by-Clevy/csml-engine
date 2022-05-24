@@ -198,6 +198,7 @@ pub enum GotoType {
     StepFlow {
         step: Option<GotoValueType>,
         flow: Option<GotoValueType>,
+        bot: Option<GotoValueType>,
     },
 }
 
@@ -211,7 +212,6 @@ pub enum DoType {
 pub struct Function {
     pub name: String,
     pub interval: Interval,
-    // TODO: update to Vec<Expr>
     pub args: Box<Expr>,
 }
 

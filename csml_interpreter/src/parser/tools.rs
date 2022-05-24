@@ -123,10 +123,9 @@ pub fn get_string<'a, E>(s: Span<'a>) -> IResult<Span<'a>, String, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
-    let (rest, string) = take_while1(|c: char| c == '_' || c == '\\' || c.is_alphanumeric())(s)?;
-    // let (rest, string) = take_till1(|c: char| c != UNDERSCORE && !c.is_alphanumeric())(s)?;
+    let (rest, string) =
+        take_while1(|c: char| c == '-' || c == '_' || c == '\\' || c.is_alphanumeric())(s)?;
 
-    // TODO: see if return can be &str ?
     Ok((rest, (*string.fragment()).to_string()))
 }
 

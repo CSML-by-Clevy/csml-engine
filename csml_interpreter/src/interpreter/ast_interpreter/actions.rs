@@ -360,6 +360,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: None,
                     step: Some(data.context.step.clone()),
+                    bot: None,
                 },
             );
 
@@ -379,6 +380,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: Some(flow.to_string()),
                     step: None,
+                    bot: None,
                 },
             );
 
@@ -402,7 +404,14 @@ pub fn match_actions(
 
             Ok(msg_data)
         }
-        ObjectType::Goto(GotoType::StepFlow { step, flow }, interval) => {
+        ObjectType::Goto(
+            GotoType::StepFlow {
+                step,
+                flow,
+                bot: None,
+            },
+            interval,
+        ) => {
             let step = match step {
                 Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
                 None => "start".to_owned(), // default value start step
@@ -453,11 +462,46 @@ pub fn match_actions(
                 MSG::Next {
                     flow: flow_opt,
                     step: Some(data.context.step.clone()),
+                    bot: None,
                 },
             );
 
             Ok(msg_data)
         }
+
+        ObjectType::Goto(
+            GotoType::StepFlow {
+                step,
+                flow,
+                bot: Some(next_bot),
+            },
+            ..,
+        ) => {
+            let step = match step {
+                Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
+                None => "start".to_owned(), // default value start step
+            };
+            let flow = match flow {
+                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender)?,
+                None => data.context.flow.to_owned(), // default value current flow
+            };
+
+            let bot = search_goto_var_memory(&next_bot, &mut msg_data, data, sender)?;
+
+            msg_data.exit_condition = Some(ExitCondition::End);
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    step: Some(ContextStepInfo::UnknownFlow(step)),
+                    flow: Some(flow),
+                    bot: Some(bot), // need to send previous flow / step / bot info
+                },
+            );
+
+            Ok(msg_data)
+        }
+
         ObjectType::Previous(previous_type, _) => {
             let flow_opt;
             let mut step_opt = None;
@@ -503,6 +547,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: flow_opt,
                     step: step_opt,
+                    bot: None,
                 },
             );
 

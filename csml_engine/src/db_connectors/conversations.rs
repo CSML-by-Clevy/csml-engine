@@ -1,5 +1,5 @@
 #[cfg(feature = "dynamo")]
-use crate::db_connectors::{is_dynamodb, dynamodb_connector};
+use crate::db_connectors::{dynamodb_connector, is_dynamodb};
 #[cfg(feature = "mongo")]
 use crate::db_connectors::{is_mongodb, mongodb_connector};
 #[cfg(feature = "postgresql")]
@@ -7,12 +7,11 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 #[cfg(feature = "sqlite")]
 use crate::db_connectors::{is_sqlite, sqlite_connector};
 
+use csml_interpreter::data::csml_logs::{csml_logger, CsmlLog, LogLvl};
 
-use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
-
+use crate::db_connectors::{state, utils::*};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, DbConversation, EngineError};
-use crate::db_connectors::utils::*;
 
 pub fn create_conversation(
     flow_id: &str,
@@ -26,18 +25,24 @@ pub fn create_conversation(
             None,
             None,
             None,
-            format!("db call create conversation flow_id: {}, step_id:{}", flow_id, step_id)
+            format!(
+                "db call create conversation flow_id: {}, step_id:{}",
+                flow_id, step_id
+            ),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&client),
             None,
             None,
-            format!("db call create conversation flow_id: {}, step_id:{}", flow_id, step_id)
+            format!(
+                "db call create conversation flow_id: {}, step_id:{}",
+                flow_id, step_id
+            ),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -86,19 +91,22 @@ pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Resul
             None,
             None,
             None,
-            format!("db call close conversation conversation_id: {}", id)
+            format!("db call close conversation conversation_id: {}", id),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&client),
             None,
             None,
-            format!("db call close conversation conversation_id: {}", id)
+            format!("db call close conversation conversation_id: {}", id),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
+
+    // delete previous bot info at the end of the conversation
+    state::delete_state_key(&client, "bot", "previous", db)?;
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -129,22 +137,17 @@ pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Resul
 
 pub fn close_all_conversations(client: &Client, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call close all conversations")
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, format!("db call close all conversations")),
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&client),
             None,
             None,
-            format!("db call close all conversations, client: {:?}", client)
+            format!("db call close all conversations, client: {:?}", client),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -183,18 +186,18 @@ pub fn get_latest_open(
             None,
             None,
             None,
-            format!("db call get latest open conversations")
+            format!("db call get latest open conversations"),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&client),
             None,
             None,
-            format!("db call get latest open conversations")
+            format!("db call get latest open conversations"),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -234,18 +237,24 @@ pub fn update_conversation(
             None,
             None,
             None,
-            format!("db call update conversations flow_id {:?}, step_id {:?}", flow_id, step_id)
+            format!(
+                "db call update conversations flow_id {:?}, step_id {:?}",
+                flow_id, step_id
+            ),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&data.client),
             None,
             None,
-            format!("db call update conversations flow_id {:?}, step_id {:?}", flow_id, step_id)
+            format!(
+                "db call update conversations flow_id {:?}, step_id {:?}",
+                flow_id, step_id
+            ),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -308,18 +317,21 @@ pub fn get_client_conversations(
             None,
             None,
             None,
-            format!("db call get client conversations, limit: {:?}", limit)
+            format!("db call get client conversations, limit: {:?}", limit),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(&client),
             None,
             None,
-            format!("db call get client conversations limit: {:?}, pagination_key: {:?}", limit, pagination_key)
+            format!(
+                "db call get client conversations limit: {:?}, pagination_key: {:?}",
+                limit, pagination_key
+            ),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
 
     #[cfg(feature = "mongo")]
@@ -331,7 +343,7 @@ pub fn get_client_conversations(
             client,
             db,
             limit,
-            pagination_key
+            pagination_key,
         );
     }
 
@@ -344,7 +356,7 @@ pub fn get_client_conversations(
             client,
             db,
             limit,
-            pagination_key
+            pagination_key,
         );
     }
 
@@ -355,7 +367,7 @@ pub fn get_client_conversations(
             client,
             db,
             limit,
-            pagination_key
+            pagination_key,
         );
     }
 
@@ -366,7 +378,7 @@ pub fn get_client_conversations(
             client,
             db,
             limit,
-            pagination_key
+            pagination_key,
         );
     }
 

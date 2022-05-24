@@ -148,6 +148,7 @@ pub fn init_child_context(data: &Data) -> Context {
         hold: None,
         step: data.context.step.clone(),
         flow: data.context.flow.clone(),
+        previous_bot: data.context.previous_bot.clone(),
     }
 }
 

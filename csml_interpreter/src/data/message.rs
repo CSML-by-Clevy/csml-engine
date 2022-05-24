@@ -1,5 +1,6 @@
 use crate::data::message_data::MessageData;
 use crate::data::position::Position;
+use crate::data::Client;
 use crate::data::Literal;
 use crate::error_format::*;
 
@@ -42,6 +43,13 @@ impl Message {
         match action {
             MessageType::Msg(msg) => msg_data.add_message(msg),
             MessageType::Empty => msg_data,
+        }
+    }
+
+    pub fn switch_bot_message(bot_id: &str, client: &Client) -> Self {
+        Self {
+            content_type: "switch_bot".to_owned(),
+            content: json!({ "bot_id": bot_id, "client": client }),
         }
     }
 

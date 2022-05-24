@@ -21,6 +21,7 @@ fn typing_0() {
             None,
             "typing_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/typing.csml",
     );
@@ -30,11 +31,6 @@ fn typing_0() {
     }
 
     assert!(false);
-
-    // let v1: Value = message_to_json_value(msg);
-    // let v2: Value = serde_json::from_str(data).unwrap();
-
-    // assert_eq!(v1, v2)
 }
 
 #[test]
@@ -50,6 +46,7 @@ fn typing_1() {
             None,
             "typing_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/typing.csml",
     );

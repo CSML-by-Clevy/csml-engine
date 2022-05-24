@@ -25,6 +25,7 @@ fn ok_current_step() {
             None,
             "current_step",
             "flow",
+            None,
         ),
         "CSML/basic_test/context.csml",
     );
@@ -48,6 +49,7 @@ fn ok_current_flow() {
             None,
             "current_flow",
             "flow",
+            None,
         ),
         "CSML/basic_test/context.csml",
     );
@@ -71,6 +73,7 @@ fn ok_default_flow() {
             None,
             "default_flow",
             "flow",
+            None,
         ),
         "CSML/basic_test/context.csml",
     );

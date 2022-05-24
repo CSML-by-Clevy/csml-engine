@@ -3,7 +3,7 @@ use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, Context,
 };
-use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Module};
+use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Module, MultiBot};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -23,6 +23,7 @@ pub struct RunRequest {
     pub version_id: Option<String>,
     #[serde(alias = "fn_endpoint")]
     pub apps_endpoint: Option<String>,
+    pub multi_bot: Option<Vec<MultiBot>>,
     pub event: CsmlRequest,
 }
 
@@ -31,30 +32,39 @@ impl RunRequest {
         match self.clone() {
             // Bot
             RunRequest {
-                bot: Some(csml_bot),
+                bot: Some(mut csml_bot),
+                multi_bot,
                 ..
-            } => Ok(BotOpt::CsmlBot(csml_bot)),
+            } => {
+                csml_bot.multi_bot = multi_bot;
+
+                Ok(BotOpt::CsmlBot(csml_bot))
+            }
 
             // version id
             RunRequest {
                 version_id: Some(version_id),
                 bot_id: Some(bot_id),
                 apps_endpoint,
+                multi_bot,
                 ..
             } => Ok(BotOpt::Id {
                 version_id,
                 bot_id,
                 apps_endpoint,
+                multi_bot,
             }),
 
-            // bot id
+            // get bot by id will search for the last version id
             RunRequest {
                 bot_id: Some(bot_id),
                 apps_endpoint,
+                multi_bot,
                 ..
             } => Ok(BotOpt::BotId {
                 bot_id,
                 apps_endpoint,
+                multi_bot,
             }),
 
             _ => Err(EngineError::Format("Invalid bot_opt format".to_owned())),
@@ -72,40 +82,59 @@ pub enum BotOpt {
         bot_id: String,
         #[serde(alias = "fn_endpoint")]
         apps_endpoint: Option<String>,
+        multi_bot: Option<Vec<MultiBot>>,
     },
     #[serde(rename = "bot_id")]
     BotId {
         bot_id: String,
         #[serde(alias = "fn_endpoint")]
         apps_endpoint: Option<String>,
+        multi_bot: Option<Vec<MultiBot>>,
     },
 }
 
 impl BotOpt {
-    pub fn search_bot(&self, db: &mut Database) -> CsmlBot {
+    pub fn search_bot(&self, db: &mut Database) -> Result<CsmlBot, EngineError> {
         match self {
-            BotOpt::CsmlBot(csml_bot) => csml_bot.to_owned(),
+            BotOpt::CsmlBot(csml_bot) => Ok(csml_bot.to_owned()),
             BotOpt::BotId {
                 bot_id,
                 apps_endpoint,
+                multi_bot,
             } => {
-                let mut bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)
-                    .unwrap()
-                    .unwrap();
-                bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
-                bot_version.bot
+                let bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)?;
+
+                match bot_version {
+                    Some(mut bot_version) => {
+                        bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
+                        bot_version.bot.multi_bot = multi_bot.to_owned();
+                        Ok(bot_version.bot)
+                    }
+                    None => Err(EngineError::Manager(format!(
+                        "bot ({}) not found in db",
+                        bot_id
+                    ))),
+                }
             }
             BotOpt::Id {
                 version_id,
                 bot_id,
                 apps_endpoint,
+                multi_bot,
             } => {
-                let mut bot_version =
-                    db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)
-                        .unwrap()
-                        .unwrap();
-                bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
-                bot_version.bot
+                let bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)?;
+
+                match bot_version {
+                    Some(mut bot_version) => {
+                        bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
+                        bot_version.bot.multi_bot = multi_bot.to_owned();
+                        Ok(bot_version.bot)
+                    }
+                    None => Err(EngineError::Manager(format!(
+                        "bot version ({}) not found in db",
+                        version_id
+                    ))),
+                }
             }
         }
     }
@@ -217,6 +246,7 @@ impl SerializeCsmlBot {
                 None => None,
             },
             modules: self.modules.to_owned(),
+            multi_bot: None,
         }
     }
 }
@@ -301,6 +331,7 @@ impl DynamoBot {
                 None => None,
             },
             modules: Some(modules),
+            multi_bot: None,
         }
     }
 }

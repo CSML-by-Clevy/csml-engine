@@ -44,6 +44,7 @@ fn ok_card() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/carousel.csml",
     );
@@ -85,7 +86,15 @@ fn ok_carousel() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/carousel.csml",
     );
 
@@ -134,6 +143,7 @@ fn ok_carousel_step1() {
             None,
             "carousel1",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/carousel.csml",
     );

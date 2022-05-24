@@ -23,7 +23,15 @@ fn string_step_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -46,7 +54,15 @@ fn string_step_1() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -71,7 +87,15 @@ fn string_step_2() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_2", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_2",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -90,7 +114,15 @@ fn string_step_3() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_3", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_3",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -113,7 +145,15 @@ fn string_step_4() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_4", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_4",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -133,7 +173,15 @@ fn string_step_5() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_5", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_5",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -152,7 +200,15 @@ fn string_step_6() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_6", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_6",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -176,7 +232,15 @@ fn string_step_7() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_7", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_7",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -195,7 +259,15 @@ fn string_step_8() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_8", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_8",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -215,7 +287,15 @@ fn string_step_9() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_9", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_9",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/string.csml",
     );
 
@@ -241,6 +321,7 @@ fn string_step_10() {
             None,
             "step_10",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -268,6 +349,7 @@ fn string_step_11() {
             None,
             "step_11",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -294,6 +376,7 @@ fn string_step_12_slice() {
             None,
             "step_12_slice",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -320,6 +403,7 @@ fn string_step_13_to_string() {
             None,
             "step_13_to_string",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -346,6 +430,7 @@ fn string_step_14_to_string() {
             None,
             "step_14_to_string",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -372,6 +457,7 @@ fn string_step_15_xml() {
             None,
             "step_15_xml",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -398,6 +484,7 @@ fn string_step_16_yaml() {
             None,
             "step_16_yaml",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -429,6 +516,7 @@ fn string_step_17_uri() {
             None,
             "step_17_uri",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );
@@ -460,6 +548,7 @@ fn string_step_18_html_escape() {
             None,
             "step_18_html_escape",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/string.csml",
     );

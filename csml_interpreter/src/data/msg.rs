@@ -24,6 +24,7 @@ pub enum MSG {
     Next {
         flow: Option<String>,
         step: Option<ContextStepInfo>,
+        bot: Option<String>,
     },
     Error(Message),
 }

@@ -51,6 +51,12 @@ impl ContextStepInfo {
     }
 }
 
+pub struct PreviousBot {
+    pub bot: String,
+    pub flow: String,
+    pub step: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct Context {
     pub current: HashMap<String, Literal>,
@@ -59,6 +65,7 @@ pub struct Context {
     pub hold: Option<Hold>,
     pub step: ContextStepInfo,
     pub flow: String,
+    pub previous_bot: Option<PreviousBot>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +124,7 @@ impl Context {
         hold: Option<Hold>,
         step: &str,
         flow: &str,
+        previous_bot: Option<PreviousBot>,
     ) -> Self {
         Self {
             current,
@@ -125,6 +133,7 @@ impl Context {
             hold,
             step: ContextStepInfo::Normal(step.to_owned()),
             flow: flow.to_owned(),
+            previous_bot,
         }
     }
 }

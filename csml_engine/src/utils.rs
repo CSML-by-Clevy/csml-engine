@@ -204,18 +204,19 @@ pub fn messages_formatter(
 
     map.insert("messages".to_owned(), Value::Array(msgs));
     map.insert("conversation_end".to_owned(), Value::Bool(end));
-
     map.insert("request_id".to_owned(), json!(data.request_id));
+
     map.insert(
         "received_at".to_owned(),
         json!(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
     );
 
-    //tmp
     let mut map_client: Map<String, Value> = Map::new();
+
     map_client.insert("bot_id".to_owned(), json!(data.client.bot_id));
     map_client.insert("user_id".to_owned(), json!(data.client.user_id));
     map_client.insert("channel_id".to_owned(), json!(data.client.channel_id));
+
     map.insert("client".to_owned(), Value::Object(map_client));
 
     map

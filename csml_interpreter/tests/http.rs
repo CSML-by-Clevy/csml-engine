@@ -45,7 +45,15 @@ fn http_http_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "http_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "http_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/http.csml",
     );
 
@@ -91,7 +99,15 @@ fn http_get_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "get_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "get_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/http.csml",
     );
 
@@ -149,7 +165,15 @@ fn http_set_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "set_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "set_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/http.csml",
     );
 
@@ -217,6 +241,7 @@ fn http_query_0() {
             None,
             "query_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/http.csml",
     );
@@ -282,6 +307,7 @@ fn http_delete_0() {
             None,
             "delete_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/http.csml",
     );
@@ -343,7 +369,15 @@ fn http_put_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "put_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "put_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/http.csml",
     );
 
@@ -411,6 +445,7 @@ fn http_patch_0() {
             None,
             "patch_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/stdlib/http.csml",
     );
@@ -472,7 +507,15 @@ fn http_post_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "post_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "post_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/http.csml",
     );
 
@@ -503,7 +546,15 @@ fn http_auth_0() {
         ]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "auth_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "auth_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/stdlib/http.csml",
     );
 

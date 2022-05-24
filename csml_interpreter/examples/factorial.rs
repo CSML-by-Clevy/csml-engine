@@ -33,6 +33,7 @@ fn main() {
         None,
         None,
         None,
+        None,
     );
 
     // Create an Event
@@ -46,6 +47,7 @@ fn main() {
         None,
         DEFAULT_STEP_NAME,
         DEFAULT_FLOW_NAME,
+        None,
     );
 
     // Run interpreter

@@ -86,6 +86,7 @@ fn execute_step(
                     MSG::Next {
                         flow: None,
                         step: Some(ContextStepInfo::Normal("end".to_owned())),
+                        bot: None,
                     },
                 );
             }
@@ -352,7 +353,7 @@ fn get_flows(bot: &CsmlBot) -> (HashMap<String, Flow>, HashMap<String, Flow>) {
             };
 
             let extern_flows = match bot.extern_flows {
-                Some(flows) => flows,
+                Some(extern_flows) => extern_flows,
                 None => HashMap::new(),
             };
 

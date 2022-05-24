@@ -41,6 +41,7 @@ pub fn format_message(event: Event, context: Context, filepath: &str) -> Message
         None,
         None,
         None,
+        None,
     );
 
     interpret(bot, context, event, None)

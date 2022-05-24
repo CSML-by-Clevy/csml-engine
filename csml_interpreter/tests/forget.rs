@@ -23,7 +23,15 @@ fn forget_all() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), metadata, None, None, "forget_all", "flow"),
+        Context::new(
+            HashMap::new(),
+            metadata,
+            None,
+            None,
+            "forget_all",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/syntax/forget.csml",
     );
 
@@ -56,6 +64,7 @@ fn forget_single() {
             None,
             "forget_single",
             "flow",
+            None,
         ),
         "CSML/basic_test/syntax/forget.csml",
     );
@@ -80,7 +89,15 @@ fn forget_list() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), metadata, None, None, "forget_list", "flow"),
+        Context::new(
+            HashMap::new(),
+            metadata,
+            None,
+            None,
+            "forget_list",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/syntax/forget.csml",
     );
 
