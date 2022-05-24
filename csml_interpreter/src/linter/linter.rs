@@ -626,7 +626,7 @@ fn validate_scope(
                     GotoType::StepFlow {
                         step: Some(GotoValueType::Name(step)),
                         flow: Some(GotoValueType::Name(flow)),
-                        bot: _,
+                        bot: None,
                     } => {
                         register_flow_breaker(
                             step_breakers,
@@ -649,7 +649,7 @@ fn validate_scope(
                     GotoType::StepFlow {
                         step: None,
                         flow: Some(GotoValueType::Name(flow)),
-                        bot: _,
+                        bot: None,
                     } => {
                         register_flow_breaker(
                             step_breakers,
@@ -672,7 +672,7 @@ fn validate_scope(
                     GotoType::StepFlow {
                         step: Some(GotoValueType::Name(step)),
                         flow: None,
-                        bot: _,
+                        bot: None,
                     } => {
                         register_flow_breaker(
                             step_breakers,

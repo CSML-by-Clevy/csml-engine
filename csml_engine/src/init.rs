@@ -109,6 +109,13 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
         return Err(EngineError::Interpreter(format!("{:?}", err)));
     }
 
+    set_bot_ast(bot)
+}
+
+/**
+ * Initialize bot ast
+ */
+fn set_bot_ast(bot: &mut CsmlBot) -> Result<(), EngineError> {
     match validate_bot(&bot) {
         CsmlResult {
             flows: Some(flows),
@@ -275,6 +282,8 @@ pub fn switch_bot(
     };
 
     *bot = bot_opt.search_bot(&mut data.db)?;
+
+    set_bot_ast(bot)?;
 
     data.context.step = next_bot.step;
     data.context.flow = match next_bot.flow {

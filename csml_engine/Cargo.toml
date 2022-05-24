@@ -101,3 +101,5 @@ name = "command_line"
 name = "fold_bot"
 [[example]]
 name = "get_messages"
+[[example]]
+name = "multi_bot"
