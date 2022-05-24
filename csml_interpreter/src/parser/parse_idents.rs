@@ -76,6 +76,7 @@ where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
 {
     let (span, var) = get_string(s)?;
+
     let (_, ..) = validate_string(s, ASSIGNATION_RESERVED, &var)?;
 
     Ok((span, var))

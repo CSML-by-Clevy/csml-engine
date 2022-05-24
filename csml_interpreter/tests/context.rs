@@ -38,7 +38,8 @@ fn ok_current_step() {
 
 #[test]
 fn ok_current_flow() {
-    let data = r#"{"messages":[ {"content":{"text": "flow", None},"content_type":"text"} ],"memories":[]}"#;
+    let data =
+        r#"{"messages":[ {"content":{"text": "flow"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         Context::new(
@@ -61,7 +62,8 @@ fn ok_current_flow() {
 
 #[test]
 fn ok_default_flow() {
-    let data = r#"{"messages":[ {"content":{"text": "flow", None},"content_type":"text"} ],"memories":[]}"#;
+    let data =
+        r#"{"messages":[ {"content":{"text": "flow"},"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
         Context::new(

@@ -267,7 +267,7 @@ fn get_flows(bot: &CsmlBot) -> (HashMap<String, Flow>, HashMap<String, Flow>) {
             };
 
             let extern_flows = match bot.extern_flows {
-                Some(flows) => flows,
+                Some(extern_flows) => extern_flows,
                 None => HashMap::new(),
             };
 
