@@ -280,12 +280,24 @@ fn manage_switch_bot<'a>(
     let next_bot = match next_bot {
         Some(next_bot) => next_bot,
         None => {
+            let error_message = format!("Switching to Bot: ({}) is not allowed", target_bot);
+
+            send_msg_to_callback_url(
+                data,
+                vec![Message {
+                    content_type: "error".to_owned(),
+                    content: serde_json::json!(error_message.clone()),
+                }],
+                *interaction_order,
+                true,
+            );
+
             csml_logger(
                 CsmlLog::new(
                     None,
                     Some(data.context.flow.to_string()),
                     None,
-                    format!("Switching to Bot: ({}) is not allowed", target_bot),
+                    error_message,
                 ),
                 LogLvl::Error,
             );
