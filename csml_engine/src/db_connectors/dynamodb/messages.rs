@@ -1,10 +1,7 @@
 use crate::db_connectors::dynamodb::{
     get_db, DynamoDbClient, DynamoDbKey, Message, MessageDeleteInfo, MessageFromDateInfo,
 };
-use crate::{
-    encrypt::{decrypt_data, encrypt_data},
-    Client, ConversationInfo, EngineError,
-};
+use crate::{encrypt::encrypt_data, Client, ConversationInfo, EngineError};
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
@@ -97,8 +94,8 @@ fn query_messages(
     index_name: Option<String>,
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
-    projection_expression: Option<String>,
     expression_attribute_names: Option<HashMap<String, String>>,
+    projection_expression: Option<String>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Message::get_hash(client);
 
@@ -134,6 +131,7 @@ fn query_messages(
         limit: Some(limit),
         exclusive_start_key: pagination_key,
         scan_index_forward: Some(false),
+        select: Some(String::from("SPECIFIC_ATTRIBUTES")),
         projection_expression,
         ..Default::default()
     };
@@ -216,7 +214,6 @@ pub fn get_client_messages(
     limit: Option<i64>,
     pagination_key: Option<HashMap<String, AttributeValue>>,
 ) -> Result<serde_json::Value, EngineError> {
-    let mut messages = vec![];
     let limit = match limit {
         Some(limit) if limit >= 1 => limit,
         Some(_limit) => 20,
@@ -238,8 +235,8 @@ pub fn get_client_messages(
         Some(String::from("TimeIndex")),
         limit,
         pagination_key,
-        None,
         Some(expr_attr_names),
+        Some(String::from("conversation_id, id")),
     )?;
 
     // The query returns an array of items (max 10, based on the limit param above).
@@ -251,23 +248,37 @@ pub fn get_client_messages(
         Some(items) => items.clone(),
     };
 
+    let mut get_requests = vec![];
+
     for item in items {
-        let message: Message = serde_dynamodb::from_hashmap(item)?;
+        let message: MessageDeleteInfo = serde_dynamodb::from_hashmap(item)?;
 
-        let json = serde_json::json!({
-            "client": message.client,
-            "conversation_id": message.conversation_id,
-            "flow_id": message.flow_id,
-            "step_id": message.step_id,
-            "message_order": message.message_order,
-            "interaction_order": message.interaction_order,
-            "direction": message.direction,
-            "payload": decrypt_data(message.payload)?,
-            "created_at": message.created_at
-        });
+        let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+            hash: Message::get_hash(client),
+            range: Message::get_range(&message.conversation_id, &message.id),
+        })?;
 
-        messages.push(json)
+        get_requests.push(key);
     }
+
+    let request_items = [(get_table_name()?, get_requests)]
+        .iter()
+        .cloned()
+        .map(|(name, keys)| {
+            let mut attval = KeysAndAttributes::default();
+
+            attval.keys = keys;
+
+            (name, attval)
+        })
+        .collect();
+
+    let input = BatchGetItemInput {
+        request_items,
+        ..Default::default()
+    };
+
+    let messages = execute_messages_batch_get_query(db, input)?;
 
     match data.last_evaluated_key {
         Some(pagination_key) => {
@@ -352,7 +363,7 @@ pub fn get_client_messages_from_date(
         ..Default::default()
     };
 
-    let mut get_messages = execute_batch_get_query(db, input)?;
+    let mut get_messages = execute_messages_batch_get_query(db, input)?;
     messages.append(&mut get_messages);
 
     match data.last_evaluated_key {
@@ -390,8 +401,8 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
             Some(String::from("TimeIndex")),
             25,
             pagination_key,
-            Some("#conversation_id, #id".to_owned()),
             Some(expr_attr_names.clone()),
+            Some("#conversation_id, #id".to_owned()),
         )?;
 
         // The query returns an array of items (max 10, based on the limit param above).

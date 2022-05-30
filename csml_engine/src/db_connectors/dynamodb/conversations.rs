@@ -1,9 +1,9 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::dynamodb::{Conversation, ConversationDeleteInfo, DynamoDbKey};
-use crate::db_connectors::DbConversation;
-use crate::{
-    Client, EngineError,
+use crate::db_connectors::dynamodb::{
+    Conversation, ConversationDeleteInfo, ConversationRange, DynamoDbKey,
 };
+use crate::db_connectors::DbConversation;
+use crate::{Client, EngineError};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
 
@@ -131,9 +131,10 @@ fn get_all_open_conversations(
     let hash = Conversation::get_hash(client);
 
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
-    let expr_attr_names = [
+
+    let expr_attr_names: HashMap<String, String> = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
+        (String::from("#rangeKey"), "range".to_owned()),
     ]
     .iter()
     .cloned()
@@ -168,12 +169,12 @@ fn get_all_open_conversations(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        index_name: Some(String::from("TimeIndex")),
+        index_name: None,
         key_condition_expression: Some(key_cond_expr),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         limit,
-        select: Some(String::from("ALL_ATTRIBUTES")),
+        projection_expression: Some("#rangeKey".to_owned()),
         ..Default::default()
     };
 
@@ -181,19 +182,53 @@ fn get_all_open_conversations(
     let data = match db.runtime.block_on(query) {
         Ok(data) => data,
         Err(e) => {
-            return Err(EngineError::Manager(format!("get_all_open_conversations {:?}", e)))
+            return Err(EngineError::Manager(format!(
+                "get_all_open_conversations {:?}",
+                e
+            )))
         }
     };
 
-    let keys = match data.items {
-        Some(items) => items
-            .iter()
-            .map(|hm| serde_dynamodb::from_hashmap(hm.clone()).unwrap())
-            .collect(),
-        None => vec![],
+    // The query returns an array of items (max 10, based on the limit param above).
+    // If 0 item is returned it means that there is no open conversation, so simply return None
+    // , "last_key": :
+    let items = match data.items {
+        None => return Ok(vec![]),
+        Some(items) if items.len() == 0 => return Ok(vec![]),
+        Some(items) => items.clone(),
     };
 
-    Ok(keys)
+    let mut get_requests = vec![];
+
+    for item in items {
+        let conversation: ConversationRange = serde_dynamodb::from_hashmap(item)?;
+
+        let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+            hash: Conversation::get_hash(client),
+            range: conversation.range,
+        })?;
+
+        get_requests.push(key);
+    }
+
+    let request_items = [(get_table_name()?, get_requests)]
+        .iter()
+        .cloned()
+        .map(|(name, keys)| {
+            let mut attval = KeysAndAttributes::default();
+
+            attval.keys = keys;
+
+            (name, attval)
+        })
+        .collect();
+
+    let input = BatchGetItemInput {
+        request_items,
+        ..Default::default()
+    };
+
+    execute_conversations_batch_get_query(db, input)
 }
 
 pub fn close_all_conversations(
@@ -268,11 +303,8 @@ pub fn get_latest_open(
     let query = db.client.query(input);
     let data = match db.runtime.block_on(query) {
         Ok(data) => data,
-        Err(e) => {
-            return Err(EngineError::Manager(format!("get_latest_open {:?}", e)))
-        }
+        Err(e) => return Err(EngineError::Manager(format!("get_latest_open {:?}", e))),
     };
-
 
     // The query returns an array of items (max 1, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
@@ -384,12 +416,9 @@ pub fn update_conversation(
     let future = db.client.update_item(input);
     match db.runtime.block_on(future) {
         Ok(_) => Ok(()),
-        Err(e) => {
-            return Err(EngineError::Manager(format!("update_conversation {:?}", e)))
-        }
+        Err(e) => return Err(EngineError::Manager(format!("update_conversation {:?}", e))),
     }
 }
-
 
 fn query_conversation(
     client: &Client,
@@ -397,7 +426,7 @@ fn query_conversation(
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
     projection_expression: Option<String>,
-    expression_attribute_names: Option<HashMap<String, String>>
+    expression_attribute_names: Option<HashMap<String, String>>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Conversation::get_hash(client);
 
@@ -423,7 +452,7 @@ fn query_conversation(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        index_name: Some(String::from("TimeIndex")),
+        index_name: None,
         key_condition_expression: Some(
             "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_owned(),
         ),
@@ -439,15 +468,16 @@ fn query_conversation(
     let future = db.client.query(input);
     let data = match db.runtime.block_on(future) {
         Ok(data) => data,
-        Err(e) => {
-            return Err(EngineError::Manager(format!("query_conversation {:?}", e)))
-        }
+        Err(e) => return Err(EngineError::Manager(format!("query_conversation {:?}", e))),
     };
 
     Ok(data)
 }
 
-pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
+pub fn delete_user_conversations(
+    client: &Client,
+    db: &mut DynamoDbClient,
+) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
     let expr_attr_names: HashMap<String, String> = [
@@ -468,7 +498,7 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
             25,
             pagination_key,
             Some("#status, #id".to_owned()),
-            Some(expr_attr_names.clone())
+            Some(expr_attr_names.clone()),
         )?;
 
         // The query returns an array of items (max 10, based on the limit param above).
@@ -483,7 +513,8 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
         let mut write_requests = vec![];
 
         for item in items {
-            let conversation: ConversationDeleteInfo = serde_dynamodb::from_hashmap(item.to_owned())?;
+            let conversation: ConversationDeleteInfo =
+                serde_dynamodb::from_hashmap(item.to_owned())?;
 
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
                 hash: Conversation::get_hash(client),
@@ -497,9 +528,9 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
         }
 
         let request_items = [(get_table_name()?, write_requests)]
-        .iter()
-        .cloned()
-        .collect();
+            .iter()
+            .cloned()
+            .collect();
 
         let input = BatchWriteItemInput {
             request_items,
@@ -510,7 +541,7 @@ pub fn delete_user_conversations(client: &Client, db: &mut DynamoDbClient) -> Re
 
         pagination_key = data.last_evaluated_key;
         if let None = &pagination_key {
-            return Ok(())
+            return Ok(());
         }
     }
 }
@@ -557,25 +588,25 @@ pub fn get_client_conversations(
     for item in items {
         let conv: Conversation = serde_dynamodb::from_hashmap(item.to_owned())?;
 
-        conversations.push(
-            DbConversation {
-                id: conv.id.to_string(),
-                client: client.to_owned(),
-                flow_id: conv.flow_id.to_string(),
-                step_id: conv.step_id.to_string(),
-                status: conv.status.to_string(),
-                last_interaction_at: conv.last_interaction_at.to_string(),
-                updated_at: conv.updated_at.to_string(),
-                created_at: conv.created_at.to_string(),
-            }
-        )
+        conversations.push(DbConversation {
+            id: conv.id.to_string(),
+            client: client.to_owned(),
+            flow_id: conv.flow_id.to_string(),
+            step_id: conv.step_id.to_string(),
+            status: conv.status.to_string(),
+            last_interaction_at: conv.last_interaction_at.to_string(),
+            updated_at: conv.updated_at.to_string(),
+            created_at: conv.created_at.to_string(),
+        })
     }
 
     match data.last_evaluated_key {
         Some(pagination_key) => {
             let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
 
-            Ok(serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}))
+            Ok(
+                serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}),
+            )
         }
         None => Ok(serde_json::json!({ "conversations": conversations })),
     }

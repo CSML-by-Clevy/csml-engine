@@ -102,6 +102,13 @@ pub struct Bot {
     pub created_at: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BotGetKeys {
+    pub hash: String,
+    pub range: String,
+    pub version_id: String,
+}
+
 impl Bot {
     pub fn get_hash(id: &str) -> String {
         format!("bot#{}", id)
@@ -129,6 +136,11 @@ impl Bot {
             created_at: now,
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConversationRange {
+    pub range: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -283,6 +295,12 @@ struct MessageFromDateInfo {
     class: String,
     range: String,
     created_at: String,
+    hash: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct MessageInfo {
+    range: String,
     hash: String,
 }
 

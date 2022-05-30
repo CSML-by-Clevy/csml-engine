@@ -1,7 +1,7 @@
 use crate::data::{DynamoBot, DynamoBotBincode, DynamoDbClient};
 use crate::db_connectors::dynamodb::utils::*;
 use crate::db_connectors::{
-    dynamodb::{aws_s3, Bot, Class, DynamoDbKey},
+    dynamodb::{aws_s3, Bot, BotGetKeys, Class, DynamoDbKey},
     BotVersion,
 };
 use crate::EngineError;
@@ -70,7 +70,6 @@ fn query_bot_version(
     pagination_key: Option<HashMap<String, AttributeValue>>,
     db: &mut DynamoDbClient,
 ) -> Result<QueryOutput, EngineError> {
-    let hash = Bot::get_hash(bot_id);
     let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
@@ -84,7 +83,7 @@ fn query_bot_version(
         (
             String::from(":hashVal"),
             AttributeValue {
-                s: Some(hash.to_string()),
+                s: Some(Bot::get_hash(bot_id)),
                 ..Default::default()
             },
         ),
@@ -107,7 +106,8 @@ fn query_bot_version(
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(limit),
-        select: Some(String::from("ALL_ATTRIBUTES")),
+        select: Some(String::from("SPECIFIC_ATTRIBUTES")),
+        projection_expression: Some("hash, range, version_id".to_owned()),
         scan_index_forward: Some(false),
         exclusive_start_key: pagination_key,
         ..Default::default()
@@ -135,6 +135,7 @@ pub fn get_bot_versions(
     };
 
     let data = query_bot_version(bot_id, limit, pagination_key, db)?;
+    /////////
     // The query returns an array of items (max 10, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
     // , "last_key": :
@@ -144,36 +145,37 @@ pub fn get_bot_versions(
         Some(items) => items.clone(),
     };
 
-    let mut bots = vec![];
+    let mut get_requests = vec![];
 
-    for item in items.iter() {
-        let data: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
+    for item in items {
+        let bot_keys: BotGetKeys = serde_dynamodb::from_hashmap(item)?;
 
-        let csml_bot: DynamoBot = match base64::decode(&data.bot) {
-            Ok(base64decoded) => {
-                match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
-                    Ok(bot) => bot.to_bot(),
-                    Err(_) => serde_json::from_str(&data.bot).unwrap(),
-                }
-            }
-            Err(_) => serde_json::from_str(&data.bot).unwrap(),
-        };
+        let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+            hash: bot_keys.hash,
+            range: bot_keys.range,
+        })?;
 
-        let mut json = serde_json::json!({
-            "version_id": data.version_id,
-            "id": data.id,
-            "name": csml_bot.name,
-            "default_flow": csml_bot.default_flow,
-            "engine_version": data.engine_version,
-            "created_at": data.created_at
-        });
-
-        if let Some(custom_components) = csml_bot.custom_components {
-            json["custom_components"] = serde_json::json!(custom_components);
-        }
-
-        bots.push(json);
+        get_requests.push(key);
     }
+
+    let request_items = [(get_table_name()?, get_requests)]
+        .iter()
+        .cloned()
+        .map(|(name, keys)| {
+            let mut attval = KeysAndAttributes::default();
+
+            attval.keys = keys;
+
+            (name, attval)
+        })
+        .collect();
+
+    let input = BatchGetItemInput {
+        request_items,
+        ..Default::default()
+    };
+
+    let bots = execute_bot_version_batch_get_query(db, input)?;
 
     match data.last_evaluated_key {
         Some(pagination_key) => {
@@ -238,9 +240,6 @@ pub fn get_last_bot_version(
     bot_id: &str,
     db: &mut DynamoDbClient,
 ) -> Result<Option<BotVersion>, EngineError> {
-    let hash = Bot::get_hash(bot_id);
-
-    let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
         (String::from("#rangeKey"), String::from("range_time")), // time index
@@ -253,7 +252,7 @@ pub fn get_last_bot_version(
         (
             String::from(":hashVal"),
             AttributeValue {
-                s: Some(hash.to_string()),
+                s: Some(Bot::get_hash(bot_id)),
                 ..Default::default()
             },
         ),
@@ -269,15 +268,19 @@ pub fn get_last_bot_version(
     .cloned()
     .collect();
 
+    let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
+
+    // retrieve last bot version from dynamodb
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name: Some(String::from("TimeIndex")),
         key_condition_expression: Some(key_cond_expr),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
-        scan_index_forward: Some(false),
         limit: Some(1),
-        select: Some(String::from("ALL_ATTRIBUTES")),
+        select: Some(String::from("SPECIFIC_ATTRIBUTES")),
+        projection_expression: Some("hash, range".to_owned()),
+        scan_index_forward: Some(false),
         ..Default::default()
     };
 
@@ -294,32 +297,49 @@ pub fn get_last_bot_version(
 
     // The query returns an array of items (max 1, based on the limit param above).
     // If 0 item is returned it means that there is no open conversation, so simply return None
-    let item = match data.items {
+    let item_key = match data.items {
         None => return Ok(None),
         Some(items) if items.len() == 0 => return Ok(None),
         Some(items) => items[0].clone(),
     };
 
-    let bot: Bot = serde_dynamodb::from_hashmap(item)?;
-    let csml_bot: DynamoBot = match base64::decode(&bot.bot) {
-        Ok(base64decoded) => match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
-            Ok(bot) => bot.to_bot(),
-            Err(_) => serde_json::from_str(&bot.bot).unwrap(),
-        },
-        Err(_) => serde_json::from_str(&bot.bot).unwrap(),
+    let input = GetItemInput {
+        table_name: get_table_name()?,
+        key: serde_dynamodb::to_hashmap(&item_key)?,
+        ..Default::default()
     };
 
-    let key = format!("bots/{}/versions/{}/flows.json", bot_id, bot.version_id);
-    let flows = get_flows(&key, db)?;
+    let future = db.client.get_item(input);
+    let res = db.runtime.block_on(future)?;
 
-    let key = format!("bots/{}/versions/{}/modules.json", bot_id, bot.version_id);
-    let modules = get_modules(&key, db)?;
+    match res.item {
+        Some(val) => {
+            let bot: Bot = serde_dynamodb::from_hashmap(val)?;
 
-    Ok(Some(BotVersion {
-        bot: csml_bot.to_bot(flows, modules),
-        version_id: bot.version_id,
-        engine_version: env!("CARGO_PKG_VERSION").to_owned(),
-    }))
+            let csml_bot: DynamoBot = match base64::decode(&bot.bot) {
+                Ok(base64decoded) => {
+                    match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
+                        Ok(bot) => bot.to_bot(),
+                        Err(_) => serde_json::from_str(&bot.bot).unwrap(),
+                    }
+                }
+                Err(_) => serde_json::from_str(&bot.bot).unwrap(),
+            };
+
+            let key = format!("bots/{}/versions/{}/flows.json", bot_id, bot.version_id);
+            let flows = get_flows(&key, db)?;
+
+            let key = format!("bots/{}/versions/{}/modules.json", bot_id, bot.version_id);
+            let modules = get_modules(&key, db)?;
+
+            Ok(Some(BotVersion {
+                bot: csml_bot.to_bot(flows, modules),
+                version_id: bot.version_id,
+                engine_version: env!("CARGO_PKG_VERSION").to_owned(),
+            }))
+        }
+        _ => Ok(None),
+    }
 }
 
 pub fn delete_bot_version(
@@ -368,7 +388,7 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut DynamoDbClient) -> Result<(), 
 
         let mut write_requests = vec![];
         for item in items {
-            let data: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
+            let data: BotGetKeys = serde_dynamodb::from_hashmap(item.to_owned())?;
 
             let key = format!("bots/{}/versions/{}/flows.json", bot_id, data.version_id);
             aws_s3::delete_object(db, &key)?;
