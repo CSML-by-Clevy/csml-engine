@@ -65,15 +65,11 @@ pub fn start_conversation(
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     init_logger();
 
-    println!("start_conversation");
-
     let mut formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
 
     let mut bot = bot_opt.search_bot(&mut db)?;
     init_bot(&mut bot)?;
-
-    println!("search_bot");
 
     let mut data = init_conversation_info(
         get_default_flow(&bot)?.name.to_owned(),
@@ -82,8 +78,6 @@ pub fn start_conversation(
         &bot,
         db,
     )?;
-
-    println!("init_conversation_info");
 
     check_for_hold(&mut data, &bot, &mut formatted_event)?;
 

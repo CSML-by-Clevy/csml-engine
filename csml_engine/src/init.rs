@@ -50,7 +50,6 @@ pub fn init_conversation_info<'a>(
         &bot.apps_endpoint,
         &mut db,
     );
-    println!("init_context");
     let ttl = get_ttl_duration_value(Some(event));
     let low_data = get_low_data_mode_value(event);
 
