@@ -1,4 +1,13 @@
 pub mod data;
+
+mod db_connectors;
+mod encrypt;
+mod error_messages;
+mod init;
+mod interpreter_actions;
+mod send;
+mod utils;
+
 pub use csml_interpreter::{
     data::{
         ast::{Expr, Flow, InstructionScope},
@@ -11,16 +20,6 @@ pub use csml_interpreter::{
     },
     load_components, search_for_modules,
 };
-
-use serde_json::json;
-
-mod db_connectors;
-mod encrypt;
-mod error_messages;
-mod init;
-mod interpreter_actions;
-mod send;
-mod utils;
 
 #[cfg(any(feature = "postgresql", feature = "sqlite"))]
 #[macro_use]
@@ -44,6 +43,7 @@ use chrono::prelude::*;
 use csml_interpreter::data::{
     csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory,
 };
+use serde_json::json;
 use std::{collections::HashMap, env};
 
 /**
@@ -65,11 +65,15 @@ pub fn start_conversation(
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     init_logger();
 
+    println!("start_conversation");
+
     let mut formatted_event = format_event(json!(request))?;
     let mut db = init_db()?;
 
     let mut bot = bot_opt.search_bot(&mut db)?;
     init_bot(&mut bot)?;
+
+    println!("search_bot");
 
     let mut data = init_conversation_info(
         get_default_flow(&bot)?.name.to_owned(),
@@ -78,6 +82,8 @@ pub fn start_conversation(
         &bot,
         db,
     )?;
+
+    println!("init_conversation_info");
 
     check_for_hold(&mut data, &bot, &mut formatted_event)?;
 

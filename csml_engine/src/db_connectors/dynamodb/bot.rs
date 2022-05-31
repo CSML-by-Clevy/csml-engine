@@ -70,10 +70,12 @@ fn query_bot_version(
     pagination_key: Option<HashMap<String, AttributeValue>>,
     db: &mut DynamoDbClient,
 ) -> Result<QueryOutput, EngineError> {
-    let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
+    let key_cond_expr =
+        "#hashKey = :hashVal AND begins_with(#rangeTimeKey, :rangePrefix)".to_string();
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
+        (String::from("#rangeTimeKey"), String::from("range_time")),
+        (String::from("#rangeKey"), String::from("range")),
     ]
     .iter()
     .cloned()
@@ -107,7 +109,7 @@ fn query_bot_version(
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(limit),
         select: Some(String::from("SPECIFIC_ATTRIBUTES")),
-        projection_expression: Some("hash, range, version_id".to_owned()),
+        projection_expression: Some("#hashKey, #rangeKey".to_owned()),
         scan_index_forward: Some(false),
         exclusive_start_key: pagination_key,
         ..Default::default()

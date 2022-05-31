@@ -1,7 +1,5 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::dynamodb::{
-    Conversation, ConversationDeleteInfo, ConversationRange, DynamoDbKey,
-};
+use crate::db_connectors::dynamodb::{Conversation, ConversationKeys, DynamoDbKey};
 use crate::db_connectors::DbConversation;
 use crate::{Client, EngineError};
 use rusoto_dynamodb::*;
@@ -36,7 +34,6 @@ pub fn create_conversation(
  * For simplicity's sake, we first retrieve the item then must rewrite it
  * entirely. This is not great but necessary because STATUS is embedded
  * in range key (ideally, we would use a secondary index instead).
- * FIXME: This should really be improved on at some point.
  */
 pub fn close_conversation(
     id: &str,
@@ -130,11 +127,13 @@ fn get_all_open_conversations(
 ) -> Result<Vec<Conversation>, EngineError> {
     let hash = Conversation::get_hash(client);
 
-    let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
+    let key_cond_expr =
+        "#hashKey = :hashVal AND begins_with(#rangeTimeKey, :rangePrefix)".to_string();
 
     let expr_attr_names: HashMap<String, String> = [
         (String::from("#hashKey"), String::from("hash")),
         (String::from("#rangeKey"), "range".to_owned()),
+        (String::from("#rangeTimeKey"), "range_time".to_owned()),
     ]
     .iter()
     .cloned()
@@ -169,12 +168,12 @@ fn get_all_open_conversations(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        index_name: None,
+        index_name: Some("TimeIndex".to_owned()),
         key_condition_expression: Some(key_cond_expr),
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         limit,
-        projection_expression: Some("#rangeKey".to_owned()),
+        projection_expression: Some("#hashKey, #rangeKey".to_owned()),
         ..Default::default()
     };
 
@@ -201,10 +200,10 @@ fn get_all_open_conversations(
     let mut get_requests = vec![];
 
     for item in items {
-        let conversation: ConversationRange = serde_dynamodb::from_hashmap(item)?;
+        let conversation: ConversationKeys = serde_dynamodb::from_hashmap(item)?;
 
         let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
-            hash: Conversation::get_hash(client),
+            hash: conversation.hash,
             range: conversation.range,
         })?;
 
@@ -296,7 +295,7 @@ pub fn get_latest_open(
         expression_attribute_names: Some(expr_attr_names),
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(1),
-        select: Some(String::from("ALL_ATTRIBUTES")),
+        // select: Some(String::from("SPECIFIC_ATTRIBUTES")),
         ..Default::default()
     };
 
@@ -314,7 +313,20 @@ pub fn get_latest_open(
         Some(items) => items[0].clone(),
     };
 
-    let conv: Conversation = serde_dynamodb::from_hashmap(item)?;
+    let conversation: ConversationKeys = serde_dynamodb::from_hashmap(item)?;
+
+    let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+        hash: conversation.hash,
+        range: conversation.range,
+    })?;
+
+    let input = GetItemInput {
+        table_name: get_table_name()?,
+        key,
+        ..Default::default()
+    };
+
+    let conv = execute_conversation_get_query(db, input)?;
 
     Ok(Some(DbConversation {
         id: conv.id.to_string(),
@@ -426,6 +438,7 @@ fn query_conversation(
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
     projection_expression: Option<String>,
+    key_condition_expression: Option<String>,
     expression_attribute_names: Option<HashMap<String, String>>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Conversation::get_hash(client);
@@ -452,16 +465,15 @@ fn query_conversation(
 
     let input = QueryInput {
         table_name: get_table_name()?,
-        index_name: None,
-        key_condition_expression: Some(
-            "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_owned(),
-        ),
+        index_name: Some("TimeIndex".to_owned()),
+        key_condition_expression,
         expression_attribute_names,
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(limit),
         exclusive_start_key: pagination_key,
         scan_index_forward: Some(false),
         projection_expression,
+        select: Some(String::from("SPECIFIC_ATTRIBUTES")),
         ..Default::default()
     };
 
@@ -480,11 +492,13 @@ pub fn delete_user_conversations(
 ) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
+    let key_condition_expression =
+        "#hashKey = :hashVal AND begins_with(#rangeTimeKey, :rangePrefix)".to_owned();
+
     let expr_attr_names: HashMap<String, String> = [
         ("#hashKey".to_string(), "hash".to_string()),
-        ("#rangeKey".to_string(), "range_time".to_string()),
-        ("#status".to_string(), "status".to_string()),
-        ("#id".to_string(), "id".to_string()),
+        ("#rangeKey".to_string(), "range".to_string()),
+        ("#rangeTimeKey".to_string(), "range_time".to_string()),
     ]
     .iter()
     .cloned()
@@ -497,7 +511,8 @@ pub fn delete_user_conversations(
             db,
             25,
             pagination_key,
-            Some("#status, #id".to_owned()),
+            Some("#hashKey, #rangeKey".to_owned()),
+            Some(key_condition_expression.clone()),
             Some(expr_attr_names.clone()),
         )?;
 
@@ -513,12 +528,11 @@ pub fn delete_user_conversations(
         let mut write_requests = vec![];
 
         for item in items {
-            let conversation: ConversationDeleteInfo =
-                serde_dynamodb::from_hashmap(item.to_owned())?;
+            let conversation: ConversationKeys = serde_dynamodb::from_hashmap(item.to_owned())?;
 
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
-                hash: Conversation::get_hash(client),
-                range: Conversation::get_range(&conversation.status, &conversation.id),
+                hash: conversation.hash,
+                range: conversation.range,
             })?;
 
             write_requests.push(WriteRequest {
@@ -559,9 +573,13 @@ pub fn get_client_conversations(
         None => 20,
     };
 
+    let key_condition_expression =
+        "#hashKey = :hashVal AND begins_with(#rangeTimeKey, :rangePrefix)".to_owned();
+
     let expr_attr_names: HashMap<String, String> = [
         ("#hashKey".to_string(), "hash".to_string()),
-        ("#rangeKey".to_string(), "range_time".to_string()),
+        ("#rangeKey".to_string(), "range".to_string()),
+        ("#rangeTimeKey".to_string(), "range_time".to_string()),
     ]
     .iter()
     .cloned()
@@ -572,7 +590,8 @@ pub fn get_client_conversations(
         db,
         limit,
         pagination_key,
-        None,
+        Some("#hashKey, #rangeKey".to_owned()),
+        Some(key_condition_expression),
         Some(expr_attr_names.clone()),
     )?;
 
@@ -585,18 +604,48 @@ pub fn get_client_conversations(
         Some(items) => items.clone(),
     };
 
-    for item in items {
-        let conv: Conversation = serde_dynamodb::from_hashmap(item.to_owned())?;
+    let mut get_requests = vec![];
 
+    for item in items {
+        let conversation: ConversationKeys = serde_dynamodb::from_hashmap(item)?;
+
+        let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+            hash: conversation.hash,
+            range: conversation.range,
+        })?;
+
+        get_requests.push(key);
+    }
+
+    let request_items = [(get_table_name()?, get_requests)]
+        .iter()
+        .cloned()
+        .map(|(name, keys)| {
+            let mut attval = KeysAndAttributes::default();
+
+            attval.keys = keys;
+
+            (name, attval)
+        })
+        .collect();
+
+    let input = BatchGetItemInput {
+        request_items,
+        ..Default::default()
+    };
+
+    let get_conversations = execute_conversations_batch_get_query(db, input)?;
+
+    for conversation in get_conversations {
         conversations.push(DbConversation {
-            id: conv.id.to_string(),
+            id: conversation.id.to_string(),
             client: client.to_owned(),
-            flow_id: conv.flow_id.to_string(),
-            step_id: conv.step_id.to_string(),
-            status: conv.status.to_string(),
-            last_interaction_at: conv.last_interaction_at.to_string(),
-            updated_at: conv.updated_at.to_string(),
-            created_at: conv.created_at.to_string(),
+            flow_id: conversation.flow_id.to_string(),
+            step_id: conversation.step_id.to_string(),
+            status: conversation.status.to_string(),
+            last_interaction_at: conversation.last_interaction_at.to_string(),
+            updated_at: conversation.updated_at.to_string(),
+            created_at: conversation.created_at.to_string(),
         })
     }
 

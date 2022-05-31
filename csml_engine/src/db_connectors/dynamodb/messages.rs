@@ -1,7 +1,7 @@
 use crate::db_connectors::dynamodb::{
-    get_db, DynamoDbClient, DynamoDbKey, Message, MessageDeleteInfo, MessageFromDateInfo,
+    get_db, DynamoDbClient, DynamoDbKey, Message, MessageFromDateInfo, MessageKeys,
 };
-use crate::{encrypt::encrypt_data, Client, ConversationInfo, EngineError};
+use crate::{data::EngineError, encrypt::encrypt_data, Client, ConversationInfo};
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use rusoto_dynamodb::*;
 use std::collections::HashMap;
@@ -95,6 +95,7 @@ fn query_messages(
     limit: i64,
     pagination_key: Option<HashMap<String, AttributeValue>>,
     expression_attribute_names: Option<HashMap<String, String>>,
+    key_condition_expression: Option<String>,
     projection_expression: Option<String>,
 ) -> Result<QueryOutput, EngineError> {
     let hash = Message::get_hash(client);
@@ -119,13 +120,10 @@ fn query_messages(
     .cloned()
     .collect();
 
-    let key_condition_expression =
-        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned();
-
     let input = QueryInput {
         table_name: get_table_name()?,
         index_name,
-        key_condition_expression: Some(key_condition_expression),
+        key_condition_expression,
         expression_attribute_names,
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(limit),
@@ -220,9 +218,13 @@ pub fn get_client_messages(
         None => 20,
     };
 
+    let key_condition_expression =
+        "#hashKey = :hashVal and begins_with(#rangeTimeKey, :rangePrefix)".to_owned();
+
     let expr_attr_names: HashMap<String, String> = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
+        (String::from("#rangeKey"), String::from("range")),
+        (String::from("#rangeTimeKey"), String::from("range_time")),
     ]
     .iter()
     .cloned()
@@ -236,7 +238,8 @@ pub fn get_client_messages(
         limit,
         pagination_key,
         Some(expr_attr_names),
-        Some(String::from("conversation_id, id")),
+        Some(key_condition_expression),
+        Some(String::from("#rangeKey, #hashKey")),
     )?;
 
     // The query returns an array of items (max 10, based on the limit param above).
@@ -251,11 +254,11 @@ pub fn get_client_messages(
     let mut get_requests = vec![];
 
     for item in items {
-        let message: MessageDeleteInfo = serde_dynamodb::from_hashmap(item)?;
+        let message: MessageKeys = serde_dynamodb::from_hashmap(item)?;
 
         let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
-            hash: Message::get_hash(client),
-            range: Message::get_range(&message.conversation_id, &message.id),
+            hash: message.hash,
+            range: message.range,
         })?;
 
         get_requests.push(key);
@@ -379,14 +382,12 @@ pub fn get_client_messages_from_date(
 pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<(), EngineError> {
     let mut pagination_key = None;
 
+    let key_condition_expression =
+        "#hashKey = :hashVal and begins_with(#rangeKey, :rangePrefix)".to_owned();
+
     let expr_attr_names: HashMap<String, String> = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
-        (
-            String::from("#conversation_id"),
-            String::from("conversation_id"),
-        ),
-        (String::from("#id"), String::from("id")),
+        (String::from("#rangeKey"), String::from("range")),
     ]
     .iter()
     .cloned()
@@ -398,11 +399,12 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
             client,
             db,
             String::from("message#"),
-            Some(String::from("TimeIndex")),
+            None,
             25,
             pagination_key,
             Some(expr_attr_names.clone()),
-            Some("#conversation_id, #id".to_owned()),
+            Some(key_condition_expression.clone()),
+            Some("#hashKey, #rangeKey".to_owned()),
         )?;
 
         // The query returns an array of items (max 10, based on the limit param above).
@@ -417,11 +419,11 @@ pub fn delete_user_messages(client: &Client, db: &mut DynamoDbClient) -> Result<
         let mut write_requests = vec![];
 
         for item in items {
-            let message: MessageDeleteInfo = serde_dynamodb::from_hashmap(item)?;
+            let message: MessageKeys = serde_dynamodb::from_hashmap(item)?;
 
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
-                hash: Message::get_hash(client),
-                range: Message::get_range(&message.conversation_id, &message.id),
+                hash: message.hash,
+                range: message.range,
             })?;
 
             write_requests.push(WriteRequest {
