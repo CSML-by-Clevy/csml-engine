@@ -7,29 +7,18 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 #[cfg(feature = "sqlite")]
 use crate::db_connectors::{is_sqlite, sqlite_connector};
 
-
-use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, Database, EngineError};
+use csml_interpreter::data::csml_logs::{csml_logger, CsmlLog, LogLvl};
 
 pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call delete client")
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, format!("db call delete client")),
+        LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(
-            Some(client),
-            None,
-            None,
-            format!("db call delete client")
-        ),
-        LogLvl::Debug
+        CsmlLog::new(Some(client), None, None, format!("db call delete client")),
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -41,7 +30,7 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
         mongodb_connector::messages::delete_user_messages(client, db)?;
         mongodb_connector::state::delete_user_state(client, db)?;
 
-        return Ok(())
+        return Ok(());
     }
 
     #[cfg(feature = "dynamo")]
@@ -53,7 +42,7 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
         dynamodb_connector::conversations::delete_user_conversations(client, db)?;
         dynamodb_connector::state::delete_user_state(client, db)?;
 
-        return Ok(())
+        return Ok(());
     }
 
     #[cfg(feature = "postgresql")]
@@ -65,7 +54,7 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
         postgresql_connector::messages::delete_user_messages(client, db)?;
         postgresql_connector::state::delete_user_state(client, db)?;
 
-        return Ok(())
+        return Ok(());
     }
 
     #[cfg(feature = "sqlite")]
@@ -77,7 +66,7 @@ pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineErr
         sqlite_connector::messages::delete_user_messages(client, db)?;
         sqlite_connector::state::delete_user_state(client, db)?;
 
-        return Ok(())
+        return Ok(());
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))

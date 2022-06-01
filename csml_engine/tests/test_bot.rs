@@ -1,6 +1,6 @@
 use csml_engine::{
     data::{BotOpt, CsmlRequest},
-    start_conversation,
+    delete_client, start_conversation,
 };
 use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client};
 use serde::{Deserialize, Serialize};
@@ -172,6 +172,13 @@ fn ok_test_hold() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -224,6 +231,13 @@ fn ok_test_import() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -276,6 +290,13 @@ fn ok_test_commands() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -328,6 +349,13 @@ fn ok_test_goto_var() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -391,4 +419,11 @@ fn ok_test_memory() {
     if output_message != messages {
         panic!("\noutput {:?}\n messages {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
