@@ -265,13 +265,16 @@ fn manage_switch_bot<'a>(
 ) -> Result<InterpreterReturn, EngineError> {
     // check if we are allow to switch to 'target_bot'
 
-    let next_bot = if let Some(multi_bot) = &bot.multi_bot {
-        multi_bot.iter().find(
+    let next_bot = if let Some(multibot) = &bot.multibot {
+        multibot.iter().find(
             |&MultiBot {
                  id,
                  name,
-                 bot_version: _,
-             }| target_bot == *id || target_bot == *name,
+                 version_id: _,
+             }| match name {
+                Some(name) => target_bot == *id || target_bot == *name,
+                None => target_bot == *id,
+            },
         )
     } else {
         None
@@ -280,12 +283,24 @@ fn manage_switch_bot<'a>(
     let next_bot = match next_bot {
         Some(next_bot) => next_bot,
         None => {
+            let error_message = format!("Switching to Bot: ({}) is not allowed", target_bot);
+
+            send_msg_to_callback_url(
+                data,
+                vec![Message {
+                    content_type: "error".to_owned(),
+                    content: serde_json::json!(error_message.clone()),
+                }],
+                *interaction_order,
+                true,
+            );
+
             csml_logger(
                 CsmlLog::new(
                     None,
                     Some(data.context.flow.to_string()),
                     None,
-                    format!("Switching to Bot: ({}) is not allowed", target_bot),
+                    error_message,
                 ),
                 LogLvl::Error,
             );
@@ -305,7 +320,7 @@ fn manage_switch_bot<'a>(
                         data.context.flow, data.context.step, bot.id
                     ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
 
             (Some(flow), step)
@@ -321,7 +336,7 @@ fn manage_switch_bot<'a>(
                         data.context.flow, data.context.step, bot.id
                     ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
 
             (Some(flow), "start".to_owned())
@@ -337,7 +352,7 @@ fn manage_switch_bot<'a>(
                         data.context.flow, data.context.step, bot.id
                     ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
 
             (None, step)
@@ -353,7 +368,7 @@ fn manage_switch_bot<'a>(
                         data.context.flow, data.context.step, bot.id
                      ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
 
             (None, "start".to_owned())
@@ -400,7 +415,7 @@ fn manage_switch_bot<'a>(
 
     Ok(InterpreterReturn::SwitchBot(SwitchBot {
         bot_id: next_bot.id.to_owned(),
-        version_id: next_bot.bot_version.to_owned(),
+        version_id: next_bot.version_id.to_owned(),
         flow,
         step,
     }))

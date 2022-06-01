@@ -88,7 +88,7 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
             "toto": "key",
         })),
         modules: None,
-        multi_bot: None,
+        multibot: None,
     };
 
     Ok(bot)
