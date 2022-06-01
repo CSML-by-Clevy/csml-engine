@@ -287,7 +287,7 @@ pub fn switch_bot(
 
     set_bot_ast(bot)?;
 
-    data.context.step = next_bot.step;
+    data.context.step = ContextStepInfo::UnknownFlow(next_bot.step);
     data.context.flow = match next_bot.flow {
         Some(flow) => flow,
         None => bot.default_flow.clone(),
@@ -300,7 +300,7 @@ pub fn switch_bot(
         Ok(flow) => (flow, data.context.step.clone()),
         Err(_) => (
             get_flow_by_id(&bot.default_flow, &bot.flows)?,
-            "start".to_owned(),
+            ContextStepInfo::Normal("start".to_owned()),
         ),
     };
 
@@ -315,7 +315,7 @@ pub fn switch_bot(
     // create new conversation for the new client
     data.conversation_id = create_conversation(
         &flow.id,
-        &step,
+        &step.get_step(),
         &data.client,
         data.ttl.clone(),
         &mut data.db,

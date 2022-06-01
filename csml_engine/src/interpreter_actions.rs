@@ -183,100 +183,6 @@ pub fn interpret_step(
                     secure,
                 });
             }
-<<<<<<< HEAD
-            MSG::Next { flow, step } => match (flow, step) {
-                (Some(flow), Some(step)) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            None,
-                            None,
-                            format!(
-                                "goto flow: {}, step: {} from: flow: {} step: {}",
-                                flow,
-                                step.get_step(),
-                                data.context.flow,
-                                data.context.step.get_step()
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
-                    update_current_context(data, &memories);
-                    goto_flow(
-                        data,
-                        &mut interaction_order,
-                        &mut current_flow,
-                        &bot,
-                        flow,
-                        step,
-                    )?
-                }
-                (Some(flow), None) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            None,
-                            None,
-                            format!(
-                                "goto flow: {}, step: start from: flow: {} step: {}",
-                                flow,
-                                data.context.flow,
-                                data.context.step.get_step()
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
-                    update_current_context(data, &memories);
-                    let step = ContextStepInfo::Normal("start".to_owned());
-                    goto_flow(
-                        data,
-                        &mut interaction_order,
-                        &mut current_flow,
-                        &bot,
-                        flow,
-                        step,
-                    )?
-                }
-                (None, Some(step)) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            None,
-                            None,
-                            format!(
-                                "goto flow: {}, step: {} from: flow: {} step: {}",
-                                data.context.flow,
-                                step.get_step(),
-                                data.context.flow,
-                                data.context.step.get_step()
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
-                    if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
-                        break;
-                    }
-                }
-                (None, None) => {
-                    csml_logger(
-                        CsmlLog::new(
-                            Some(&data.client),
-                            Some(data.context.flow.to_string()),
-                            None,
-                            format!(
-                                "goto end from: flow: {} step: {}",
-                                data.context.flow,
-                                data.context.step.get_step()
-                            ),
-                        ),
-                        LogLvl::Debug,
-                    );
-
-                    let step = ContextStepInfo::Normal("end".to_owned());
-                    if goto_step(data, &mut conversation_end, &mut interaction_order, step)? {
-                        break;
-                    }
-=======
             MSG::Next {
                 flow,
                 step,
@@ -306,7 +212,6 @@ pub fn interpret_step(
                 {
                     switch_bot = Some(s_bot);
                     break;
->>>>>>> dev
                 }
             }
 
@@ -358,7 +263,7 @@ fn manage_switch_bot<'a>(
     interaction_order: &mut i32,
     bot: &'a CsmlBot,
     flow: Option<String>,
-    step: Option<String>,
+    step: Option<ContextStepInfo>,
     target_bot: String,
 ) -> Result<InterpreterReturn, EngineError> {
     // check if we are allow to switch to 'target_bot'
@@ -393,14 +298,16 @@ fn manage_switch_bot<'a>(
 
     let (flow, step) = match (flow, step) {
         (Some(flow), Some(step)) => {
+            let step_name = step.get_step_ref();
+
             csml_logger(
                 CsmlLog::new(
                     Some(&data.client),
                     None,
                     None,
                     format!(
-                        "goto flow: {flow}, step: {step} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        "goto flow: {flow}, step: {step_name} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step.get_step(), bot.id
                     ),
                 ),
                 LogLvl::Debug,
@@ -416,23 +323,25 @@ fn manage_switch_bot<'a>(
                     None,
                     format!(
                         "goto flow: {flow}, step: start in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        data.context.flow, data.context.step.get_step(), bot.id
                     ),
                 ),
                 LogLvl::Debug,
             );
 
-            (Some(flow), "start".to_owned())
+            (Some(flow), ContextStepInfo::Normal("start".to_owned()))
         }
         (None, Some(step)) => {
+            let step_name = step.get_step_ref();
+
             csml_logger(
                 CsmlLog::new(
                     Some(&data.client),
                     None,
                     None,
                     format!(
-                        "goto flow: default_flow, step: {step} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        "goto flow: default_flow, step: {step_name} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step.get_step(), bot.id
                     ),
                 ),
                 LogLvl::Debug,
@@ -448,13 +357,13 @@ fn manage_switch_bot<'a>(
                     None,
                     format!(
                         "goto flow: default_flow step: start in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        data.context.flow, data.context.step.get_step(), bot.id
                      ),
                 ),
                 LogLvl::Debug,
             );
 
-            (None, "start".to_owned())
+            (None, ContextStepInfo::Normal("start".to_owned()))
         }
     };
 
@@ -500,7 +409,7 @@ fn manage_switch_bot<'a>(
         bot_id: next_bot.id.to_owned(),
         version_id: next_bot.bot_version.to_owned(),
         flow,
-        step,
+        step: step.get_step(),
     }))
 }
 
@@ -512,7 +421,7 @@ fn manage_internal_goto<'a>(
     bot: &'a CsmlBot,
     memories: &mut HashMap<String, Memory>,
     flow: Option<String>,
-    step: Option<String>,
+    step: Option<ContextStepInfo>,
 ) -> Result<InterpreterReturn, EngineError> {
     match (flow, step) {
         (Some(flow), Some(step)) => {
@@ -523,7 +432,10 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto flow: {}, step: {} from: flow: {} step: {}",
-                        flow, step, data.context.flow, data.context.step
+                        flow,
+                        step.get_step(),
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
@@ -539,13 +451,16 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto flow: {}, step: start from: flow: {} step: {}",
-                        flow, data.context.flow, data.context.step
+                        flow,
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
             );
             update_current_context(data, &memories);
-            let step = "start".to_owned();
+            let step = ContextStepInfo::Normal("start".to_owned());
+
             goto_flow(data, interaction_order, current_flow, &bot, flow, step)?
         }
         (None, Some(step)) => {
@@ -556,7 +471,10 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto flow: {}, step: {} from: flow: {} step: {}",
-                        data.context.flow, step, data.context.flow, data.context.step
+                        data.context.flow,
+                        step.get_step(),
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
@@ -573,13 +491,14 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto end from: flow: {} step: {}",
-                        data.context.flow, data.context.step
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
             );
 
-            let step = "end".to_owned();
+            let step = ContextStepInfo::Normal("end".to_owned());
             if goto_step(data, conversation_end, interaction_order, step)? {
                 return Ok(InterpreterReturn::End);
             }

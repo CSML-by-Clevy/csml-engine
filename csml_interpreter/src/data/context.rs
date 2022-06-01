@@ -51,6 +51,7 @@ impl ContextStepInfo {
     }
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PreviousBot {
     pub bot: String,
     pub flow: String,

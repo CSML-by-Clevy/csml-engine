@@ -1,10 +1,6 @@
 #[cfg(test)]
 mod tests {
-<<<<<<< HEAD
     use csml_interpreter::data::{context::ContextStepInfo, Message};
-=======
-    use csml_interpreter::data::Message;
->>>>>>> dev
     use std::collections::HashMap;
 
     use crate::{db_connectors::*, init_db, make_migrations, Client, Context, ConversationInfo};
