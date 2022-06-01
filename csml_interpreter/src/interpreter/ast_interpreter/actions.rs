@@ -445,8 +445,8 @@ pub fn match_actions(
                 None => "start".to_owned(), // default value start step
             };
             let flow = match flow {
-                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender)?,
-                None => data.context.flow.to_owned(), // default value current flow
+                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender).ok(),
+                None => None,
             };
 
             let bot = search_goto_var_memory(&next_bot, &mut msg_data, data, sender)?;
@@ -457,7 +457,7 @@ pub fn match_actions(
                 &sender,
                 MSG::Next {
                     step: Some(step),
-                    flow: Some(flow),
+                    flow: flow,
                     bot: Some(bot), // need to send previous flow / step / bot info
                 },
             );
