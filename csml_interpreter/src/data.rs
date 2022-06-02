@@ -39,4 +39,4 @@ pub use position::Position;
 pub use msg::MSG;
 
 // limit of steps in a single execution
-pub static STEP_LIMIT: i32 = 100;
+pub static STEP_LIMIT: usize = 100;

@@ -29,6 +29,7 @@ pub fn init_request(string: &str, metadata: Option<serde_json::Value>) -> CsmlRe
             None => json!({}),
         },
         ttl_duration: None,
+        step_limit: None,
         low_data_mode: None,
     }
 }
@@ -51,6 +52,7 @@ pub fn init_request_flow_trigger(flow_id: &str, step_id: Option<&str>) -> CsmlRe
         }),
         metadata: json!({}),
         ttl_duration: None,
+        step_limit: None,
         low_data_mode: None,
     }
 }

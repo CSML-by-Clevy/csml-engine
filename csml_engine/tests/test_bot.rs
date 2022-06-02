@@ -109,6 +109,7 @@ fn init_request(string: &str, bot_id: String, channel_id: String) -> CsmlRequest
         }),
         metadata: json!({"some": "custom-value"}),
         ttl_duration: None,
+        step_limit: None,
         low_data_mode: None,
     }
 }

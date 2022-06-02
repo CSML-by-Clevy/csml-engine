@@ -12,8 +12,6 @@ pub use csml_interpreter::{
     load_components, search_for_modules,
 };
 
-use serde_json::json;
-
 mod db_connectors;
 mod encrypt;
 mod error_messages;
@@ -65,7 +63,7 @@ pub fn start_conversation(
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     init_logger();
 
-    let mut formatted_event = format_event(json!(request))?;
+    let mut formatted_event = format_event(&request)?;
     let mut db = init_db()?;
 
     let mut bot = bot_opt.search_bot(&mut db)?;
