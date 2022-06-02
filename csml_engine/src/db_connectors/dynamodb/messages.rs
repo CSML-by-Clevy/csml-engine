@@ -22,7 +22,7 @@ fn format_messages(
             &data.client,
             &data.conversation_id,
             &data.context.flow,
-            &data.context.step,
+            &data.context.step.get_step(),
             direction,
             interaction_order,
             i as i32,

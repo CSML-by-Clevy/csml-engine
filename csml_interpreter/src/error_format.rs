@@ -29,6 +29,8 @@ pub const ERROR_ACTION_ARGUMENT: &str =
     "expecting valid argument after action keywords. Example: say value";
 pub const ERROR_IMPORT_ARGUMENT: &str =
     "'import' expecting valid function name. Example: 'import function from flow'";
+pub const ERROR_INSERT_ARGUMENT: &str =
+    "'insert' expecting valid step name. Example: 'insert step from flow'";
 pub const ERROR_BREAK: &str = "break can only be used inside loops";
 pub const ERROR_RETURN: &str = "return expects a value to return";
 pub const ERROR_LEFT_BRACE: &str = "expecting '{'";

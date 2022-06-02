@@ -35,6 +35,19 @@ enum ObjType {
 // PRIVATE FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
 
+fn check_for_function(name: &str, data: &Data) -> Option<(InstructionScope, Expr)> {
+    match data
+        .flow
+        .flow_instructions
+        .get_key_value(&InstructionScope::FunctionScope {
+            name: name.to_owned(),
+            args: Vec::new(),
+        }) {
+        Some((i, e)) => Some((i.to_owned(), e.to_owned())),
+        None => None,
+    }
+}
+
 fn get_type<'a>(name: &'a str, interval: Interval, data: &'a Data) -> ObjType {
     if data.native_component.contains_key(name) {
         return ObjType::NativeComponent;
@@ -170,19 +183,6 @@ fn search_function<'a>(
                 additional_info: Some(error_info),
             })
         }
-    }
-}
-
-fn check_for_function(name: &str, data: &Data) -> Option<(InstructionScope, Expr)> {
-    match data
-        .flow
-        .flow_instructions
-        .get_key_value(&InstructionScope::FunctionScope {
-            name: name.to_owned(),
-            args: Vec::new(),
-        }) {
-        Some((i, e)) => Some((i.to_owned(), e.to_owned())),
-        None => None,
     }
 }
 

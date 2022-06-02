@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use csml_interpreter::data::Message;
+    use csml_interpreter::data::{context::ContextStepInfo, Message};
     use std::collections::HashMap;
 
     use crate::{db_connectors::*, init_db, make_migrations, Client, Context, ConversationInfo};
@@ -19,7 +19,7 @@ mod tests {
             metadata: HashMap::new(),
             api_info: None,
             hold: None,
-            step: "start".to_owned(),
+            step: ContextStepInfo::Normal("start".to_owned()),
             flow: "Default".to_owned(),
             previous_bot: None,
         }

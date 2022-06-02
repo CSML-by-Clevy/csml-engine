@@ -2,6 +2,7 @@ use crate::db_connectors::{conversations::*, memories::*, messages::*, state::*}
 use crate::utils::*;
 use crate::{data::*, delete_client_memories};
 
+use csml_interpreter::data::context::ContextStepInfo;
 use csml_interpreter::{
     data::{
         ast::ForgetMemory, csml_bot::CsmlBot, csml_flow::CsmlFlow, csml_logs::*, Client, Event,
@@ -260,7 +261,7 @@ fn manage_switch_bot<'a>(
     interaction_order: &mut i32,
     bot: &'a CsmlBot,
     flow: Option<String>,
-    step: Option<String>,
+    step: Option<ContextStepInfo>,
     target_bot: String,
 ) -> Result<InterpreterReturn, EngineError> {
     // check if we are allow to switch to 'target_bot'
@@ -310,14 +311,16 @@ fn manage_switch_bot<'a>(
 
     let (flow, step) = match (flow, step) {
         (Some(flow), Some(step)) => {
+            let step_name = step.get_step_ref();
+
             csml_logger(
                 CsmlLog::new(
                     Some(&data.client),
                     None,
                     None,
                     format!(
-                        "goto flow: {flow}, step: {step} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        "goto flow: {flow}, step: {step_name} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step.get_step(), bot.id
                     ),
                 ),
                 LogLvl::Info,
@@ -333,23 +336,25 @@ fn manage_switch_bot<'a>(
                     None,
                     format!(
                         "goto flow: {flow}, step: start in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        data.context.flow, data.context.step.get_step(), bot.id
                     ),
                 ),
                 LogLvl::Info,
             );
 
-            (Some(flow), "start".to_owned())
+            (Some(flow), ContextStepInfo::Normal("start".to_owned()))
         }
         (None, Some(step)) => {
+            let step_name = step.get_step_ref();
+
             csml_logger(
                 CsmlLog::new(
                     Some(&data.client),
                     None,
                     None,
                     format!(
-                        "goto flow: default_flow, step: {step} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        "goto flow: default_flow, step: {step_name} in bot: {target_bot} from: flow: {} step: {} in bot: {}",
+                        data.context.flow, data.context.step.get_step(), bot.id
                     ),
                 ),
                 LogLvl::Info,
@@ -365,13 +370,13 @@ fn manage_switch_bot<'a>(
                     None,
                     format!(
                         "goto flow: default_flow step: start in bot: {target_bot} from: flow: {} step: {} in bot: {}",
-                        data.context.flow, data.context.step, bot.id
+                        data.context.flow, data.context.step.get_step(), bot.id
                      ),
                 ),
                 LogLvl::Info,
             );
 
-            (None, "start".to_owned())
+            (None, ContextStepInfo::Normal("start".to_owned()))
         }
     };
 
@@ -417,7 +422,7 @@ fn manage_switch_bot<'a>(
         bot_id: next_bot.id.to_owned(),
         version_id: next_bot.version_id.to_owned(),
         flow,
-        step,
+        step: step.get_step(),
     }))
 }
 
@@ -429,7 +434,7 @@ fn manage_internal_goto<'a>(
     bot: &'a CsmlBot,
     memories: &mut HashMap<String, Memory>,
     flow: Option<String>,
-    step: Option<String>,
+    step: Option<ContextStepInfo>,
 ) -> Result<InterpreterReturn, EngineError> {
     match (flow, step) {
         (Some(flow), Some(step)) => {
@@ -440,7 +445,10 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto flow: {}, step: {} from: flow: {} step: {}",
-                        flow, step, data.context.flow, data.context.step
+                        flow,
+                        step.get_step(),
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
@@ -456,13 +464,16 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto flow: {}, step: start from: flow: {} step: {}",
-                        flow, data.context.flow, data.context.step
+                        flow,
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
             );
             update_current_context(data, &memories);
-            let step = "start".to_owned();
+            let step = ContextStepInfo::Normal("start".to_owned());
+
             goto_flow(data, interaction_order, current_flow, &bot, flow, step)?
         }
         (None, Some(step)) => {
@@ -473,7 +484,10 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto flow: {}, step: {} from: flow: {} step: {}",
-                        data.context.flow, step, data.context.flow, data.context.step
+                        data.context.flow,
+                        step.get_step(),
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
@@ -490,13 +504,14 @@ fn manage_internal_goto<'a>(
                     None,
                     format!(
                         "goto end from: flow: {} step: {}",
-                        data.context.flow, data.context.step
+                        data.context.flow,
+                        data.context.step.get_step()
                     ),
                 ),
                 LogLvl::Debug,
             );
 
-            let step = "end".to_owned();
+            let step = ContextStepInfo::Normal("end".to_owned());
             if goto_step(data, conversation_end, interaction_order, step)? {
                 return Ok(InterpreterReturn::End);
             }
@@ -515,7 +530,7 @@ fn goto_flow<'a>(
     current_flow: &mut &'a CsmlFlow,
     bot: &'a CsmlBot,
     nextflow: String,
-    nextstep: String,
+    nextstep: ContextStepInfo,
 ) -> Result<(), EngineError> {
     *current_flow = get_flow_by_id(&nextflow, &bot.flows)?;
     data.context.flow = nextflow;
@@ -524,7 +539,7 @@ fn goto_flow<'a>(
     update_conversation(
         data,
         Some(current_flow.id.clone()),
-        Some(data.context.step.clone()),
+        Some(data.context.step.get_step()),
     )?;
 
     *interaction_order += 1;
@@ -539,9 +554,9 @@ fn goto_step<'a>(
     data: &mut ConversationInfo,
     conversation_end: &mut bool,
     interaction_order: &mut i32,
-    nextstep: String,
+    nextstep: ContextStepInfo,
 ) -> Result<bool, EngineError> {
-    if nextstep == "end" {
+    if nextstep.is_step("end") {
         *conversation_end = true;
 
         // send end of conversation
@@ -552,7 +567,7 @@ fn goto_step<'a>(
         return Ok(*conversation_end);
     } else {
         data.context.step = nextstep;
-        update_conversation(data, None, Some(data.context.step.to_owned()))?;
+        update_conversation(data, None, Some(data.context.step.get_step()))?;
     }
 
     *interaction_order += 1;
