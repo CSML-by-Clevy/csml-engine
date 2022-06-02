@@ -43,7 +43,6 @@ use chrono::prelude::*;
 use csml_interpreter::data::{
     csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory,
 };
-use serde_json::json;
 use std::{collections::HashMap, env};
 
 /**
@@ -65,7 +64,7 @@ pub fn start_conversation(
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     init_logger();
 
-    let mut formatted_event = format_event(json!(request))?;
+    let mut formatted_event = format_event(&request)?;
     let mut db = init_db()?;
 
     let mut bot = bot_opt.search_bot(&mut db)?;

@@ -35,6 +35,7 @@ fn init_request(string: &str) -> CsmlRequest {
         }),
         metadata: json!({"some": "custom-value"}),
         ttl_duration: None,
+        step_limit: None,
         low_data_mode: None,
     }
 }

@@ -51,6 +51,7 @@ fn main() {
         content: serde_json::json!({"payload":"4"}),
         ttl_duration: None,
         low_data_mode: None,
+        step_limit: None,
         secure: false,
     };
 

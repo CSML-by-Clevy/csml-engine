@@ -1,5 +1,5 @@
 use crate::{
-    data::{ConversationInfo, Database, EngineError, FlowTrigger},
+    data::{ConversationInfo, CsmlRequest, Database, EngineError, FlowTrigger},
     db_connectors::state::delete_state_key,
     send::send_to_callback_url,
     CsmlBot, CsmlFlow,
@@ -122,7 +122,10 @@ pub fn get_event_content(content_type: &str, metadata: &Value) -> Result<String,
 /**
  * Format the incoming (JSON-formatted) event into an Event struct.
  */
-pub fn format_event(json_event: serde_json::Value) -> Result<Event, EngineError> {
+pub fn format_event(request: &CsmlRequest) -> Result<Event, EngineError> {
+    let step_limit = request.step_limit;
+    let json_event = json!(request);
+
     let content_type = match json_event["payload"]["content_type"].as_str() {
         Some(content_type) => content_type.to_string(),
         None => {
@@ -141,6 +144,7 @@ pub fn format_event(json_event: serde_json::Value) -> Result<Event, EngineError>
         content,
         ttl_duration: json_event["ttl_duration"].as_i64(),
         low_data_mode: json_event["low_data_mode"].as_bool(),
+        step_limit,
         secure: json_event["payload"]["secure"].as_bool().unwrap_or(false),
     })
 }

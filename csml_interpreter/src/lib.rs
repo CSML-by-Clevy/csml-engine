@@ -42,7 +42,7 @@ fn execute_step(
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> MessageData {
     // stop execution if step_count >= STEP_LIMIT in order to avoid infinite loops
-    if *data.step_count >= STEP_LIMIT {
+    if *data.step_count >= data.step_limit {
         let msg_data = Err(gen_error_info(
             Position::new(
                 Interval::new_as_u32(0, 0, 0, None, None),
@@ -94,6 +94,14 @@ fn execute_step(
     }
 
     MessageData::error_to_message(msg_data, sender)
+}
+
+fn get_step_limit(event: &Event) -> usize {
+    match (event.step_limit, env::var("STEP_LIMIT").ok()) {
+        (Some(step_limit), _) => step_limit,
+        (None, Some(step_limit)) => step_limit.parse::<usize>().unwrap_or(STEP_LIMIT),
+        _ => STEP_LIMIT,
+    }
 }
 
 fn get_flow_ast<'a, 'b>(
@@ -443,6 +451,7 @@ pub fn interpret(
     let mut step = context.step.to_owned();
 
     let mut step_count = 0;
+    let step_limit = get_step_limit(&event);
 
     let mut step_vars = match &context.hold {
         Some(hold) => get_hashmap_from_mem(&hold.step_vars, &flow),
@@ -499,6 +508,7 @@ pub fn interpret(
             vec![],
             0,
             &mut step_count,
+            step_limit,
             step_vars,
             previous_info.clone(),
             &custom,
