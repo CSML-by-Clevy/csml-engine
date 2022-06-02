@@ -1,6 +1,6 @@
 use crate::data::{
-    ast::ForgetMemory, csml_logs::LogLvl, error_info::ErrorInfo, hold::Hold, message::Message,
-    primitive::PrimitiveNull, Literal, Memory, MessageData,
+    ast::ForgetMemory, context::ContextStepInfo, csml_logs::LogLvl, error_info::ErrorInfo,
+    hold::Hold, message::Message, primitive::PrimitiveNull, Literal, Memory, MessageData,
 };
 
 use std::sync::mpsc;
@@ -23,7 +23,8 @@ pub enum MSG {
     Hold(Hold),
     Next {
         flow: Option<String>,
-        step: Option<String>,
+        step: Option<ContextStepInfo>,
+        bot: Option<String>,
     },
     Error(Message),
 }

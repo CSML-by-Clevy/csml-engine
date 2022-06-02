@@ -41,6 +41,7 @@ fn main() {
             flow: None,
             auth: None,
         }]),
+        None,
     );
 
     // Create an Event
@@ -61,6 +62,7 @@ fn main() {
         None,
         DEFAULT_STEP_NAME,
         DEFAULT_FLOW_NAME,
+        None,
     );
 
     search_for_modules(&mut bot).unwrap();

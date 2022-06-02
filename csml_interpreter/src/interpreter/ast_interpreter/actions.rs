@@ -3,6 +3,7 @@ use crate::data::position::Position;
 use crate::data::warnings::DisplayWarnings;
 use crate::data::{
     ast::*,
+    context::ContextStepInfo,
     data::Data,
     literal::ContentType,
     message::*,
@@ -70,6 +71,23 @@ fn get_var_info<'a>(
             Position::new(interval_from_expr(e), &data.context.flow),
             ERROR_GET_VAR_INFO.to_owned(),
         )),
+    }
+}
+
+fn check_if_inserted_step<'a>(name: &str, interval: &Interval, data: &'a Data) -> Option<String> {
+    match data
+        .flow
+        .flow_instructions
+        .get_key_value(&InstructionScope::InsertStep(InsertStep {
+            name: name.to_owned(),
+            original_name: None,
+            from_flow: "".to_owned(),
+            interval: interval.clone(),
+        })) {
+        Some((InstructionScope::InsertStep(insert_step), _expr)) => {
+            Some(insert_step.from_flow.to_owned())
+        }
+        _ => None,
     }
 }
 
@@ -297,16 +315,8 @@ pub fn match_actions(
             )?;
             Ok(msg_data)
         }
-        ObjectType::Goto(GotoType::Step(step), ..) => {
+        ObjectType::Goto(GotoType::Step(step), interval) => {
             let step = search_goto_var_memory(step, &mut msg_data, data, sender)?;
-
-            MSG::send(
-                &sender,
-                MSG::Next {
-                    flow: None,
-                    step: Some(step.to_string()),
-                },
-            );
 
             // previous flow/step
             match data.previous_info {
@@ -321,8 +331,26 @@ pub fn match_actions(
                 }
             }
 
+            let insert_from_flow = check_if_inserted_step(&step, interval, &data);
+
             // current flow/step
-            data.context.step = step.to_string();
+            data.context.step = match insert_from_flow {
+                Some(from_flow) => ContextStepInfo::InsertedStep {
+                    step: step.to_string(),
+                    flow: from_flow,
+                },
+                None => ContextStepInfo::Normal(step.to_string()),
+            };
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    flow: None,
+                    step: Some(data.context.step.clone()),
+                    bot: None,
+                },
+            );
+
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
             if step == "end" {
@@ -339,6 +367,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: Some(flow.to_string()),
                     step: None,
+                    bot: None,
                 },
             );
 
@@ -355,14 +384,21 @@ pub fn match_actions(
                 }
             }
             // current flow/step
-            data.context.step = "start".to_string();
+            data.context.step = ContextStepInfo::Normal("start".to_string());
             data.context.flow = flow.to_string();
 
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
             Ok(msg_data)
         }
-        ObjectType::Goto(GotoType::StepFlow { step, flow }, ..) => {
+        ObjectType::Goto(
+            GotoType::StepFlow {
+                step,
+                flow,
+                bot: None,
+            },
+            interval,
+        ) => {
             let step = match step {
                 Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
                 None => "start".to_owned(), // default value start step
@@ -381,14 +417,6 @@ pub fn match_actions(
                 flow_opt = None;
             }
 
-            MSG::send(
-                &sender,
-                MSG::Next {
-                    flow: flow_opt,
-                    step: Some(step.to_string()),
-                },
-            );
-
             // previous flow/step
             match data.previous_info {
                 Some(ref mut previous_info) => {
@@ -404,10 +432,68 @@ pub fn match_actions(
 
             // current flow/step
             data.context.flow = flow.to_string();
-            data.context.step = step.to_string();
+
+            let insert_from_flow = check_if_inserted_step(&step, interval, &data);
+
+            // current flow/step
+            data.context.step = match insert_from_flow {
+                Some(from_flow) => ContextStepInfo::InsertedStep {
+                    step: step.to_string(),
+                    flow: from_flow,
+                },
+                None => ContextStepInfo::Normal(step.to_string()),
+            };
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    flow: flow_opt,
+                    step: Some(data.context.step.clone()),
+                    bot: None,
+                },
+            );
 
             Ok(msg_data)
         }
+
+        ObjectType::Goto(
+            GotoType::StepFlow {
+                step,
+                flow,
+                bot: Some(next_bot),
+            },
+            ..,
+        ) => {
+            let step = match step {
+                Some(step) => ContextStepInfo::UnknownFlow(search_goto_var_memory(
+                    &step,
+                    &mut msg_data,
+                    data,
+                    sender,
+                )?),
+                None => ContextStepInfo::Normal("start".to_owned()), // default value start step
+            };
+            let flow = match flow {
+                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender).ok(),
+                None => None,
+            };
+
+            let bot = search_goto_var_memory(&next_bot, &mut msg_data, data, sender)?;
+
+            msg_data.exit_condition = Some(ExitCondition::End);
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    step: Some(step),
+                    flow: flow,
+                    bot: Some(bot), // need to send previous flow / step / bot info
+                },
+            );
+
+            Ok(msg_data)
+        }
+
         ObjectType::Previous(previous_type, _) => {
             let flow_opt;
             let mut step_opt = None;
@@ -422,7 +508,7 @@ pub fn match_actions(
                         (data.context.step.clone(), data.context.flow.clone());
 
                     data.context.flow = tmp_f;
-                    data.context.step = "start".to_string();
+                    data.context.step = ContextStepInfo::Normal("start".to_string());
                 }
                 (PreviousType::Step(_interval), Some(ref mut previous_info)) => {
                     let (tmp_s, tmp_f) = previous_info.step_at_flow.clone();
@@ -440,9 +526,9 @@ pub fn match_actions(
                 }
                 (_, None) => {
                     flow_opt = None;
-                    step_opt = Some("end".to_owned());
+                    step_opt = Some(ContextStepInfo::Normal("end".to_owned()));
 
-                    data.context.step = "end".to_string();
+                    data.context.step = ContextStepInfo::Normal("end".to_string());
                 }
             }
 
@@ -453,6 +539,7 @@ pub fn match_actions(
                 MSG::Next {
                     flow: flow_opt,
                     step: step_opt,
+                    bot: None,
                 },
             );
 

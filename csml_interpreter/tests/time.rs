@@ -22,7 +22,15 @@ fn ok_time() {
         }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/time.csml",
     );
 
@@ -49,6 +57,7 @@ fn ok_time_parse_1_args() {
             None,
             "parse_1_arg",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/time.csml",
     );
@@ -76,6 +85,7 @@ fn ok_time_parse_2_args() {
             None,
             "parse_2_arg",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/time.csml",
     );
@@ -103,6 +113,7 @@ fn ok_parse_timezone() {
             None,
             "parse_timezone",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/time.csml",
     );
@@ -130,6 +141,7 @@ fn ok_with_timezone() {
             None,
             "with_timezone",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/time.csml",
     );

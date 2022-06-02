@@ -1,12 +1,9 @@
 #[cfg(test)]
 mod tests {
+    use csml_interpreter::data::{context::ContextStepInfo, Message};
     use std::collections::HashMap;
-    use csml_interpreter::data::{Message};
 
-    use crate::{
-        Client, ConversationInfo, Context,
-        init_db, db_connectors::*, make_migrations
-    };
+    use crate::{db_connectors::*, init_db, make_migrations, Client, Context, ConversationInfo};
 
     fn get_client() -> Client {
         Client {
@@ -22,15 +19,16 @@ mod tests {
             metadata: HashMap::new(),
             api_info: None,
             hold: None,
-            step: "start".to_owned(),
+            step: ContextStepInfo::Normal("start".to_owned()),
             flow: "Default".to_owned(),
+            previous_bot: None,
         }
     }
 
     fn get_conversation_info(
         messages: Vec<Message>,
         conversation_id: String,
-        db: Database
+        db: Database,
     ) -> ConversationInfo {
         ConversationInfo {
             request_id: "1234".to_owned(),
@@ -61,7 +59,8 @@ mod tests {
         let mut db = init_db().unwrap();
         user::delete_client(&client, &mut db).unwrap();
 
-        let c_id = conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
+        let c_id =
+            conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
 
         let msgs = vec![
             gen_message("1"),
@@ -70,47 +69,34 @@ mod tests {
             gen_message("4"),
         ];
 
-        let mut data = get_conversation_info(
-            vec![],
-            c_id,
-            db
+        let mut data = get_conversation_info(vec![], c_id, db);
+
+        messages::add_messages_bulk(&mut data, msgs, 0, "SEND").unwrap();
+
+        let response =
+            messages::get_client_messages(&client, &mut data.db, Some(1), None, None, None)
+                .unwrap();
+
+        let received_msgs: Vec<serde_json::Value> =
+            serde_json::from_value(response["messages"].clone()).unwrap();
+
+        assert_eq!(1, received_msgs.len());
+
+        assert_eq!(
+            "4",
+            received_msgs[0]["payload"]["content"]["text"]
+                .as_str()
+                .unwrap()
         );
-
-        messages::add_messages_bulk(
-            &mut data,
-            msgs,
-            0,
-            "SEND",
-        ).unwrap();
-
-        let response = messages::get_client_messages(
-            &client,
-            &mut data.db,
-            Some(2),
-            None,
-            None,
-            None,
-        ).unwrap();
-
-        let received_msgs: Vec<serde_json::Value> = serde_json::from_value(response["messages"].clone()).unwrap();
-
-        assert_eq!(2, received_msgs.len());
-
-        assert_eq!("4", received_msgs[0]["payload"]["content"]["text"].as_str().unwrap());
-        assert_eq!("3", received_msgs[1]["payload"]["content"]["text"].as_str().unwrap());
 
         user::delete_client(&client, &mut data.db).unwrap();
 
-        let response = messages::get_client_messages(
-            &client,
-            &mut data.db,
-            Some(2),
-            None,
-            None,
-            None,
-        ).unwrap();
+        let response =
+            messages::get_client_messages(&client, &mut data.db, Some(2), None, None, None)
+                .unwrap();
 
-        let received_msgs: Vec<serde_json::Value> = serde_json::from_value(response["messages"].clone()).unwrap();
+        let received_msgs: Vec<serde_json::Value> =
+            serde_json::from_value(response["messages"].clone()).unwrap();
         assert_eq!(0, received_msgs.len());
     }
 
@@ -127,25 +113,21 @@ mod tests {
         conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
         conversations::create_conversation("Default", "start", &client, None, &mut db).unwrap();
 
-        let response = conversations::get_client_conversations(
-            &client, &mut db,
-            Some(6),
-            None
-        ).unwrap();
+        let response =
+            conversations::get_client_conversations(&client, &mut db, Some(6), None).unwrap();
 
-        let conversations: Vec<serde_json::Value> = serde_json::from_value(response["conversations"].clone()).unwrap();
+        let conversations: Vec<serde_json::Value> =
+            serde_json::from_value(response["conversations"].clone()).unwrap();
 
         assert_eq!(conversations.len(), 3);
 
         user::delete_client(&client, &mut db).unwrap();
 
-        let response = conversations::get_client_conversations(
-            &client, &mut db,
-            Some(6),
-            None
-        ).unwrap();
+        let response =
+            conversations::get_client_conversations(&client, &mut db, Some(6), None).unwrap();
 
-        let conversations: Vec<serde_json::Value> = serde_json::from_value(response["conversations"].clone()).unwrap();
+        let conversations: Vec<serde_json::Value> =
+            serde_json::from_value(response["conversations"].clone()).unwrap();
         assert_eq!(conversations.len(), 0);
     }
 
@@ -164,7 +146,14 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
+            memories::create_client_memory(
+                &client,
+                key.to_owned(),
+                value.to_owned(),
+                None,
+                &mut db,
+            )
+            .unwrap();
         }
 
         let response = memories::internal_use_get_memories(&client, &mut db).unwrap();
@@ -200,7 +189,14 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
+            memories::create_client_memory(
+                &client,
+                key.to_owned(),
+                value.to_owned(),
+                None,
+                &mut db,
+            )
+            .unwrap();
         }
 
         let response = memories::internal_use_get_memories(&client, &mut db).unwrap();
@@ -224,9 +220,7 @@ mod tests {
 
         assert_eq!(memories.len(), 1);
 
-        let mems = vec![
-            ("memory_key".to_owned(), serde_json::json!("next")),
-        ];
+        let mems = vec![("memory_key".to_owned(), serde_json::json!("next"))];
 
         for (key, value) in mems.iter() {
             assert_eq!(memories.get(key).unwrap(), value);
@@ -249,12 +243,22 @@ mod tests {
         ];
 
         for (key, value) in mems.iter() {
-            memories::create_client_memory(&client, key.to_owned(), value.to_owned(), None, &mut db).unwrap();
+            memories::create_client_memory(
+                &client,
+                key.to_owned(),
+                value.to_owned(),
+                None,
+                &mut db,
+            )
+            .unwrap();
         }
 
         let response = memories::get_memory(&client, "my_key", &mut db).unwrap();
 
-        assert_eq!(serde_json::Value::String("next".to_owned()), response["value"]);
+        assert_eq!(
+            serde_json::Value::String("next".to_owned()),
+            response["value"]
+        );
 
         let response = memories::get_memories(&client, &mut db).unwrap();
 
@@ -267,7 +271,7 @@ mod tests {
                     }
                 }
             }
-            value => panic!("bad format => {:?}", value)
+            value => panic!("bad format => {:?}", value),
         }
     }
 }

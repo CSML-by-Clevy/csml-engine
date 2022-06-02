@@ -1,5 +1,6 @@
 use crate::data::{
     ast::{Block, Expr, IfStatement, Infix, InstructionInfo},
+    context::ContextStepInfo,
     warnings::DisplayWarnings,
     Data, Literal, MessageData, MSG,
 };
@@ -83,7 +84,11 @@ pub fn evaluate_condition(
     msg_data: &mut MessageData,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<Literal, ErrorInfo> {
-    let flow_name = &data.context.flow.clone();
+    let flow_name = if let ContextStepInfo::InsertedStep { step: _, ref flow } = data.context.step {
+        flow.clone()
+    } else {
+        data.context.flow.clone()
+    };
 
     match (expr1, expr2) {
         (Expr::InfixExpr(i1, ex1, ex2), Expr::InfixExpr(i2, exp_1, exp_2)) => evaluate_infix(

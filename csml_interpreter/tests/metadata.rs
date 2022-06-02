@@ -25,7 +25,7 @@ fn metadata() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), metadata, None, None, "start", "flow"),
+        Context::new(HashMap::new(), metadata, None, None, "start", "flow", None),
         "CSML/basic_test/metadata.csml",
     );
 
@@ -51,7 +51,7 @@ fn metadata_step1() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), metadata, None, None, "step1", "flow"),
+        Context::new(HashMap::new(), metadata, None, None, "step1", "flow", None),
         "CSML/basic_test/metadata.csml",
     );
 
@@ -77,7 +77,7 @@ fn metadata_step2() {
 
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), metadata, None, None, "step2", "flow"),
+        Context::new(HashMap::new(), metadata, None, None, "step2", "flow", None),
         "CSML/basic_test/metadata.csml",
     );
 

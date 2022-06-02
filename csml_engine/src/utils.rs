@@ -7,7 +7,12 @@ use crate::{
 
 use chrono::{prelude::Utc, SecondsFormat};
 use csml_interpreter::{
-    data::{ast::Flow, csml_logs::*, Client, Context, Event, Interval, Memory, Message},
+    data::{
+        ast::{Flow, InsertStep, InstructionScope},
+        context::ContextStepInfo,
+        csml_logs::*,
+        Client, Context, Event, Interval, Memory, Message,
+    },
     error_format::{ERROR_KEY_ALPHANUMERIC, ERROR_NUMBER_AS_KEY, ERROR_SIZE_IDENT},
     get_step,
     interpreter::json_to_literal,
@@ -199,18 +204,19 @@ pub fn messages_formatter(
 
     map.insert("messages".to_owned(), Value::Array(msgs));
     map.insert("conversation_end".to_owned(), Value::Bool(end));
-
     map.insert("request_id".to_owned(), json!(data.request_id));
+
     map.insert(
         "received_at".to_owned(),
         json!(Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)),
     );
 
-    //tmp
     let mut map_client: Map<String, Value> = Map::new();
+
     map_client.insert("bot_id".to_owned(), json!(data.client.bot_id));
     map_client.insert("user_id".to_owned(), json!(data.client.user_id));
     map_client.insert("channel_id".to_owned(), json!(data.client.channel_id));
+
     map.insert("client".to_owned(), Value::Object(map_client));
 
     map
@@ -340,24 +346,100 @@ pub fn search_flow<'a>(
 pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String, EngineError> {
     let mut hash = Md5::new();
 
-    let flow = &get_flow_by_id(&context.flow, &bot.flows)?.content;
+    let step = match &context.step {
+        ContextStepInfo::Normal(step) => {
+            let flow = &get_flow_by_id(&context.flow, &bot.flows)?.content;
 
-    let ast = match &bot.bot_ast {
-        Some(ast) => {
-            let base64decoded = base64::decode(&ast).unwrap();
-            let csml_bot: HashMap<String, Flow> = bincode::deserialize(&base64decoded[..]).unwrap();
-            match csml_bot.get(&context.flow) {
-                Some(flow) => flow.to_owned(),
-                None => csml_bot
-                    .get(&get_default_flow(&bot)?.name)
-                    .unwrap()
-                    .to_owned(),
+            let ast = match &bot.bot_ast {
+                Some(ast) => {
+                    let base64decoded = base64::decode(&ast).unwrap();
+                    let csml_bot: HashMap<String, Flow> =
+                        bincode::deserialize(&base64decoded[..]).unwrap();
+                    match csml_bot.get(&context.flow) {
+                        Some(flow) => flow.to_owned(),
+                        None => csml_bot
+                            .get(&get_default_flow(&bot)?.name)
+                            .unwrap()
+                            .to_owned(),
+                    }
+                }
+                None => return Err(EngineError::Manager(format!("not valid ast"))),
+            };
+
+            get_step(step, &flow, &ast)
+        }
+        ContextStepInfo::UnknownFlow(step) => {
+            let flow = &get_flow_by_id(&context.flow, &bot.flows)?.content;
+
+            match &bot.bot_ast {
+                Some(ast) => {
+                    let base64decoded = base64::decode(&ast).unwrap();
+                    let csml_bot: HashMap<String, Flow> =
+                        bincode::deserialize(&base64decoded[..]).unwrap();
+
+                    let default_flow = csml_bot.get(&get_default_flow(&bot)?.name).unwrap();
+
+                    match csml_bot.get(&context.flow) {
+                        Some(target_flow) => {
+                            // check if there is a inserted step with the same name as the target step
+                            let insertion_expr = target_flow.flow_instructions.get_key_value(
+                                &InstructionScope::InsertStep(InsertStep {
+                                    name: step.clone(),
+                                    original_name: None,
+                                    from_flow: "".to_owned(),
+                                    interval: Interval::default(),
+                                }),
+                            );
+
+                            // if there is a inserted step get the flow of the target step and
+                            if let Some((InstructionScope::InsertStep(insert), _)) = insertion_expr
+                            {
+                                match csml_bot.get(&insert.from_flow) {
+                                    Some(inserted_step_flow) => {
+                                        let inserted_raw_flow =
+                                            &get_flow_by_id(&insert.from_flow, &bot.flows)?.content;
+
+                                        get_step(step, &inserted_raw_flow, &inserted_step_flow)
+                                    }
+                                    None => get_step(step, &flow, &default_flow),
+                                }
+                            } else {
+                                get_step(step, &flow, &target_flow)
+                            }
+                        }
+                        None => get_step(step, &flow, &default_flow),
+                    }
+                }
+                None => return Err(EngineError::Manager(format!("not valid ast"))),
             }
         }
-        None => return Err(EngineError::Manager(format!("not valid ast"))),
+        ContextStepInfo::InsertedStep {
+            step,
+            flow: inserted_flow,
+        } => {
+            let flow = &get_flow_by_id(inserted_flow, &bot.flows)?.content;
+
+            let ast = match &bot.bot_ast {
+                Some(ast) => {
+                    let base64decoded = base64::decode(&ast).unwrap();
+                    let csml_bot: HashMap<String, Flow> =
+                        bincode::deserialize(&base64decoded[..]).unwrap();
+
+                    match csml_bot.get(inserted_flow) {
+                        Some(flow) => flow.to_owned(),
+                        None => csml_bot
+                            .get(&get_default_flow(&bot)?.name)
+                            .unwrap()
+                            .to_owned(),
+                    }
+                }
+                None => return Err(EngineError::Manager(format!("not valid ast"))),
+            };
+
+            get_step(step, &flow, &ast)
+        }
     };
 
-    let step = get_step(&context.step, &flow, &ast);
     hash.update(step.as_bytes());
 
     Ok(format!("{:x}", hash.finalize()))

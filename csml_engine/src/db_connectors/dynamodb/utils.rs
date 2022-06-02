@@ -1,8 +1,14 @@
-use crate::db_connectors::dynamodb::Message;
-use crate::{data::DynamoDbClient, encrypt::decrypt_data, Client, EngineError};
+use crate::db_connectors::dynamodb::{Bot, Conversation, Memory, Message};
+use crate::{
+    data::{DynamoBot, DynamoBotBincode, DynamoDbClient},
+    encrypt::decrypt_data,
+    Client, EngineError,
+};
+
 use rusoto_core::RusotoError;
 use rusoto_dynamodb::{
     BatchGetItemError, BatchGetItemInput, BatchWriteItemError, BatchWriteItemInput, DynamoDb,
+    GetItemError, GetItemInput,
 };
 use std::{thread, time};
 
@@ -104,7 +110,83 @@ pub fn execute_batch_write_query(
 /**
  * Batch get query wrapper with exponential backoff in case of exceeded throughput
  */
-pub fn execute_batch_get_query(
+pub fn execute_bot_version_batch_get_query(
+    db: &mut DynamoDbClient,
+    input: BatchGetItemInput,
+) -> Result<Vec<serde_json::Value>, EngineError> {
+    let mut retry_times = 1;
+
+    let mut rng = rand::thread_rng();
+    let now = time::Instant::now();
+    loop {
+        match db.runtime.block_on(db.client.batch_get_item(input.clone())) {
+            Ok(output) => {
+                let items = match output.responses {
+                    None => return Ok(vec![]),
+                    Some(items) if items.len() == 0 => return Ok(vec![]),
+                    Some(items) => items.clone(),
+                };
+                let mut bots = vec![];
+
+                for (_, item) in items {
+                    for item in item {
+                        let data: Bot = serde_dynamodb::from_hashmap(item.to_owned())?;
+
+                        let csml_bot: DynamoBot = match base64::decode(&data.bot) {
+                            Ok(base64decoded) => {
+                                match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
+                                    Ok(bot) => bot.to_bot(),
+                                    Err(_) => serde_json::from_str(&data.bot).unwrap(),
+                                }
+                            }
+                            Err(_) => serde_json::from_str(&data.bot).unwrap(),
+                        };
+
+                        let mut json = serde_json::json!({
+                            "version_id": data.version_id,
+                            "id": data.id,
+                            "name": csml_bot.name,
+                            "default_flow": csml_bot.default_flow,
+                            "engine_version": data.engine_version,
+                            "created_at": data.created_at
+                        });
+
+                        if let Some(custom_components) = csml_bot.custom_components {
+                            json["custom_components"] = serde_json::json!(custom_components);
+                        }
+
+                        bots.push(json);
+                    }
+                }
+
+                return Ok(bots);
+            }
+            // request rate is too high, reduce the frequency of requests and use exponential backoff. "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff"
+            Err(RusotoError::Service(BatchGetItemError::ProvisionedThroughputExceeded(err))) => {
+                let interval = std::cmp::min(MAX_INTERVAL_LIMIT, RETRY_BASE * 2 * retry_times);
+                let interval_jitter = rng.gen_range(0..interval);
+                let duration = time::Duration::from_millis(interval_jitter);
+
+                thread::sleep(duration);
+
+                if now.elapsed() >= time::Duration::from_millis(MAX_ELAPSED_TIME_MILLIS) {
+                    // if time elapsed reach the MAX_ELAPSED_TIME_MILLIS return error
+                    return Err(RusotoError::Service(
+                        BatchGetItemError::ProvisionedThroughputExceeded(err),
+                    )
+                    .into());
+                }
+            }
+            Err(err) => return Err(err.into()),
+        }
+        retry_times += 1;
+    }
+}
+
+/**
+ * Batch get query wrapper with exponential backoff in case of exceeded throughput
+ */
+pub fn execute_messages_batch_get_query(
     db: &mut DynamoDbClient,
     input: BatchGetItemInput,
 ) -> Result<Vec<serde_json::Value>, EngineError> {
@@ -146,6 +228,158 @@ pub fn execute_batch_get_query(
             }
             // request rate is too high, reduce the frequency of requests and use exponential backoff. "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff"
             Err(RusotoError::Service(BatchGetItemError::ProvisionedThroughputExceeded(err))) => {
+                let interval = std::cmp::min(MAX_INTERVAL_LIMIT, RETRY_BASE * 2 * retry_times);
+                let interval_jitter = rng.gen_range(0..interval);
+                let duration = time::Duration::from_millis(interval_jitter);
+
+                thread::sleep(duration);
+
+                if now.elapsed() >= time::Duration::from_millis(MAX_ELAPSED_TIME_MILLIS) {
+                    // if time elapsed reach the MAX_ELAPSED_TIME_MILLIS return error
+                    return Err(RusotoError::Service(
+                        BatchGetItemError::ProvisionedThroughputExceeded(err),
+                    )
+                    .into());
+                }
+            }
+            Err(err) => return Err(err.into()),
+        }
+        retry_times += 1;
+    }
+}
+
+/**
+ * Batch get query wrapper with exponential backoff in case of exceeded throughput
+ */
+pub fn execute_memory_batch_get_query(
+    db: &mut DynamoDbClient,
+    input: BatchGetItemInput,
+) -> Result<Vec<serde_json::Value>, EngineError> {
+    let mut retry_times = 1;
+
+    let mut rng = rand::thread_rng();
+    let now = time::Instant::now();
+    loop {
+        match db.runtime.block_on(db.client.batch_get_item(input.clone())) {
+            Ok(output) => {
+                let items = match output.responses {
+                    None => return Ok(vec![]),
+                    Some(items) if items.len() == 0 => return Ok(vec![]),
+                    Some(items) => items.clone(),
+                };
+                let mut memories = vec![];
+
+                for (_, item) in items {
+                    for item in item {
+                        let memory: Memory = serde_dynamodb::from_hashmap(item)?;
+
+                        let json = serde_json::json!({
+                            "key": memory.key,
+                            "value": decrypt_data(memory.value.unwrap())?,
+                            "created_at": memory.created_at,
+                        });
+
+                        memories.push(json)
+                    }
+                }
+
+                return Ok(memories);
+            }
+            // request rate is too high, reduce the frequency of requests and use exponential backoff. "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff"
+            Err(RusotoError::Service(BatchGetItemError::ProvisionedThroughputExceeded(err))) => {
+                let interval = std::cmp::min(MAX_INTERVAL_LIMIT, RETRY_BASE * 2 * retry_times);
+                let interval_jitter = rng.gen_range(0..interval);
+                let duration = time::Duration::from_millis(interval_jitter);
+
+                thread::sleep(duration);
+
+                if now.elapsed() >= time::Duration::from_millis(MAX_ELAPSED_TIME_MILLIS) {
+                    // if time elapsed reach the MAX_ELAPSED_TIME_MILLIS return error
+                    return Err(RusotoError::Service(
+                        BatchGetItemError::ProvisionedThroughputExceeded(err),
+                    )
+                    .into());
+                }
+            }
+            Err(err) => return Err(err.into()),
+        }
+        retry_times += 1;
+    }
+}
+
+/**
+ * Batch get query wrapper with exponential backoff in case of exceeded throughput
+ */
+pub fn execute_conversations_batch_get_query(
+    db: &mut DynamoDbClient,
+    input: BatchGetItemInput,
+) -> Result<Vec<Conversation>, EngineError> {
+    let mut retry_times = 1;
+
+    let mut rng = rand::thread_rng();
+    let now = time::Instant::now();
+    loop {
+        match db.runtime.block_on(db.client.batch_get_item(input.clone())) {
+            Ok(output) => {
+                let items = match output.responses {
+                    None => return Ok(vec![]),
+                    Some(items) if items.len() == 0 => return Ok(vec![]),
+                    Some(items) => items.clone(),
+                };
+                let mut conversations = vec![];
+
+                for (_, item) in items {
+                    for item in item {
+                        let conversation: Conversation = serde_dynamodb::from_hashmap(item)?;
+
+                        conversations.push(conversation)
+                    }
+                }
+
+                return Ok(conversations);
+            }
+            // request rate is too high, reduce the frequency of requests and use exponential backoff. "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff"
+            Err(RusotoError::Service(BatchGetItemError::ProvisionedThroughputExceeded(err))) => {
+                let interval = std::cmp::min(MAX_INTERVAL_LIMIT, RETRY_BASE * 2 * retry_times);
+                let interval_jitter = rng.gen_range(0..interval);
+                let duration = time::Duration::from_millis(interval_jitter);
+
+                thread::sleep(duration);
+
+                if now.elapsed() >= time::Duration::from_millis(MAX_ELAPSED_TIME_MILLIS) {
+                    // if time elapsed reach the MAX_ELAPSED_TIME_MILLIS return error
+                    return Err(RusotoError::Service(
+                        BatchGetItemError::ProvisionedThroughputExceeded(err),
+                    )
+                    .into());
+                }
+            }
+            Err(err) => return Err(err.into()),
+        }
+        retry_times += 1;
+    }
+}
+
+/**
+ * Batch get query wrapper with exponential backoff in case of exceeded throughput
+ */
+pub fn execute_conversation_get_query(
+    db: &mut DynamoDbClient,
+    input: GetItemInput,
+) -> Result<Conversation, EngineError> {
+    let mut retry_times = 1;
+
+    let mut rng = rand::thread_rng();
+    let now = time::Instant::now();
+    loop {
+        match db.runtime.block_on(db.client.get_item(input.clone())) {
+            Ok(item) => {
+                let conversation: Conversation = serde_dynamodb::from_hashmap(item.item.unwrap())?;
+
+                return Ok(conversation);
+            }
+            // request rate is too high, reduce the frequency of requests and use exponential backoff. "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff"
+            Err(RusotoError::Service(GetItemError::ProvisionedThroughputExceeded(err))) => {
                 let interval = std::cmp::min(MAX_INTERVAL_LIMIT, RETRY_BASE * 2 * retry_times);
                 let interval_jitter = rng.gen_range(0..interval);
                 let duration = time::Duration::from_millis(interval_jitter);

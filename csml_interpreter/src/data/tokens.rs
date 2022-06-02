@@ -62,6 +62,7 @@ pub const ELSE: &str = "else";
 
 pub const IMPORT: &str = "import";
 pub const CONST: &str = "const";
+pub const INSERT: &str = "insert";
 pub const FROM: &str = "from";
 pub const AS: &str = "as";
 pub const IN: &str = "in";
@@ -120,14 +121,14 @@ pub const TYPES: &[&str] = &[
 ];
 
 pub const RESERVED: &[&str] = &[
-    FOREACH, WHILE, IF, ELSE, IMPORT, CONST, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP, SAY, USE,
-    HOLD, GOTO, MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE, NULL,
-    BREAK, COMPONENT,
+    FOREACH, WHILE, IF, ELSE, IMPORT, CONST, INSERT, AS, IN, DO, FROM, EVENT, FLOW, FILE, STEP,
+    SAY, USE, HOLD, GOTO, MATCH, _METADATA, _MEMORY, _ENV, DEFAULT, REMEMBER, FORGET, TRUE, FALSE,
+    NULL, BREAK, COMPONENT,
 ];
 
 pub const UTILISATION_RESERVED: &[&str] = &[
-    FOREACH, WHILE, IF, ELSE, IMPORT, CONST, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO, MATCH,
-    REMEMBER, FORGET, BREAK, COMPONENT,
+    FOREACH, WHILE, IF, ELSE, IMPORT, CONST, INSERT, AS, DO, FLOW, STEP, SAY, USE, HOLD, GOTO,
+    MATCH, REMEMBER, FORGET, BREAK, COMPONENT,
 ];
 
 pub const ASSIGNATION_RESERVED: &[&str] = &[

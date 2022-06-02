@@ -13,7 +13,15 @@ use serde_json::Value;
 fn ok_v1() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "v1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "v1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/uuid.csml",
     );
 
@@ -30,7 +38,15 @@ fn ok_v1() {
 fn ok_v4() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "v4", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "v4",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/uuid.csml",
     );
 
@@ -54,6 +70,7 @@ fn ok_v4_no_arg() {
             None,
             "v4_no_arg",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/uuid.csml",
     );

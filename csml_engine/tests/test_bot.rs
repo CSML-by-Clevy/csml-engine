@@ -1,8 +1,8 @@
 use csml_engine::{
     data::{BotOpt, CsmlRequest},
-    start_conversation,
+    delete_client, start_conversation,
 };
-use csml_interpreter::data::{csml_bot::{CsmlBot}, csml_flow::CsmlFlow, Client};
+use csml_interpreter::data::{csml_bot::CsmlBot, csml_flow::CsmlFlow, Client};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs;
@@ -88,6 +88,7 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
             "toto": "key",
         })),
         modules: None,
+        multibot: None,
     };
 
     Ok(bot)
@@ -108,7 +109,7 @@ fn init_request(string: &str, bot_id: String, channel_id: String) -> CsmlRequest
         }),
         metadata: json!({"some": "custom-value"}),
         ttl_duration: None,
-        low_data_mode: None
+        low_data_mode: None,
     }
 }
 
@@ -171,6 +172,13 @@ fn ok_test_hold() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -223,6 +231,13 @@ fn ok_test_import() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -275,6 +290,13 @@ fn ok_test_commands() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -327,6 +349,13 @@ fn ok_test_goto_var() {
     if output_message != messages {
         panic!("\noutput {:?}\n message {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }
 
 #[test]
@@ -390,4 +419,11 @@ fn ok_test_memory() {
     if output_message != messages {
         panic!("\noutput {:?}\n messages {:?}", output_message, messages);
     }
+
+    delete_client(&Client {
+        user_id: "test".to_owned(),
+        bot_id: bot_id.clone(),
+        channel_id: channel_id.clone(),
+    })
+    .unwrap();
 }

@@ -6,6 +6,7 @@ use crate::data::{
 use crate::interpreter::{json_to_literal, memory_to_literal};
 
 use nom::lib::std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
 ////////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURE
@@ -17,14 +18,55 @@ pub struct ApiInfo {
     pub apps_endpoint: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ContextStepInfo {
+    Normal(String),
+    UnknownFlow(String),
+    InsertedStep { step: String, flow: String },
+}
+
+impl ContextStepInfo {
+    pub fn get_step(&self) -> String {
+        match self {
+            ContextStepInfo::Normal(step)
+            | ContextStepInfo::UnknownFlow(step)
+            | ContextStepInfo::InsertedStep { step, flow: _ } => step.to_owned(),
+        }
+    }
+
+    pub fn get_step_ref(&self) -> &str {
+        match self {
+            ContextStepInfo::Normal(step)
+            | ContextStepInfo::UnknownFlow(step)
+            | ContextStepInfo::InsertedStep { step, flow: _ } => step,
+        }
+    }
+
+    pub fn is_step(&self, cmp_step: &str) -> bool {
+        match self {
+            ContextStepInfo::Normal(step)
+            | ContextStepInfo::UnknownFlow(step)
+            | ContextStepInfo::InsertedStep { step, flow: _ } => step == cmp_step,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PreviousBot {
+    pub bot: String,
+    pub flow: String,
+    pub step: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct Context {
     pub current: HashMap<String, Literal>,
     pub metadata: HashMap<String, Literal>,
     pub api_info: Option<ApiInfo>,
     pub hold: Option<Hold>,
-    pub step: String,
+    pub step: ContextStepInfo,
     pub flow: String,
+    pub previous_bot: Option<PreviousBot>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,14 +125,16 @@ impl Context {
         hold: Option<Hold>,
         step: &str,
         flow: &str,
+        previous_bot: Option<PreviousBot>,
     ) -> Self {
         Self {
             current,
             metadata,
             api_info,
             hold,
-            step: step.to_owned(),
+            step: ContextStepInfo::Normal(step.to_owned()),
             flow: flow.to_owned(),
+            previous_bot,
         }
     }
 }

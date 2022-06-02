@@ -22,8 +22,8 @@ pub mod warnings;
 
 pub use ast::Interval;
 pub use client::Client;
-pub use context::{ApiInfo, Context};
-pub use csml_bot::{CsmlBot, Module};
+pub use context::{ApiInfo, Context, PreviousBot};
+pub use csml_bot::{CsmlBot, Module, MultiBot};
 pub use csml_flow::CsmlFlow;
 pub use csml_result::CsmlResult;
 pub use data::Data;

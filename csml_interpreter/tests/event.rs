@@ -23,7 +23,15 @@ fn event_step_0() {
             "content",
             serde_json::Value::Object(serde_json::Map::new()),
         ),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -55,7 +63,15 @@ fn event_step_1() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -79,7 +95,15 @@ fn event_step_2() {
             "content",
             serde_json::Value::Object(serde_json::Map::new()),
         ),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_2", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_2",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -103,7 +127,15 @@ fn event_step_3() {
             "content",
             serde_json::Value::Object(serde_json::Map::new()),
         ),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_3", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_3",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -131,7 +163,15 @@ fn event_step_4() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_4", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_4",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -159,7 +199,15 @@ fn event_step_5() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_5", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_5",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -184,7 +232,15 @@ fn event_step_6() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_6", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_6",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -212,7 +268,15 @@ fn event_step_7() {
 
     let msg = format_message(
         Event::new("content_type", "text", serde_json::Value::Object(map)),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_7", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_7",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -237,7 +301,15 @@ fn event_step_8() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_8", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_8",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -262,7 +334,15 @@ fn event_step_9() {
 
     let msg = format_message(
         Event::new("content_type", "content", serde_json::Value::Object(map)),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_9", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_9",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/event.csml",
     );
 
@@ -281,6 +361,7 @@ fn event_types() {
         None,
         "event_types",
         "flow",
+        None,
     );
 
     let ok_types = ["text", "payload"];

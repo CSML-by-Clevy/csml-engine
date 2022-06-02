@@ -29,6 +29,28 @@ pub enum FromFlow {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InsertStep {
+    pub name: String,
+    pub original_name: Option<String>,
+    pub from_flow: String,
+    pub interval: Interval,
+}
+
+impl Hash for InsertStep {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state)
+    }
+}
+
+impl PartialEq for InsertStep {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+impl Eq for InsertStep {}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportScope {
     pub name: String,
     pub original_name: Option<String>,
@@ -55,6 +77,7 @@ pub enum InstructionScope {
     StepScope(String),
     FunctionScope { name: String, args: Vec<String> },
     ImportScope(ImportScope),
+    InsertStep(InsertStep),
     Constant(String),
 
     // this Variant is use to store all duplicated instruction during parsing
@@ -68,6 +91,7 @@ impl Hash for InstructionScope {
             InstructionScope::StepScope(name) => name.hash(state),
             InstructionScope::FunctionScope { name, .. } => name.hash(state),
             InstructionScope::ImportScope(import_scope) => import_scope.hash(state),
+            InstructionScope::InsertStep(insert_step) => insert_step.hash(state),
             InstructionScope::Constant(name) => name.hash(state),
             InstructionScope::DuplicateInstruction(interval, ..) => interval.hash(state),
         }
@@ -94,6 +118,14 @@ impl PartialEq for InstructionScope {
                     ..
                 }),
             ) => import_scope1 == import_scope2,
+            (
+                InstructionScope::InsertStep(InsertStep {
+                    name: insert_step1, ..
+                }),
+                InstructionScope::InsertStep(InsertStep {
+                    name: insert_step2, ..
+                }),
+            ) => insert_step1 == insert_step2,
             (InstructionScope::Constant(name1), InstructionScope::Constant(name2)) => {
                 name1 == name2
             }
@@ -120,6 +152,12 @@ impl Display for InstructionScope {
                 from_flow,
                 ..
             }) => write!(f, "import {} from {:?} ", name, from_flow),
+            InstructionScope::InsertStep(InsertStep {
+                name,
+                original_name: _,
+                from_flow,
+                ..
+            }) => write!(f, "insert {} from {:?} ", name, from_flow),
             InstructionScope::Constant(name) => write!(f, "constant {}", name),
             InstructionScope::DuplicateInstruction(index, ..) => {
                 write!(f, "duplicate instruction at line {}", index.start_line)
@@ -135,6 +173,7 @@ impl InstructionScope {
             InstructionScope::FunctionScope { name, .. } => format!("function {}", name),
             InstructionScope::Constant(name) => format!("constant {}", name),
             InstructionScope::ImportScope(ImportScope { name, .. }) => format!("import {}", name),
+            InstructionScope::InsertStep(InsertStep { name, .. }) => format!("insert {}", name),
             InstructionScope::DuplicateInstruction(_, info) => format!("duplicate {}", info),
         }
     }
@@ -159,6 +198,7 @@ pub enum GotoType {
     StepFlow {
         step: Option<GotoValueType>,
         flow: Option<GotoValueType>,
+        bot: Option<GotoValueType>,
     },
 }
 
@@ -172,7 +212,6 @@ pub enum DoType {
 pub struct Function {
     pub name: String,
     pub interval: Interval,
-    // TODO: update to Vec<Expr>
     pub args: Box<Expr>,
 }
 

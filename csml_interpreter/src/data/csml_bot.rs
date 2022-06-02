@@ -15,6 +15,7 @@ pub struct CsmlBot {
     pub apps_endpoint: Option<String>,
     pub flows: Vec<CsmlFlow>,
     pub modules: Option<Vec<Module>>,
+    pub multibot: Option<Vec<MultiBot>>,
     pub native_components: Option<serde_json::Map<String, serde_json::Value>>,
     pub custom_components: Option<serde_json::Value>,
     pub default_flow: String,
@@ -31,6 +32,13 @@ pub struct Module {
     #[serde(default = "default_version")]
     pub version: String,
     pub flow: Option<CsmlFlow>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MultiBot {
+    pub id: String,
+    pub name: Option<String>,
+    pub version_id: Option<String>,
 }
 
 fn default_version() -> String {
@@ -54,6 +62,7 @@ impl CsmlBot {
         no_interruption_delay: Option<i32>,
         env: Option<serde_json::Value>,
         modules: Option<Vec<Module>>,
+        multibot: Option<Vec<MultiBot>>,
     ) -> Self {
         Self {
             id: id.to_owned(),
@@ -61,6 +70,7 @@ impl CsmlBot {
             apps_endpoint,
             flows,
             modules,
+            multibot,
             native_components,
             custom_components,
             default_flow: default_flow.to_owned(),

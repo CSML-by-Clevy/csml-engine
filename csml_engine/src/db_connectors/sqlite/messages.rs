@@ -35,7 +35,7 @@ pub fn add_messages_bulk(
             conversation_id,
 
             flow_id: &data.context.flow,
-            step_id: &data.context.step,
+            step_id: &data.context.step.get_step(),
             direction,
             payload: encrypt_data(&message)?,
             content_type: &message["content_type"].as_str().unwrap_or("text"),

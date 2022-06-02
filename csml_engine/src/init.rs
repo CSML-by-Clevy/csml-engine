@@ -1,21 +1,24 @@
-use crate::db_connectors::{conversations::*, memories::*};
+use crate::db_connectors::{conversations::*, memories::*, state};
+use crate::interpreter_actions::SwitchBot;
 use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
     utils::{
         get_default_flow, get_flow_by_id, get_low_data_mode_value, get_ttl_duration_value,
         search_flow,
     },
-    Context, CsmlBot, CsmlFlow, CsmlResult,
+    BotOpt, Context, CsmlBot, CsmlFlow, CsmlResult,
 };
 
+use csml_interpreter::data::context::ContextStepInfo;
 use csml_interpreter::{
     data::{
         ast::Flow,
         context::{get_hashmap_from_json, get_hashmap_from_mem},
-        ApiInfo, Client, Event,
+        ApiInfo, Client, Event, PreviousBot,
     },
     load_components, search_for_modules, validate_bot,
 };
+
 use std::collections::HashMap;
 
 /**
@@ -42,7 +45,12 @@ pub fn init_conversation_info<'a>(
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
 
-    let mut context = init_context(default_flow, request.client.clone(), &bot.apps_endpoint);
+    let mut context = init_context(
+        default_flow,
+        request.client.clone(),
+        &bot.apps_endpoint,
+        &mut db,
+    );
     let ttl = get_ttl_duration_value(Some(event));
     let low_data = get_low_data_mode_value(event);
 
@@ -83,7 +91,7 @@ pub fn init_conversation_info<'a>(
 
     // Now that everything is correctly setup, update the conversation with wherever
     // we are now and continue with the rest of the request!
-    update_conversation(&mut data, Some(flow), Some(step))?;
+    update_conversation(&mut data, Some(flow), Some(step.get_step()))?;
 
     Ok(data)
 }
@@ -102,6 +110,13 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
         return Err(EngineError::Interpreter(format!("{:?}", err)));
     }
 
+    set_bot_ast(bot)
+}
+
+/**
+ * Initialize bot ast
+ */
+fn set_bot_ast(bot: &mut CsmlBot) -> Result<(), EngineError> {
     match validate_bot(&bot) {
         CsmlResult {
             flows: Some(flows),
@@ -143,7 +158,14 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
 /**
  * Initialize the context object for incoming requests
  */
-pub fn init_context(flow: String, client: Client, apps_endpoint: &Option<String>) -> Context {
+pub fn init_context(
+    flow: String,
+    client: Client,
+    apps_endpoint: &Option<String>,
+    db: &mut Database,
+) -> Context {
+    let previous_bot = get_previous_bot(&client, db);
+
     let api_info = match apps_endpoint {
         Some(value) => Some(ApiInfo {
             client,
@@ -157,8 +179,16 @@ pub fn init_context(flow: String, client: Client, apps_endpoint: &Option<String>
         metadata: HashMap::new(),
         api_info,
         hold: None,
-        step: "start".to_owned(),
+        step: ContextStepInfo::Normal("start".to_owned()),
         flow,
+        previous_bot,
+    }
+}
+
+fn get_previous_bot(client: &Client, db: &mut Database) -> Option<PreviousBot> {
+    match state::get_state_key(client, "bot", "previous", db) {
+        Ok(Some(bot)) => serde_json::from_value(bot).ok(),
+        _ => None,
     }
 }
 
@@ -177,7 +207,7 @@ fn get_or_create_conversation<'a>(
         Some(conversation) => {
             match flow_found {
                 Some((flow, step)) => {
-                    context.step = step;
+                    context.step = ContextStepInfo::UnknownFlow(step);
                     context.flow = flow.name.to_owned();
                 }
                 None => {
@@ -193,7 +223,7 @@ fn get_or_create_conversation<'a>(
                         }
                     };
 
-                    context.step = conversation.step_id.to_owned();
+                    context.step = ContextStepInfo::UnknownFlow(conversation.step_id.to_owned());
                     context.flow = flow.name.to_owned();
                 }
             };
@@ -219,10 +249,84 @@ fn create_new_conversation<'a>(
         Some((flow, step)) => (flow, step),
         None => (get_default_flow(bot)?, "start".to_owned()),
     };
-    context.step = step;
+
+    let conversation_id = create_conversation(&flow.id, &step, client, ttl, db)?;
+
+    context.step = ContextStepInfo::UnknownFlow(step);
     context.flow = flow.name.to_owned();
 
-    let conversation_id = create_conversation(&flow.id, &context.step, client, ttl, db)?;
-
     Ok(conversation_id)
+}
+
+/**
+ * Switch bot find next bot in DB and create new Client and new conversation
+ */
+pub fn switch_bot(
+    data: &mut ConversationInfo,
+    bot: &mut CsmlBot,
+    next_bot: SwitchBot,
+    bot_opt: &mut BotOpt,
+    event: &mut Event,
+) -> Result<(), EngineError> {
+    // update data info with new bot |ex| client bot_id, create new conversation
+    *bot_opt = match next_bot.version_id {
+        Some(version_id) => BotOpt::Id {
+            version_id,
+            bot_id: next_bot.bot_id,
+            apps_endpoint: bot.apps_endpoint.clone(),
+            multibot: bot.multibot.clone(),
+        },
+        None => BotOpt::BotId {
+            bot_id: next_bot.bot_id,
+            apps_endpoint: bot.apps_endpoint.clone(),
+            multibot: bot.multibot.clone(),
+        },
+    };
+
+    *bot = bot_opt.search_bot(&mut data.db)?;
+
+    set_bot_ast(bot)?;
+
+    data.context.step = ContextStepInfo::UnknownFlow(next_bot.step);
+    data.context.flow = match next_bot.flow {
+        Some(flow) => flow,
+        None => bot.default_flow.clone(),
+    };
+
+    // update client with the new bot id
+    data.client.bot_id = bot.id.to_owned();
+
+    let (flow, step) = match get_flow_by_id(&data.context.flow, &bot.flows) {
+        Ok(flow) => (flow, data.context.step.clone()),
+        Err(_) => (
+            get_flow_by_id(&bot.default_flow, &bot.flows)?,
+            ContextStepInfo::Normal("start".to_owned()),
+        ),
+    };
+
+    // update event to flow trigger
+    event.content_type = "flow_trigger".to_owned();
+    event.content = serde_json::json!({
+            "flow_id": flow.id,
+            "step_id": step
+        }
+    );
+
+    // create new conversation for the new client
+    data.conversation_id = create_conversation(
+        &flow.id,
+        &step.get_step(),
+        &data.client,
+        data.ttl.clone(),
+        &mut data.db,
+    )?;
+
+    // and get memories of the new bot form db,
+    // clearing the permanent memories form scope of the previous bot
+    data.context.current = get_hashmap_from_mem(
+        &internal_use_get_memories(&data.client, &mut data.db)?,
+        &data.context.flow,
+    );
+
+    Ok(())
 }

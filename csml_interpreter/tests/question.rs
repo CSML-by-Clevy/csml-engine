@@ -34,6 +34,7 @@ fn ok_button() {
             None,
             "simple_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/question.csml",
     );
@@ -76,7 +77,15 @@ fn ok_question() {
     }"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/question.csml",
     );
 
@@ -127,6 +136,7 @@ fn ok_question_step1() {
             None,
             "question1",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/question.csml",
     );
@@ -177,6 +187,7 @@ fn ok_question_step2() {
             None,
             "question2",
             "flow",
+            None,
         ),
         "CSML/basic_test/built-in/question.csml",
     );

@@ -16,7 +16,16 @@ fn format_messages(
     messages
         .iter()
         .enumerate()
-        .map(|(i, var)| format_message(data, var.clone(), i as i32, interaction_order, direction, expires_at))
+        .map(|(i, var)| {
+            format_message(
+                data,
+                var.clone(),
+                i as i32,
+                interaction_order,
+                direction,
+                expires_at,
+            )
+        })
         .collect::<Result<Vec<Document>, EngineError>>()
 }
 
@@ -33,7 +42,7 @@ fn format_message(
         "client": bson::to_bson(&data.client)?,
         "conversation_id": &data.conversation_id,
         "flow_id": &data.context.flow,
-        "step_id": &data.context.step,
+        "step_id": &data.context.step.get_step(),
         "message_order": msg_order,
         "interaction_order": interaction_order,
         "direction": direction,
@@ -59,7 +68,11 @@ fn format_message_struct(message: bson::document::Document) -> Result<DbMessage,
         interaction_order: message.get_i32("interaction_order").unwrap(),
         direction: message.get_str("direction").unwrap().to_owned(),
         payload,
-        created_at: message.get_datetime("created_at").unwrap().to_chrono().to_rfc3339_opts(SecondsFormat::Millis, true),
+        created_at: message
+            .get_datetime("created_at")
+            .unwrap()
+            .to_chrono()
+            .to_rfc3339_opts(SecondsFormat::Millis, true),
     })
 }
 
@@ -106,7 +119,7 @@ pub fn get_client_messages(
     let collection = db.client.collection::<Document>("message");
 
     let limit = match limit {
-        Some(limit) => std::cmp::min(limit + 1 , 26),
+        Some(limit) => std::cmp::min(limit + 1, 26),
         None => 26,
     };
 
@@ -115,7 +128,7 @@ pub fn get_client_messages(
             let from_date = bson::DateTime::from_millis(from_date * 1000);
             let to_date = match to_date {
                 Some(to_date) => bson::DateTime::from_millis(to_date * 1000),
-                None => bson::DateTime::from_chrono(chrono::Utc::now())
+                None => bson::DateTime::from_chrono(chrono::Utc::now()),
             };
 
             doc! {
@@ -128,7 +141,7 @@ pub fn get_client_messages(
             let from_date = bson::DateTime::from_millis(from_date * 1000);
             let to_date = match to_date {
                 Some(to_date) => bson::DateTime::from_millis(to_date * 1000),
-                None => bson::DateTime::from_chrono(chrono::Utc::now())
+                None => bson::DateTime::from_chrono(chrono::Utc::now()),
             };
 
             doc! {

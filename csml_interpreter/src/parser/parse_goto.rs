@@ -65,6 +65,17 @@ where
     Ok((s, GotoType::Flow(flow)))
 }
 
+fn parse_in_bot<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoValueType, E>
+where
+    E: ParseError<Span<'a>> + ContextError<Span<'a>>,
+{
+    let (s, name) = preceded(comment, get_string)(s)?;
+
+    let (s, bot) = preceded(get_tag(name, "in"), preceded(comment, get_goto_value_type))(s)?;
+
+    Ok((s, bot))
+}
+
 fn get_step_at_flow<'a, E>(s: Span<'a>) -> IResult<Span<'a>, GotoType, E>
 where
     E: ParseError<Span<'a>> + ContextError<Span<'a>>,
@@ -75,11 +86,13 @@ where
     let (s, at) = opt(tag("@"))(s)?;
     let (s, flow) = opt(get_goto_value_type)(s)?;
 
+    let (s, bot) = opt(parse_in_bot)(s)?;
+
     if let (None, None, None) = (&step, at, &flow) {
         return Err(gen_nom_failure(s, ERROR_GOTO_STEP));
     }
 
-    Ok((s, GotoType::StepFlow { step, flow }))
+    Ok((s, GotoType::StepFlow { step, flow, bot }))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

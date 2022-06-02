@@ -15,7 +15,15 @@ fn break_test_0() {
         r#"{"memories":[], "messages":[{"content":{"text":"Hello"}, "content_type":"text"}]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/break.csml",
     );
 
@@ -37,6 +45,7 @@ fn break_test_1() {
             None,
             "break_test_0",
             "flow",
+            None,
         ),
         "CSML/basic_test/break.csml",
     );
@@ -59,6 +68,7 @@ fn break_test_2() {
             None,
             "break_test_1",
             "flow",
+            None,
         ),
         "CSML/basic_test/break.csml",
     );
@@ -81,6 +91,7 @@ fn break_test_3() {
             None,
             "break_test_2",
             "flow",
+            None,
         ),
         "CSML/basic_test/break.csml",
     );
@@ -104,6 +115,7 @@ fn break_test_4() {
             None,
             "break_test_3",
             "flow",
+            None,
         ),
         "CSML/basic_test/break.csml",
     );

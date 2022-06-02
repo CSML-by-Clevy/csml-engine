@@ -13,7 +13,7 @@ use crate::error_format::{
 use crate::interpreter::variable_handler::interval::interval_from_expr;
 use crate::linter::{
     ConstantInfo, FlowConstantUse, FlowToValidate, FunctionCallInfo, FunctionInfo, ImportInfo,
-    LinterInfo, ScopeType, State, StepBreakers, StepInfo,
+    InsertInfo, LinterInfo, ScopeType, State, StepBreakers, StepInfo,
 };
 
 use std::collections::{HashMap, HashSet};
@@ -44,6 +44,7 @@ pub fn lint_bot(
     let mut step_list = HashSet::new();
     let mut function_list = HashSet::new();
     let mut import_list = HashSet::new();
+    let mut insert_list = HashSet::new();
     let mut valid_closure_list = vec![];
     let mut functions_call_list = vec![];
 
@@ -57,6 +58,7 @@ pub fn lint_bot(
         default_flow,
         &mut bot_constants,
         &mut import_list,
+        &mut insert_list,
         &mut valid_closure_list,
         &mut functions_call_list,
         errors,
@@ -91,6 +93,7 @@ pub fn lint_bot(
     validate_imports(&mut linter_info);
     validate_functions(&mut linter_info);
     validate_constants(&mut linter_info);
+    validate_inserts(&mut linter_info);
 
     match infinite_loop_check(
         &linter_info,
@@ -118,19 +121,21 @@ pub fn validate_gotos(linter_info: &mut LinterInfo) {
             continue;
         }
 
-        if let None = linter_info.step_list.get(&goto_info) {
-            linter_info.errors.push(gen_error_info(
-                Position::new(goto_info.interval.to_owned(), &goto_info.in_flow),
-                convert_error_from_interval(
-                    Span::new(goto_info.raw_flow),
-                    format!(
-                        "step {} at flow {} does not exist",
-                        goto_info.step, goto_info.flow
-                    ),
-                    goto_info.interval.to_owned(),
-                ),
-            ));
-        }
+        // toto
+
+        // if let None = linter_info.step_list.get(&goto_info) {
+        //     linter_info.errors.push(gen_error_info(
+        //         Position::new(goto_info.interval.to_owned(), &goto_info.in_flow),
+        //         convert_error_from_interval(
+        //             Span::new(goto_info.raw_flow),
+        //             format!(
+        //                 "step {} at flow {} does not exist",
+        //                 goto_info.step, goto_info.flow
+        //             ),
+        //             goto_info.interval.to_owned(),
+        //         ),
+        //     ));
+        // }
     }
 }
 
@@ -256,6 +261,55 @@ pub fn validate_imports(linter_info: &mut LinterInfo) {
     }
 }
 
+pub fn validate_inserts(linter_info: &mut LinterInfo) {
+    for insert_info in linter_info.insert_list.iter() {
+        if let Some(_) = linter_info.step_list.get(&StepInfo::new(
+            &insert_info.in_flow,
+            &insert_info.as_name,
+            insert_info.raw_flow,
+            insert_info.in_flow.to_owned(),
+            vec![],
+            insert_info.interval.to_owned(),
+        )) {
+            gen_function_error(
+                linter_info.errors,
+                insert_info.raw_flow,
+                linter_info.flow_name,
+                insert_info.interval.to_owned(),
+                format!(
+                    "insert failed, a step named '{}' already exist in current flow '{}'",
+                    insert_info.as_name, insert_info.in_flow
+                ),
+            );
+        };
+
+        let as_name: &str = match insert_info.original_name {
+            Some(ref name) => name.as_str(),
+            None => insert_info.as_name.as_str(),
+        };
+
+        if let None = linter_info.step_list.get(&StepInfo::new(
+            &insert_info.from_flow,
+            as_name,
+            insert_info.raw_flow,
+            insert_info.in_flow.to_owned(),
+            vec![],
+            insert_info.interval.to_owned(),
+        )) {
+            gen_function_error(
+                linter_info.errors,
+                insert_info.raw_flow,
+                insert_info.in_flow,
+                insert_info.interval.to_owned(),
+                format!(
+                    "insert failed, step '{}' not found in flow '{}'",
+                    as_name, insert_info.from_flow
+                ),
+            );
+        };
+    }
+}
+
 pub fn validate_functions(linter_info: &mut LinterInfo) {
     for info in linter_info.functions_call_list.iter() {
         let is_native_component = match linter_info.native_components {
@@ -372,6 +426,17 @@ pub fn validate_flow_ast(flow: &FlowToValidate, linter_info: &mut LinterInfo, ex
                     linter_info.flow_name,
                     linter_info.raw_flow,
                     import_scope.interval.to_owned(),
+                ));
+            }
+
+            InstructionScope::InsertStep(insert_step) => {
+                linter_info.insert_list.insert(InsertInfo::new(
+                    insert_step.name.to_owned(),
+                    insert_step.original_name.to_owned(),
+                    insert_step.from_flow.clone(),
+                    linter_info.flow_name,
+                    linter_info.raw_flow,
+                    insert_step.interval.to_owned(),
                 ));
             }
 
@@ -626,6 +691,7 @@ fn validate_scope(
                     GotoType::StepFlow {
                         step: Some(GotoValueType::Name(step)),
                         flow: Some(GotoValueType::Name(flow)),
+                        bot: None,
                     } => {
                         register_flow_breaker(
                             step_breakers,
@@ -648,6 +714,7 @@ fn validate_scope(
                     GotoType::StepFlow {
                         step: None,
                         flow: Some(GotoValueType::Name(flow)),
+                        bot: None,
                     } => {
                         register_flow_breaker(
                             step_breakers,
@@ -670,6 +737,7 @@ fn validate_scope(
                     GotoType::StepFlow {
                         step: Some(GotoValueType::Name(step)),
                         flow: None,
+                        bot: None,
                     } => {
                         register_flow_breaker(
                             step_breakers,

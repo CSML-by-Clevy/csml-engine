@@ -15,7 +15,15 @@ fn ok_length() {
         r#"{"messages":[ {"content":{ "text": "5"  },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "start", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "start",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/length.csml",
     );
 
@@ -31,7 +39,15 @@ fn ok_length_1() {
         r#"{"messages":[ {"content":{ "text": "2"  },"content_type":"text"} ],"memories":[]}"#;
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_0", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_0",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/length.csml",
     );
 
@@ -45,7 +61,15 @@ fn ok_length_1() {
 fn ok_length_2() {
     let msg = format_message(
         Event::new("payload", "", serde_json::json!({})),
-        Context::new(HashMap::new(), HashMap::new(), None, None, "step_1", "flow"),
+        Context::new(
+            HashMap::new(),
+            HashMap::new(),
+            None,
+            None,
+            "step_1",
+            "flow",
+            None,
+        ),
         "CSML/basic_test/built-in/length.csml",
     );
 

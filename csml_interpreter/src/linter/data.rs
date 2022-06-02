@@ -67,6 +67,16 @@ pub struct ImportInfo<'a> {
     pub interval: Interval,
 }
 
+#[derive(Debug, Clone)]
+pub struct InsertInfo<'a> {
+    pub as_name: String,
+    pub original_name: Option<String>,
+    pub from_flow: String,
+    pub in_flow: &'a str,
+    pub raw_flow: &'a str,
+    pub interval: Interval,
+}
+
 #[derive(Debug)]
 pub struct State {
     pub in_function: i16,
@@ -90,6 +100,7 @@ pub struct LinterInfo<'a> {
     pub bot_constants: &'a mut HashMap<String, FlowConstantUse<'a>>,
     pub function_list: &'a mut HashSet<FunctionInfo<'a>>,
     pub import_list: &'a mut HashSet<ImportInfo<'a>>,
+    pub insert_list: &'a mut HashSet<InsertInfo<'a>>,
     pub valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
     pub functions_call_list: &'a mut Vec<FunctionCallInfo<'a>>,
     pub errors: &'a mut Vec<ErrorInfo>,
@@ -100,6 +111,7 @@ pub struct LinterInfo<'a> {
 ////////////////////////////////////////////////////////////////////////////////
 // Hash FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////
+//Step/////////////////
 
 impl<'a> Hash for StepInfo<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -115,6 +127,8 @@ impl<'a> PartialEq for StepInfo<'a> {
 }
 
 impl<'a> Eq for StepInfo<'a> {}
+
+//Function/////////////////
 
 impl<'a> Hash for FunctionInfo<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -134,6 +148,8 @@ impl<'a> PartialEq for FunctionInfo<'a> {
 
 impl<'a> Eq for FunctionInfo<'a> {}
 
+//Import/////////////////
+
 impl<'a> Hash for ImportInfo<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_name.hash(state);
@@ -148,6 +164,23 @@ impl<'a> PartialEq for ImportInfo<'a> {
 }
 
 impl<'a> Eq for ImportInfo<'a> {}
+
+//Insert/////////////////
+
+impl<'a> Hash for InsertInfo<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_name.hash(state);
+        self.in_flow.hash(state)
+    }
+}
+
+impl<'a> PartialEq for InsertInfo<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_name == other.as_name && self.in_flow == other.in_flow
+    }
+}
+
+impl<'a> Eq for InsertInfo<'a> {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
@@ -201,6 +234,7 @@ impl<'a> LinterInfo<'a> {
         default_flow: &'a str,
         bot_constants: &'a mut HashMap<String, FlowConstantUse<'a>>,
         import_list: &'a mut HashSet<ImportInfo<'a>>,
+        insert_list: &'a mut HashSet<InsertInfo<'a>>,
         valid_closure_list: &'a mut Vec<FunctionCallInfo<'a>>,
         functions_call_list: &'a mut Vec<FunctionCallInfo<'a>>,
         errors: &'a mut Vec<ErrorInfo>,
@@ -217,6 +251,7 @@ impl<'a> LinterInfo<'a> {
             default_flow,
             bot_constants,
             import_list,
+            insert_list,
             valid_closure_list,
             functions_call_list,
             errors,
@@ -269,6 +304,26 @@ impl<'a> ImportInfo<'a> {
         as_name: String,
         original_name: Option<String>,
         from_flow: FromFlow,
+        in_flow: &'a str,
+        raw_flow: &'a str,
+        interval: Interval,
+    ) -> Self {
+        Self {
+            as_name,
+            original_name,
+            from_flow,
+            in_flow,
+            raw_flow,
+            interval,
+        }
+    }
+}
+
+impl<'a> InsertInfo<'a> {
+    pub fn new(
+        as_name: String,
+        original_name: Option<String>,
+        from_flow: String,
         in_flow: &'a str,
         raw_flow: &'a str,
         interval: Interval,
