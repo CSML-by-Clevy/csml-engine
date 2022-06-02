@@ -23,7 +23,7 @@ pub struct RunRequest {
     pub version_id: Option<String>,
     #[serde(alias = "fn_endpoint")]
     pub apps_endpoint: Option<String>,
-    pub multi_bot: Option<Vec<MultiBot>>,
+    pub multibot: Option<Vec<MultiBot>>,
     pub event: CsmlRequest,
 }
 
@@ -33,10 +33,10 @@ impl RunRequest {
             // Bot
             RunRequest {
                 bot: Some(mut csml_bot),
-                multi_bot,
+                multibot,
                 ..
             } => {
-                csml_bot.multi_bot = multi_bot;
+                csml_bot.multibot = multibot;
 
                 Ok(BotOpt::CsmlBot(csml_bot))
             }
@@ -46,25 +46,25 @@ impl RunRequest {
                 version_id: Some(version_id),
                 bot_id: Some(bot_id),
                 apps_endpoint,
-                multi_bot,
+                multibot,
                 ..
             } => Ok(BotOpt::Id {
                 version_id,
                 bot_id,
                 apps_endpoint,
-                multi_bot,
+                multibot,
             }),
 
             // get bot by id will search for the last version id
             RunRequest {
                 bot_id: Some(bot_id),
                 apps_endpoint,
-                multi_bot,
+                multibot,
                 ..
             } => Ok(BotOpt::BotId {
                 bot_id,
                 apps_endpoint,
-                multi_bot,
+                multibot,
             }),
 
             _ => Err(EngineError::Format("Invalid bot_opt format".to_owned())),
@@ -82,14 +82,14 @@ pub enum BotOpt {
         bot_id: String,
         #[serde(alias = "fn_endpoint")]
         apps_endpoint: Option<String>,
-        multi_bot: Option<Vec<MultiBot>>,
+        multibot: Option<Vec<MultiBot>>,
     },
     #[serde(rename = "bot_id")]
     BotId {
         bot_id: String,
         #[serde(alias = "fn_endpoint")]
         apps_endpoint: Option<String>,
-        multi_bot: Option<Vec<MultiBot>>,
+        multibot: Option<Vec<MultiBot>>,
     },
 }
 
@@ -100,14 +100,14 @@ impl BotOpt {
             BotOpt::BotId {
                 bot_id,
                 apps_endpoint,
-                multi_bot,
+                multibot,
             } => {
                 let bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)?;
 
                 match bot_version {
                     Some(mut bot_version) => {
                         bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
-                        bot_version.bot.multi_bot = multi_bot.to_owned();
+                        bot_version.bot.multibot = multibot.to_owned();
                         Ok(bot_version.bot)
                     }
                     None => Err(EngineError::Manager(format!(
@@ -120,14 +120,14 @@ impl BotOpt {
                 version_id,
                 bot_id,
                 apps_endpoint,
-                multi_bot,
+                multibot,
             } => {
                 let bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)?;
 
                 match bot_version {
                     Some(mut bot_version) => {
                         bot_version.bot.apps_endpoint = apps_endpoint.to_owned();
-                        bot_version.bot.multi_bot = multi_bot.to_owned();
+                        bot_version.bot.multibot = multibot.to_owned();
                         Ok(bot_version.bot)
                     }
                     None => Err(EngineError::Manager(format!(
@@ -246,7 +246,7 @@ impl SerializeCsmlBot {
                 None => None,
             },
             modules: self.modules.to_owned(),
-            multi_bot: None,
+            multibot: None,
         }
     }
 }
@@ -331,7 +331,7 @@ impl DynamoBot {
                 None => None,
             },
             modules: Some(modules),
-            multi_bot: None,
+            multibot: None,
         }
     }
 }

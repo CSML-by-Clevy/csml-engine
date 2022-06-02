@@ -102,6 +102,13 @@ pub struct Bot {
     pub created_at: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BotGetKeys {
+    pub hash: String,
+    pub range: String,
+    pub version_id: String,
+}
+
 impl Bot {
     pub fn get_hash(id: &str) -> String {
         format!("bot#{}", id)
@@ -132,9 +139,9 @@ impl Bot {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ConversationDeleteInfo {
-    pub status: String,
-    pub id: String,
+pub struct ConversationKeys {
+    pub hash: String,
+    pub range: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -152,6 +159,7 @@ pub struct Conversation {
     pub step_id: String,
     pub status: String,
     pub last_interaction_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<i64>,
     pub updated_at: String,
     pub created_at: String,
@@ -209,11 +217,11 @@ pub struct MemoryDeleteInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct MemoryGetInfo {
-    pub key: String,
-    pub value: Option<String>,
-    pub created_at: String,
+pub struct MemoryKeys {
+    pub hash: String,
+    pub range: String,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Memory {
     pub hash: String,
@@ -226,6 +234,7 @@ pub struct Memory {
     pub user_id: Option<String>,
     pub key: String,
     pub value: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<i64>,
     pub created_at: String,
 }
@@ -273,9 +282,9 @@ impl Memory {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct MessageDeleteInfo {
-    conversation_id: String,
-    id: String,
+struct MessageKeys {
+    hash: String,
+    range: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -305,6 +314,7 @@ pub struct Message {
     pub direction: String,
     pub payload: String,
     pub content_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<i64>,
     pub created_at: String,
 }
@@ -436,6 +446,7 @@ pub struct State {
     pub _type: String,
     pub key: String,
     pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expires_at: Option<i64>,
     pub created_at: String,
 }

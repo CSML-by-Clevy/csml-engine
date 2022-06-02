@@ -274,12 +274,12 @@ pub fn switch_bot(
             version_id,
             bot_id: next_bot.bot_id,
             apps_endpoint: bot.apps_endpoint.clone(),
-            multi_bot: bot.multi_bot.clone(),
+            multibot: bot.multibot.clone(),
         },
         None => BotOpt::BotId {
             bot_id: next_bot.bot_id,
             apps_endpoint: bot.apps_endpoint.clone(),
-            multi_bot: bot.multi_bot.clone(),
+            multibot: bot.multibot.clone(),
         },
     };
 

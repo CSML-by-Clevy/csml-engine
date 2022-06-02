@@ -1,4 +1,13 @@
 pub mod data;
+
+mod db_connectors;
+mod encrypt;
+mod error_messages;
+mod init;
+mod interpreter_actions;
+mod send;
+mod utils;
+
 pub use csml_interpreter::{
     data::{
         ast::{Expr, Flow, InstructionScope},
@@ -11,16 +20,6 @@ pub use csml_interpreter::{
     },
     load_components, search_for_modules,
 };
-
-use serde_json::json;
-
-mod db_connectors;
-mod encrypt;
-mod error_messages;
-mod init;
-mod interpreter_actions;
-mod send;
-mod utils;
 
 #[cfg(any(feature = "postgresql", feature = "sqlite"))]
 #[macro_use]
@@ -44,6 +43,7 @@ use chrono::prelude::*;
 use csml_interpreter::data::{
     csml_bot::CsmlBot, csml_flow::CsmlFlow, Context, Hold, IndexInfo, Memory,
 };
+use serde_json::json;
 use std::{collections::HashMap, env};
 
 /**
