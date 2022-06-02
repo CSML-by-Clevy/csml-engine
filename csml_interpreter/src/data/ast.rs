@@ -233,6 +233,9 @@ pub enum AssignType {
     Assignment,
     AdditionAssignment,
     SubtractionAssignment,
+    MultiplicationAssignment,
+    DivisionAssignment,
+    RemainderAssignment,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

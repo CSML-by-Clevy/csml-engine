@@ -28,6 +28,9 @@ pub const AND: &str = "&&";
 
 pub const SUBTRACTION_ASSIGNMENT: &str = "-=";
 pub const ADDITION_ASSIGNMENT: &str = "+=";
+pub const MULTIPLY_ASSIGNMENT: &str = "*=";
+pub const DIVISION_ASSIGNMENT: &str = "/=";
+pub const REMAINDER_ASSIGNMENT: &str = "%=";
 
 pub const GREATER_THAN_EQUAL: &str = ">=";
 pub const LESS_THAN_EQUAL: &str = "<=";
