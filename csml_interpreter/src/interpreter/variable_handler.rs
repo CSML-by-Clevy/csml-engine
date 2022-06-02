@@ -458,7 +458,7 @@ fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Lite
 
     flow_context.insert(
         "current_step".to_owned(),
-        PrimitiveString::get_literal(&data.context.step, interval),
+        PrimitiveString::get_literal(&data.context.step.get_step(), interval),
     );
     flow_context.insert(
         "current_flow".to_owned(),
@@ -473,7 +473,7 @@ fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Lite
     if let Some(previous_info) = &data.previous_info {
         flow_context.insert(
             "previous_step".to_owned(),
-            PrimitiveString::get_literal(&previous_info.step_at_flow.0, interval),
+            PrimitiveString::get_literal(&previous_info.step_at_flow.0.get_step(), interval),
         );
         flow_context.insert(
             "previous_flow".to_owned(),
@@ -545,14 +545,6 @@ pub fn get_metadata_context_literal(
     )?;
     Ok(lit)
 }
-
-// pub enum MemoryType {
-//     Event(String),
-//     Metadata,
-//     Use,
-//     Remember,
-//     Constant,
-// }
 
 pub fn get_literal_from_metadata(
     path: &[(Interval, PathLiteral)],

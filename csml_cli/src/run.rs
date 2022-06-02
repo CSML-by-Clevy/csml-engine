@@ -102,7 +102,7 @@ pub fn load_info(directory_name: &str) -> Result<CsmlBot, Box<dyn Error>> {
         no_interruption_delay: None,
         env: None,
         modules: None,
-        multi_bot: None,
+        multibot: None,
     })
 }
 

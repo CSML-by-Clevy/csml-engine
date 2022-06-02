@@ -9,6 +9,7 @@ use crate::{
     BotOpt, Context, CsmlBot, CsmlFlow, CsmlResult,
 };
 
+use csml_interpreter::data::context::ContextStepInfo;
 use csml_interpreter::{
     data::{
         ast::Flow,
@@ -90,7 +91,7 @@ pub fn init_conversation_info<'a>(
 
     // Now that everything is correctly setup, update the conversation with wherever
     // we are now and continue with the rest of the request!
-    update_conversation(&mut data, Some(flow), Some(step))?;
+    update_conversation(&mut data, Some(flow), Some(step.get_step()))?;
 
     Ok(data)
 }
@@ -178,7 +179,7 @@ pub fn init_context(
         metadata: HashMap::new(),
         api_info,
         hold: None,
-        step: "start".to_owned(),
+        step: ContextStepInfo::Normal("start".to_owned()),
         flow,
         previous_bot,
     }
@@ -206,7 +207,7 @@ fn get_or_create_conversation<'a>(
         Some(conversation) => {
             match flow_found {
                 Some((flow, step)) => {
-                    context.step = step;
+                    context.step = ContextStepInfo::UnknownFlow(step);
                     context.flow = flow.name.to_owned();
                 }
                 None => {
@@ -222,7 +223,7 @@ fn get_or_create_conversation<'a>(
                         }
                     };
 
-                    context.step = conversation.step_id.to_owned();
+                    context.step = ContextStepInfo::UnknownFlow(conversation.step_id.to_owned());
                     context.flow = flow.name.to_owned();
                 }
             };
@@ -248,10 +249,11 @@ fn create_new_conversation<'a>(
         Some((flow, step)) => (flow, step),
         None => (get_default_flow(bot)?, "start".to_owned()),
     };
-    context.step = step;
-    context.flow = flow.name.to_owned();
 
-    let conversation_id = create_conversation(&flow.id, &context.step, client, ttl, db)?;
+    let conversation_id = create_conversation(&flow.id, &step, client, ttl, db)?;
+
+    context.step = ContextStepInfo::UnknownFlow(step);
+    context.flow = flow.name.to_owned();
 
     Ok(conversation_id)
 }
@@ -272,12 +274,12 @@ pub fn switch_bot(
             version_id,
             bot_id: next_bot.bot_id,
             apps_endpoint: bot.apps_endpoint.clone(),
-            multi_bot: bot.multi_bot.clone(),
+            multibot: bot.multibot.clone(),
         },
         None => BotOpt::BotId {
             bot_id: next_bot.bot_id,
             apps_endpoint: bot.apps_endpoint.clone(),
-            multi_bot: bot.multi_bot.clone(),
+            multibot: bot.multibot.clone(),
         },
     };
 
@@ -285,7 +287,7 @@ pub fn switch_bot(
 
     set_bot_ast(bot)?;
 
-    data.context.step = next_bot.step;
+    data.context.step = ContextStepInfo::UnknownFlow(next_bot.step);
     data.context.flow = match next_bot.flow {
         Some(flow) => flow,
         None => bot.default_flow.clone(),
@@ -298,7 +300,7 @@ pub fn switch_bot(
         Ok(flow) => (flow, data.context.step.clone()),
         Err(_) => (
             get_flow_by_id(&bot.default_flow, &bot.flows)?,
-            "start".to_owned(),
+            ContextStepInfo::Normal("start".to_owned()),
         ),
     };
 
@@ -313,7 +315,7 @@ pub fn switch_bot(
     // create new conversation for the new client
     data.conversation_id = create_conversation(
         &flow.id,
-        &step,
+        &step.get_step(),
         &data.client,
         data.ttl.clone(),
         &mut data.db,

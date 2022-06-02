@@ -3,6 +3,7 @@ use crate::data::position::Position;
 use crate::data::warnings::DisplayWarnings;
 use crate::data::{
     ast::*,
+    context::ContextStepInfo,
     data::Data,
     literal::ContentType,
     message::*,
@@ -70,6 +71,23 @@ fn get_var_info<'a>(
             Position::new(interval_from_expr(e), &data.context.flow),
             ERROR_GET_VAR_INFO.to_owned(),
         )),
+    }
+}
+
+fn check_if_inserted_step<'a>(name: &str, interval: &Interval, data: &'a Data) -> Option<String> {
+    match data
+        .flow
+        .flow_instructions
+        .get_key_value(&InstructionScope::InsertStep(InsertStep {
+            name: name.to_owned(),
+            original_name: None,
+            from_flow: "".to_owned(),
+            interval: interval.clone(),
+        })) {
+        Some((InstructionScope::InsertStep(insert_step), _expr)) => {
+            Some(insert_step.from_flow.to_owned())
+        }
+        _ => None,
     }
 }
 
@@ -204,62 +222,49 @@ pub fn match_actions(
 
             let (lit, name, mem_type, path) = get_var_info(old, None, data, &mut msg_data, sender)?;
 
-            match assign_type {
+            let primitive = match assign_type {
                 AssignType::AdditionAssignment => {
-                    let primitive = lit.primitive.clone() + new_value.primitive;
-
-                    match primitive {
-                        Ok(primitive) => {
-                            new_value = Literal {
-                                content_type: new_value.content_type,
-                                interval: new_value.interval,
-                                additional_info: None,
-                                secure_variable: false,
-                                primitive,
-                            };
-                        }
-                        Err(err) => {
-                            new_value = PrimitiveString::get_literal(&err, lit.interval);
-                            MSG::send_error_msg(
-                                &sender,
-                                &mut msg_data,
-                                Err(gen_error_info(
-                                    Position::new(new_value.interval, &new_scope_data.context.flow),
-                                    err,
-                                )),
-                            );
-                        }
-                    }
+                    Some(lit.primitive.clone() + new_value.primitive.clone())
                 }
                 AssignType::SubtractionAssignment => {
-                    let primitive = lit.primitive.clone() - new_value.primitive;
-
-                    match primitive {
-                        Ok(primitive) => {
-                            new_value = Literal {
-                                content_type: new_value.content_type,
-                                interval: new_value.interval,
-                                additional_info: None,
-                                secure_variable: false,
-                                primitive,
-                            };
-                        }
-                        Err(err) => {
-                            new_value = PrimitiveString::get_literal(&err, lit.interval);
-
-                            MSG::send_error_msg(
-                                &sender,
-                                &mut msg_data,
-                                Err(gen_error_info(
-                                    Position::new(new_value.interval, &new_scope_data.context.flow),
-                                    err,
-                                )),
-                            );
-                        }
-                    }
+                    Some(lit.primitive.clone() - new_value.primitive.clone())
                 }
-                _ => {}
+                AssignType::DivisionAssignment => {
+                    Some(lit.primitive.clone() / new_value.primitive.clone())
+                }
+                AssignType::MultiplicationAssignment => {
+                    Some(lit.primitive.clone() * new_value.primitive.clone())
+                }
+                AssignType::RemainderAssignment => {
+                    Some(lit.primitive.clone() % new_value.primitive.clone())
+                }
+                AssignType::Assignment => None,
             };
+
+            match primitive {
+                Some(Ok(primitive)) => {
+                    new_value = Literal {
+                        content_type: new_value.content_type,
+                        interval: new_value.interval,
+                        additional_info: None,
+                        secure_variable: false,
+                        primitive,
+                    };
+                }
+                Some(Err(err)) => {
+                    new_value = PrimitiveString::get_literal(&err, lit.interval);
+                    MSG::send_error_msg(
+                        &sender,
+                        &mut msg_data,
+                        Err(gen_error_info(
+                            Position::new(new_value.interval, &new_scope_data.context.flow),
+                            err,
+                        )),
+                    );
+                }
+                None => {}
+            }
+
             //TODO: refacto memory update system
 
             let (new_value, update) = if let MemoryType::Constant = mem_type {
@@ -312,17 +317,8 @@ pub fn match_actions(
             )?;
             Ok(msg_data)
         }
-        ObjectType::Goto(GotoType::Step(step), ..) => {
+        ObjectType::Goto(GotoType::Step(step), interval) => {
             let step = search_goto_var_memory(step, &mut msg_data, data, sender)?;
-
-            MSG::send(
-                &sender,
-                MSG::Next {
-                    flow: None,
-                    step: Some(step.to_string()),
-                    bot: None,
-                },
-            );
 
             // previous flow/step
             match data.previous_info {
@@ -337,8 +333,26 @@ pub fn match_actions(
                 }
             }
 
+            let insert_from_flow = check_if_inserted_step(&step, interval, &data);
+
             // current flow/step
-            data.context.step = step.to_string();
+            data.context.step = match insert_from_flow {
+                Some(from_flow) => ContextStepInfo::InsertedStep {
+                    step: step.to_string(),
+                    flow: from_flow,
+                },
+                None => ContextStepInfo::Normal(step.to_string()),
+            };
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    flow: None,
+                    step: Some(data.context.step.clone()),
+                    bot: None,
+                },
+            );
+
             msg_data.exit_condition = Some(ExitCondition::Goto);
 
             if step == "end" {
@@ -372,7 +386,7 @@ pub fn match_actions(
                 }
             }
             // current flow/step
-            data.context.step = "start".to_string();
+            data.context.step = ContextStepInfo::Normal("start".to_string());
             data.context.flow = flow.to_string();
 
             msg_data.exit_condition = Some(ExitCondition::Goto);
@@ -385,7 +399,7 @@ pub fn match_actions(
                 flow,
                 bot: None,
             },
-            ..,
+            interval,
         ) => {
             let step = match step {
                 Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
@@ -405,15 +419,6 @@ pub fn match_actions(
                 flow_opt = None;
             }
 
-            MSG::send(
-                &sender,
-                MSG::Next {
-                    flow: flow_opt,
-                    step: Some(step.to_string()),
-                    bot: None,
-                },
-            );
-
             // previous flow/step
             match data.previous_info {
                 Some(ref mut previous_info) => {
@@ -429,7 +434,26 @@ pub fn match_actions(
 
             // current flow/step
             data.context.flow = flow.to_string();
-            data.context.step = step.to_string();
+
+            let insert_from_flow = check_if_inserted_step(&step, interval, &data);
+
+            // current flow/step
+            data.context.step = match insert_from_flow {
+                Some(from_flow) => ContextStepInfo::InsertedStep {
+                    step: step.to_string(),
+                    flow: from_flow,
+                },
+                None => ContextStepInfo::Normal(step.to_string()),
+            };
+
+            MSG::send(
+                &sender,
+                MSG::Next {
+                    flow: flow_opt,
+                    step: Some(data.context.step.clone()),
+                    bot: None,
+                },
+            );
 
             Ok(msg_data)
         }
@@ -443,12 +467,17 @@ pub fn match_actions(
             ..,
         ) => {
             let step = match step {
-                Some(step) => search_goto_var_memory(&step, &mut msg_data, data, sender)?,
-                None => "start".to_owned(), // default value start step
+                Some(step) => ContextStepInfo::UnknownFlow(search_goto_var_memory(
+                    &step,
+                    &mut msg_data,
+                    data,
+                    sender,
+                )?),
+                None => ContextStepInfo::Normal("start".to_owned()), // default value start step
             };
             let flow = match flow {
-                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender)?,
-                None => data.context.flow.to_owned(), // default value current flow
+                Some(flow) => search_goto_var_memory(&flow, &mut msg_data, data, sender).ok(),
+                None => None,
             };
 
             let bot = search_goto_var_memory(&next_bot, &mut msg_data, data, sender)?;
@@ -459,27 +488,10 @@ pub fn match_actions(
                 &sender,
                 MSG::Next {
                     step: Some(step),
-                    flow: Some(flow),
+                    flow: flow,
                     bot: Some(bot), // need to send previous flow / step / bot info
                 },
             );
-
-            // // previous flow/step
-            // match data.previous_info {
-            //     Some(ref mut previous_info) => {
-            //         previous_info.goto(data.context.flow.clone(), data.context.step.clone());
-            //     }
-            //     None => {
-            //         data.previous_info = Some(PreviousInfo::new(
-            //             data.context.flow.clone(),
-            //             data.context.step.clone(),
-            //         ))
-            //     }
-            // }
-
-            // current flow/step
-            // data.context.flow = flow.to_string();
-            // data.context.step = step.to_string();
 
             Ok(msg_data)
         }
@@ -498,7 +510,7 @@ pub fn match_actions(
                         (data.context.step.clone(), data.context.flow.clone());
 
                     data.context.flow = tmp_f;
-                    data.context.step = "start".to_string();
+                    data.context.step = ContextStepInfo::Normal("start".to_string());
                 }
                 (PreviousType::Step(_interval), Some(ref mut previous_info)) => {
                     let (tmp_s, tmp_f) = previous_info.step_at_flow.clone();
@@ -516,9 +528,9 @@ pub fn match_actions(
                 }
                 (_, None) => {
                     flow_opt = None;
-                    step_opt = Some("end".to_owned());
+                    step_opt = Some(ContextStepInfo::Normal("end".to_owned()));
 
-                    data.context.step = "end".to_string();
+                    data.context.step = ContextStepInfo::Normal("end".to_string());
                 }
             }
 

@@ -104,7 +104,9 @@ fn get_offsets(ast: &Flow) -> (Vec<(String, usize)>, Vec<usize>) {
                 let interval = interval_from_expr(block);
                 offsets.push((name.to_owned(), interval.offset))
             }
-            InstructionScope::FunctionScope { .. } | InstructionScope::ImportScope(_) => {
+            InstructionScope::FunctionScope { .. }
+            | InstructionScope::ImportScope(_)
+            | InstructionScope::InsertStep(_) => {
                 let interval = interval_from_expr(block);
                 skip_offsets.push(interval.offset)
             }

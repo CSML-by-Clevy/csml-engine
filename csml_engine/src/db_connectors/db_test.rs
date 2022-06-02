@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use csml_interpreter::data::Message;
+    use csml_interpreter::data::{context::ContextStepInfo, Message};
     use std::collections::HashMap;
 
     use crate::{db_connectors::*, init_db, make_migrations, Client, Context, ConversationInfo};
@@ -19,7 +19,7 @@ mod tests {
             metadata: HashMap::new(),
             api_info: None,
             hold: None,
-            step: "start".to_owned(),
+            step: ContextStepInfo::Normal("start".to_owned()),
             flow: "Default".to_owned(),
             previous_bot: None,
         }
@@ -74,23 +74,17 @@ mod tests {
         messages::add_messages_bulk(&mut data, msgs, 0, "SEND").unwrap();
 
         let response =
-            messages::get_client_messages(&client, &mut data.db, Some(2), None, None, None)
+            messages::get_client_messages(&client, &mut data.db, Some(1), None, None, None)
                 .unwrap();
 
         let received_msgs: Vec<serde_json::Value> =
             serde_json::from_value(response["messages"].clone()).unwrap();
 
-        assert_eq!(2, received_msgs.len());
+        assert_eq!(1, received_msgs.len());
 
         assert_eq!(
             "4",
             received_msgs[0]["payload"]["content"]["text"]
-                .as_str()
-                .unwrap()
-        );
-        assert_eq!(
-            "3",
-            received_msgs[1]["payload"]["content"]["text"]
                 .as_str()
                 .unwrap()
         );

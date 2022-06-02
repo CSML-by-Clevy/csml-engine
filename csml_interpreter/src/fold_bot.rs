@@ -27,6 +27,7 @@ pub fn fold_bot(
     let mut step_list = HashSet::new();
     let mut function_list = HashSet::new();
     let mut import_list = HashSet::new();
+    let mut insert_list = HashSet::new();
     let mut valid_closure_list = vec![];
     let mut functions_call_list = vec![];
 
@@ -40,6 +41,7 @@ pub fn fold_bot(
         default_flow,
         &mut bot_constants,
         &mut import_list,
+        &mut insert_list,
         &mut valid_closure_list,
         &mut functions_call_list,
         errors,

@@ -66,7 +66,7 @@ fn init_bot() -> CsmlBot {
         no_interruption_delay: None,
         env: None,
         modules: None,
-        multi_bot: None,
+        multibot: None,
     }
 }
 
