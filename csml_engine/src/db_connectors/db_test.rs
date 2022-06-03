@@ -75,6 +75,8 @@ mod tests {
 
     #[test]
     fn ok_bots() {
+        make_migrations().unwrap_or({});
+
         let bot = init_bot();
         let bot_id = bot.id.clone();
         let mut db = init_db().unwrap();

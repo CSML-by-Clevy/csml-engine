@@ -1,9 +1,9 @@
 table! {
     cmsl_bot_versions (id) {
-        id -> Binary,
-        bot_id -> Text,
+        id -> Uuid,
+        bot_id -> Varchar,
         bot -> Text,
-        engine_version -> Text,
+        engine_version -> Varchar,
         updated_at -> Timestamp,
         created_at -> Timestamp,
     }
@@ -11,13 +11,13 @@ table! {
 
 table! {
     csml_conversations (id) {
-        id -> Binary,
-        bot_id -> Text,
-        channel_id -> Text,
-        user_id -> Text,
-        flow_id -> Text,
-        step_id -> Text,
-        status -> Text,
+        id -> Uuid,
+        bot_id -> Varchar,
+        channel_id -> Varchar,
+        user_id -> Varchar,
+        flow_id -> Varchar,
+        step_id -> Varchar,
+        status -> Varchar,
         last_interaction_at -> Timestamp,
         updated_at -> Timestamp,
         created_at -> Timestamp,
@@ -27,12 +27,12 @@ table! {
 
 table! {
     csml_memories (id) {
-        id -> Binary,
-        bot_id -> Text,
-        channel_id -> Text,
-        user_id -> Text,
-        key -> Text,
-        value -> Text,
+        id -> Uuid,
+        bot_id -> Varchar,
+        channel_id -> Varchar,
+        user_id -> Varchar,
+        key -> Varchar,
+        value -> Varchar,
         expires_at -> Nullable<Timestamp>,
         updated_at -> Timestamp,
         created_at -> Timestamp,
@@ -41,15 +41,15 @@ table! {
 
 table! {
     csml_messages (id) {
-        id -> Binary,
-        conversation_id -> Binary,
-        flow_id -> Text,
-        step_id -> Text,
-        direction -> Text,
-        payload -> Text,
-        content_type -> Text,
-        message_order -> Integer,
-        interaction_order -> Integer,
+        id -> Uuid,
+        conversation_id -> Uuid,
+        flow_id -> Varchar,
+        step_id -> Varchar,
+        direction -> Varchar,
+        payload -> Varchar,
+        content_type -> Varchar,
+        message_order -> Int4,
+        interaction_order -> Int4,
         updated_at -> Timestamp,
         created_at -> Timestamp,
         expires_at -> Nullable<Timestamp>,
@@ -58,14 +58,14 @@ table! {
 
 table! {
     csml_states (id) {
-        id -> Binary,
-        bot_id -> Text,
-        channel_id -> Text,
-        user_id -> Text,
+        id -> Uuid,
+        bot_id -> Varchar,
+        channel_id -> Varchar,
+        user_id -> Varchar,
         #[sql_name = "type"]
-        type_ -> Text,
-        key -> Text,
-        value -> Text,
+        type_ -> Varchar,
+        key -> Varchar,
+        value -> Varchar,
         expires_at -> Nullable<Timestamp>,
         updated_at -> Timestamp,
         created_at -> Timestamp,
