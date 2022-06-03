@@ -103,10 +103,9 @@ pub struct Bot {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct BotGetKeys {
+pub struct BotKeys {
     pub hash: String,
     pub range: String,
-    pub version_id: String,
 }
 
 impl Bot {

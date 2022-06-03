@@ -1,7 +1,7 @@
 use crate::data::{DynamoBot, DynamoBotBincode, DynamoDbClient};
 use crate::db_connectors::dynamodb::utils::*;
 use crate::db_connectors::{
-    dynamodb::{aws_s3, Bot, BotGetKeys, Class, DynamoDbKey},
+    dynamodb::{aws_s3, Bot, BotKeys, Class, DynamoDbKey},
     BotVersion,
 };
 use crate::EngineError;
@@ -150,7 +150,7 @@ pub fn get_bot_versions(
     let mut get_requests = vec![];
 
     for item in items {
-        let bot_keys: BotGetKeys = serde_dynamodb::from_hashmap(item)?;
+        let bot_keys: BotKeys = serde_dynamodb::from_hashmap(item)?;
 
         let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
             hash: bot_keys.hash,
@@ -244,7 +244,8 @@ pub fn get_last_bot_version(
 ) -> Result<Option<BotVersion>, EngineError> {
     let expr_attr_names = [
         (String::from("#hashKey"), String::from("hash")),
-        (String::from("#rangeKey"), String::from("range_time")), // time index
+        (String::from("#rangeKey"), String::from("range")),
+        (String::from("#rangeTimeKey"), String::from("range_time")),
     ]
     .iter()
     .cloned()
@@ -270,7 +271,8 @@ pub fn get_last_bot_version(
     .cloned()
     .collect();
 
-    let key_cond_expr = "#hashKey = :hashVal AND begins_with(#rangeKey, :rangePrefix)".to_string();
+    let key_cond_expr =
+        "#hashKey = :hashVal AND begins_with(#rangeTimeKey, :rangePrefix)".to_string();
 
     // retrieve last bot version from dynamodb
     let input = QueryInput {
@@ -281,7 +283,7 @@ pub fn get_last_bot_version(
         expression_attribute_values: Some(expr_attr_values),
         limit: Some(1),
         select: Some(String::from("SPECIFIC_ATTRIBUTES")),
-        projection_expression: Some("hash, range".to_owned()),
+        projection_expression: Some("#hashKey, #rangeKey".to_owned()),
         scan_index_forward: Some(false),
         ..Default::default()
     };
@@ -305,9 +307,15 @@ pub fn get_last_bot_version(
         Some(items) => items[0].clone(),
     };
 
+    let bot_key: BotKeys = serde_dynamodb::from_hashmap(item_key)?;
+    let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
+        hash: bot_key.hash,
+        range: bot_key.range,
+    })?;
+
     let input = GetItemInput {
         table_name: get_table_name()?,
-        key: serde_dynamodb::to_hashmap(&item_key)?,
+        key,
         ..Default::default()
     };
 
@@ -390,17 +398,19 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut DynamoDbClient) -> Result<(), 
 
         let mut write_requests = vec![];
         for item in items {
-            let data: BotGetKeys = serde_dynamodb::from_hashmap(item.to_owned())?;
+            let data: BotKeys = serde_dynamodb::from_hashmap(item.to_owned())?;
 
-            let key = format!("bots/{}/versions/{}/flows.json", bot_id, data.version_id);
+            let version_id: &str = data.range.split('#').collect::<Vec<&str>>()[1];
+
+            let key = format!("bots/{}/versions/{}/flows.json", bot_id, version_id);
             aws_s3::delete_object(db, &key)?;
 
-            let key = format!("bots/{}/versions/{}/modules.json", bot_id, data.version_id);
+            let key = format!("bots/{}/versions/{}/modules.json", bot_id, version_id);
             aws_s3::delete_object(db, &key)?;
 
             let key = serde_dynamodb::to_hashmap(&DynamoDbKey {
-                hash: Bot::get_hash(bot_id),
-                range: Bot::get_range(&data.version_id),
+                hash: data.hash,
+                range: data.range,
             })?;
 
             write_requests.push(WriteRequest {
