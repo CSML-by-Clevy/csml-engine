@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use csml_interpreter::data::{context::ContextStepInfo, Message};
+    use csml_interpreter::data::{context::ContextStepInfo, CsmlFlow, Message};
     use std::collections::HashMap;
 
     use crate::{db_connectors::*, init_db, make_migrations, Client, Context, ConversationInfo};
@@ -22,6 +22,28 @@ mod tests {
             step: ContextStepInfo::Normal("start".to_owned()),
             flow: "Default".to_owned(),
             previous_bot: None,
+        }
+    }
+
+    fn init_bot() -> CsmlBot {
+        CsmlBot {
+            id: "daee9417-8444-4ec3-8f53".to_owned(),
+            name: "bot".to_owned(),
+            apps_endpoint: None,
+            flows: vec![CsmlFlow {
+                id: "daee9417-8444-4ec3-8f53-673faff14994".to_owned(),
+                name: "Default".to_owned(),
+                content: "start: say \"hello\"".to_owned(),
+                commands: vec![],
+            }],
+            native_components: None,
+            custom_components: None,
+            default_flow: "Default".to_owned(),
+            bot_ast: None,
+            no_interruption_delay: None,
+            env: None,
+            modules: None,
+            multibot: None,
         }
     }
 
@@ -49,6 +71,31 @@ mod tests {
             "content_type": "text",
             "content": { "text": message},
         })
+    }
+
+    #[test]
+    fn ok_bots() {
+        let bot = init_bot();
+        let bot_id = bot.id.clone();
+        let mut db = init_db().unwrap();
+
+        let bot_version = bot::create_bot_version(bot_id.clone(), bot, &mut db).unwrap();
+
+        let last_bot_version = bot::get_last_bot_version(&bot_id, &mut db)
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(bot_version, last_bot_version.version_id);
+
+        let versions = bot::get_bot_versions(&bot_id, None, None, &mut db).unwrap();
+
+        assert_eq!(bot_id, versions["bots"][0]["id"].as_str().unwrap());
+
+        bot::delete_bot_versions(&bot_id, &mut db).unwrap();
+
+        let versions = bot::get_bot_versions(&bot_id, None, None, &mut db).unwrap();
+
+        assert_eq!(0, versions["bots"].as_array().unwrap().len());
     }
 
     #[test]
