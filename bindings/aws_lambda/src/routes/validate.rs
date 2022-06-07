@@ -2,7 +2,7 @@ use csml_engine::{validate_bot, CsmlResult};
 use csml_interpreter::data::csml_bot::CsmlBot;
 use serde::{Deserialize, Serialize};
 
-use lambda_runtime::{error::HandlerError};
+use crate::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ValidateBotResponse {
@@ -29,22 +29,20 @@ struct ValidationError {
     message: String,
 }
 
-pub fn handler(body: CsmlBot) -> Result<serde_json::Value, HandlerError> {
+pub fn handler(body: CsmlBot) -> Result<serde_json::Value, Error> {
     let response = match validate_bot(body.clone()) {
         CsmlResult {
             flows: _,
             extern_flows: _,
             warnings: _,
             errors: None,
-        } => {
-            ValidateBotResponse::new()
-        }
+        } => ValidateBotResponse::new(),
 
         CsmlResult {
-        flows: _,
-        extern_flows: _,
-        warnings: _,
-        errors: Some(errors),
+            flows: _,
+            extern_flows: _,
+            warnings: _,
+            errors: Some(errors),
         } => {
             let mut errors_array = Vec::new();
             for (_, error_info) in errors.iter().enumerate() {

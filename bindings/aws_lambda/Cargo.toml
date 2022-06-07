@@ -9,12 +9,13 @@ name = "aws_lambda"
 path = "src/main.rs"
 
 [dependencies]
-lambda_runtime = "0.2.1"
+lambda_runtime = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-ureq = "1.5.1"
+ureq = "2"
+tokio = { version = "1", features = ["macros"] }
 
-ring = "0.16.15"
+ring = "0.16"
 
 csml_engine = { path = "../../csml_engine"}
 csml_interpreter = { path = "../../csml_interpreter" }

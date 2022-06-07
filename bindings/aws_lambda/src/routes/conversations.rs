@@ -1,9 +1,8 @@
-use csml_engine::{user_close_all_conversations, get_open_conversation, Client};
+use csml_engine::{get_open_conversation, user_close_all_conversations, Client};
 
-use lambda_runtime::error::HandlerError;
+use crate::Error;
 
-pub fn get_open(body: Client) -> Result<serde_json::Value, HandlerError> {
-
+pub fn get_open(body: Client) -> Result<serde_json::Value, Error> {
     let res = get_open_conversation(&body);
 
     match res {
@@ -26,13 +25,12 @@ pub fn get_open(body: Client) -> Result<serde_json::Value, HandlerError> {
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
             eprintln!("{}", error);
-            Err(HandlerError::from(error.as_str()))
+            Err(Error::from(error.as_str()))
         }
     }
 }
 
-pub fn close_user_conversations(body: Client) -> Result<serde_json::Value, HandlerError> {
-
+pub fn close_user_conversations(body: Client) -> Result<serde_json::Value, Error> {
     let res = user_close_all_conversations(body.clone());
 
     match res {
@@ -47,12 +45,16 @@ pub fn close_user_conversations(body: Client) -> Result<serde_json::Value, Handl
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
             eprintln!("{}", error);
-            Err(HandlerError::from(error.as_str()))
+            Err(Error::from(error.as_str()))
         }
     }
 }
 
-pub fn get_client_conversations(client: Client, limit: Option<i64>, pagination_key: Option<String>) -> Result<serde_json::Value, HandlerError> {
+pub fn get_client_conversations(
+    client: Client,
+    limit: Option<i64>,
+    pagination_key: Option<String>,
+) -> Result<serde_json::Value, Error> {
     let res = csml_engine::get_client_conversations(&client, limit, pagination_key);
 
     match res {
@@ -67,8 +69,7 @@ pub fn get_client_conversations(client: Client, limit: Option<i64>, pagination_k
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
             eprintln!("{}", error);
-            Err(HandlerError::from(error.as_str()))
+            Err(Error::from(error.as_str()))
         }
     }
-
 }

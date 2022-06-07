@@ -38,7 +38,7 @@ async fn main() -> std::io::Result<()> {
                     .max_age(86_400), //24h
             )
             .wrap(middleware::Logger::default())
-            .data(web::JsonConfig::default().limit(MAX_BODY_SIZE))
+            .app_data(web::JsonConfig::default().limit(MAX_BODY_SIZE))
             .service(fs::Files::new("/static", "./static").use_last_modified(true))
             .service(routes::index::home)
             .service(routes::validate::handler)

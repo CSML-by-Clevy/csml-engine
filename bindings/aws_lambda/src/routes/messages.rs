@@ -1,9 +1,6 @@
+use csml_engine::Client;
 
-use csml_engine::{Client};
-
-use crate::{format_response};
-
-use lambda_runtime::error::HandlerError;
+use crate::{format_response, Error};
 
 pub fn get_client_messages(
     client: Client,
@@ -11,8 +8,7 @@ pub fn get_client_messages(
     pagination_key: Option<String>,
     from_date: Option<i64>,
     to_date: Option<i64>,
-) -> Result<serde_json::Value, HandlerError> {
-
+) -> Result<serde_json::Value, Error> {
     let res = csml_engine::get_client_messages(&client, limit, pagination_key, from_date, to_date);
 
     match res {
@@ -26,7 +22,7 @@ pub fn get_client_messages(
         )),
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
-            return Ok(format_response(400, serde_json::json!(error)))
+            return Ok(format_response(400, serde_json::json!(error)));
         }
     }
 }

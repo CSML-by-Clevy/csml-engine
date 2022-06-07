@@ -22,12 +22,17 @@ use csml_engine::{data::RunRequest, Client};
 use csml_interpreter::data::csml_bot::CsmlBot;
 use helpers::{format_csml_client, format_response};
 
-use lambda_runtime::{error::HandlerError, lambda, Context};
+use lambda_runtime::{service_fn, LambdaEvent};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    lambda!(lambda_handler);
+pub type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
+
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    let func = service_fn(lambda_handler);
+
+    lambda_runtime::run(func).await?;
+
     Ok(())
 }
 
@@ -48,8 +53,8 @@ struct LambdaRequest {
     is_base64_encoded: bool,
 }
 
-fn lambda_handler(request: LambdaRequest, _c: Context) -> Result<serde_json::Value, HandlerError> {
-    match request {
+async fn lambda_handler(request: LambdaEvent<LambdaRequest>) -> Result<serde_json::Value, Error> {
+    match request.payload {
         /*
          * RUN
          */

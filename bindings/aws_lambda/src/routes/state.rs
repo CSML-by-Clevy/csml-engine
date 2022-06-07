@@ -1,11 +1,8 @@
-use csml_engine::{Client};
+use csml_engine::Client;
 
-use crate::{format_response};
+use crate::{format_response, Error};
 
-use lambda_runtime::error::HandlerError;
-
-pub fn get_client_current_state(client: Client) -> Result<serde_json::Value, HandlerError> {
-
+pub fn get_client_current_state(client: Client) -> Result<serde_json::Value, Error> {
     let res = csml_engine::get_current_state(&client);
 
     match res {
@@ -26,7 +23,7 @@ pub fn get_client_current_state(client: Client) -> Result<serde_json::Value, Han
         )),
         Err(err) => {
             let error = format!("EngineError: {:?}", err);
-            return Ok(format_response(400, serde_json::json!(error)))
+            return Ok(format_response(400, serde_json::json!(error)));
         }
     }
 }
