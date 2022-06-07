@@ -273,17 +273,21 @@ pub fn switch_bot(
         Some(version_id) => BotOpt::Id {
             version_id,
             bot_id: next_bot.bot_id,
-            apps_endpoint: bot.apps_endpoint.clone(),
-            multibot: bot.multibot.clone(),
+            apps_endpoint: bot.apps_endpoint.take(),
+            multibot: bot.multibot.take(),
         },
         None => BotOpt::BotId {
             bot_id: next_bot.bot_id,
-            apps_endpoint: bot.apps_endpoint.clone(),
-            multibot: bot.multibot.clone(),
+            apps_endpoint: bot.apps_endpoint.take(),
+            multibot: bot.multibot.take(),
         },
     };
 
-    *bot = bot_opt.search_bot(&mut data.db)?;
+    let mut new_bot = bot_opt.search_bot(&mut data.db)?;
+    new_bot.custom_components = bot.custom_components.take();
+    new_bot.native_components = bot.native_components.take();
+
+    *bot = new_bot;
 
     set_bot_ast(bot)?;
 
