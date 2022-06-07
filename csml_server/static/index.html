@@ -43,37 +43,41 @@
   <section class="container mx-auto my-6">
     <h2 class="text-xl font-bold mb-4">Setup</h2>
     <p class="text-lg font-base mb-2">Environment variables:</p>
-    <pre class="bg-gray-800 py-3 px-4 rounded-lg mb-12"><code class="text-sm text-white">ENGINE_DB_TYPE=mongodb # must be one of mongodb|dynamodb|postgresql
+    <pre class="bg-gray-800 py-3 px-4 rounded-lg mb-12"><code class="text-sm text-white">ENGINE_DB_TYPE=mongodb # must be one of mongodb|dynamodb|postgresql|sqlite
 
 # for mongodb
-MONGODB_HOST=localhost
-MONGODB_PORT=27017
+MONGODB_URI=mongodb://username:password@localhost:27017
 MONGODB_DATABASE=csml
-MONGODB_USERNAME=root
-MONGODB_PASSWORD=root
-
-# for dynamodb
-AWS_ACCESS_KEY_ID= # or use an IAM role
-AWS_SECRET_ACCESS_KEY= # or use an IAM role
-AWS_REGION=
-AWS_DYNAMODB_ENDPOINT= # optional, defaults to the dynamodb endpoint for the given region
-AWS_DYNAMODB_TABLE=
-AWS_S3_ENDPOINT= # optional, defaults to the S3 endpoint for the given region
-AWS_S3_BUCKET=
 
 # for postgresql
 POSTGRESQL_URL=postgres://user:password@hostname:port/database
 
+# for sqlite
+SQLITE_URL=csml.db
+
+# for dynamodb (also requires S3 for storage of large items)
+AWS_ACCESS_KEY_ID= # or use a local IAM role
+AWS_SECRET_ACCESS_KEY= # or use a local IAM role
+AWS_REGION=
+AWS_DYNAMODB_ENDPOINT= # optional, defaults to the dynamodb endpoint for the given region.
+AWS_DYNAMODB_TABLE=
+AWS_S3_ENDPOINT= # optional, defaults to the S3 endpoint for the given region
+AWS_S3_BUCKET=
+
 # CSML Server configuration
-ENGINE_SERVER_PORT=5000 # defaults to 5000
-ENGINE_SERVER_API_KEYS=my-key-1,my-key-2 # comma-separated list of accepted server auth keys
+ENGINE_SERVER_PORT=5000
+ENGINE_SERVER_API_KEYS=someAuthKey4CsmlServer,someOtherAuthKey
 
 # Other optional engine configuration
 ENGINE_ENCRYPTION_SECRET=some-secret-string # if not set, data will not be stored encrypted
 TTL_DURATION=30 # auto-remove chatbot user data after X days
 LOW_DATA_MODE=true # do not store contents of sent/received messages
+STEP_LIMIT=30 # step the limit of steps that the interpreter can handle per request
 DISABLE_SSL_VERIFY=false # reach trusted endpoints with known invalid certificates
-DEBUG=true # print debug output in console</code></pre>
+DEBUG=true # print debug output in console
+CSML_LOG_LEVEL=error # print log output in stderr. Possible values are error, warn, info, debug, trace.
+MODULES_URL= # default module repository base url
+MODULES_AUTH= # default module auth token</code></pre>
   </section>
 
   <hr>

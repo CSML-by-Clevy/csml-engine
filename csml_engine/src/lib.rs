@@ -578,6 +578,12 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
         Err(_) => status.insert("debug_mode_enabled".to_owned(), serde_json::json!(false)),
     };
 
+    match std::env::var("CSML_LOG_LEVEL") {
+        Ok(val) => status.insert("csml_log_level".to_owned(), serde_json::json!(val.to_owned())),
+        Err(_) => status.insert("csml_log_level".to_owned(), serde_json::json!("info".to_owned())),
+
+    };
+
     status.insert(
         "engine_version".to_owned(),
         serde_json::json!(env!("CARGO_PKG_VERSION")),

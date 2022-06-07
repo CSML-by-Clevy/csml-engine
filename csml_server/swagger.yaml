@@ -1096,6 +1096,8 @@ components:
           enum:
             - mongodb
             - dynamodb
+            - postgresql
+            - sqlite
           description: The type of database configured
         server_port:
           type: number
@@ -1110,6 +1112,9 @@ components:
         debug_mode_enabled:
           type: boolean
           description: Whether the server is in debug mode
+        engine_version:
+          type: string
+          description: The current CSML version
 
     AppsEndpoint:
       type: string

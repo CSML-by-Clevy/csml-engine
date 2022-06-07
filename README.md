@@ -178,7 +178,7 @@ After that, execute your build (by default under ./targets/release/csml_server) 
 
 This repository provides Node.js bindings of this rust library. To use this library in a Node.js project, you will need to build it from source. There are a few requirements:
 
-- Rust v1.46
+- Current Rust Stable version (v1.61.0 and above)
 - Node.js LTS or above
 - Neon CLI v0.4.0 (make sure that all [required dependencies](https://neon-bindings.com/docs/getting-started/#install-node-build-tools/) are installed)
 - libssl-dev (or equivalent for your architecture: openssl-dev, libssl-devel...)
