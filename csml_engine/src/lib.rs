@@ -578,6 +578,11 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
         Err(_) => status.insert("debug_mode_enabled".to_owned(), serde_json::json!(false)),
     };
 
+    status.insert(
+        "engine_version".to_owned(),
+        serde_json::json!(env!("CARGO_PKG_VERSION")),
+    );
+
     Ok(serde_json::json!(status))
 }
 

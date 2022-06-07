@@ -4,7 +4,7 @@ use crate::{
     data::{ConversationInfo, CsmlRequest, Database, EngineError},
     utils::{
         get_default_flow, get_flow_by_id, get_low_data_mode_value, get_ttl_duration_value,
-        search_flow,
+        search_flow, send_msg_to_callback_url,
     },
     BotOpt, Context, CsmlBot, CsmlFlow, CsmlResult,
 };
@@ -14,7 +14,7 @@ use csml_interpreter::{
     data::{
         ast::Flow,
         context::{get_hashmap_from_json, get_hashmap_from_mem},
-        ApiInfo, Client, Event, PreviousBot,
+        ApiInfo, Client, Event, Message, PreviousBot,
     },
     load_components, search_for_modules, validate_bot,
 };
@@ -302,10 +302,24 @@ pub fn switch_bot(
 
     let (flow, step) = match get_flow_by_id(&data.context.flow, &bot.flows) {
         Ok(flow) => (flow, data.context.step.clone()),
-        Err(_) => (
-            get_flow_by_id(&bot.default_flow, &bot.flows)?,
-            ContextStepInfo::Normal("start".to_owned()),
-        ),
+        Err(_) => {
+            let error_message =
+                format!("flow: {} not found in bot: {}", data.context.flow, bot.name);
+            send_msg_to_callback_url(
+                data,
+                vec![Message {
+                    content_type: "error".to_owned(),
+                    content: serde_json::json!(error_message.clone()),
+                }],
+                0,
+                false,
+            );
+
+            (
+                get_flow_by_id(&bot.default_flow, &bot.flows)?,
+                ContextStepInfo::Normal("start".to_owned()),
+            )
+        }
     };
 
     // update event to flow trigger
