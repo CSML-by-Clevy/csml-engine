@@ -2,6 +2,7 @@ use actix_cors::Cors;
 use actix_files as fs;
 use actix_web::{http::header, middleware, web, App, HttpServer};
 use csml_engine::make_migrations;
+use csml_interpreter::csml_logs::init_logger;
 
 mod routes;
 
@@ -9,8 +10,7 @@ const MAX_BODY_SIZE: usize = 8_388_608; // 8MB
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
+    init_logger();
 
     let server_port: String = match std::env::var("ENGINE_SERVER_PORT") {
         Ok(val) => val,

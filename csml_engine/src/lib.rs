@@ -12,7 +12,6 @@ pub use csml_interpreter::{
     data::{
         ast::{Expr, Flow, InstructionScope},
         csml_logs::*,
-        csml_logs::*,
         error_info::ErrorInfo,
         position::Position,
         warnings::Warnings,
@@ -579,9 +578,14 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
     };
 
     match std::env::var("CSML_LOG_LEVEL") {
-        Ok(val) => status.insert("csml_log_level".to_owned(), serde_json::json!(val.to_owned())),
-        Err(_) => status.insert("csml_log_level".to_owned(), serde_json::json!("info".to_owned())),
-
+        Ok(val) => status.insert(
+            "csml_log_level".to_owned(),
+            serde_json::json!(val.to_owned()),
+        ),
+        Err(_) => status.insert(
+            "csml_log_level".to_owned(),
+            serde_json::json!("info".to_owned()),
+        ),
     };
 
     status.insert(
