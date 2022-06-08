@@ -294,7 +294,7 @@ pub fn switch_bot(
     data.context.step = ContextStepInfo::UnknownFlow(next_bot.step);
     data.context.flow = match next_bot.flow {
         Some(flow) => flow,
-        None => bot.default_flow.clone(),
+        None => bot.get_default_flow_name(),
     };
 
     // update client with the new bot id
@@ -320,7 +320,7 @@ pub fn switch_bot(
 
             // setting default step && flow
             data.context.step = ContextStepInfo::Normal("start".to_owned());
-            data.context.flow = bot.default_flow.clone();
+            data.context.flow = bot.get_default_flow_name();
 
             (
                 get_flow_by_id(&bot.default_flow, &bot.flows)?,

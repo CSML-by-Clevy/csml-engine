@@ -400,7 +400,7 @@ fn manage_switch_bot<'a>(
 
     let previous_bot: Value = serde_json::json!({
         "bot": data.client.bot_id,
-        "flow": data.context.step,
+        "flow": data.context.flow,
         "step": data.context.step,
     });
 

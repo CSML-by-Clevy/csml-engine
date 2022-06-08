@@ -79,6 +79,16 @@ impl CsmlBot {
             env,
         }
     }
+
+    pub fn get_default_flow_name(&self) -> String {
+        match self.flows.iter().find(|&val| {
+            val.id.to_ascii_lowercase() == self.default_flow.to_ascii_lowercase()
+                || val.name.to_ascii_lowercase() == self.default_flow.to_ascii_lowercase()
+        }) {
+            Some(ref f) => f.name.to_owned(),
+            None => unreachable!("default_flow should always be found"),
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
