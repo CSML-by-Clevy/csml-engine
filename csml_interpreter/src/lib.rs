@@ -107,12 +107,13 @@ fn get_step_limit(event: &Event) -> usize {
 fn get_flow_ast<'a, 'b>(
     flows: &'a HashMap<String, Flow>,
     flow: &'b str,
+    bot_id: &'b str,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> Result<&'a Flow, MessageData> {
     match flows.get(flow) {
         Some(result) => Ok(result),
         None => {
-            let error_message = format!("flow '{}' does not exist in this bot", flow);
+            let error_message = format!("flow: [{}] does not exist in bot: [{}]", flow, bot_id);
             let error_info = create_error_info(&error_message, Interval::default());
 
             Err(MessageData::error_to_message(
@@ -130,10 +131,11 @@ fn get_flow_ast<'a, 'b>(
     }
 }
 
-fn get_inserted_ast<'a>(
+fn get_inserted_ast<'a, 'b>(
     flows: &'a HashMap<String, Flow>,
     ast: &'a Flow,
     step: &ContextStepInfo,
+    bot_id: &'b str,
     sender: &Option<mpsc::Sender<MSG>>,
 ) -> (bool, Option<&'a Flow>) {
     match &step {
@@ -166,7 +168,7 @@ fn get_inserted_ast<'a>(
                             flow: insert_step.from_flow.clone(),
                         };
 
-                        get_inserted_ast(flows, ast, &step, sender)
+                        get_inserted_ast(flows, ast, &step, bot_id, sender)
                     }
                     _ => (missing_step, None),
                 }
@@ -175,7 +177,7 @@ fn get_inserted_ast<'a>(
             }
         }
         ContextStepInfo::InsertedStep { step, flow } => {
-            match get_flow_ast(&flows, &flow, &sender) {
+            match get_flow_ast(&flows, &flow, bot_id, &sender) {
                 Ok(inserted_ast) => {
                     let missing_step = inserted_ast
                         .flow_instructions
@@ -484,12 +486,12 @@ pub fn interpret(
     };
 
     while msg_data.exit_condition.is_none() {
-        let ast = match get_flow_ast(&flows, &flow, &sender) {
+        let ast = match get_flow_ast(&flows, &flow, &bot.id, &sender) {
             Ok(ast) => ast,
             Err(message_data) => return message_data,
         };
 
-        let (missing_step, inserted_ast) = get_inserted_ast(&flows, ast, &step, &sender);
+        let (missing_step, inserted_ast) = get_inserted_ast(&flows, ast, &step, &bot.id, &sender);
 
         // if the target flow dose not contains a 'start' flow change the target to the default_flow
         if step.is_step("start") && missing_step {
