@@ -303,17 +303,24 @@ pub fn switch_bot(
     let (flow, step) = match get_flow_by_id(&data.context.flow, &bot.flows) {
         Ok(flow) => (flow, data.context.step.clone()),
         Err(_) => {
-            let error_message =
-                format!("flow: {} not found in bot: {}", data.context.flow, bot.name);
-            send_msg_to_callback_url(
-                data,
-                vec![Message {
-                    content_type: "error".to_owned(),
-                    content: serde_json::json!(error_message.clone()),
-                }],
-                0,
-                false,
+            let error_message = format!(
+                "flow: [{}] not found in bot: [{}], switching to start@default_flow",
+                data.context.flow, bot.name
             );
+
+            let message = Message {
+                content_type: "error".to_owned(),
+                content: serde_json::json!(error_message.clone()),
+            };
+
+            // save message
+            data.messages.push(message.clone());
+            // send message
+            send_msg_to_callback_url(data, vec![message], 0, false);
+
+            // setting default step && flow
+            data.context.step = ContextStepInfo::Normal("start".to_owned());
+            data.context.flow = bot.default_flow.clone();
 
             (
                 get_flow_by_id(&bot.default_flow, &bot.flows)?,
