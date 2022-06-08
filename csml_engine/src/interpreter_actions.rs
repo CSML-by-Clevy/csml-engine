@@ -285,7 +285,7 @@ fn manage_switch_bot<'a>(
         Some(next_bot) => next_bot,
         None => {
             let error_message = format!("Switching to Bot: ({}) is not allowed", target_bot);
-
+            // send message
             send_msg_to_callback_url(
                 data,
                 vec![Message {
@@ -380,13 +380,11 @@ fn manage_switch_bot<'a>(
         }
     };
 
+    let message = Message::switch_bot_message(&next_bot.id, &data.client);
+    // save message
+    data.messages.push(message.clone());
     // send message switch bot
-    send_msg_to_callback_url(
-        data,
-        vec![Message::switch_bot_message(&next_bot.id, &data.client)],
-        *interaction_order,
-        true,
-    );
+    send_msg_to_callback_url(data, vec![message], *interaction_order, true);
 
     csml_logger(
         CsmlLog::new(
