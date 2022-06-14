@@ -1,14 +1,16 @@
-
 {
-    "name": "csml_engine_node",
-    "version": "1.11.0-rc5",
-    "main": "index.node",
-    "scripts": {
-      "build": "cargo-cp-artifact -nc index.node -- cargo build --features csml_engine/mongo,csml_engine/dynamo --message-format=json-render-diagnostics",
-      "install": "npm run build",
-      "test": "cargo test"
-    },
-    "devDependencies": {
-      "cargo-cp-artifact": "^0.1"
-    }
+  "name": "@csml/engine-node",
+  "version": "1.11.0-rc5",
+  "main": "index.node",
+  "scripts": {
+    "build": "cargo-cp-artifact -nc index.node -- cargo build --features=csml_engine/mongo,csml_engine/dynamo,csml_engine/sqlite,csml_engine/postgresql --message-format=json-render-diagnostics",
+    "build:dynamodb": "cargo-cp-artifact -nc index.node -- cargo build --features=csml_engine/dynamo --message-format=json-render-diagnostics",
+    "build:mongodb": "cargo-cp-artifact -nc index.node -- cargo build --features=csml_engine/mongo --message-format=json-render-diagnostics",
+    "build:postgresql": "cargo-cp-artifact -nc index.node -- cargo build --features=csml_engine/postgresql --message-format=json-render-diagnostics",
+    "build:sqlite": "cargo-cp-artifact -nc index.node -- cargo build --features=csml_engine/sqlite --message-format=json-render-diagnostics",
+    "test": "cargo test"
+  },
+  "devDependencies": {
+    "cargo-cp-artifact": "^0.1.6"
   }
+}

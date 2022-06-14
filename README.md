@@ -179,7 +179,7 @@ After that, execute your build (by default under ./targets/release/csml_server) 
 This repository provides Node.js bindings of this rust library. To use this library in a Node.js project, you will need to build it from source. There are a few requirements:
 
 - Current Rust Stable version (v1.61.0 and above)
-- Node.js LTS or above
+- Node.js LTS
 - cargo-cp-artifact v0.1.6 [required dependencies](https://www.npmjs.com/package/cargo-cp-artifact)
 - libssl-dev (or equivalent for your architecture: openssl-dev, libssl-devel...)
 
@@ -190,6 +190,8 @@ git clone https://github.com/CSML-by-Clevy/csml-engine csml
 cd csml/bindings/node/native
 npm run build -- --release
 ```
+
+> NB: you can build specifically for MongoDB, DynamoDB, SQLite or PostgreSQL by using one of the specialized scripts (i.e `npm run build:mongodb`) in the [package.json](./bindings/node/native/package.json).
 
 This method will output this native file: `csml/bindings/node/native/index.node` that you can simply `require()` (or `import`) in your project. For more details about how to use this module in your own projects, you can have a look at [our implementation for Docker version](https://github.com/CSML-by-Clevy/csml-engine-docker/blob/master/app/server.js).
 
