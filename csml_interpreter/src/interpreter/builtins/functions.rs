@@ -231,7 +231,7 @@ pub fn uuid_command(
                         rand::thread_rng().gen(),
                     ];
                     Ok(PrimitiveString::get_literal(
-                        &Uuid::new_v1(ts, node_id)?.to_string(),
+                        &Uuid::new_v1(ts, node_id).hyphenated().to_string(),
                         interval,
                     ))
                 }

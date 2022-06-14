@@ -16,12 +16,16 @@ fn jwt_algorithm_to_str(algo: &jsonwebtoken::Algorithm) -> String {
 
         jsonwebtoken::Algorithm::ES256 => "ES256".to_owned(),
         jsonwebtoken::Algorithm::ES384 => "ES384".to_owned(),
+
         jsonwebtoken::Algorithm::RS256 => "RS256".to_owned(),
         jsonwebtoken::Algorithm::RS384 => "RS384".to_owned(),
+        jsonwebtoken::Algorithm::RS512 => "RS512".to_owned(),
+
         jsonwebtoken::Algorithm::PS256 => "PS256".to_owned(),
         jsonwebtoken::Algorithm::PS384 => "PS384".to_owned(),
         jsonwebtoken::Algorithm::PS512 => "PS512".to_owned(),
-        jsonwebtoken::Algorithm::RS512 => "RS512".to_owned(),
+
+        jsonwebtoken::Algorithm::EdDSA => "EdDSA".to_owned(),
     }
 }
 
@@ -259,15 +263,18 @@ pub fn get_validation(
                 validation.aud = Some(HashSet::from_iter(vec.iter().cloned()));
             }
             "iss" => {
-                validation.iss = Some(
-                    Literal::get_value::<String>(
-                        &value.primitive,
-                        flow_name,
-                        interval,
-                        "JWT Validation 'validate_nbf' must be of type Boolean".to_owned(),
-                    )?
-                    .to_owned(),
-                )
+                let mut iss = HashSet::new();
+                let iss_value = Literal::get_value::<String>(
+                    &value.primitive,
+                    flow_name,
+                    interval,
+                    "JWT Validation 'validate_nbf' must be of type Boolean".to_owned(),
+                )?
+                .to_owned();
+
+                iss.insert(iss_value);
+
+                validation.iss = Some(iss)
             }
             "sub" => {
                 validation.sub = Some(
