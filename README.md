@@ -180,17 +180,16 @@ This repository provides Node.js bindings of this rust library. To use this libr
 
 - Current Rust Stable version (v1.61.0 and above)
 - Node.js LTS or above
-- Neon CLI v0.4.0 (make sure that all [required dependencies](https://neon-bindings.com/docs/getting-started/#install-node-build-tools/) are installed)
+- cargo-cp-artifact v0.1.6 [required dependencies](https://www.npmjs.com/package/cargo-cp-artifact)
 - libssl-dev (or equivalent for your architecture: openssl-dev, libssl-devel...)
 
 To compile CSML Engine into a [native node module](https://Node.js.org/api/addons.html), run:
 
 ```shell
 git clone https://github.com/CSML-by-Clevy/csml-engine csml
-neon build -p csml/bindings/node --release
+cd csml/bindings/node/native
+npm run build -- --release
 ```
-
-> If you are not familiar with Rust build times, please know that the `neon build` step can take up to 10 minutes. Be patient!
 
 This method will output this native file: `csml/bindings/node/native/index.node` that you can simply `require()` (or `import`) in your project. For more details about how to use this module in your own projects, you can have a look at [our implementation for Docker version](https://github.com/CSML-by-Clevy/csml-engine-docker/blob/master/app/server.js).
 
