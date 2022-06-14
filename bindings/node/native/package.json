@@ -1,5 +1,5 @@
 {
-  "name": "@csml/engine-node",
+  "name": "csml_engine_node",
   "version": "1.11.0-rc5",
   "main": "index.node",
   "scripts": {
