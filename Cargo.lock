@@ -551,7 +551,7 @@ name = "aws_lambda"
 version = "0.1.0"
 dependencies = [
  "csml_engine",
- "csml_interpreter 1.11.0-rc4",
+ "csml_interpreter 1.11.0-rc5",
  "lambda_runtime",
  "ring",
  "serde",
@@ -1016,7 +1016,7 @@ dependencies = [
  "clap",
  "crossterm 0.21.0",
  "csml_engine",
- "csml_interpreter 1.11.0-rc4",
+ "csml_interpreter 1.11.0-rc5",
  "dotenv",
  "git2",
  "image",
@@ -1042,13 +1042,13 @@ dependencies = [
 
 [[package]]
 name = "csml_engine"
-version = "1.11.0-rc4"
+version = "1.11.0-rc5"
 dependencies = [
  "base64 0.13.0",
  "bincode",
  "bson",
  "chrono",
- "csml_interpreter 1.11.0-rc4",
+ "csml_interpreter 1.11.0-rc5",
  "diesel",
  "diesel_migrations",
  "env_logger",
@@ -1075,10 +1075,10 @@ dependencies = [
 
 [[package]]
 name = "csml_engine_node"
-version = "1.11.0-rc4"
+version = "1.11.0-rc5"
 dependencies = [
  "csml_engine",
- "csml_interpreter 1.11.0-rc4",
+ "csml_interpreter 1.11.0-rc5",
  "neon",
  "neon-build",
  "serde",
@@ -1123,7 +1123,7 @@ dependencies = [
 
 [[package]]
 name = "csml_interpreter"
-version = "1.11.0-rc4"
+version = "1.11.0-rc5"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -1157,7 +1157,7 @@ dependencies = [
 
 [[package]]
 name = "csml_server"
-version = "1.11.0-rc4"
+version = "1.11.0-rc5"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1167,7 +1167,7 @@ dependencies = [
  "awc",
  "bytes",
  "csml_engine",
- "csml_interpreter 1.11.0-rc4",
+ "csml_interpreter 1.11.0-rc5",
  "env_logger",
  "futures",
  "json",

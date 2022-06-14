@@ -1,6 +1,6 @@
 [package]
 name = "csml_engine_node"
-version = "1.11.0-rc4"
+version = "1.11.0-rc5"
 authors = ["Alexis Merelo <alexis.merelo@clevy.io>"]
 license = "MIT"
 build = "build.rs"
@@ -16,7 +16,6 @@ neon-build = "0.10.1"
 
 [dependencies]
 neon = "0.10.1"
-# neon-serde = "0.4.0"
 csml_engine = { version = "1.11.0-rc4", path = "../../../csml_engine", features = ["mongo", "postgresql", "dynamo"]}
 csml_interpreter = { version = "1.11.0-rc4", path = "../../../csml_interpreter"}
 serde = { version = "1.0", features = ["derive"] }
