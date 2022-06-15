@@ -310,7 +310,7 @@ pub fn switch_bot(
 
             let message = Message {
                 content_type: "error".to_owned(),
-                content: serde_json::json!(error_message.clone()),
+                content: serde_json::json!({"error": error_message.clone()}),
             };
 
             // save message

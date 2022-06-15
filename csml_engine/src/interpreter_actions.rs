@@ -290,7 +290,9 @@ fn manage_switch_bot<'a>(
                 data,
                 vec![Message {
                     content_type: "error".to_owned(),
-                    content: serde_json::json!(error_message.clone()),
+                    content: serde_json::json!({
+                        "error": error_message.clone()
+                    }),
                 }],
                 *interaction_order,
                 true,
