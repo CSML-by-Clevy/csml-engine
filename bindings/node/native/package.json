@@ -1,6 +1,6 @@
 {
   "name": "csml_engine_node",
-  "version": "1.11.0-rc5",
+  "version": "1.11.0",
   "main": "index.node",
   "scripts": {
     "build": "cargo-cp-artifact -nc index.node -- cargo build --features=csml_engine/mongo,csml_engine/dynamo,csml_engine/sqlite,csml_engine/postgresql --message-format=json-render-diagnostics",
