@@ -14,7 +14,7 @@ fn metadata() {
     let data = r#"{
         "memories":[],
         "messages":[
-            {"content":{"var": 42}, "content_type":"object"}
+            {"content":{"var": 42, "_context": {"current_flow": "flow", "current_step": "start", "default_flow": "flow"}}, "content_type":"object"}
         ]
     }"#;
     let mut metadata = HashMap::new();
