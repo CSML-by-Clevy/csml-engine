@@ -467,7 +467,7 @@ fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Lite
 
     flow_context.insert(
         "default_flow".to_owned(),
-        PrimitiveString::get_literal(&data.context.flow, interval),
+        PrimitiveString::get_literal(&data.default_flow, interval),
     );
 
     if let Some(previous_info) = &data.previous_info {
