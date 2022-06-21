@@ -375,7 +375,7 @@ pub unsafe extern "C" fn GetBotByVersionId(
 
             CString::new(value.to_string())
             .expect("Couldn't create string!")
-            .into_raw()        
+            .into_raw()
         },
     }
 }
@@ -708,7 +708,7 @@ pub unsafe extern "C" fn GetClientMemories(
 
             CString::new(value.to_string())
             .expect("Couldn't create string!")
-            .into_raw()        
+            .into_raw()
         },
         Err(err) => {
             let value = serde_json::json!({

@@ -22,5 +22,5 @@ json = "0.12"
 log = "0.4"
 env_logger= "0.9"
 
-csml_engine = { path = "../csml_engine"}
+csml_engine = { path = "../csml_engine" }
 csml_interpreter = { path = "../csml_interpreter" }

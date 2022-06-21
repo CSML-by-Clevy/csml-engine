@@ -1190,7 +1190,7 @@ name = "csmllib"
 version = "0.1.0"
 dependencies = [
  "csml_engine",
- "csml_interpreter 1.10.4",
+ "csml_interpreter 1.11.0",
  "serde",
  "serde_json",
 ]
