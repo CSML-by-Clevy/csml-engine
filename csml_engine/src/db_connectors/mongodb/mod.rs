@@ -52,6 +52,7 @@ pub fn init() -> Result<Database, EngineError> {
     let client = mongodb::sync::Client::with_uri_str(&uri)?;
     let mongodb_client = MongoDbClient::new(client.database(&dbname));
     create_ttl_indexes(&mongodb_client);
+    create_client_indexes(&mongodb_client);
 
     let db = Database::Mongo(mongodb_client);
 
@@ -136,6 +137,62 @@ fn create_ttl_indexes(
         }
     )
     .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
+    .build();
+    state.create_index(index,None).ok();
+}
+
+fn create_client_indexes(
+    db: &MongoDbClient,
+) {
+    // create compound client index for conversation
+    let conversation = db.client.collection::<Document>("conversation");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "client.bot_id": 1,
+            "client.channel_id": 1,
+            "client.user_id": 1
+        }
+    )
+    .build();
+    conversation.create_index(index, None).ok();
+
+    // create compound client index for memory
+    let memory = db.client.collection::<Document>("memory");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "client.bot_id": 1,
+            "client.channel_id": 1,
+            "client.user_id": 1
+        }
+    )
+    .build();
+    memory.create_index(index, None).ok();
+
+    // create compound client index for message
+    let message = db.client.collection::<Document>("message");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "client.bot_id": 1,
+            "client.channel_id": 1,
+            "client.user_id": 1
+        }
+    )
+    .build();
+    message.create_index(index,None).ok();
+
+    // create compound client index for state
+    let state = db.client.collection::<Document>("state");
+    let index: IndexModel = IndexModel::builder()
+    .keys(
+        doc! {
+            "client.bot_id": 1,
+            "client.channel_id": 1,
+            "client.user_id": 1
+        }
+    )
     .build();
     state.create_index(index,None).ok();
 }
