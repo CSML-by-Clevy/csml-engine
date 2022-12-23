@@ -15,8 +15,9 @@ pub mod expired_data;
 use crate::{Database, EngineError, SqliteClient};
 
 use diesel::prelude::*;
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness};
 
-embed_migrations!("migrations/sqlite");
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/sqlite");
 
 pub fn init() -> Result<Database, EngineError> {
 
@@ -40,10 +41,10 @@ pub fn make_migrations() -> Result<(), EngineError> {
         _ => "".to_owned(),
     };
 
-    let sqlite_connection = SqliteConnection::establish(&uri)
+    let mut sqlite_connection = SqliteConnection::establish(&uri)
         .unwrap_or_else(|_| panic!("Error connecting to {}", uri));
 
-    embedded_migrations::run_with_output(&sqlite_connection, &mut std::io::stdout())?;
+    sqlite_connection.run_pending_migrations(MIGRATIONS, &mut std::io::stdout())?;
 
     Ok(())
 }

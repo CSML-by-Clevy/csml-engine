@@ -5,6 +5,7 @@ use crate::{
 };
 use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Module, MultiBot};
 use serde::{Deserialize, Serialize};
+use serde::de::StdError;
 use serde_json::Value;
 
 pub const DEBUG: &str = "DEBUG";
@@ -448,6 +449,7 @@ pub enum EngineError {
     Manager(String),
     Format(String),
     Interpreter(String),
+    DateTimeError(String),
     Parring(String),
     Time(std::time::SystemTimeError),
     Openssl(openssl::error::ErrorStack),
@@ -552,8 +554,15 @@ impl From<diesel::result::Error> for EngineError {
 }
 
 #[cfg(any(feature = "postgresql", feature = "sqlite"))]
-impl From<diesel_migrations::RunMigrationsError> for EngineError {
-    fn from(e: diesel_migrations::RunMigrationsError) -> Self {
+impl From<Box<dyn StdError + Send + Sync>> for EngineError {
+    fn from(e: Box<dyn StdError + Send + Sync>) -> Self {
+        EngineError::SqlErrorCode(e.to_string())
+    }
+}
+
+#[cfg(any(feature = "postgresql", feature = "sqlite"))]
+impl From<diesel_migrations::MigrationError> for EngineError {
+    fn from(e: diesel_migrations::MigrationError) -> Self {
         EngineError::SqlMigrationsError(e.to_string())
     }
 }

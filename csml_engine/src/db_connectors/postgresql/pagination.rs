@@ -32,9 +32,9 @@ impl<T> Paginated<T> {
         Paginated { per_page, ..self }
     }
 
-    pub fn load_and_count_pages<U>(self, conn: &PgConnection) -> QueryResult<(Vec<U>, i64)>
-    where
-        Self: LoadQuery<PgConnection, (U, i64)>,
+    pub fn load_and_count_pages<'query, U>(self, conn: &mut PgConnection) -> QueryResult<(Vec<U>, i64)>
+        where
+            Self: LoadQuery<'query, PgConnection, (U, i64)>,
     {
         let per_page = self.per_page;
         let results = self.load::<(U, i64)>(conn)?;
@@ -52,16 +52,16 @@ impl<T: Query> Query for Paginated<T> {
 impl<T> RunQueryDsl<PgConnection> for Paginated<T> {}
 
 impl<T> QueryFragment<Pg> for Paginated<T>
-where
-    T: QueryFragment<Pg>,
+    where
+        T: QueryFragment<Pg>,
 {
-    fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
+    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Pg>) -> QueryResult<()> {
         out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(") t LIMIT ");
         out.push_bind_param::<BigInt, _>(&self.per_page)?;
         out.push_sql(" OFFSET ");
-        let offset = (self.page - 1) * self.per_page;
+        let offset: i64 = (self.page - 1) * self.per_page;
         out.push_bind_param::<BigInt, _>(&offset)?;
         Ok(())
     }

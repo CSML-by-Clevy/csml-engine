@@ -14,8 +14,9 @@ pub mod expired_data;
 use crate::{Database, EngineError, PostgresqlClient};
 
 use diesel::prelude::{Connection, PgConnection};
+use diesel_migrations::{EmbeddedMigrations, HarnessWithOutput, MigrationHarness};
 
-embed_migrations!("migrations/postgresql");
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/postgresql");
 
 pub fn init() -> Result<Database, EngineError> {
 
@@ -39,15 +40,16 @@ pub fn make_migrations() -> Result<(), EngineError> {
         _ => "".to_owned(),
     };
 
-    let pg_connection = PgConnection::establish(&uri)
+    let mut pg_connection = PgConnection::establish(&uri)
         .unwrap_or_else(|_| panic!("Error connecting to {}", uri));
 
-    embedded_migrations::run_with_output(&pg_connection, &mut std::io::stdout())?;
+    let mut harness = HarnessWithOutput::write_to_stdout(&mut pg_connection);
+    harness.run_pending_migrations(MIGRATIONS)?;
 
     Ok(())
 }
 
-pub fn get_db<'a>(db: &'a Database) -> Result<&'a PostgresqlClient, EngineError> {
+pub fn get_db<'a>(db: &'a mut Database) -> Result<&'a mut PostgresqlClient, EngineError> {
     match db {
         Database::Postgresql(db) => Ok(db),
         _ => Err(EngineError::Manager(

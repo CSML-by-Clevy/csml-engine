@@ -1,12 +1,10 @@
-use diesel::{Queryable, Identifiable, Insertable, Associations,};
-
 use chrono::NaiveDateTime;
+use diesel::{Associations, Identifiable, Insertable, Queryable};
 use uuid::Uuid;
-
 use super::schema::*;
 
 #[derive(Identifiable, Queryable, PartialEq, Debug)]
-#[table_name = "cmsl_bot_versions"]
+#[diesel(table_name = cmsl_bot_versions)]
 pub struct Bot {
     pub id: Uuid,
 
@@ -19,7 +17,7 @@ pub struct Bot {
 }
 
 #[derive(Queryable, Insertable, Associations, PartialEq, Debug)]
-#[table_name = "cmsl_bot_versions"]
+#[diesel(table_name = cmsl_bot_versions, belongs_to(Bot))]
 pub struct NewBot<'a> {
     pub id: Uuid,
     pub bot_id: &'a str,
@@ -28,7 +26,7 @@ pub struct NewBot<'a> {
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_conversations"]
+#[diesel(table_name = csml_conversations, belongs_to(Bot))]
 pub struct Conversation {
     pub id: Uuid,
 
@@ -48,7 +46,7 @@ pub struct Conversation {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_conversations"]
+#[diesel(table_name = csml_conversations, belongs_to(Bot))]
 pub struct NewConversation<'a> {
     pub id: Uuid,
     pub bot_id: &'a str,
@@ -63,7 +61,7 @@ pub struct NewConversation<'a> {
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_memories"]
+#[diesel(table_name = csml_memories, belongs_to(Bot))]
 pub struct Memory {
     pub id: Uuid,
     pub bot_id: String,
@@ -79,7 +77,7 @@ pub struct Memory {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_memories"]
+#[diesel(table_name = csml_memories, belongs_to(Bot))]
 pub struct NewMemory<'a> {
     pub id: Uuid,
     pub bot_id: &'a str,
@@ -93,8 +91,7 @@ pub struct NewMemory<'a> {
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
-#[belongs_to(Conversation)]
-#[table_name = "csml_messages"]
+#[diesel(table_name = csml_messages, belongs_to(Conversation))]
 pub struct Message {
     pub id: Uuid,
     pub conversation_id: Uuid,
@@ -115,7 +112,7 @@ pub struct Message {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_messages"]
+#[diesel(table_name = csml_messages, belongs_to(Conversation))]
 pub struct NewMessages<'a> {
     pub id: Uuid,
     pub conversation_id: Uuid,
@@ -133,7 +130,7 @@ pub struct NewMessages<'a> {
 }
 
 #[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_states"]
+#[diesel(table_name = csml_states, belongs_to(Bot))]
 pub struct State {
     pub id: Uuid,
 
@@ -151,7 +148,7 @@ pub struct State {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_states"]
+#[diesel(table_name = csml_states, belongs_to(Bot))]
 pub struct NewState<'a> {
     pub id: Uuid,
     pub bot_id: &'a str,
@@ -164,9 +161,6 @@ pub struct NewState<'a> {
 
     pub expires_at: Option<NaiveDateTime>,
 }
-
-
-
 
 
 // use serde::{ Deserializer};
