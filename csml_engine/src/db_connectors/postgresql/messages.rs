@@ -24,7 +24,7 @@ pub fn add_messages_bulk(
         return Ok(());
     }
 
-    let mut db = get_db(&mut data.db)?;
+    let db = get_db(&mut data.db)?;
 
     let mut new_messages = vec![];
     for (message_order, message) in msgs.iter().enumerate() {
