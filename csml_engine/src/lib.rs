@@ -44,27 +44,14 @@ use csml_interpreter::data::{
 };
 use std::{collections::HashMap, env};
 
-/**
- * Initiate a CSML chat request.
- * Takes 2 arguments: the request being made and the CSML bot.
- * This method assumes that the bot is already validated in advance. A best practice is
- * to pre-validate the bot and store it in a valid state.
- *
- * The request must be made by a given client. Its unicity (used as a key for identifying
- * who made each new request and if they relate to an already-open conversation) is based
- * on a combination of 3 parameters that are assumed to be unique in their own context:
- * - bot_id: differentiate bots handled by the same CSML engine instance
- * - channel_id: a given bot may be used on different channels (messenger, slack...)
- * - user_id: differentiate users on the same communication channel
- */
-pub fn start_conversation(
+pub fn start_conversation_db(
     request: CsmlRequest,
     mut bot_opt: BotOpt,
-) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
+    mut db: Database,
+) -> Result<(serde_json::Map<String, serde_json::Value>, Database), EngineError> {
     init_logger();
 
     let mut formatted_event = format_event(&request)?;
-    let mut db = init_db()?;
 
     let mut bot = bot_opt.search_bot(&mut db)?;
     init_bot(&mut bot)?;
@@ -84,7 +71,7 @@ pub fn start_conversation(
         if let Some(delay) = state::get_state_key(&data.client, "delay", "content", &mut data.db)? {
             match (delay["delay_value"].as_i64(), delay["timestamp"].as_i64()) {
                 (Some(delay), Some(timestamp)) if timestamp + delay >= Utc::now().timestamp() => {
-                    return Ok(serde_json::Map::new())
+                    return Ok((serde_json::Map::new(), data.db));
                 }
                 _ => {}
             }
@@ -128,7 +115,28 @@ pub fn start_conversation(
         &mut bot,
         &mut bot_opt,
         &mut formatted_event,
-    )
+    ).map(|res| (res, data.db))
+}
+
+/**
+ * Initiate a CSML chat request.
+ * Takes 2 arguments: the request being made and the CSML bot.
+ * This method assumes that the bot is already validated in advance. A best practice is
+ * to pre-validate the bot and store it in a valid state.
+ *
+ * The request must be made by a given client. Its unicity (used as a key for identifying
+ * who made each new request and if they relate to an already-open conversation) is based
+ * on a combination of 3 parameters that are assumed to be unique in their own context:
+ * - bot_id: differentiate bots handled by the same CSML engine instance
+ * - channel_id: a given bot may be used on different channels (messenger, slack...)
+ * - user_id: differentiate users on the same communication channel
+ */
+pub fn start_conversation(
+    request: CsmlRequest,
+    bot_opt: BotOpt,
+) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
+    let db = init_db()?;
+    start_conversation_db(request, bot_opt, db).map(|res| res.0)
 }
 
 fn check_switch_bot(
@@ -414,7 +422,7 @@ pub fn validate_bot(mut bot: CsmlBot) -> CsmlResult {
                 warnings: None,
                 flows: None,
                 extern_flows: None,
-            }
+            };
         }
     };
 
