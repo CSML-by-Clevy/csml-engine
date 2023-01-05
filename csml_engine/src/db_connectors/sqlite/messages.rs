@@ -88,9 +88,9 @@ pub fn get_client_messages(
 
     let (conversation_with_messages, total_pages) = match from_date {
         Some(from_date) => {
-            let from_date = NaiveDateTime::from_timestamp(from_date, 0);
+            let from_date = NaiveDateTime::from_timestamp_opt(from_date, 0).unwrap();
             let to_date = match to_date {
-                Some(to_date) => NaiveDateTime::from_timestamp(to_date, 0),
+                Some(to_date) => NaiveDateTime::from_timestamp_opt(to_date, 0).unwrap(),
                 None => chrono::Utc::now().naive_utc(),
             };
 

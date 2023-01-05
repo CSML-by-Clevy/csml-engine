@@ -22,7 +22,7 @@ use crate::interpreter::{
 use std::cmp::Ordering;
 use std::{collections::HashMap, sync::mpsc};
 
-use chrono::{DateTime, FixedOffset, LocalResult, TimeZone, Utc};
+use chrono::{DateTime, FixedOffset, LocalResult, Timelike, TimeZone, Utc};
 use chrono_tz::{Tz, UTC};
 use lettre::Transport;
 use phf::phf_map;
@@ -494,7 +494,7 @@ impl PrimitiveObject {
                     return Err(gen_error_info(
                         Position::new(interval, &data.context.flow),
                         ERROR_HTTP_UNKNOWN_METHOD.to_string(),
-                    ))
+                    ));
                 }
             };
 
@@ -822,7 +822,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         };
 
@@ -879,21 +879,37 @@ impl PrimitiveObject {
     ) -> Result<Literal, ErrorInfo> {
         let date = tools_time::get_date(args);
 
-        let date = Utc
-            .ymd(
-                date[0] as i32, // year
-                date[1] as u32, // month
-                date[2] as u32, // day
-            )
-            .and_hms_milli_opt(
-                date[3] as u32, // hour
-                date[4] as u32, // min
-                date[5] as u32, // sec
-                date[6] as u32, // milli
-            );
+        // let date = Utc
+        //     .ymd(
+        //         date[0] as i32, // year
+        //         date[1] as u32, // month
+        //         date[2] as u32, // day
+        //     )
+        //     .and_hms_milli_opt(
+        //         date[3] as u32, // hour
+        //         date[4] as u32, // min
+        //         date[5] as u32, // sec
+        //         date[6] as u32, // milli
+        //     );
+
+        let nanos = (date[6] as u32).checked_mul(1_000_000);
+
+        let date = nanos.map(|nanos| {
+            let date = Utc
+                .with_ymd_and_hms(
+                    date[0] as i32, // year
+                    date[1] as u32, // month
+                    date[2] as u32, // day
+                    date[3] as u32, // hour
+                    date[4] as u32, // min
+                    date[5] as u32, // sec
+                );
+            date.map(|dt| dt.with_nanosecond(nanos))
+        }
+        );
 
         match date {
-            Some(date) => {
+            Some(LocalResult::Single(Some(date))) | Some(LocalResult::Ambiguous(Some(date), _)) | Some(LocalResult::Ambiguous(_, Some(date))) => {
                 object.value.insert(
                     "milliseconds".to_owned(),
                     PrimitiveInt::get_literal(date.timestamp_millis(), interval),
@@ -903,7 +919,7 @@ impl PrimitiveObject {
 
                 Ok(lit)
             }
-            None => Ok(PrimitiveBoolean::get_literal(false, interval)),
+            _ => Ok(PrimitiveBoolean::get_literal(false, interval)),
         }
     }
 
@@ -941,7 +957,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         };
 
@@ -992,7 +1008,13 @@ impl PrimitiveObject {
                     "".to_string(),
                 )?;
 
-                let date: DateTime<Utc> = Utc.timestamp_millis(*millis);
+                let date = match Utc.timestamp_millis_opt(*millis) {
+                    LocalResult::Single(date) => date,
+                    _ => return Err(gen_error_info(
+                        Position::new(interval, &data.context.flow),
+                        format!("Invalid milliseconds"),
+                    ))
+                };
 
                 let duration = match time_type {
                     t_val if t_val == "s" => date.timestamp(),
@@ -1005,7 +1027,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("{}", usage),
-                ))
+                ));
             }
         }
     }
@@ -1057,7 +1079,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         }
     }
@@ -1109,7 +1131,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         }
     }
@@ -1133,7 +1155,7 @@ impl PrimitiveObject {
                 Time().parse(\"2020-08-13\")   or
                 Time().parse(\"1983-08-13 12:09:14.274\", \"%Y-%m-%d %H:%M:%S%.3f\")"
                     ),
-                ))
+                ));
             }
         }
     }
@@ -1155,7 +1177,7 @@ impl PrimitiveObject {
                 interval,
                 "".to_string(),
             )
-            .ok()
+                .ok()
         } else {
             None
         };
@@ -1173,80 +1195,80 @@ impl PrimitiveObject {
                     "".to_string(),
                 )?;
 
-                let date: DateTime<Utc> = Utc.timestamp_millis(*millis);
+                let date: DateTime<Utc> = Utc.timestamp_millis_opt(*millis).unwrap();
 
                 let formatted_date = tools_time::format_date(args, date, data, interval, true)?;
 
                 Ok(PrimitiveString::get_literal(&formatted_date, interval))
             }
             (Some(lit), Some(timezone), _)
-                if lit.primitive.get_type() == PrimitiveType::PrimitiveInt =>
-            {
-                let millis = Literal::get_value::<i64>(
-                    &lit.primitive,
-                    &data.context.flow,
-                    interval,
-                    "".to_string(),
-                )?;
+            if lit.primitive.get_type() == PrimitiveType::PrimitiveInt =>
+                {
+                    let millis = Literal::get_value::<i64>(
+                        &lit.primitive,
+                        &data.context.flow,
+                        interval,
+                        "".to_string(),
+                    )?;
 
-                let tz_string = Literal::get_value::<String>(
-                    &timezone.primitive,
-                    &data.context.flow,
-                    interval,
-                    "".to_string(),
-                )
-                .ok();
+                    let tz_string = Literal::get_value::<String>(
+                        &timezone.primitive,
+                        &data.context.flow,
+                        interval,
+                        "".to_string(),
+                    )
+                        .ok();
 
-                let formatted_date = match tz_string {
-                    Some(tz_string) => {
-                        let local_date = Utc.timestamp_millis(*millis);
+                    let formatted_date = match tz_string {
+                        Some(tz_string) => {
+                            let local_date = Utc.timestamp_millis_opt(*millis).unwrap();
 
-                        match tz_string.parse::<Tz>() {
-                            Ok(tz) => match UTC.from_local_datetime(&local_date.naive_local()) {
-                                LocalResult::Single(date) | LocalResult::Ambiguous(date, _) => {
-                                    let date = date.with_timezone(&tz);
+                            match tz_string.parse::<Tz>() {
+                                Ok(tz) => match UTC.from_local_datetime(&local_date.naive_local()) {
+                                    LocalResult::Single(date) | LocalResult::Ambiguous(date, _) => {
+                                        let date = date.with_timezone(&tz);
 
-                                    tools_time::format_date(args, date, data, interval, false)?
+                                        tools_time::format_date(args, date, data, interval, false)?
+                                    }
+                                    LocalResult::None => tools_time::format_date(
+                                        args, local_date, data, interval, false,
+                                    )?,
+                                },
+                                Err(_) => {
+                                    return Err(gen_error_info(
+                                        Position::new(interval, &data.context.flow),
+                                        format!("invalid timezone {}", tz_string),
+                                    ));
                                 }
-                                LocalResult::None => tools_time::format_date(
-                                    args, local_date, data, interval, false,
-                                )?,
-                            },
-                            Err(_) => {
-                                return Err(gen_error_info(
-                                    Position::new(interval, &data.context.flow),
-                                    format!("invalid timezone {}", tz_string),
-                                ))
                             }
                         }
-                    }
-                    _ => {
-                        let date = Utc.timestamp_millis(*millis);
+                        _ => {
+                            let date = Utc.timestamp_millis_opt(*millis).unwrap();
 
-                        tools_time::format_date(args, date, data, interval, false)?
-                    }
-                };
+                            tools_time::format_date(args, date, data, interval, false)?
+                        }
+                    };
 
-                Ok(PrimitiveString::get_literal(&formatted_date, interval))
-            }
+                    Ok(PrimitiveString::get_literal(&formatted_date, interval))
+                }
 
             (Some(lit), None, Some(offset))
-                if lit.primitive.get_type() == PrimitiveType::PrimitiveInt =>
-            {
-                let millis = Literal::get_value::<i64>(
-                    &lit.primitive,
-                    &data.context.flow,
-                    interval,
-                    "".to_string(),
-                )?;
+            if lit.primitive.get_type() == PrimitiveType::PrimitiveInt =>
+                {
+                    let millis = Literal::get_value::<i64>(
+                        &lit.primitive,
+                        &data.context.flow,
+                        interval,
+                        "".to_string(),
+                    )?;
 
-                let date: DateTime<FixedOffset> =
-                    FixedOffset::east(*offset as i32).timestamp_millis(*millis);
+                    let date: DateTime<FixedOffset> =
+                        FixedOffset::east_opt(*offset as i32).unwrap().timestamp_millis_opt(*millis).unwrap();
 
-                let formatted_date = tools_time::format_date(args, date, data, interval, false)?;
+                    let formatted_date = tools_time::format_date(args, date, data, interval, false)?;
 
-                Ok(PrimitiveString::get_literal(&formatted_date, interval))
-            }
+                    Ok(PrimitiveString::get_literal(&formatted_date, interval))
+                }
 
             _ => Err(gen_error_info(
                 Position::new(interval, &data.context.flow),
@@ -1275,7 +1297,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_SIGN_ALGO.to_string(),
-                ))
+                ));
             }
         }
 
@@ -1285,7 +1307,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_SIGN_CLAIMS.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1304,7 +1326,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_ALGO.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1318,7 +1340,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Invalid JWT encode {:?}", e.kind()),
-                ))
+                ));
             }
         }
     }
@@ -1342,7 +1364,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_TOKEN.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1354,7 +1376,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_DECODE_ALGO.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1373,7 +1395,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_DECODE_SECRET.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1389,7 +1411,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Invalid JWT decode {:?}", e.kind()),
-                ))
+                ));
             }
         }
     }
@@ -1415,7 +1437,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_TOKEN.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1427,7 +1449,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_VALIDATION_CLAIMS.to_string(),
-                ))
+                ));
             }
         }
 
@@ -1443,7 +1465,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_VALIDATION_ALGO.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1462,7 +1484,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_JWT_VALIDATION_SECRETE.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1474,7 +1496,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Invalid JWT verify {:?}", e.kind()),
-                ))
+                ));
             }
         }
     }
@@ -1502,7 +1524,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
                     ERROR_HASH.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1520,7 +1542,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
                     ERROR_HASH_ALGO.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1538,7 +1560,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
                     ERROR_HMAC_KEY.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1568,7 +1590,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
                     format!("{}", e),
-                ))
+                ));
             }
         }
     }
@@ -1594,7 +1616,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
                     ERROR_HASH.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1612,7 +1634,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
                     ERROR_HASH_ALGO.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1638,7 +1660,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, flow_name),
                     format!("{}", e),
-                ))
+                ));
             }
         }
     }
@@ -1662,7 +1684,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_DIGEST.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1679,7 +1701,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     ERROR_DIGEST_ALGO.to_string(),
-                ))
+                ));
             }
         };
 
@@ -1716,7 +1738,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         };
 
@@ -1741,7 +1763,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         };
 
@@ -1751,7 +1773,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Base64 invalid value: {}, can't be decode", string),
-                ))
+                ));
             }
         };
 
@@ -1776,7 +1798,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         };
 
@@ -1801,7 +1823,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("usage: {}", usage),
-                ))
+                ));
             }
         };
 
@@ -1811,7 +1833,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("Hex invalid value: {}, can't be decode", string),
-                ))
+                ));
             }
         };
 
@@ -1964,7 +1986,7 @@ impl PrimitiveObject {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
                     format!("expect Array value as argument usage: {}", usage),
-                ))
+                ));
             }
         };
 

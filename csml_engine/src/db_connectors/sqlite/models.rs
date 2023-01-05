@@ -1,16 +1,14 @@
 use diesel::{Queryable, Identifiable, Insertable, Associations, backend};
 
 use uuid;
-use std::io::prelude::*;
 use diesel::deserialize::{self, FromSql};
-use diesel::serialize::{self, IsNull, Output, ToSql};
+use diesel::serialize::{self, Output, ToSql};
 use diesel::sql_types::{Binary};
-use diesel::sqlite::{Sqlite, SqliteValue};
+use diesel::sqlite::{Sqlite};
 use std::fmt::{Display, Formatter};
 use std::fmt;
 
 use chrono::NaiveDateTime;
-use uuid::Bytes;
 use super::schema::*;
 
 #[derive(Identifiable, Queryable, PartialEq, Debug)]
