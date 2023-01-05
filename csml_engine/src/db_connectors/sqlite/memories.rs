@@ -26,7 +26,7 @@ pub fn add_memories(
         return Ok(());
     }
 
-    let db = get_db(&data.db)?;
+    let db = get_db(&mut data.db)?;
 
     for (key, mem) in memories.iter() {
         create_client_memory(&data.client, key, &mem.value, expires_at, db)?;
@@ -40,7 +40,7 @@ pub fn create_client_memory(
     key: &str,
     value: &serde_json::Value,
     expires_at: Option<NaiveDateTime>,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
 
     let value = encrypt_data(&value)?;
@@ -59,7 +59,7 @@ pub fn create_client_memory(
         .bind::<sql_types::VarChar, _>(key)
         .bind::<sql_types::VarChar, _>(value.clone())
         .bind::<sql_types::Timestamp, _>(expires_at)
-        .execute(&db.client)?;
+        .execute(&mut db.client)?;
     }
     else {
         sql_query("
@@ -74,7 +74,7 @@ pub fn create_client_memory(
         .bind::<sql_types::VarChar, _>(&client.user_id)
         .bind::<sql_types::VarChar, _>(key)
         .bind::<sql_types::VarChar, _>(value.clone())
-        .execute(&db.client)?;
+        .execute(&mut db.client)?;
     }
 
     // diesel::insert_into(csml_memories::table)
@@ -89,13 +89,13 @@ pub fn create_client_memory(
 
 pub fn internal_use_get_memories(
     client: &Client,
-    db: &SqliteClient
+    db: &mut SqliteClient
 ) -> Result<serde_json::Value, EngineError> {
     let memories: Vec<models::Memory> = csml_memories::table
     .filter(csml_memories::bot_id.eq(&client.bot_id))
     .filter(csml_memories::channel_id.eq(&client.channel_id))
     .filter(csml_memories::user_id.eq(&client.user_id))
-    .load(&db.client)?;
+    .load(&mut db.client)?;
 
     let mut map = serde_json::Map::new();
     for mem in memories {
@@ -110,13 +110,13 @@ pub fn internal_use_get_memories(
 
 pub fn get_memories(
     client: &Client,
-    db: &SqliteClient
+    db: &mut SqliteClient
 ) -> Result<serde_json::Value, EngineError> {
     let memories: Vec<models::Memory> = csml_memories::table
     .filter(csml_memories::bot_id.eq(&client.bot_id))
     .filter(csml_memories::channel_id.eq(&client.channel_id))
     .filter(csml_memories::user_id.eq(&client.user_id))
-    .load(&db.client)?;
+    .load(&mut db.client)?;
 
     let mut vec = vec![];
     for mem in memories {
@@ -136,7 +136,7 @@ pub fn get_memories(
 pub fn get_memory(
     client: &Client,
     key: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<serde_json::Value, EngineError> {
 
     let mem: models::Memory = csml_memories::table
@@ -144,7 +144,7 @@ pub fn get_memory(
         .filter(csml_memories::bot_id.eq(&client.bot_id))
         .filter(csml_memories::channel_id.eq(&client.channel_id))
         .filter(csml_memories::user_id.eq(&client.user_id))
-        .get_result(&db.client)?;
+        .get_result(&mut db.client)?;
 
     let mut memory = serde_json::Map::new();
     let value: serde_json::Value = decrypt_data(mem.value)?;
@@ -159,7 +159,7 @@ pub fn get_memory(
 pub fn delete_client_memory(
     client: &Client,
     key: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
 
     diesel::delete(csml_memories::table
@@ -167,32 +167,32 @@ pub fn delete_client_memory(
         .filter(csml_memories::channel_id.eq(&client.channel_id))
         .filter(csml_memories::user_id.eq(&client.user_id))
         .filter(csml_memories::key.eq(key))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }
 
 pub fn delete_client_memories(
     client: &Client,
-    db: &SqliteClient
+    db: &mut SqliteClient
 ) -> Result<(), EngineError> {
     diesel::delete(csml_memories::table
         .filter(csml_memories::bot_id.eq(&client.bot_id))
         .filter(csml_memories::channel_id.eq(&client.channel_id))
         .filter(csml_memories::user_id.eq(&client.user_id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }
 
 pub fn delete_all_bot_data(
     bot_id: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
     diesel::delete(
         csml_memories::table
         .filter(csml_memories::bot_id.eq(bot_id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }

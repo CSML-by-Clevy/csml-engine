@@ -16,7 +16,7 @@ pub fn delete_state_key(
     client: &Client,
     type_: &str,
     key: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
     diesel::delete(csml_states::table
         .filter(csml_states::bot_id.eq(&client.bot_id))
@@ -24,7 +24,7 @@ pub fn delete_state_key(
         .filter(csml_states::user_id.eq(&client.user_id))
         .filter(csml_states::type_.eq(type_))
         .filter(csml_states::key.eq(key))
-    ).execute(&db.client)?;
+    ).execute(&mut db.client)?;
 
     Ok(())
 }
@@ -33,7 +33,7 @@ pub fn get_state_key(
     client: &Client,
     type_: &str,
     key: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<Option<serde_json::Value>, EngineError> {
     let state: Result<models::State, diesel::result::Error> = csml_states::table
     .filter(csml_states::bot_id.eq(&client.bot_id))
@@ -43,7 +43,7 @@ pub fn get_state_key(
     .filter(csml_states::type_.eq(type_))
     .filter(csml_states::key.eq(key))
 
-    .get_result(&db.client);
+    .get_result(&mut db.client);
 
     match state {
         Ok(state) => {
@@ -58,7 +58,7 @@ pub fn get_state_key(
 
 pub fn get_current_state(
     client: &Client,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<Option<serde_json::Value>, EngineError> {
 
     let current_state: models::State = csml_states::table
@@ -69,7 +69,7 @@ pub fn get_current_state(
         .filter(csml_states::type_.eq("hold"))
         .filter(csml_states::key.eq("position"))
 
-        .get_result(&db.client)?;
+        .get_result(&mut db.client)?;
 
     let current_state = serde_json::json!({
         "client": {
@@ -90,7 +90,7 @@ pub fn set_state_items(
     type_: &str,
     keys_values: Vec<(&str, &serde_json::Value)>,
     expires_at: Option<NaiveDateTime>,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
     if keys_values.len() == 0 {
         return Ok(());
@@ -118,32 +118,32 @@ pub fn set_state_items(
 
     diesel::insert_into(csml_states::table)
     .values(&new_states)
-    .execute(&db.client)?;
+    .execute(&mut db.client)?;
 
     Ok(())
 }
 
 pub fn delete_user_state(
     client: &Client,
-    db: &SqliteClient
+    db: &mut SqliteClient
 ) -> Result<(), EngineError> {
     diesel::delete(csml_states::table
         .filter(csml_states::bot_id.eq(&client.bot_id))
         .filter(csml_states::channel_id.eq(&client.channel_id))
         .filter(csml_states::user_id.eq(&client.user_id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }
 
 pub fn delete_all_bot_data(
     bot_id: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
     diesel::delete(
         csml_states::table
         .filter(csml_states::bot_id.eq(bot_id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }

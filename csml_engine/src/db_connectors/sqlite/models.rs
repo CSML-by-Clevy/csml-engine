@@ -5,12 +5,12 @@ use std::io::prelude::*;
 use diesel::deserialize::{self, FromSql};
 use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sql_types::{Binary};
-use diesel::sqlite::Sqlite;
-use diesel::backend::Backend;
+use diesel::sqlite::{Sqlite, SqliteValue};
 use std::fmt::{Display, Formatter};
 use std::fmt;
 
 use chrono::NaiveDateTime;
+use uuid::Bytes;
 use super::schema::*;
 
 #[derive(Identifiable, Queryable, PartialEq, Debug)]
@@ -205,20 +205,20 @@ impl Display for UUID {
 
 impl FromSql<Binary, Sqlite> for UUID {
     fn from_sql(value: backend::RawValue<'_, Sqlite>) -> deserialize::Result<Self> {
-        let bytes = value.as_bytes();
-        // let bytes = not_none!(bytes);
-        let bytes = match bytes { //TODO better error message for not null error
-            Some(bytes) => bytes,
-            None => return Err(Box::new(diesel::NotFound)),
-        };
-        uuid::Uuid::from_slice(bytes.read_blob()).map(UUID).map_err(|e| e.into())
+        let bytes = <*const [u8] as FromSql<Binary, Sqlite>>::from_sql(value)?;
+
+        unsafe {
+            let ref_bytes: &[u8] = &*bytes;
+            uuid::Uuid::from_slice(ref_bytes).map(UUID).map_err(|e| e.into())
+        }
     }
 }
 
-impl ToSql<Binary, Sqlite> for UUID {
+impl ToSql<Binary, Sqlite> for UUID where [u8]: ToSql<Binary, Sqlite>{
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Sqlite>) -> serialize::Result {
-        out.write_all(self.0.as_bytes())
+        <[u8] as ToSql<Binary, Sqlite>>::to_sql(self.0.as_bytes(), out)
+        /*out.write_all(self.0.as_bytes())
             .map(|_| IsNull::No)
-            .map_err(Into::into)
+            .map_err(Into::into)*/
     }
 }
