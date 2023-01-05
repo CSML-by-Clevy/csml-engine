@@ -83,7 +83,7 @@ pub fn set_state_items(
     expires_at: Option<NaiveDateTime>,
     db: &mut PostgresqlClient,
 ) -> Result<(), EngineError> {
-    if keys_values.len() == 0 {
+    if keys_values.is_empty() {
         return Ok(());
     }
 

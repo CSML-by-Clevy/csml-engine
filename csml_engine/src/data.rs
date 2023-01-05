@@ -103,7 +103,7 @@ impl BotOpt {
                 apps_endpoint,
                 multibot,
             } => {
-                let bot_version = db_connectors::bot::get_last_bot_version(&bot_id, db)?;
+                let bot_version = db_connectors::bot::get_last_bot_version(bot_id, db)?;
 
                 match bot_version {
                     Some(mut bot_version) => {
@@ -123,7 +123,7 @@ impl BotOpt {
                 apps_endpoint,
                 multibot,
             } => {
-                let bot_version = db_connectors::bot::get_by_version_id(&version_id, &bot_id, db)?;
+                let bot_version = db_connectors::bot::get_by_version_id(version_id, bot_id, db)?;
 
                 match bot_version {
                     Some(mut bot_version) => {
@@ -193,16 +193,10 @@ pub fn to_serializable_bot(bot: &CsmlBot) -> SerializeCsmlBot {
         name: bot.name.to_owned(),
         flows: bot.flows.to_owned(),
         native_components: {
-            match bot.native_components.to_owned() {
-                Some(value) => Some(serde_json::Value::Object(value).to_string()),
-                None => None,
-            }
+            bot.native_components.to_owned().map(|value| serde_json::Value::Object(value).to_string())
         },
         custom_components: {
-            match bot.custom_components.to_owned() {
-                Some(value) => Some(value.to_string()),
-                None => None,
-            }
+            bot.custom_components.to_owned().map(|value| value.to_string())
         },
         default_flow: bot.default_flow.to_owned(),
         no_interruption_delay: bot.no_interruption_delay,
@@ -294,10 +288,7 @@ pub fn to_dynamo_bot(csml_bot: &CsmlBot) -> DynamoBot {
     DynamoBot {
         id: csml_bot.id.to_owned(),
         name: csml_bot.name.to_owned(),
-        custom_components: match csml_bot.custom_components.to_owned() {
-            Some(value) => Some(value.to_string()),
-            None => None,
-        },
+        custom_components: csml_bot.custom_components.to_owned().map(|value| value.to_string()),
         default_flow: csml_bot.default_flow.to_owned(),
         no_interruption_delay: csml_bot.no_interruption_delay,
         env: match &csml_bot.env {

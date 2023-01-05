@@ -38,7 +38,7 @@ pub fn create_client_memory(
     expires_at: Option<NaiveDateTime>,
     db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
-    let value = encrypt_data(&value)?;
+    let value = encrypt_data(value)?;
 
     if let Some(expires_at) = expires_at {
         sql_query(
@@ -54,7 +54,7 @@ pub fn create_client_memory(
         .bind::<sql_types::VarChar, _>(&client.channel_id)
         .bind::<sql_types::VarChar, _>(&client.user_id)
         .bind::<sql_types::VarChar, _>(key)
-        .bind::<sql_types::VarChar, _>(value.clone())
+        .bind::<sql_types::VarChar, _>(value)
         .bind::<sql_types::Timestamp, _>(expires_at)
         .execute(&mut db.client)?;
     } else {
@@ -71,7 +71,7 @@ pub fn create_client_memory(
         .bind::<sql_types::VarChar, _>(&client.channel_id)
         .bind::<sql_types::VarChar, _>(&client.user_id)
         .bind::<sql_types::VarChar, _>(key)
-        .bind::<sql_types::VarChar, _>(value.clone())
+        .bind::<sql_types::VarChar, _>(value)
         .execute(&mut db.client)?;
     }
 

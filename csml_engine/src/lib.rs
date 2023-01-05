@@ -113,7 +113,7 @@ pub fn start_conversation(
             messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
         }
         (false, false) => {
-            let msgs = vec![request.payload.to_owned()];
+            let msgs = vec![request.payload];
 
             messages::add_messages_bulk(&mut data, msgs, 0, "RECEIVE")?;
         }
@@ -148,13 +148,13 @@ fn check_switch_bot(
         Ok((mut messages, Some(next_bot))) => {
             if let Err(err) = switch_bot(data, bot, next_bot, bot_opt, event) {
                 // End no interruption delay
-                if let Some(_) = bot.no_interruption_delay {
+                if bot.no_interruption_delay.is_some() {
                     delete_state_key(&data.client, "delay", "content", &mut data.db)?;
                 }
                 return Err(err);
             };
 
-            let result = interpret_step(data, event.clone(), &bot);
+            let result = interpret_step(data, event.clone(), bot);
 
             let mut new_messages = check_switch_bot(result, data, bot, bot_opt, event)?;
 
@@ -164,7 +164,7 @@ fn check_switch_bot(
         }
         Ok((messages, None)) => {
             // End no interruption delay
-            if let Some(_) = bot.no_interruption_delay {
+            if bot.no_interruption_delay.is_some() {
                 delete_state_key(&data.client, "delay", "content", &mut data.db)?;
             }
 
@@ -172,7 +172,7 @@ fn check_switch_bot(
         }
         Err(err) => {
             // End no interruption delay
-            if let Some(_) = bot.no_interruption_delay {
+            if bot.no_interruption_delay.is_some() {
                 delete_state_key(&data.client, "delay", "content", &mut data.db)?;
             }
 
@@ -580,7 +580,7 @@ pub fn get_status() -> Result<serde_json::Value, EngineError> {
     match std::env::var("CSML_LOG_LEVEL") {
         Ok(val) => status.insert(
             "csml_log_level".to_owned(),
-            serde_json::json!(val.to_owned()),
+            serde_json::json!(val),
         ),
         Err(_) => status.insert(
             "csml_log_level".to_owned(),

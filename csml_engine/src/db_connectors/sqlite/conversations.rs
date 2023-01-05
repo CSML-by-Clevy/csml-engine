@@ -15,7 +15,7 @@ pub fn create_conversation(
     let id = models::UUID::new_v4();
 
     let new_conversation = models::NewConversation {
-        id: id.clone(),
+        id,
         bot_id: &client.bot_id,
         channel_id: &client.channel_id,
         user_id: &client.user_id,

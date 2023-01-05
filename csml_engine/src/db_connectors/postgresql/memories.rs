@@ -36,7 +36,7 @@ pub fn create_client_memory(
     expires_at: Option<NaiveDateTime>,
     db: &mut PostgresqlClient,
 ) -> Result<(), EngineError> {
-    let value = encrypt_data(&value)?;
+    let value = encrypt_data(value)?;
 
     let new_memories = models::NewMemory {
         id: uuid::Uuid::new_v4(),

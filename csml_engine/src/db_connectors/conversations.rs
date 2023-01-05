@@ -34,7 +34,7 @@ pub fn create_conversation(
     );
     csml_logger(
         CsmlLog::new(
-            Some(&client),
+            Some(client),
             None,
             None,
             format!(
@@ -97,7 +97,7 @@ pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Resul
     );
     csml_logger(
         CsmlLog::new(
-            Some(&client),
+            Some(client),
             None,
             None,
             format!("db call close conversation conversation_id: {}", id),
@@ -106,7 +106,7 @@ pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Resul
     );
 
     // delete previous bot info at the end of the conversation
-    state::delete_state_key(&client, "bot", "previous", db)?;
+    state::delete_state_key(client, "bot", "previous", db)?;
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
@@ -137,12 +137,12 @@ pub fn close_conversation(id: &str, client: &Client, db: &mut Database) -> Resul
 
 pub fn close_all_conversations(client: &Client, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call close all conversations")),
+        CsmlLog::new(None, None, None, "db call close all conversations".to_string()),
         LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
-            Some(&client),
+            Some(client),
             None,
             None,
             format!("db call close all conversations, client: {:?}", client),
@@ -186,16 +186,16 @@ pub fn get_latest_open(
             None,
             None,
             None,
-            format!("db call get latest open conversations"),
+            "db call get latest open conversations".to_string(),
         ),
         LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
-            Some(&client),
+            Some(client),
             None,
             None,
-            format!("db call get latest open conversations"),
+            "db call get latest open conversations".to_string(),
         ),
         LogLvl::Debug,
     );
@@ -323,7 +323,7 @@ pub fn get_client_conversations(
     );
     csml_logger(
         CsmlLog::new(
-            Some(&client),
+            Some(client),
             None,
             None,
             format!(

@@ -52,13 +52,13 @@ pub fn add_memories(
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let expires_at = get_expires_at_for_postgresql(data.ttl);
-        return postgresql_connector::memories::add_memories(data, &memories, expires_at);
+        return postgresql_connector::memories::add_memories(data, memories, expires_at);
     }
 
     #[cfg(feature = "sqlite")]
     if is_sqlite() {
         let expires_at = get_expires_at_for_sqlite(data.ttl);
-        return sqlite_connector::memories::add_memories(data, &memories, expires_at);
+        return sqlite_connector::memories::add_memories(data, memories, expires_at);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -130,11 +130,11 @@ pub fn internal_use_get_memories(
     db: &mut Database,
 ) -> Result<serde_json::Value, EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call get memories")),
+        CsmlLog::new(None, None, None, "db call get memories".to_string()),
         LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(Some(client), None, None, format!("db call get memories")),
+        CsmlLog::new(Some(client), None, None, "db call get memories".to_string()),
         LogLvl::Debug,
     );
 
@@ -170,7 +170,7 @@ pub fn internal_use_get_memories(
  */
 pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call get memories client")),
+        CsmlLog::new(None, None, None, "db call get memories client".to_string()),
         LogLvl::Info,
     );
     csml_logger(
@@ -178,7 +178,7 @@ pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Va
             Some(client),
             None,
             None,
-            format!("db call get memories client"),
+            "db call get memories client".to_string(),
         ),
         LogLvl::Debug,
     );
@@ -307,11 +307,11 @@ pub fn delete_client_memory(
 
 pub fn delete_client_memories(client: &Client, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call delete memories")),
+        CsmlLog::new(None, None, None, "db call delete memories".to_string()),
         LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(Some(client), None, None, format!("db call delete memories")),
+        CsmlLog::new(Some(client), None, None, "db call delete memories".to_string()),
         LogLvl::Debug,
     );
 

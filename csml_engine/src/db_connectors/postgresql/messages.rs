@@ -20,7 +20,7 @@ pub fn add_messages_bulk(
     direction: &str,
     expires_at: Option<NaiveDateTime>,
 ) -> Result<(), EngineError> {
-    if msgs.len() == 0 {
+    if msgs.is_empty() {
         return Ok(());
     }
 
@@ -37,8 +37,8 @@ pub fn add_messages_bulk(
             flow_id: &data.context.flow,
             step_id: data.context.step.get_step_ref(),
             direction,
-            payload: encrypt_data(&message)?,
-            content_type: &message["content_type"].as_str().unwrap_or("text"),
+            payload: encrypt_data(message)?,
+            content_type: message["content_type"].as_str().unwrap_or("text"),
 
             message_order: message_order as i32,
             interaction_order,

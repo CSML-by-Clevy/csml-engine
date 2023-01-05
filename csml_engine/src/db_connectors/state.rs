@@ -122,7 +122,7 @@ pub fn get_current_state(
     db: &mut Database,
 ) -> Result<Option<serde_json::Value>, EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call get current state")),
+        CsmlLog::new(None, None, None, "db call get current state".to_string()),
         LogLvl::Info,
     );
     csml_logger(
@@ -130,7 +130,7 @@ pub fn get_current_state(
             Some(client),
             None,
             None,
-            format!("db call get current state"),
+            "db call get current state".to_string(),
         ),
         LogLvl::Debug,
     );

@@ -238,7 +238,7 @@ pub fn get_flow_by_id<'a>(f_id: &str, flows: &'a [CsmlFlow]) -> Result<&'a CsmlF
         .iter()
         .find(|&val| val.id.to_ascii_lowercase() == id || val.name.to_ascii_lowercase() == id)
     {
-        Some(ref f) => Ok(f),
+        Some(f) => Ok(f),
         None => Err(EngineError::Interpreter(format!(
             "Flow '{}' does not exist",
             f_id
@@ -276,7 +276,7 @@ pub fn search_flow<'a>(
 ) -> Result<(&'a CsmlFlow, String), EngineError> {
     match event {
         event if event.content_type == "flow_trigger" => {
-            delete_state_key(&client, "hold", "position", db)?;
+            delete_state_key(client, "hold", "position", db)?;
 
             let flow_trigger: FlowTrigger = serde_json::from_str(&event.content_value)?;
 
@@ -297,7 +297,7 @@ pub fn search_flow<'a>(
             for flow in bot.flows.iter() {
                 let contains_command = flow.commands.iter().any(|cmd| {
                     if let Ok(action) = Regex::new(&event.content_value) {
-                        action.is_match(&cmd)
+                        action.is_match(cmd)
                     } else {
                         false
                     }
@@ -310,7 +310,7 @@ pub fn search_flow<'a>(
 
             match random_flows.choose(&mut rand::thread_rng()) {
                 Some(flow) => {
-                    delete_state_key(&client, "hold", "position", db)?;
+                    delete_state_key(client, "hold", "position", db)?;
                     Ok((flow, "start".to_owned()))
                 }
                 None => Err(EngineError::Interpreter(format!(
@@ -335,7 +335,7 @@ pub fn search_flow<'a>(
 
             match random_flows.choose(&mut rand::thread_rng()) {
                 Some(flow) => {
-                    delete_state_key(&client, "hold", "position", db)?;
+                    delete_state_key(client, "hold", "position", db)?;
                     Ok((flow, "start".to_owned()))
                 }
                 None => Err(EngineError::Interpreter(format!(
@@ -356,32 +356,32 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
 
             let ast = match &bot.bot_ast {
                 Some(ast) => {
-                    let base64decoded = base64::decode(&ast).unwrap();
+                    let base64decoded = base64::decode(ast).unwrap();
                     let csml_bot: HashMap<String, Flow> =
                         bincode::deserialize(&base64decoded[..]).unwrap();
                     match csml_bot.get(&context.flow) {
                         Some(flow) => flow.to_owned(),
                         None => csml_bot
-                            .get(&get_default_flow(&bot)?.name)
+                            .get(&get_default_flow(bot)?.name)
                             .unwrap()
                             .to_owned(),
                     }
                 }
-                None => return Err(EngineError::Manager(format!("not valid ast"))),
+                None => return Err(EngineError::Manager("not valid ast".to_string())),
             };
 
-            get_step(step, &flow, &ast)
+            get_step(step, flow, &ast)
         }
         ContextStepInfo::UnknownFlow(step) => {
             let flow = &get_flow_by_id(&context.flow, &bot.flows)?.content;
 
             match &bot.bot_ast {
                 Some(ast) => {
-                    let base64decoded = base64::decode(&ast).unwrap();
+                    let base64decoded = base64::decode(ast).unwrap();
                     let csml_bot: HashMap<String, Flow> =
                         bincode::deserialize(&base64decoded[..]).unwrap();
 
-                    let default_flow = csml_bot.get(&get_default_flow(&bot)?.name).unwrap();
+                    let default_flow = csml_bot.get(&get_default_flow(bot)?.name).unwrap();
 
                     match csml_bot.get(&context.flow) {
                         Some(target_flow) => {
@@ -403,18 +403,18 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
                                         let inserted_raw_flow =
                                             &get_flow_by_id(&insert.from_flow, &bot.flows)?.content;
 
-                                        get_step(step, &inserted_raw_flow, &inserted_step_flow)
+                                        get_step(step, inserted_raw_flow, inserted_step_flow)
                                     }
-                                    None => get_step(step, &flow, &default_flow),
+                                    None => get_step(step, flow, default_flow),
                                 }
                             } else {
-                                get_step(step, &flow, &target_flow)
+                                get_step(step, flow, target_flow)
                             }
                         }
-                        None => get_step(step, &flow, &default_flow),
+                        None => get_step(step, flow, default_flow),
                     }
                 }
-                None => return Err(EngineError::Manager(format!("not valid ast"))),
+                None => return Err(EngineError::Manager("not valid ast".to_string())),
             }
         }
         ContextStepInfo::InsertedStep {
@@ -425,22 +425,22 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
 
             let ast = match &bot.bot_ast {
                 Some(ast) => {
-                    let base64decoded = base64::decode(&ast).unwrap();
+                    let base64decoded = base64::decode(ast).unwrap();
                     let csml_bot: HashMap<String, Flow> =
                         bincode::deserialize(&base64decoded[..]).unwrap();
 
                     match csml_bot.get(inserted_flow) {
                         Some(flow) => flow.to_owned(),
                         None => csml_bot
-                            .get(&get_default_flow(&bot)?.name)
+                            .get(&get_default_flow(bot)?.name)
                             .unwrap()
                             .to_owned(),
                     }
                 }
-                None => return Err(EngineError::Manager(format!("not valid ast"))),
+                None => return Err(EngineError::Manager("not valid ast".to_string())),
             };
 
-            get_step(step, &flow, &ast)
+            get_step(step, flow, &ast)
         }
     };
 
@@ -452,7 +452,7 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
 pub fn clean_hold_and_restart(data: &mut ConversationInfo) -> Result<(), EngineError> {
     delete_state_key(&data.client, "hold", "position", &mut data.db)?;
     data.context.hold = None;
-    return Ok(());
+    Ok(())
 }
 
 pub fn get_ttl_duration_value(event: Option<&Event>) -> Option<chrono::Duration> {
@@ -463,12 +463,12 @@ pub fn get_ttl_duration_value(event: Option<&Event>) -> Option<chrono::Duration>
     }
 
     if let Ok(ttl) = env::var("TTL_DURATION") {
-        if let Some(ttl) = ttl.parse::<i64>().ok() {
+        if let Ok(ttl) = ttl.parse::<i64>() {
             return Some(chrono::Duration::days(ttl));
         }
     }
 
-    return None;
+    None
 }
 
 pub fn get_low_data_mode_value(event: &Event) -> bool {
@@ -482,5 +482,5 @@ pub fn get_low_data_mode_value(event: &Event) -> bool {
         }
     }
 
-    return false;
+    false
 }

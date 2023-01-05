@@ -14,7 +14,7 @@ pub fn create_bot_version(
     let id = models::UUID::new_v4();
 
     let newbot = models::NewBot {
-        id: id.clone(),
+        id,
         bot_id: &bot_id,
         bot: &bot,
         engine_version: env!("CARGO_PKG_VERSION"),

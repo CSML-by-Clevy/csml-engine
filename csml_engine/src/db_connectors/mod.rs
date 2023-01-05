@@ -176,7 +176,7 @@ pub fn is_dynamodb() -> bool {
 #[cfg(feature = "postgresql")]
 pub fn is_postgresql() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
-        Ok(val) => val == "postgresql".to_owned(),
+        Ok(val) => val == *"postgresql",
         Err(_) => false,
     }
 }
@@ -184,7 +184,7 @@ pub fn is_postgresql() -> bool {
 #[cfg(feature = "sqlite")]
 pub fn is_sqlite() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
-        Ok(val) => val == "sqlite".to_owned(),
+        Ok(val) => val == *"sqlite",
         Err(_) => false,
     }
 }
