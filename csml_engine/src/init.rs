@@ -57,10 +57,10 @@ pub fn init_conversation_info<'a>(
     // Do we have a flow matching the request? If the user is requesting a flow in one way
     // or another, this takes precedence over any previously open conversation
     // and a new conversation is created with the new flow as a starting point.
-    let flow_found = search_flow(event, &bot, &request.client, &mut db).ok();
+    let flow_found = search_flow(event, bot, &request.client, &mut db).ok();
     let conversation_id = get_or_create_conversation(
         &mut context,
-        &bot,
+        bot,
         flow_found,
         &request.client,
         ttl,
@@ -117,7 +117,7 @@ pub fn init_bot(bot: &mut CsmlBot) -> Result<(), EngineError> {
  * Initialize bot ast
  */
 fn set_bot_ast(bot: &mut CsmlBot) -> Result<(), EngineError> {
-    match validate_bot(&bot) {
+    match validate_bot(bot) {
         CsmlResult {
             flows: Some(flows),
             extern_flows: Some(extern_flows),
@@ -149,7 +149,7 @@ fn set_bot_ast(bot: &mut CsmlBot) -> Result<(), EngineError> {
                 errors
             )))
         }
-        _ => return Err(EngineError::Interpreter(format!("empty bot"))),
+        _ => return Err(EngineError::Interpreter("empty bot".to_string())),
     }
 
     Ok(())
@@ -166,13 +166,10 @@ pub fn init_context(
 ) -> Context {
     let previous_bot = get_previous_bot(&client, db);
 
-    let api_info = match apps_endpoint {
-        Some(value) => Some(ApiInfo {
+    let api_info = apps_endpoint.as_ref().map(|value| ApiInfo {
             client,
             apps_endpoint: value.to_owned(),
-        }),
-        None => None,
-    };
+        });
 
     Context {
         current: HashMap::new(),
@@ -215,7 +212,7 @@ fn get_or_create_conversation<'a>(
                         Ok(flow) => flow,
                         Err(..) => {
                             // if flow id exist in db but not in bot close conversation
-                            close_conversation(&conversation.id, &client, db)?;
+                            close_conversation(&conversation.id, client, db)?;
                             // start new conversation at default flow
                             return create_new_conversation(
                                 context, bot, flow_found, client, ttl, db,
@@ -310,7 +307,7 @@ pub fn switch_bot(
 
             let message = Message {
                 content_type: "error".to_owned(),
-                content: serde_json::json!({"error": error_message.clone()}),
+                content: serde_json::json!({"error": error_message}),
             };
 
             // save message
@@ -342,7 +339,7 @@ pub fn switch_bot(
         &flow.id,
         &step.get_step(),
         &data.client,
-        data.ttl.clone(),
+        data.ttl,
         &mut data.db,
     )?;
 

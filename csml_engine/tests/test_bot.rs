@@ -45,7 +45,7 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
 
     let tmp = format!("CSML/test/{}/flows", bot_name);
     let flows_path = Path::new(&tmp);
-    let mut file = fs::File::open(&format!("CSML/test/{}/bot.json", bot_name))?;
+    let mut file = fs::File::open(format!("CSML/test/{}/bot.json", bot_name))?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
 
@@ -80,7 +80,7 @@ fn init_bot(bot_name: &str) -> Result<CsmlBot, std::io::Error> {
         flows: bot_flows,
         native_components: None,
         custom_components: None,
-        default_flow: bot_info.default_flow.clone(),
+        default_flow: bot_info.default_flow,
         bot_ast: None,
         no_interruption_delay: None,
         env: Some(serde_json::json!({
@@ -176,8 +176,8 @@ fn ok_test_hold() {
 
     delete_client(&Client {
         user_id: "test".to_owned(),
-        bot_id: bot_id.clone(),
-        channel_id: channel_id.clone(),
+        bot_id: bot_id,
+        channel_id: channel_id,
     })
     .unwrap();
 }
@@ -235,8 +235,8 @@ fn ok_test_import() {
 
     delete_client(&Client {
         user_id: "test".to_owned(),
-        bot_id: bot_id.clone(),
-        channel_id: channel_id.clone(),
+        bot_id: bot_id,
+        channel_id: channel_id,
     })
     .unwrap();
 }
@@ -294,8 +294,8 @@ fn ok_test_commands() {
 
     delete_client(&Client {
         user_id: "test".to_owned(),
-        bot_id: bot_id.clone(),
-        channel_id: channel_id.clone(),
+        bot_id: bot_id,
+        channel_id: channel_id,
     })
     .unwrap();
 }
@@ -353,8 +353,8 @@ fn ok_test_goto_var() {
 
     delete_client(&Client {
         user_id: "test".to_owned(),
-        bot_id: bot_id.clone(),
-        channel_id: channel_id.clone(),
+        bot_id: bot_id,
+        channel_id: channel_id,
     })
     .unwrap();
 }
@@ -423,8 +423,8 @@ fn ok_test_memory() {
 
     delete_client(&Client {
         user_id: "test".to_owned(),
-        bot_id: bot_id.clone(),
-        channel_id: channel_id.clone(),
+        bot_id: bot_id,
+        channel_id: channel_id,
     })
     .unwrap();
 }

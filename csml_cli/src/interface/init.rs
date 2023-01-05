@@ -1,5 +1,6 @@
 use std::{error::Error, io::Stdout};
 
+use crate::interface::AppState;
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -7,7 +8,6 @@ use tui::{
     widgets::{Block, Borders},
     Terminal,
 };
-use crate::interface::AppState;
 
 use crate::interface::{menu_widget::*, AppInit};
 

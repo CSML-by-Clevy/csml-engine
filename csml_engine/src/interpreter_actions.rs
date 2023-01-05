@@ -101,7 +101,7 @@ pub fn interpret_step(
                         None,
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("sending message"),
+                        "sending message".to_string(),
                     ),
                     LogLvl::Info,
                 );
@@ -151,7 +151,7 @@ pub fn interpret_step(
                         None,
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("hold bot"),
+                        "hold bot".to_string(),
                     ),
                     LogLvl::Info,
                 );
@@ -191,7 +191,7 @@ pub fn interpret_step(
                     &mut conversation_end,
                     &mut interaction_order,
                     &mut current_flow,
-                    &bot,
+                    bot,
                     &mut memories,
                     flow,
                     step,
@@ -206,7 +206,7 @@ pub fn interpret_step(
                 bot: Some(target_bot),
             } => {
                 if let Ok(InterpreterReturn::SwitchBot(s_bot)) =
-                    manage_switch_bot(data, &mut interaction_order, &bot, flow, step, target_bot)
+                    manage_switch_bot(data, &mut interaction_order, bot, flow, step, target_bot)
                 {
                     switch_bot = Some(s_bot);
                     break;
@@ -291,7 +291,7 @@ fn manage_switch_bot<'a>(
                 vec![Message {
                     content_type: "error".to_owned(),
                     content: serde_json::json!({
-                        "error": error_message.clone()
+                        "error": error_message
                     }),
                 }],
                 *interaction_order,
@@ -393,7 +393,7 @@ fn manage_switch_bot<'a>(
             None,
             Some(data.context.flow.to_string()),
             None,
-            format!("switch bot"),
+            "switch bot".to_string(),
         ),
         LogLvl::Info,
     );
@@ -453,8 +453,8 @@ fn manage_internal_goto<'a>(
                 ),
                 LogLvl::Debug,
             );
-            update_current_context(data, &memories);
-            goto_flow(data, interaction_order, current_flow, &bot, flow, step)?
+            update_current_context(data, memories);
+            goto_flow(data, interaction_order, current_flow, bot, flow, step)?
         }
         (Some(flow), None) => {
             csml_logger(
@@ -471,10 +471,10 @@ fn manage_internal_goto<'a>(
                 ),
                 LogLvl::Debug,
             );
-            update_current_context(data, &memories);
+            update_current_context(data, memories);
             let step = ContextStepInfo::Normal("start".to_owned());
 
-            goto_flow(data, interaction_order, current_flow, &bot, flow, step)?
+            goto_flow(data, interaction_order, current_flow, bot, flow, step)?
         }
         (None, Some(step)) => {
             csml_logger(

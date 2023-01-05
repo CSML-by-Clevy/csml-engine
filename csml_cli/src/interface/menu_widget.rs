@@ -9,7 +9,6 @@ use tui::{
     widgets::{Block, StatefulWidget, Widget},
 };
 
-
 use crate::init_package::{DataBase, DynamoRegion, Env, S3Region};
 use crate::interface::AppState;
 use std::iter::Iterator;
@@ -122,12 +121,7 @@ impl<'a> StatefulWidget for Menu<'a> {
         let mut current_height = 0;
         let current_width = 40;
 
-        for item in self
-            .items
-            .iter_mut()
-            .skip(state.offset)
-            .take(end - start)
-        {
+        for item in self.items.iter_mut().skip(state.offset).take(end - start) {
             let (x, y) = (list_area.left(), list_area.top() + current_height);
             current_height += item.height(mode) as u16;
 
@@ -187,49 +181,58 @@ pub trait MenuType {
 
 pub fn get_sub_components(component: &MenuComponent, sub_component: &mut Vec<MenuItem>) {
     match component {
-        MenuComponent::Text {sub_component: list, ..} => {
+        MenuComponent::Text {
+            sub_component: list,
+            ..
+        } => {
             for item in list {
                 sub_component.push(item.clone());
                 get_sub_components(&item.component, sub_component);
             }
-        },
-        MenuComponent::List { selected, components, ..} => {
+        }
+        MenuComponent::List {
+            selected,
+            components,
+            ..
+        } => {
             let selected_component = &components[*selected];
 
             get_sub_components(selected_component, sub_component)
-        },
-        _ => {},
+        }
+        _ => {}
     }
 }
 
 fn generate_list(old_items: &Vec<MenuItem>, index: Option<(u16, usize)>) -> Vec<MenuItem> {
-
     let mut lvl_diff = true;
 
-    old_items.iter().enumerate().fold(vec![], |mut acc, (i, item)| {
-        match index {
-            Some((lvl, index)) if index < i && lvl_diff && lvl >= item.lvl => {
-                lvl_diff = false;
-            }
-            _ => {}
-        };
-        match index {
-            Some((_, index)) if index == i => {
-                acc.push(item.clone());
-                get_sub_components(&item.component, &mut acc);
-            }
-            Some((_, index)) if index < i && lvl_diff => {}
-            Some(_) => {
-                acc.push(item.clone());
-            }
-            None => {
-                acc.push(item.clone());
-                get_sub_components(&item.component, &mut acc);
-            }
-        };
+    old_items
+        .iter()
+        .enumerate()
+        .fold(vec![], |mut acc, (i, item)| {
+            match index {
+                Some((lvl, index)) if index < i && lvl_diff && lvl >= item.lvl => {
+                    lvl_diff = false;
+                }
+                _ => {}
+            };
+            match index {
+                Some((_, index)) if index == i => {
+                    acc.push(item.clone());
+                    get_sub_components(&item.component, &mut acc);
+                }
+                Some((_, index)) if index < i && lvl_diff => {}
+                Some(_) => {
+                    acc.push(item.clone());
+                }
+                None => {
+                    acc.push(item.clone());
+                    get_sub_components(&item.component, &mut acc);
+                }
+            };
 
-        acc
-    })
+            acc
+        })
 }
 
 pub struct MenuState {
@@ -311,35 +314,35 @@ impl MenuState {
                 DataBase::Postgres { uri }
             }
             _dynamodb => {
-
                 let mut local_host = 0;
 
                 let dynamodb_region = match self.menu[3].get_value().as_str() {
                     "localhost" => {
-                        local_host +=1;
+                        local_host += 1;
                         DynamoRegion::Endpoint(format!(
                             "http://localhost:{}",
                             self.menu[4].get_value()
                         ))
-                    },
+                    }
                     _ => DynamoRegion::Region(self.menu[3].get_value()),
                 };
 
                 let s3_region = match self.menu[5 + local_host].get_value().as_str() {
                     "localhost" => {
                         local_host += 1;
-                        S3Region::Endpoint(format!("http://localhost:{}", self.menu[5 + local_host].get_value()))
-                    },
-                    _ => {
-                        S3Region::Region(self.menu[5 + local_host].get_value())
+                        S3Region::Endpoint(format!(
+                            "http://localhost:{}",
+                            self.menu[5 + local_host].get_value()
+                        ))
                     }
+                    _ => S3Region::Region(self.menu[5 + local_host].get_value()),
                 };
 
                 DataBase::DynamoDB {
                     dynamodb_region,
                     dynamodb_table: self.menu[3 + local_host].get_value(),
                     s3_region,
-                    s3_bucket: self.menu[6 + local_host ].get_value(),
+                    s3_bucket: self.menu[6 + local_host].get_value(),
                 }
             }
         };
@@ -365,19 +368,18 @@ impl MenuState {
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////
 
 #[derive(Debug, Clone)]
 pub enum MenuComponent {
-    Text{
+    Text {
         text: String,
         payload: Option<String>,
-        sub_component: Vec<MenuItem>
+        sub_component: Vec<MenuItem>,
     },
-    Button{
+    Button {
         text: String,
-        payload: Option<String>
+        payload: Option<String>,
     },
     List {
         components: Vec<MenuComponent>,
@@ -393,11 +395,10 @@ pub enum MenuComponent {
 }
 
 impl MenuComponent {
-
     pub fn height(&self) -> usize {
         match &self {
-            Self::Text{..} => 2,
-            Self::Button{..} => 1,
+            Self::Text { .. } => 2,
+            Self::Button { .. } => 1,
             Self::List { components, .. } => components.len() + 2,
             Self::Bot { .. } => 1,
         }
@@ -405,12 +406,22 @@ impl MenuComponent {
 
     pub fn get_value(&self) -> String {
         match &self {
-            MenuComponent::List {selected, components, ..} => components[*selected].get_value(),
-            MenuComponent::Text{payload: Some(value), ..} => value.to_owned(),
-            MenuComponent::Text{text: value, ..} => value.to_owned(),
-            MenuComponent::Button{payload: Some(value), ..} => value.to_owned(),
-            MenuComponent::Button{text: value, ..} => value.to_owned(),
-            MenuComponent::Bot{path_info, ..} => path_info.to_owned(),
+            MenuComponent::List {
+                selected,
+                components,
+                ..
+            } => components[*selected].get_value(),
+            MenuComponent::Text {
+                payload: Some(value),
+                ..
+            } => value.to_owned(),
+            MenuComponent::Text { text: value, .. } => value.to_owned(),
+            MenuComponent::Button {
+                payload: Some(value),
+                ..
+            } => value.to_owned(),
+            MenuComponent::Button { text: value, .. } => value.to_owned(),
+            MenuComponent::Bot { path_info, .. } => path_info.to_owned(),
         }
     }
 }
@@ -443,12 +454,22 @@ impl MenuItem {
 
     pub fn get_value(&self) -> String {
         match &self.component {
-            MenuComponent::List { selected, components, ..} => components[*selected].get_value(),
-            MenuComponent::Text{payload: Some(value), ..} => value.to_owned(),
-            MenuComponent::Text{text: value, ..} => value.to_owned(),
-            MenuComponent::Button{payload: Some(value), ..} => value.to_owned(),
-            MenuComponent::Button{text: value, ..} => value.to_owned(),
-            MenuComponent::Bot { path_info, ..} => path_info.to_owned(),
+            MenuComponent::List {
+                selected,
+                components,
+                ..
+            } => components[*selected].get_value(),
+            MenuComponent::Text {
+                payload: Some(value),
+                ..
+            } => value.to_owned(),
+            MenuComponent::Text { text: value, .. } => value.to_owned(),
+            MenuComponent::Button {
+                payload: Some(value),
+                ..
+            } => value.to_owned(),
+            MenuComponent::Button { text: value, .. } => value.to_owned(),
+            MenuComponent::Bot { path_info, .. } => path_info.to_owned(),
         }
     }
 
@@ -461,21 +482,27 @@ impl MenuItem {
             } => {
                 *selected = *scroll_index;
             }
-            MenuComponent::Text{ text: old_value , payload, ..} => {
+            MenuComponent::Text {
+                text: old_value,
+                payload,
+                ..
+            } => {
                 if let Some(payload) = payload {
                     *payload = value.to_string();
                 };
 
                 *old_value = value.to_string();
             }
-            MenuComponent::Button{ .. } => {}
+            MenuComponent::Button { .. } => {}
             MenuComponent::Bot { .. } => {}
         }
     }
 
     pub fn next(&mut self) {
         if let MenuComponent::List {
-            scroll_index, components, ..
+            scroll_index,
+            components,
+            ..
         } = &mut self.component
         {
             if *scroll_index < components.len() - 1 {
@@ -487,7 +514,12 @@ impl MenuItem {
     }
 
     pub fn previous(&mut self) {
-        if let MenuComponent::List { scroll_index, components, .. } = &mut self.component {
+        if let MenuComponent::List {
+            scroll_index,
+            components,
+            ..
+        } = &mut self.component
+        {
             if *scroll_index > 0 {
                 *scroll_index -= 1;
             } else {
@@ -512,8 +544,8 @@ impl MenuItem {
         &self,
         mode: &AppState,
         elem: String,
-        additional_info: Option<Vec<Spans::<'a>>>
-    ) -> Text::<'a> {
+        additional_info: Option<Vec<Spans<'a>>>,
+    ) -> Text<'a> {
         // (160, 231, 229) blue
         // (180, 248, 200) green
         let span = Spans::from(vec![
@@ -551,27 +583,23 @@ impl MenuItem {
 
     pub fn gen_components(&self, input: &str, mode: &AppState) -> Text {
         match &self.component {
-            MenuComponent::Text{..} if self.selected && *mode == AppState::Editing => {
-                self.format_span(
-                    mode, input.to_owned(), None
-                )
-            },
-            MenuComponent::Text{payload: Some(text), ..} => {
-                self.format_span(
-                    mode, text.to_owned(), None
-                )
-            },
-            MenuComponent::Text{text, ..} => {
-                self.format_span(
-                    mode, text.to_owned(), None
-                )
-            },
+            MenuComponent::Text { .. } if self.selected && *mode == AppState::Editing => {
+                self.format_span(mode, input.to_owned(), None)
+            }
+            MenuComponent::Text {
+                payload: Some(text),
+                ..
+            } => self.format_span(mode, text.to_owned(), None),
+            MenuComponent::Text { text, .. } => self.format_span(mode, text.to_owned(), None),
 
             MenuComponent::List {
-                components: list_components, scroll_index, ..
+                components: list_components,
+                scroll_index,
+                ..
             } if self.selected && *mode == AppState::Selecting => {
                 let additional_info = Some(
-                    list_components.iter()
+                    list_components
+                        .iter()
                         .enumerate()
                         .map(|(i, value)| {
                             let symbol = if *mode == AppState::Selecting && i == *scroll_index {
@@ -588,31 +616,20 @@ impl MenuItem {
                         .collect::<Vec<Spans>>(),
                 );
 
-                self.format_span(
-                    mode, "".to_owned(), additional_info
-                )
+                self.format_span(mode, "".to_owned(), additional_info)
             }
-            MenuComponent::List { selected, components: list_components, .. } => {
-                self.format_span(
-                    mode, list_components[*selected].get_value(), None
-                )
-            },
+            MenuComponent::List {
+                selected,
+                components: list_components,
+                ..
+            } => self.format_span(mode, list_components[*selected].get_value(), None),
 
-            MenuComponent::Button{payload: Some(text), ..} => {
-                self.format_span(
-                    mode, text.to_owned(), None
-                )
-            },
-            MenuComponent::Button{text, ..} => {
-                self.format_span(
-                    mode, text.to_owned(), None
-                )
-            },
-            MenuComponent::Bot { text, .. } => {
-                self.format_span(
-                    mode, text.to_owned(), None
-                )
-            },
+            MenuComponent::Button {
+                payload: Some(text),
+                ..
+            } => self.format_span(mode, text.to_owned(), None),
+            MenuComponent::Button { text, .. } => self.format_span(mode, text.to_owned(), None),
+            MenuComponent::Bot { text, .. } => self.format_span(mode, text.to_owned(), None),
         }
     }
 

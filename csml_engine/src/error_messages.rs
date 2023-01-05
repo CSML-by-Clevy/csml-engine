@@ -1,1 +1,1 @@
-pub const ERROR_DB_SETUP: &'static str = "Database connector is not setup correctly";
+pub const ERROR_DB_SETUP: &str = "Database connector is not setup correctly";

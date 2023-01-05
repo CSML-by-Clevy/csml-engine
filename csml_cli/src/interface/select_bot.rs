@@ -40,7 +40,10 @@ impl MenuType for SelectBotMenu {
 
         options.push(MenuItem::new(
             "",
-            MenuComponent::Button{text:"[create new bot]".to_owned(), payload: None},
+            MenuComponent::Button {
+                text: "[create new bot]".to_owned(),
+                payload: None,
+            },
             0,
         ));
 

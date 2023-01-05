@@ -1,15 +1,8 @@
-use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
-use crate::{
-    EngineError, PostgresqlClient,
-    BotVersion, SerializeCsmlBot
-};
+use crate::{BotVersion, EngineError, PostgresqlClient, SerializeCsmlBot};
 
-use super::{
-    models,
-    schema::cmsl_bot_versions,
-    pagination::*
-};
+use super::{models, pagination::*, schema::cmsl_bot_versions};
 
 use std::env;
 
@@ -26,8 +19,8 @@ pub fn create_bot_version(
     };
 
     let bot: models::Bot = diesel::insert_into(cmsl_bot_versions::table)
-    .values(&newbot)
-    .get_result(&mut db.client)?;
+        .values(&newbot)
+        .get_result(&mut db.client)?;
 
     Ok(bot.id.to_string())
 }
@@ -38,10 +31,9 @@ pub fn get_bot_versions(
     pagination_key: Option<String>,
     db: &mut PostgresqlClient,
 ) -> Result<serde_json::Value, EngineError> {
-
     let pagination_key = match pagination_key {
         Some(paginate) => paginate.parse::<i64>().unwrap_or(1),
-        None => 1
+        None => 1,
     };
 
     let mut query = cmsl_bot_versions::table
@@ -55,8 +47,7 @@ pub fn get_bot_versions(
     };
     query = query.per_page(limit_per_page);
 
-    let (bot_versions, total_pages) =
-    query.load_and_count_pages::<models::Bot>(&mut db.client)?;
+    let (bot_versions, total_pages) = query.load_and_count_pages::<models::Bot>(&mut db.client)?;
 
     let mut bots = vec![];
     for bot_version in bot_versions {
@@ -81,9 +72,7 @@ pub fn get_bot_versions(
     match pagination_key < total_pages {
         true => {
             let pagination_key = (pagination_key + 1).to_string();
-            Ok(
-                serde_json::json!({"bots": bots, "pagination_key": pagination_key}),
-            )
+            Ok(serde_json::json!({"bots": bots, "pagination_key": pagination_key}))
         }
         false => Ok(serde_json::json!({ "bots": bots })),
     }
@@ -96,8 +85,8 @@ pub fn get_bot_by_version_id(
     let version_id = uuid::Uuid::parse_str(id).unwrap();
 
     let result: Result<models::Bot, diesel::result::Error> = cmsl_bot_versions::table
-    .filter(cmsl_bot_versions::id.eq(&version_id))
-    .get_result(&mut db.client);
+        .filter(cmsl_bot_versions::id.eq(&version_id))
+        .get_result(&mut db.client);
 
     match result {
         Ok(bot) => {
@@ -118,9 +107,9 @@ pub fn get_last_bot_version(
     db: &mut PostgresqlClient,
 ) -> Result<Option<BotVersion>, EngineError> {
     let result: Result<models::Bot, diesel::result::Error> = cmsl_bot_versions::table
-    .filter(cmsl_bot_versions::bot_id.eq(&bot_id))
-    .order_by(cmsl_bot_versions::created_at.desc())
-    .get_result(&mut db.client);
+        .filter(cmsl_bot_versions::bot_id.eq(&bot_id))
+        .order_by(cmsl_bot_versions::created_at.desc())
+        .get_result(&mut db.client);
 
     match result {
         Ok(bot) => {
@@ -136,28 +125,23 @@ pub fn get_last_bot_version(
     }
 }
 
-pub fn delete_bot_version(
-    version_id: &str,
-    db: &mut PostgresqlClient
-) -> Result<(), EngineError> {
+pub fn delete_bot_version(version_id: &str, db: &mut PostgresqlClient) -> Result<(), EngineError> {
     let id = match uuid::Uuid::parse_str(version_id) {
         Ok(id) => id,
-        Err(..) => return Ok(())
+        Err(..) => return Ok(()),
     };
 
-    diesel::delete(
-        cmsl_bot_versions::table
-        .filter(cmsl_bot_versions::id.eq(id))
-    ).get_result::<models::Bot>(&mut db.client).ok();
+    diesel::delete(cmsl_bot_versions::table.filter(cmsl_bot_versions::id.eq(id)))
+        .get_result::<models::Bot>(&mut db.client)
+        .ok();
 
     Ok(())
 }
 
 pub fn delete_bot_versions(bot_id: &str, db: &mut PostgresqlClient) -> Result<(), EngineError> {
-    diesel::delete(
-        cmsl_bot_versions::table
-        .filter(cmsl_bot_versions::bot_id.eq(bot_id))
-    ).get_result::<models::Bot>(&mut db.client).ok();
+    diesel::delete(cmsl_bot_versions::table.filter(cmsl_bot_versions::bot_id.eq(bot_id)))
+        .get_result::<models::Bot>(&mut db.client)
+        .ok();
 
     Ok(())
 }

@@ -13,11 +13,11 @@ use csml_interpreter::data::csml_logs::{csml_logger, CsmlLog, LogLvl};
 
 pub fn delete_client(client: &Client, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call delete client")),
+        CsmlLog::new(None, None, None, "db call delete client".to_string()),
         LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(Some(client), None, None, format!("db call delete client")),
+        CsmlLog::new(Some(client), None, None, "db call delete client".to_string()),
         LogLvl::Debug,
     );
 

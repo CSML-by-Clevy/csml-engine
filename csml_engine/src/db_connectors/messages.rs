@@ -101,11 +101,11 @@ pub fn get_client_messages(
     to_date: Option<i64>,
 ) -> Result<serde_json::Value, EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call get messages")),
+        CsmlLog::new(None, None, None, "db call get messages".to_string()),
         LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(Some(client), None, None, format!("db call get messages")),
+        CsmlLog::new(Some(client), None, None, "db call get messages".to_string()),
         LogLvl::Debug,
     );
 

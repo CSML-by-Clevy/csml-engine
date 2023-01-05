@@ -51,7 +51,7 @@ pub fn get_bot_versions(
     let collection = db.client.collection::<Document>("bot");
 
     let limit = match limit {
-        Some(limit) => std::cmp::min(limit + 1 , 26),
+        Some(limit) => std::cmp::min(limit + 1, 26),
         None => 26,
     };
 

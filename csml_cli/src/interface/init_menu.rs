@@ -1,4 +1,4 @@
-use crate::interface::{MenuComponent, AppState, MenuItem, MenuType};
+use crate::interface::{AppState, MenuComponent, MenuItem, MenuType};
 use std::iter::Iterator;
 
 const AWS_REGIONS_PAYLOAD: &[&str] = &[
@@ -25,7 +25,6 @@ const AWS_REGIONS_PAYLOAD: &[&str] = &[
     "South America (São Paulo) sa-east-1",
     "AWS GovCloud (US-East) us-gov-east-1",
     "AWS GovCloud (US-West) us-gov-west-1",
-
     "localhost",
 ];
 
@@ -53,62 +52,64 @@ const AWS_REGIONS: &[&str] = &[
     "sa-east-1",
     "us-gov-east-1",
     "us-gov-west-1",
-
     "localhost",
 ];
 
 fn get_aws_regions() -> Vec<MenuComponent> {
-    AWS_REGIONS.iter().zip(AWS_REGIONS_PAYLOAD.iter()).map(|(&text, &payload)| {
+    AWS_REGIONS
+        .iter()
+        .zip(AWS_REGIONS_PAYLOAD.iter())
+        .map(|(&text, &payload)| {
+            let mut sub_component = vec![];
 
-        let mut sub_component = vec![];
-
-        if payload == "localhost" {
-            sub_component.push(
-                MenuItem::new(
+            if payload == "localhost" {
+                sub_component.push(MenuItem::new(
                     "Dynamodb port",
-                    MenuComponent::Text{
+                    MenuComponent::Text {
                         text: "8000".to_owned(),
                         payload: None,
-                        sub_component: vec![]
+                        sub_component: vec![],
                     },
-                    2
-                )
-            );
-        }
+                    2,
+                ));
+            }
 
-        MenuComponent::Text{
-            text: text.to_owned(),
-            payload: Some(payload.to_owned()),
-            sub_component
-        }
-    }).collect()
+            MenuComponent::Text {
+                text: text.to_owned(),
+                payload: Some(payload.to_owned()),
+                sub_component,
+            }
+        })
+        .collect()
 }
 
 fn get_s3_regions() -> Vec<MenuComponent> {
-    AWS_REGIONS.iter().zip(AWS_REGIONS_PAYLOAD.iter()).map(|(&text, &payload)| {
+    AWS_REGIONS
+        .iter()
+        .zip(AWS_REGIONS_PAYLOAD.iter())
+        .map(|(&text, &payload)| {
+            let mut sub_component = vec![];
 
-        let mut sub_component = vec![];
-
-        if payload == "localhost" {
-            sub_component.push(
-                MenuItem::new(
+            if payload == "localhost" {
+                sub_component.push(MenuItem::new(
                     "Localstack port",
-                    MenuComponent::Text{
-                        text: "8000".to_owned(), payload: None, sub_component: vec![]
+                    MenuComponent::Text {
+                        text: "8000".to_owned(),
+                        payload: None,
+                        sub_component: vec![],
                     },
-                    2
-                )
-            )
-        }
+                    2,
+                ))
+            }
 
-        MenuComponent::Text{
-            text: text.to_owned(),
-            payload: Some(payload.to_owned()),
-            sub_component
-        }
-    }).collect()
+            MenuComponent::Text {
+                text: text.to_owned(),
+                payload: Some(payload.to_owned()),
+                sub_component,
+            }
+        })
+        .collect()
 }
-
 
 #[derive(Debug, Clone)]
 pub struct InitMenu {
@@ -117,21 +118,25 @@ pub struct InitMenu {
 
 impl MenuType for InitMenu {
     fn init() -> Box<dyn MenuType> {
-        let mongodb_sub_menu = vec![
-            MenuItem::new(
-                "MongoDB Connection String URI",
-                MenuComponent::Text{text: "mongodb://localhost:27017".to_owned(), payload: None, sub_component: vec![]},
-                1,
-            )
-        ];
+        let mongodb_sub_menu = vec![MenuItem::new(
+            "MongoDB Connection String URI",
+            MenuComponent::Text {
+                text: "mongodb://localhost:27017".to_owned(),
+                payload: None,
+                sub_component: vec![],
+            },
+            1,
+        )];
 
-        let postgres_sub_menu = vec![
-            MenuItem::new(
-                "POSTGRESQL Connection String URI",
-                MenuComponent::Text{text: "postgres://localhost:27017".to_owned(), payload: None, sub_component: vec![]},
-                1,
-            )
-        ];
+        let postgres_sub_menu = vec![MenuItem::new(
+            "POSTGRESQL Connection String URI",
+            MenuComponent::Text {
+                text: "postgres://localhost:27017".to_owned(),
+                payload: None,
+                sub_component: vec![],
+            },
+            1,
+        )];
 
         let dynamodb_sub_menu = vec![
             MenuItem::new(
@@ -145,7 +150,11 @@ impl MenuType for InitMenu {
             ),
             MenuItem::new(
                 "Dynamodb table name",
-                MenuComponent::Text{text: "csml-engine-db-local".to_owned(), payload: None, sub_component: vec![]},
+                MenuComponent::Text {
+                    text: "csml-engine-db-local".to_owned(),
+                    payload: None,
+                    sub_component: vec![],
+                },
                 1,
             ),
             MenuItem::new(
@@ -159,21 +168,41 @@ impl MenuType for InitMenu {
             ),
             MenuItem::new(
                 "S3 bucket name",
-                MenuComponent::Text{text: "csml-engine-bucket".to_owned(), payload: None, sub_component: vec![]},
+                MenuComponent::Text {
+                    text: "csml-engine-bucket".to_owned(),
+                    payload: None,
+                    sub_component: vec![],
+                },
                 1,
             ),
         ];
 
         let init = InitMenu {
             start: vec![
-                MenuItem::new("Chatbot name", MenuComponent::Text{text: "bot".to_owned(), payload: None, sub_component: vec![]}, 0),
+                MenuItem::new(
+                    "Chatbot name",
+                    MenuComponent::Text {
+                        text: "bot".to_owned(),
+                        payload: None,
+                        sub_component: vec![],
+                    },
+                    0,
+                ),
                 MenuItem::new(
                     "Enable variable encryption",
                     MenuComponent::List {
                         components: vec![
-                                MenuComponent::Text{text: "yes".to_owned(), payload: None, sub_component: vec![]},
-                                MenuComponent::Text{text: "no".to_owned(), payload: None, sub_component: vec![]}
-                            ],
+                            MenuComponent::Text {
+                                text: "yes".to_owned(),
+                                payload: None,
+                                sub_component: vec![],
+                            },
+                            MenuComponent::Text {
+                                text: "no".to_owned(),
+                                payload: None,
+                                sub_component: vec![],
+                            },
+                        ],
                         selected: 0,
                         scroll_index: 0,
                     },
@@ -183,10 +212,22 @@ impl MenuType for InitMenu {
                     "Database type",
                     MenuComponent::List {
                         components: vec![
-                                MenuComponent::Text{text: "mongodb".to_owned(), payload: None, sub_component: mongodb_sub_menu },
-                                MenuComponent::Text{text: "dynamodb".to_owned(), payload: None, sub_component: dynamodb_sub_menu},
-                                MenuComponent::Text{text: "postgresql".to_owned(), payload: None, sub_component: postgres_sub_menu}
-                            ],
+                            MenuComponent::Text {
+                                text: "mongodb".to_owned(),
+                                payload: None,
+                                sub_component: mongodb_sub_menu,
+                            },
+                            MenuComponent::Text {
+                                text: "dynamodb".to_owned(),
+                                payload: None,
+                                sub_component: dynamodb_sub_menu,
+                            },
+                            MenuComponent::Text {
+                                text: "postgresql".to_owned(),
+                                payload: None,
+                                sub_component: postgres_sub_menu,
+                            },
+                        ],
                         selected: 0,
                         scroll_index: 0,
                     },
@@ -194,7 +235,10 @@ impl MenuType for InitMenu {
                 ),
                 MenuItem::new(
                     "",
-                    MenuComponent::Button{text: "               [Validate]".to_owned(), payload: None},
+                    MenuComponent::Button {
+                        text: "               [Validate]".to_owned(),
+                        payload: None,
+                    },
                     0,
                 ),
             ],

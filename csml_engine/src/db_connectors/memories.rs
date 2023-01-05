@@ -7,12 +7,11 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 #[cfg(feature = "sqlite")]
 use crate::db_connectors::{is_sqlite, sqlite_connector};
 
+use csml_interpreter::data::csml_logs::{csml_logger, CsmlLog, LogLvl};
 
-use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
-
+use crate::db_connectors::utils::*;
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Client, ConversationInfo, Database, EngineError, Memory};
-use crate::db_connectors::utils::*;
 use std::collections::HashMap;
 
 pub fn add_memories(
@@ -24,18 +23,18 @@ pub fn add_memories(
             None,
             None,
             None,
-            format!("db call save memories {:?}", memories.keys())
+            format!("db call save memories {:?}", memories.keys()),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             None,
             None,
             None,
-            format!("db call save memories {:?}", memories.keys())
+            format!("db call save memories {:?}", memories.keys()),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -53,13 +52,13 @@ pub fn add_memories(
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let expires_at = get_expires_at_for_postgresql(data.ttl);
-        return postgresql_connector::memories::add_memories(data, &memories, expires_at);
+        return postgresql_connector::memories::add_memories(data, memories, expires_at);
     }
 
     #[cfg(feature = "sqlite")]
     if is_sqlite() {
         let expires_at = get_expires_at_for_sqlite(data.ttl);
-        return sqlite_connector::memories::add_memories(data, &memories, expires_at);
+        return sqlite_connector::memories::add_memories(data, memories, expires_at);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -70,33 +69,29 @@ pub fn create_client_memory(
     key: String,
     value: serde_json::Value,
     ttl: Option<chrono::Duration>,
-    db: &mut Database
+    db: &mut Database,
 ) -> Result<(), EngineError> {
-
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call save memory {:?}", key)
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, format!("db call save memory {:?}", key)),
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             None,
             None,
             None,
-            format!("db call save memory {:?} with value {:?}", key, value)
+            format!("db call save memory {:?} with value {:?}", key, value),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         let db = mongodb_connector::get_db(db)?;
         let expires_at = get_expires_at_for_mongodb(ttl);
-        return mongodb_connector::memories::create_client_memory(client, key, value, expires_at, db);
+        return mongodb_connector::memories::create_client_memory(
+            client, key, value, expires_at, db,
+        );
     }
 
     #[cfg(feature = "dynamo")]
@@ -104,44 +99,43 @@ pub fn create_client_memory(
         let db = dynamodb_connector::get_db(db)?;
         let expires_at = get_expires_at_for_dynamodb(ttl);
 
-        return dynamodb_connector::memories::create_client_memory(client, key, value, expires_at, db);
+        return dynamodb_connector::memories::create_client_memory(
+            client, key, value, expires_at, db,
+        );
     }
 
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
         let expires_at = get_expires_at_for_postgresql(ttl);
-        return postgresql_connector::memories::create_client_memory(client, &key, &value, expires_at,db);
+        return postgresql_connector::memories::create_client_memory(
+            client, &key, &value, expires_at, db,
+        );
     }
 
     #[cfg(feature = "sqlite")]
     if is_sqlite() {
         let db = sqlite_connector::get_db(db)?;
         let expires_at = get_expires_at_for_sqlite(ttl);
-        return sqlite_connector::memories::create_client_memory(client, &key, &value, expires_at,db);
+        return sqlite_connector::memories::create_client_memory(
+            client, &key, &value, expires_at, db,
+        );
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
+pub fn internal_use_get_memories(
+    client: &Client,
+    db: &mut Database,
+) -> Result<serde_json::Value, EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call get memories")
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, "db call get memories".to_string()),
+        LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(
-            Some(client),
-            None,
-            None,
-            format!("db call get memories")
-        ),
-        LogLvl::Debug
+        CsmlLog::new(Some(client), None, None, "db call get memories".to_string()),
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -174,24 +168,19 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
 /**
  * Get client Memories
  */
- pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
+pub fn get_memories(client: &Client, db: &mut Database) -> Result<serde_json::Value, EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call get memories client")
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, "db call get memories client".to_string()),
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(client),
             None,
             None,
-            format!("db call get memories client")
+            "db call get memories client".to_string(),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -224,24 +213,23 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
 /**
  * Get client Memory
  */
- pub fn get_memory(client: &Client, key: &str, db: &mut Database) -> Result<serde_json::Value, EngineError> {
+pub fn get_memory(
+    client: &Client,
+    key: &str,
+    db: &mut Database,
+) -> Result<serde_json::Value, EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call get memory {:?}", key)
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, format!("db call get memory {:?}", key)),
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(client),
             None,
             None,
-            format!("db call get memory {:?}", key)
+            format!("db call get memory {:?}", key),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -271,25 +259,23 @@ pub fn internal_use_get_memories(client: &Client, db: &mut Database) -> Result<s
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
 
-
-pub fn delete_client_memory(client: &Client, key: &str, db: &mut Database) -> Result<(), EngineError> {
+pub fn delete_client_memory(
+    client: &Client,
+    key: &str,
+    db: &mut Database,
+) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call delete memory {:?}", key)
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, format!("db call delete memory {:?}", key)),
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(client),
             None,
             None,
-            format!("db call delete memory {:?}", key)
+            format!("db call delete memory {:?}", key),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -321,22 +307,12 @@ pub fn delete_client_memory(client: &Client, key: &str, db: &mut Database) -> Re
 
 pub fn delete_client_memories(client: &Client, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call delete memories")
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, "db call delete memories".to_string()),
+        LogLvl::Info,
     );
     csml_logger(
-        CsmlLog::new(
-            Some(client),
-            None,
-            None,
-            format!("db call delete memories")
-        ),
-        LogLvl::Debug
+        CsmlLog::new(Some(client), None, None, "db call delete memories".to_string()),
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]

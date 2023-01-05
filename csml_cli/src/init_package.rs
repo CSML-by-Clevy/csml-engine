@@ -63,11 +63,8 @@ impl Env {
 
                 env
             }
-            DataBase::Postgres { uri } => { 
-                let mut env = format!(
-                    "ENGINE_DB_TYPE=postgresql\nPOSTGRESQL_URL={}",
-                    uri
-                );
+            DataBase::Postgres { uri } => {
+                let mut env = format!("ENGINE_DB_TYPE=postgresql\nPOSTGRESQL_URL={}", uri);
 
                 if let Some(encryption) = &self.encryption {
                     env.push_str(&format!("\n\nENCRYPTION_SECRET={}", encryption));

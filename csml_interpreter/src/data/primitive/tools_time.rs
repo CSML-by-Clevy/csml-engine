@@ -145,7 +145,7 @@ pub fn pasre_from_str(
         let date = DateTime::<Utc>::from_utc(naive_datetime, Utc);
         date.naive_utc().timestamp_millis()
     } else if let Ok(naive_date) = NaiveDate::parse_from_str(&date_str, &format_str) {
-        let naive_datetime: NaiveDateTime = naive_date.and_hms(0, 0, 0);
+        let naive_datetime: NaiveDateTime = naive_date.and_hms_opt(0, 0, 0).unwrap();
         let date = DateTime::<Utc>::from_utc(naive_datetime, Utc);
         date.naive_utc().timestamp_millis()
     } else {

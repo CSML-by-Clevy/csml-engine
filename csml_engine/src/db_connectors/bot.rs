@@ -82,7 +82,7 @@ pub fn create_bot_version(
         let serializable_bot = crate::data::to_serializable_bot(&csml_bot);
         let bot = serde_json::json!(serializable_bot).to_string();
 
-        let version_id = postgresql_connector::bot::create_bot_version(bot_id.clone(), bot, db)?;
+        let version_id = postgresql_connector::bot::create_bot_version(bot_id, bot, db)?;
 
         return Ok(version_id);
     }
@@ -94,7 +94,7 @@ pub fn create_bot_version(
         let serializable_bot = crate::data::to_serializable_bot(&csml_bot);
         let bot = serde_json::json!(serializable_bot).to_string();
 
-        let version_id = sqlite_connector::bot::create_bot_version(bot_id.clone(), bot, db)?;
+        let version_id = sqlite_connector::bot::create_bot_version(bot_id, bot, db)?;
 
         return Ok(version_id);
     }
@@ -131,13 +131,13 @@ pub fn get_last_bot_version(
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
-        return postgresql_connector::bot::get_last_bot_version(&bot_id, db);
+        return postgresql_connector::bot::get_last_bot_version(bot_id, db);
     }
 
     #[cfg(feature = "sqlite")]
     if is_sqlite() {
         let db = sqlite_connector::get_db(db)?;
-        return sqlite_connector::bot::get_last_bot_version(&bot_id, db);
+        return sqlite_connector::bot::get_last_bot_version(bot_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -185,13 +185,13 @@ pub fn get_by_version_id(
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
-        return postgresql_connector::bot::get_bot_by_version_id(&version_id, db);
+        return postgresql_connector::bot::get_bot_by_version_id(version_id, db);
     }
 
     #[cfg(feature = "sqlite")]
     if is_sqlite() {
         let db = sqlite_connector::get_db(db)?;
-        return sqlite_connector::bot::get_bot_by_version_id(&version_id, db);
+        return sqlite_connector::bot::get_bot_by_version_id(version_id, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -244,13 +244,13 @@ pub fn get_bot_versions(
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         let db = postgresql_connector::get_db(db)?;
-        return postgresql_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
+        return postgresql_connector::bot::get_bot_versions(bot_id, limit, pagination_key, db);
     }
 
     #[cfg(feature = "sqlite")]
     if is_sqlite() {
         let db = sqlite_connector::get_db(db)?;
-        return sqlite_connector::bot::get_bot_versions(&bot_id, limit, pagination_key, db);
+        return sqlite_connector::bot::get_bot_versions(bot_id, limit, pagination_key, db);
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -309,7 +309,7 @@ pub fn delete_bot_version(
 
 pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call delete bot versions")),
+        CsmlLog::new(None, None, None, "db call delete bot versions".to_string()),
         LogLvl::Info,
     );
     csml_logger(
@@ -351,7 +351,7 @@ pub fn delete_bot_versions(bot_id: &str, db: &mut Database) -> Result<(), Engine
 
 pub fn delete_all_bot_data(bot_id: &str, db: &mut Database) -> Result<(), EngineError> {
     csml_logger(
-        CsmlLog::new(None, None, None, format!("db call delete all bot data")),
+        CsmlLog::new(None, None, None, "db call delete all bot data".to_string()),
         LogLvl::Info,
     );
     csml_logger(

@@ -28,7 +28,7 @@ fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
 
     pbkdf2_hmac(
         pass.as_bytes(),
-        &salt,
+        salt,
         10000,
         openssl::hash::MessageDigest::sha512(),
         key,
@@ -45,9 +45,9 @@ fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
  * retaining full retrocompatibility with older data at a small cost.
  */
 fn decode(text: &str) -> Result<Vec<u8>, EngineError> {
-    match hex::decode(text.to_owned()) {
+    match hex::decode(text) {
         Ok(val) => Ok(val),
-        Err(_) => match base64::decode(text.to_owned()) {
+        Err(_) => match base64::decode(text) {
             Ok(val) => Ok(val),
             Err(err) => Err(EngineError::Base64(err)),
         },
@@ -67,12 +67,12 @@ fn encrypt(text: &[u8]) -> Result<String, EngineError> {
 
     let encrypted = encrypt_aead(cipher, &key, Some(&iv), &[], text, &mut tag)?;
 
-    Ok(base64::encode(&[salt, iv, tag, encrypted].concat()))
+    Ok(base64::encode([salt, iv, tag, encrypted].concat()))
 }
 
 pub fn encrypt_data(value: &serde_json::Value) -> Result<String, EngineError> {
     match env::var("ENCRYPTION_SECRET") {
-        Ok(..) => encrypt(&value.to_string().as_bytes()),
+        Ok(..) => encrypt(value.to_string().as_bytes()),
         _ => Ok(value.to_string()),
     }
 }
@@ -93,9 +93,9 @@ fn decrypt(text: String) -> Result<String, EngineError> {
     let encrypted: &[u8] = &ciphertext[encrypted_position..];
 
     let mut key = [0; 32];
-    get_key(&salt, &mut key)?;
+    get_key(salt, &mut key)?;
 
-    let value = decrypt_aead(cipher, &key, Some(&iv), &[], &encrypted, &tag)?;
+    let value = decrypt_aead(cipher, &key, Some(iv), &[], encrypted, tag)?;
 
     Ok(String::from_utf8_lossy(&value).to_string())
 }

@@ -344,7 +344,7 @@ impl Primitive for PrimitiveNull {
             if *mem_type == MemoryType::Constant && *right == Right::Write {
                 return Err(gen_error_info(
                     Position::new(interval, &data.context.flow),
-                    format!("{}" , ERROR_CONSTANT_MUTABLE_FUNCTION),
+                    format!("{}", ERROR_CONSTANT_MUTABLE_FUNCTION),
                 ));
             } else {
                 let res = f(self, args, additional_info, data, interval)?;

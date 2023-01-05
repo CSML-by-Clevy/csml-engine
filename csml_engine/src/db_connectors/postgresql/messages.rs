@@ -20,7 +20,7 @@ pub fn add_messages_bulk(
     direction: &str,
     expires_at: Option<NaiveDateTime>,
 ) -> Result<(), EngineError> {
-    if msgs.len() == 0 {
+    if msgs.is_empty() {
         return Ok(());
     }
 
@@ -37,8 +37,8 @@ pub fn add_messages_bulk(
             flow_id: &data.context.flow,
             step_id: data.context.step.get_step_ref(),
             direction,
-            payload: encrypt_data(&message)?,
-            content_type: &message["content_type"].as_str().unwrap_or("text"),
+            payload: encrypt_data(message)?,
+            content_type: message["content_type"].as_str().unwrap_or("text"),
 
             message_order: message_order as i32,
             interaction_order,
@@ -88,9 +88,13 @@ pub fn get_client_messages(
 
     let (conversation_with_messages, total_pages) = match from_date {
         Some(from_date) => {
-            let from_date = NaiveDateTime::from_timestamp_opt(from_date, 0).ok_or(EngineError::DateTimeError("Date time is out of range".to_owned()))?;
+            let from_date = NaiveDateTime::from_timestamp_opt(from_date, 0).ok_or(
+                EngineError::DateTimeError("Date time is out of range".to_owned()),
+            )?;
             let to_date = match to_date {
-                Some(to_date) => NaiveDateTime::from_timestamp_opt(to_date, 0).ok_or(EngineError::DateTimeError("Date time is out of range".to_owned()))?,
+                Some(to_date) => NaiveDateTime::from_timestamp_opt(to_date, 0).ok_or(
+                    EngineError::DateTimeError("Date time is out of range".to_owned()),
+                )?,
                 None => chrono::Utc::now().naive_utc(),
             };
 

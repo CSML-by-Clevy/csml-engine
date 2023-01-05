@@ -1,7 +1,7 @@
+use super::schema::*;
 use chrono::NaiveDateTime;
 use diesel::{Associations, Identifiable, Insertable, Queryable};
 use uuid::Uuid;
-use super::schema::*;
 
 #[derive(Identifiable, Queryable, PartialEq, Debug)]
 #[diesel(table_name = cmsl_bot_versions)]
@@ -161,7 +161,6 @@ pub struct NewState<'a> {
 
     pub expires_at: Option<NaiveDateTime>,
 }
-
 
 // use serde::{ Deserializer};
 // use serde_derive::{Serialize,Deserialize};

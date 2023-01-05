@@ -51,8 +51,8 @@ pub mod memories;
 pub mod messages;
 pub mod state;
 
-pub mod user;
 pub mod clean_db;
+pub mod user;
 pub mod utils;
 
 pub mod db_test;
@@ -68,7 +68,6 @@ mod postgresql;
 
 #[cfg(feature = "sqlite")]
 mod sqlite;
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DbConversation {
@@ -177,7 +176,7 @@ pub fn is_dynamodb() -> bool {
 #[cfg(feature = "postgresql")]
 pub fn is_postgresql() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
-        Ok(val) => val == "postgresql".to_owned(),
+        Ok(val) => val == *"postgresql",
         Err(_) => false,
     }
 }
@@ -185,7 +184,7 @@ pub fn is_postgresql() -> bool {
 #[cfg(feature = "sqlite")]
 pub fn is_sqlite() -> bool {
     match std::env::var("ENGINE_DB_TYPE") {
-        Ok(val) => val == "sqlite".to_owned(),
+        Ok(val) => val == *"sqlite",
         Err(_) => false,
     }
 }
@@ -215,7 +214,6 @@ pub fn init_db() -> Result<Database, EngineError> {
 }
 
 pub fn make_migrations() -> Result<(), EngineError> {
-
     #[cfg(feature = "postgresql")]
     if is_postgresql() {
         return self::postgresql::make_migrations();
