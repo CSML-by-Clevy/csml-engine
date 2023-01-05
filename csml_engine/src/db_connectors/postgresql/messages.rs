@@ -14,7 +14,7 @@ use super::{
 use chrono::NaiveDateTime;
 
 pub fn add_messages_bulk(
-    data: &ConversationInfo,
+    data: &mut ConversationInfo,
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
@@ -24,7 +24,7 @@ pub fn add_messages_bulk(
         return Ok(());
     }
 
-    let db = get_db(&data.db)?;
+    let db = get_db(&mut data.db)?;
 
     let mut new_messages = vec![];
     for (message_order, message) in msgs.iter().enumerate() {
@@ -50,23 +50,23 @@ pub fn add_messages_bulk(
 
     diesel::insert_into(csml_messages::table)
         .values(&new_messages)
-        .get_result::<models::Message>(&db.client)?;
+        .get_result::<models::Message>(&mut db.client)?;
 
     Ok(())
 }
 
-pub fn delete_user_messages(client: &Client, db: &PostgresqlClient) -> Result<(), EngineError> {
+pub fn delete_user_messages(client: &Client, db: &mut PostgresqlClient) -> Result<(), EngineError> {
     let conversations: Vec<models::Conversation> = csml_conversations::table
         .filter(csml_conversations::bot_id.eq(&client.bot_id))
         .filter(csml_conversations::channel_id.eq(&client.channel_id))
         .filter(csml_conversations::user_id.eq(&client.user_id))
-        .load(&db.client)?;
+        .load(&mut db.client)?;
 
     for conversation in conversations {
         diesel::delete(
             csml_messages::table.filter(csml_messages::conversation_id.eq(&conversation.id)),
         )
-        .execute(&db.client)
+        .execute(&mut db.client)
         .ok();
     }
 
@@ -75,7 +75,7 @@ pub fn delete_user_messages(client: &Client, db: &PostgresqlClient) -> Result<()
 
 pub fn get_client_messages(
     client: &Client,
-    db: &PostgresqlClient,
+    db: &mut PostgresqlClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
     from_date: Option<i64>,
@@ -88,9 +88,9 @@ pub fn get_client_messages(
 
     let (conversation_with_messages, total_pages) = match from_date {
         Some(from_date) => {
-            let from_date = NaiveDateTime::from_timestamp(from_date, 0);
+            let from_date = NaiveDateTime::from_timestamp_opt(from_date, 0).ok_or(EngineError::DateTimeError("Date time is out of range".to_owned()))?;
             let to_date = match to_date {
-                Some(to_date) => NaiveDateTime::from_timestamp(to_date, 0),
+                Some(to_date) => NaiveDateTime::from_timestamp_opt(to_date, 0).ok_or(EngineError::DateTimeError("Date time is out of range".to_owned()))?,
                 None => chrono::Utc::now().naive_utc(),
             };
 
@@ -112,7 +112,7 @@ pub fn get_client_messages(
             };
             query = query.per_page(limit_per_page);
 
-            query.load_and_count_pages::<(models::Conversation, models::Message)>(&db.client)?
+            query.load_and_count_pages::<(models::Conversation, models::Message)>(&mut db.client)?
         }
         None => {
             let mut query = csml_conversations::table
@@ -131,7 +131,7 @@ pub fn get_client_messages(
             };
             query = query.per_page(limit_per_page);
 
-            query.load_and_count_pages::<(models::Conversation, models::Message)>(&db.client)?
+            query.load_and_count_pages::<(models::Conversation, models::Message)>(&mut db.client)?
         }
     };
 

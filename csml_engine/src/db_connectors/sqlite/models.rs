@@ -1,20 +1,20 @@
-use diesel::{Queryable, Identifiable, Insertable, Associations,};
+use diesel::{Queryable, Identifiable, Insertable, Associations, backend};
 
 use uuid;
 use std::io::prelude::*;
 use diesel::deserialize::{self, FromSql};
 use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sql_types::{Binary};
-use diesel::sqlite::Sqlite;
-use diesel::backend::Backend;
+use diesel::sqlite::{Sqlite, SqliteValue};
 use std::fmt::{Display, Formatter};
 use std::fmt;
 
 use chrono::NaiveDateTime;
+use uuid::Bytes;
 use super::schema::*;
 
 #[derive(Identifiable, Queryable, PartialEq, Debug)]
-#[table_name = "cmsl_bot_versions"]
+#[diesel(table_name = cmsl_bot_versions)]
 pub struct Bot {
     pub id: UUID,
 
@@ -27,7 +27,7 @@ pub struct Bot {
 }
 
 #[derive(Queryable, Insertable, Associations, PartialEq, Debug)]
-#[table_name = "cmsl_bot_versions"]
+#[diesel(table_name = cmsl_bot_versions, belongs_to(Bot))]
 pub struct NewBot<'a> {
     pub id: UUID,
     pub bot_id: &'a str,
@@ -36,7 +36,7 @@ pub struct NewBot<'a> {
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_conversations"]
+#[diesel(table_name = csml_conversations, belongs_to(Bot))]
 pub struct Conversation {
     pub id: UUID,
 
@@ -56,7 +56,7 @@ pub struct Conversation {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_conversations"]
+#[diesel(table_name = csml_conversations, belongs_to(Bot))]
 pub struct NewConversation<'a> {
     pub id: UUID,
     pub bot_id: &'a str,
@@ -71,7 +71,7 @@ pub struct NewConversation<'a> {
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_memories"]
+#[diesel(table_name = csml_memories, belongs_to(Bot))]
 pub struct Memory {
     pub id: UUID,
     pub bot_id: String,
@@ -87,7 +87,7 @@ pub struct Memory {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_memories"]
+#[diesel(table_name = csml_memories, belongs_to(Bot))]
 pub struct NewMemory<'a> {
     pub id: UUID,
     pub bot_id: &'a str,
@@ -101,8 +101,7 @@ pub struct NewMemory<'a> {
 }
 
 #[derive(Identifiable, Queryable, Associations, PartialEq, Debug)]
-#[belongs_to(Conversation)]
-#[table_name = "csml_messages"]
+#[diesel(table_name = csml_messages, belongs_to(Conversation))]
 pub struct Message {
     pub id: UUID,
     pub conversation_id: UUID,
@@ -123,7 +122,7 @@ pub struct Message {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_messages"]
+#[diesel(table_name = csml_messages, belongs_to(Conversation))]
 pub struct NewMessages<'a> {
     pub id: UUID,
     pub conversation_id: UUID,
@@ -141,7 +140,7 @@ pub struct NewMessages<'a> {
 }
 
 #[derive(Identifiable, Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_states"]
+#[diesel(table_name = csml_states, belongs_to(Bot))]
 pub struct State {
     pub id: UUID,
 
@@ -159,7 +158,7 @@ pub struct State {
 }
 
 #[derive(Insertable, Queryable, Associations, PartialEq, Debug)]
-#[table_name = "csml_states"]
+#[diesel(table_name = csml_states, belongs_to(Bot))]
 pub struct NewState<'a> {
     pub id: UUID,
     pub bot_id: &'a str,
@@ -174,10 +173,8 @@ pub struct NewState<'a> {
 }
 
 
-
-
 #[derive(Debug, Clone, Copy, FromSqlRow, AsExpression, Hash, Eq, PartialEq)]
-#[sql_type = "Binary"]
+#[diesel(sql_type = Binary)]
 pub struct UUID(pub uuid::Uuid);
 
 impl UUID {
@@ -207,16 +204,21 @@ impl Display for UUID {
 }
 
 impl FromSql<Binary, Sqlite> for UUID {
-    fn from_sql(bytes: Option<&<Sqlite as Backend>::RawValue>) -> deserialize::Result<Self> {
-        let bytes = not_none!(bytes);
-        uuid::Uuid::from_slice(bytes.read_blob()).map(UUID).map_err(|e| e.into())
+    fn from_sql(value: backend::RawValue<'_, Sqlite>) -> deserialize::Result<Self> {
+        let bytes = <*const [u8] as FromSql<Binary, Sqlite>>::from_sql(value)?;
+
+        unsafe {
+            let ref_bytes: &[u8] = &*bytes;
+            uuid::Uuid::from_slice(ref_bytes).map(UUID).map_err(|e| e.into())
+        }
     }
 }
 
-impl ToSql<Binary, Sqlite> for UUID {
-    fn to_sql<W: Write>(&self, out: &mut Output<W, Sqlite>) -> serialize::Result {
-        out.write_all(self.0.as_bytes())
+impl ToSql<Binary, Sqlite> for UUID where [u8]: ToSql<Binary, Sqlite>{
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Sqlite>) -> serialize::Result {
+        <[u8] as ToSql<Binary, Sqlite>>::to_sql(self.0.as_bytes(), out)
+        /*out.write_all(self.0.as_bytes())
             .map(|_| IsNull::No)
-            .map_err(Into::into)
+            .map_err(Into::into)*/
     }
 }

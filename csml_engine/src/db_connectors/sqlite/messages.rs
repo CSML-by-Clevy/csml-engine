@@ -14,7 +14,7 @@ use super::{
 use chrono::NaiveDateTime;
 
 pub fn add_messages_bulk(
-    data: &ConversationInfo,
+    data: &mut ConversationInfo,
     msgs: &[serde_json::Value],
     interaction_order: i32,
     direction: &str,
@@ -24,7 +24,7 @@ pub fn add_messages_bulk(
         return Ok(());
     }
 
-    let db = get_db(&data.db)?;
+    let db = get_db(&mut data.db)?;
 
     let mut new_messages = vec![];
     for (message_order, message) in msgs.iter().enumerate() {
@@ -50,23 +50,23 @@ pub fn add_messages_bulk(
 
     diesel::insert_into(csml_messages::table)
         .values(&new_messages)
-        .execute(&db.client)?;
+        .execute(&mut db.client)?;
 
     Ok(())
 }
 
-pub fn delete_user_messages(client: &Client, db: &SqliteClient) -> Result<(), EngineError> {
+pub fn delete_user_messages(client: &Client, db: &mut SqliteClient) -> Result<(), EngineError> {
     let conversations: Vec<models::Conversation> = csml_conversations::table
         .filter(csml_conversations::bot_id.eq(&client.bot_id))
         .filter(csml_conversations::channel_id.eq(&client.channel_id))
         .filter(csml_conversations::user_id.eq(&client.user_id))
-        .load(&db.client)?;
+        .load(&mut db.client)?;
 
     for conversation in conversations {
         diesel::delete(
             csml_messages::table.filter(csml_messages::conversation_id.eq(&conversation.id)),
         )
-        .execute(&db.client)
+        .execute(&mut db.client)
         .ok();
     }
 
@@ -75,7 +75,7 @@ pub fn delete_user_messages(client: &Client, db: &SqliteClient) -> Result<(), En
 
 pub fn get_client_messages(
     client: &Client,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
     from_date: Option<i64>,
@@ -112,7 +112,7 @@ pub fn get_client_messages(
             };
             query = query.per_page(limit_per_page);
 
-            query.load_and_count_pages::<(models::Conversation, models::Message)>(&db.client)?
+            query.load_and_count_pages::<(models::Conversation, models::Message)>(&mut db.client)?
         }
         None => {
             let mut query = csml_conversations::table
@@ -131,7 +131,7 @@ pub fn get_client_messages(
             };
             query = query.per_page(limit_per_page);
 
-            query.load_and_count_pages::<(models::Conversation, models::Message)>(&db.client)?
+            query.load_and_count_pages::<(models::Conversation, models::Message)>(&mut db.client)?
         }
     };
 

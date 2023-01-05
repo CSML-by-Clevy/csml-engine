@@ -16,7 +16,7 @@ use std::env;
 pub fn create_bot_version(
     bot_id: String,
     bot: String,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<String, EngineError> {
     let id = models::UUID::new_v4();
 
@@ -29,7 +29,7 @@ pub fn create_bot_version(
 
     diesel::insert_into(cmsl_bot_versions::table)
     .values(&newbot)
-    .execute(&db.client)?;
+    .execute(&mut db.client)?;
 
     Ok(id.to_string())
 }
@@ -38,7 +38,7 @@ pub fn get_bot_versions(
     bot_id: &str,
     limit: Option<i64>,
     pagination_key: Option<String>,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<serde_json::Value, EngineError> {
 
     let pagination_key = match pagination_key {
@@ -58,7 +58,7 @@ pub fn get_bot_versions(
     query = query.per_page(limit_per_page);
 
     let (bot_versions, total_pages) =
-    query.load_and_count_pages::<models::Bot>(&db.client)?;
+    query.load_and_count_pages::<models::Bot>(&mut db.client)?;
 
     let mut bots = vec![];
     for bot_version in bot_versions {
@@ -93,13 +93,13 @@ pub fn get_bot_versions(
 
 pub fn get_bot_by_version_id(
     id: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<Option<BotVersion>, EngineError> {
     let version_id = models::UUID::parse_str(id).unwrap();
 
     let result: Result<models::Bot, diesel::result::Error> = cmsl_bot_versions::table
     .filter(cmsl_bot_versions::id.eq(&version_id))
-    .first::<models::Bot>(&db.client);
+    .first::<models::Bot>(&mut db.client);
 
     match result {
         Ok(bot) => {
@@ -117,12 +117,12 @@ pub fn get_bot_by_version_id(
 
 pub fn get_last_bot_version(
     bot_id: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<Option<BotVersion>, EngineError> {
     let result: Result<models::Bot, diesel::result::Error> = cmsl_bot_versions::table
     .filter(cmsl_bot_versions::bot_id.eq(&bot_id))
     .order_by(cmsl_bot_versions::created_at.desc())
-    .get_result(&db.client);
+    .get_result(&mut db.client);
 
     match result {
         Ok(bot) => {
@@ -140,7 +140,7 @@ pub fn get_last_bot_version(
 
 pub fn delete_bot_version(
     version_id: &str,
-    db: &SqliteClient
+    db: &mut SqliteClient
 ) -> Result<(), EngineError> {
     let id = match models::UUID::parse_str(version_id) {
         Ok(id) => id,
@@ -150,16 +150,16 @@ pub fn delete_bot_version(
     diesel::delete(
         cmsl_bot_versions::table
         .filter(cmsl_bot_versions::id.eq(id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }
 
-pub fn delete_bot_versions(bot_id: &str, db: &SqliteClient) -> Result<(), EngineError> {
+pub fn delete_bot_versions(bot_id: &str, db: &mut SqliteClient) -> Result<(), EngineError> {
     diesel::delete(
         cmsl_bot_versions::table
         .filter(cmsl_bot_versions::bot_id.eq(bot_id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }

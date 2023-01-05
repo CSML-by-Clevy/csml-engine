@@ -17,7 +17,7 @@ pub fn create_conversation(
     step_id: &str,
     client: &Client,
     expires_at: Option<NaiveDateTime>,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<String, EngineError> {
     let id = models::UUID::new_v4();
 
@@ -34,7 +34,7 @@ pub fn create_conversation(
 
     diesel::insert_into(csml_conversations::table)
     .values(&new_conversation)
-    .execute(&db.client)?;
+    .execute(&mut db.client)?;
 
     Ok(id.to_string())
 }
@@ -43,7 +43,7 @@ pub fn close_conversation(
     id: &str,
     _client: &Client,
     status: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
     let id = models::UUID::parse_str(id).unwrap();
 
@@ -52,12 +52,12 @@ pub fn close_conversation(
         .filter(csml_conversations::id.eq(id))
     )
     .set(csml_conversations::status.eq(status))
-    .execute(&db.client)?;
+    .execute(&mut db.client)?;
 
     Ok(())
 }
 
-pub fn close_all_conversations(client: &Client, db: &SqliteClient) -> Result<(), EngineError> {
+pub fn close_all_conversations(client: &Client, db: &mut SqliteClient) -> Result<(), EngineError> {
     diesel::update(
         csml_conversations::table
         .filter(csml_conversations::bot_id.eq(&client.bot_id))
@@ -65,14 +65,14 @@ pub fn close_all_conversations(client: &Client, db: &SqliteClient) -> Result<(),
         .filter(csml_conversations::user_id.eq(&client.user_id))
     )
     .set(csml_conversations::status.eq("CLOSED"))
-    .execute(&db.client)?;
+    .execute(&mut db.client)?;
 
     Ok(())
 }
 
 pub fn get_latest_open(
     client: &Client,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<Option<DbConversation>, EngineError> {
     let result: Result<models::Conversation, diesel::result::Error> = csml_conversations::table
         .filter(csml_conversations::bot_id.eq(&client.bot_id))
@@ -81,7 +81,7 @@ pub fn get_latest_open(
         .filter(csml_conversations::status.eq("OPEN"))
         .order_by(csml_conversations::updated_at.desc())
         .limit(1)
-        .get_result(&db.client);
+        .get_result(&mut db.client);
 
     match result {
         Ok(conv) => {
@@ -111,7 +111,7 @@ pub fn update_conversation(
     conversation_id: &str,
     flow_id: Option<String>,
     step_id: Option<String>,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
 
     let id = models::UUID::parse_str(conversation_id).unwrap();
@@ -126,7 +126,7 @@ pub fn update_conversation(
                 csml_conversations::flow_id.eq(flow_id.as_str()),
                 csml_conversations::step_id.eq(step_id.as_str())
             ))
-            .execute(&db.client)?;
+            .execute(&mut db.client)?;
         }
         (Some(flow_id), _) => {
             diesel::update(
@@ -134,7 +134,7 @@ pub fn update_conversation(
                 .filter(csml_conversations::id.eq(&id))
             )
             .set(csml_conversations::flow_id.eq(flow_id.as_str()))
-            .execute(&db.client)?;
+            .execute(&mut db.client)?;
         }
         (_, Some(step_id)) => {
             diesel::update(
@@ -142,7 +142,7 @@ pub fn update_conversation(
                 .filter(csml_conversations::id.eq(&id))
             )
             .set(csml_conversations::step_id.eq(step_id.as_str()))
-            .execute(&db.client)?;
+            .execute(&mut db.client)?;
         }
         _ => return Ok(())
     };
@@ -150,19 +150,19 @@ pub fn update_conversation(
     Ok(())
 }
 
-pub fn delete_user_conversations(client: &Client, db: &SqliteClient) -> Result<(), EngineError> {
+pub fn delete_user_conversations(client: &Client, db: &mut SqliteClient) -> Result<(), EngineError> {
     diesel::delete(csml_conversations::table
         .filter(csml_conversations::bot_id.eq(&client.bot_id))
         .filter(csml_conversations::channel_id.eq(&client.channel_id))
         .filter(csml_conversations::user_id.eq(&client.user_id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }
 
 pub fn get_client_conversations(
     client: &Client,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
     limit: Option<i64>,
     pagination_key: Option<String>,
 ) -> Result<serde_json::Value, EngineError> {
@@ -186,7 +186,7 @@ pub fn get_client_conversations(
     query = query.per_page(limit_per_page);
 
     let (conversations, total_pages) =
-    query.load_and_count_pages::<models::Conversation>(&db.client)?;
+    query.load_and_count_pages::<models::Conversation>(&mut db.client)?;
 
     let mut convs = vec![];
     for conversation in conversations {
@@ -220,12 +220,12 @@ pub fn get_client_conversations(
 
 pub fn delete_all_bot_data(
     bot_id: &str,
-    db: &SqliteClient,
+    db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
     diesel::delete(
         csml_conversations::table
         .filter(csml_conversations::bot_id.eq(bot_id))
-    ).execute(&db.client).ok();
+    ).execute(&mut db.client).ok();
 
     Ok(())
 }
