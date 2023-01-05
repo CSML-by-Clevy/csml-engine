@@ -1,20 +1,16 @@
-use diesel::{RunQueryDsl, ExpressionMethods, QueryDsl};
 use diesel::sql_query;
 use diesel::sql_types;
+use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 
 use crate::{
     db_connectors::sqlite::get_db,
     encrypt::{decrypt_data, encrypt_data},
-    EngineError, SqliteClient,
-    ConversationInfo, Memory, Client,
+    Client, ConversationInfo, EngineError, Memory, SqliteClient,
 };
 
-use super::{
-    models,
-    schema::csml_memories
-};
+use super::{models, schema::csml_memories};
 
-use chrono::{NaiveDateTime};
+use chrono::NaiveDateTime;
 use std::collections::HashMap;
 
 pub fn add_memories(
@@ -42,16 +38,17 @@ pub fn create_client_memory(
     expires_at: Option<NaiveDateTime>,
     db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
-
     let value = encrypt_data(&value)?;
 
     if let Some(expires_at) = expires_at {
-        sql_query("
+        sql_query(
+            "
             INSERT INTO csml_memories (id, bot_id, channel_id, user_id, key, value, expires_at)
                 VALUES(?, ?, ?, ?, ?, ?)
                 ON CONFLICT(bot_id, channel_id, user_id, key)
                 DO UPDATE SET key=excluded.value;
-        ")
+        ",
+        )
         .bind::<sql_types::Binary, _>(models::UUID::new_v4())
         .bind::<sql_types::VarChar, _>(&client.bot_id)
         .bind::<sql_types::VarChar, _>(&client.channel_id)
@@ -60,14 +57,15 @@ pub fn create_client_memory(
         .bind::<sql_types::VarChar, _>(value.clone())
         .bind::<sql_types::Timestamp, _>(expires_at)
         .execute(&mut db.client)?;
-    }
-    else {
-        sql_query("
+    } else {
+        sql_query(
+            "
             INSERT INTO csml_memories (id, bot_id, channel_id, user_id, key, value)
                 VALUES(?, ?, ?, ?, ?, ?)
                 ON CONFLICT(bot_id, channel_id, user_id, key)
                 DO UPDATE SET value=excluded.value;
-        ")
+        ",
+        )
         .bind::<sql_types::Binary, _>(models::UUID::new_v4())
         .bind::<sql_types::VarChar, _>(&client.bot_id)
         .bind::<sql_types::VarChar, _>(&client.channel_id)
@@ -89,13 +87,13 @@ pub fn create_client_memory(
 
 pub fn internal_use_get_memories(
     client: &Client,
-    db: &mut SqliteClient
+    db: &mut SqliteClient,
 ) -> Result<serde_json::Value, EngineError> {
     let memories: Vec<models::Memory> = csml_memories::table
-    .filter(csml_memories::bot_id.eq(&client.bot_id))
-    .filter(csml_memories::channel_id.eq(&client.channel_id))
-    .filter(csml_memories::user_id.eq(&client.user_id))
-    .load(&mut db.client)?;
+        .filter(csml_memories::bot_id.eq(&client.bot_id))
+        .filter(csml_memories::channel_id.eq(&client.channel_id))
+        .filter(csml_memories::user_id.eq(&client.user_id))
+        .load(&mut db.client)?;
 
     let mut map = serde_json::Map::new();
     for mem in memories {
@@ -110,13 +108,13 @@ pub fn internal_use_get_memories(
 
 pub fn get_memories(
     client: &Client,
-    db: &mut SqliteClient
+    db: &mut SqliteClient,
 ) -> Result<serde_json::Value, EngineError> {
     let memories: Vec<models::Memory> = csml_memories::table
-    .filter(csml_memories::bot_id.eq(&client.bot_id))
-    .filter(csml_memories::channel_id.eq(&client.channel_id))
-    .filter(csml_memories::user_id.eq(&client.user_id))
-    .load(&mut db.client)?;
+        .filter(csml_memories::bot_id.eq(&client.bot_id))
+        .filter(csml_memories::channel_id.eq(&client.channel_id))
+        .filter(csml_memories::user_id.eq(&client.user_id))
+        .load(&mut db.client)?;
 
     let mut vec = vec![];
     for mem in memories {
@@ -125,7 +123,10 @@ pub fn get_memories(
 
         memory.insert("key".to_owned(), serde_json::json!(mem.key));
         memory.insert("value".to_owned(), value);
-        memory.insert("created_at".to_owned(), serde_json::json!(mem.created_at.to_string()));
+        memory.insert(
+            "created_at".to_owned(),
+            serde_json::json!(mem.created_at.to_string()),
+        );
 
         vec.push(memory);
     }
@@ -138,7 +139,6 @@ pub fn get_memory(
     key: &str,
     db: &mut SqliteClient,
 ) -> Result<serde_json::Value, EngineError> {
-
     let mem: models::Memory = csml_memories::table
         .filter(csml_memories::key.eq(&key))
         .filter(csml_memories::bot_id.eq(&client.bot_id))
@@ -151,7 +151,10 @@ pub fn get_memory(
 
     memory.insert("key".to_owned(), serde_json::json!(mem.key));
     memory.insert("value".to_owned(), value);
-    memory.insert("created_at".to_owned(), serde_json::json!(mem.created_at.to_string()));
+    memory.insert(
+        "created_at".to_owned(),
+        serde_json::json!(mem.created_at.to_string()),
+    );
 
     Ok(serde_json::json!(memory))
 }
@@ -161,38 +164,36 @@ pub fn delete_client_memory(
     key: &str,
     db: &mut SqliteClient,
 ) -> Result<(), EngineError> {
-
-    diesel::delete(csml_memories::table
-        .filter(csml_memories::bot_id.eq(&client.bot_id))
-        .filter(csml_memories::channel_id.eq(&client.channel_id))
-        .filter(csml_memories::user_id.eq(&client.user_id))
-        .filter(csml_memories::key.eq(key))
-    ).execute(&mut db.client).ok();
-
-    Ok(())
-}
-
-pub fn delete_client_memories(
-    client: &Client,
-    db: &mut SqliteClient
-) -> Result<(), EngineError> {
-    diesel::delete(csml_memories::table
-        .filter(csml_memories::bot_id.eq(&client.bot_id))
-        .filter(csml_memories::channel_id.eq(&client.channel_id))
-        .filter(csml_memories::user_id.eq(&client.user_id))
-    ).execute(&mut db.client).ok();
-
-    Ok(())
-}
-
-pub fn delete_all_bot_data(
-    bot_id: &str,
-    db: &mut SqliteClient,
-) -> Result<(), EngineError> {
     diesel::delete(
         csml_memories::table
-        .filter(csml_memories::bot_id.eq(bot_id))
-    ).execute(&mut db.client).ok();
+            .filter(csml_memories::bot_id.eq(&client.bot_id))
+            .filter(csml_memories::channel_id.eq(&client.channel_id))
+            .filter(csml_memories::user_id.eq(&client.user_id))
+            .filter(csml_memories::key.eq(key)),
+    )
+    .execute(&mut db.client)
+    .ok();
+
+    Ok(())
+}
+
+pub fn delete_client_memories(client: &Client, db: &mut SqliteClient) -> Result<(), EngineError> {
+    diesel::delete(
+        csml_memories::table
+            .filter(csml_memories::bot_id.eq(&client.bot_id))
+            .filter(csml_memories::channel_id.eq(&client.channel_id))
+            .filter(csml_memories::user_id.eq(&client.user_id)),
+    )
+    .execute(&mut db.client)
+    .ok();
+
+    Ok(())
+}
+
+pub fn delete_all_bot_data(bot_id: &str, db: &mut SqliteClient) -> Result<(), EngineError> {
+    diesel::delete(csml_memories::table.filter(csml_memories::bot_id.eq(bot_id)))
+        .execute(&mut db.client)
+        .ok();
 
     Ok(())
 }

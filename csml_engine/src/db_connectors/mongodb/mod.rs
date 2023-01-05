@@ -7,7 +7,7 @@ pub mod state;
 use crate::{Database, EngineError, MongoDbClient};
 use bson::{doc, Document};
 use core::time::Duration as CoreDuration;
-use mongodb::{IndexModel, options::IndexOptions};
+use mongodb::{options::IndexOptions, IndexModel};
 
 fn create_mongodb_uri() -> Result<String, EngineError> {
     let mut uri = "mongodb://".to_owned();
@@ -41,7 +41,11 @@ fn create_mongodb_uri() -> Result<String, EngineError> {
 pub fn init() -> Result<Database, EngineError> {
     let dbname = match std::env::var("MONGODB_DATABASE") {
         Ok(var) => var,
-        _ => return Err(EngineError::Manager(format!("Missing MONGODB_DATABASE in env"))),
+        _ => {
+            return Err(EngineError::Manager(format!(
+                "Missing MONGODB_DATABASE in env"
+            )))
+        }
     };
 
     let uri = match std::env::var("MONGODB_URI") {
@@ -87,112 +91,107 @@ pub fn get_pagination_key(pagination_key: Option<String>) -> Result<Option<Strin
     }
 }
 
-fn create_ttl_indexes(
-    db: &MongoDbClient,
-) {
+fn create_ttl_indexes(db: &MongoDbClient) {
     // create index expires_at for conversation
     let conversation = db.client.collection::<Document>("conversation");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "expires_at": 1
-        }
-    )
-    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
-    .build();
+        })
+        .options(Some(
+            IndexOptions::builder()
+                .expire_after(CoreDuration::new(0, 0))
+                .build(),
+        ))
+        .build();
     conversation.create_index(index, None).ok();
 
     // create index expires_at for memory
     let memory = db.client.collection::<Document>("memory");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "expires_at": 1
-        }
-    )
-    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
-    .build();
+        })
+        .options(Some(
+            IndexOptions::builder()
+                .expire_after(CoreDuration::new(0, 0))
+                .build(),
+        ))
+        .build();
 
-    memory.create_index(index,None).ok();
-
+    memory.create_index(index, None).ok();
 
     // create index expires_at for message
     let message = db.client.collection::<Document>("message");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "expires_at": 1
-        }
-    )
-    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
-    .build();
-    message.create_index(index,None).ok();
+        })
+        .options(Some(
+            IndexOptions::builder()
+                .expire_after(CoreDuration::new(0, 0))
+                .build(),
+        ))
+        .build();
+    message.create_index(index, None).ok();
 
     // create index expires_at for state
     let state = db.client.collection::<Document>("state");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "expires_at": 1
-        }
-    )
-    .options(Some(IndexOptions::builder().expire_after(CoreDuration::new(0, 0)).build()))
-    .build();
-    state.create_index(index,None).ok();
+        })
+        .options(Some(
+            IndexOptions::builder()
+                .expire_after(CoreDuration::new(0, 0))
+                .build(),
+        ))
+        .build();
+    state.create_index(index, None).ok();
 }
 
-fn create_client_indexes(
-    db: &MongoDbClient,
-) {
+fn create_client_indexes(db: &MongoDbClient) {
     // create compound client index for conversation
     let conversation = db.client.collection::<Document>("conversation");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "client.bot_id": 1,
             "client.channel_id": 1,
             "client.user_id": 1
-        }
-    )
-    .build();
+        })
+        .build();
     conversation.create_index(index, None).ok();
 
     // create compound client index for memory
     let memory = db.client.collection::<Document>("memory");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "client.bot_id": 1,
             "client.channel_id": 1,
             "client.user_id": 1
-        }
-    )
-    .build();
+        })
+        .build();
     memory.create_index(index, None).ok();
 
     // create compound client index for message
     let message = db.client.collection::<Document>("message");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "client.bot_id": 1,
             "client.channel_id": 1,
             "client.user_id": 1
-        }
-    )
-    .build();
-    message.create_index(index,None).ok();
+        })
+        .build();
+    message.create_index(index, None).ok();
 
     // create compound client index for state
     let state = db.client.collection::<Document>("state");
     let index: IndexModel = IndexModel::builder()
-    .keys(
-        doc! {
+        .keys(doc! {
             "client.bot_id": 1,
             "client.channel_id": 1,
             "client.user_id": 1
-        }
-    )
-    .build();
-    state.create_index(index,None).ok();
+        })
+        .build();
+    state.create_index(index, None).ok();
 }

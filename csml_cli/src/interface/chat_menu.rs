@@ -112,7 +112,7 @@ pub fn draw_run(
 ) -> Result<(), Box<dyn Error>> {
     match terminal.size() {
         Ok(size) if size.width > 30 && size.height > 20 => {}
-        _ => return Ok(())
+        _ => return Ok(()),
     };
 
     // Draw UI
@@ -456,19 +456,9 @@ pub fn bot_message_to_raw_msg<'a>(
             let content_type: String = chars.into_iter().collect();
 
             let content: String = match message["content"].get("error") {
-                Some(error) => {
-                    error.as_str()
-                    .unwrap_or(" ")
-                    .to_owned()
-                }
-                None => {
-                    message["content"]
-                    .as_str()
-                    .unwrap_or(" ")
-                    .to_owned()
-                }
+                Some(error) => error.as_str().unwrap_or(" ").to_owned(),
+                None => message["content"].as_str().unwrap_or(" ").to_owned(),
             };
-             
 
             let line = format!("💬 {}({})", content_type, content);
 

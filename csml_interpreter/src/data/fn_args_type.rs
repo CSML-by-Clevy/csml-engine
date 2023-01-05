@@ -59,7 +59,7 @@ impl ArgsType {
                 while index < size {
                     let lit = map[&format!("arg{}", index)].clone();
                     if lit.secure_variable {
-                        return "secure variables can not be logged".to_string()
+                        return "secure variables can not be logged".to_string();
                     }
 
                     let value = lit.primitive.to_string();

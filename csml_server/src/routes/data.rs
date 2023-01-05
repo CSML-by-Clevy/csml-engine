@@ -1,8 +1,8 @@
+use crate::routes::tools::validate_api_key;
 use actix_web::{delete, post, web, HttpResponse};
-use csml_interpreter::data::{Client};
+use csml_interpreter::data::Client;
 use serde::{Deserialize, Serialize};
 use std::thread;
-use crate::routes::tools::validate_api_key;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ClientQuery {
@@ -13,7 +13,7 @@ pub struct ClientQuery {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BotIdPath {
-    bot_id: String
+    bot_id: String,
 }
 
 /*
@@ -23,7 +23,10 @@ pub struct BotIdPath {
 *
 */
 #[delete("/data/clients")]
-pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpRequest) -> HttpResponse {
+pub async fn delete_client(
+    query: web::Query<ClientQuery>,
+    req: actix_web::HttpRequest,
+) -> HttpResponse {
     let client = Client {
         user_id: query.user_id.clone(),
         channel_id: query.channel_id.clone(),
@@ -31,12 +34,12 @@ pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpR
     };
 
     if let Some(_value) = validate_api_key(&req) {
-        return HttpResponse::Forbidden().finish()
+        return HttpResponse::Forbidden().finish();
     }
 
-    let res = thread::spawn(move || {
-        csml_engine::delete_client(&client)
-    }).join().unwrap();
+    let res = thread::spawn(move || csml_engine::delete_client(&client))
+        .join()
+        .unwrap();
 
     match res {
         Ok(_) => HttpResponse::NoContent().finish(),
@@ -55,14 +58,13 @@ pub async fn delete_client(query: web::Query<ClientQuery>, req: actix_web::HttpR
  */
 #[delete("/data/bots/{bot_id}")]
 pub async fn delete_bot(path: web::Path<BotIdPath>, req: actix_web::HttpRequest) -> HttpResponse {
-
     if let Some(_value) = validate_api_key(&req) {
-        return HttpResponse::Forbidden().finish()
+        return HttpResponse::Forbidden().finish();
     }
 
-    let res = thread::spawn(move || {
-        csml_engine::delete_all_bot_data(&path.bot_id)
-    }).join().unwrap();
+    let res = thread::spawn(move || csml_engine::delete_all_bot_data(&path.bot_id))
+        .join()
+        .unwrap();
 
     match res {
         Ok(_) => HttpResponse::NoContent().finish(),
@@ -73,7 +75,6 @@ pub async fn delete_bot(path: web::Path<BotIdPath>, req: actix_web::HttpRequest)
     }
 }
 
-
 /**
  * Delete all expired data in db (Conversation, Messages, Memory and State)
  *
@@ -82,10 +83,9 @@ pub async fn delete_bot(path: web::Path<BotIdPath>, req: actix_web::HttpRequest)
  */
 #[post("/data/cleanup")]
 pub async fn delete_expired_data() -> HttpResponse {
-
-    let res = thread::spawn(move || {
-        csml_engine::delete_expired_data()
-    }).join().unwrap();
+    let res = thread::spawn(move || csml_engine::delete_expired_data())
+        .join()
+        .unwrap();
 
     match res {
         Ok(_) => HttpResponse::Ok().finish(),
@@ -93,5 +93,5 @@ pub async fn delete_expired_data() -> HttpResponse {
             eprintln!("EngineError: {:?}", err);
             HttpResponse::InternalServerError().finish()
         }
-   }
+    }
 }

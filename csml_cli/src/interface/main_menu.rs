@@ -22,12 +22,18 @@ impl MenuType for MainMenu {
             options: vec![
                 MenuItem::new(
                     "",
-                    MenuComponent::Button{text: "csml init -- setup a new bot project".to_owned(), payload: None},
+                    MenuComponent::Button {
+                        text: "csml init -- setup a new bot project".to_owned(),
+                        payload: None,
+                    },
                     0,
                 ),
                 MenuItem::new(
                     "",
-                    MenuComponent::Button{text: "csml run -- execute your bot script".to_owned(), payload: None},
+                    MenuComponent::Button {
+                        text: "csml run -- execute your bot script".to_owned(),
+                        payload: None,
+                    },
                     0,
                 ),
             ],
@@ -49,10 +55,9 @@ pub fn draw_main(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     app: &mut AppMain,
 ) -> Result<(), Box<dyn Error>> {
-
     match terminal.size() {
         Ok(size) if size.width > 30 && size.height > 20 => {}
-        _ => return Ok(())
+        _ => return Ok(()),
     };
 
     // Draw Main UI

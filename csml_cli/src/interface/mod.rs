@@ -1,6 +1,6 @@
+pub mod chat_menu;
 pub mod init;
 pub mod init_menu;
-pub mod chat_menu;
 pub mod main_menu;
 pub mod select_bot;
 
@@ -26,9 +26,9 @@ use tui::{backend::CrosstermBackend, Terminal};
 use csml_engine::data::{BotOpt, CsmlRequest};
 
 use chat_menu::{draw_run, run_conversation};
-use init_menu::{InitMenu};
 use chat_widget::{RawMessage, StatefulList};
 use init::draw_init;
+use init_menu::InitMenu;
 use main_menu::{draw_main, MainMenu};
 use menu_widget::*;
 use select_bot::SelectBotMenu;
@@ -329,8 +329,8 @@ fn handle_normal_mode<'a>(
                 if let Some(index) = app.menu_state.selected {
                     match &app.menu_state.menu[index].component {
                         MenuComponent::List { .. } => app.menu_state.state = AppState::Selecting,
-                        MenuComponent::Text{..} => app.menu_state.state = AppState::Editing,
-                        MenuComponent::Button{..} => {
+                        MenuComponent::Text { .. } => app.menu_state.state = AppState::Editing,
+                        MenuComponent::Button { .. } => {
                             let env = app.menu_state.gen_env();
                             let bot_name = env.bot_name.clone();
 
@@ -426,7 +426,7 @@ fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dy
                     app.menu_state.change_list(Some((lvl, index)));
                     // }
 
-                    // reset offset to 0 
+                    // reset offset to 0
                     app.menu_state.offset = 0;
                     app.menu_state.state = AppState::Normal;
                 }
@@ -449,11 +449,11 @@ fn handle_select_mode(input: KeyEvent, app: &mut AppInit) -> Result<Exit, Box<dy
                 Ok(Exit::None)
             }
             KeyCode::Esc => {
-                // reset offset to 0 
+                // reset offset to 0
                 app.menu_state.offset = 0;
                 app.menu_state.state = AppState::Normal;
                 Ok(Exit::None)
-            },
+            }
             _ => Ok(Exit::None),
         },
         KeyEvent { code, modifiers } => match code {
@@ -636,7 +636,7 @@ fn handle_main_normal_mode<'a>(input: KeyEvent, app: &mut AppMain) -> Result<Exi
             KeyCode::Enter => {
                 if let Some(index) = app.menu_state.selected {
                     match &app.menu_state.menu[index].component {
-                        MenuComponent::Button{text, ..} => match text.as_str() {
+                        MenuComponent::Button { text, .. } => match text.as_str() {
                             "csml init -- setup a new bot project" => {
                                 app.menu_state.state = AppState::Normal;
 
@@ -701,7 +701,7 @@ fn handle_select_bot_mode<'a>(
 
                             return Ok(Exit::ChangeAPP(AppMode::Run(AppRun::default())));
                         }
-                        MenuComponent::Button{text, ..} => match text.as_str() {
+                        MenuComponent::Button { text, .. } => match text.as_str() {
                             "[create new bot]" => {
                                 app.menu_state.state = AppState::Normal;
 

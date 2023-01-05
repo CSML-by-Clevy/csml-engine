@@ -1,8 +1,8 @@
-use diesel::sqlite::Sqlite;
 use diesel::prelude::*;
 use diesel::query_builder::*;
 use diesel::query_dsl::methods::LoadQuery;
 use diesel::sql_types::BigInt;
+use diesel::sqlite::Sqlite;
 
 pub trait Paginate: Sized {
     fn paginate(self, page: i64) -> Paginated<Self>;
@@ -37,9 +37,12 @@ impl<T> Paginated<T> {
         }
     }
 
-    pub fn load_and_count_pages<'query, U>(self, conn: &mut SqliteConnection) -> QueryResult<(Vec<U>, i64)>
-        where
-            Self: LoadQuery<'query, SqliteConnection, (U, i64)>,
+    pub fn load_and_count_pages<'query, U>(
+        self,
+        conn: &mut SqliteConnection,
+    ) -> QueryResult<(Vec<U>, i64)>
+    where
+        Self: LoadQuery<'query, SqliteConnection, (U, i64)>,
     {
         let per_page = self.per_page;
         let results = self.load::<(U, i64)>(conn)?;
@@ -57,8 +60,8 @@ impl<T: Query> Query for Paginated<T> {
 impl<T> RunQueryDsl<SqliteConnection> for Paginated<T> {}
 
 impl<T> QueryFragment<Sqlite> for Paginated<T>
-    where
-        T: QueryFragment<Sqlite>,
+where
+    T: QueryFragment<Sqlite>,
 {
     fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Sqlite>) -> QueryResult<()> {
         out.push_sql("SELECT *, COUNT(*) OVER () FROM (");

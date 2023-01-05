@@ -1,28 +1,24 @@
 #[cfg(feature = "dynamo")]
-use crate::db_connectors::{is_dynamodb};
+use crate::db_connectors::is_dynamodb;
 #[cfg(feature = "mongo")]
-use crate::db_connectors::{is_mongodb};
+use crate::db_connectors::is_mongodb;
 #[cfg(feature = "postgresql")]
 use crate::db_connectors::{is_postgresql, postgresql_connector};
 #[cfg(feature = "sqlite")]
 use crate::db_connectors::{is_sqlite, sqlite_connector};
 
-
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, EngineError};
 
 pub fn delete_expired_data(_db: &mut Database) -> Result<(), EngineError> {
-
     #[cfg(feature = "mongo")]
     if is_mongodb() {
-
-        return Ok(())
+        return Ok(());
     }
 
     #[cfg(feature = "dynamo")]
     if is_dynamodb() {
-
-        return Ok(())
+        return Ok(());
     }
 
     #[cfg(feature = "postgresql")]
@@ -31,7 +27,7 @@ pub fn delete_expired_data(_db: &mut Database) -> Result<(), EngineError> {
 
         postgresql_connector::expired_data::delete_expired_data(db)?;
 
-        return Ok(())
+        return Ok(());
     }
 
     #[cfg(feature = "sqlite")]
@@ -40,9 +36,8 @@ pub fn delete_expired_data(_db: &mut Database) -> Result<(), EngineError> {
 
         sqlite_connector::expired_data::delete_expired_data(db)?;
 
-        return Ok(())
+        return Ok(());
     }
-
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }

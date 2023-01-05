@@ -1,15 +1,15 @@
-use diesel::{Queryable, Identifiable, Insertable, Associations, backend};
+use diesel::{backend, Associations, Identifiable, Insertable, Queryable};
 
-use uuid;
 use diesel::deserialize::{self, FromSql};
 use diesel::serialize::{self, Output, ToSql};
-use diesel::sql_types::{Binary};
-use diesel::sqlite::{Sqlite};
-use std::fmt::{Display, Formatter};
+use diesel::sql_types::Binary;
+use diesel::sqlite::Sqlite;
 use std::fmt;
+use std::fmt::{Display, Formatter};
+use uuid;
 
-use chrono::NaiveDateTime;
 use super::schema::*;
+use chrono::NaiveDateTime;
 
 #[derive(Identifiable, Queryable, PartialEq, Debug)]
 #[diesel(table_name = cmsl_bot_versions)]
@@ -170,7 +170,6 @@ pub struct NewState<'a> {
     pub expires_at: Option<NaiveDateTime>,
 }
 
-
 #[derive(Debug, Clone, Copy, FromSqlRow, AsExpression, Hash, Eq, PartialEq)]
 #[diesel(sql_type = Binary)]
 pub struct UUID(pub uuid::Uuid);
@@ -207,16 +206,21 @@ impl FromSql<Binary, Sqlite> for UUID {
 
         unsafe {
             let ref_bytes: &[u8] = &*bytes;
-            uuid::Uuid::from_slice(ref_bytes).map(UUID).map_err(|e| e.into())
+            uuid::Uuid::from_slice(ref_bytes)
+                .map(UUID)
+                .map_err(|e| e.into())
         }
     }
 }
 
-impl ToSql<Binary, Sqlite> for UUID where [u8]: ToSql<Binary, Sqlite>{
+impl ToSql<Binary, Sqlite> for UUID
+where
+    [u8]: ToSql<Binary, Sqlite>,
+{
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Sqlite>) -> serialize::Result {
         <[u8] as ToSql<Binary, Sqlite>>::to_sql(self.0.as_bytes(), out)
         /*out.write_all(self.0.as_bytes())
-            .map(|_| IsNull::No)
-            .map_err(Into::into)*/
+        .map(|_| IsNull::No)
+        .map_err(Into::into)*/
     }
 }

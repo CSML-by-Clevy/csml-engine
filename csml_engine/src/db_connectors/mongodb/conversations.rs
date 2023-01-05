@@ -192,7 +192,7 @@ pub fn get_client_conversations(
     let collection = db.client.collection::<Document>("conversation");
 
     let limit = match limit {
-        Some(limit) => std::cmp::min(limit + 1 , 26),
+        Some(limit) => std::cmp::min(limit + 1, 26),
         None => 26,
     };
 

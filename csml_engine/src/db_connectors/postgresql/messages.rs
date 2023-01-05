@@ -88,9 +88,13 @@ pub fn get_client_messages(
 
     let (conversation_with_messages, total_pages) = match from_date {
         Some(from_date) => {
-            let from_date = NaiveDateTime::from_timestamp_opt(from_date, 0).ok_or(EngineError::DateTimeError("Date time is out of range".to_owned()))?;
+            let from_date = NaiveDateTime::from_timestamp_opt(from_date, 0).ok_or(
+                EngineError::DateTimeError("Date time is out of range".to_owned()),
+            )?;
             let to_date = match to_date {
-                Some(to_date) => NaiveDateTime::from_timestamp_opt(to_date, 0).ok_or(EngineError::DateTimeError("Date time is out of range".to_owned()))?,
+                Some(to_date) => NaiveDateTime::from_timestamp_opt(to_date, 0).ok_or(
+                    EngineError::DateTimeError("Date time is out of range".to_owned()),
+                )?,
                 None => chrono::Utc::now().naive_utc(),
             };
 

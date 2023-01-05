@@ -4,8 +4,8 @@ use crate::{
     Client, Context,
 };
 use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Module, MultiBot};
-use serde::{Deserialize, Serialize};
 use serde::de::StdError;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub const DEBUG: &str = "DEBUG";

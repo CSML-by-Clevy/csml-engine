@@ -9,10 +9,9 @@ use std::thread;
 */
 #[get("/status")]
 pub async fn get_status() -> HttpResponse {
-
-    let res = thread::spawn(move || {
-        csml_engine::get_status()
-    }).join().unwrap();
+    let res = thread::spawn(move || csml_engine::get_status())
+        .join()
+        .unwrap();
 
     match res {
         Ok(data) => HttpResponse::Ok().json(data),

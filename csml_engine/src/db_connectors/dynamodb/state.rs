@@ -1,5 +1,5 @@
 use crate::data::DynamoDbClient;
-use crate::db_connectors::dynamodb::{DynamoDbKey, State, StatDeleteInfo};
+use crate::db_connectors::dynamodb::{DynamoDbKey, StatDeleteInfo, State};
 use crate::{
     encrypt::{decrypt_data, encrypt_data},
     Client, EngineError,
@@ -111,7 +111,13 @@ fn format_state_data(
     let mut vec = vec![];
     for (key, value) in keys_values.iter() {
         let encrypted_value = encrypt_data(value)?;
-        vec.push(State::new(client, _type, *key, &encrypted_value, expires_at));
+        vec.push(State::new(
+            client,
+            _type,
+            *key,
+            &encrypted_value,
+            expires_at,
+        ));
     }
     Ok(vec)
 }
@@ -203,9 +209,7 @@ fn query_states(
     let future = db.client.query(input);
     let data = match db.runtime.block_on(future) {
         Ok(data) => data,
-        Err(e) => {
-            return Err(EngineError::Manager(format!("query_states {:?}", e)))
-        }
+        Err(e) => return Err(EngineError::Manager(format!("query_states {:?}", e))),
     };
 
     Ok(data)
@@ -260,9 +264,9 @@ pub fn delete_user_state(client: &Client, db: &mut DynamoDbClient) -> Result<(),
         }
 
         let request_items = [(get_table_name()?, write_requests)]
-        .iter()
-        .cloned()
-        .collect();
+            .iter()
+            .cloned()
+            .collect();
 
         let input = BatchWriteItemInput {
             request_items,
@@ -273,7 +277,7 @@ pub fn delete_user_state(client: &Client, db: &mut DynamoDbClient) -> Result<(),
 
         pagination_key = data.last_evaluated_key;
         if let None = &pagination_key {
-            return Ok(())
+            return Ok(());
         }
     }
 }

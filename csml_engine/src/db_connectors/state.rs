@@ -7,11 +7,10 @@ use crate::db_connectors::{is_postgresql, postgresql_connector};
 #[cfg(feature = "sqlite")]
 use crate::db_connectors::{is_sqlite, sqlite_connector};
 
-
-use csml_interpreter::data::csml_logs::{LogLvl, CsmlLog, csml_logger};
+use crate::db_connectors::utils::*;
 use crate::error_messages::ERROR_DB_SETUP;
 use crate::{Database, EngineError};
-use crate::db_connectors::utils::*;
+use csml_interpreter::data::csml_logs::{csml_logger, CsmlLog, LogLvl};
 use csml_interpreter::data::Client;
 
 pub fn delete_state_key(
@@ -25,18 +24,18 @@ pub fn delete_state_key(
             None,
             None,
             None,
-            format!("db call delete state key: {:?}, type: {:?}", key, _type)
+            format!("db call delete state key: {:?}, type: {:?}", key, _type),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(client),
             None,
             None,
-            format!("db call delete state key: {:?}, type: {:?}", key, _type)
+            format!("db call delete state key: {:?}, type: {:?}", key, _type),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -77,18 +76,18 @@ pub fn get_state_key(
             None,
             None,
             None,
-            format!("db call get state key: {:?}, type: {:?}", _key, _type)
+            format!("db call get state key: {:?}, type: {:?}", _key, _type),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(client),
             None,
             None,
-            format!("db call get state key: {:?}, type: {:?}", _key, _type)
+            format!("db call get state key: {:?}, type: {:?}", _key, _type),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -123,22 +122,17 @@ pub fn get_current_state(
     db: &mut Database,
 ) -> Result<Option<serde_json::Value>, EngineError> {
     csml_logger(
-        CsmlLog::new(
-            None,
-            None,
-            None,
-            format!("db call get current state")
-        ),
-        LogLvl::Info
+        CsmlLog::new(None, None, None, format!("db call get current state")),
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(client),
             None,
             None,
-            format!("db call get current state")
+            format!("db call get current state"),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -180,18 +174,24 @@ pub fn set_state_items(
             None,
             None,
             None,
-            format!("db call set state type: {:?}, keys and values {:?}", _type, _keys_values)
+            format!(
+                "db call set state type: {:?}, keys and values {:?}",
+                _type, _keys_values
+            ),
         ),
-        LogLvl::Info
+        LogLvl::Info,
     );
     csml_logger(
         CsmlLog::new(
             Some(_client),
             None,
             None,
-            format!("db call set state type: {:?}, keys and values {:?}", _type, _keys_values)
+            format!(
+                "db call set state type: {:?}, keys and values {:?}",
+                _type, _keys_values
+            ),
         ),
-        LogLvl::Debug
+        LogLvl::Debug,
     );
 
     #[cfg(feature = "mongo")]
@@ -199,7 +199,13 @@ pub fn set_state_items(
         let db = mongodb_connector::get_db(_db)?;
         let expires_at = get_expires_at_for_mongodb(ttl);
 
-        return mongodb_connector::state::set_state_items(_client, _type, _keys_values, expires_at, &db);
+        return mongodb_connector::state::set_state_items(
+            _client,
+            _type,
+            _keys_values,
+            expires_at,
+            &db,
+        );
     }
 
     #[cfg(feature = "dynamo")]
@@ -207,7 +213,13 @@ pub fn set_state_items(
         let db = dynamodb_connector::get_db(_db)?;
         let expires_at = get_expires_at_for_dynamodb(ttl);
 
-        return dynamodb_connector::state::set_state_items(_client, _type, _keys_values, expires_at, db);
+        return dynamodb_connector::state::set_state_items(
+            _client,
+            _type,
+            _keys_values,
+            expires_at,
+            db,
+        );
     }
 
     #[cfg(feature = "postgresql")]
@@ -215,7 +227,13 @@ pub fn set_state_items(
         let db = postgresql_connector::get_db(_db)?;
         let expires_at = get_expires_at_for_postgresql(ttl);
 
-        return postgresql_connector::state::set_state_items(_client, _type, _keys_values, expires_at, db);
+        return postgresql_connector::state::set_state_items(
+            _client,
+            _type,
+            _keys_values,
+            expires_at,
+            db,
+        );
     }
 
     #[cfg(feature = "sqlite")]
@@ -223,7 +241,13 @@ pub fn set_state_items(
         let db = sqlite_connector::get_db(_db)?;
         let expires_at = get_expires_at_for_sqlite(ttl);
 
-        return sqlite_connector::state::set_state_items(_client, _type, _keys_values, expires_at, db);
+        return sqlite_connector::state::set_state_items(
+            _client,
+            _type,
+            _keys_values,
+            expires_at,
+            db,
+        );
     }
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
@@ -255,7 +279,7 @@ mod tests {
             step_name: "step_name".to_owned(),
             flow_name: "flow_name".to_owned(),
             previous: None,
-            secure: false
+            secure: false,
         };
 
         let state_hold: serde_json::Value = serde_json::json!({
@@ -264,7 +288,14 @@ mod tests {
             "hash": hash
         });
 
-        set_state_items(&client, "hold", vec![("position", &state_hold)], None, &mut db).unwrap();
+        set_state_items(
+            &client,
+            "hold",
+            vec![("position", &state_hold)],
+            None,
+            &mut db,
+        )
+        .unwrap();
 
         let hold = get_state_key(&client, "hold", "position", &mut db)
             .unwrap()
