@@ -189,7 +189,7 @@ pub fn is_sqlite() -> bool {
     }
 }
 
-pub fn init_db() -> Result<Database, EngineError> {
+pub fn init_db() -> Result<Database<'static>, EngineError> {
     #[cfg(feature = "mongo")]
     if is_mongodb() {
         return mongodb_connector::init();

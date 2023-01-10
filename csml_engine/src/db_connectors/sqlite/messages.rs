@@ -50,7 +50,7 @@ pub fn add_messages_bulk(
 
     diesel::insert_into(csml_messages::table)
         .values(&new_messages)
-        .execute(&mut db.client)?;
+        .execute(db.client.as_mut())?;
 
     Ok(())
 }
@@ -60,13 +60,13 @@ pub fn delete_user_messages(client: &Client, db: &mut SqliteClient) -> Result<()
         .filter(csml_conversations::bot_id.eq(&client.bot_id))
         .filter(csml_conversations::channel_id.eq(&client.channel_id))
         .filter(csml_conversations::user_id.eq(&client.user_id))
-        .load(&mut db.client)?;
+        .load(db.client.as_mut())?;
 
     for conversation in conversations {
         diesel::delete(
             csml_messages::table.filter(csml_messages::conversation_id.eq(&conversation.id)),
         )
-        .execute(&mut db.client)
+        .execute(db.client.as_mut())
         .ok();
     }
 
@@ -112,7 +112,7 @@ pub fn get_client_messages(
             };
             query = query.per_page(limit_per_page);
 
-            query.load_and_count_pages::<(models::Conversation, models::Message)>(&mut db.client)?
+            query.load_and_count_pages::<(models::Conversation, models::Message)>(db.client.as_mut())?
         }
         None => {
             let mut query = csml_conversations::table
@@ -131,7 +131,7 @@ pub fn get_client_messages(
             };
             query = query.per_page(limit_per_page);
 
-            query.load_and_count_pages::<(models::Conversation, models::Message)>(&mut db.client)?
+            query.load_and_count_pages::<(models::Conversation, models::Message)>(db.client.as_mut())?
         }
     };
 

@@ -56,7 +56,7 @@ pub fn create_client_memory(
         .bind::<sql_types::VarChar, _>(key)
         .bind::<sql_types::VarChar, _>(value)
         .bind::<sql_types::Timestamp, _>(expires_at)
-        .execute(&mut db.client)?;
+        .execute(db.client.as_mut())?;
     } else {
         sql_query(
             "
@@ -72,7 +72,7 @@ pub fn create_client_memory(
         .bind::<sql_types::VarChar, _>(&client.user_id)
         .bind::<sql_types::VarChar, _>(key)
         .bind::<sql_types::VarChar, _>(value)
-        .execute(&mut db.client)?;
+        .execute(db.client.as_mut())?;
     }
 
     // diesel::insert_into(csml_memories::table)
@@ -93,7 +93,7 @@ pub fn internal_use_get_memories(
         .filter(csml_memories::bot_id.eq(&client.bot_id))
         .filter(csml_memories::channel_id.eq(&client.channel_id))
         .filter(csml_memories::user_id.eq(&client.user_id))
-        .load(&mut db.client)?;
+        .load(db.client.as_mut())?;
 
     let mut map = serde_json::Map::new();
     for mem in memories {
@@ -114,7 +114,7 @@ pub fn get_memories(
         .filter(csml_memories::bot_id.eq(&client.bot_id))
         .filter(csml_memories::channel_id.eq(&client.channel_id))
         .filter(csml_memories::user_id.eq(&client.user_id))
-        .load(&mut db.client)?;
+        .load(db.client.as_mut())?;
 
     let mut vec = vec![];
     for mem in memories {
@@ -144,7 +144,7 @@ pub fn get_memory(
         .filter(csml_memories::bot_id.eq(&client.bot_id))
         .filter(csml_memories::channel_id.eq(&client.channel_id))
         .filter(csml_memories::user_id.eq(&client.user_id))
-        .get_result(&mut db.client)?;
+        .get_result(db.client.as_mut())?;
 
     let mut memory = serde_json::Map::new();
     let value: serde_json::Value = decrypt_data(mem.value)?;
@@ -171,7 +171,7 @@ pub fn delete_client_memory(
             .filter(csml_memories::user_id.eq(&client.user_id))
             .filter(csml_memories::key.eq(key)),
     )
-    .execute(&mut db.client)
+    .execute(db.client.as_mut())
     .ok();
 
     Ok(())
@@ -184,7 +184,7 @@ pub fn delete_client_memories(client: &Client, db: &mut SqliteClient) -> Result<
             .filter(csml_memories::channel_id.eq(&client.channel_id))
             .filter(csml_memories::user_id.eq(&client.user_id)),
     )
-    .execute(&mut db.client)
+    .execute(db.client.as_mut())
     .ok();
 
     Ok(())
@@ -192,7 +192,7 @@ pub fn delete_client_memories(client: &Client, db: &mut SqliteClient) -> Result<
 
 pub fn delete_all_bot_data(bot_id: &str, db: &mut SqliteClient) -> Result<(), EngineError> {
     diesel::delete(csml_memories::table.filter(csml_memories::bot_id.eq(bot_id)))
-        .execute(&mut db.client)
+        .execute(db.client.as_mut())
         .ok();
 
     Ok(())

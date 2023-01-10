@@ -146,8 +146,10 @@ pub struct SerializeCsmlBot {
     pub id: String,
     pub name: String,
     pub flows: Vec<CsmlFlow>,
-    pub native_components: Option<String>, // serde_json::Map<String, serde_json::Value>
-    pub custom_components: Option<String>, // serde_json::Value
+    pub native_components: Option<String>,
+    // serde_json::Map<String, serde_json::Value>
+    pub custom_components: Option<String>,
+    // serde_json::Value
     pub default_flow: String,
     pub no_interruption_delay: Option<i32>,
     pub env: Option<String>,
@@ -166,8 +168,10 @@ pub struct CsmlBotBincode {
     pub id: String,
     pub name: String,
     pub flows: Vec<CsmlFlow>,
-    pub native_components: Option<String>, // serde_json::Map<String, serde_json::Value>
-    pub custom_components: Option<String>, // serde_json::Value
+    pub native_components: Option<String>,
+    // serde_json::Map<String, serde_json::Value>
+    pub custom_components: Option<String>,
+    // serde_json::Value
     pub default_flow: String,
 }
 
@@ -340,39 +344,53 @@ pub struct CsmlRequest {
     pub low_data_mode: Option<serde_json::Value>,
 }
 
-pub enum Database {
+pub enum Container<'a, E> {
+    Value(E),
+    Reference(&'a mut E),
+}
+
+impl<'a, E> AsMut<E> for Container<'a, E> {
+    fn as_mut(&mut self) -> &mut E {
+        match self {
+            Container::Value(e) => e,
+            Container::Reference(e) => *e,
+        }
+    }
+}
+
+pub enum Database<'a> {
     #[cfg(feature = "mongo")]
     Mongo(MongoDbClient),
     #[cfg(feature = "dynamo")]
     Dynamodb(DynamoDbClient),
     #[cfg(feature = "postgresql")]
-    Postgresql(PostgresqlClient),
+    Postgresql(PostgresqlClient<'a>),
     #[cfg(feature = "sqlite")]
-    SqLite(SqliteClient),
+    SqLite(SqliteClient<'a>),
     None,
 }
 
 #[cfg(feature = "sqlite")]
-pub struct SqliteClient {
-    pub client: diesel::prelude::SqliteConnection,
+pub struct SqliteClient<'a> {
+    pub client: Container<'a, diesel::prelude::SqliteConnection>,
 }
 
 #[cfg(feature = "sqlite")]
-impl SqliteClient {
+impl SqliteClient<'static> {
     pub fn new(client: diesel::prelude::SqliteConnection) -> Self {
-        Self { client }
+        Self { client: Container::Value(client) }
     }
 }
 
 #[cfg(feature = "postgresql")]
-pub struct PostgresqlClient {
-    pub client: diesel::prelude::PgConnection,
+pub struct PostgresqlClient<'a> {
+    pub client: Container<'a, diesel::prelude::PgConnection>,
 }
 
 #[cfg(feature = "postgresql")]
-impl PostgresqlClient {
+impl PostgresqlClient<'static> {
     pub fn new(client: diesel::prelude::PgConnection) -> Self {
-        Self { client }
+        Self { client: Container::Value(client) }
     }
 }
 
@@ -387,6 +405,7 @@ impl MongoDbClient {
         Self { client }
     }
 }
+
 /**
  * Dynamodb runs in async by default and returns futures, that need to be awaited on.
  * The proper way to do it is by using tokio's runtime::block_on(). It is however quite costly
@@ -410,7 +429,7 @@ impl DynamoDbClient {
     }
 }
 
-pub struct ConversationInfo {
+pub struct ConversationInfo<'a> {
     pub request_id: String,
     pub conversation_id: String,
     pub callback_url: Option<String>,
@@ -420,14 +439,15 @@ pub struct ConversationInfo {
     pub messages: Vec<Message>,
     pub ttl: Option<chrono::Duration>,
     pub low_data: bool,
-    pub db: Database,
+    pub db: Database<'a>,
 }
 
 #[derive(Debug)]
 pub enum Next {
     Flow(String),
     Step(String),
-    Hold, //(i32)
+    Hold,
+    //(i32)
     End,
     Error,
 }

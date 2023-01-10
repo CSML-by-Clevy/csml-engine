@@ -22,7 +22,7 @@ pub fn create_bot_version(
 
     diesel::insert_into(cmsl_bot_versions::table)
         .values(&newbot)
-        .execute(&mut db.client)?;
+        .execute(db.client.as_mut())?;
 
     Ok(id.to_string())
 }
@@ -49,7 +49,7 @@ pub fn get_bot_versions(
     };
     query = query.per_page(limit_per_page);
 
-    let (bot_versions, total_pages) = query.load_and_count_pages::<models::Bot>(&mut db.client)?;
+    let (bot_versions, total_pages) = query.load_and_count_pages::<models::Bot>(db.client.as_mut())?;
 
     let mut bots = vec![];
     for bot_version in bot_versions {
@@ -88,7 +88,7 @@ pub fn get_bot_by_version_id(
 
     let result: Result<models::Bot, diesel::result::Error> = cmsl_bot_versions::table
         .filter(cmsl_bot_versions::id.eq(&version_id))
-        .first::<models::Bot>(&mut db.client);
+        .first::<models::Bot>(db.client.as_mut());
 
     match result {
         Ok(bot) => {
@@ -111,7 +111,7 @@ pub fn get_last_bot_version(
     let result: Result<models::Bot, diesel::result::Error> = cmsl_bot_versions::table
         .filter(cmsl_bot_versions::bot_id.eq(&bot_id))
         .order_by(cmsl_bot_versions::created_at.desc())
-        .get_result(&mut db.client);
+        .get_result(db.client.as_mut());
 
     match result {
         Ok(bot) => {
@@ -134,7 +134,7 @@ pub fn delete_bot_version(version_id: &str, db: &mut SqliteClient) -> Result<(),
     };
 
     diesel::delete(cmsl_bot_versions::table.filter(cmsl_bot_versions::id.eq(id)))
-        .execute(&mut db.client)
+        .execute(db.client.as_mut())
         .ok();
 
     Ok(())
@@ -142,7 +142,7 @@ pub fn delete_bot_version(version_id: &str, db: &mut SqliteClient) -> Result<(),
 
 pub fn delete_bot_versions(bot_id: &str, db: &mut SqliteClient) -> Result<(), EngineError> {
     diesel::delete(cmsl_bot_versions::table.filter(cmsl_bot_versions::bot_id.eq(bot_id)))
-        .execute(&mut db.client)
+        .execute(db.client.as_mut())
         .ok();
 
     Ok(())

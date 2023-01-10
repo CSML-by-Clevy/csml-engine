@@ -19,7 +19,7 @@ use diesel_migrations::{EmbeddedMigrations, HarnessWithOutput, MigrationHarness}
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/sqlite");
 
-pub fn init() -> Result<Database, EngineError> {
+pub fn init() -> Result<Database<'static>, EngineError> {
     let uri = match std::env::var("SQLITE_URL") {
         Ok(var) => var,
         _ => "".to_owned(),
@@ -47,7 +47,7 @@ pub fn make_migrations() -> Result<(), EngineError> {
     Ok(())
 }
 
-pub fn get_db<'a>(db: &'a mut Database) -> Result<&'a mut SqliteClient, EngineError> {
+pub fn get_db<'a, 'b>(db: &'a mut Database<'b>) -> Result<&'a mut SqliteClient<'b>, EngineError> {
     match db {
         Database::SqLite(db) => Ok(db),
         _ => Err(EngineError::Manager(

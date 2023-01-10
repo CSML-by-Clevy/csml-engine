@@ -35,13 +35,13 @@ use std::collections::HashMap;
  * This method takes care of the initialization of the data as well as setting up
  * some information in the database (conversation_id, metadata, state...).
  */
-pub fn init_conversation_info<'a>(
+pub fn init_conversation_info<'a, 'b>(
     default_flow: String,
     event: &Event,
     request: &'a CsmlRequest,
     bot: &'a CsmlBot,
-    mut db: Database,
-) -> Result<ConversationInfo, EngineError> {
+    mut db: Database<'b>,
+) -> Result<ConversationInfo<'b>, EngineError> {
     // Create a new interaction. An interaction is basically each request,
     // initiated from the bot or the user.
 
