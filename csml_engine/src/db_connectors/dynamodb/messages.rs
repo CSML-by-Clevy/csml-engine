@@ -154,7 +154,7 @@ fn query_messages_from_date(
     from_date: i64,
     _to_date: Option<i64>,
 ) -> Result<QueryOutput, EngineError> {
-    let from_date = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(from_date, 0), Utc);
+    let from_date = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp_opt(from_date, 0).unwrap(), Utc);
     // let to_date = match to_date {
     //     Some(to_date) => {
     //         DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(to_date, 0), Utc)
