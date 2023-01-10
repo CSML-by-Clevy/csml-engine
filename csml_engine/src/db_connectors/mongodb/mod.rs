@@ -38,7 +38,7 @@ fn create_mongodb_uri() -> Result<String, EngineError> {
     Ok(uri)
 }
 
-pub fn init() -> Result<Database, EngineError> {
+pub fn init() -> Result<Database<'static>, EngineError> {
     let dbname = match std::env::var("MONGODB_DATABASE") {
         Ok(var) => var,
         _ => {

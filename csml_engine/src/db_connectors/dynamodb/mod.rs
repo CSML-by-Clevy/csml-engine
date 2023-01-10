@@ -17,7 +17,7 @@ use crate::db_connectors::dynamodb::utils::*;
 
 use rusoto_core::Region;
 
-pub fn init() -> Result<Database, EngineError> {
+pub fn init() -> Result<Database<'static>, EngineError> {
     let region_name = std::env::var("AWS_REGION").ok();
     let dynamodb_endpoint = std::env::var("AWS_DYNAMODB_ENDPOINT").ok();
     let s3_endpoint = std::env::var("AWS_S3_ENDPOINT").ok();
