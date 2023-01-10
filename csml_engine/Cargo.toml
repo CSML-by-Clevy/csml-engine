@@ -23,6 +23,7 @@ mongo = ["mongodb", "bson", "futures"]
 dynamo = ["rusoto_core", "rusoto_dynamodb", "rusoto_s3", "serde_dynamodb"]
 postgresql = ["diesel_postgresql"]
 sqlite = ["diesel_sqlite"]
+pooled = ["diesel/r2d2"]
 
 diesel_postgresql = ["diesel/postgres", "diesel/chrono", "diesel/uuid", "diesel_migrations"] # "diesel/uuidv07",
 diesel_sqlite = ["diesel/sqlite", "diesel/chrono", "diesel_migrations"]
