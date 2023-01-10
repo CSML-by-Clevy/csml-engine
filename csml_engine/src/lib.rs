@@ -48,7 +48,7 @@ pub fn start_conversation_db(
     request: CsmlRequest,
     mut bot_opt: BotOpt,
     mut db: Database,
-) -> Result<(serde_json::Map<String, serde_json::Value>, Database), EngineError> {
+) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     init_logger();
 
     let mut formatted_event = format_event(&request)?;
@@ -71,7 +71,7 @@ pub fn start_conversation_db(
         if let Some(delay) = state::get_state_key(&data.client, "delay", "content", &mut data.db)? {
             match (delay["delay_value"].as_i64(), delay["timestamp"].as_i64()) {
                 (Some(delay), Some(timestamp)) if timestamp + delay >= Utc::now().timestamp() => {
-                    return Ok((serde_json::Map::new(), data.db));
+                    return Ok(serde_json::Map::new());
                 }
                 _ => {}
             }
@@ -115,7 +115,7 @@ pub fn start_conversation_db(
         &mut bot,
         &mut bot_opt,
         &mut formatted_event,
-    ).map(|res| (res, data.db))
+    )
 }
 
 /**
@@ -136,7 +136,7 @@ pub fn start_conversation(
     bot_opt: BotOpt,
 ) -> Result<serde_json::Map<String, serde_json::Value>, EngineError> {
     let db = init_db()?;
-    start_conversation_db(request, bot_opt, db).map(|res| res.0)
+    start_conversation_db(request, bot_opt, db)
 }
 
 fn check_switch_bot(

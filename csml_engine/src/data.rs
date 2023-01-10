@@ -357,7 +357,7 @@ impl<'a, E: R2D2Connection> AsMut<E> for Connections<'a, E> {
         match self {
             Connections::Direct(e) => e,
             #[cfg(feature = "pooled")]
-            Connections::Managed(e) => e.deref_mut(),
+            Connections::Managed(e) => e,
         }
     }
 }
