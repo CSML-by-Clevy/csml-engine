@@ -1,4 +1,4 @@
-use std::ops::DerefMut;
+#[cfg(feature = "pooled")]
 use diesel::r2d2::{ConnectionManager, PooledConnection, R2D2Connection};
 use crate::{
     db_connectors,
@@ -346,18 +346,37 @@ pub struct CsmlRequest {
     pub low_data_mode: Option<serde_json::Value>,
 }
 
+#[cfg(feature = "pooled")]
 pub enum Connections<'a, E: R2D2Connection + 'static> {
     Direct(E),
-    #[cfg(feature = "pooled")]
+    Reference(&'a mut E),
     Managed(&'a mut PooledConnection<ConnectionManager<E>>),
 }
 
+#[cfg(feature = "pooled")]
 impl<'a, E: R2D2Connection> AsMut<E> for Connections<'a, E> {
     fn as_mut(&mut self) -> &mut E {
         match self {
             Connections::Direct(e) => e,
+            Connections::Reference(e) => e,
             #[cfg(feature = "pooled")]
             Connections::Managed(e) => e,
+        }
+    }
+}
+
+#[cfg(not(feature = "pooled"))]
+pub enum Connections<'a, E> {
+    Direct(E),
+    Reference(&'a mut E),
+}
+
+#[cfg(not(feature = "pooled"))]
+impl<'a, E> AsMut<E> for Connections<'a, E> {
+    fn as_mut(&mut self) -> &mut E {
+        match self {
+            Connections::Direct(e) => e,
+            Connections::Reference(e) => e
         }
     }
 }
@@ -382,7 +401,7 @@ pub struct SqliteClient<'a> {
 #[cfg(feature = "sqlite")]
 impl SqliteClient<'static> {
     pub fn new(client: diesel::prelude::SqliteConnection) -> Self {
-        Self { client: Connections::Direct(client) }
+        Self { client: Connections::Direct(client)}
     }
 }
 
@@ -394,7 +413,7 @@ pub struct PostgresqlClient<'a> {
 #[cfg(feature = "postgresql")]
 impl PostgresqlClient<'static> {
     pub fn new(client: diesel::prelude::PgConnection) -> Self {
-        Self { client: Connections::Direct(client) }
+        Self { client: Connections::Direct(client)}
     }
 }
 
