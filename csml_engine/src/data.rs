@@ -6,6 +6,7 @@ use crate::{
     Client, Context,
 };
 use csml_interpreter::data::{CsmlBot, CsmlFlow, Message, Module, MultiBot};
+#[cfg(any(feature = "postgresql", feature = "sqlite"))]
 use serde::de::StdError;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -390,7 +391,7 @@ pub enum Database<'a> {
     Postgresql(PostgresqlClient<'a>),
     #[cfg(feature = "sqlite")]
     SqLite(SqliteClient<'a>),
-    None,
+    None(std::marker::PhantomData<&'a ()>),
 }
 
 #[cfg(feature = "sqlite")]
@@ -438,7 +439,7 @@ impl MongoDbClient {
 pub struct DynamoDbClient {
     pub client: rusoto_dynamodb::DynamoDbClient,
     pub s3_client: rusoto_s3::S3Client,
-    pub runtime: tokio::runtime::Runtime,
+    pub runtime: tokio::runtime::Runtime
 }
 
 #[cfg(feature = "dynamo")]
@@ -447,7 +448,7 @@ impl DynamoDbClient {
         Self {
             client: rusoto_dynamodb::DynamoDbClient::new(dynamo_region),
             s3_client: rusoto_s3::S3Client::new(s3_region),
-            runtime: tokio::runtime::Runtime::new().unwrap(),
+            runtime: tokio::runtime::Runtime::new().unwrap()
         }
     }
 }
