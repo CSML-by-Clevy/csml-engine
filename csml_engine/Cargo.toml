@@ -29,11 +29,15 @@ diesel_postgresql = ["diesel/postgres", "diesel/chrono", "diesel/uuid", "diesel_
 diesel_sqlite = ["diesel/sqlite", "diesel/chrono", "diesel_migrations"]
 
 [dependencies.diesel_migrations]
+git = "https://github.com/diesel-rs/diesel"
+branch = "master"
 version = "2.0.0"
 optional = true
 
 [dependencies.diesel]
-version = "2.0.0"
+git = "https://github.com/diesel-rs/diesel"
+branch = "master"
+version = "2.0.2"
 optional = true
 
 [dependencies.mongodb]
