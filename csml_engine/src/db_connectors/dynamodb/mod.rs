@@ -60,7 +60,7 @@ pub fn get_pagination_key(
 ) -> Result<Option<HashMap<String, AttributeValue>>, EngineError> {
     match pagination_key {
         Some(key) => {
-            let base64decoded = match base64::decode(&key) {
+            let base64decoded = match base64::engine::general_purpose::STANDARD.decode(&key) {
                 Ok(base64decoded) => base64decoded,
                 Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
             };

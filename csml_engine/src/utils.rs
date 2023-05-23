@@ -21,6 +21,7 @@ use rand::seq::SliceRandom;
 use serde_json::{json, map::Map, Value};
 use std::collections::HashMap;
 use std::env;
+use base64::Engine;
 
 use md5::{Digest, Md5};
 use regex::Regex;
@@ -356,7 +357,7 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
 
             let ast = match &bot.bot_ast {
                 Some(ast) => {
-                    let base64decoded = base64::decode(&ast).unwrap();
+                    let base64decoded = base64::engine::general_purpose::STANDARD.decode(&ast).unwrap();
                     let csml_bot: HashMap<String, Flow> =
                         bincode::deserialize(&base64decoded[..]).unwrap();
                     match csml_bot.get(&context.flow) {
@@ -377,7 +378,7 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
 
             match &bot.bot_ast {
                 Some(ast) => {
-                    let base64decoded = base64::decode(&ast).unwrap();
+                    let base64decoded = base64::engine::general_purpose::STANDARD.decode(&ast).unwrap();
                     let csml_bot: HashMap<String, Flow> =
                         bincode::deserialize(&base64decoded[..]).unwrap();
 
@@ -425,7 +426,7 @@ pub fn get_current_step_hash(context: &Context, bot: &CsmlBot) -> Result<String,
 
             let ast = match &bot.bot_ast {
                 Some(ast) => {
-                    let base64decoded = base64::decode(&ast).unwrap();
+                    let base64decoded = base64::engine::general_purpose::STANDARD.decode(&ast).unwrap();
                     let csml_bot: HashMap<String, Flow> =
                         bincode::deserialize(&base64decoded[..]).unwrap();
 

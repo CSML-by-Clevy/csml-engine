@@ -20,6 +20,7 @@ use csml_interpreter::{
 };
 
 use std::collections::HashMap;
+use base64::Engine;
 
 /**
  * Initialize a new ConversationInfo data, usually upon new chat request.
@@ -124,7 +125,7 @@ fn set_bot_ast(bot: &mut CsmlBot) -> Result<(), EngineError> {
             errors: None,
             ..
         } => {
-            bot.bot_ast = Some(base64::encode(
+            bot.bot_ast = Some(base64::engine::general_purpose::STANDARD.encode(
                 bincode::serialize(&(&flows, &extern_flows)).unwrap(),
             ));
         }
@@ -136,7 +137,7 @@ fn set_bot_ast(bot: &mut CsmlBot) -> Result<(), EngineError> {
         } => {
             let extern_flows: HashMap<String, Flow> = HashMap::new();
 
-            bot.bot_ast = Some(base64::encode(
+            bot.bot_ast = Some(base64::engine::general_purpose::STANDARD.encode(
                 bincode::serialize(&(&flows, &extern_flows)).unwrap(),
             ));
         }

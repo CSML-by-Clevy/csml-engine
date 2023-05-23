@@ -24,6 +24,7 @@ use aes_gcm::{
     aead::{AeadCore, KeyInit},
     AeadInPlace, AesGcm,
 };
+use base64::Engine;
 use rand::{rngs::OsRng, RngCore};
 use ring::pbkdf2;
 
@@ -64,7 +65,7 @@ fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
 fn decode(text: &str) -> Result<Vec<u8>, EngineError> {
     match hex::decode(text) {
         Ok(val) => Ok(val),
-        Err(_) => match base64::decode(text) {
+        Err(_) => match base64::engine::general_purpose::STANDARD.decode(text) {
             Ok(val) => Ok(val),
             Err(err) => Err(EngineError::Base64(err)),
         },
@@ -87,7 +88,7 @@ fn encrypt(text: &[u8]) -> Result<String, EngineError> {
     encrypted.extend_from_slice(payload.msg);
     let tag = cipher.encrypt_in_place_detached(&nonce, &[], encrypted.as_mut())?;
 
-    Ok(base64::encode(
+    Ok(base64::engine::general_purpose::STANDARD.encode(
         [
             salt,
             nonce.to_vec(),

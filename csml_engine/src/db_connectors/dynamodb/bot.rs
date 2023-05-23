@@ -181,7 +181,7 @@ pub fn get_bot_versions(
 
     match data.last_evaluated_key {
         Some(pagination_key) => {
-            let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
+            let pagination_key = base64::engine::general_purpose::STANDARD.encode(serde_json::json!(pagination_key).to_string());
 
             Ok(serde_json::json!({"bots": bots, "pagination_key": pagination_key}))
         }
@@ -212,7 +212,7 @@ pub fn get_bot_by_version_id(
         Some(val) => {
             let bot: Bot = serde_dynamodb::from_hashmap(val)?;
 
-            let csml_bot: DynamoBot = match base64::decode(&bot.bot) {
+            let csml_bot: DynamoBot = match base64::engine::general_purpose::STANDARD.decode(&bot.bot) {
                 Ok(base64decoded) => {
                     match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),
@@ -326,7 +326,7 @@ pub fn get_last_bot_version(
         Some(val) => {
             let bot: Bot = serde_dynamodb::from_hashmap(val)?;
 
-            let csml_bot: DynamoBot = match base64::decode(&bot.bot) {
+            let csml_bot: DynamoBot = match base64::engine::general_purpose::STANDARD.decode(&bot.bot) {
                 Ok(base64decoded) => {
                     match bincode::deserialize::<DynamoBotBincode>(&base64decoded[..]) {
                         Ok(bot) => bot.to_bot(),

@@ -651,7 +651,7 @@ pub fn get_client_conversations(
 
     match data.last_evaluated_key {
         Some(pagination_key) => {
-            let pagination_key = base64::encode(serde_json::json!(pagination_key).to_string());
+            let pagination_key = base64::engine::general_purpose::STANDARD.encode(serde_json::json!(pagination_key).to_string());
 
             Ok(
                 serde_json::json!({"conversations": conversations, "pagination_key": pagination_key}),

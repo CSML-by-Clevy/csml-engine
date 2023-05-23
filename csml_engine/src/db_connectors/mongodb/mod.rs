@@ -7,6 +7,7 @@ pub mod state;
 use crate::{Database, EngineError, MongoDbClient};
 use bson::{doc, Document};
 use core::time::Duration as CoreDuration;
+use base64::Engine;
 use mongodb::{IndexModel, options::IndexOptions};
 
 fn create_mongodb_uri() -> Result<String, EngineError> {
@@ -71,7 +72,7 @@ pub fn get_db<'a>(db: &'a Database) -> Result<&'a MongoDbClient, EngineError> {
 pub fn get_pagination_key(pagination_key: Option<String>) -> Result<Option<String>, EngineError> {
     match pagination_key {
         Some(key) => {
-            let base64decoded = match base64::decode(&key) {
+            let base64decoded = match base64::engine::general_purpose::STANDARD.decode(&key) {
                 Ok(base64decoded) => base64decoded,
                 Err(_) => return Err(EngineError::Manager(format!("Invalid pagination_key"))),
             };
