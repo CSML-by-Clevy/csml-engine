@@ -93,7 +93,7 @@ fn encrypt(text: &[u8]) -> Result<String, EngineError> {
             salt,
             nonce.to_vec(),
             tag.to_vec(),
-            encrypted.as_slice().to_vec(),
+            encrypted,
         ]
         .concat(),
     ))
