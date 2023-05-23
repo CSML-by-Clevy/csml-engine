@@ -451,6 +451,7 @@ pub enum EngineError {
     Parring(String),
     Time(std::time::SystemTimeError),
     Openssl(openssl::error::ErrorStack),
+    Encryption(String),
     Base64(base64::DecodeError),
 
     #[cfg(any(feature = "mongo"))]
@@ -500,6 +501,12 @@ impl From<std::time::SystemTimeError> for EngineError {
 impl From<openssl::error::ErrorStack> for EngineError {
     fn from(e: openssl::error::ErrorStack) -> Self {
         EngineError::Openssl(e)
+    }
+}
+
+impl From<aes_gcm::Error> for EngineError {
+    fn from(e: aes_gcm::Error) -> Self {
+        EngineError::Encryption(e.to_string())
     }
 }
 
