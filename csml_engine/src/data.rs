@@ -450,7 +450,6 @@ pub enum EngineError {
     Interpreter(String),
     Parring(String),
     Time(std::time::SystemTimeError),
-    Openssl(openssl::error::ErrorStack),
     Encryption(String),
     Base64(base64::DecodeError),
 
@@ -495,12 +494,6 @@ impl From<std::str::Utf8Error> for EngineError {
 impl From<std::time::SystemTimeError> for EngineError {
     fn from(e: std::time::SystemTimeError) -> Self {
         EngineError::Time(e)
-    }
-}
-
-impl From<openssl::error::ErrorStack> for EngineError {
-    fn from(e: openssl::error::ErrorStack) -> Self {
-        EngineError::Openssl(e)
     }
 }
 

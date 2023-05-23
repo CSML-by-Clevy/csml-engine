@@ -85,7 +85,6 @@ serde = { version = "1.0.133", features = ["derive"] }
 serde_derive = "1.0.133"
 serde_json = "1.0.75"
 regex = "1.5.4"
-openssl = { version = "0.10.38", features = ["vendored"] }
 ring = "0.16.20"
 aes-gcm = "0.10.1"
 base64 = "0.13.0"
