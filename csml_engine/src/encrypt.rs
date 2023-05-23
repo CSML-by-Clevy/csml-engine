@@ -14,7 +14,6 @@
 use crate::EngineError;
 
 use openssl::{
-    pkcs5::pbkdf2_hmac,
     rand::rand_bytes,
     symm::{decrypt_aead, encrypt_aead, Cipher},
 };
@@ -32,20 +31,6 @@ fn get_encryption_secret() -> String {
         Ok(var) => var,
         _ => panic!("No ENCRYPTION_SECRET value in env"),
     }
-}
-
-fn get_key_old(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
-    let pass = get_encryption_secret();
-
-    pbkdf2_hmac(
-        pass.as_bytes(),
-        &salt,
-        10000,
-        openssl::hash::MessageDigest::sha512(),
-        key,
-    )?;
-
-    Ok(())
 }
 
 fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
@@ -141,13 +126,10 @@ mod tests {
         env::set_var("ENCRYPTION_SECRET", "test");
         let salt = b"test123";
         let key = b"key123".to_vec();
-        let mut encrypted_old = key.clone();
         let mut encrypted = key.clone();
 
-        get_key_old(salt, encrypted_old.as_mut_slice())?;
         get_key(salt, encrypted.as_mut_slice())?;
 
-        assert_eq!(encrypted_old, [35, 47, 70, 158, 170, 34]);
         assert_eq!(encrypted, [35, 47, 70, 158, 170, 34]);
         Ok(())
     }
