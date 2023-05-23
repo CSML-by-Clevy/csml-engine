@@ -19,12 +19,23 @@ use openssl::{
     symm::{decrypt_aead, encrypt_aead, Cipher},
 };
 use std::env;
+use std::num::NonZeroU32;
 
-fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
-    let pass = match env::var("ENCRYPTION_SECRET") {
+use ring::pbkdf2;
+
+
+static PBKDF2_ALG: pbkdf2::Algorithm = pbkdf2::PBKDF2_HMAC_SHA512;
+// static PBKDF2_ITERATIONS: NonZeroU32 = NonZeroU32::new(10000).unwrap();
+
+fn get_encryption_secret() -> String {
+    match env::var("ENCRYPTION_SECRET") {
         Ok(var) => var,
         _ => panic!("No ENCRYPTION_SECRET value in env"),
-    };
+    }
+}
+
+fn get_key_old(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
+    let pass = get_encryption_secret();
 
     pbkdf2_hmac(
         pass.as_bytes(),
@@ -33,6 +44,14 @@ fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
         openssl::hash::MessageDigest::sha512(),
         key,
     )?;
+
+    Ok(())
+}
+
+fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
+    let pass = get_encryption_secret();
+
+    pbkdf2::derive(PBKDF2_ALG, NonZeroU32::new(10000).unwrap(), &salt,pass.as_bytes(), key);
 
     Ok(())
 }
@@ -110,5 +129,26 @@ pub fn decrypt_data(value: String) -> Result<serde_json::Value, EngineError> {
             let value: serde_json::Value = serde_json::from_str(&value)?;
             Ok(value)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_key() -> Result<(), EngineError> {
+        env::set_var("ENCRYPTION_SECRET", "test");
+        let salt = b"test123";
+        let key = b"key123".to_vec();
+        let mut encrypted_old = key.clone();
+        let mut encrypted = key.clone();
+
+        get_key_old(salt, encrypted_old.as_mut_slice())?;
+        get_key(salt, encrypted.as_mut_slice())?;
+
+        assert_eq!(encrypted_old, [35, 47, 70, 158, 170, 34]);
+        assert_eq!(encrypted, [35, 47, 70, 158, 170, 34]);
+        Ok(())
     }
 }

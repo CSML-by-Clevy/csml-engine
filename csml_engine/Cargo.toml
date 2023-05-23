@@ -86,6 +86,7 @@ serde_derive = "1.0.133"
 serde_json = "1.0.75"
 regex = "1.5.4"
 openssl = { version = "0.10.38", features = ["vendored"] }
+ring = "0.16.20"
 base64 = "0.13.0"
 hex = "0.4.3"
 tokio = "1.19.2"
