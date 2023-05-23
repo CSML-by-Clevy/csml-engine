@@ -1114,7 +1114,6 @@ dependencies = [
  "md-5 0.10.1",
  "mongodb",
  "multimap",
- "openssl",
  "rand",
  "regex",
  "ring",

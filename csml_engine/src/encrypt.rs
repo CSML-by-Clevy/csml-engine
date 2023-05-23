@@ -16,14 +16,16 @@ use crate::EngineError;
 use std::env;
 use std::num::NonZeroU32;
 
-use ring::pbkdf2;
-use aes_gcm::{aead::{Aead, AeadCore, KeyInit}, AeadInPlace, AesGcm};
 use aes_gcm::aead::consts::U16;
 use aes_gcm::aead::Payload;
-use aes_gcm::aes::{Aes256};
 use aes_gcm::aes::cipher::Unsigned;
-use rand::{RngCore, rngs::OsRng};
-
+use aes_gcm::aes::Aes256;
+use aes_gcm::{
+    aead::{AeadCore, KeyInit},
+    AeadInPlace, AesGcm,
+};
+use rand::{rngs::OsRng, RngCore};
+use ring::pbkdf2;
 
 static PBKDF2_ALG: pbkdf2::Algorithm = pbkdf2::PBKDF2_HMAC_SHA512;
 // static PBKDF2_ITERATIONS: NonZeroU32 = NonZeroU32::new(10000).unwrap();
@@ -41,7 +43,13 @@ fn get_encryption_secret() -> String {
 fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
     let pass = get_encryption_secret();
 
-    pbkdf2::derive(PBKDF2_ALG, NonZeroU32::new(10000).unwrap(), &salt, pass.as_bytes(), key);
+    pbkdf2::derive(
+        PBKDF2_ALG,
+        NonZeroU32::new(10000).unwrap(),
+        salt,
+        pass.as_bytes(),
+        key,
+    );
 
     Ok(())
 }
@@ -54,9 +62,9 @@ fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
  * retaining full retrocompatibility with older data at a small cost.
  */
 fn decode(text: &str) -> Result<Vec<u8>, EngineError> {
-    match hex::decode(text.to_owned()) {
+    match hex::decode(text) {
         Ok(val) => Ok(val),
-        Err(_) => match base64::decode(text.to_owned()) {
+        Err(_) => match base64::decode(text) {
             Ok(val) => Ok(val),
             Err(err) => Err(EngineError::Base64(err)),
         },
@@ -74,16 +82,25 @@ fn encrypt(text: &[u8]) -> Result<String, EngineError> {
 
     // Unrolled version of let encrypted = cipher.encrypt(&nonce, text)?;
     let payload: Payload = text.into();
-    let mut encrypted = Vec::with_capacity(payload.msg.len() + <Aes256Gcm16 as AeadCore>::TagSize::to_usize());
+    let mut encrypted =
+        Vec::with_capacity(payload.msg.len() + <Aes256Gcm16 as AeadCore>::TagSize::to_usize());
     encrypted.extend_from_slice(payload.msg);
     let tag = cipher.encrypt_in_place_detached(&nonce, &[], encrypted.as_mut())?;
 
-    Ok(base64::encode(&[salt, nonce.to_vec(), tag.to_vec(), encrypted.as_slice().to_vec()].concat()))
+    Ok(base64::encode(
+        [
+            salt,
+            nonce.to_vec(),
+            tag.to_vec(),
+            encrypted.as_slice().to_vec(),
+        ]
+        .concat(),
+    ))
 }
 
 pub fn encrypt_data(value: &serde_json::Value) -> Result<String, EngineError> {
     match env::var("ENCRYPTION_SECRET") {
-        Ok(..) => encrypt(&value.to_string().as_bytes()),
+        Ok(..) => encrypt(value.to_string().as_bytes()),
         _ => Ok(value.to_string()),
     }
 }
@@ -103,7 +120,7 @@ fn decrypt(text: String) -> Result<String, EngineError> {
     let mut buffer = ciphertext[encrypted_position..].to_vec();
 
     let mut key = [0; 32];
-    get_key(&salt, &mut key)?;
+    get_key(salt, &mut key)?;
 
     let cipher = Aes256Gcm16::new(&key.into());
     // Unrolled version of let encrypted = cipher.decrypt(...)?;
