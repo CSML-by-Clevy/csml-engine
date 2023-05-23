@@ -450,6 +450,9 @@ pub enum EngineError {
     Interpreter(String),
     Parring(String),
     Time(std::time::SystemTimeError),
+    #[cfg(all(feature = "openssl", not(feature = "rustls")))]
+    Openssl(openssl::error::ErrorStack),
+    #[cfg(feature = "rustls")]
     Encryption(String),
     Base64(base64::DecodeError),
 
@@ -497,6 +500,14 @@ impl From<std::time::SystemTimeError> for EngineError {
     }
 }
 
+#[cfg(all(feature = "openssl", not(feature = "rustls")))]
+impl From<openssl::error::ErrorStack> for EngineError {
+    fn from(e: openssl::error::ErrorStack) -> Self {
+        EngineError::Openssl(e)
+    }
+}
+
+#[cfg(feature = "rustls")]
 impl From<aes_gcm::Error> for EngineError {
     fn from(e: aes_gcm::Error) -> Self {
         EngineError::Encryption(e.to_string())

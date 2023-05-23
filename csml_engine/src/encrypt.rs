@@ -13,25 +13,36 @@
  */
 use crate::EngineError;
 
+#[cfg(all(feature = "openssl", not(feature = "rustls")))]
+use openssl::{
+    pkcs5::pbkdf2_hmac,
+    rand::rand_bytes,
+    symm::{decrypt_aead, encrypt_aead, Cipher},
+};
+
 use std::env;
+#[cfg(feature = "rustls")]
 use std::num::NonZeroU32;
 
-use aes_gcm::aead::consts::U16;
-use aes_gcm::aead::Payload;
-use aes_gcm::aes::cipher::Unsigned;
-use aes_gcm::aes::Aes256;
+#[cfg(feature = "rustls")]
 use aes_gcm::{
-    aead::{AeadCore, KeyInit},
+    aead::{consts::U16, AeadCore, KeyInit, Payload},
+    aes::{cipher::Unsigned, Aes256},
     AeadInPlace, AesGcm,
 };
+
 use base64::Engine;
+#[cfg(feature = "rustls")]
 use rand::{rngs::OsRng, RngCore};
+#[cfg(feature = "rustls")]
 use ring::pbkdf2;
 
+#[cfg(feature = "rustls")]
 static PBKDF2_ALG: pbkdf2::Algorithm = pbkdf2::PBKDF2_HMAC_SHA512;
 // static PBKDF2_ITERATIONS: NonZeroU32 = NonZeroU32::new(10000).unwrap();
 
 // AES-GCM with a 256-bit key and 128-bit nonce.
+#[cfg(feature = "rustls")]
 type Aes256Gcm16 = AesGcm<Aes256, U16>;
 
 fn get_encryption_secret() -> String {
@@ -41,6 +52,22 @@ fn get_encryption_secret() -> String {
     }
 }
 
+#[cfg(all(feature = "openssl", not(feature = "rustls")))]
+fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
+    let pass = get_encryption_secret();
+
+    pbkdf2_hmac(
+        pass.as_bytes(),
+        salt,
+        10000,
+        openssl::hash::MessageDigest::sha512(),
+        key,
+    )?;
+
+    Ok(())
+}
+
+#[cfg(feature = "rustls")]
 fn get_key(salt: &[u8], key: &mut [u8]) -> Result<(), EngineError> {
     let pass = get_encryption_secret();
 
@@ -72,6 +99,24 @@ fn decode(text: &str) -> Result<Vec<u8>, EngineError> {
     }
 }
 
+#[cfg(all(feature = "openssl", not(feature = "rustls")))]
+fn encrypt(text: &[u8]) -> Result<String, EngineError> {
+    let cipher = Cipher::aes_256_gcm();
+
+    let mut tag = vec![0; 16];
+    let mut iv = vec![0; 16];
+    rand_bytes(&mut iv)?;
+    let mut salt = vec![0; 64];
+    rand_bytes(&mut salt)?;
+    let mut key = [0; 32];
+    get_key(&salt, &mut key)?;
+
+    let encrypted = encrypt_aead(cipher, &key, Some(&iv), &[], text, &mut tag)?;
+
+    Ok(base64::engine::general_purpose::STANDARD.encode([salt, iv, tag, encrypted].concat()))
+}
+
+#[cfg(feature = "rustls")]
 fn encrypt(text: &[u8]) -> Result<String, EngineError> {
     let mut key = [0; 32];
     let mut salt = vec![0; 64];
@@ -88,15 +133,8 @@ fn encrypt(text: &[u8]) -> Result<String, EngineError> {
     encrypted.extend_from_slice(payload.msg);
     let tag = cipher.encrypt_in_place_detached(&nonce, &[], encrypted.as_mut())?;
 
-    Ok(base64::engine::general_purpose::STANDARD.encode(
-        [
-            salt,
-            nonce.to_vec(),
-            tag.to_vec(),
-            encrypted,
-        ]
-        .concat(),
-    ))
+    Ok(base64::engine::general_purpose::STANDARD
+        .encode([salt, nonce.to_vec(), tag.to_vec(), encrypted].concat()))
 }
 
 pub fn encrypt_data(value: &serde_json::Value) -> Result<String, EngineError> {
@@ -106,6 +144,31 @@ pub fn encrypt_data(value: &serde_json::Value) -> Result<String, EngineError> {
     }
 }
 
+#[cfg(all(feature = "openssl", not(feature = "rustls")))]
+fn decrypt(text: String) -> Result<String, EngineError> {
+    let ciphertext = decode(&text)?;
+    let cipher = Cipher::aes_256_gcm();
+
+    let iv_length = 16;
+    let salt_length = 64;
+    let tag_length = 16;
+    let tag_position = salt_length + iv_length;
+    let encrypted_position = tag_position + tag_length;
+
+    let salt: &[u8] = &ciphertext[0..salt_length];
+    let iv: &[u8] = &ciphertext[salt_length..tag_position];
+    let tag: &[u8] = &ciphertext[tag_position..encrypted_position];
+    let encrypted: &[u8] = &ciphertext[encrypted_position..];
+
+    let mut key = [0; 32];
+    get_key(salt, &mut key)?;
+
+    let value = decrypt_aead(cipher, &key, Some(iv), &[], encrypted, tag)?;
+
+    Ok(String::from_utf8_lossy(&value).to_string())
+}
+
+#[cfg(feature = "rustls")]
 fn decrypt(text: String) -> Result<String, EngineError> {
     let ciphertext = decode(&text)?;
 

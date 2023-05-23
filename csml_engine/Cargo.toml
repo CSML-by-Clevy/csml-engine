@@ -27,6 +27,11 @@ sqlite = ["diesel_sqlite"]
 diesel_postgresql = ["diesel/postgres", "diesel/uuidv07", "diesel/chrono", "diesel_migrations"]
 diesel_sqlite = ["diesel/sqlite", "diesel/chrono", "diesel_migrations"]
 
+# We don't actually use rustls but other pure rust implementations
+rustls = ["ring", "aes-gcm"]
+
+default = ["openssl"]
+
 [dependencies.diesel_migrations]
 version = "1.4.0"
 optional = true
@@ -74,6 +79,19 @@ default_features = false
 features = ["rustls"]
 optional = true
 
+[dependencies.openssl]
+version = "0.10.38"
+features = ["vendored"]
+optional = true
+
+[dependencies.ring]
+version = "0.16.20"
+optional = true
+
+[dependencies.aes-gcm]
+version = "0.10.1"
+optional = true
+
 [dependencies]
 csml_interpreter = { version = "1.11.2", path = "../csml_interpreter" }
 multimap = "0.8.3"
@@ -85,8 +103,6 @@ serde = { version = "1.0.133", features = ["derive"] }
 serde_derive = "1.0.133"
 serde_json = "1.0.75"
 regex = "1.5.4"
-ring = "0.16.20"
-aes-gcm = "0.10.1"
 base64 = "0.21.1"
 hex = "0.4.3"
 tokio = "1.19.2"
