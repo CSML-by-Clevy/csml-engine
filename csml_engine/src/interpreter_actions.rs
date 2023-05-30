@@ -101,7 +101,7 @@ pub fn interpret_step(
                         None,
                         Some(data.context.flow.to_string()),
                         None,
-                        format!("sending message"),
+                        format!("start sending message"),
                     ),
                     LogLvl::Info,
                 );
@@ -117,6 +117,16 @@ pub fn interpret_step(
 
                 send_msg_to_callback_url(data, vec![msg.clone()], interaction_order, false);
                 data.messages.push(msg);
+
+                csml_logger(
+                    CsmlLog::new(
+                        None,
+                        Some(data.context.flow.to_string()),
+                        None,
+                        format!("end sending message"),
+                    ),
+                    LogLvl::Info,
+                );
             }
             MSG::Log {
                 flow,

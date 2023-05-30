@@ -240,6 +240,16 @@ pub fn http_request(
         ERROR_HTTP_GET_VALUE,
     )?;
 
+    csml_logger(
+        CsmlLog::new(
+            None,
+            Some(flow_name.to_string()),
+            Some(interval.start_line),
+            "start Make Http call".to_string(),
+        ),
+        LogLvl::Info,
+    );
+
     let mut request = get_http_request(method, &url, flow_name, interval, is_ssl_disable)?;
 
     for key in header.keys() {
@@ -261,7 +271,7 @@ pub fn http_request(
             None,
             Some(flow_name.to_string()),
             Some(interval.start_line),
-            "Make Http call".to_string(),
+            "end Make Http call".to_string(),
         ),
         LogLvl::Info,
     );

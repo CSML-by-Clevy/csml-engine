@@ -1581,7 +1581,7 @@ impl PrimitiveObject {
         interval: Interval,
         _content_type: &str,
     ) -> Result<Literal, ErrorInfo> {
-        let flow_name = &data.context.flow;
+        let flow_name: &String = &data.context.flow;
 
         let data = match object.value.get("value") {
             Some(literal) => Literal::get_value::<String>(
@@ -1616,6 +1616,16 @@ impl PrimitiveObject {
             }
         };
 
+        csml_logger(
+            CsmlLog::new(
+                None,
+                Some(flow_name.to_string()),
+                Some(interval.start_line),
+                "start crypto create_hash".to_string(),
+            ),
+            LogLvl::Info,
+        );
+
         match openssl::hash::hash(algo, data.as_bytes()) {
             Ok(digest_bytes) => {
                 let vec = digest_bytes
@@ -1628,6 +1638,16 @@ impl PrimitiveObject {
                 map.insert(
                     "hash".to_string(),
                     PrimitiveArray::get_literal(&vec, interval),
+                );
+
+                csml_logger(
+                    CsmlLog::new(
+                        None,
+                        Some(flow_name.to_string()),
+                        Some(interval.start_line),
+                        "end crypto create_hash".to_string(),
+                    ),
+                    LogLvl::Info,
                 );
 
                 let mut lit = PrimitiveObject::get_literal(&map, interval);
@@ -1720,7 +1740,27 @@ impl PrimitiveObject {
             }
         };
 
+        csml_logger(
+            CsmlLog::new(
+                None,
+                Some(data.context.flow.clone()),
+                Some(interval.start_line),
+                "start base64_encode".to_string(),
+            ),
+            LogLvl::Info,
+        );
+
         let result = base64::encode(string.as_bytes());
+
+        csml_logger(
+            CsmlLog::new(
+                None,
+                Some(data.context.flow.clone()),
+                Some(interval.start_line),
+                "end base64_encode".to_string(),
+            ),
+            LogLvl::Info,
+        );
 
         Ok(PrimitiveString::get_literal(&result, interval))
     }
@@ -1780,7 +1820,27 @@ impl PrimitiveObject {
             }
         };
 
+        csml_logger(
+            CsmlLog::new(
+                None,
+                Some(data.context.flow.clone()),
+                Some(interval.start_line),
+                "start hex_encode".to_string(),
+            ),
+            LogLvl::Info,
+        );
+
         let result = hex::encode(string.as_bytes());
+
+        csml_logger(
+            CsmlLog::new(
+                None,
+                Some(data.context.flow.clone()),
+                Some(interval.start_line),
+                "end hex_encode".to_string(),
+            ),
+            LogLvl::Info,
+        );
 
         Ok(PrimitiveString::get_literal(&result, interval))
     }

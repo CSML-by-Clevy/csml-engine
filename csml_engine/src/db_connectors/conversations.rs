@@ -238,7 +238,7 @@ pub fn update_conversation(
             None,
             None,
             format!(
-                "db call update conversations flow_id {:?}, step_id {:?}",
+                "start db call update conversations flow_id {:?}, step_id {:?}",
                 flow_id, step_id
             ),
         ),
@@ -302,6 +302,19 @@ pub fn update_conversation(
             db,
         );
     }
+
+    csml_logger(
+        CsmlLog::new(
+            None,
+            None,
+            None,
+            format!(
+                "end db call update conversations flow_id {:?}, step_id {:?}",
+                flow_id, step_id
+            ),
+        ),
+        LogLvl::Info,
+    );
 
     Err(EngineError::Manager(ERROR_DB_SETUP.to_owned()))
 }
