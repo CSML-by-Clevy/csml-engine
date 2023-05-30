@@ -4,6 +4,7 @@ use crate::data::warnings::DisplayWarnings;
 use crate::data::{
     ast::*,
     context::ContextStepInfo,
+    csml_logs::*,
     data::Data,
     literal::ContentType,
     message::*,
@@ -548,6 +549,20 @@ pub fn match_actions(
             Ok(msg_data)
         }
         ObjectType::Remember(name, variable) => {
+            csml_logger(
+                CsmlLog::new(
+                    None,
+                    Some(data.context.flow.to_string()),
+                    Some(name.interval.start_line),
+                    format!(
+                        "start remember: {:?} at step {}",
+                        name,
+                        data.context.step.get_step()
+                    ),
+                ),
+                LogLvl::Info,
+            );
+
             let mut new_value = expr_to_literal(
                 variable,
                 &DisplayWarnings::On,
@@ -582,6 +597,21 @@ pub fn match_actions(
             data.context
                 .current
                 .insert(name.ident.to_owned(), new_value);
+
+            csml_logger(
+                CsmlLog::new(
+                    None,
+                    Some(data.context.flow.to_string()),
+                    Some(name.interval.start_line),
+                    format!(
+                        "end remember: {:?} at step {}",
+                        name,
+                        data.context.step.get_step()
+                    ),
+                ),
+                LogLvl::Info,
+            );
+
             Ok(msg_data)
         }
         ObjectType::Forget(memory, _interval) => {
