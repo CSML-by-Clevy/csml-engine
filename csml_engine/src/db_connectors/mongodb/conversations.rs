@@ -67,7 +67,9 @@ pub fn close_conversation(
 
     let filter = doc! {
         "_id": bson::oid::ObjectId::parse_str(id).unwrap(),
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
 
     collection.update_one(
@@ -85,7 +87,9 @@ pub fn close_all_conversations(client: &Client, db: &MongoDbClient) -> Result<()
     let collection = db.client.collection::<Document>("conversation");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
 
     collection.update_many(
@@ -108,7 +112,9 @@ pub fn get_latest_open(
 
     let filter = doc! {
         "status": "OPEN",
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
     let find_options = mongodb::options::FindOneOptions::builder()
         .sort(doc! { "$natural": -1 })
@@ -135,7 +141,9 @@ pub fn update_conversation(
 
     let filter = doc! {
         "_id": bson::oid::ObjectId::parse_str(conversation_id).unwrap(),
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
 
     let doc = match (flow_id, step_id) {
@@ -165,7 +173,9 @@ pub fn delete_user_conversations(client: &Client, db: &MongoDbClient) -> Result<
     let collection = db.client.collection::<Document>("conversation");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
 
     collection.delete_many(filter, None)?;
@@ -189,11 +199,17 @@ pub fn get_client_conversations(
     let filter = match pagination_key {
         Some(key) => {
             doc! {
-                "client": bson::to_bson(&client)?,
+                "client.bot_id": client.bot_id.to_owned(),
+                "client.user_id": client.user_id.to_owned(),
+                "client.channel_id": client.channel_id.to_owned(),
                 "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() }
             }
         }
-        None => doc! {"client": bson::to_bson(&client)?},
+        None => doc! {
+            "client.bot_id": client.bot_id.to_owned(),
+            "client.user_id": client.user_id.to_owned(),
+            "client.channel_id": client.channel_id.to_owned(),
+        },
     };
 
     let find_options = mongodb::options::FindOptions::builder()

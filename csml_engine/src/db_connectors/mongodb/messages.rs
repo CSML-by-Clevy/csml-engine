@@ -100,7 +100,9 @@ pub fn delete_user_messages(client: &Client, db: &MongoDbClient) -> Result<(), E
     let collection = db.client.collection::<Document>("message");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
 
     collection.delete_many(filter, None)?;
@@ -132,7 +134,9 @@ pub fn get_client_messages(
             };
 
             doc! {
-                "client": bson::to_bson(&client)?,
+                "client.bot_id": client.bot_id.to_owned(),
+                "client.user_id": client.user_id.to_owned(),
+                "client.channel_id": client.channel_id.to_owned(),
                 "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() },
                 "created_at": {"$gte": from_date, "$lt": to_date}
             }
@@ -145,18 +149,24 @@ pub fn get_client_messages(
             };
 
             doc! {
-                "client": bson::to_bson(&client)?,
+                "client.bot_id": client.bot_id.to_owned(),
+                "client.user_id": client.user_id.to_owned(),
+                "client.channel_id": client.channel_id.to_owned(),
                 "created_at": {"$gte": from_date, "$lt": to_date}
             }
         }
         (Some(key), None) => {
             doc! {
-                "client": bson::to_bson(&client)?,
+                "client.bot_id": client.bot_id.to_owned(),
+                "client.user_id": client.user_id.to_owned(),
+                "client.channel_id": client.channel_id.to_owned(),
                 "_id": {"$gt": bson::oid::ObjectId::parse_str(&key).unwrap() },
             }
         }
         (None, None) => doc! {
-            "client": bson::to_bson(&client)?,
+            "client.bot_id": client.bot_id.to_owned(),
+            "client.user_id": client.user_id.to_owned(),
+            "client.channel_id": client.channel_id.to_owned(),
         },
     };
 

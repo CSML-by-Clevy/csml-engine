@@ -58,7 +58,9 @@ pub fn get_state_key(
     let state = db.client.collection::<Document>("state");
 
     let filter = doc! {
-        "client": bson::to_bson(client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
         "type": _type,
         "key": key,
     };
@@ -80,7 +82,9 @@ pub fn get_current_state(
     let state = db.client.collection::<Document>("state");
 
     let filter = doc! {
-        "client": bson::to_bson(client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
         "type": "hold",
         "key": "position",
     };
@@ -125,7 +129,9 @@ pub fn delete_user_state(client: &Client, db: &MongoDbClient) -> Result<(), Engi
     let collection = db.client.collection::<Document>("state");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
 
     collection.delete_many(filter, None)?;
