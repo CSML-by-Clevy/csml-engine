@@ -271,15 +271,6 @@ pub fn http_request(
             None,
             Some(flow_name.to_string()),
             Some(interval.start_line),
-            "end Make Http call".to_string(),
-        ),
-        LogLvl::Info,
-    );
-    csml_logger(
-        CsmlLog::new(
-            None,
-            Some(flow_name.to_string()),
-            Some(interval.start_line),
             format!("Make Http call request info: {:?}", request),
         ),
         LogLvl::Debug,
@@ -289,6 +280,16 @@ pub fn http_request(
         Some(body) => request.send_json(body.primitive.to_json()),
         None => request.call(),
     };
+
+    csml_logger(
+        CsmlLog::new(
+            None,
+            Some(flow_name.to_string()),
+            Some(interval.start_line),
+            "end Make Http call".to_string(),
+        ),
+        LogLvl::Info,
+    );
 
     match response {
         Ok(response) => {
