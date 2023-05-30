@@ -73,7 +73,7 @@ pub fn start_conversation(
             None,
             "start_conversation:".to_string(),
         ),
-        LogLvl::Error,
+        LogLvl::Info,
     );
 
     let mut bot = bot_opt.search_bot(&mut db)?;
@@ -85,7 +85,7 @@ pub fn start_conversation(
             None,
             "start_conversation: search_bot finish".to_string(),
         ),
-        LogLvl::Error,
+        LogLvl::Info,
     );
 
     init_bot(&mut bot)?;
@@ -97,7 +97,7 @@ pub fn start_conversation(
             None,
             "start_conversation: init_bot finish".to_string(),
         ),
-        LogLvl::Error,
+        LogLvl::Info,
     );
 
     let mut data = init_conversation_info(
@@ -155,12 +155,15 @@ pub fn start_conversation(
 
     csml_logger(
         CsmlLog::new(
-            None,
+            Some(&request.client),
             Some(data.context.flow.to_string()),
             None,
-            "start_conversation: interpret_step finish".to_string(),
+            format!(
+                "start_conversation: interpret_step: [{}] finish",
+                data.context.step.get_step()
+            ),
         ),
-        LogLvl::Error,
+        LogLvl::Info,
     );
 
     check_switch_bot(

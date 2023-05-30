@@ -451,7 +451,7 @@ fn manage_internal_goto<'a>(
                         data.context.step.get_step()
                     ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
             update_current_context(data, &memories);
             goto_flow(data, interaction_order, current_flow, &bot, flow, step)?
@@ -469,7 +469,7 @@ fn manage_internal_goto<'a>(
                         data.context.step.get_step()
                     ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
             update_current_context(data, &memories);
             let step = ContextStepInfo::Normal("start".to_owned());
@@ -490,7 +490,7 @@ fn manage_internal_goto<'a>(
                         data.context.step.get_step()
                     ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
             if goto_step(data, conversation_end, interaction_order, step)? {
                 return Ok(InterpreterReturn::End);
@@ -508,7 +508,7 @@ fn manage_internal_goto<'a>(
                         data.context.step.get_step()
                     ),
                 ),
-                LogLvl::Debug,
+                LogLvl::Info,
             );
 
             let step = ContextStepInfo::Normal("end".to_owned());

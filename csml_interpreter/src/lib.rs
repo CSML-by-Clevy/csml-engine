@@ -487,11 +487,38 @@ pub fn interpret(
     };
 
     while msg_data.exit_condition.is_none() {
+        csml_logger(
+            CsmlLog::new(
+                Some(&Client::new(
+                    bot.id.to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                )),
+                Some(flow.to_string()),
+                None,
+                format!("interpret: search ast flow [{}]", flow).to_string(),
+            ),
+            LogLvl::Info,
+        );
+
         let ast = match get_flow_ast(&flows, &flow, &bot.id, &sender) {
             Ok(ast) => ast,
             Err(message_data) => return message_data,
         };
 
+        csml_logger(
+            CsmlLog::new(
+                Some(&Client::new(
+                    bot.id.to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                )),
+                Some(flow.to_string()),
+                None,
+                format!("interpret: search ast flow [{}] found", flow).to_string(),
+            ),
+            LogLvl::Info,
+        );
         let (missing_step, inserted_ast) = get_inserted_ast(&flows, ast, &step, &bot.id, &sender);
 
         // if the target flow dose not contains a 'start' flow change the target to the default_flow
@@ -525,11 +552,11 @@ pub fn interpret(
                     "".to_string(),
                     "".to_string(),
                 )),
-                Some(data.context.flow.to_string()),
+                Some(flow.to_string()),
                 None,
-                format!("interpret: step [{}]", data.context.step.get_step()).to_string(),
+                format!("interpret: start execute step [{}]", step.get_step()).to_string(),
             ),
-            LogLvl::Error,
+            LogLvl::Info,
         );
 
         msg_data = match inserted_ast {
@@ -538,6 +565,20 @@ pub fn interpret(
             }
             None => msg_data + execute_step(&step.get_step(), &ast, &mut data, &sender),
         };
+
+        csml_logger(
+            CsmlLog::new(
+                Some(&Client::new(
+                    bot.id.to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                )),
+                Some(flow.to_string()),
+                None,
+                format!("interpret: end execute step [{}]", step.get_step()).to_string(),
+            ),
+            LogLvl::Info,
+        );
 
         previous_info = data.previous_info.clone();
         flow = data.context.flow.to_string();

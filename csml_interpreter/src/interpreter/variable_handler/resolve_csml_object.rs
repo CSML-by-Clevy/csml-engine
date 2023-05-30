@@ -1,5 +1,6 @@
 use crate::data::{
     ast::*,
+    csml_logs::LogLvl,
     data::{init_child_context, init_child_scope, Data},
     error_info::ErrorInfo,
     literal::create_error_info,
@@ -328,7 +329,18 @@ pub fn resolve_object(
         ObjType::Function { fn_args, scope } => {
             let resolved_args =
                 resolve_fn_args(args, data, msg_data, &DisplayWarnings::On, sender)?;
-            exec_fn(
+
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: interval.start_line,
+                    message: format!("start exec function: {}", name),
+                    log_lvl: LogLvl::Info,
+                },
+            );
+
+            let value = exec_fn(
                 &scope,
                 &fn_args,
                 resolved_args,
@@ -337,7 +349,19 @@ pub fn resolve_object(
                 data,
                 msg_data,
                 sender,
-            )
+            );
+
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: interval.start_line,
+                    message: format!("end exec function: {}", name),
+                    log_lvl: LogLvl::Info,
+                },
+            );
+
+            value
         }
 
         ObjType::Import => {
