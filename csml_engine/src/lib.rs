@@ -66,8 +66,39 @@ pub fn start_conversation(
     let mut formatted_event = format_event(&request)?;
     let mut db = init_db()?;
 
+    csml_logger(
+        CsmlLog::new(
+            Some(&request.client),
+            None,
+            None,
+            "start_conversation:".to_string(),
+        ),
+        LogLvl::Error,
+    );
+
     let mut bot = bot_opt.search_bot(&mut db)?;
+
+    csml_logger(
+        CsmlLog::new(
+            Some(&request.client),
+            None,
+            None,
+            "start_conversation: search_bot finish".to_string(),
+        ),
+        LogLvl::Error,
+    );
+
     init_bot(&mut bot)?;
+
+    csml_logger(
+        CsmlLog::new(
+            Some(&request.client),
+            None,
+            None,
+            "start_conversation: init_bot finish".to_string(),
+        ),
+        LogLvl::Error,
+    );
 
     let mut data = init_conversation_info(
         get_default_flow(&bot)?.name.to_owned(),
@@ -121,6 +152,16 @@ pub fn start_conversation(
     }
 
     let result = interpret_step(&mut data, formatted_event.to_owned(), &bot);
+
+    csml_logger(
+        CsmlLog::new(
+            None,
+            Some(data.context.flow.to_string()),
+            None,
+            "start_conversation: interpret_step finish".to_string(),
+        ),
+        LogLvl::Error,
+    );
 
     check_switch_bot(
         result,

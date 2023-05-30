@@ -14,13 +14,14 @@ use parser::parse_flow;
 
 use data::ast::{Expr, Flow, InsertStep, InstructionScope, Interval};
 use data::context::{get_hashmap_from_mem, ContextStepInfo};
+use data::csml_logs::*;
 use data::error_info::ErrorInfo;
 use data::event::Event;
 use data::literal::create_error_info;
 use data::message_data::MessageData;
 use data::msg::MSG;
 use data::CsmlResult;
-use data::{csml_bot::CsmlBot, CsmlFlow};
+use data::{csml_bot::CsmlBot, Client, CsmlFlow};
 use data::{Context, Data, Position, STEP_LIMIT};
 use error_format::*;
 use fold_bot::fold_bot as fold;
@@ -515,6 +516,20 @@ pub fn interpret(
             previous_info.clone(),
             &custom,
             &native,
+        );
+
+        csml_logger(
+            CsmlLog::new(
+                Some(&Client::new(
+                    bot.id.to_string(),
+                    "".to_string(),
+                    "".to_string(),
+                )),
+                Some(data.context.flow.to_string()),
+                None,
+                format!("interpret: step [{}]", data.context.step.get_step()).to_string(),
+            ),
+            LogLvl::Error,
         );
 
         msg_data = match inserted_ast {
