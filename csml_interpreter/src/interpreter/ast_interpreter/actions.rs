@@ -167,6 +167,18 @@ pub fn match_actions(
             // TODO:
             // create a temporary scope, this is necessary in order to bypass de borrow checker
             // in the future we need to refacto this code to avoid any scope copy like this
+
+            let interval = crate::interpreter::variable_handler::interval::interval_from_expr(old);
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: interval.start_column,
+                    message: format!("start copy scope: {}", data.context.step.get_step()),
+                    log_lvl: LogLvl::Info,
+                },
+            );
+
             let (
                 tmp_flows,
                 tmp_extern_flows,
@@ -201,10 +213,35 @@ pub fn match_actions(
                 &tmp_custom_component,
                 &tmp_native_component,
             );
+
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: interval.start_column,
+                    message: format!("end copy scope: at step {}", data.context.step.get_step()),
+                    log_lvl: LogLvl::Info,
+                },
+            );
+
             // #####################
 
             let mut new_value =
                 expr_to_literal(new, &DisplayWarnings::On, None, data, &mut msg_data, sender)?;
+
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: new_value.interval.start_column,
+                    message: format!(
+                        "variable {:?} created in new scope {}",
+                        new_value,
+                        data.context.step.get_step()
+                    ),
+                    log_lvl: LogLvl::Info,
+                },
+            );
 
             // check if it is secure variable
             if new_value.secure_variable {

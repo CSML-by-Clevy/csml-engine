@@ -18,6 +18,7 @@ use crate::data::primitive::{
 };
 use crate::data::{
     ast::{Expr, Function, GotoValueType, Identifier, Interval, PathLiteral, PathState},
+    csml_logs::*,
     data::Data,
     tokens::{COMPONENT, EVENT, _ENV, _MEMORY, _METADATA},
     warnings::DisplayWarnings,
@@ -677,6 +678,16 @@ pub fn get_var(
             //// TODO:
             // create a temporary scope, this is necessary in order to bypass de borrow checker
             // in the future we need to refacto this code to avoid any scope copy like this
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: var.interval.start_column,
+                    message: format!("start copy scope: {}", data.context.step.get_step()),
+                    log_lvl: LogLvl::Info,
+                },
+            );
+
             let (
                 tmp_flows,
                 tmp_extern_flows,
@@ -711,6 +722,17 @@ pub fn get_var(
                 &tmp_custom_component,
                 &tmp_native_component,
             );
+
+            MSG::send(
+                &sender,
+                MSG::Log {
+                    flow: data.context.flow.to_owned(),
+                    line: var.interval.start_column,
+                    message: format!("end copy scope: at step {}", data.context.step.get_step()),
+                    log_lvl: LogLvl::Info,
+                },
+            );
+
             // #####################
 
             match get_var_from_mem(var.to_owned(), dis_warnings, path, data, msg_data, sender) {
