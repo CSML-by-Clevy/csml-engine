@@ -80,7 +80,9 @@ pub fn internal_use_get_memories(
     let collection = db.client.collection::<Document>("memory");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
     let find_options = mongodb::options::FindOptions::builder()
         .sort(doc! { "$natural": -1 })
@@ -107,7 +109,9 @@ pub fn get_memories(client: &Client, db: &MongoDbClient) -> Result<serde_json::V
     let collection = db.client.collection::<Document>("memory");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
     let find_options = mongodb::options::FindOptions::builder()
         .sort(doc! { "$natural": -1 })
@@ -141,7 +145,9 @@ pub fn get_memory(
     let collection = db.client.collection::<Document>("memory");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
         "key": key,
     };
     let find_options = mongodb::options::FindOneOptions::builder()
@@ -175,7 +181,9 @@ pub fn delete_client_memory(
     let collection = db.client.collection::<Document>("memory");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
         "key": key,
     };
 
@@ -188,7 +196,9 @@ pub fn delete_client_memories(client: &Client, db: &MongoDbClient) -> Result<(),
     let collection = db.client.collection::<Document>("memory");
 
     let filter = doc! {
-        "client": bson::to_bson(&client)?,
+        "client.bot_id": client.bot_id.to_owned(),
+        "client.user_id": client.user_id.to_owned(),
+        "client.channel_id": client.channel_id.to_owned(),
     };
 
     collection.delete_many(filter, None)?;

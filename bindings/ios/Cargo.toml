@@ -8,7 +8,7 @@ name = "csmllib"
 crate-type = ["staticlib"]
 
 [dependencies]
-csml_engine = { version = "1.11.0", path = "../../csml_engine" }
-csml_interpreter = { version = "1.11.0", path = "../../csml_interpreter" }
+csml_engine = { version = "1.11.2", path = "../../csml_engine" }
+csml_interpreter = { version = "1.11.2", path = "../../csml_interpreter" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

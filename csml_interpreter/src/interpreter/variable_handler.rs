@@ -467,7 +467,7 @@ fn get_flow_context(data: &mut Data, interval: Interval) -> HashMap<String, Lite
 
     flow_context.insert(
         "default_flow".to_owned(),
-        PrimitiveString::get_literal(&data.context.flow, interval),
+        PrimitiveString::get_literal(&data.default_flow, interval),
     );
 
     if let Some(previous_info) = &data.previous_info {
@@ -634,10 +634,19 @@ pub fn get_var(
                 let path = resolve_path(path, dis_warnings, data, msg_data, sender)?;
                 get_literal_from_metadata(&path, dis_warnings, data, msg_data, sender)
             }
-            None => Ok(PrimitiveObject::get_literal(
-                &data.context.metadata,
-                interval.to_owned(),
-            )),
+            None => {
+                let mut metadata = data.context.metadata.clone();
+                let context_values = get_flow_context(data, interval.to_owned());
+                let mut context = HashMap::new();
+                context.insert(
+                    "_context".to_owned(),
+                    PrimitiveObject::get_literal(&context_values, interval.to_owned()),
+                );
+
+                metadata.extend(context);
+
+                Ok(PrimitiveObject::get_literal(&metadata, interval.to_owned()))
+            }
         },
         name if name == _MEMORY => {
             let memory: HashMap<String, Literal> = data.get_all_memories();
