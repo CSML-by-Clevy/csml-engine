@@ -103,9 +103,6 @@ impl<'a> Data<'a> {
     pub fn copy_scope(
         &self,
     ) -> (
-        HashMap<String, Flow>,
-        HashMap<String, Flow>,
-        Flow,
         String,
         Context,
         Event,
@@ -119,9 +116,6 @@ impl<'a> Data<'a> {
         serde_json::Map<String, serde_json::Value>,
     ) {
         (
-            self.flows.clone(),
-            self.extern_flows.clone(),
-            self.flow.clone(),
             self.default_flow.to_string(),
             init_child_context(&self),
             self.event.clone(),

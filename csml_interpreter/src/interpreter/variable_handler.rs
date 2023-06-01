@@ -689,9 +689,6 @@ pub fn get_var(
             );
 
             let (
-                tmp_flows,
-                tmp_extern_flows,
-                tmp_flow,
                 tmp_default_flow,
                 mut tmp_context,
                 tmp_event,
@@ -706,9 +703,9 @@ pub fn get_var(
             ) = data.copy_scope();
 
             let mut new_scope_data = Data::new(
-                &tmp_flows,
-                &tmp_extern_flows,
-                &tmp_flow,
+                data.flows,
+                data.extern_flows,
+                data.flow,
                 tmp_default_flow,
                 &mut tmp_context,
                 &tmp_event,
