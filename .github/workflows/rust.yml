@@ -14,7 +14,7 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: 10.11
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-10.15]
+        os: [ubuntu-22.04, macos-12]
         # windows-latest
 
     steps:
@@ -22,7 +22,7 @@ jobs:
 
     # for some reason cache does not work properly with macos builds
     - name: Cache Cargo
-      if: matrix.os != 'macos-10.15'
+      if: matrix.os != 'macos-12'
       uses: actions/cache@v2
       with:
         path: |
@@ -32,7 +32,7 @@ jobs:
         key: ${{ runner.os }}-csml-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Create mongoDB Docker container
-      if: matrix.os == 'ubuntu-18.04'
+      if: matrix.os == 'ubuntu-22.04'
       run: sudo docker run -d -p 27017:27017 mongo:latest
 
     - name: Install postgres (Linux)
@@ -67,7 +67,7 @@ jobs:
     # Warning: only one live test can run at once!
     - name: Test csml_engine with (Mongodb)
       uses: actions-rs/cargo@v1
-      if: matrix.os == 'ubuntu-18.04'
+      if: matrix.os == 'ubuntu-22.04'
       with:
         command: test
         args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "mongo" -- --test-threads=1
@@ -86,7 +86,7 @@ jobs:
     # Warning: only one live test can run at once!
     - name: Test csml_engine with (Postgres)
       uses: actions-rs/cargo@v1
-      if: matrix.os == 'ubuntu-18.04'
+      if: matrix.os == 'ubuntu-22.04'
       with:
         command: test
         args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "postgresql" -- --test-threads=1
@@ -101,7 +101,7 @@ jobs:
     # Warning: only one live test can run at once!
     - name: Test csml_engine with (dynamodb)
       uses: actions-rs/cargo@v1
-      if: matrix.os == 'ubuntu-18.04'
+      if: matrix.os == 'ubuntu-22.04'
       with:
         command: test
         args: --verbose --manifest-path=csml_engine/Cargo.toml -j 1 --features "dynamo" -- --test-threads=1
@@ -120,7 +120,7 @@ jobs:
     # Warning: only one live test can run at once!
     - name: Test csml_server endpoint (dynamodb)
       uses: actions-rs/cargo@v1
-      if: matrix.os == 'ubuntu-18.04'
+      if: matrix.os == 'ubuntu-22.04'
       with:
         command: test
         args: --verbose --manifest-path=csml_server/Cargo.toml -j 1 --features csml_engine/dynamo -- --test-threads=1

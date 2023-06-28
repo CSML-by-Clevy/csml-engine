@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:18.04
+FROM --platform=linux/amd64 ubuntu:22.04
 
 RUN apt update && apt install -y ca-certificates libpq-dev && apt clean
 RUN update-ca-certificates
@@ -17,7 +17,7 @@ EXPOSE 5000
 CMD ./server
 
 
-FROM --platform=linux/arm64 ubuntu:18.04
+FROM --platform=linux/arm64 ubuntu:22.04
 
 RUN apt update && apt install -y ca-certificates libpq-dev && apt clean
 RUN update-ca-certificates
