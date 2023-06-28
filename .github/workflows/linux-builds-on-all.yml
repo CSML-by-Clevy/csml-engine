@@ -9,9 +9,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-22.04]
         include:
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             amd_asset_name: csml-server-linux-amd64
             amd_cli_asset_name: csml-cli-linux-amd64
             arm_asset_name: csml-server-linux-arm64
@@ -99,9 +99,9 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-22.04]
         include:
-          - os: ubuntu-18.04
+          - os: ubuntu-22.04
             amd_asset_name: csml-server-linux-amd64
             amd_cli_asset_name: csml-cli-linux-amd64
             arm_asset_name: csml-server-linux-arm64
@@ -169,7 +169,7 @@ jobs:
 
 
   publish-docker:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - uses: actions/checkout@v2
